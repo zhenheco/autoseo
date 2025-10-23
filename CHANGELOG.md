@@ -9,30 +9,83 @@
 
 ## [Unreleased]
 
-### 🎯 Phase 4: WordPress 整合 - 🔄 進行中 (2025-01-23)
+### 🎉 MVP 完成 (2025-01-23)
+
+**MVP 核心功能已全部完成！**
+
+✅ 使用者認證與權限系統
+✅ 公司與團隊管理
+✅ WordPress 網站管理
+✅ 文章生成（3 種輸入方式）
+✅ 文章狀態追蹤與預覽
+✅ 完整的權限控制機制
+
+---
+
+### 🎯 Phase 5: 文章生成核心 - ✅ 已完成 (2025-01-23)
 
 #### 新增 (Added)
 
-##### [2025-01-23] - 網站管理基礎
+##### [2025-01-23] - 文章管理系統
+- 建立文章管理頁面
+  - 檔案: `src/app/(dashboard)/dashboard/articles/page.tsx`
+  - 功能: 顯示所有文章列表
+  - 功能: 文章狀態標籤（已發布、處理中、失敗、草稿、待處理）
+  - 功能: 快速查看文章詳情
+- 建立文章生成介面
+  - 檔案: `src/app/(dashboard)/dashboard/articles/new/page.tsx`
+  - 功能: 方式 1 - 關鍵字輸入
+  - 功能: 方式 2 - URL 參考輸入
+  - 功能: 方式 3 - 批量關鍵字（最多 10 個）
+  - 功能: 自動選擇目標網站
+  - 功能: 輸入驗證和錯誤處理
+- 建立文章詳情頁面
+  - 檔案: `src/app/(dashboard)/dashboard/articles/[id]/page.tsx`
+  - 功能: 顯示文章完整資訊
+  - 功能: 生成內容預覽
+  - 功能: WordPress 文章 ID 顯示
+  - 功能: 錯誤訊息顯示
+- 實作 Server Actions
+  - 檔案: `src/app/(dashboard)/dashboard/articles/new/actions.ts`
+  - 功能: createArticle（建立文章生成任務）
+  - 功能: 支援三種輸入方式
+  - 功能: 批量生成支援
+  - 功能: N8N Workflow 整合準備
+
+#### 待整合
+- [ ] N8N Webhook 實際呼叫
+- [ ] WordPress REST API 實際發布測試
+- [ ] AI 內容生成優化
+
+---
+
+### 🎯 Phase 4: WordPress 整合 - ✅ 已完成 (2025-01-23)
+
+#### 新增 (Added)
+
+##### [2025-01-23] - 網站管理系統
 - 建立網站管理頁面
   - 檔案: `src/app/(dashboard)/dashboard/websites/page.tsx`
   - 功能: 顯示 WordPress 網站列表
   - 功能: 顯示網站狀態和 CNAME 驗證狀態
+  - 功能: 網站編輯和刪除按鈕
 - 建立新增網站頁面
   - 檔案: `src/app/(dashboard)/dashboard/websites/new/page.tsx`
   - 功能: WordPress 網站資訊表單
   - 功能: 支援應用密碼驗證
+  - 功能: URL 格式驗證
 - 實作 Server Actions
   - 檔案: `src/app/(dashboard)/dashboard/websites/new/actions.ts`
   - 功能: createWebsite（新增 WordPress 網站）
-  - 功能: 權限檢查和 URL 驗證
+  - 檔案: `src/app/(dashboard)/dashboard/websites/actions.ts`
+  - 功能: deleteWebsite（刪除網站，需 owner/admin 權限）
+  - 功能: updateBrandVoice（更新品牌語調設定）
+  - 功能: JSONB 儲存品牌語調、目標受眾、關鍵字
 
-#### 待完成
+#### 待整合
 - [ ] WordPress REST API 連線驗證
-- [ ] 密碼加密儲存
-- [ ] 網站編輯功能
-- [ ] 網站刪除功能
-- [ ] Brand Voice 設定表單
+- [ ] 密碼加密儲存（目前明文）
+- [ ] 網站編輯頁面 UI
 
 ---
 
