@@ -9,7 +9,81 @@
 
 ## [Unreleased]
 
-### 🎯 Phase 1: 基礎架構 - 進行中
+### 🎯 Phase 2: 認證與權限系統 - ✅ 已完成 (2025-01-23)
+
+#### 新增 (Added)
+
+##### [2025-01-23] - UI 元件庫
+- 安裝並配置 shadcn/ui
+  - 套件: `@radix-ui/react-*`, `class-variance-authority`, `clsx`, `tailwind-merge`
+- 建立基礎 UI 元件
+  - 檔案: `src/components/ui/button.tsx`
+  - 檔案: `src/components/ui/input.tsx`
+  - 檔案: `src/components/ui/label.tsx`
+  - 檔案: `src/components/ui/card.tsx`
+- 建立工具函數
+  - 檔案: `src/lib/utils.ts` (cn 函數用於合併 className)
+
+##### [2025-01-23] - 認證系統
+- 實作 Supabase Auth 功能
+  - 檔案: `src/lib/auth.ts`
+  - 功能: signUp (註冊 + 自動建立公司和訂閱)
+  - 功能: signIn (登入)
+  - 功能: signOut (登出)
+  - 功能: getUser (取得當前使用者)
+  - 功能: getUserCompanies (取得使用者公司列表)
+- 建立登入頁面
+  - 檔案: `src/app/(auth)/login/page.tsx`
+  - 檔案: `src/app/(auth)/login/actions.ts`
+  - 功能: 支援錯誤訊息顯示
+- 建立註冊頁面
+  - 檔案: `src/app/(auth)/signup/page.tsx`
+  - 檔案: `src/app/(auth)/signup/actions.ts`
+  - 功能: 支援錯誤訊息顯示
+- 建立 OAuth callback 路由
+  - 檔案: `src/app/auth/callback/route.ts`
+
+##### [2025-01-23] - Dashboard 基礎
+- 建立 Dashboard 佈局
+  - 檔案: `src/app/(dashboard)/dashboard/layout.tsx`
+  - 功能: 導航選單（Dashboard、網站管理、文章管理、設定）
+  - 功能: 登出按鈕
+- 建立 Dashboard 主頁
+  - 檔案: `src/app/(dashboard)/dashboard/page.tsx`
+  - 功能: 顯示使用者公司列表
+  - 功能: 顯示訂閱狀態
+  - 功能: 快速開始選項
+- 更新首頁
+  - 檔案: `src/app/page.tsx`
+  - 功能: 添加「開始使用」和「登入」按鈕
+
+#### 修改 (Changed)
+
+##### [2025-01-23] - Tailwind CSS 4.x 相容性修復
+- 修改 PostCSS 配置
+  - 檔案: `postcss.config.js`
+  - 變更: 使用 `@tailwindcss/postcss` 代替 `tailwindcss`
+- 修改全域樣式
+  - 檔案: `src/app/globals.css`
+  - 變更: 移除 `@apply border-border`
+  - 變更: 將 `@apply bg-background text-foreground` 改為純 CSS
+- 修改 Tailwind 配置
+  - 檔案: `tailwind.config.ts`
+  - 變更: `darkMode: ["class"]` → `darkMode: "class"`
+
+#### 修復 (Fixed)
+
+##### [2025-01-23] - TypeScript 類型錯誤
+- 修復 Server Action 返回類型問題
+  - 檔案: `src/app/(auth)/login/actions.ts`, `src/app/(auth)/signup/actions.ts`
+  - 修復: 使用 redirect 代替返回物件來處理錯誤
+- 修復 Dashboard 頁面類型問題
+  - 檔案: `src/app/(dashboard)/dashboard/page.tsx`
+  - 修復: 添加類型斷言解決 Supabase 查詢返回類型問題
+
+---
+
+### 🎯 Phase 1: 基礎架構 - ✅ 已完成 (2025-01-23)
 
 #### 新增 (Added)
 
@@ -83,16 +157,24 @@
 
 ## 🔮 即將推出 (Upcoming)
 
-### Phase 1 剩餘任務
-- [ ] 執行 Supabase Migration（等待連線資訊）
-- [ ] 生成 TypeScript 型別定義
-- [ ] 建立首頁 UI
+### Phase 3: 公司與團隊管理 (進行中)
+- [ ] 公司設定頁面
+- [ ] 成員管理介面
+- [ ] 成員邀請系統（Email）
+- [ ] 角色權限管理
+- [ ] 多公司切換功能
 
-### Phase 2: 認證系統
-- [ ] Supabase Auth 整合
-- [ ] 登入/註冊頁面
-- [ ] 密碼重置流程
-- [ ] Google OAuth 整合
+### Phase 4: WordPress 整合
+- [ ] WordPress OAuth 連接流程
+- [ ] 網站設定頁面
+- [ ] CNAME 設定指引
+- [ ] WordPress 自動發布測試
+
+### Phase 5: 文章生成核心
+- [ ] 文章生成介面（3種輸入方式）
+- [ ] N8N Workflow 整合
+- [ ] AI 內容生成預覽
+- [ ] 文章草稿系統
 
 ---
 
