@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+import { deleteWebsite } from './actions'
 
 async function getCompanyWebsites(companyId: string) {
   const supabase = await createClient()
@@ -94,12 +95,22 @@ export default async function WebsitesPage({
                     </span>
                   </div>
                   <div className="flex gap-2 pt-2">
-                    <Button variant="outline" size="sm" className="flex-1">
-                      編輯
-                    </Button>
-                    <Button variant="outline" size="sm" className="text-destructive hover:text-destructive">
-                      刪除
-                    </Button>
+                    <Link href={`/dashboard/websites/${website.id}/edit`} className="flex-1">
+                      <Button variant="outline" size="sm" className="w-full">
+                        編輯
+                      </Button>
+                    </Link>
+                    <form action={deleteWebsite} className="inline">
+                      <input type="hidden" name="websiteId" value={website.id} />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        type="submit"
+                        className="text-destructive hover:text-destructive"
+                      >
+                        刪除
+                      </Button>
+                    </form>
                   </div>
                 </div>
               </CardContent>
