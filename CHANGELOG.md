@@ -22,6 +22,148 @@
 
 ---
 
+### 🔗 Phase 6: N8N Workflow 整合文檔 - ✅ 已完成 (2025-01-23)
+
+#### 新增 (Added)
+
+##### [2025-01-23] - N8N 整合完整文檔
+- 建立 N8N 整合指南
+  - 檔案: `N8N-INTEGRATION-GUIDE.md`
+  - 內容: 完整的 Workflow 架構分析（20+ 節點）
+  - 內容: 平台整合方案（資料庫調整、API 端點設計）
+  - 內容: N8N Workflow 設定詳細步驟
+  - 內容: 環境變數配置說明
+  - 內容: 測試流程和故障排除指南
+  - 涵蓋階段: SERP 分析、競爭對手分析、內容策略、文章撰寫、品質檢查、WordPress 發布
+
+- 建立 N8N Workflow 配置範例
+  - 檔案: `docs/n8n-workflow-example.json`
+  - 內容: 完整的 N8N Workflow JSON 範例
+  - 功能: Webhook Trigger（取代 Schedule Trigger）
+  - 功能: Callback 節點（6 個處理階段回調）
+  - 功能: 取得舊文章節點（供內部連結使用）
+  - 功能: 錯誤處理機制
+  - 功能: 品質檢查條件判斷
+
+- 建立實作檢查清單
+  - 檔案: `N8N-IMPLEMENTATION-CHECKLIST.md`
+  - 內容: 10 個 Phase 的完整實作步驟
+  - 內容: 資料庫 migration 指令
+  - 內容: 環境變數配置步驟
+  - 內容: API 端點建立指南
+  - 內容: N8N Workflow 設定步驟
+  - 內容: Cloudflare Tunnel 設定（本地測試）
+  - 內容: 端到端測試案例（3 個 Test Cases）
+  - 內容: 常見問題排除指南
+  - 內容: 測試結果記錄表
+
+- 建立 API 端點規格文檔
+  - 檔案: `docs/api-endpoints.md`
+  - 內容: N8N Callback API 完整規格
+  - 內容: 取得舊文章 API 規格
+  - 內容: 6 個處理階段的資料格式定義
+  - 內容: 錯誤處理和重試策略
+  - 內容: cURL 測試範例
+  - 內容: JavaScript/TypeScript 整合範例
+
+#### 資料庫設計
+
+##### 擴充 article_jobs 表
+- 新增欄位: `workflow_data` (JSONB) - 儲存所有 workflow 中間資料
+- 新增欄位: `serp_analysis` (JSONB) - SERP 分析結果快取
+- 新增欄位: `competitor_analysis` (JSONB) - 競爭對手分析
+- 新增欄位: `content_plan` (JSONB) - 內容大綱
+- 新增欄位: `quality_score` (INTEGER) - 品質分數 (0-100)
+- 新增欄位: `quality_report` (JSONB) - 詳細品質報告
+- 新增欄位: `processing_stages` (JSONB) - 各階段狀態追蹤
+
+##### 擴充 website_configs 表
+- 新增欄位: `n8n_webhook_url` (TEXT) - 每個網站可設定不同 workflow
+- 新增欄位: `workflow_settings` (JSONB) - Workflow 自訂設定
+
+#### API 端點設計
+
+##### `/api/n8n/callback` (POST)
+- 功能: 接收 N8N workflow 各階段回調
+- 認證: X-API-Key header
+- 支援階段: serp_analysis, competitor_analysis, content_plan, content_generation, quality_check, wordpress_publish
+- 自動更新: article_jobs 相關欄位和 processing_stages
+
+##### `/api/articles/previous` (GET)
+- 功能: 提供舊文章列表供 N8N 內部連結使用
+- 認證: X-API-Key header
+- 參數: websiteId (必填), limit (預設 20), keyword (選填)
+- 回傳: 已發布文章的 title, url, excerpt, keyword
+
+#### Workflow 處理流程
+
+**完整管線** (預估 2 分鐘):
+1. Webhook Trigger（平台觸發）
+2. SERP 數據分析（Perplexity API，30秒）
+3. 競爭對手分析（Web scraping + AI，30秒）
+4. 內容策略規劃（GPT-4，20秒）
+5. 文章撰寫（GPT-4，60秒）
+6. 內部連結添加（查詢舊文章 + AI，10秒）
+7. HTML 格式化（10秒）
+8. SEO 元數據生成（Slug, Title, Meta，10秒）
+9. 品質檢查（10秒）
+10. WordPress 發布（條件式，10秒）
+11. 狀態回調（持續更新）
+
+#### 品質控制機制
+
+**檢查項目**:
+- 字數: 1500-2500 字
+- 關鍵字密度: 1.5-2.5%
+- 文章結構: H1=1, H2≥3, H3≥5
+- 內部連結: ≥3 個
+- 外部連結: ≥2 個
+
+**評分標準**:
+- 總分 0-100
+- 通過門檻: 80 分
+- 未通過: 標記為 failed，不發布
+
+#### 測試計劃
+
+**Test Case 1**: 單一關鍵字文章生成
+- 輸入: "Next.js 教學"
+- 預期: 完整流程執行，品質檢查通過，WordPress 發布成功
+
+**Test Case 2**: 批量關鍵字生成
+- 輸入: 3 個關鍵字
+- 預期: 3 篇文章依序處理，狀態正確更新
+
+**Test Case 3**: 品質檢查失敗
+- 輸入: 冷門關鍵字
+- 預期: 品質分數 < 80，標記為 failed，不發布
+
+#### 文檔交付物
+
+- ✅ N8N 整合指南（40+ 頁完整文檔）
+- ✅ Workflow 配置 JSON 範例
+- ✅ 實作檢查清單（10 個 Phase，詳細步驟）
+- ✅ API 端點規格（完整的請求/回應範例）
+
+#### 下一步行動
+
+**明天測試前準備**:
+1. 執行資料庫 migration
+2. 建立 API 端點檔案
+3. 修改 createArticle Server Action
+4. 配置 N8N Workflow
+5. 啟動 Cloudflare Tunnel
+6. 執行端到端測試
+
+**後續優化**:
+1. 密碼加密（pgsodium）
+2. 圖片生成整合（Google Imagen）
+3. 監控儀表板
+4. 自動重試機制
+5. A/B 測試功能
+
+---
+
 ### 🎯 Phase 5: 文章生成核心 - ✅ 已完成 (2025-01-23)
 
 #### 新增 (Added)
