@@ -132,3 +132,35 @@ export async function getUserCompanies(userId: string) {
 
   return data
 }
+
+/**
+ * 取得使用者的主要公司（第一個公司）
+ */
+export async function getUserPrimaryCompany(userId: string) {
+  const companies = await getUserCompanies(userId)
+  if (!companies || companies.length === 0) return null
+  return (companies[0] as any).companies
+}
+
+/**
+ * 取得公司的所有成員
+ */
+export async function getCompanyMembers(companyId: string) {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('company_members')
+    .select(`
+      *,
+      users:user_id (
+        email
+      )
+    `)
+    .eq('company_id', companyId)
+    .eq('status', 'active')
+    .order('joined_at', { ascending: false })
+
+  if (error) throw error
+
+  return data
+}
