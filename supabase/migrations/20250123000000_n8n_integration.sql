@@ -6,15 +6,21 @@
 -- 1. 擴充 article_jobs 表
 -- ============================================
 
--- 新增欄位
+-- 新增欄位（相容原有 schema）
 ALTER TABLE article_jobs
+ADD COLUMN IF NOT EXISTS article_title TEXT,
+ADD COLUMN IF NOT EXISTS input_type VARCHAR(20),
+ADD COLUMN IF NOT EXISTS input_content JSONB DEFAULT '{}',
+ADD COLUMN IF NOT EXISTS wp_post_id INTEGER,
+ADD COLUMN IF NOT EXISTS generated_content JSONB,
 ADD COLUMN IF NOT EXISTS workflow_data JSONB DEFAULT '{}',
 ADD COLUMN IF NOT EXISTS serp_analysis JSONB,
 ADD COLUMN IF NOT EXISTS competitor_analysis JSONB,
 ADD COLUMN IF NOT EXISTS content_plan JSONB,
 ADD COLUMN IF NOT EXISTS quality_score INTEGER,
 ADD COLUMN IF NOT EXISTS quality_report JSONB,
-ADD COLUMN IF NOT EXISTS processing_stages JSONB DEFAULT '{}';
+ADD COLUMN IF NOT EXISTS processing_stages JSONB DEFAULT '{}',
+ADD COLUMN IF NOT EXISTS scheduled_time TIMESTAMP WITH TIME ZONE;
 
 -- 新增欄位註解
 COMMENT ON COLUMN article_jobs.workflow_data IS 'N8N workflow 執行的所有中間資料，包含各階段的完整輸出';
@@ -77,7 +83,7 @@ DECLARE
   stage_data JSONB;
   latest_stage TEXT := NULL;
   latest_time TIMESTAMP := NULL;
-  current_time TIMESTAMP;
+  stage_time TIMESTAMP;
 BEGIN
   -- 取得 processing_stages
   SELECT processing_stages INTO stages
@@ -94,17 +100,17 @@ BEGIN
   LOOP
     -- 取得完成或失敗時間
     IF stage_data->>'completed_at' IS NOT NULL THEN
-      current_time := (stage_data->>'completed_at')::timestamp;
+      stage_time := (stage_data->>'completed_at')::timestamp;
     ELSIF stage_data->>'failed_at' IS NOT NULL THEN
-      current_time := (stage_data->>'failed_at')::timestamp;
+      stage_time := (stage_data->>'failed_at')::timestamp;
     ELSE
       CONTINUE;
     END IF;
 
     -- 更新最新階段
-    IF latest_time IS NULL OR current_time > latest_time THEN
+    IF latest_time IS NULL OR stage_time > latest_time THEN
       latest_stage := stage_name;
-      latest_time := current_time;
+      latest_time := stage_time;
     END IF;
   END LOOP;
 
