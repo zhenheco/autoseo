@@ -1,5 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient as createSupabaseClient } from '@supabase/supabase-js'
+
+// N8N API 使用 service_role key 繞過 RLS
+function createServiceRoleClient() {
+  return createSupabaseClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false
+      }
+    }
+  )
+}
 
 /**
  * 取得舊文章列表（供 N8N "Add internal links" 節點使用）
@@ -58,7 +72,7 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    const supabase = await createClient()
+    const supabase = createServiceRoleClient()
 
     // 查詢已發布的文章
     let query = supabase

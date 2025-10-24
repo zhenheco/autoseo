@@ -22,6 +22,11 @@ ADD COLUMN IF NOT EXISTS quality_report JSONB,
 ADD COLUMN IF NOT EXISTS processing_stages JSONB DEFAULT '{}',
 ADD COLUMN IF NOT EXISTS scheduled_time TIMESTAMP WITH TIME ZONE;
 
+-- 更新 status 欄位的 check constraint，添加 'published' 狀態
+ALTER TABLE article_jobs DROP CONSTRAINT IF EXISTS article_jobs_status_check;
+ALTER TABLE article_jobs ADD CONSTRAINT article_jobs_status_check
+  CHECK (status IN ('pending', 'processing', 'completed', 'failed', 'published'));
+
 -- 新增欄位註解
 COMMENT ON COLUMN article_jobs.workflow_data IS 'N8N workflow 執行的所有中間資料，包含各階段的完整輸出';
 COMMENT ON COLUMN article_jobs.serp_analysis IS 'SERP 分析結果（快取用），包含 top 10 URLs、common topics、search intent';
