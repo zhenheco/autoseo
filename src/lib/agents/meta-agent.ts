@@ -85,6 +85,11 @@ ${input.content.markdown.substring(0, 500)}...
       title: metaData.title,
       description: metaData.description,
       slug: this.sanitizeSlug(metaData.slug),
+      seo: {
+        title: metaData.title,
+        description: metaData.description,
+        keywords: metaData.keywords || [],
+      },
       openGraph: {
         title: metaData.openGraph.title,
         description: metaData.openGraph.description,

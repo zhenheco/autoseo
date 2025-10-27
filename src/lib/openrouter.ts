@@ -77,6 +77,25 @@ export async function callOpenRouter(params: {
     throw new Error('OPENROUTER_API_KEY is not set');
   }
 
+  // 構建請求參數，圖片模型不支援 temperature
+  const requestBody: any = {
+    model: params.model,
+    messages: params.messages,
+    max_tokens: params.max_tokens,
+    response_format: params.response_format,
+  };
+
+  // 只有非圖片模型才加入 temperature
+  const modelName = params.model.toLowerCase();
+  const isImageModel = modelName.includes('image') ||
+                       modelName.includes('dalle') ||
+                       modelName.includes('flux') ||
+                       modelName.includes('stable-diffusion');
+
+  if (!isImageModel) {
+    requestBody.temperature = params.temperature ?? 0.7;
+  }
+
   const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
     method: 'POST',
     headers: {
@@ -85,13 +104,7 @@ export async function callOpenRouter(params: {
       'HTTP-Referer': process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3168',
       'X-Title': 'Auto Pilot SEO',
     },
-    body: JSON.stringify({
-      model: params.model,
-      messages: params.messages,
-      temperature: params.temperature ?? 0.7,
-      max_tokens: params.max_tokens,
-      response_format: params.response_format,
-    }),
+    body: JSON.stringify(requestBody),
   });
 
   if (!response.ok) {

@@ -29,7 +29,7 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
     if (input.model === 'none') {
       console.warn('[ImageAgent] Image generation skipped (model is "none")');
       return {
-        featuredImage: null,
+        featuredImage: null as any,  // TypeScript workaround
         contentImages: [],
         executionInfo: {
           model: 'none',

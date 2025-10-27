@@ -35,7 +35,7 @@ export const modelPresets: Record<string, ModelPreset> = {
     qualityScore: 98
   },
 
-  // 平衡配置（推薦）
+  // 平衡配置（推薦）(GPT-5 價格 $0.18 + 50% = $0.27)
   balanced: {
     name: '標準版',
     description: '品質與成本的最佳平衡，適合大多數用戶',
@@ -47,11 +47,11 @@ export const modelPresets: Record<string, ModelPreset> = {
       meta_model: 'deepseek/deepseek-chat-v3.1:free',
       image_model: 'openai/gpt-5-image-mini'
     },
-    estimatedCostPerArticle: 0.18,
+    estimatedCostPerArticle: 0.27, // GPT-5 基準價格 + 50%
     qualityScore: 92
   },
 
-  // 高CP值配置（新增）
+  // 高CP值配置（新增）(GPT-5 價格 $0.18 + 80% = $0.324)
   costEffective: {
     name: '經濟版',
     description: '保持90%品質，成本降低60%',
@@ -63,11 +63,11 @@ export const modelPresets: Record<string, ModelPreset> = {
       meta_model: 'google/gemini-2.0-flash-exp:free',    // Google免費模型（穩定快速）
       image_model: 'none' // 可選擇性啟用
     },
-    estimatedCostPerArticle: 0.08,
+    estimatedCostPerArticle: 0.324, // GPT-5 基準價格 + 80%
     qualityScore: 88
   },
 
-  // 最大節省配置
+  // 最大節省配置 (GPT-5 價格 $0.18 + 100% = $0.36)
   budget: {
     name: '入門版',
     description: '最低成本，適合個人部落格或測試',
@@ -79,7 +79,7 @@ export const modelPresets: Record<string, ModelPreset> = {
       meta_model: 'deepseek/deepseek-chat-v3.1:free',
       image_model: 'none'
     },
-    estimatedCostPerArticle: 0.00, // 虛擬成本另計
+    estimatedCostPerArticle: 0.36, // GPT-5 基準價格 + 100%
     qualityScore: 75
   },
 

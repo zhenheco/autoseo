@@ -22,7 +22,7 @@ async function verifyAgentsStructure() {
   };
 
   const aiConfig = {
-    openaiApiKey: 'test-key',
+    openrouterApiKey: 'test-key',
   };
 
   const agentTests = [

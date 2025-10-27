@@ -155,6 +155,7 @@ export interface StrategyOutput {
     faq: number;
   };
   keywordDensityTarget: number;
+  keywords: string[];
   relatedKeywords: string[];
   lsiKeywords: string[];
   internalLinkingStrategy: {
@@ -276,6 +277,11 @@ export interface MetaOutput {
   title: string;
   description: string;
   slug: string;
+  seo: {
+    title: string;
+    description: string;
+    keywords?: string[];
+  };
   openGraph: {
     title: string;
     description: string;
@@ -291,6 +297,34 @@ export interface MetaOutput {
   canonicalUrl?: string;
   focusKeyphrase: string;
   executionInfo: {
+    model: string;
+    executionTime: number;
+    tokenUsage: { input: number; output: number };
+  };
+}
+
+// Category Agent Types
+export interface CategoryInput {
+  title: string;
+  content: string;
+  keywords: string[];
+  outline: StrategyOutput;
+  language?: string;
+}
+
+export interface CategoryOutput {
+  categories: {
+    name: string;
+    slug: string;
+    confidence: number;
+  }[];
+  tags: {
+    name: string;
+    slug: string;
+    relevance: number;
+  }[];
+  focusKeywords: string[];
+  executionInfo?: {
     model: string;
     executionTime: number;
     tokenUsage: { input: number; output: number };
@@ -361,7 +395,13 @@ export interface ArticleGenerationResult {
   writing?: WritingOutput;
   image?: ImageOutput;
   meta?: MetaOutput;
+  category?: CategoryOutput;
   quality?: QualityOutput;
+  wordpress?: {
+    postId: number;
+    postUrl: string;
+    status: string;
+  };
   executionStats: {
     totalTime: number;
     phases: {

@@ -71,6 +71,7 @@ export interface WordPressConfig {
   applicationPassword?: string;
   accessToken?: string;
   refreshToken?: string;
+  jwtToken?: string; // JWT Authentication for WP REST API 外掛支援
 }
 
 export interface CreatePostData {
@@ -102,7 +103,10 @@ export class WordPressClient {
   }
 
   private setupAuthentication() {
-    if (this.config.accessToken) {
+    if (this.config.jwtToken) {
+      // JWT Authentication for WP REST API 外掛 (最推薦)
+      this.headers['Authorization'] = `Bearer ${this.config.jwtToken}`;
+    } else if (this.config.accessToken) {
       // OAuth 2.0 (推薦)
       this.headers['Authorization'] = `Bearer ${this.config.accessToken}`;
     } else if (this.config.applicationPassword && this.config.username) {
@@ -114,8 +118,8 @@ export class WordPressClient {
     } else {
       // 不再支援純密碼認證
       throw new Error(
-        'WordPress 認證錯誤：請使用 OAuth 2.0 或 Application Password。' +
-        '不支援使用純密碼認證，因為安全性風險。'
+        'WordPress 認證錯誤：請使用 JWT、OAuth 2.0 或 Application Password。' +
+        '推薦使用 JWT Authentication for WP REST API 外掛。'
       );
     }
 
@@ -288,9 +292,9 @@ export class WordPressClient {
     const formData = new FormData();
 
     if (file instanceof Buffer) {
-      formData.append('file', new Blob([file]), filename);
+      formData.append('file', new Blob([file as any]), filename);
     } else {
-      formData.append('file', file, filename);
+      formData.append('file', file as Blob, filename);
     }
 
     if (altText) formData.append('alt_text', altText);
@@ -484,6 +488,47 @@ export class WordPressClient {
   private getFilenameFromUrl(url: string): string {
     const parts = url.split('/');
     return parts[parts.length - 1] || 'image.jpg';
+  }
+
+  /**
+   * 使用 JWT 外掛進行身份驗證
+   */
+  async authenticateWithJWT(
+    username: string,
+    password: string
+  ): Promise<{
+    token: string;
+    user_email: string;
+    user_nicename: string;
+    user_display_name: string;
+  }> {
+    const response = await fetch(`${this.config.url}/wp-json/jwt-auth/v1/token`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ username, password })
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      throw new Error(`JWT 認證失敗: ${response.status} - ${error}`);
+    }
+
+    return await response.json();
+  }
+
+  /**
+   * 驗證 JWT Token 是否有效
+   */
+  async validateJWTToken(token: string): Promise<boolean> {
+    const response = await fetch(`${this.config.url}/wp-json/jwt-auth/v1/token/validate`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    return response.ok;
   }
 
   /**
