@@ -8,8 +8,8 @@ const migrationsDir = path.join(__dirname, '../supabase/migrations');
 const migrations = [
   '20250101000000_init_schema.sql',
   '20250101000001_advanced_features.sql',
-  // '20250101000002_rls_and_functions.sql', // 暫時跳過（有 pgsodium 相容問題）
-  '20250101000003_rls_policies_only.sql'
+  '20250101000003_rls_policies_only.sql',
+  '20250127000001_update_ai_models_for_openrouter.sql'
 ];
 
 async function runMigrations() {
