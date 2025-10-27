@@ -67,7 +67,19 @@ ${input.content.markdown.substring(0, 500)}...
       format: 'json',
     });
 
-    const metaData = JSON.parse(response.content);
+    let metaData;
+    try {
+      const jsonMatch = response.content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        metaData = JSON.parse(jsonMatch[0]);
+      } else {
+        metaData = JSON.parse(response.content);
+      }
+    } catch (error) {
+      console.error('[MetaAgent] JSON parse error:', error);
+      console.error('[MetaAgent] Response content:', response.content);
+      throw new Error(`Failed to parse meta data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
 
     return {
       title: metaData.title,

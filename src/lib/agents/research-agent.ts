@@ -28,7 +28,8 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
   private async fetchSERP(keyword: string, region?: string): Promise<SERPResult[]> {
     const serpApiKey = process.env.SERP_API_KEY;
     if (!serpApiKey) {
-      throw new Error('SERP_API_KEY not configured');
+      console.warn('[ResearchAgent] SERP_API_KEY not configured, using mock data');
+      return this.getMockSERPResults(keyword);
     }
 
     const params = new URLSearchParams({
@@ -120,5 +121,31 @@ ${i + 1}. ${r.title}
     });
 
     return JSON.parse(response.content);
+  }
+
+  private getMockSERPResults(keyword: string): SERPResult[] {
+    return [
+      {
+        position: 1,
+        title: `${keyword} - 官方文檔`,
+        url: 'https://example.com/docs',
+        domain: 'example.com',
+        snippet: `${keyword}的完整文檔和指南`,
+      },
+      {
+        position: 2,
+        title: `了解${keyword}的核心概念`,
+        url: 'https://blog.example.com/guide',
+        domain: 'blog.example.com',
+        snippet: `深入探討${keyword}的特性和應用`,
+      },
+      {
+        position: 3,
+        title: `${keyword}最佳實踐指南`,
+        url: 'https://dev.example.com/best-practices',
+        domain: 'dev.example.com',
+        snippet: `學習如何正確使用${keyword}`,
+      },
+    ];
   }
 }

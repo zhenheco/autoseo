@@ -396,6 +396,7 @@ export interface AICompletionOptions {
   maxTokens?: number;
   messages?: AIMessage[];
   format?: 'text' | 'json';
+  responseFormat?: any;
 }
 
 export interface AICompletionResponse {

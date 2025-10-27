@@ -162,7 +162,7 @@ async function testArticleGeneration() {
       region: 'TW',
     };
 
-    const orchestrator = new ParallelOrchestrator();
+    const orchestrator = new ParallelOrchestrator(supabase);
     const startTime = Date.now();
 
     try {
