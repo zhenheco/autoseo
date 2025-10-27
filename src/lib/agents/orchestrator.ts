@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server';
+import { SupabaseClient } from '@supabase/supabase-js';
 import { ResearchAgent } from './research-agent';
 import { StrategyAgent } from './strategy-agent';
 import { WritingAgent } from './writing-agent';
@@ -17,8 +18,21 @@ import type {
 import { AgentExecutionContext } from './base-agent';
 
 export class ParallelOrchestrator {
+  private supabaseClient?: SupabaseClient;
+
+  constructor(supabaseClient?: SupabaseClient) {
+    this.supabaseClient = supabaseClient;
+  }
+
+  private async getSupabase(): Promise<SupabaseClient> {
+    if (this.supabaseClient) {
+      return this.supabaseClient;
+    }
+    return await createClient();
+  }
+
   async execute(input: ArticleGenerationInput): Promise<ArticleGenerationResult> {
-    const supabase = await createClient();
+    const supabase = await this.getSupabase();
     const startTime = Date.now();
     const phaseTimings = {
       research: 0,
@@ -127,7 +141,7 @@ export class ParallelOrchestrator {
       phaseTimings.metaGeneration = Date.now() - phase4Start;
       result.meta = metaOutput;
 
-      if (imageOutput.featuredImage) {
+      if (imageOutput?.featuredImage) {
         metaOutput.openGraph.image = imageOutput.featuredImage.url;
         metaOutput.twitterCard.image = imageOutput.featuredImage.url;
       }
@@ -221,7 +235,7 @@ export class ParallelOrchestrator {
   }
 
   private async getBrandVoice(websiteId: string): Promise<BrandVoice> {
-    const supabase = await createClient();
+    const supabase = await this.getSupabase();
     const { data, error } = await supabase
       .from('brand_voices')
       .select('*')
@@ -233,7 +247,7 @@ export class ParallelOrchestrator {
   }
 
   private async getWorkflowSettings(websiteId: string): Promise<WorkflowSettings> {
-    const supabase = await createClient();
+    const supabase = await this.getSupabase();
     const { data, error } = await supabase
       .from('workflow_settings')
       .select('*')
@@ -245,7 +259,7 @@ export class ParallelOrchestrator {
   }
 
   private async getAgentConfig(websiteId: string): Promise<AgentConfig> {
-    const supabase = await createClient();
+    const supabase = await this.getSupabase();
 
     const { data: website, error: websiteError } = await supabase
       .from('website_configs')
@@ -263,18 +277,16 @@ export class ParallelOrchestrator {
 
     if (companyError) throw companyError;
 
-    const preferences = company.ai_model_preferences || {
-      text_model: 'anthropic/claude-3.5-sonnet',
-      image_model: 'openai/dall-e-3',
-      fallback_text_model: 'openai/gpt-4o',
-      fallback_image_model: 'openai/dall-e-2',
-    };
+    const preferences = company.ai_model_preferences || {};
+
+    const smartModel = preferences.research_model || preferences.text_model || 'openai/gpt-4o';
+    const cheapModel = preferences.meta_model || 'google/gemini-flash-1.5';
 
     return {
-      research_model: preferences.text_model,
-      strategy_model: preferences.text_model,
-      writing_model: preferences.text_model,
-      image_model: preferences.image_model,
+      research_model: smartModel,
+      strategy_model: smartModel,
+      writing_model: smartModel,
+      image_model: preferences.image_model || 'none',
       research_temperature: 0.3,
       strategy_temperature: 0.7,
       writing_temperature: 0.7,
@@ -284,19 +296,19 @@ export class ParallelOrchestrator {
       image_size: '1024x1024',
       image_count: 3,
       meta_enabled: true,
-      meta_model: preferences.text_model,
+      meta_model: cheapModel,
       meta_temperature: 0.7,
       meta_max_tokens: 2000,
     };
   }
 
   private async getPreviousArticles(websiteId: string): Promise<PreviousArticle[]> {
-    const supabase = await createClient();
+    const supabase = await this.getSupabase();
     const { data, error } = await supabase
       .from('article_jobs')
-      .select('id, title, keywords, excerpt')
+      .select('id, keywords, generated_content')
       .eq('website_id', websiteId)
-      .eq('status', 'published')
+      .eq('status', 'completed')
       .order('created_at', { ascending: false })
       .limit(10);
 
@@ -304,10 +316,10 @@ export class ParallelOrchestrator {
 
     return (data || []).map((article: any) => ({
       id: article.id,
-      title: article.title || '',
+      title: article.keywords?.[0] || 'Untitled',
       url: `/articles/${article.id}`,
       keywords: article.keywords || [],
-      excerpt: article.excerpt || '',
+      excerpt: (article.generated_content || '').substring(0, 200),
     }));
   }
 
@@ -322,7 +334,7 @@ export class ParallelOrchestrator {
     status: string,
     data: any
   ): Promise<void> {
-    const supabase = await createClient();
+    const supabase = await this.getSupabase();
     await supabase
       .from('article_jobs')
       .update({

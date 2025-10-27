@@ -20,12 +20,15 @@ export class AIClient {
     const messages = this.formatMessages(prompt);
 
     try {
+      const responseFormat = options.responseFormat ||
+        (options.format === 'json' ? { type: 'json_object' } : undefined);
+
       const response = await callOpenRouter({
         model: options.model,
         messages,
         temperature: options.temperature ?? 0.7,
         max_tokens: options.maxTokens ?? 2000,
-        response_format: options.format === 'json' ? { type: 'json_object' } : undefined,
+        response_format: responseFormat,
       });
 
       return {
@@ -63,7 +66,6 @@ export class AIClient {
             content: `Generate an image with the following prompt: ${prompt}. Quality: ${options.quality || 'standard'}, Size: ${options.size || '1024x1024'}`,
           },
         ],
-        temperature: 0.7,
       });
 
       return {
