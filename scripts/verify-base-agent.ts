@@ -36,7 +36,7 @@ async function verifyBaseAgent() {
   };
 
   const aiConfig = {
-    openaiApiKey: 'test-key',
+    openrouterApiKey: 'test-key',
   };
 
   results.total++;

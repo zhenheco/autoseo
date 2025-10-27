@@ -97,10 +97,7 @@ async function testPreset(presetName: string): Promise<TestResult> {
 
     // 執行文章生成
     const startTime = Date.now();
-    const orchestrator = new ParallelOrchestrator({
-      openrouterKey: process.env.OPENROUTER_API_KEY!,
-      serpApiKey: process.env.SERP_API_KEY || '',
-    });
+    const orchestrator = new ParallelOrchestrator(supabase);
 
     const result = await orchestrator.execute({
       articleJobId: articleJob.id,

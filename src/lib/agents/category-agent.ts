@@ -3,10 +3,8 @@
  * 使用免費模型來降低成本
  */
 
-import { OpenAI } from 'openai';
 import { z } from 'zod';
-import { createOpenRouter } from '../openrouter';
-import { models } from '../openrouter/models';
+import { callOpenRouter } from '../openrouter';
 
 // 分類和標籤輸出 Schema
 const CategoryOutputSchema = z.object({
@@ -40,11 +38,9 @@ export interface CategoryInput {
 }
 
 export class CategoryAgent {
-  private openai: OpenAI;
   private model: string;
 
   constructor(model?: string) {
-    this.openai = createOpenRouter();
     // 使用免費模型以降低成本
     this.model = model || 'google/gemini-2.0-flash-exp:free';
   }
@@ -56,7 +52,7 @@ export class CategoryAgent {
       const systemPrompt = this.buildSystemPrompt(input);
       const userPrompt = this.buildUserPrompt(input);
 
-      const response = await this.openai.chat.completions.create({
+      const response = await callOpenRouter({
         model: this.model,
         messages: [
           { role: 'system', content: systemPrompt },
@@ -197,7 +193,7 @@ ${existingCategories.map(cat => `- ${cat.name}${cat.description ? `: ${cat.descr
 只返回選中的分類ID，用逗號分隔。`;
 
     try {
-      const response = await this.openai.chat.completions.create({
+      const response = await callOpenRouter({
         model: this.model,
         messages: [
           { role: 'user', content: prompt }
@@ -206,11 +202,11 @@ ${existingCategories.map(cat => `- ${cat.name}${cat.description ? `: ${cat.descr
       });
 
       const result = response.choices[0]?.message?.content || '';
-      const categoryNames = result.split(',').map(s => s.trim()).filter(Boolean);
+      const categoryNames = result.split(',').map((s: string) => s.trim()).filter(Boolean);
 
       // 匹配ID
       return existingCategories
-        .filter(cat => categoryNames.some(name =>
+        .filter(cat => categoryNames.some((name: string) =>
           cat.name.toLowerCase().includes(name.toLowerCase()) ||
           name.toLowerCase().includes(cat.name.toLowerCase())
         ))

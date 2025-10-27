@@ -6,6 +6,9 @@ import { WritingAgent } from './writing-agent';
 import { ImageAgent } from './image-agent';
 import { QualityAgent } from './quality-agent';
 import { MetaAgent } from './meta-agent';
+import { CategoryAgent } from './category-agent';
+import { WordPressClient } from '@/lib/wordpress/client';
+import { PerplexityClient } from '@/lib/perplexity/client';
 import type {
   ArticleGenerationInput,
   ArticleGenerationResult,
@@ -167,6 +170,55 @@ export class ParallelOrchestrator {
       phaseTimings.qualityCheck = Date.now() - phase5Start;
       result.quality = qualityOutput;
 
+      // Phase 6: Category and Tag Selection
+      const phase6Start = Date.now();
+      const categoryAgent = new CategoryAgent(agentConfig.meta_model); // 使用免費模型
+      const categoryOutput = await categoryAgent.generateCategories({
+        title: metaOutput.seo.title,
+        content: writingOutput.html || writingOutput.markdown || '',
+        keywords: [input.keyword, ...strategyOutput.keywords.slice(0, 5)],
+        outline: strategyOutput,
+        language: input.region?.startsWith('zh') ? 'zh-TW' : 'en',
+      });
+      result.category = categoryOutput;
+
+      await this.updateJobStatus(input.articleJobId, 'category_completed', {
+        category: categoryOutput,
+      });
+
+      // Phase 7: WordPress Direct Publish (如果配置了)
+      const wordpressConfig = await this.getWordPressConfig(input.websiteId);
+      if (wordpressConfig?.enabled) {
+        try {
+          const wordpressClient = new WordPressClient(wordpressConfig);
+          const publishResult = await wordpressClient.publishArticle({
+            title: metaOutput.seo.title,
+            content: writingOutput.html || writingOutput.markdown || '',
+            excerpt: metaOutput.seo.description,
+            slug: metaOutput.slug,
+            featuredImageUrl: imageOutput?.featuredImage?.url,
+            categories: categoryOutput.categories.map(c => c.name),
+            tags: categoryOutput.tags.map(t => t.name),
+            seoTitle: metaOutput.seo.title,
+            seoDescription: metaOutput.seo.description,
+            focusKeyword: categoryOutput.focusKeywords[0] || input.keyword,
+          }, workflowSettings.auto_publish ? 'publish' : 'draft');
+
+          result.wordpress = {
+            postId: publishResult.post.id,
+            postUrl: publishResult.post.link,
+            status: publishResult.post.status,
+          };
+
+          await this.updateJobStatus(input.articleJobId, 'wordpress_published', {
+            wordpress: result.wordpress,
+          });
+        } catch (wpError) {
+          console.error('[Orchestrator] WordPress 發布失敗:', wpError);
+          // 不中斷流程，WordPress 發布失敗不影響文章生成
+        }
+      }
+
       const totalTime = Date.now() - startTime;
       const serialTime =
         phaseTimings.research +
@@ -229,7 +281,7 @@ export class ParallelOrchestrator {
       outline: strategyOutput.outline,
       count: agentConfig.image_count,
       model: agentConfig.image_model,
-      quality: agentConfig.image_quality,
+      quality: 'standard' as const,
       size: agentConfig.image_size,
     });
   }
@@ -280,7 +332,7 @@ export class ParallelOrchestrator {
     const preferences = company.ai_model_preferences || {};
 
     const smartModel = preferences.research_model || preferences.text_model || 'openai/gpt-4o';
-    const cheapModel = preferences.meta_model || 'google/gemini-flash-1.5';
+    const cheapModel = preferences.meta_model || 'google/gemini-2.0-flash-exp:free';
 
     return {
       research_model: smartModel,
@@ -326,6 +378,34 @@ export class ParallelOrchestrator {
   private getAIConfig(): AIClientConfig {
     return {
       openrouterApiKey: process.env.OPENROUTER_API_KEY,
+    };
+  }
+
+  private async getWordPressConfig(websiteId: string): Promise<any> {
+    const supabase = await this.getSupabase();
+    const { data, error } = await supabase
+      .from('websites')
+      .select('wordpress_config')
+      .eq('id', websiteId)
+      .single();
+
+    if (error || !data?.wordpress_config) {
+      return null;
+    }
+
+    // 確保配置格式正確
+    const config = data.wordpress_config;
+    if (!config.url || (!config.applicationPassword && !config.accessToken)) {
+      return null;
+    }
+
+    return {
+      enabled: true,
+      url: config.url,
+      username: config.username,
+      applicationPassword: config.applicationPassword,
+      accessToken: config.accessToken,
+      refreshToken: config.refreshToken,
     };
   }
 

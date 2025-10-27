@@ -25,6 +25,7 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
       targetWordCount: input.targetWordCount,
       sectionWordDistribution: sectionDistribution,
       keywordDensityTarget: 1.5,
+      keywords: input.researchData.relatedKeywords || [],
       relatedKeywords: input.researchData.relatedKeywords,
       lsiKeywords,
       internalLinkingStrategy: {

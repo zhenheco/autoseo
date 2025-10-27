@@ -124,7 +124,7 @@ export function calculateProfit(
   grossProfit: number;
   profitMargin: number;
 } {
-  const actualCost = INTERNAL_MODEL_STRATEGY.actualCosts[modelPreset] || 0;
+  const actualCost = (INTERNAL_MODEL_STRATEGY.actualCosts as any)[modelPreset] || 0;
   const grossProfit = customerCharge - actualCost;
   const profitMargin = customerCharge > 0 ? (grossProfit / customerCharge) * 100 : 0;
 
