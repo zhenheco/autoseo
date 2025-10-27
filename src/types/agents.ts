@@ -27,36 +27,22 @@ export interface WorkflowSettings {
 }
 
 export interface AgentConfig {
-  id: string;
-  website_id: string;
-
-  research_enabled: boolean;
   research_model: string;
-  research_temperature: number;
-  research_max_tokens: number;
-
-  strategy_enabled: boolean;
   strategy_model: string;
-  strategy_temperature: number;
-  strategy_max_tokens: number;
-
-  writing_enabled: boolean;
   writing_model: string;
-  writing_temperature: number;
-  writing_max_tokens: number;
-
-  image_enabled: boolean;
   image_model: string;
-  image_quality: 'standard' | 'hd';
+  research_temperature: number;
+  strategy_temperature: number;
+  writing_temperature: number;
+  research_max_tokens: number;
+  strategy_max_tokens: number;
+  writing_max_tokens: number;
   image_size: string;
   image_count: number;
-
   meta_enabled: boolean;
   meta_model: string;
   meta_temperature: number;
   meta_max_tokens: number;
-
-  quality_enabled: boolean;
 }
 
 export interface Keyword {
@@ -423,8 +409,5 @@ export interface AICompletionResponse {
 }
 
 export interface AIClientConfig {
-  openaiApiKey?: string;
-  anthropicApiKey?: string;
-  deepseekApiKey?: string;
-  perplexityApiKey?: string;
+  openrouterApiKey?: string;
 }

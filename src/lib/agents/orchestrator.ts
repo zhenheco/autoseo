@@ -246,14 +246,48 @@ export class ParallelOrchestrator {
 
   private async getAgentConfig(websiteId: string): Promise<AgentConfig> {
     const supabase = await createClient();
-    const { data, error } = await supabase
-      .from('agent_configs')
-      .select('*')
-      .eq('website_id', websiteId)
+
+    const { data: website, error: websiteError } = await supabase
+      .from('website_configs')
+      .select('company_id')
+      .eq('id', websiteId)
       .single();
 
-    if (error) throw error;
-    return data;
+    if (websiteError) throw websiteError;
+
+    const { data: company, error: companyError } = await supabase
+      .from('companies')
+      .select('ai_model_preferences')
+      .eq('id', website.company_id)
+      .single();
+
+    if (companyError) throw companyError;
+
+    const preferences = company.ai_model_preferences || {
+      text_model: 'anthropic/claude-3.5-sonnet',
+      image_model: 'openai/dall-e-3',
+      fallback_text_model: 'openai/gpt-4o',
+      fallback_image_model: 'openai/dall-e-2',
+    };
+
+    return {
+      research_model: preferences.text_model,
+      strategy_model: preferences.text_model,
+      writing_model: preferences.text_model,
+      image_model: preferences.image_model,
+      research_temperature: 0.3,
+      strategy_temperature: 0.7,
+      writing_temperature: 0.7,
+      research_max_tokens: 4000,
+      strategy_max_tokens: 4000,
+      writing_max_tokens: 8000,
+      image_size: '1024x1024',
+      image_count: 3,
+      meta_enabled: true,
+      meta_model: preferences.text_model,
+      meta_temperature: 0.7,
+      meta_max_tokens: 2000,
+    };
   }
 
   private async getPreviousArticles(websiteId: string): Promise<PreviousArticle[]> {
@@ -279,10 +313,7 @@ export class ParallelOrchestrator {
 
   private getAIConfig(): AIClientConfig {
     return {
-      openaiApiKey: process.env.OPENAI_API_KEY,
-      anthropicApiKey: process.env.ANTHROPIC_API_KEY,
-      deepseekApiKey: process.env.DEEPSEEK_API_KEY,
-      perplexityApiKey: process.env.PERPLEXITY_API_KEY,
+      openrouterApiKey: process.env.OPENROUTER_API_KEY,
     };
   }
 
