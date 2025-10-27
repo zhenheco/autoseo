@@ -1,62 +1,61 @@
+import { createClient } from '@/lib/supabase/server';
 import { NextResponse } from 'next/server';
-import { ModelSyncService } from '@/lib/model-sync/model-sync-service';
+import { fetchOpenRouterModels, normalizeOpenRouterModel } from '@/lib/openrouter';
 
 export async function POST(request: Request) {
+  const supabase = await createClient();
+
   try {
-    const { provider } = await request.json().catch(() => ({}));
+    const models = await fetchOpenRouterModels();
 
-    const syncService = new ModelSyncService(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      process.env.OPENAI_API_KEY!
-    );
+    let syncedCount = 0;
+    let errorCount = 0;
+    const errors: string[] = [];
 
-    let results;
+    for (const model of models) {
+      try {
+        const normalizedModel = normalizeOpenRouterModel(model);
 
-    if (provider === 'openai') {
-      results = [await syncService.syncOpenAI()];
-    } else if (provider === 'anthropic') {
-      results = [await syncService.syncAnthropic()];
-    } else {
-      results = await syncService.syncAllProviders();
+        const { error } = await supabase
+          .from('ai_models')
+          .upsert(normalizedModel, { onConflict: 'model_id' });
+
+        if (error) {
+          console.error(`Failed to sync model ${model.id}:`, error);
+          errors.push(`${model.id}: ${error.message}`);
+          errorCount++;
+        } else {
+          syncedCount++;
+        }
+      } catch (err: any) {
+        console.error(`Error processing model ${model.id}:`, err);
+        errors.push(`${model.id}: ${err.message}`);
+        errorCount++;
+      }
     }
-
-    const totalNew = results.reduce((sum, r) => sum + r.newModels, 0);
-    const totalUpdated = results.reduce((sum, r) => sum + r.updatedModels, 0);
-    const allErrors = results.flatMap((r) => r.errors);
-
-    const deprecatedCount = await syncService.markDeprecatedModels();
 
     return NextResponse.json({
       success: true,
-      summary: {
-        newModels: totalNew,
-        updatedModels: totalUpdated,
-        deprecatedModels: deprecatedCount,
-        errors: allErrors.length,
-      },
-      details: results,
-      errors: allErrors,
+      synced: syncedCount,
+      errors: errorCount,
+      total: models.length,
+      message: `同步完成: ${syncedCount} 個模型成功, ${errorCount} 個失敗`,
+      errorDetails: errors.slice(0, 10),
     });
   } catch (error: any) {
-    return NextResponse.json(
-      {
-        success: false,
-        error: error.message,
-      },
-      { status: 500 }
-    );
+    console.error('Sync error:', error);
+    return NextResponse.json({
+      success: false,
+      error: error.message
+    }, { status: 500 });
   }
 }
 
 export async function GET() {
   return NextResponse.json({
     success: true,
-    message: 'Use POST to trigger model sync',
-    usage: {
-      syncAll: 'POST /api/ai-models/sync',
-      syncOpenAI: 'POST /api/ai-models/sync { "provider": "openai" }',
-      syncAnthropic: 'POST /api/ai-models/sync { "provider": "anthropic" }',
-    },
+    message: '使用 POST 方法觸發模型同步',
+    usage: 'POST /api/ai-models/sync',
+    description: '從 OpenRouter 同步所有可用的 AI 模型',
   });
 }

@@ -10,10 +10,7 @@ async function verifyAIClient() {
   };
 
   const aiClient = new AIClient({
-    openaiApiKey: process.env.OPENAI_API_KEY,
-    anthropicApiKey: process.env.ANTHROPIC_API_KEY,
-    deepseekApiKey: process.env.DEEPSEEK_API_KEY,
-    perplexityApiKey: process.env.PERPLEXITY_API_KEY,
+    openrouterApiKey: process.env.OPENROUTER_API_KEY,
   });
 
   console.log('✅ AIClient 初始化成功');
