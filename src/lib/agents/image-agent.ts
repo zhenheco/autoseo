@@ -26,6 +26,20 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
   }
 
   protected async process(input: ImageInput): Promise<ImageOutput> {
+    if (input.model === 'none') {
+      console.warn('[ImageAgent] Image generation skipped (model is "none")');
+      return {
+        featuredImage: null as any,  // TypeScript workaround
+        contentImages: [],
+        executionInfo: {
+          model: 'none',
+          totalImages: 0,
+          executionTime: 0,
+          totalCost: 0,
+        },
+      };
+    }
+
     const featuredImage = await this.generateFeaturedImage(input);
 
     const contentImages: GeneratedImage[] = [];

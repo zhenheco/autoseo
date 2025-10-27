@@ -1,10 +1,14 @@
 import { createClient } from '@/lib/supabase/server';
+import { SupabaseClient } from '@supabase/supabase-js';
 import { ResearchAgent } from './research-agent';
 import { StrategyAgent } from './strategy-agent';
 import { WritingAgent } from './writing-agent';
 import { ImageAgent } from './image-agent';
 import { QualityAgent } from './quality-agent';
 import { MetaAgent } from './meta-agent';
+import { CategoryAgent } from './category-agent';
+import { WordPressClient } from '@/lib/wordpress/client';
+import { PerplexityClient } from '@/lib/perplexity/client';
 import type {
   ArticleGenerationInput,
   ArticleGenerationResult,
@@ -17,8 +21,21 @@ import type {
 import { AgentExecutionContext } from './base-agent';
 
 export class ParallelOrchestrator {
+  private supabaseClient?: SupabaseClient;
+
+  constructor(supabaseClient?: SupabaseClient) {
+    this.supabaseClient = supabaseClient;
+  }
+
+  private async getSupabase(): Promise<SupabaseClient> {
+    if (this.supabaseClient) {
+      return this.supabaseClient;
+    }
+    return await createClient();
+  }
+
   async execute(input: ArticleGenerationInput): Promise<ArticleGenerationResult> {
-    const supabase = await createClient();
+    const supabase = await this.getSupabase();
     const startTime = Date.now();
     const phaseTimings = {
       research: 0,
@@ -127,7 +144,7 @@ export class ParallelOrchestrator {
       phaseTimings.metaGeneration = Date.now() - phase4Start;
       result.meta = metaOutput;
 
-      if (imageOutput.featuredImage) {
+      if (imageOutput?.featuredImage) {
         metaOutput.openGraph.image = imageOutput.featuredImage.url;
         metaOutput.twitterCard.image = imageOutput.featuredImage.url;
       }
@@ -152,6 +169,55 @@ export class ParallelOrchestrator {
       });
       phaseTimings.qualityCheck = Date.now() - phase5Start;
       result.quality = qualityOutput;
+
+      // Phase 6: Category and Tag Selection
+      const phase6Start = Date.now();
+      const categoryAgent = new CategoryAgent(agentConfig.meta_model); // 使用免費模型
+      const categoryOutput = await categoryAgent.generateCategories({
+        title: metaOutput.seo.title,
+        content: writingOutput.html || writingOutput.markdown || '',
+        keywords: [input.keyword, ...strategyOutput.keywords.slice(0, 5)],
+        outline: strategyOutput,
+        language: input.region?.startsWith('zh') ? 'zh-TW' : 'en',
+      });
+      result.category = categoryOutput;
+
+      await this.updateJobStatus(input.articleJobId, 'category_completed', {
+        category: categoryOutput,
+      });
+
+      // Phase 7: WordPress Direct Publish (如果配置了)
+      const wordpressConfig = await this.getWordPressConfig(input.websiteId);
+      if (wordpressConfig?.enabled) {
+        try {
+          const wordpressClient = new WordPressClient(wordpressConfig);
+          const publishResult = await wordpressClient.publishArticle({
+            title: metaOutput.seo.title,
+            content: writingOutput.html || writingOutput.markdown || '',
+            excerpt: metaOutput.seo.description,
+            slug: metaOutput.slug,
+            featuredImageUrl: imageOutput?.featuredImage?.url,
+            categories: categoryOutput.categories.map(c => c.name),
+            tags: categoryOutput.tags.map(t => t.name),
+            seoTitle: metaOutput.seo.title,
+            seoDescription: metaOutput.seo.description,
+            focusKeyword: categoryOutput.focusKeywords[0] || input.keyword,
+          }, workflowSettings.auto_publish ? 'publish' : 'draft');
+
+          result.wordpress = {
+            postId: publishResult.post.id,
+            postUrl: publishResult.post.link,
+            status: publishResult.post.status,
+          };
+
+          await this.updateJobStatus(input.articleJobId, 'wordpress_published', {
+            wordpress: result.wordpress,
+          });
+        } catch (wpError) {
+          console.error('[Orchestrator] WordPress 發布失敗:', wpError);
+          // 不中斷流程，WordPress 發布失敗不影響文章生成
+        }
+      }
 
       const totalTime = Date.now() - startTime;
       const serialTime =
@@ -215,13 +281,13 @@ export class ParallelOrchestrator {
       outline: strategyOutput.outline,
       count: agentConfig.image_count,
       model: agentConfig.image_model,
-      quality: agentConfig.image_quality,
+      quality: 'standard' as const,
       size: agentConfig.image_size,
     });
   }
 
   private async getBrandVoice(websiteId: string): Promise<BrandVoice> {
-    const supabase = await createClient();
+    const supabase = await this.getSupabase();
     const { data, error } = await supabase
       .from('brand_voices')
       .select('*')
@@ -233,7 +299,7 @@ export class ParallelOrchestrator {
   }
 
   private async getWorkflowSettings(websiteId: string): Promise<WorkflowSettings> {
-    const supabase = await createClient();
+    const supabase = await this.getSupabase();
     const { data, error } = await supabase
       .from('workflow_settings')
       .select('*')
@@ -245,24 +311,56 @@ export class ParallelOrchestrator {
   }
 
   private async getAgentConfig(websiteId: string): Promise<AgentConfig> {
-    const supabase = await createClient();
-    const { data, error } = await supabase
-      .from('agent_configs')
-      .select('*')
-      .eq('website_id', websiteId)
+    const supabase = await this.getSupabase();
+
+    const { data: website, error: websiteError } = await supabase
+      .from('website_configs')
+      .select('company_id')
+      .eq('id', websiteId)
       .single();
 
-    if (error) throw error;
-    return data;
+    if (websiteError) throw websiteError;
+
+    const { data: company, error: companyError } = await supabase
+      .from('companies')
+      .select('ai_model_preferences')
+      .eq('id', website.company_id)
+      .single();
+
+    if (companyError) throw companyError;
+
+    const preferences = company.ai_model_preferences || {};
+
+    const smartModel = preferences.research_model || preferences.text_model || 'openai/gpt-4o';
+    const cheapModel = preferences.meta_model || 'google/gemini-2.0-flash-exp:free';
+
+    return {
+      research_model: smartModel,
+      strategy_model: smartModel,
+      writing_model: smartModel,
+      image_model: preferences.image_model || 'none',
+      research_temperature: 0.3,
+      strategy_temperature: 0.7,
+      writing_temperature: 0.7,
+      research_max_tokens: 4000,
+      strategy_max_tokens: 4000,
+      writing_max_tokens: 8000,
+      image_size: '1024x1024',
+      image_count: 3,
+      meta_enabled: true,
+      meta_model: cheapModel,
+      meta_temperature: 0.7,
+      meta_max_tokens: 2000,
+    };
   }
 
   private async getPreviousArticles(websiteId: string): Promise<PreviousArticle[]> {
-    const supabase = await createClient();
+    const supabase = await this.getSupabase();
     const { data, error } = await supabase
       .from('article_jobs')
-      .select('id, title, keywords, excerpt')
+      .select('id, keywords, generated_content')
       .eq('website_id', websiteId)
-      .eq('status', 'published')
+      .eq('status', 'completed')
       .order('created_at', { ascending: false })
       .limit(10);
 
@@ -270,19 +368,44 @@ export class ParallelOrchestrator {
 
     return (data || []).map((article: any) => ({
       id: article.id,
-      title: article.title || '',
+      title: article.keywords?.[0] || 'Untitled',
       url: `/articles/${article.id}`,
       keywords: article.keywords || [],
-      excerpt: article.excerpt || '',
+      excerpt: (article.generated_content || '').substring(0, 200),
     }));
   }
 
   private getAIConfig(): AIClientConfig {
     return {
-      openaiApiKey: process.env.OPENAI_API_KEY,
-      anthropicApiKey: process.env.ANTHROPIC_API_KEY,
-      deepseekApiKey: process.env.DEEPSEEK_API_KEY,
-      perplexityApiKey: process.env.PERPLEXITY_API_KEY,
+      openrouterApiKey: process.env.OPENROUTER_API_KEY,
+    };
+  }
+
+  private async getWordPressConfig(websiteId: string): Promise<any> {
+    const supabase = await this.getSupabase();
+    const { data, error } = await supabase
+      .from('websites')
+      .select('wordpress_config')
+      .eq('id', websiteId)
+      .single();
+
+    if (error || !data?.wordpress_config) {
+      return null;
+    }
+
+    // 確保配置格式正確
+    const config = data.wordpress_config;
+    if (!config.url || (!config.applicationPassword && !config.accessToken)) {
+      return null;
+    }
+
+    return {
+      enabled: true,
+      url: config.url,
+      username: config.username,
+      applicationPassword: config.applicationPassword,
+      accessToken: config.accessToken,
+      refreshToken: config.refreshToken,
     };
   }
 
@@ -291,7 +414,7 @@ export class ParallelOrchestrator {
     status: string,
     data: any
   ): Promise<void> {
-    const supabase = await createClient();
+    const supabase = await this.getSupabase();
     await supabase
       .from('article_jobs')
       .update({

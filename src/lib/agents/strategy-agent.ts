@@ -25,6 +25,7 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
       targetWordCount: input.targetWordCount,
       sectionWordDistribution: sectionDistribution,
       keywordDensityTarget: 1.5,
+      keywords: input.researchData.relatedKeywords || [],
       relatedKeywords: input.researchData.relatedKeywords,
       lsiKeywords,
       internalLinkingStrategy: {
@@ -73,7 +74,21 @@ ${input.researchData.topRankingFeatures.titlePatterns.join('\n')}
       format: 'json',
     });
 
-    return JSON.parse(response.content);
+    let titleOptions;
+    try {
+      const jsonMatch = response.content.match(/\[[\s\S]*\]/);
+      if (jsonMatch) {
+        titleOptions = JSON.parse(jsonMatch[0]);
+      } else {
+        titleOptions = JSON.parse(response.content);
+      }
+    } catch (error) {
+      console.error('[StrategyAgent] Title options JSON parse error:', error);
+      console.error('[StrategyAgent] Response content:', response.content);
+      throw new Error(`Failed to parse title options: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+
+    return titleOptions;
   }
 
   private async generateOutline(
@@ -101,7 +116,13 @@ ${input.researchData.competitorAnalysis
 內容缺口:
 ${input.researchData.contentGaps.join('\n')}
 
-請以 JSON 格式生成大綱:
+請以 JSON 格式生成大綱。**極度重要**：
+1. keyPoints 每個**最多 30 字**，只寫核心重點
+2. keywords 每個 section **最多 3 個**關鍵字
+3. faq **最多 2 個**問題，answerOutline 每個**最多 30 字**
+4. 所有文字務必精簡，避免冗長說明
+
+JSON 格式範例:
 {
   "introduction": {
     "hook": "吸引讀者的開場",
@@ -113,7 +134,7 @@ ${input.researchData.contentGaps.join('\n')}
     {
       "heading": "主要章節標題",
       "subheadings": ["子標題 1", "子標題 2"],
-      "keyPoints": ["重點 1", "重點 2"],
+      "keyPoints": ["簡短重點1", "簡短重點2"],
       "targetWordCount": 500,
       "keywords": ["相關關鍵字"]
     }
@@ -126,7 +147,7 @@ ${input.researchData.contentGaps.join('\n')}
   "faq": [
     {
       "question": "常見問題",
-      "answerOutline": "答案大綱"
+      "answerOutline": "簡短答案大綱"
     }
   ]
 }`;
@@ -138,28 +159,60 @@ ${input.researchData.contentGaps.join('\n')}
       format: 'json',
     });
 
-    return JSON.parse(response.content);
+    let outline;
+    try {
+      const jsonMatch = response.content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        outline = JSON.parse(jsonMatch[0]);
+      } else {
+        outline = JSON.parse(response.content);
+      }
+    } catch (error) {
+      console.error('[StrategyAgent] Outline JSON parse error:', error);
+      console.error('[StrategyAgent] Response content:', response.content);
+      throw new Error(`Failed to parse outline: ${error instanceof Error ? error.message : 'Unknown error'}`);
+    }
+
+    return outline;
   }
 
   private async generateLSIKeywords(input: StrategyInput): Promise<string[]> {
-    const prompt = `請為關鍵字 "${input.researchData.keyword}" 生成 10 個 LSI（潛在語義索引）關鍵字。
+    const fallbackKeywords = input.researchData.relatedKeywords.slice(0, 5);
 
-這些關鍵字應該:
-1. 與主關鍵字語義相關
-2. 自然融入內容
-3. 提升 SEO 效果
+    if (fallbackKeywords.length >= 5) {
+      console.log('[StrategyAgent] Using related keywords as LSI keywords (fallback)');
+      return fallbackKeywords;
+    }
 
-請以 JSON 陣列格式回答:
-["LSI 關鍵字 1", "LSI 關鍵字 2", ...]`;
+    try {
+      const prompt = `為關鍵字 "${input.researchData.keyword}" 生成 5 個 LSI 關鍵字。
 
-    const response = await this.complete(prompt, {
-      model: input.model,
-      temperature: input.temperature,
-      maxTokens: 500,
-      format: 'json',
-    });
+輸出格式（必須是純 JSON 陣列）:
+["關鍵字1", "關鍵字2", "關鍵字3", "關鍵字4", "關鍵字5"]`;
 
-    return JSON.parse(response.content);
+      const response = await this.complete(prompt, {
+        model: input.model,
+        temperature: 0.1,
+        maxTokens: 100,
+        format: 'json',
+      });
+
+      const parsed = JSON.parse(response.content);
+      const lsiKeywords = parsed.keywords || parsed;
+
+      if (!Array.isArray(lsiKeywords) || lsiKeywords.length < 5) {
+        const jsonMatch = response.content.match(/\[[\s\S]*\]/);
+        if (jsonMatch) {
+          return JSON.parse(jsonMatch[0]);
+        }
+        throw new Error('Invalid LSI keywords format');
+      }
+
+      return lsiKeywords;
+    } catch (error) {
+      console.warn('[StrategyAgent] LSI keywords generation failed, using fallback:', error);
+      return fallbackKeywords;
+    }
   }
 
   private calculateWordDistribution(

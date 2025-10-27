@@ -19,7 +19,7 @@ describe('BaseAgent', () => {
   };
 
   const aiConfig = {
-    openaiApiKey: 'test-key',
+    openrouterApiKey: 'test-key',
   };
 
   it('應該成功執行 agent 並記錄日誌', async () => {
