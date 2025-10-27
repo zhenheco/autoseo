@@ -13,9 +13,7 @@ export async function GET(request: Request) {
       .from('ai_models')
       .select('*')
       .eq('is_active', true)
-      .eq('is_deprecated', false)
-      .order('provider')
-      .order('model_id');
+      .order('sort_order');
 
     if (type) {
       query = query.eq('model_type', type);
