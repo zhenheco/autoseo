@@ -6,6 +6,7 @@ import { WritingAgent } from './writing-agent';
 import { ImageAgent } from './image-agent';
 import { QualityAgent } from './quality-agent';
 import { MetaAgent } from './meta-agent';
+import { HTMLAgent } from './html-agent';
 import { CategoryAgent } from './category-agent';
 import { WordPressClient } from '@/lib/wordpress/client';
 import { PerplexityClient } from '@/lib/perplexity/client';
@@ -153,6 +154,23 @@ export class ParallelOrchestrator {
         meta: metaOutput,
       });
 
+      const htmlAgent = new HTMLAgent(aiConfig, context);
+      const htmlOutput = await htmlAgent.execute({
+        html: writingOutput.html,
+        internalLinks: previousArticles.map((article) => ({
+          url: article.url,
+          title: article.title,
+          keywords: article.keywords,
+        })),
+        externalReferences: strategyOutput.externalReferences || [],
+      });
+
+      writingOutput.html = htmlOutput.html;
+
+      await this.updateJobStatus(input.articleJobId, 'html_completed', {
+        html: htmlOutput,
+      });
+
       const phase5Start = Date.now();
       const qualityAgent = new QualityAgent(aiConfig, context);
       const qualityOutput = await qualityAgent.execute({
@@ -172,13 +190,51 @@ export class ParallelOrchestrator {
 
       // Phase 6: Category and Tag Selection
       const phase6Start = Date.now();
-      const categoryAgent = new CategoryAgent(agentConfig.meta_model); // 使用免費模型
+
+      // 先獲取 WordPress 配置，用於抓取現有分類和標籤
+      const wordpressConfig = await this.getWordPressConfig(input.websiteId);
+
+      // 從 WordPress 抓取現有分類和標籤（如果配置了）
+      let existingCategories: Array<{ name: string; slug: string; count: number }> = [];
+      let existingTags: Array<{ name: string; slug: string; count: number }> = [];
+
+      if (wordpressConfig?.enabled) {
+        try {
+          const wordpressClient = new WordPressClient(wordpressConfig);
+          const [categories, tags] = await Promise.all([
+            wordpressClient.getCategories(),
+            wordpressClient.getTags(),
+          ]);
+
+          existingCategories = categories.map((cat) => ({
+            name: cat.name,
+            slug: cat.slug,
+            count: cat.count,
+          }));
+
+          existingTags = tags.map((tag) => ({
+            name: tag.name,
+            slug: tag.slug,
+            count: tag.count,
+          }));
+
+          console.log(
+            `[Orchestrator] 從 WordPress 獲取: ${existingCategories.length} 個分類, ${existingTags.length} 個標籤`
+          );
+        } catch (wpError) {
+          console.error('[Orchestrator] 獲取 WordPress 分類/標籤失敗:', wpError);
+        }
+      }
+
+      const categoryAgent = new CategoryAgent(agentConfig.meta_model);
       const categoryOutput = await categoryAgent.generateCategories({
         title: metaOutput.seo.title,
         content: writingOutput.html || writingOutput.markdown || '',
         keywords: [input.keyword, ...strategyOutput.keywords.slice(0, 5)],
         outline: strategyOutput,
         language: input.region?.startsWith('zh') ? 'zh-TW' : 'en',
+        existingCategories,
+        existingTags,
       });
       result.category = categoryOutput;
 
@@ -187,7 +243,6 @@ export class ParallelOrchestrator {
       });
 
       // Phase 7: WordPress Direct Publish (如果配置了)
-      const wordpressConfig = await this.getWordPressConfig(input.websiteId);
       if (wordpressConfig?.enabled) {
         try {
           const wordpressClient = new WordPressClient(wordpressConfig);
@@ -331,13 +386,18 @@ export class ParallelOrchestrator {
 
     const preferences = company.ai_model_preferences || {};
 
-    const smartModel = preferences.research_model || preferences.text_model || 'openai/gpt-4o';
-    const cheapModel = preferences.meta_model || 'google/gemini-2.0-flash-exp:free';
+    // Research/Strategy: 使用思考模式 (reasoner) 進行深度分析
+    const researchModel = preferences.research_model || 'deepseek-reasoner';
+    const strategyModel = preferences.strategy_model || 'deepseek-reasoner';
+
+    // Writing/Meta/Category: 使用非思考模式 (chat) 保持流暢性
+    const writingModel = preferences.writing_model || 'deepseek-chat';
+    const cheapModel = preferences.meta_model || 'deepseek-chat';
 
     return {
-      research_model: smartModel,
-      strategy_model: smartModel,
-      writing_model: smartModel,
+      research_model: researchModel,
+      strategy_model: strategyModel,
+      writing_model: writingModel,
       image_model: preferences.image_model || 'none',
       research_temperature: 0.3,
       strategy_temperature: 0.7,
