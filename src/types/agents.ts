@@ -101,6 +101,7 @@ export interface ResearchOutput {
   }[];
   recommendedStrategy: string;
   relatedKeywords: string[];
+  externalReferences?: ExternalReference[];
   executionInfo: {
     model: string;
     executionTime: number;
@@ -168,6 +169,7 @@ export interface StrategyOutput {
     valueProposition: string;
     competitiveAdvantages: string[];
   };
+  externalReferences?: ExternalReference[];
   executionInfo: {
     model: string;
     executionTime: number;
@@ -296,6 +298,40 @@ export interface MetaOutput {
   };
   canonicalUrl?: string;
   focusKeyphrase: string;
+  executionInfo: {
+    model: string;
+    executionTime: number;
+    tokenUsage: { input: number; output: number };
+  };
+}
+
+// HTML Agent Types
+export interface ExternalReference {
+  url: string;
+  title: string;
+  type: 'wikipedia' | 'official_docs' | 'research' | 'news' | 'blog';
+  relevantSection?: string;
+  description: string;
+}
+
+export interface InternalLink {
+  url: string;
+  title: string;
+  keywords: string[];
+}
+
+export interface HTMLInput {
+  html: string;
+  internalLinks: InternalLink[];
+  externalReferences: ExternalReference[];
+}
+
+export interface HTMLOutput {
+  html: string;
+  linkCount: {
+    internal: number;
+    external: number;
+  };
   executionInfo: {
     model: string;
     executionTime: number;

@@ -11,8 +11,6 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
 
     const outline = await this.generateOutline(input, titleOptions[0]);
 
-    const lsiKeywords = await this.generateLSIKeywords(input);
-
     const sectionDistribution = this.calculateWordDistribution(
       input.targetWordCount,
       outline
@@ -27,7 +25,7 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
       keywordDensityTarget: 1.5,
       keywords: input.researchData.relatedKeywords || [],
       relatedKeywords: input.researchData.relatedKeywords,
-      lsiKeywords,
+      lsiKeywords: input.researchData.relatedKeywords.slice(0, 5),
       internalLinkingStrategy: {
         targetSections: outline.mainSections.map((s) => s.heading),
         suggestedTopics: input.researchData.contentGaps.slice(0, 3),
@@ -42,6 +40,7 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
           '最新資訊',
         ],
       },
+      externalReferences: input.researchData.externalReferences,
       executionInfo: this.getExecutionInfo(input.model),
     };
   }
@@ -161,15 +160,44 @@ JSON 格式範例:
 
     let outline;
     try {
-      const jsonMatch = response.content.match(/\{[\s\S]*\}/);
+      let content = response.content.trim();
+
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        outline = JSON.parse(jsonMatch[0]);
-      } else {
-        outline = JSON.parse(response.content);
+        content = jsonMatch[0];
       }
+
+      let jsonStr = content;
+
+      jsonStr = jsonStr.replace(/,(\s*[}\]])/g, '$1');
+
+      if (!jsonStr.endsWith('}')) {
+        const lastValidBrace = jsonStr.lastIndexOf('}');
+        const lastValidBracket = jsonStr.lastIndexOf(']');
+        const lastValid = Math.max(lastValidBrace, lastValidBracket);
+
+        if (lastValid > 0) {
+          jsonStr = jsonStr.substring(0, lastValid + 1);
+        }
+      }
+
+      const openBraces = (jsonStr.match(/\{/g) || []).length;
+      const closeBraces = (jsonStr.match(/\}/g) || []).length;
+      const openBrackets = (jsonStr.match(/\[/g) || []).length;
+      const closeBrackets = (jsonStr.match(/\]/g) || []).length;
+
+      if (openBrackets > closeBrackets) {
+        jsonStr += ']'.repeat(openBrackets - closeBrackets);
+      }
+      if (openBraces > closeBraces) {
+        jsonStr += '}'.repeat(openBraces - closeBraces);
+      }
+
+      outline = JSON.parse(jsonStr);
     } catch (error) {
       console.error('[StrategyAgent] Outline JSON parse error:', error);
-      console.error('[StrategyAgent] Response content:', response.content);
+      console.error('[StrategyAgent] Response content (first 1000):', response.content.substring(0, 1000));
+      console.error('[StrategyAgent] Response content (last 500):', response.content.substring(Math.max(0, response.content.length - 500)));
       throw new Error(`Failed to parse outline: ${error instanceof Error ? error.message : 'Unknown error'}`);
     }
 
@@ -224,11 +252,15 @@ JSON 格式範例:
       0
     );
 
+    const introWordCount = outline.introduction?.wordCount || 200;
+    const conclusionWordCount = outline.conclusion?.wordCount || 150;
+    const faqWordCount = Math.max(0, targetWordCount - introWordCount - mainSectionsTotal - conclusionWordCount);
+
     return {
-      introduction: outline.introduction.wordCount,
+      introduction: introWordCount,
       mainSections: mainSectionsTotal,
-      conclusion: outline.conclusion.wordCount,
-      faq: Math.max(0, targetWordCount - outline.introduction.wordCount - mainSectionsTotal - outline.conclusion.wordCount),
+      conclusion: conclusionWordCount,
+      faq: faqWordCount,
     };
   }
 }
