@@ -1,5 +1,6 @@
 import { BaseAgent } from './base-agent';
 import type { ImageInput, ImageOutput, GeneratedImage } from '@/types/agents';
+import { GoogleDriveClient } from '@/lib/storage/google-drive-client';
 
 const IMAGE_MODELS = {
   'dall-e-3': {
@@ -81,10 +82,29 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
       size: input.size,
     });
 
+    let finalUrl = result.url;
+
+    if (process.env.GOOGLE_DRIVE_FOLDER_ID) {
+      try {
+        const driveClient = new GoogleDriveClient({
+          folderId: process.env.GOOGLE_DRIVE_FOLDER_ID,
+          accessToken: process.env.GOOGLE_DRIVE_ACCESS_TOKEN,
+        });
+
+        const filename = `featured-${Date.now()}.jpg`;
+        const uploaded = await driveClient.uploadFromUrl(result.url, filename);
+        finalUrl = uploaded.url;
+
+        console.log(`[ImageAgent] Uploaded featured image to Google Drive: ${uploaded.fileId}`);
+      } catch (error) {
+        console.warn('[ImageAgent] Failed to upload to Google Drive, using original URL:', error);
+      }
+    }
+
     const [width, height] = input.size.split('x').map(Number);
 
     return {
-      url: result.url,
+      url: finalUrl,
       prompt,
       altText: `${input.title} - 精選圖片`,
       width,
@@ -105,10 +125,29 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
       size: input.size,
     });
 
+    let finalUrl = result.url;
+
+    if (process.env.GOOGLE_DRIVE_FOLDER_ID) {
+      try {
+        const driveClient = new GoogleDriveClient({
+          folderId: process.env.GOOGLE_DRIVE_FOLDER_ID,
+          accessToken: process.env.GOOGLE_DRIVE_ACCESS_TOKEN,
+        });
+
+        const filename = `content-${Date.now()}.jpg`;
+        const uploaded = await driveClient.uploadFromUrl(result.url, filename);
+        finalUrl = uploaded.url;
+
+        console.log(`[ImageAgent] Uploaded content image to Google Drive: ${uploaded.fileId}`);
+      } catch (error) {
+        console.warn('[ImageAgent] Failed to upload to Google Drive, using original URL:', error);
+      }
+    }
+
     const [width, height] = input.size.split('x').map(Number);
 
     return {
-      url: result.url,
+      url: finalUrl,
       prompt,
       altText: `${section.heading} - 說明圖片`,
       suggestedSection: section.heading,

@@ -1,0 +1,147 @@
+🚀 開始執行 5 輪測試
+======================================
+
+============================================================
+🔄 第 1 輪測試
+============================================================
+
+❌ 第 1 輪測試失敗
+      at async WritingAgent.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:67:24)
+      at async WritingAgent.generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:82:22)
+      at async WritingAgent.process (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:11:22)
+      at async WritingAgent.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:45:22)
+      at async Promise.all (index 0)
+      at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:110:44)
+      at async testSimple (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/test-simple.ts:103:20)
+}
+
+❌ 測試失敗: Error: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+    at AIClient.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/ai/ai-client.ts:75:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async WritingAgent.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:67:24)
+    at async WritingAgent.generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:82:22)
+    at async WritingAgent.process (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:11:22)
+    at async WritingAgent.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:45:22)
+    at async Promise.all (index 0)
+    at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:110:44)
+    at async testSimple (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/test-simple.ts:103:20)
+錯誤: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+
+⏳ 等待 3 秒後進行下一輪...
+
+============================================================
+🔄 第 2 輪測試
+============================================================
+
+❌ 第 2 輪測試失敗
+      at async WritingAgent.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:67:24)
+      at async WritingAgent.generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:82:22)
+      at async WritingAgent.process (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:11:22)
+      at async WritingAgent.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:45:22)
+      at async Promise.all (index 0)
+      at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:110:44)
+      at async testSimple (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/test-simple.ts:103:20)
+}
+
+❌ 測試失敗: Error: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+    at AIClient.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/ai/ai-client.ts:75:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async WritingAgent.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:67:24)
+    at async WritingAgent.generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:82:22)
+    at async WritingAgent.process (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:11:22)
+    at async WritingAgent.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:45:22)
+    at async Promise.all (index 0)
+    at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:110:44)
+    at async testSimple (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/test-simple.ts:103:20)
+錯誤: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+
+⏳ 等待 3 秒後進行下一輪...
+
+============================================================
+🔄 第 3 輪測試
+============================================================
+
+❌ 第 3 輪測試失敗
+      at async WritingAgent.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:67:24)
+      at async WritingAgent.generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:82:22)
+      at async WritingAgent.process (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:11:22)
+      at async WritingAgent.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:45:22)
+      at async Promise.all (index 0)
+      at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:110:44)
+      at async testSimple (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/test-simple.ts:103:20)
+}
+
+❌ 測試失敗: Error: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+    at AIClient.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/ai/ai-client.ts:75:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async WritingAgent.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:67:24)
+    at async WritingAgent.generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:82:22)
+    at async WritingAgent.process (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:11:22)
+    at async WritingAgent.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:45:22)
+    at async Promise.all (index 0)
+    at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:110:44)
+    at async testSimple (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/test-simple.ts:103:20)
+錯誤: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+
+⏳ 等待 3 秒後進行下一輪...
+
+============================================================
+🔄 第 4 輪測試
+============================================================
+
+❌ 第 4 輪測試失敗
+      at async WritingAgent.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:67:24)
+      at async WritingAgent.generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:82:22)
+      at async WritingAgent.process (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:11:22)
+      at async WritingAgent.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:45:22)
+      at async Promise.all (index 0)
+      at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:110:44)
+      at async testSimple (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/test-simple.ts:103:20)
+}
+
+❌ 測試失敗: Error: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+    at AIClient.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/ai/ai-client.ts:75:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async WritingAgent.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:67:24)
+    at async WritingAgent.generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:82:22)
+    at async WritingAgent.process (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:11:22)
+    at async WritingAgent.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:45:22)
+    at async Promise.all (index 0)
+    at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:110:44)
+    at async testSimple (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/test-simple.ts:103:20)
+錯誤: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+
+⏳ 等待 3 秒後進行下一輪...
+
+============================================================
+🔄 第 5 輪測試
+============================================================
+
+❌ 第 5 輪測試失敗
+      at async WritingAgent.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:67:24)
+      at async WritingAgent.generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:82:22)
+      at async WritingAgent.process (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:11:22)
+      at async WritingAgent.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:45:22)
+      at async Promise.all (index 0)
+      at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:110:44)
+      at async testSimple (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/test-simple.ts:103:20)
+}
+
+❌ 測試失敗: Error: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+    at AIClient.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/ai/ai-client.ts:75:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async WritingAgent.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:67:24)
+    at async WritingAgent.generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:82:22)
+    at async WritingAgent.process (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:11:22)
+    at async WritingAgent.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:45:22)
+    at async Promise.all (index 0)
+    at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:110:44)
+    at async testSimple (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/test-simple.ts:103:20)
+錯誤: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+
+======================================
+📊 測試結果統計
+======================================
+✅ 成功: 0/5
+📄 完整日誌: test-results-20251028-205447.txt
+

@@ -13,13 +13,13 @@ const CategoryOutputSchema = z.object({
     slug: z.string().describe('分類 URL slug'),
     confidence: z.number().min(0).max(1).describe('推薦信心度 0-1'),
     reason: z.string().describe('推薦理由')
-  })).describe('推薦的分類（最多3個）'),
+  })).length(1).describe('只有 1 個主要分類'),
 
   tags: z.array(z.object({
     name: z.string().describe('標籤名稱'),
     slug: z.string().describe('標籤 URL slug'),
     relevance: z.number().min(0).max(1).describe('相關性分數 0-1')
-  })).describe('推薦的標籤（5-10個）'),
+  })).min(5).max(10).describe('推薦的標籤（5-10個）'),
 
   primaryCategory: z.string().describe('主要分類名稱'),
   focusKeywords: z.array(z.string()).describe('文章焦點關鍵字')
@@ -41,8 +41,8 @@ export class CategoryAgent {
   private model: string;
 
   constructor(model?: string) {
-    // 使用免費模型以降低成本
-    this.model = model || 'google/gemini-2.0-flash-exp:free';
+    // 使用 DeepSeek 3.1:free (與 Writing/Meta 相同配置)
+    this.model = model || 'deepseek/deepseek-chat-v3.1:free';
   }
 
   async generateCategories(input: CategoryInput): Promise<CategoryOutput> {
@@ -70,6 +70,34 @@ export class CategoryAgent {
       }
 
       const parsed = JSON.parse(content);
+
+      // 檢查並修正 AI 回傳的格式（如果是字串陣列，轉換為物件陣列）
+      if (Array.isArray(parsed.categories) && parsed.categories.length > 0) {
+        if (typeof parsed.categories[0] === 'string') {
+          // 只保留第一個分類（WordPress 只能有 1 個主要分類）
+          const categoryName = parsed.categories[0];
+          parsed.categories = [{
+            name: categoryName,
+            slug: this.slugify(categoryName),
+            confidence: 0.9,
+            reason: '主要分類'
+          }];
+        } else if (parsed.categories.length > 1) {
+          // 如果 AI 回傳多個分類物件，只保留第一個
+          parsed.categories = [parsed.categories[0]];
+        }
+      }
+
+      if (Array.isArray(parsed.tags) && parsed.tags.length > 0) {
+        if (typeof parsed.tags[0] === 'string') {
+          parsed.tags = parsed.tags.slice(0, 10).map((name: string, index: number) => ({
+            name,
+            slug: this.slugify(name),
+            relevance: 1 - (index * 0.05)
+          }));
+        }
+      }
+
       const validated = CategoryOutputSchema.parse(parsed);
 
       console.log('[CategoryAgent] 成功生成分類和標籤');
@@ -88,19 +116,63 @@ export class CategoryAgent {
 
   private buildSystemPrompt(input: CategoryInput): string {
     const lang = input.language === 'zh-TW' ? '繁體中文' : 'English';
+    const existingCategoryCount = input.existingCategories?.length || 0;
+    const maxCategories = 10;
+    const canCreateNew = existingCategoryCount < maxCategories;
+
+    let categoryInstruction = '';
+    if (canCreateNew) {
+      categoryInstruction = `
+5a. 優先使用現有分類
+5b. 如果現有分類不完全適合，可以建議 1 個新分類（因為目前有 ${existingCategoryCount} 個分類，少於 ${maxCategories} 個上限）`;
+    } else {
+      categoryInstruction = `
+5. **重要：目前已有 ${existingCategoryCount} 個分類（達到上限），請只從現有分類中選擇，不要建議新分類**`;
+    }
 
     return `你是一個專業的內容分類專家。請根據文章內容推薦最適合的分類和標籤。
 
 要求：
 1. 分析文章主題、內容深度和目標受眾
-2. 推薦 1-3 個最相關的分類（按信心度排序）
+2. **只推薦 1 個最相關的主要分類**（WordPress 文章只能有 1 個主要分類）
 3. 推薦 5-10 個相關標籤（按相關性排序）
-4. 分類應該較廣泛，標籤應該較具體
-5. 優先使用現有的分類和標籤（如果提供）
-6. 使用 ${lang} 命名
-7. slug 使用小寫英文和連字符（如: digital-marketing）
+4. 分類應該較廣泛，標籤應該較具體${categoryInstruction}
+6. 標籤可以建議新標籤，但也優先使用現有標籤
+7. 使用 ${lang} 命名
+8. slug 使用小寫英文和連字符（如: digital-marketing）
 
-輸出 JSON 格式，包含 categories、tags、primaryCategory 和 focusKeywords。`;
+**極度重要的輸出格式要求**：
+- categories 必須**只包含 1 個物件**，包含 name, slug, confidence, reason
+- tags 必須是物件陣列（5-10個），每個物件包含 name, slug, relevance
+- **絕對不要**輸出純字串陣列
+- 嚴格遵守以下 JSON 格式：
+
+\`\`\`json
+{
+  "categories": [
+    {
+      "name": "主要分類名稱",
+      "slug": "category-slug",
+      "confidence": 0.95,
+      "reason": "這是最相關的主要分類"
+    }
+  ],
+  "tags": [
+    {
+      "name": "標籤名稱",
+      "slug": "tag-slug",
+      "relevance": 0.9
+    },
+    {
+      "name": "標籤名稱2",
+      "slug": "tag-slug-2",
+      "relevance": 0.85
+    }
+  ],
+  "primaryCategory": "主要分類名稱",
+  "focusKeywords": ["關鍵字1", "關鍵字2"]
+}
+\`\`\``;
   }
 
   private buildUserPrompt(input: CategoryInput): string {

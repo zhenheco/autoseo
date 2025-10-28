@@ -74,7 +74,7 @@ export class PerplexityClient {
           'Content-Type': 'application/json'
         },
         body: JSON.stringify({
-          model: options.model || 'llama-3.1-sonar-small-128k-online',
+          model: options.model || 'sonar',
           messages: [
             {
               role: 'system',

@@ -171,11 +171,13 @@ export class QualityAgent extends BaseAgent<QualityInput, QualityOutput> {
   }
 
   private checkImages(input: QualityInput): QualityOutput['checks']['images'] {
-    const totalImages = 1 + input.images.contentImages.length;
-    const hasAltText = [
+    const images = [
       input.images.featuredImage,
       ...input.images.contentImages,
-    ].every((img) => img.altText && img.altText.length > 0);
+    ].filter((img): img is NonNullable<typeof img> => img !== null);
+
+    const totalImages = images.length;
+    const hasAltText = images.every((img) => img.altText && img.altText.length > 0);
 
     const passed = totalImages >= 2 && hasAltText;
     let score = 0;
