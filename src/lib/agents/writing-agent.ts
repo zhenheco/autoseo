@@ -10,11 +10,17 @@ export class WritingAgent extends BaseAgent<WritingInput, WritingOutput> {
   protected async process(input: WritingInput): Promise<WritingOutput> {
     const markdown = await this.generateArticle(input);
 
-    const html = await marked(markdown);
+    // 移除第一個 H1 標題（WordPress 會自動顯示文章標題）
+    const markdownWithoutH1 = markdown.replace(/^#\s+.+?\n\n?/, '');
+
+    const html = await marked(markdownWithoutH1);
+
+    // 為表格添加樣式類別
+    const styledHtml = this.addTableStyles(html);
 
     const statistics = this.calculateStatistics(markdown);
 
-    const internalLinks = this.extractInternalLinks(html, input.previousArticles);
+    const internalLinks = this.extractInternalLinks(styledHtml, input.previousArticles);
 
     const keywordUsage = this.analyzeKeywordUsage(
       markdown,
@@ -25,7 +31,7 @@ export class WritingAgent extends BaseAgent<WritingInput, WritingOutput> {
 
     return {
       markdown,
-      html,
+      html: styledHtml,
       statistics,
       internalLinks,
       keywordUsage,
@@ -37,7 +43,7 @@ export class WritingAgent extends BaseAgent<WritingInput, WritingOutput> {
   private async generateArticle(input: WritingInput): Promise<string> {
     const { strategy, brandVoice, previousArticles } = input;
 
-    const prompt = `你是一位專業的 SEO 內容作家，請根據以下策略撰寫完整的文章。
+    const prompt = `你是一位專業的 SEO 內容作家，請根據以下策略撰寫完整的文章。直接輸出 Markdown 格式的文章內容，不要使用程式碼區塊包裹。
 
 # 文章標題
 ${strategy.selectedTitle}
@@ -58,7 +64,7 @@ ${this.formatOutline(strategy.outline)}
 4. LSI 關鍵字: ${strategy.lsiKeywords.join(', ')}
 
 # 內部連結機會
-${previousArticles
+${previousArticles.length > 0 ? previousArticles
   .map(
     (a) => `
 - [${a.title}](${a.url})
@@ -66,18 +72,35 @@ ${previousArticles
   摘要: ${a.excerpt}
 `
   )
-  .join('\n')}
+  .join('\n') : '（暫無內部文章可連結）'}
+
+# 外部引用來源
+${strategy.externalReferences && strategy.externalReferences.length > 0 ? strategy.externalReferences
+  .map(
+    (ref) => `
+- 來源: ${ref.title || ref.domain}
+  URL: ${ref.url}
+  摘要: ${ref.snippet || '權威來源'}
+`
+  )
+  .join('\n') : ''}
 
 # 撰寫指南
 1. 使用 Markdown 格式
 2. 每個主要章節使用 H2 (##)
 3. 每個子章節使用 H3 (###)
-4. 自然地融入內部連結（至少 ${strategy.internalLinkingStrategy.minLinks} 個）
-5. 使用清單、表格等增加可讀性
-6. 確保內容原創且有價值
-7. 符合品牌聲音和風格
+4. **重要**：必須在文章中自然地加入外部引用連結，格式如：[來源標題](完整URL)
+5. 如果有內部文章，請融入至少 ${strategy.internalLinkingStrategy.minLinks} 個內部連結
+6. 外部連結應該作為引用來源，增加文章可信度
+7. 使用清單、表格等增加可讀性
+8. 確保內容原創且有價值
+9. 符合品牌聲音和風格
+10. **連結範例**：
+    - 內部連結：根據[先前文章標題](/article-url)的分析...
+    - 外部連結：根據[UDN報導](https://blog.udn.com/...)的研究顯示...
 
-請撰寫完整的文章（Markdown 格式）:`;
+請撰寫完整的文章（Markdown 格式），確保包含實際可點擊的內外部連結。
+**重要**：直接輸出 Markdown 文字，不要使用程式碼區塊包裹（不要使用 \`\`\`markdown），直接從 ## 標題開始。`;
 
     const response = await this.complete(prompt, {
       model: input.model,
@@ -85,7 +108,15 @@ ${previousArticles
       maxTokens: input.maxTokens,
     });
 
-    return response.content;
+    // 移除可能存在的程式碼區塊包裹
+    let content = response.content.trim();
+    if (content.startsWith('```markdown')) {
+      content = content.replace(/^```markdown\n/, '').replace(/\n```$/, '');
+    } else if (content.startsWith('```')) {
+      content = content.replace(/^```\n/, '').replace(/\n```$/, '');
+    }
+
+    return content;
   }
 
   private formatOutline(outline: WritingInput['strategy']['outline']): string {
@@ -94,7 +125,7 @@ ${previousArticles
     result += `- 背景: ${outline.introduction.context}\n`;
     result += `- 主旨: ${outline.introduction.thesis}\n\n`;
 
-    outline.mainSections.forEach((section, i) => {
+    outline.mainSections.forEach((section) => {
       result += `## ${section.heading}\n`;
       section.subheadings.forEach((sub) => {
         result += `### ${sub}\n`;
@@ -207,5 +238,22 @@ ${previousArticles
       fleschReadingEase: Math.max(0, Math.min(100, fleschReadingEase)),
       gunningFogIndex: Math.max(0, gunningFogIndex),
     };
+  }
+
+  private addTableStyles(html: string): string {
+    // 為表格添加 inline style，使其更美觀
+    return html.replace(
+      /<table>/g,
+      '<table style="width: 100%; border-collapse: collapse; margin: 20px 0;">'
+    ).replace(
+      /<th>/g,
+      '<th style="border: 1px solid #ddd; padding: 12px 15px; text-align: left; background-color: #f8f9fa; font-weight: 600;">'
+    ).replace(
+      /<td>/g,
+      '<td style="border: 1px solid #ddd; padding: 12px 15px; text-align: left;">'
+    ).replace(
+      /<tr>/g,
+      '<tr style="border-bottom: 1px solid #ddd;">'
+    );
   }
 }
