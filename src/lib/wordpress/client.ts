@@ -27,7 +27,7 @@ const WordPressPostSchema = z.object({
   sticky: z.boolean(),
   template: z.string(),
   format: z.string(),
-  meta: z.array(z.any()),
+  meta: z.object({}).passthrough(),
   categories: z.array(z.number()),
   tags: z.array(z.number())
 });
@@ -41,7 +41,7 @@ const WordPressTaxonomySchema = z.object({
   name: z.string(),
   slug: z.string(),
   taxonomy: z.enum(['category', 'post_tag']),
-  parent: z.number()
+  parent: z.number().optional()
 });
 
 // WordPress Media Schema
@@ -88,6 +88,12 @@ export interface CreatePostData {
     yoast_wpseo_title?: string;
     yoast_wpseo_metadesc?: string;
     yoast_wpseo_focuskw?: string;
+  };
+  rank_math_meta?: {
+    rank_math_title?: string;
+    rank_math_description?: string;
+    rank_math_focus_keyword?: string;
+    rank_math_robots?: string[];
   };
 }
 
@@ -154,6 +160,14 @@ export class WordPressClient {
         };
       }
 
+      // Rank Math SEO 支援
+      if (data.rank_math_meta) {
+        postData.meta = {
+          ...postData.meta,
+          ...data.rank_math_meta
+        };
+      }
+
       const response = await fetch(`${this.baseUrl}/posts`, {
         method: 'POST',
         headers: this.headers,
@@ -198,20 +212,62 @@ export class WordPressClient {
     return WordPressPostSchema.parse(post);
   }
 
+  async updateRankMathMeta(postId: number, meta: {
+    rank_math_title?: string;
+    rank_math_description?: string;
+    rank_math_focus_keyword?: string;
+    rank_math_robots?: string[];
+  }): Promise<void> {
+    console.log('[WordPress] 更新 Rank Math 元數據:', postId);
+
+    const url = `${this.config.url}/wp-json/rankmath/v1/updateMeta`;
+
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: this.headers,
+      body: JSON.stringify({
+        objectID: postId,
+        objectType: 'post',
+        meta
+      })
+    });
+
+    if (!response.ok) {
+      const error = await response.text();
+      console.error('[WordPress] Rank Math 更新失敗:', error);
+      throw new Error(`Rank Math API 錯誤: ${response.status} - ${error}`);
+    }
+
+    console.log('[WordPress] Rank Math 元數據更新成功');
+  }
+
   /**
    * 獲取所有分類
    */
   async getCategories(): Promise<WordPressTaxonomy[]> {
-    const response = await fetch(`${this.baseUrl}/categories?per_page=100`, {
-      headers: this.headers
-    });
+    const url = `${this.baseUrl}/categories?per_page=100`;
+    console.log('[WordPress] 獲取分類:', url);
 
-    if (!response.ok) {
-      throw new Error(`獲取分類失敗: ${response.status}`);
+    try {
+      const response = await fetch(url, {
+        headers: this.headers
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[WordPress] 獲取分類失敗:', response.status, errorText);
+        throw new Error(`獲取分類失敗: ${response.status} - ${errorText}`);
+      }
+
+      const categories = await response.json();
+      console.log('[WordPress] 成功獲取', categories.length, '個分類');
+      return categories.map((cat: any) => WordPressTaxonomySchema.parse(cat));
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error('[WordPress] 分類 API 錯誤:', error.message);
+      }
+      throw error;
     }
-
-    const categories = await response.json();
-    return categories.map((cat: any) => WordPressTaxonomySchema.parse(cat));
   }
 
   /**
@@ -242,16 +298,29 @@ export class WordPressClient {
    * 獲取所有標籤
    */
   async getTags(): Promise<WordPressTaxonomy[]> {
-    const response = await fetch(`${this.baseUrl}/tags?per_page=100`, {
-      headers: this.headers
-    });
+    const url = `${this.baseUrl}/tags?per_page=100`;
+    console.log('[WordPress] 獲取標籤:', url);
 
-    if (!response.ok) {
-      throw new Error(`獲取標籤失敗: ${response.status}`);
+    try {
+      const response = await fetch(url, {
+        headers: this.headers
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('[WordPress] 獲取標籤失敗:', response.status, errorText);
+        throw new Error(`獲取標籤失敗: ${response.status} - ${errorText}`);
+      }
+
+      const tags = await response.json();
+      console.log('[WordPress] 成功獲取', tags.length, '個標籤');
+      return tags.map((tag: any) => WordPressTaxonomySchema.parse(tag));
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error('[WordPress] 標籤 API 錯誤:', error.message);
+      }
+      throw error;
     }
-
-    const tags = await response.json();
-    return tags.map((tag: any) => WordPressTaxonomySchema.parse(tag));
   }
 
   /**
@@ -439,7 +508,7 @@ export class WordPressClient {
         }
       }
 
-      // 3. 創建文章
+      // 3. 創建文章（支援 Yoast SEO 和 Rank Math SEO）
       const post = await this.createPost({
         title: article.title,
         content: article.content,
@@ -453,6 +522,12 @@ export class WordPressClient {
           yoast_wpseo_title: article.seoTitle,
           yoast_wpseo_metadesc: article.seoDescription,
           yoast_wpseo_focuskw: article.focusKeyword
+        },
+        rank_math_meta: {
+          rank_math_title: article.seoTitle,
+          rank_math_description: article.seoDescription,
+          rank_math_focus_keyword: article.focusKeyword,
+          rank_math_robots: ['index', 'follow']
         }
       });
 
