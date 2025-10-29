@@ -226,7 +226,10 @@ export class ParallelOrchestrator {
         }
       }
 
-      const categoryAgent = new CategoryAgent(agentConfig.meta_model);
+      // CategoryAgent 使用 DeepSeek 自己的 API，需要移除 OpenRouter 前綴
+      const categoryModel = agentConfig.meta_model.replace('deepseek/', '');
+      console.log(`[Orchestrator] CategoryAgent model: ${agentConfig.meta_model} -> ${categoryModel}`);
+      const categoryAgent = new CategoryAgent(categoryModel);
       const categoryOutput = await categoryAgent.generateCategories({
         title: metaOutput.seo.title,
         content: writingOutput.html || writingOutput.markdown || '',
@@ -386,13 +389,15 @@ export class ParallelOrchestrator {
 
     const preferences = company.ai_model_preferences || {};
 
-    // Research/Strategy: 使用思考模式 (reasoner) 進行深度分析
-    const researchModel = preferences.research_model || 'deepseek-reasoner';
-    const strategyModel = preferences.strategy_model || 'deepseek-reasoner';
+    // Research: 使用思考模式 (reasoner) 進行深度分析
+    const researchModel = preferences.research_model || 'deepseek/deepseek-reasoner';
+
+    // Strategy: 使用 chat 模式（reasoner 不支援 JSON 格式）
+    const strategyModel = preferences.strategy_model || 'deepseek/deepseek-chat';
 
     // Writing/Meta/Category: 使用非思考模式 (chat) 保持流暢性
-    const writingModel = preferences.writing_model || 'deepseek-chat';
-    const cheapModel = preferences.meta_model || 'deepseek-chat';
+    const writingModel = preferences.writing_model || 'deepseek/deepseek-chat';
+    const cheapModel = preferences.meta_model || 'deepseek/deepseek-chat';
 
     return {
       research_model: researchModel,
@@ -444,28 +449,27 @@ export class ParallelOrchestrator {
   private async getWordPressConfig(websiteId: string): Promise<any> {
     const supabase = await this.getSupabase();
     const { data, error } = await supabase
-      .from('websites')
-      .select('wordpress_config')
+      .from('website_configs')
+      .select('wordpress_url, wp_username, wp_app_password, wp_enabled, wordpress_access_token, wordpress_refresh_token')
       .eq('id', websiteId)
       .single();
 
-    if (error || !data?.wordpress_config) {
+    if (error || !data?.wp_enabled) {
       return null;
     }
 
     // 確保配置格式正確
-    const config = data.wordpress_config;
-    if (!config.url || (!config.applicationPassword && !config.accessToken)) {
+    if (!data.wordpress_url || (!data.wp_app_password && !data.wordpress_access_token)) {
       return null;
     }
 
     return {
       enabled: true,
-      url: config.url,
-      username: config.username,
-      applicationPassword: config.applicationPassword,
-      accessToken: config.accessToken,
-      refreshToken: config.refreshToken,
+      url: data.wordpress_url,
+      username: data.wp_username,
+      applicationPassword: data.wp_app_password,
+      accessToken: data.wordpress_access_token,
+      refreshToken: data.wordpress_refresh_token,
     };
   }
 
