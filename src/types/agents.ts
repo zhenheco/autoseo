@@ -309,6 +309,8 @@ export interface MetaOutput {
 export interface ExternalReference {
   url: string;
   title: string;
+  domain?: string;
+  snippet?: string;
   type: 'wikipedia' | 'official_docs' | 'research' | 'news' | 'blog';
   relevantSection?: string;
   description: string;

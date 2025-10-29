@@ -19,6 +19,7 @@ const PerplexityResponseSchema = z.object({
     }),
     finish_reason: z.string()
   })),
+  citations: z.array(z.string()).optional(),
   usage: z.object({
     prompt_tokens: z.number(),
     completion_tokens: z.number(),
@@ -78,7 +79,7 @@ export class PerplexityClient {
           messages: [
             {
               role: 'system',
-              content: '你是一個專業的研究助手。請提供準確、最新的資訊，並引用來源。'
+              content: '你是一個專業的研究助手。請使用與用戶查詢相同的語言提供準確、最新的資訊，並引用來源。針對中文查詢，請優先搜尋繁體中文和簡體中文的資源。'
             },
             {
               role: 'user',
@@ -91,7 +92,8 @@ export class PerplexityClient {
           search_domain_filter: options.search_domain_filter,
           search_recency_filter: options.search_recency_filter,
           return_citations: options.return_citations !== false,
-          return_images: options.return_images
+          return_images: options.return_images,
+          return_related_questions: false
         })
       });
 
@@ -101,17 +103,29 @@ export class PerplexityClient {
       }
 
       const data = await response.json();
+
+      console.log('[Perplexity] Raw API response:', JSON.stringify(data, null, 2));
+
       const validated = PerplexityResponseSchema.parse(data);
 
       const content = validated.choices[0]?.message?.content || '';
 
-      // 解析引用和圖片（如果有）
-      const citations = this.extractCitations(content);
+      const apiCitations = validated.citations || [];
+      const extractedCitations = this.extractCitations(content);
+      const allCitations = [...new Set([...apiCitations, ...extractedCitations])];
+
+      console.log('[Perplexity] Citations summary:', {
+        apiCitations: apiCitations.length,
+        extractedCitations: extractedCitations.length,
+        totalUnique: allCitations.length,
+        citations: allCitations
+      });
+
       const images = this.extractImages(content);
 
       return {
         content: this.cleanContent(content),
-        citations: citations.length > 0 ? citations : undefined,
+        citations: allCitations.length > 0 ? allCitations : undefined,
         images: images.length > 0 ? images : undefined
       };
 
