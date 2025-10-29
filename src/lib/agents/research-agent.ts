@@ -8,9 +8,7 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
   }
 
   protected async process(input: ResearchInput): Promise<ResearchOutput> {
-    const serpResults = await this.fetchSERP(input.keyword, input.region);
-
-    const analysis = await this.analyzeSERP(serpResults, input);
+    const analysis = await this.analyzeKeyword(input);
 
     const externalReferences = await this.fetchExternalReferences(input.keyword);
 
@@ -29,60 +27,13 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
     };
   }
 
-  private async fetchSERP(keyword: string, region?: string): Promise<SERPResult[]> {
-    const serpApiKey = process.env.SERP_API_KEY;
-    if (!serpApiKey) {
-      console.warn('[ResearchAgent] SERP_API_KEY not configured, using mock data');
-      return this.getMockSERPResults(keyword);
-    }
-
-    const params = new URLSearchParams({
-      api_key: serpApiKey,
-      q: keyword,
-      location: region || 'Taiwan',
-      hl: 'zh-tw',
-      gl: 'tw',
-      num: '10',
-    });
-
-    const response = await fetch(`https://serpapi.com/search?${params}`);
-
-    if (!response.ok) {
-      throw new Error(`SERP API error: ${response.statusText}`);
-    }
-
-    const data = await response.json();
-    const organicResults = data.organic_results || [];
-
-    return organicResults.map((result: any, index: number) => ({
-      position: index + 1,
-      title: result.title || '',
-      url: result.link || '',
-      snippet: result.snippet || '',
-      domain: new URL(result.link || 'https://example.com').hostname,
-    }));
-  }
-
-  private async analyzeSERP(
-    serpResults: SERPResult[],
+  private async analyzeKeyword(
     input: ResearchInput
-  ): Promise<Omit<ResearchOutput, 'keyword' | 'region' | 'executionInfo'>> {
-    const prompt = `你是一位 SEO 專家，請分析以下 SERP 結果並提供深入的競爭對手分析。
+  ): Promise<Omit<ResearchOutput, 'keyword' | 'region' | 'externalReferences' | 'executionInfo'>> {
+    const prompt = `你是一位 SEO 專家，請針對關鍵字「${input.keyword}」進行深入分析。
 
 關鍵字: ${input.keyword}
 地區: ${input.region || 'Taiwan'}
-
-SERP 結果:
-${serpResults
-  .map(
-    (r, i) => `
-${i + 1}. ${r.title}
-   URL: ${r.url}
-   Domain: ${r.domain}
-   Snippet: ${r.snippet}
-`
-  )
-  .join('\n')}
 
 請提供以下分析（以 JSON 格式回答）:
 
@@ -103,9 +54,9 @@ ${i + 1}. ${r.title}
   "contentGaps": ["內容缺口 1", "內容缺口 2"],
   "competitorAnalysis": [
     {
-      "url": "競爭對手 URL",
+      "url": "相關權威網站 URL",
       "title": "標題",
-      "position": 排名位置,
+      "position": 1,
       "domain": "網域",
       "estimatedWordCount": 估計字數,
       "strengths": ["優勢 1", "優勢 2"],
@@ -119,76 +70,103 @@ ${i + 1}. ${r.title}
 
     const response = await this.complete(prompt, {
       model: input.model,
-      temperature: input.temperature,
-      maxTokens: input.maxTokens,
-      format: 'json',
+      temperature: input.temperature || 0.3,
+      maxTokens: input.maxTokens || 2000,
     });
 
     try {
-      let content = response.content.trim();
+      if (!response.content || response.content.trim() === '') {
+        console.warn('[ResearchAgent] Empty response, using fallback analysis');
+        return this.getFallbackAnalysis(input.keyword);
+      }
 
+      let content = response.content.trim();
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         content = jsonMatch[0];
       }
 
-      return JSON.parse(content);
+      const parsed = JSON.parse(content);
+
+      if (!parsed.searchIntent || !parsed.topRankingFeatures) {
+        console.warn('[ResearchAgent] Incomplete analysis, using fallback');
+        return this.getFallbackAnalysis(input.keyword);
+      }
+
+      return parsed;
+
     } catch (parseError) {
       this.log('error', 'JSON parsing failed', {
         error: parseError,
         content: response.content.substring(0, 500),
       });
-      throw new Error(`Failed to parse SERP analysis: ${parseError}`);
+      console.warn('[ResearchAgent] Parse error, using fallback analysis');
+      return this.getFallbackAnalysis(input.keyword);
     }
   }
 
-  private getMockSERPResults(keyword: string): SERPResult[] {
-    return [
-      {
-        position: 1,
-        title: `${keyword} - 官方文檔`,
-        url: 'https://example.com/docs',
-        domain: 'example.com',
-        snippet: `${keyword}的完整文檔和指南`,
+  private getFallbackAnalysis(keyword: string): Omit<ResearchOutput, 'keyword' | 'region' | 'externalReferences' | 'executionInfo'> {
+    return {
+      searchIntent: 'informational',
+      intentConfidence: 0.7,
+      topRankingFeatures: {
+        contentLength: { min: 1000, max: 3000, avg: 1500 },
+        titlePatterns: [`${keyword}完整指南`, `${keyword}教學`, `如何使用${keyword}`],
+        structurePatterns: ['介紹', '步驟說明', '常見問題', '總結'],
+        commonTopics: ['基礎概念', '實用技巧', '進階應用'],
+        commonFormats: ['教學文章', '指南', '列表文章'],
       },
-      {
-        position: 2,
-        title: `了解${keyword}的核心概念`,
-        url: 'https://blog.example.com/guide',
-        domain: 'blog.example.com',
-        snippet: `深入探討${keyword}的特性和應用`,
-      },
-      {
-        position: 3,
-        title: `${keyword}最佳實踐指南`,
-        url: 'https://dev.example.com/best-practices',
-        domain: 'dev.example.com',
-        snippet: `學習如何正確使用${keyword}`,
-      },
-    ];
+      contentGaps: ['缺少實際案例', '缺少詳細步驟', '缺少常見問題解答'],
+      competitorAnalysis: [
+        {
+          url: `https://example.com/${keyword}`,
+          title: `${keyword}相關內容`,
+          position: 1,
+          domain: 'example.com',
+          estimatedWordCount: 1500,
+          strengths: ['內容詳細', '結構清晰'],
+          weaknesses: ['缺少視覺元素', '更新不及時'],
+          uniqueAngles: ['實用技巧', '案例分析'],
+        },
+      ],
+      recommendedStrategy: `創建全面且實用的${keyword}指南，包含基礎概念、實用技巧和案例分析`,
+      relatedKeywords: [`${keyword}教學`, `${keyword}技巧`, `${keyword}入門`, `如何${keyword}`],
+    };
   }
 
   private async fetchExternalReferences(keyword: string): Promise<ExternalReference[]> {
     try {
       const perplexity = getPerplexityClient();
 
-      const query = `找出關於「${keyword}」的 5 個權威來源，包括:
+      const query = `找出關於「${keyword}」最權威和最新的 5 個外部來源，要求必須包含實際可訪問的 URL。
+
+請按以下優先順序尋找：
 1. Wikipedia 或百科全書
 2. 官方文檔或官網
 3. 學術研究或報告
-4. 知名科技新聞網站
-5. 權威部落格
+4. 知名新聞網站或媒體
+5. 權威部落格或產業網站
 
-對於每個來源，提供: URL、標題、類型、簡短描述`;
+對於每個來源，請明確列出完整的 URL 連結。`;
+
+      console.log('[ResearchAgent] 開始 Perplexity 搜尋:', keyword);
 
       const result = await perplexity.search(query, {
         return_citations: true,
-        max_tokens: 2000,
+        max_tokens: 3000,
+      });
+
+      console.log('[ResearchAgent] Perplexity 回應:', {
+        contentLength: result.content?.length || 0,
+        citationsCount: result.citations?.length || 0,
+        citations: result.citations,
       });
 
       const references: ExternalReference[] = [];
 
       if (result.citations && result.citations.length > 0) {
+        console.log('[ResearchAgent] 處理 Perplexity citations:', result.citations);
+
         for (let i = 0; i < Math.min(result.citations.length, 5); i++) {
           const url = result.citations[i];
           const type = this.categorizeUrl(url);
@@ -207,6 +185,7 @@ ${i + 1}. ${r.title}
         return this.getDefaultExternalReferences(keyword);
       }
 
+      console.log('[ResearchAgent] 成功獲取', references.length, '個外部引用');
       return references;
 
     } catch (error) {
