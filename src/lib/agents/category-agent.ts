@@ -1,10 +1,9 @@
 /**
  * CategoryAgent - 自動分析文章內容並推薦分類和標籤
- * 使用免費模型來降低成本
+ * 使用 DeepSeek API 來降低成本
  */
 
 import { z } from 'zod';
-import { callOpenRouter } from '../openrouter';
 
 // 分類和標籤輸出 Schema
 const CategoryOutputSchema = z.object({
@@ -41,8 +40,43 @@ export class CategoryAgent {
   private model: string;
 
   constructor(model?: string) {
-    // 使用 DeepSeek 3.1:free (與 Writing/Meta 相同配置)
-    this.model = model || 'deepseek/deepseek-chat-v3.1:free';
+    this.model = model || 'deepseek-chat';
+  }
+
+  private async callDeepSeekAPI(params: {
+    model: string;
+    messages: Array<{ role: string; content: string }>;
+    temperature?: number;
+    max_tokens?: number;
+    response_format?: { type: string };
+  }) {
+    const apiKey = process.env.DEEPSEEK_API_KEY;
+
+    if (!apiKey) {
+      throw new Error('DEEPSEEK_API_KEY is not set');
+    }
+
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        model: params.model,
+        messages: params.messages,
+        temperature: params.temperature ?? 0.7,
+        max_tokens: params.max_tokens,
+        response_format: params.response_format,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(`DeepSeek API error: ${JSON.stringify(error)}`);
+    }
+
+    return await response.json();
   }
 
   async generateCategories(input: CategoryInput): Promise<CategoryOutput> {
@@ -52,7 +86,7 @@ export class CategoryAgent {
       const systemPrompt = this.buildSystemPrompt(input);
       const userPrompt = this.buildUserPrompt(input);
 
-      const response = await callOpenRouter({
+      const response = await this.callDeepSeekAPI({
         model: this.model,
         messages: [
           { role: 'system', content: systemPrompt },
@@ -265,7 +299,7 @@ ${existingCategories.map(cat => `- ${cat.name}${cat.description ? `: ${cat.descr
 只返回選中的分類ID，用逗號分隔。`;
 
     try {
-      const response = await callOpenRouter({
+      const response = await this.callDeepSeekAPI({
         model: this.model,
         messages: [
           { role: 'user', content: prompt }
@@ -276,7 +310,6 @@ ${existingCategories.map(cat => `- ${cat.name}${cat.description ? `: ${cat.descr
       const result = response.choices[0]?.message?.content || '';
       const categoryNames = result.split(',').map((s: string) => s.trim()).filter(Boolean);
 
-      // 匹配ID
       return existingCategories
         .filter(cat => categoryNames.some((name: string) =>
           cat.name.toLowerCase().includes(name.toLowerCase()) ||

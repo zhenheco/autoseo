@@ -1,7 +1,9 @@
 #!/bin/bash
 
 if [ -f .env.local ]; then
-  export $(cat .env.local | grep -v '^#' | xargs)
+  set -a
+  source .env.local
+  set +a
   echo "✅ Environment variables loaded from .env.local"
 else
   echo "❌ .env.local not found"
