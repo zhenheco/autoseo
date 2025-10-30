@@ -1,5 +1,6 @@
 import { createClient } from '@/lib/supabase/server';
 import { SupabaseClient } from '@supabase/supabase-js';
+import { ArticleStorageService } from '@/lib/services/article-storage';
 import { ResearchAgent } from './research-agent';
 import { StrategyAgent } from './strategy-agent';
 import { WritingAgent } from './writing-agent';
@@ -226,8 +227,10 @@ export class ParallelOrchestrator {
         }
       }
 
-      // CategoryAgent 使用 DeepSeek 自己的 API，需要移除 OpenRouter 前綴
-      const categoryModel = agentConfig.meta_model.replace('deepseek/', '');
+      // CategoryAgent 使用 DeepSeek 自己的 API，需要移除 OpenRouter 前綴和版本後綴
+      let categoryModel = agentConfig.meta_model.replace('deepseek/', '');
+      // 移除 :free 等版本後綴，DeepSeek API 只接受 deepseek-chat 或 deepseek-reasoner
+      categoryModel = categoryModel.replace(/:.*$/, '').replace(/-v[\d.]+/, '');
       console.log(`[Orchestrator] CategoryAgent model: ${agentConfig.meta_model} -> ${categoryModel}`);
       const categoryAgent = new CategoryAgent(categoryModel);
       const categoryOutput = await categoryAgent.generateCategories({
@@ -295,6 +298,55 @@ export class ParallelOrchestrator {
 
       const finalStatus = qualityOutput.passed ? 'completed' : 'quality_failed';
       await this.updateJobStatus(input.articleJobId, finalStatus, result);
+
+      // Phase 8: 儲存文章到資料庫（如果品質通過或已發布到 WordPress）
+      if (qualityOutput.passed || result.wordpress) {
+        try {
+          const articleStorage = new ArticleStorageService(supabase);
+
+          // 取得 user ID，如果沒有認證則使用預設測試 UUID
+          const { data: userData } = await supabase.auth.getUser();
+          const userId = userData.user?.id || '00000000-0000-0000-0000-000000000000';
+
+          // 在儲存文章前，先確保 article_job 記錄存在
+          const { error: upsertError } = await supabase
+            .from('article_jobs')
+            .upsert({
+              id: input.articleJobId,
+              keywords: input.researchKeyword || '',
+              status: 'storage_preparing',
+              metadata: { message: '準備儲存文章到資料庫' },
+            }, {
+              onConflict: 'id',
+            });
+
+          if (upsertError) {
+            console.error('[Orchestrator] 建立 job 記錄失敗:', upsertError);
+            throw new Error(`建立 job 記錄失敗: ${upsertError.message}`);
+          }
+          console.log('[Orchestrator] Job 記錄已準備:', input.articleJobId);
+
+          const savedArticle = await articleStorage.saveArticleWithRecommendations({
+            articleJobId: input.articleJobId,
+            result,
+            websiteId: input.websiteId,
+            companyId: input.companyId,
+            userId,
+          });
+
+          console.log('[Orchestrator] 文章已儲存:', savedArticle.article.id);
+          console.log('[Orchestrator] 推薦數量:', savedArticle.recommendations.length);
+
+          // 更新 result 加入儲存資訊
+          result.savedArticle = {
+            id: savedArticle.article.id,
+            recommendationsCount: savedArticle.recommendations.length,
+          };
+        } catch (storageError) {
+          console.error('[Orchestrator] 文章儲存失敗:', storageError);
+          // 不中斷流程，儲存失敗不影響文章生成
+        }
+      }
 
       return result;
     } catch (error) {
@@ -479,13 +531,24 @@ export class ParallelOrchestrator {
     data: any
   ): Promise<void> {
     const supabase = await this.getSupabase();
+
+    // 使用 upsert 確保 job 記錄存在
+    //只在初始建立時需要 keywords
+    const jobData: any = {
+      id: articleJobId,
+      status,
+      metadata: data,
+    };
+
+    // 如果 data 包含 keywords，則加入
+    if (data && typeof data === 'object' && 'keywords' in data) {
+      jobData.keywords = data.keywords;
+    }
+
     await supabase
       .from('article_jobs')
-      .update({
-        status,
-        updated_at: new Date().toISOString(),
-        metadata: data,
-      })
-      .eq('id', articleJobId);
+      .upsert(jobData, {
+        onConflict: 'id',
+      });
   }
 }
