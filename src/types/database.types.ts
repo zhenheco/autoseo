@@ -6,325 +6,309 @@ export type Json =
   | { [key: string]: Json | undefined }
   | Json[]
 
-export interface Database {
+export type Database = {
+  __InternalSupabase: {
+    PostgrestVersion: "13.0.5"
+  }
   public: {
     Tables: {
-      companies: {
+      company_subscriptions: {
         Row: {
+          cancelled_at: string | null
+          company_id: string
+          created_at: string | null
+          current_period_end: string | null
+          current_period_start: string | null
           id: string
-          name: string
-          slug: string
-          owner_id: string | null
-          subscription_tier: 'free' | 'basic' | 'pro' | 'enterprise'
-          newebpay_customer_id: string | null
-          created_at: string
-          updated_at: string
+          is_lifetime: boolean | null
+          lifetime_discount: number | null
+          monthly_quota_balance: number
+          monthly_token_quota: number
+          plan_id: string
+          purchased_token_balance: number
+          status: string
+          token_balance: number
+          trial_end: string | null
+          updated_at: string | null
         }
         Insert: {
+          cancelled_at?: string | null
+          company_id: string
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
           id?: string
-          name: string
-          slug: string
-          owner_id?: string | null
-          subscription_tier?: 'free' | 'basic' | 'pro' | 'enterprise'
-          newebpay_customer_id?: string | null
-          created_at?: string
-          updated_at?: string
+          is_lifetime?: boolean | null
+          lifetime_discount?: number | null
+          monthly_quota_balance?: number
+          monthly_token_quota: number
+          plan_id: string
+          purchased_token_balance?: number
+          status: string
+          token_balance?: number
+          trial_end?: string | null
+          updated_at?: string | null
         }
         Update: {
-          id?: string
-          name?: string
-          slug?: string
-          owner_id?: string | null
-          subscription_tier?: 'free' | 'basic' | 'pro' | 'enterprise'
-          newebpay_customer_id?: string | null
-          created_at?: string
-          updated_at?: string
-        }
-      }
-      company_members: {
-        Row: {
-          id: string
-          company_id: string
-          user_id: string
-          role: 'owner' | 'admin' | 'editor' | 'writer' | 'viewer'
-          invited_at: string
-          joined_at: string | null
-          invited_by: string | null
-          status: 'pending' | 'active' | 'suspended'
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          company_id: string
-          user_id: string
-          role: 'owner' | 'admin' | 'editor' | 'writer' | 'viewer'
-          invited_at?: string
-          joined_at?: string | null
-          invited_by?: string | null
-          status?: 'pending' | 'active' | 'suspended'
-          created_at?: string
-        }
-        Update: {
-          id?: string
+          cancelled_at?: string | null
           company_id?: string
-          user_id?: string
-          role?: 'owner' | 'admin' | 'editor' | 'writer' | 'viewer'
-          invited_at?: string
-          joined_at?: string | null
-          invited_by?: string | null
-          status?: 'pending' | 'active' | 'suspended'
-          created_at?: string
-        }
-      }
-      website_configs: {
-        Row: {
-          id: string
-          company_id: string
-          website_name: string
-          wordpress_url: string
-          wordpress_oauth_client_id: string | null
-          wordpress_oauth_client_secret: string | null
-          wordpress_access_token: string | null
-          wordpress_refresh_token: string | null
-          wordpress_token_expires_at: string | null
-          brand_voice: Json
-          language: string
-          api_config: Json
-          n8n_webhook_url: string | null
-          is_active: boolean
-          created_at: string
-          updated_at: string
-          created_by: string | null
-        }
-        Insert: {
+          created_at?: string | null
+          current_period_end?: string | null
+          current_period_start?: string | null
           id?: string
-          company_id: string
-          website_name: string
-          wordpress_url: string
-          wordpress_oauth_client_id?: string | null
-          wordpress_oauth_client_secret?: string | null
-          wordpress_access_token?: string | null
-          wordpress_refresh_token?: string | null
-          wordpress_token_expires_at?: string | null
-          brand_voice?: Json
-          language?: string
-          api_config?: Json
-          n8n_webhook_url?: string | null
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-          created_by?: string | null
+          is_lifetime?: boolean | null
+          lifetime_discount?: number | null
+          monthly_quota_balance?: number
+          monthly_token_quota?: number
+          plan_id?: string
+          purchased_token_balance?: number
+          status?: string
+          token_balance?: number
+          trial_end?: string | null
+          updated_at?: string | null
         }
-        Update: {
-          id?: string
-          company_id?: string
-          website_name?: string
-          wordpress_url?: string
-          wordpress_oauth_client_id?: string | null
-          wordpress_oauth_client_secret?: string | null
-          wordpress_access_token?: string | null
-          wordpress_refresh_token?: string | null
-          wordpress_token_expires_at?: string | null
-          brand_voice?: Json
-          language?: string
-          api_config?: Json
-          n8n_webhook_url?: string | null
-          is_active?: boolean
-          created_at?: string
-          updated_at?: string
-          created_by?: string | null
-        }
-      }
-      article_jobs: {
-        Row: {
-          id: string
-          job_id: string
-          company_id: string
-          website_id: string
-          user_id: string | null
-          keywords: string[]
-          region: string
-          article_type: string
-          status: 'pending' | 'processing' | 'completed' | 'failed'
-          progress: number
-          current_step: string | null
-          result_url: string | null
-          wordpress_post_id: string | null
-          error_message: string | null
-          scheduled_publish_at: string | null
-          auto_publish: boolean
-          published_at: string | null
-          featured_image_url: string | null
-          image_generation_prompt: string | null
-          image_alt_text: string | null
-          metadata: Json | null
-          created_at: string
-          started_at: string | null
-          completed_at: string | null
-        }
-        Insert: {
-          id?: string
-          job_id: string
-          company_id: string
-          website_id: string
-          user_id?: string | null
-          keywords: string[]
-          region?: string
-          article_type?: string
-          status?: 'pending' | 'processing' | 'completed' | 'failed'
-          progress?: number
-          current_step?: string | null
-          result_url?: string | null
-          wordpress_post_id?: string | null
-          error_message?: string | null
-          scheduled_publish_at?: string | null
-          auto_publish?: boolean
-          published_at?: string | null
-          featured_image_url?: string | null
-          image_generation_prompt?: string | null
-          image_alt_text?: string | null
-          metadata?: Json | null
-          created_at?: string
-          started_at?: string | null
-          completed_at?: string | null
-        }
-        Update: {
-          id?: string
-          job_id?: string
-          company_id?: string
-          website_id?: string
-          user_id?: string | null
-          keywords?: string[]
-          region?: string
-          article_type?: string
-          status?: 'pending' | 'processing' | 'completed' | 'failed'
-          progress?: number
-          current_step?: string | null
-          result_url?: string | null
-          wordpress_post_id?: string | null
-          error_message?: string | null
-          scheduled_publish_at?: string | null
-          auto_publish?: boolean
-          published_at?: string | null
-          featured_image_url?: string | null
-          image_generation_prompt?: string | null
-          image_alt_text?: string | null
-          metadata?: Json | null
-          created_at?: string
-          started_at?: string | null
-          completed_at?: string | null
-        }
+        Relationships: [
+          {
+            foreignKeyName: "company_subscriptions_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: true
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_subscriptions_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "subscription_plans"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subscription_plans: {
         Row: {
-          id: string
-          name: string
-          display_name: string
-          price_twd: number
-          billing_period: 'monthly' | 'yearly'
-          article_limit: number | null
-          website_limit: number | null
-          team_member_limit: number | null
+          base_tokens: number
+          created_at: string | null
           features: Json
-          can_use_own_api_keys: boolean
-          priority_processing: boolean
-          is_active: boolean
-          sort_order: number | null
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          name: string
-          display_name: string
-          price_twd: number
-          billing_period?: 'monthly' | 'yearly'
-          article_limit?: number | null
-          website_limit?: number | null
-          team_member_limit?: number | null
-          features?: Json
-          can_use_own_api_keys?: boolean
-          priority_processing?: boolean
-          is_active?: boolean
-          sort_order?: number | null
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          name?: string
-          display_name?: string
-          price_twd?: number
-          billing_period?: 'monthly' | 'yearly'
-          article_limit?: number | null
-          website_limit?: number | null
-          team_member_limit?: number | null
-          features?: Json
-          can_use_own_api_keys?: boolean
-          priority_processing?: boolean
-          is_active?: boolean
-          sort_order?: number | null
-          created_at?: string
-        }
-      }
-      subscriptions: {
-        Row: {
           id: string
-          company_id: string
-          newebpay_order_no: string | null
-          plan_name: 'free' | 'basic' | 'pro' | 'enterprise'
-          status: 'active' | 'cancelled' | 'expired' | 'pending'
-          current_period_start: string | null
-          current_period_end: string | null
-          monthly_article_limit: number | null
-          articles_used_this_month: number
-          auto_renew: boolean
-          created_at: string
-          updated_at: string
+          is_lifetime: boolean | null
+          lifetime_price: number | null
+          limits: Json
+          monthly_price: number
+          name: string
+          slug: string
+          updated_at: string | null
+          yearly_discount: number | null
+          yearly_price: number | null
         }
         Insert: {
+          base_tokens: number
+          created_at?: string | null
+          features?: Json
           id?: string
-          company_id: string
-          newebpay_order_no?: string | null
-          plan_name: 'free' | 'basic' | 'pro' | 'enterprise'
-          status?: 'active' | 'cancelled' | 'expired' | 'pending'
-          current_period_start?: string | null
-          current_period_end?: string | null
-          monthly_article_limit?: number | null
-          articles_used_this_month?: number
-          auto_renew?: boolean
-          created_at?: string
-          updated_at?: string
+          is_lifetime?: boolean | null
+          lifetime_price?: number | null
+          limits?: Json
+          monthly_price: number
+          name: string
+          slug: string
+          updated_at?: string | null
+          yearly_discount?: number | null
+          yearly_price?: number | null
         }
         Update: {
+          base_tokens?: number
+          created_at?: string | null
+          features?: Json
           id?: string
-          company_id?: string
-          newebpay_order_no?: string | null
-          plan_name?: 'free' | 'basic' | 'pro' | 'enterprise'
-          status?: 'active' | 'cancelled' | 'expired' | 'pending'
-          current_period_start?: string | null
-          current_period_end?: string | null
-          monthly_article_limit?: number | null
-          articles_used_this_month?: number
-          auto_renew?: boolean
-          created_at?: string
-          updated_at?: string
+          is_lifetime?: boolean | null
+          lifetime_price?: number | null
+          limits?: Json
+          monthly_price?: number
+          name?: string
+          slug?: string
+          updated_at?: string | null
+          yearly_discount?: number | null
+          yearly_price?: number | null
         }
+        Relationships: []
       }
+      token_packages: {
+        Row: {
+          bonus_tokens: number | null
+          created_at: string | null
+          description: string | null
+          id: string
+          is_active: boolean | null
+          name: string
+          price: number
+          slug: string
+          tokens: number
+          updated_at: string | null
+        }
+        Insert: {
+          bonus_tokens?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name: string
+          price: number
+          slug: string
+          tokens: number
+          updated_at?: string | null
+        }
+        Update: {
+          bonus_tokens?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          is_active?: boolean | null
+          name?: string
+          price?: number
+          slug?: string
+          tokens?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      token_usage_logs: {
+        Row: {
+          article_id: string | null
+          charged_cost_usd: number
+          charged_tokens: number
+          company_id: string
+          created_at: string | null
+          id: string
+          input_tokens: number
+          metadata: Json | null
+          model_multiplier: number
+          model_name: string
+          model_tier: string
+          official_cost_usd: number
+          output_tokens: number
+          total_official_tokens: number
+          usage_type: string
+          user_id: string | null
+        }
+        Insert: {
+          article_id?: string | null
+          charged_cost_usd: number
+          charged_tokens: number
+          company_id: string
+          created_at?: string | null
+          id?: string
+          input_tokens: number
+          metadata?: Json | null
+          model_multiplier: number
+          model_name: string
+          model_tier: string
+          official_cost_usd: number
+          output_tokens: number
+          total_official_tokens: number
+          usage_type: string
+          user_id?: string | null
+        }
+        Update: {
+          article_id?: string | null
+          charged_cost_usd?: number
+          charged_tokens?: number
+          company_id?: string
+          created_at?: string | null
+          id?: string
+          input_tokens?: number
+          metadata?: Json | null
+          model_multiplier?: number
+          model_name?: string
+          model_tier?: string
+          official_cost_usd?: number
+          output_tokens?: number
+          total_official_tokens?: number
+          usage_type?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "token_usage_logs_article_id_fkey"
+            columns: ["article_id"]
+            isOneToOne: false
+            referencedRelation: "generated_articles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "token_usage_logs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      ai_model_pricing: {
+        Row: {
+          created_at: string | null
+          id: string
+          input_price_per_1m: number
+          is_active: boolean | null
+          model_name: string
+          multiplier: number
+          output_price_per_1m: number
+          provider: string
+          tier: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          input_price_per_1m: number
+          is_active?: boolean | null
+          model_name: string
+          multiplier?: number
+          output_price_per_1m: number
+          provider: string
+          tier: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          input_price_per_1m?: number
+          is_active?: boolean | null
+          model_name?: string
+          multiplier?: number
+          output_price_per_1m?: number
+          provider?: string
+          tier?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      [key: string]: unknown
     }
     Views: {
-      [_ in never]: never
+      [key: string]: unknown
     }
     Functions: {
-      has_permission: {
-        Args: {
-          check_user_id: string
-          check_company_id: string
-          required_permission: string
-        }
-        Returns: boolean
-      }
+      [key: string]: unknown
     }
     Enums: {
-      [_ in never]: never
+      [key: string]: unknown
+    }
+    CompositeTypes: {
+      [key: string]: unknown
     }
   }
 }
+
+type DatabaseWithoutInternals = Omit<Database, "__InternalSupabase">
+type DefaultSchema = DatabaseWithoutInternals[Extract<keyof Database, "public">]
+
+export type Tables<T extends keyof (DefaultSchema["Tables"] & DefaultSchema["Views"])> =
+  (DefaultSchema["Tables"] & DefaultSchema["Views"])[T] extends { Row: infer R } ? R : never
+
+export type TablesInsert<T extends keyof DefaultSchema["Tables"]> =
+  DefaultSchema["Tables"][T] extends { Insert: infer I } ? I : never
+
+export type TablesUpdate<T extends keyof DefaultSchema["Tables"]> =
+  DefaultSchema["Tables"][T] extends { Update: infer U } ? U : never
+
+export type Enums<T extends keyof DefaultSchema["Enums"]> = DefaultSchema["Enums"][T]

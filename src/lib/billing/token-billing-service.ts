@@ -1,0 +1,339 @@
+import { createClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/database.types'
+import { TokenCalculator } from './token-calculator'
+import type { AIClient } from '@/lib/ai/ai-client'
+import type { AICompletionOptions, AICompletionResponse } from '@/types/agents'
+
+export interface BilledCompletionResult {
+  response: AICompletionResponse
+  billing: {
+    chargedTokens: number
+    officialTokens: number
+    modelTier: 'basic' | 'advanced'
+    modelMultiplier: number
+    balanceBefore: number
+    balanceAfter: number
+  }
+}
+
+export interface TokenCheckResult {
+  sufficient: boolean
+  currentBalance: number
+  requiredTokens: number
+  deficit?: number
+}
+
+export class TokenBillingService {
+  private supabase: ReturnType<typeof createClient<Database>>
+  private calculator: TokenCalculator
+
+  constructor(supabase: ReturnType<typeof createClient<Database>>) {
+    this.supabase = supabase
+    this.calculator = new TokenCalculator(supabase)
+  }
+
+  async checkTokenBalance(
+    companyId: string,
+    estimatedTokens: number
+  ): Promise<TokenCheckResult> {
+    const result = await this.calculator.hasEnoughTokens(companyId, estimatedTokens)
+
+    if (!result.sufficient) {
+      return {
+        sufficient: false,
+        currentBalance: result.current,
+        requiredTokens: result.required,
+        deficit: result.required - result.current,
+      }
+    }
+
+    return {
+      sufficient: true,
+      currentBalance: result.current,
+      requiredTokens: result.required,
+    }
+  }
+
+  async completeWithBilling(
+    aiClient: AIClient,
+    companyId: string,
+    userId: string,
+    articleId: string | null,
+    prompt: string,
+    options: AICompletionOptions,
+    usageType: 'article_generation' | 'title_generation' | 'image_description' | 'perplexity_analysis' = 'article_generation',
+    metadata: Record<string, unknown> = {}
+  ): Promise<BilledCompletionResult> {
+    const estimateResult = await this.calculator.estimateArticleTokens({
+      wordCount: typeof prompt === 'string' ? prompt.length : 1000,
+      model: options.model,
+      includeImages: 0,
+      includeSeo: false,
+    })
+
+    const balanceCheck = await this.checkTokenBalance(companyId, estimateResult.chargedTokens)
+
+    if (!balanceCheck.sufficient) {
+      throw new Error(
+        `Token 餘額不足。當前: ${balanceCheck.currentBalance}, 需要: ${balanceCheck.requiredTokens}, 差額: ${balanceCheck.deficit}`
+      )
+    }
+
+    const response = await aiClient.complete(prompt, options)
+
+    const actualCalculation = await this.calculator.calculate({
+      modelName: response.model || options.model,
+      inputTokens: response.usage.promptTokens,
+      outputTokens: response.usage.completionTokens,
+    })
+
+    const { data: subscriptionData } = await this.supabase
+      .from('company_subscriptions')
+      .select('monthly_quota_balance, purchased_token_balance')
+      .eq('company_id', companyId)
+      .eq('status', 'active')
+      .single()
+
+    if (!subscriptionData) {
+      throw new Error('找不到有效的訂閱')
+    }
+
+    const monthlyQuotaBefore = subscriptionData.monthly_quota_balance
+    const purchasedBefore = subscriptionData.purchased_token_balance
+    const totalBefore = monthlyQuotaBefore + purchasedBefore
+
+    let remainingToDeduct = actualCalculation.chargedTokens
+    let newMonthlyQuota = monthlyQuotaBefore
+    let newPurchased = purchasedBefore
+
+    if (purchasedBefore > 0) {
+      const deductFromPurchased = Math.min(remainingToDeduct, purchasedBefore)
+      newPurchased -= deductFromPurchased
+      remainingToDeduct -= deductFromPurchased
+
+      await this.supabase.from('token_balance_changes').insert({
+        company_id: companyId,
+        change_type: 'usage',
+        amount: -deductFromPurchased,
+        balance_before: purchasedBefore,
+        balance_after: newPurchased,
+        reference_id: articleId,
+        description: `${usageType} - ${options.model} (購買)`,
+      })
+    }
+
+    if (remainingToDeduct > 0) {
+      if (monthlyQuotaBefore < remainingToDeduct) {
+        throw new Error('Token 餘額不足')
+      }
+
+      newMonthlyQuota -= remainingToDeduct
+
+      await this.supabase.from('token_balance_changes').insert({
+        company_id: companyId,
+        change_type: 'usage',
+        amount: -remainingToDeduct,
+        balance_before: monthlyQuotaBefore,
+        balance_after: newMonthlyQuota,
+        reference_id: articleId,
+        description: `${usageType} - ${options.model} (月配額)`,
+      })
+    }
+
+    const { error: balanceError } = await this.supabase
+      .from('company_subscriptions')
+      .update({
+        monthly_quota_balance: newMonthlyQuota,
+        purchased_token_balance: newPurchased,
+      })
+      .eq('company_id', companyId)
+      .eq('status', 'active')
+
+    if (balanceError) {
+      console.error('[TokenBillingService] Token 扣除失敗:', balanceError)
+      throw new Error('Token 扣除失敗，請聯繫客服')
+    }
+
+    const { error: usageError } = await this.supabase.from('token_usage_logs').insert({
+      company_id: companyId,
+      article_id: articleId,
+      user_id: userId,
+      model_name: response.model || options.model,
+      model_tier: actualCalculation.modelTier,
+      model_multiplier: actualCalculation.modelMultiplier,
+      input_tokens: actualCalculation.officialInputTokens,
+      output_tokens: actualCalculation.officialOutputTokens,
+      total_official_tokens: actualCalculation.officialTotalTokens,
+      charged_tokens: actualCalculation.chargedTokens,
+      official_cost_usd: actualCalculation.officialCostUsd,
+      charged_cost_usd: actualCalculation.chargedCostUsd,
+      usage_type: usageType,
+      metadata,
+    })
+
+    if (usageError) {
+      console.error('[TokenBillingService] 使用記錄寫入失敗:', usageError)
+    }
+
+    const totalAfter = newMonthlyQuota + newPurchased
+
+    await this.updateMonthlyStats(companyId, actualCalculation, usageType)
+
+    return {
+      response,
+      billing: {
+        chargedTokens: actualCalculation.chargedTokens,
+        officialTokens: actualCalculation.officialTotalTokens,
+        modelTier: actualCalculation.modelTier,
+        modelMultiplier: actualCalculation.modelMultiplier,
+        balanceBefore: totalBefore,
+        balanceAfter: totalAfter,
+      },
+    }
+  }
+
+  private async updateMonthlyStats(
+    companyId: string,
+    calculation: Awaited<ReturnType<typeof this.calculator.calculate>>,
+    usageType: string
+  ): Promise<void> {
+    const now = new Date()
+    const year = now.getFullYear()
+    const month = now.getMonth() + 1
+
+    const { data: existingStats } = await this.supabase
+      .from('monthly_token_usage_stats')
+      .select('*')
+      .eq('company_id', companyId)
+      .eq('year', year)
+      .eq('month', month)
+      .single()
+
+    if (existingStats) {
+      const tokensByModel = existingStats.tokens_by_model as Record<string, number> || {}
+      const tokensByUsage = existingStats.tokens_by_usage as Record<string, number> || {}
+
+      const modelKey = calculation.modelTier
+      tokensByModel[modelKey] = (tokensByModel[modelKey] || 0) + calculation.chargedTokens
+      tokensByUsage[usageType] = (tokensByUsage[usageType] || 0) + calculation.chargedTokens
+
+      await this.supabase
+        .from('monthly_token_usage_stats')
+        .update({
+          total_articles_generated: (existingStats.total_articles_generated || 0) + 1,
+          total_tokens_used: (existingStats.total_tokens_used || 0) + calculation.chargedTokens,
+          total_cost_usd: Number(existingStats.total_cost_usd || 0) + calculation.chargedCostUsd,
+          tokens_by_model: tokensByModel,
+          tokens_by_usage: tokensByUsage,
+        })
+        .eq('id', existingStats.id)
+    } else {
+      await this.supabase.from('monthly_token_usage_stats').insert({
+        company_id: companyId,
+        year,
+        month,
+        total_articles_generated: 1,
+        total_tokens_used: calculation.chargedTokens,
+        total_cost_usd: calculation.chargedCostUsd,
+        tokens_by_model: { [calculation.modelTier]: calculation.chargedTokens },
+        tokens_by_usage: { [usageType]: calculation.chargedTokens },
+      })
+    }
+  }
+
+  async estimateArticleTokens(params: {
+    wordCount: number
+    model: string
+    includeImages: number
+    includeSeo: boolean
+  }) {
+    return this.calculator.estimateArticleTokens(params)
+  }
+
+  async getAvailableModels() {
+    return this.calculator.getAvailableModels()
+  }
+
+  async getCurrentBalance(
+    companyId: string
+  ): Promise<{
+    total: number
+    monthlyQuota: number
+    purchased: number
+  }> {
+    const { data } = await this.supabase
+      .from('company_subscriptions')
+      .select('monthly_quota_balance, purchased_token_balance')
+      .eq('company_id', companyId)
+      .eq('status', 'active')
+      .single()
+
+    if (!data) {
+      return { total: 0, monthlyQuota: 0, purchased: 0 }
+    }
+
+    return {
+      total: data.monthly_quota_balance + data.purchased_token_balance,
+      monthlyQuota: data.monthly_quota_balance,
+      purchased: data.purchased_token_balance,
+    }
+  }
+
+  async getUsageHistory(
+    companyId: string,
+    options: {
+      limit?: number
+      offset?: number
+      startDate?: Date
+      endDate?: Date
+      usageType?: string
+    } = {}
+  ) {
+    let query = this.supabase
+      .from('token_usage_logs')
+      .select('*')
+      .eq('company_id', companyId)
+      .order('created_at', { ascending: false })
+
+    if (options.limit) {
+      query = query.limit(options.limit)
+    }
+
+    if (options.offset) {
+      query = query.range(options.offset, options.offset + (options.limit || 10) - 1)
+    }
+
+    if (options.startDate) {
+      query = query.gte('created_at', options.startDate.toISOString())
+    }
+
+    if (options.endDate) {
+      query = query.lte('created_at', options.endDate.toISOString())
+    }
+
+    if (options.usageType) {
+      query = query.eq('usage_type', options.usageType)
+    }
+
+    const { data, error } = await query
+
+    if (error) {
+      console.error('[TokenBillingService] 查詢使用記錄失敗:', error)
+      return []
+    }
+
+    return data || []
+  }
+
+  async getMonthlyStats(companyId: string, year: number, month: number) {
+    const { data } = await this.supabase
+      .from('monthly_token_usage_stats')
+      .select('*')
+      .eq('company_id', companyId)
+      .eq('year', year)
+      .eq('month', month)
+      .single()
+
+    return data
+  }
+}
