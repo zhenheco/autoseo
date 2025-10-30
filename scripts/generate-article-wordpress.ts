@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import { createClient } from '@supabase/supabase-js';
 import { ParallelOrchestrator } from '../src/lib/agents/orchestrator';
+import { v4 as uuidv4 } from 'uuid';
 
 async function generateArticle() {
   console.log('=== 生成文章並發布到 WordPress ===\n');
@@ -46,7 +47,7 @@ async function generateArticle() {
       keyword,
       websiteId,
       companyId,
-      articleJobId: `article-${Date.now()}`,
+      articleJobId: uuidv4(),
       region: 'zh-TW',
     });
 
@@ -82,6 +83,12 @@ async function generateArticle() {
         console.log('\n分類和標籤:');
         console.log('分類:', result.category.categories.map(c => c.name).join(', '));
         console.log('標籤:', result.category.tags.map(t => t.name).join(', '));
+      }
+
+      if (result.savedArticle) {
+        console.log('\n✅ 已儲存到資料庫');
+        console.log('文章 ID:', result.savedArticle.id);
+        console.log('推薦數量:', result.savedArticle.recommendationsCount);
       }
 
     } else {

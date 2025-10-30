@@ -14,6 +14,8 @@ export class HTMLAgent extends BaseAgent<HTMLInput, HTMLOutput> {
 
     html = this.insertExternalReferences(html, input.externalReferences);
 
+    html = this.insertFAQSchema(html);
+
     html = this.optimizeForWordPress(html);
 
     const linkCount = this.countLinks(html);
@@ -287,6 +289,73 @@ export class HTMLAgent extends BaseAgent<HTMLInput, HTMLOutput> {
       .trim()
       .replace(/[\s\W-]+/g, '-')
       .replace(/^-+|-+$/g, '');
+  }
+
+  private insertFAQSchema(html: string): string {
+    const dom = new JSDOM(html);
+    const document = dom.window.document;
+    const body = document.body;
+
+    const faqHeadings = Array.from(body.querySelectorAll('h2, h3')).filter((h) =>
+      (h.textContent || '').toLowerCase().includes('常見問題')
+    );
+
+    if (faqHeadings.length === 0) {
+      return html;
+    }
+
+    const faqSection = faqHeadings[0];
+    const faqItems: Array<{ question: string; answer: string }> = [];
+
+    let currentElement = faqSection.nextElementSibling;
+    while (currentElement && !['H1', 'H2'].includes(currentElement.tagName)) {
+      if (currentElement.tagName === 'H3') {
+        const questionText = (currentElement.textContent || '').replace(/^Q:\s*/i, '').trim();
+        let answerText = '';
+
+        let nextEl = currentElement.nextElementSibling;
+        while (nextEl && !['H1', 'H2', 'H3'].includes(nextEl.tagName)) {
+          const text = (nextEl.textContent || '').replace(/^A:\s*/i, '').trim();
+          if (text) {
+            answerText += text + ' ';
+          }
+          nextEl = nextEl.nextElementSibling;
+        }
+
+        if (questionText && answerText.trim()) {
+          faqItems.push({
+            question: questionText,
+            answer: answerText.trim(),
+          });
+        }
+      }
+      currentElement = currentElement.nextElementSibling;
+    }
+
+    if (faqItems.length === 0) {
+      return html;
+    }
+
+    const schema = {
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: faqItems.map((item) => ({
+        '@type': 'Question',
+        name: item.question,
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: item.answer,
+        },
+      })),
+    };
+
+    const scriptTag = document.createElement('script');
+    scriptTag.setAttribute('type', 'application/ld+json');
+    scriptTag.textContent = JSON.stringify(schema, null, 2);
+
+    body.appendChild(scriptTag);
+
+    return body.innerHTML;
   }
 
   private countLinks(html: string): { internal: number; external: number } {

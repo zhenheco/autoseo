@@ -154,20 +154,21 @@ ${topGaps.join('\n')}
   ]
 }`;
 
+    let apiResponse;
     try {
-      const response = await this.complete(prompt, {
+      apiResponse = await this.complete(prompt, {
         model: input.model,
         temperature: 0.5,
         maxTokens: 2500,
         format: 'json',
       });
 
-      if (!response.content || response.content.trim() === '') {
+      if (!apiResponse.content || apiResponse.content.trim() === '') {
         console.warn('[StrategyAgent] Empty outline response, using fallback');
         return this.getFallbackOutline(input.researchData.keyword, input.targetWordCount);
       }
 
-      let content = response.content.trim();
+      let content = apiResponse.content.trim();
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         content = jsonMatch[0];
@@ -207,8 +208,8 @@ ${topGaps.join('\n')}
 
     } catch (error) {
       console.error('[StrategyAgent] Outline generation failed:', error);
-      console.error('[StrategyAgent] Response (first 500):', response?.content?.substring(0, 500));
-      console.error('[StrategyAgent] Response (last 300):', response?.content?.substring(Math.max(0, (response?.content?.length || 0) - 300)));
+      console.error('[StrategyAgent] Response (first 500):', apiResponse?.content?.substring(0, 500));
+      console.error('[StrategyAgent] Response (last 300):', apiResponse?.content?.substring(Math.max(0, (apiResponse?.content?.length || 0) - 300)));
       return this.getFallbackOutline(input.researchData.keyword, input.targetWordCount);
     }
   }
