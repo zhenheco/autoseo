@@ -81,6 +81,7 @@ export class CategoryAgent {
 
   async generateCategories(input: CategoryInput): Promise<CategoryOutput> {
     console.log('[CategoryAgent] 開始分析文章分類和標籤...');
+    console.log('[CategoryAgent] 使用模型:', this.model);
 
     try {
       const systemPrompt = this.buildSystemPrompt(input);

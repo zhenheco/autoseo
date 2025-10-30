@@ -10,10 +10,15 @@ export class WritingAgent extends BaseAgent<WritingInput, WritingOutput> {
   protected async process(input: WritingInput): Promise<WritingOutput> {
     const markdown = await this.generateArticle(input);
 
-    // 移除第一個 H1 標題（WordPress 會自動顯示文章標題）
-    const markdownWithoutH1 = markdown.replace(/^#\s+.+?\n\n?/, '');
+    // 移除開頭的重複標題（H1 或 H2）
+    let cleanedMarkdown = markdown;
+    // 移除開頭的 H1
+    cleanedMarkdown = cleanedMarkdown.replace(/^#\s+.+?\n\n?/, '');
+    // 移除開頭的 H2（如果標題與文章標題相同）
+    const titleRegex = new RegExp(`^##\\s+${input.strategy.selectedTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\n\\n?`, 'm');
+    cleanedMarkdown = cleanedMarkdown.replace(titleRegex, '');
 
-    const html = await marked(markdownWithoutH1);
+    const html = await marked(cleanedMarkdown);
 
     // 為表格添加樣式類別
     const styledHtml = this.addTableStyles(html);
@@ -87,20 +92,33 @@ ${strategy.externalReferences && strategy.externalReferences.length > 0 ? strate
 
 # 撰寫指南
 1. 使用 Markdown 格式
-2. 每個主要章節使用 H2 (##)
-3. 每個子章節使用 H3 (###)
-4. **重要**：必須在文章中自然地加入外部引用連結，格式如：[來源標題](完整URL)
-5. 如果有內部文章，請融入至少 ${strategy.internalLinkingStrategy.minLinks} 個內部連結
-6. 外部連結應該作為引用來源，增加文章可信度
-7. 使用清單、表格等增加可讀性
-8. 確保內容原創且有價值
-9. 符合品牌聲音和風格
-10. **連結範例**：
+2. **不要在文章開頭重複標題**：文章標題已經在 WordPress 自動顯示，直接從第一個章節（## 導言）開始
+3. 每個主要章節使用 H2 (##)
+4. 每個子章節使用 H3 (###)
+5. **重要**：必須在文章中自然地加入外部引用連結，格式如：[來源標題](完整URL)
+6. 如果有內部文章，請融入至少 ${strategy.internalLinkingStrategy.minLinks} 個內部連結
+7. 外部連結應該作為引用來源，增加文章可信度
+8. 使用清單、表格等增加可讀性
+9. 確保內容原創且有價值
+10. 符合品牌聲音和風格
+11. **連結範例**：
     - 內部連結：根據[先前文章標題](/article-url)的分析...
     - 外部連結：根據[UDN報導](https://blog.udn.com/...)的研究顯示...
+12. **絕對禁止使用程式碼區塊**：
+    - ❌ 不要使用 \`\`\`markdown、\`\`\`json、\`\`\`javascript 等程式碼區塊
+    - ❌ 不要使用單個反引號 \` 包裹的行內程式碼
+    - ✅ 如需展示範例，使用引言區塊 (>) 或格式化文字
+    - ✅ 如需展示步驟，使用編號清單或項目符號
+13. **FAQ 格式要求**：
+    - 必須在文章結尾加入「## 常見問題」章節
+    - 包含 3-5 個常見問題
+    - 每個問題使用 H3 (### Q: 問題內容)
+    - 每個答案以「A:」開頭，並提供詳細解答
 
 請撰寫完整的文章（Markdown 格式），確保包含實際可點擊的內外部連結。
-**重要**：直接輸出 Markdown 文字，不要使用程式碼區塊包裹（不要使用 \`\`\`markdown），直接從 ## 標題開始。`;
+**重要**：
+1. 直接輸出 Markdown 文字，不要使用程式碼區塊包裹（不要使用 \`\`\`markdown）
+2. 直接從 ## 導言 開始，不要重複標題`;
 
     const response = await this.complete(prompt, {
       model: input.model,
@@ -134,11 +152,13 @@ ${strategy.externalReferences && strategy.externalReferences.length > 0 ? strate
       result += `字數: ${section.targetWordCount}\n\n`;
     });
 
-    result += '## 結論\n';
-    result += `- 總結: ${outline.conclusion.summary}\n`;
-    result += `- 行動呼籲: ${outline.conclusion.callToAction}\n\n`;
+    if (outline.conclusion) {
+      result += '## 結論\n';
+      result += `- 總結: ${outline.conclusion.summary}\n`;
+      result += `- 行動呼籲: ${outline.conclusion.callToAction}\n\n`;
+    }
 
-    if (outline.faq.length > 0) {
+    if (outline.faq && outline.faq.length > 0) {
       result += '## 常見問題\n';
       outline.faq.forEach((faq) => {
         result += `### ${faq.question}\n`;
@@ -241,8 +261,10 @@ ${strategy.externalReferences && strategy.externalReferences.length > 0 ? strate
   }
 
   private addTableStyles(html: string): string {
+    let result = html;
+
     // 為表格添加 inline style，使其更美觀
-    return html.replace(
+    result = result.replace(
       /<table>/g,
       '<table style="width: 100%; border-collapse: collapse; margin: 20px 0;">'
     ).replace(
@@ -254,6 +276,36 @@ ${strategy.externalReferences && strategy.externalReferences.length > 0 ? strate
     ).replace(
       /<tr>/g,
       '<tr style="border-bottom: 1px solid #ddd;">'
+    );
+
+    // 移除程式碼區塊，轉換為引言區塊
+    result = this.convertCodeBlocksToBlockquotes(result);
+
+    return result;
+  }
+
+  private convertCodeBlocksToBlockquotes(html: string): string {
+    // 處理 <pre><code> 程式碼區塊
+    // 將程式碼區塊轉換為格式化的引言區塊或純文字
+    return html.replace(
+      /<pre><code(?:\s+class="[^"]*")?>([\s\S]*?)<\/code><\/pre>/g,
+      (_match, code) => {
+        // 解碼 HTML 實體
+        const decodedCode = code
+          .replace(/&lt;/g, '<')
+          .replace(/&gt;/g, '>')
+          .replace(/&quot;/g, '"')
+          .replace(/&#39;/g, "'")
+          .replace(/&amp;/g, '&');
+
+        // 將程式碼轉換為格式化的引言區塊
+        const lines = decodedCode.split('\n').filter((line: string) => line.trim());
+        const formattedLines = lines.map((line: string) =>
+          `<p style="margin: 0; padding-left: 20px; font-family: monospace; background: #f5f5f5;">${line}</p>`
+        ).join('');
+
+        return `<blockquote style="border-left: 4px solid #ddd; margin: 20px 0; padding: 10px 20px; background: #f9f9f9;">${formattedLines}</blockquote>`;
+      }
     );
   }
 }
