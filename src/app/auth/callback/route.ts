@@ -8,9 +8,22 @@ export async function GET(request: NextRequest) {
 
   if (code) {
     const supabase = await createClient()
-    await supabase.auth.exchangeCodeForSession(code)
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+
+    if (error) {
+      console.error('Auth callback error:', error)
+      return NextResponse.redirect(
+        requestUrl.origin + '/login?error=' + encodeURIComponent(error.message)
+      )
+    }
+
+    if (data.session) {
+      console.log('Session created successfully for user:', data.user?.email)
+      return NextResponse.redirect(requestUrl.origin + '/dashboard')
+    }
   }
 
-  // URL to redirect to after sign in process completes
-  return NextResponse.redirect(requestUrl.origin + '/dashboard')
+  return NextResponse.redirect(
+    requestUrl.origin + '/login?error=' + encodeURIComponent('驗證失敗，請重新註冊')
+  )
 }

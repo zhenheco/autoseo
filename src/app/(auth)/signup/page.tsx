@@ -12,11 +12,13 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 
-export default function SignupPage({
+export default async function SignupPage({
   searchParams,
 }: {
-  searchParams: { error?: string }
+  searchParams: Promise<{ error?: string }>
 }) {
+  const params = await searchParams
+
   return (
     <div className="flex min-h-screen items-center justify-center bg-gray-50 px-4">
       <Card className="w-full max-w-md">
@@ -28,9 +30,9 @@ export default function SignupPage({
         </CardHeader>
         <form action={signup}>
           <CardContent className="space-y-4">
-            {searchParams.error && (
+            {params.error && (
               <div className="rounded-md bg-destructive/15 p-3 text-sm text-destructive">
-                {searchParams.error}
+                {params.error}
               </div>
             )}
             <div className="space-y-2">
