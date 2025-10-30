@@ -1,53 +1,38 @@
-import { getUser, getUserPrimaryCompany } from '@/lib/auth'
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 
-async function getCompanyArticles(companyId: string) {
-  const supabase = await createClient()
+async function getAllArticles() {
+  const supabase = createAdminClient()
 
   const { data, error } = await supabase
-    .from('article_jobs')
+    .from('generated_articles')
     .select(`
-      *,
-      website_configs (
-        site_name,
-        site_url
-      )
+      id,
+      title,
+      slug,
+      status,
+      quality_score,
+      word_count,
+      reading_time,
+      wordpress_post_url,
+      created_at,
+      published_at
     `)
-    .eq('company_id', companyId)
     .order('created_at', { ascending: false })
-    .limit(50)
+    .limit(100)
 
-  if (error) throw error
+  if (error) {
+    console.error('獲取文章失敗:', error)
+    return []
+  }
 
-  return data
+  return data || []
 }
 
-export default async function ArticlesPage({
-  searchParams,
-}: {
-  searchParams: { error?: string; success?: string }
-}) {
-  const user = await getUser()
-
-  if (!user) {
-    redirect('/login')
-  }
-
-  const company = await getUserPrimaryCompany(user.id)
-
-  if (!company) {
-    return (
-      <div className="container mx-auto p-8">
-        <p className="text-muted-foreground">您尚未加入任何公司</p>
-      </div>
-    )
-  }
-
-  const articles = await getCompanyArticles(company.id)
+export default async function ArticlesPage() {
+  const articles = await getAllArticles()
 
   return (
     <div className="container mx-auto p-8">
@@ -63,62 +48,68 @@ export default async function ArticlesPage({
         </Link>
       </div>
 
-      {/* 訊息顯示 */}
-      {searchParams.error && (
-        <div className="mb-6 rounded-md bg-destructive/15 p-4 text-sm text-destructive">
-          {searchParams.error}
-        </div>
-      )}
-      {searchParams.success && (
-        <div className="mb-6 rounded-md bg-green-500/15 p-4 text-sm text-green-700">
-          {searchParams.success}
-        </div>
-      )}
-
-      {/* 文章列表 */}
       <Card>
         <CardHeader>
           <CardTitle>所有文章</CardTitle>
-          <CardDescription>查看和管理您的文章</CardDescription>
+          <CardDescription>共 {articles.length} 篇文章</CardDescription>
         </CardHeader>
         <CardContent>
           {articles && articles.length > 0 ? (
             <div className="divide-y">
-              {articles.map((article: any) => (
+              {articles.map((article) => (
                 <div key={article.id} className="py-4">
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
-                      <h3 className="font-medium">{article.article_title || '未命名文章'}</h3>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        網站: {article.website_configs?.site_name || '未知'}
-                      </p>
+                      <h3 className="font-medium">{article.title || '未命名文章'}</h3>
+                      <div className="flex gap-4 mt-2 text-sm text-muted-foreground">
+                        <span>字數: {article.word_count || 0}</span>
+                        <span>閱讀時間: {article.reading_time || 0} 分鐘</span>
+                        {article.quality_score && (
+                          <span>品質: {article.quality_score}分</span>
+                        )}
+                      </div>
                       <p className="text-xs text-muted-foreground mt-1">
                         建立時間: {new Date(article.created_at).toLocaleString('zh-TW')}
                       </p>
+                      {article.published_at && (
+                        <p className="text-xs text-muted-foreground">
+                          發布時間: {new Date(article.published_at).toLocaleString('zh-TW')}
+                        </p>
+                      )}
                     </div>
                     <div className="flex items-center gap-3">
                       <span
                         className={`text-xs px-3 py-1 rounded-full ${
                           article.status === 'published'
                             ? 'bg-green-100 text-green-700'
-                            : article.status === 'failed'
-                            ? 'bg-red-100 text-red-700'
-                            : article.status === 'processing'
+                            : article.status === 'reviewed'
                             ? 'bg-blue-100 text-blue-700'
-                            : 'bg-gray-100 text-gray-700'
+                            : article.status === 'archived'
+                            ? 'bg-gray-100 text-gray-700'
+                            : 'bg-yellow-100 text-yellow-700'
                         }`}
                       >
                         {article.status === 'published' && '已發布'}
-                        {article.status === 'failed' && '失敗'}
-                        {article.status === 'processing' && '處理中'}
-                        {article.status === 'draft' && '草稿'}
-                        {article.status === 'pending' && '待處理'}
+                        {article.status === 'reviewed' && '已審核'}
+                        {article.status === 'generated' && '已生成'}
+                        {article.status === 'archived' && '已封存'}
                       </span>
-                      <Link href={`/dashboard/articles/${article.id}`}>
+                      <Link href={`/dashboard/articles/${article.id}/preview`}>
                         <Button variant="outline" size="sm">
-                          查看
+                          預覽
                         </Button>
                       </Link>
+                      {article.wordpress_post_url && (
+                        <a
+                          href={article.wordpress_post_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                        >
+                          <Button variant="ghost" size="sm">
+                            查看發布
+                          </Button>
+                        </a>
+                      )}
                     </div>
                   </div>
                 </div>
