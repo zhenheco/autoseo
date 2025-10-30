@@ -440,6 +440,10 @@ export interface ArticleGenerationResult {
     postUrl: string;
     status: string;
   };
+  savedArticle?: {
+    id: string;
+    recommendationsCount: number;
+  };
   executionStats: {
     totalTime: number;
     phases: {
