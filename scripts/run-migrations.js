@@ -9,7 +9,11 @@ const migrations = [
   '20250101000000_init_schema.sql',
   '20250101000001_advanced_features.sql',
   '20250101000003_rls_policies_only.sql',
-  '20250127000001_update_ai_models_for_openrouter.sql'
+  '20250127000001_update_ai_models_for_openrouter.sql',
+  '20251030090000_transition_to_token_billing.sql',
+  '20251030100000_token_billing_system.sql',
+  '20251030110000_token_billing_mvp.sql',
+  '20251030120000_final_pricing_update.sql'
 ];
 
 async function runMigrations() {
@@ -80,14 +84,18 @@ async function runMigrations() {
 
     // 檢查預設訂閱方案
     const plansResult = await client.query(`
-      SELECT name, display_name, price_twd, article_limit
+      SELECT name, slug, monthly_price, base_tokens, is_lifetime, lifetime_price
       FROM subscription_plans
-      ORDER BY sort_order;
+      ORDER BY is_lifetime, monthly_price;
     `);
 
     console.log('\n💰 訂閱方案:');
     plansResult.rows.forEach(plan => {
-      console.log(`  - ${plan.display_name} (${plan.name}): NT$ ${plan.price_twd} - ${plan.article_limit} 篇/月`);
+      if (plan.is_lifetime) {
+        console.log(`  - ${plan.name} (終身): NT$ ${plan.lifetime_price} - ${plan.base_tokens} tokens/月`);
+      } else {
+        console.log(`  - ${plan.name}: NT$ ${plan.monthly_price}/月 - ${plan.base_tokens} tokens`);
+      }
     });
 
     // 檢查角色權限
