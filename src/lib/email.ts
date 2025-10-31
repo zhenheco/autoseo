@@ -1,4 +1,6 @@
 import nodemailer from 'nodemailer'
+import type { Transporter } from 'nodemailer'
+import type SMTPTransport from 'nodemailer/lib/smtp-transport'
 
 interface EmailOptions {
   to: string
@@ -7,7 +9,7 @@ interface EmailOptions {
   text?: string
 }
 
-const createTransporter = () => {
+const createTransporter = (): Transporter<SMTPTransport.SentMessageInfo> => {
   const gmailUser = process.env.GMAIL_USER
   const gmailAppPassword = process.env.GMAIL_APP_PASSWORD
 
@@ -15,13 +17,24 @@ const createTransporter = () => {
     throw new Error('Gmail credentials not configured. Please set GMAIL_USER and GMAIL_APP_PASSWORD in .env.local')
   }
 
-  return nodemailer.createTransporter({
-    service: 'gmail',
+  const transportConfig = {
+    host: 'smtp.gmail.com',
+    port: 587,
+    secure: false,
     auth: {
       user: gmailUser,
       pass: gmailAppPassword,
     },
-  })
+  }
+
+  const mailer = nodemailer as any
+  if (typeof mailer.createTransport === 'function') {
+    return mailer.createTransport(transportConfig)
+  } else if (mailer.default && typeof mailer.default.createTransport === 'function') {
+    return mailer.default.createTransport(transportConfig)
+  } else {
+    throw new Error('Unable to create nodemailer transport')
+  }
 }
 
 export async function sendEmail({ to, subject, html, text }: EmailOptions): Promise<boolean> {
