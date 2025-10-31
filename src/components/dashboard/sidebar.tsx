@@ -11,7 +11,6 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
-  Building2,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -32,11 +31,6 @@ const navItems = [
     title: '網站管理',
     href: '/dashboard/websites',
     icon: Globe,
-  },
-  {
-    title: '公司管理',
-    href: '/dashboard/companies',
-    icon: Building2,
   },
   {
     title: '設定',
