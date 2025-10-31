@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { sendCompanyInvitationEmail } from '@/lib/email'
 
 interface RouteParams {
@@ -100,7 +100,8 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       joined_at: memberStatus === 'active' ? new Date().toISOString() : null,
     }
 
-    const { data: newMember, error } = await supabase
+    const adminClient = createAdminClient()
+    const { data: newMember, error } = await adminClient
       .from('company_members')
       .insert(invitationData)
       .select()
