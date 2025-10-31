@@ -97,9 +97,9 @@ async function generateArticle() {
       if (result.quality) {
         console.log('\n品質檢查結果:');
         console.log('通過:', result.quality.passed);
-        console.log('分數:', result.quality.overallScore);
-        if (result.quality.issues?.length > 0) {
-          console.log('問題:', result.quality.issues.map(i => `${i.severity}: ${i.message}`).join('\n  '));
+        console.log('分數:', result.quality.score);
+        if (result.quality.recommendations?.length > 0) {
+          console.log('建議:', result.quality.recommendations.map(r => `${r.priority}: ${r.message}`).join('\n  '));
         }
       }
     }

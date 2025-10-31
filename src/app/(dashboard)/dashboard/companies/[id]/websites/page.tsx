@@ -36,7 +36,9 @@ export default async function CompanyWebsitesPage({ params }: PageProps) {
     redirect('/dashboard')
   }
 
-  const company = memberData.companies as { name: string; subscription_tier: string }
+  const company = Array.isArray(memberData.companies)
+    ? memberData.companies[0] as { name: string; subscription_tier: string }
+    : memberData.companies as { name: string; subscription_tier: string }
 
   const { data: websites, error: websitesError } = await supabase
     .from('website_configs')

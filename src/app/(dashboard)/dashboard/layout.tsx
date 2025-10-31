@@ -3,7 +3,20 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { signOut } from '@/lib/auth'
+import { User, LogOut, Settings, Bell, Search } from 'lucide-react'
+import { Sidebar } from '@/components/dashboard/sidebar'
+import { Input } from '@/components/ui/input'
+import { DashboardLayoutClient, MainContent } from '@/components/dashboard/dashboard-layout-client'
 
 async function logout() {
   'use server'
@@ -25,52 +38,80 @@ export default async function DashboardLayout({
   // }
 
   return (
-    <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-50 border-b border-border/40 bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4">
-          <Link href="/dashboard" className="flex items-center gap-2 text-xl font-bold hover:opacity-80 transition-opacity">
-            Auto Pilot SEO
-          </Link>
+    <DashboardLayoutClient>
+      <div className="min-h-screen bg-background">
+        <Sidebar />
 
-          <nav className="flex items-center gap-2">
-            <Link
-              href="/dashboard"
-              className="px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-accent/50 rounded-lg transition-all"
-            >
-              Dashboard
-            </Link>
-            <Link
-              href="/dashboard/websites"
-              className="px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-accent/50 rounded-lg transition-all"
-            >
-              網站管理
-            </Link>
-            <Link
-              href="/dashboard/articles"
-              className="px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-accent/50 rounded-lg transition-all"
-            >
-              文章管理
-            </Link>
-            <Link
-              href="/dashboard/settings"
-              className="px-4 py-2 text-sm font-medium text-foreground/80 hover:text-foreground hover:bg-accent/50 rounded-lg transition-all"
-            >
-              設定
-            </Link>
+        <MainContent>
+          <header className="sticky top-0 z-30 h-16 border-b border-border bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60">
+            <div className="flex h-full items-center justify-between px-6">
+              <div className="flex items-center gap-4 flex-1">
+                <div className="relative w-full max-w-md">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="搜尋功能、文章或設定..."
+                    className="pl-9 h-9 bg-muted/50 border-border focus:bg-background transition-colors"
+                  />
+                </div>
+              </div>
 
-            <div className="ml-2 flex items-center gap-2">
-              <ThemeToggle />
-              <form action={logout}>
-                <Button variant="outline" size="sm" type="submit">
-                  登出
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 relative hover:bg-accent"
+                >
+                  <Bell className="h-5 w-5 text-foreground/70" />
+                  <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-primary rounded-full" />
                 </Button>
-              </form>
-            </div>
-          </nav>
-        </div>
-      </header>
 
-      <main>{children}</main>
-    </div>
+                <ThemeToggle />
+
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-9 w-9 rounded-full ring-2 ring-primary/20 hover:ring-primary/40 transition-all">
+                      <Avatar className="h-9 w-9">
+                        <AvatarImage src="" alt="User avatar" />
+                        <AvatarFallback className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground">
+                          <User className="h-4 w-4" />
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">使用者帳號</p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          user@example.com
+                        </p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/dashboard/settings" className="cursor-pointer">
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>設定</span>
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <form action={logout} className="w-full">
+                        <button type="submit" className="flex w-full items-center cursor-pointer">
+                          <LogOut className="mr-2 h-4 w-4" />
+                          <span>登出</span>
+                        </button>
+                      </form>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
+            </div>
+          </header>
+
+          <main className="p-6">{children}</main>
+        </MainContent>
+      </div>
+    </DashboardLayoutClient>
   )
 }

@@ -93,9 +93,9 @@ async function runMultiRoundTest(rounds: number = 5) {
       result.contentLength = output.writing?.html?.length || 0;
       result.categoryCount = output.category?.categories?.length || 0;
       result.tagCount = output.category?.tags?.length || 0;
-      result.researchModel = output.research?.executionInfo?.modelUsed;
-      result.strategyModel = output.strategy?.executionInfo?.modelUsed;
-      result.writingModel = output.writing?.executionInfo?.modelUsed;
+      result.researchModel = output.research?.executionInfo?.model;
+      result.strategyModel = output.strategy?.executionInfo?.model;
+      result.writingModel = output.writing?.executionInfo?.model;
 
       console.log(`\n✅ 第 ${i + 1} 輪測試完成`);
       console.log(`  - 總時間: ${(result.totalTime / 1000).toFixed(2)}s`);
