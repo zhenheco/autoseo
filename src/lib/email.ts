@@ -11,16 +11,14 @@ interface EmailOptions {
 
 const createTransporter = (): Transporter<SMTPTransport.SentMessageInfo> => {
   const gmailUser = process.env.GMAIL_USER
-  const gmailAppPassword = process.env.GMAIL_APP_PASSWORD
+  const gmailAppPassword = process.env.GMAIL_APP_PASSWORD?.replace(/\s+/g, '')
 
   if (!gmailUser || !gmailAppPassword) {
     throw new Error('Gmail credentials not configured. Please set GMAIL_USER and GMAIL_APP_PASSWORD in .env.local')
   }
 
   const transportConfig = {
-    host: 'smtp.gmail.com',
-    port: 587,
-    secure: false,
+    service: 'gmail',
     auth: {
       user: gmailUser,
       pass: gmailAppPassword,
