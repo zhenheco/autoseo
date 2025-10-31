@@ -1,8 +1,8 @@
 import { getUser, getUserCompanies } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Badge } from '@/components/ui/badge'
-import { Building2, Rocket, TrendingUp, ArrowRight } from 'lucide-react'
+import { StatCard } from '@/components/dashboard/stat-card'
+import { FileText, Globe, TrendingUp, DollarSign, Users, ArrowUpRight } from 'lucide-react'
 
 export default async function DashboardPage() {
   const user = await getUser()
@@ -13,177 +13,186 @@ export default async function DashboardPage() {
 
   const companies = await getUserCompanies(user.id)
 
-  const hasAgencyPlan = companies?.some(
-    (member: any) => member.companies.subscription_tier === 'agency'
-  )
-
   return (
-    <div className="min-h-screen bg-gradient-to-b from-background to-background/80">
-      <div className="container mx-auto px-4 py-8 md:px-6 lg:px-8">
-        <div className="mb-12 space-y-3">
-          <div className="flex items-center gap-3">
-            <div className="h-12 w-12 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
-              <TrendingUp className="h-6 w-6 text-primary" />
-            </div>
-            <div>
-              <h1 className="text-4xl font-bold tracking-tight">Dashboard</h1>
-              <p className="text-muted-foreground/80 mt-1">
-                歡迎回來，<span className="text-foreground/60">{user.email}</span>
-              </p>
-            </div>
-          </div>
+    <div className="space-y-6">
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">Dashboard</h1>
+          <p className="text-muted-foreground mt-1">
+            歡迎回來，{user.email}
+          </p>
         </div>
-
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {hasAgencyPlan && (
-          <Card className="group border-muted/40 bg-card/50 backdrop-blur-sm hover:border-primary/20 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
-            <CardHeader className="space-y-3">
-              <div className="flex items-center gap-3">
-                <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-blue-500/20 to-blue-600/5 flex items-center justify-center">
-                  <Building2 className="h-5 w-5 text-blue-500" />
-                </div>
-                <div>
-                  <CardTitle className="text-lg">您的公司</CardTitle>
-                  <CardDescription className="text-xs">管理您所屬的組織</CardDescription>
-                </div>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {companies && companies.length > 0 ? (
-                <div className="space-y-3">
-                  {companies.map((member: any) => (
-                    <a
-                      key={member.companies.id}
-                      href={`/dashboard/companies/${member.companies.id}/websites`}
-                      className="group/item flex items-center justify-between p-4 rounded-xl border border-border/50 bg-background/50 hover:bg-accent/50 hover:border-primary/30 cursor-pointer transition-all duration-200"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-foreground/90 group-hover/item:text-primary transition-colors truncate">
-                          {member.companies.name}
-                        </p>
-                        <p className="text-xs text-muted-foreground/60 mt-1">
-                          {member.role}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-3 ml-3">
-                        <Badge variant="secondary" className="text-xs font-medium bg-primary/10 text-primary border-0">
-                          {member.companies.subscription_tier.toUpperCase()}
-                        </Badge>
-                        <ArrowRight className="h-4 w-4 text-muted-foreground/40 group-hover/item:text-primary group-hover/item:translate-x-0.5 transition-all" />
-                      </div>
-                    </a>
-                  ))}
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <p className="text-sm text-muted-foreground/60">尚未加入任何公司</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
-
-        <Card className="group border-muted/40 bg-card/50 backdrop-blur-sm hover:border-primary/20 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
-          <CardHeader className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-emerald-500/20 to-emerald-600/5 flex items-center justify-center">
-                <Rocket className="h-5 w-5 text-emerald-500" />
-              </div>
-              <div>
-                <CardTitle className="text-lg">快速開始</CardTitle>
-                <CardDescription className="text-xs">開始使用平台功能</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <a
-              href="/dashboard/getting-started"
-              className="group/link flex items-center gap-3 p-4 rounded-xl border border-border/50 bg-gradient-to-br from-background/50 to-accent/20 hover:from-accent/50 hover:to-accent/30 hover:border-primary/30 cursor-pointer transition-all duration-200"
-            >
-              <div className="flex-1">
-                <p className="font-semibold text-foreground/90 group-hover/link:text-primary transition-colors mb-1">
-                  查看完整設定指南
-                </p>
-                <p className="text-xs text-muted-foreground/60">
-                  一步步引導您完成網站設定到文章生成
-                </p>
-              </div>
-              <ArrowRight className="h-5 w-5 text-muted-foreground/40 group-hover/link:text-primary group-hover/link:translate-x-1 transition-all" />
-            </a>
-          </CardContent>
-        </Card>
-
-        <Card className="border-muted/40 bg-card/50 backdrop-blur-sm">
-          <CardHeader className="space-y-3">
-            <div className="flex items-center gap-3">
-              <div className="h-10 w-10 rounded-lg bg-gradient-to-br from-violet-500/20 to-violet-600/5 flex items-center justify-center">
-                <TrendingUp className="h-5 w-5 text-violet-500" />
-              </div>
-              <div>
-                <CardTitle className="text-lg">訂閱狀態</CardTitle>
-                <CardDescription className="text-xs">當前方案資訊</CardDescription>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
-                <span className="text-sm text-muted-foreground/80">方案</span>
-                <Badge variant="outline" className="font-semibold bg-primary/10 text-primary border-primary/20">
-                  {companies && companies.length > 0
-                    ? (companies[0] as any).companies.subscription_tier.toUpperCase()
-                    : 'FREE'}
-                </Badge>
-              </div>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-background/50">
-                <span className="text-sm text-muted-foreground/80">本月額度</span>
-                <span className="font-semibold text-foreground/90">0 / 5 篇</span>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
-      <div className="mt-12">
-        <Card className="border-muted/40 bg-card/50 backdrop-blur-sm">
-          <CardHeader className="space-y-3">
-            <div>
-              <CardTitle className="text-2xl font-bold">最近的文章</CardTitle>
-              <CardDescription className="text-sm mt-2">查看您最近生成的文章</CardDescription>
-            </div>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+        <StatCard
+          title="總文章數"
+          value="24"
+          icon={FileText}
+          trend={{ value: 12.5, isPositive: true }}
+          iconBgColor="bg-primary/10"
+          iconColor="text-primary"
+        />
+        <StatCard
+          title="網站數量"
+          value="3"
+          icon={Globe}
+          trend={{ value: 8.2, isPositive: true }}
+          iconBgColor="bg-success/10"
+          iconColor="text-success"
+        />
+        <StatCard
+          title="月流量"
+          value="15.2K"
+          icon={TrendingUp}
+          trend={{ value: 23.1, isPositive: true }}
+          iconBgColor="bg-secondary/10"
+          iconColor="text-secondary"
+        />
+        <StatCard
+          title="轉換率"
+          value="3.24%"
+          icon={DollarSign}
+          trend={{ value: -2.4, isPositive: false }}
+          iconBgColor="bg-warning/10"
+          iconColor="text-warning"
+        />
+      </div>
+
+      <div className="grid gap-8 lg:grid-cols-2">
+        <Card className="border-border/50 bg-card/50 backdrop-blur-sm rounded-xl card-hover-lift hover:shadow-xl hover:border-primary/50 transition-all">
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold">7 天流量趨勢</CardTitle>
+            <CardDescription className="text-base">近一週的網站訪問數據</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="flex flex-col items-center justify-center py-16 px-4">
-              <div className="h-16 w-16 rounded-full bg-muted/50 flex items-center justify-center mb-4">
-                <svg
-                  className="h-8 w-8 text-muted-foreground/40"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                  />
-                </svg>
+            <div className="h-[300px] flex items-center justify-center text-muted-foreground glass-effect rounded-xl">
+              <p className="text-base">圖表組件將在此顯示</p>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-border/50 bg-card/50 backdrop-blur-sm rounded-xl card-hover-lift hover:shadow-xl hover:border-primary/50 transition-all">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-2xl font-bold">最近活動</CardTitle>
+                <CardDescription className="text-base">您的最新操作記錄</CardDescription>
               </div>
-              <h3 className="text-lg font-semibold text-foreground/90 mb-2">還沒有任何文章</h3>
-              <p className="text-sm text-muted-foreground/60 text-center max-w-sm mb-6">
-                開始生成您的第一篇文章，讓 AI 幫助您創作高品質的 SEO 內容
-              </p>
-              <a href="/dashboard/articles/generate">
-                <button className="px-6 py-2.5 bg-primary text-primary-foreground rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center gap-2">
-                  <Rocket className="h-4 w-4" />
-                  開始生成文章
-                </button>
+              <a
+                href="/dashboard/activity"
+                className="text-base text-primary hover:text-primary/80 font-semibold flex items-center gap-1 transition-all hover:gap-2"
+              >
+                查看全部
+                <ArrowUpRight className="h-5 w-5" />
               </a>
             </div>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {[
+                {
+                  action: '生成新文章',
+                  title: 'Next.js 14 最佳實踐指南',
+                  time: '2 小時前',
+                  status: 'success',
+                },
+                {
+                  action: '更新網站',
+                  title: '技術部落格',
+                  time: '5 小時前',
+                  status: 'info',
+                },
+                {
+                  action: '發布文章',
+                  title: 'React Server Components 深入解析',
+                  time: '1 天前',
+                  status: 'success',
+                },
+              ].map((activity, i) => (
+                <div
+                  key={i}
+                  className="flex items-start gap-4 p-4 rounded-xl hover:bg-accent/50 transition-all duration-200 hover:translate-x-1"
+                >
+                  <div className="mt-1.5">
+                    <div
+                      className={`h-3 w-3 rounded-full ${
+                        activity.status === 'success'
+                          ? 'bg-success'
+                          : 'bg-primary'
+                      }`}
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-base font-semibold text-foreground">
+                      {activity.action}
+                    </p>
+                    <p className="text-base text-muted-foreground truncate mt-1">
+                      {activity.title}
+                    </p>
+                  </div>
+                  <span className="text-sm text-muted-foreground whitespace-nowrap">
+                    {activity.time}
+                  </span>
+                </div>
+              ))}
+            </div>
           </CardContent>
         </Card>
       </div>
-      </div>
+
+      <Card className="border-border/50 bg-card/50 backdrop-blur-sm rounded-xl card-hover-lift hover:shadow-xl hover:border-primary/50 transition-all">
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold">快速操作</CardTitle>
+          <CardDescription className="text-base">常用功能快捷入口</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
+            {[
+              {
+                title: '生成文章',
+                description: '使用 AI 創建 SEO 文章',
+                href: '/dashboard/articles/generate',
+                icon: FileText,
+              },
+              {
+                title: '管理網站',
+                description: '新增或編輯網站',
+                href: '/dashboard/websites',
+                icon: Globe,
+              },
+              {
+                title: '查看分析',
+                description: '檢視流量數據',
+                href: '/dashboard/analytics',
+                icon: TrendingUp,
+              },
+              {
+                title: '團隊管理',
+                description: '邀請成員協作',
+                href: '/dashboard/team',
+                icon: Users,
+              },
+            ].map((action) => (
+              <a
+                key={action.title}
+                href={action.href}
+                className="flex flex-col gap-3 p-5 rounded-xl border border-border/50 hover:border-primary/50 hover:bg-accent/50 transition-all duration-300 group card-hover-lift"
+              >
+                <action.icon className="h-6 w-6 text-primary group-hover:scale-125 transition-transform duration-300" />
+                <div>
+                  <h3 className="font-bold text-base text-foreground group-hover:text-primary transition-colors">
+                    {action.title}
+                  </h3>
+                  <p className="text-sm text-muted-foreground mt-1.5">
+                    {action.description}
+                  </p>
+                </div>
+              </a>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }

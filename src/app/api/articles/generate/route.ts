@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { v4 as uuidv4 } from 'uuid'
-import { Orchestrator } from '@/lib/agents/orchestrator'
+import { ParallelOrchestrator } from '@/lib/agents/orchestrator'
 
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { keyword } = body
+    const { keyword, companyId, websiteId, region } = body
 
     if (!keyword || typeof keyword !== 'string' || keyword.trim().length === 0) {
       return NextResponse.json(
@@ -14,15 +14,25 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    if (!companyId || !websiteId) {
+      return NextResponse.json(
+        { error: '缺少必要參數：companyId 或 websiteId' },
+        { status: 400 }
+      )
+    }
+
     const articleJobId = uuidv4()
 
-    const orchestrator = new Orchestrator()
+    const orchestrator = new ParallelOrchestrator()
 
     setImmediate(async () => {
       try {
         await orchestrator.execute({
           articleJobId,
-          researchKeyword: keyword.trim(),
+          companyId,
+          websiteId,
+          keyword: keyword.trim(),
+          region: region || 'zh-TW',
         })
       } catch (error) {
         console.error('[API] 文章生成失敗:', error)

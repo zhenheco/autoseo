@@ -148,19 +148,27 @@ export async function getUserPrimaryCompany(userId: string) {
 export async function getCompanyMembers(companyId: string) {
   const supabase = await createClient()
 
-  const { data, error } = await supabase
+  const { data: members, error } = await supabase
     .from('company_members')
-    .select(`
-      *,
-      users:user_id (
-        email
-      )
-    `)
+    .select('id, user_id, role, status, joined_at')
     .eq('company_id', companyId)
     .eq('status', 'active')
     .order('joined_at', { ascending: false })
 
   if (error) throw error
 
-  return data
+  if (!members) return []
+
+  const userIds = members.map(m => m.user_id)
+  const { data: users } = await supabase
+    .from('users')
+    .select('id, email')
+    .in('id', userIds)
+
+  const membersWithUsers = members.map(member => ({
+    ...member,
+    users: users?.find(u => u.id === member.user_id) || null
+  }))
+
+  return membersWithUsers
 }

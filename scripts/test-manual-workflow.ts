@@ -30,7 +30,7 @@ async function testManualWorkflow() {
     console.log('1️⃣ 檢查資料庫連線...');
     const { data: websites, error: websiteError } = await supabase
       .from('website_configs')
-      .select('id, wordpress_url, name')
+      .select('id, wordpress_url, name, company_id')
       .limit(1);
 
     if (websiteError) {
@@ -97,9 +97,9 @@ async function testManualWorkflow() {
     if (result.quality) {
       console.log('\n📝 品質檢查結果：');
       console.log(`  - 通過: ${result.quality.passed ? '✅' : '❌'}`);
-      console.log(`  - 分數: ${result.quality.overallScore}/100`);
-      console.log(`  - 字數: ${result.quality.metrics.wordCount}`);
-      console.log(`  - 關鍵字密度: ${(result.quality.metrics.keywordDensity * 100).toFixed(2)}%`);
+      console.log(`  - 分數: ${result.quality.score}/100`);
+      console.log(`  - 字數: ${result.quality.checks.wordCount.actual}`);
+      console.log(`  - 關鍵字密度: ${(result.quality.checks.keywordDensity.actual * 100).toFixed(2)}%`);
     }
 
     if (result.wordpress) {
@@ -111,7 +111,7 @@ async function testManualWorkflow() {
 
     if (result.category) {
       console.log('\n🏷️  分類和標籤：');
-      console.log(`  - 主要分類: ${result.category.primaryCategory}`);
+      console.log(`  - 主要分類: ${result.category.categories[0]?.name || 'N/A'}`);
       console.log(`  - 分類: ${result.category.categories.map(c => c.name).join(', ')}`);
       console.log(`  - 標籤: ${result.category.tags.slice(0, 5).map(t => t.name).join(', ')}`);
     }

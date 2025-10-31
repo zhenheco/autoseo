@@ -3,7 +3,9 @@
 import { useState, useEffect } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Tables } from '@/types/database.types'
-import { Check } from 'lucide-react'
+import { Check, Sparkles, Zap, ArrowRight } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { Badge } from '@/components/ui/badge'
 
 type SubscriptionPlan = Tables<'subscription_plans'>
 
@@ -52,9 +54,11 @@ export default function PricingPage() {
 
     if (features.wordpress_sites) {
       items.push(
-        <li key="sites" className="flex items-start gap-2">
-          <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-          <span>
+        <li key="sites" className="flex items-start gap-3 group">
+          <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
+            <Check className="h-3 w-3 text-primary" />
+          </div>
+          <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
             {features.wordpress_sites === -1
               ? '無限 WordPress 網站'
               : `${features.wordpress_sites} 個 WordPress 網站`}
@@ -65,9 +69,11 @@ export default function PricingPage() {
 
     if (features.images_per_article) {
       items.push(
-        <li key="images" className="flex items-start gap-2">
-          <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-          <span>
+        <li key="images" className="flex items-start gap-3 group">
+          <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
+            <Check className="h-3 w-3 text-primary" />
+          </div>
+          <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
             {features.images_per_article === -1
               ? '無限圖片/文章'
               : `每篇 ${features.images_per_article} 張圖片`}
@@ -78,18 +84,24 @@ export default function PricingPage() {
 
     if (features.batch_generation) {
       items.push(
-        <li key="batch" className="flex items-start gap-2">
-          <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-          <span>{features.batch_generation} 篇批量生成</span>
+        <li key="batch" className="flex items-start gap-3 group">
+          <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
+            <Check className="h-3 w-3 text-primary" />
+          </div>
+          <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+            {features.batch_generation} 篇批量生成
+          </span>
         </li>
       )
     }
 
     if (features.team_members) {
       items.push(
-        <li key="team" className="flex items-start gap-2">
-          <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-          <span>
+        <li key="team" className="flex items-start gap-3 group">
+          <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
+            <Check className="h-3 w-3 text-primary" />
+          </div>
+          <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
             {features.team_members === -1
               ? '無限團隊成員'
               : `${features.team_members} 個團隊成員`}
@@ -100,9 +112,13 @@ export default function PricingPage() {
 
     if (features.seo_score) {
       items.push(
-        <li key="seo" className="flex items-start gap-2">
-          <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-          <span>SEO 分數優化</span>
+        <li key="seo" className="flex items-start gap-3 group">
+          <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
+            <Check className="h-3 w-3 text-primary" />
+          </div>
+          <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+            SEO 分數優化
+          </span>
         </li>
       )
     }
@@ -115,18 +131,24 @@ export default function PricingPage() {
             ? '進階排程'
             : '智能排程'
       items.push(
-        <li key="schedule" className="flex items-start gap-2">
-          <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-          <span>{schedText}</span>
+        <li key="schedule" className="flex items-start gap-3 group">
+          <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
+            <Check className="h-3 w-3 text-primary" />
+          </div>
+          <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+            {schedText}
+          </span>
         </li>
       )
     }
 
     if (features.brand_voices) {
       items.push(
-        <li key="voices" className="flex items-start gap-2">
-          <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-          <span>
+        <li key="voices" className="flex items-start gap-3 group">
+          <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
+            <Check className="h-3 w-3 text-primary" />
+          </div>
+          <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
             {features.brand_voices === -1
               ? '無限品牌聲音'
               : features.brand_voices === 0
@@ -139,18 +161,26 @@ export default function PricingPage() {
 
     if (features.api_access) {
       items.push(
-        <li key="api" className="flex items-start gap-2">
-          <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-          <span>API 存取</span>
+        <li key="api" className="flex items-start gap-3 group">
+          <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
+            <Check className="h-3 w-3 text-primary" />
+          </div>
+          <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+            API 存取
+          </span>
         </li>
       )
     }
 
     if (features.white_label) {
       items.push(
-        <li key="white" className="flex items-start gap-2">
-          <Check className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
-          <span>白標服務</span>
+        <li key="white" className="flex items-start gap-3 group">
+          <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
+            <Check className="h-3 w-3 text-primary" />
+          </div>
+          <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+            白標服務
+          </span>
         </li>
       )
     }
@@ -160,108 +190,163 @@ export default function PricingPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-slate-900 flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <div className="relative">
+            <div className="h-12 w-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
+            <div className="absolute inset-0 h-12 w-12 rounded-full bg-primary/20 blur-xl animate-pulse" />
+          </div>
+          <p className="text-sm text-muted-foreground animate-pulse">載入中...</p>
+        </div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-900">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-4">
-            靈活透明的定價方案
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 relative overflow-hidden">
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--border))_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border))_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
+
+      <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl opacity-20 animate-pulse" />
+      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '1s' }} />
+
+      <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="text-center mb-16 space-y-6">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/20 bg-primary/5 backdrop-blur-sm">
+            <Sparkles className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium text-primary">簡單透明的定價</span>
+          </div>
+
+          <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-foreground via-foreground to-foreground/70 bg-clip-text text-transparent">
+            選擇最適合您的方案
           </h1>
-          <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
-            無論您是個人、小團隊或成長中的企業，我們都有最適合您的方案
+
+          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+            無論您是個人創作者、成長中的團隊或是大型企業，我們都有最適合您的解決方案
           </p>
         </div>
 
-        <div className="flex items-center justify-center gap-4 mb-12">
-          <button
-            onClick={() => setBillingPeriod('monthly')}
-            className={`px-6 py-2 rounded-lg font-medium transition-colors ${
-              billingPeriod === 'monthly'
-                ? 'bg-blue-600 text-white'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-            }`}
-          >
-            月繳
-          </button>
-          <button
-            onClick={() => setBillingPeriod('yearly')}
-            className={`px-6 py-2 rounded-lg font-medium transition-colors relative ${
-              billingPeriod === 'yearly'
-                ? 'bg-blue-600 text-white'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-            }`}
-          >
-            年繳
-            <span className="absolute -top-2 -right-2 bg-green-500 text-white text-xs px-2 py-0.5 rounded-full">
-              省 20%
-            </span>
-          </button>
+        <div className="flex items-center justify-center mb-12">
+          <div className="inline-flex items-center gap-1 p-1 rounded-full border border-border bg-card/50 backdrop-blur-sm shadow-sm">
+            <button
+              onClick={() => setBillingPeriod('monthly')}
+              className={`relative px-6 py-2.5 rounded-full text-sm font-medium transition-all ${
+                billingPeriod === 'monthly'
+                  ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              月繳
+            </button>
+            <button
+              onClick={() => setBillingPeriod('yearly')}
+              className={`relative px-6 py-2.5 rounded-full text-sm font-medium transition-all ${
+                billingPeriod === 'yearly'
+                  ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <span>年繳</span>
+              {billingPeriod === 'yearly' && (
+                <Badge className="absolute -top-2 -right-2 bg-emerald-500 hover:bg-emerald-600 text-white border-0 text-xs px-1.5 py-0">
+                  省 20%
+                </Badge>
+              )}
+            </button>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
-          {plans.map((plan) => {
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+          {plans.map((plan, index) => {
             const price = getPlanPrice(plan)
             const savings = getYearlySavings(plan)
             const features = plan.features as Record<string, unknown>
+            const isPopular = index === 1
 
             return (
               <div
                 key={plan.id}
-                className="bg-white dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 rounded-2xl p-8 hover:border-blue-500 dark:hover:border-blue-400 hover:shadow-xl transition-all duration-300"
+                className={`group relative rounded-2xl transition-all duration-300 ${
+                  isPopular
+                    ? 'lg:-mt-4 lg:mb-4'
+                    : ''
+                }`}
               >
-                <div className="mb-6">
-                  <h3 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-                    {plan.name}
-                  </h3>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-bold text-slate-900 dark:text-white">
-                      NT$ {price.toLocaleString()}
-                    </span>
-                    <span className="text-slate-600 dark:text-slate-400">
-                      {billingPeriod === 'yearly' ? '/ 年' : '/ 月'}
-                    </span>
+                {isPopular && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                    <Badge className="bg-gradient-to-r from-primary to-primary/80 text-white border-0 px-4 py-1 shadow-lg">
+                      <Zap className="w-3 h-3 mr-1" />
+                      最受歡迎
+                    </Badge>
                   </div>
-                  {billingPeriod === 'yearly' && savings > 0 && (
-                    <p className="text-sm text-green-600 dark:text-green-400 mt-2">
-                      每年省下 NT$ {savings.toLocaleString()}
-                    </p>
-                  )}
+                )}
+
+                <div
+                  className={`relative h-full rounded-2xl border bg-card/50 backdrop-blur-sm p-8 transition-all duration-300 ${
+                    isPopular
+                      ? 'border-primary shadow-2xl shadow-primary/20 hover:shadow-primary/30'
+                      : 'border-border hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10'
+                  }`}
+                >
+                  <div className="mb-8">
+                    <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
+
+                    <div className="flex items-baseline gap-2 mb-1">
+                      <span className="text-4xl font-bold">
+                        NT$ {price.toLocaleString()}
+                      </span>
+                      <span className="text-muted-foreground">
+                        {billingPeriod === 'yearly' ? '/ 年' : '/ 月'}
+                      </span>
+                    </div>
+
+                    {billingPeriod === 'yearly' && savings > 0 && (
+                      <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">
+                        每年省下 NT$ {savings.toLocaleString()}
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="mb-8 p-4 rounded-xl bg-primary/5 border border-primary/10">
+                    <div className="text-3xl font-bold text-primary mb-1">
+                      {(plan.base_tokens / 1000).toLocaleString()}K
+                    </div>
+                    <div className="text-sm text-muted-foreground">
+                      Tokens / 月
+                    </div>
+                  </div>
+
+                  <ul className="space-y-3 mb-8">
+                    {renderFeatureList(features)}
+                  </ul>
+
+                  <Button
+                    className={`w-full group/button ${
+                      isPopular
+                        ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30'
+                        : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
+                    }`}
+                  >
+                    <span>開始使用</span>
+                    <ArrowRight className="w-4 h-4 ml-2 group-hover/button:translate-x-1 transition-transform" />
+                  </Button>
                 </div>
 
-                <div className="mb-6 py-4 px-5 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
-                  <div className="text-3xl font-bold text-blue-600 dark:text-blue-400">
-                    {(plan.base_tokens / 1000).toLocaleString()}K
-                  </div>
-                  <div className="text-sm text-slate-600 dark:text-slate-400">
-                    Tokens / {billingPeriod === 'yearly' ? '月' : '月'}
-                  </div>
-                </div>
-
-                <ul className="space-y-3 mb-8 text-sm text-slate-700 dark:text-slate-300">
-                  {renderFeatureList(features)}
-                </ul>
-
-                <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-3 px-6 rounded-lg transition-colors">
-                  選擇方案
-                </button>
+                {isPopular && (
+                  <div className="absolute inset-0 -z-10 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 blur-2xl opacity-50 group-hover:opacity-75 transition-opacity" />
+                )}
               </div>
             )
           })}
         </div>
 
-        <div className="mt-16 text-center">
-          <p className="text-slate-600 dark:text-slate-400 mb-4">
+        <div className="text-center space-y-4">
+          <p className="text-muted-foreground">
             需要更多 Token？可隨時購買額外的 Token 包，永不過期
           </p>
-          <button className="text-blue-600 dark:text-blue-400 font-medium hover:underline">
-            查看 Token 購買方案 →
-          </button>
+          <Button variant="outline" className="group">
+            查看 Token 購買方案
+            <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
+          </Button>
         </div>
       </div>
     </div>
