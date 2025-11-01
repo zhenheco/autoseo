@@ -6,5 +6,13 @@
   "assets": {
     "directory": ".open-next/assets",
     "binding": "ASSETS"
+  },
+  "env": {
+    "production": {
+      "routes": [
+        { "pattern": "seo.zhenhe-dm.com", "zone_name": "zhenhe-dm.com" },
+        { "pattern": "seo.zhenhe-dm.com/*", "zone_name": "zhenhe-dm.com" }
+      ]
+    }
   }
 }

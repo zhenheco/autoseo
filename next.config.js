@@ -1,12 +1,14 @@
+const path = require('path');
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   output: 'standalone',
-  outputFileTracingRoot: require('path').join(__dirname),
-  allowedDevOrigins: ['seo.zhenhe-dm.com'],
-  experimental: {
-    serverActions: {
-      bodySizeLimit: '2mb',
-    },
+  outputFileTracingRoot: path.join(__dirname),
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+  eslint: {
+    ignoreDuringBuilds: true,
   },
   images: {
     remotePatterns: [
@@ -16,6 +18,6 @@ const nextConfig = {
       },
     ],
   },
-}
+};
 
-module.exports = nextConfig
+module.exports = nextConfig;

@@ -25,7 +25,7 @@ async function getCompanyWebsites(companyId: string) {
 export default async function WebsitesPage({
   searchParams,
 }: {
-  searchParams: { error?: string; success?: string }
+  searchParams: Promise<{ error?: string; success?: string }>
 }) {
   const user = await getUser()
 
@@ -44,6 +44,7 @@ export default async function WebsitesPage({
   }
 
   const websites = await getCompanyWebsites(company.id)
+  const params = await searchParams
 
   return (
     <div className="container mx-auto p-8">
@@ -60,14 +61,14 @@ export default async function WebsitesPage({
       </div>
 
       {/* 訊息顯示 */}
-      {searchParams.error && (
+      {params.error && (
         <div className="mb-6 rounded-md bg-destructive/15 p-4 text-sm text-destructive">
-          {searchParams.error}
+          {params.error}
         </div>
       )}
-      {searchParams.success && (
+      {params.success && (
         <div className="mb-6 rounded-md bg-green-500/15 p-4 text-sm text-green-700">
-          {searchParams.success}
+          {params.success}
         </div>
       )}
 
