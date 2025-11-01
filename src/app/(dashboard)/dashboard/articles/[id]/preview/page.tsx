@@ -24,9 +24,10 @@ async function getArticle(articleId: string) {
 export default async function ArticlePreviewPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
-  const article = await getArticle(params.id)
+  const { id } = await params
+  const article = await getArticle(id)
 
   if (!article) {
     redirect('/dashboard/articles')

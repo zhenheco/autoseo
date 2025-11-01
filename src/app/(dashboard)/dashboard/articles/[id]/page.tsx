@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import Link from 'next/link'
 
 async function getArticle(articleId: string) {
   const supabase = await createClient()
@@ -27,7 +28,7 @@ async function getArticle(articleId: string) {
 export default async function ArticleDetailPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
   const user = await getUser()
 
@@ -35,7 +36,8 @@ export default async function ArticleDetailPage({
     redirect('/login')
   }
 
-  const article = await getArticle(params.id)
+  const { id } = await params
+  const article = await getArticle(id)
 
   if (!article) {
     redirect('/dashboard/articles?error=' + encodeURIComponent('找不到該文章'))
@@ -50,9 +52,11 @@ export default async function ArticleDetailPage({
             網站: {article.website_configs?.site_name}
           </p>
         </div>
-        <Button variant="outline" onClick={() => window.history.back()}>
-          返回
-        </Button>
+        <Link href="/dashboard/articles">
+          <Button variant="outline">
+            返回
+          </Button>
+        </Link>
       </div>
 
       <div className="grid gap-6">
