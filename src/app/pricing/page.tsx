@@ -306,13 +306,16 @@ export default function PricingPage() {
                   <div className="mb-8">
                     <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
 
-                    <div className="flex items-baseline gap-2 mb-1">
-                      <span className="text-4xl font-bold">
-                        NT$ {price.toLocaleString()}
-                      </span>
-                      <span className="text-muted-foreground">
-                        {billingPeriod === 'yearly' ? '/ 年' : '/ 月'}
-                      </span>
+                    <div className="mb-1">
+                      <div className="text-lg text-muted-foreground mb-1">NT$</div>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-4xl font-bold">
+                          {price.toLocaleString()}
+                        </span>
+                        <span className="text-muted-foreground">
+                          {billingPeriod === 'yearly' ? '/ 年' : '/ 月'}
+                        </span>
+                      </div>
                     </div>
 
                     {billingPeriod === 'yearly' && savings > 0 && (
