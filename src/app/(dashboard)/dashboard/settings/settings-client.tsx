@@ -108,7 +108,12 @@ export function SettingsClient({
                   <span className="text-sm font-medium uppercase">
                     {company.subscription_tier}
                   </span>
-                  <Button variant="outline" size="sm" type="button">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    type="button"
+                    onClick={() => router.push('/dashboard/billing-test')}
+                  >
                     升級方案
                   </Button>
                 </div>
