@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, type ReactNode } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import type { Tables } from '@/types/database.types'
 import { Check, Sparkles, Zap, ArrowRight } from 'lucide-react'
@@ -28,7 +28,25 @@ export default function PricingPage() {
         .order('monthly_price', { ascending: true })
 
       if (error) throw error
-      setPlans(data || [])
+
+      // 重新排序：確保 Agency 在最右邊
+      if (data) {
+        const sortedPlans = [...data].sort((a, b) => {
+          // 根據價格判斷方案等級
+          const priceA = a.monthly_price
+          const priceB = b.monthly_price
+
+          // Starter < Professional < Business < Agency
+          if (priceA < 500) return -1 // Starter
+          if (priceB < 500) return 1
+          if (priceA < 2000) return -1 // Professional
+          if (priceB < 2000) return 1
+          if (priceA < 5000) return -1 // Business
+          if (priceB < 5000) return 1
+          return 0 // Agency
+        })
+        setPlans(sortedPlans)
+      }
     } catch (error) {
       console.error('Failed to load plans:', error)
     } finally {
@@ -50,7 +68,7 @@ export default function PricingPage() {
   }
 
   const renderFeatureList = (features: Record<string, unknown>) => {
-    const items: JSX.Element[] = []
+    const items: ReactNode[] = []
 
     if (features.wordpress_sites) {
       items.push(
@@ -89,7 +107,7 @@ export default function PricingPage() {
             <Check className="h-3 w-3 text-primary" />
           </div>
           <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-            {features.batch_generation} 篇批量生成
+            {String(features.batch_generation)} 篇批量生成
           </span>
         </li>
       )
@@ -246,16 +264,14 @@ export default function PricingPage() {
               }`}
             >
               <span>年繳</span>
-              {billingPeriod === 'yearly' && (
-                <Badge className="absolute -top-2 -right-2 bg-emerald-500 hover:bg-emerald-600 text-white border-0 text-xs px-1.5 py-0">
-                  省 20%
-                </Badge>
-              )}
+              <Badge className="absolute -top-2 -right-2 bg-emerald-500 hover:bg-emerald-600 text-white border-0 text-xs px-1.5 py-0">
+                省 20%
+              </Badge>
             </button>
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16 max-w-7xl mx-auto">
           {plans.map((plan, index) => {
             const price = getPlanPrice(plan)
             const savings = getYearlySavings(plan)
@@ -265,26 +281,26 @@ export default function PricingPage() {
             return (
               <div
                 key={plan.id}
-                className={`group relative rounded-2xl transition-all duration-300 ${
+                className={`group relative rounded-3xl transition-all duration-500 ${
                   isPopular
-                    ? 'lg:-mt-4 lg:mb-4'
-                    : ''
+                    ? 'lg:scale-105'
+                    : 'lg:hover:scale-105'
                 }`}
               >
                 {isPopular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
-                    <Badge className="bg-gradient-to-r from-primary to-primary/80 text-white border-0 px-4 py-1 shadow-lg">
-                      <Zap className="w-3 h-3 mr-1" />
+                  <div className="absolute -top-5 left-1/2 -translate-x-1/2 z-10">
+                    <Badge className="bg-gradient-to-r from-primary via-primary to-secondary text-white border-0 px-5 py-1.5 shadow-lg shadow-primary/40 text-sm font-semibold animate-pulse-glow">
+                      <Zap className="w-4 h-4 mr-1.5" />
                       最受歡迎
                     </Badge>
                   </div>
                 )}
 
                 <div
-                  className={`relative h-full rounded-2xl border bg-card/50 backdrop-blur-sm p-8 transition-all duration-300 ${
+                  className={`relative h-full flex flex-col rounded-3xl border glass-effect p-8 transition-all duration-500 ${
                     isPopular
-                      ? 'border-primary shadow-2xl shadow-primary/20 hover:shadow-primary/30'
-                      : 'border-border hover:border-primary/50 hover:shadow-xl hover:shadow-primary/10'
+                      ? 'border-primary/50 shadow-2xl shadow-primary/30 hover:shadow-primary/40'
+                      : 'border-border/50 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/20'
                   }`}
                 >
                   <div className="mb-8">
@@ -315,12 +331,12 @@ export default function PricingPage() {
                     </div>
                   </div>
 
-                  <ul className="space-y-3 mb-8">
+                  <ul className="space-y-3 mb-8 flex-1">
                     {renderFeatureList(features)}
                   </ul>
 
                   <Button
-                    className={`w-full group/button ${
+                    className={`w-full group/button mt-auto ${
                       isPopular
                         ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30'
                         : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'

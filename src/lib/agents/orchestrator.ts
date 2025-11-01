@@ -313,7 +313,7 @@ export class ParallelOrchestrator {
             .from('article_jobs')
             .upsert({
               id: input.articleJobId,
-              keywords: input.researchKeyword || '',
+              keywords: input.keyword || '',
               status: 'storage_preparing',
               metadata: { message: '準備儲存文章到資料庫' },
             }, {

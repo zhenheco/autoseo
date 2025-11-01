@@ -8,7 +8,8 @@ export interface AgentExecutionContext {
 }
 
 export interface AgentExecutionInfo {
-  model: string;
+  agentName: string;
+  model?: string;
   executionTime: number;
   tokenUsage: { input: number; output: number };
 }
@@ -126,8 +127,9 @@ export abstract class BaseAgent<TInput, TOutput> {
     return this.logs;
   }
 
-  getExecutionInfo(model: string): AgentExecutionInfo {
+  getExecutionInfo(model?: string): AgentExecutionInfo {
     return {
+      agentName: this.agentName,
       model,
       executionTime: this.startTime ? Date.now() - this.startTime : 0,
       tokenUsage: this.totalTokensUsed,

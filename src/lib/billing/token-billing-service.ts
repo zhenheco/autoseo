@@ -168,7 +168,7 @@ export class TokenBillingService {
       official_cost_usd: actualCalculation.officialCostUsd,
       charged_cost_usd: actualCalculation.chargedCostUsd,
       usage_type: usageType,
-      metadata,
+      metadata: metadata as unknown as Database['public']['Tables']['token_usage_logs']['Insert']['metadata'],
     })
 
     if (usageError) {
@@ -286,7 +286,7 @@ export class TokenBillingService {
       offset?: number
       startDate?: Date
       endDate?: Date
-      usageType?: string
+      usageType?: 'article_generation' | 'title_generation' | 'image_description' | 'perplexity_analysis'
     } = {}
   ) {
     let query = this.supabase

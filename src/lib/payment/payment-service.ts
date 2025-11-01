@@ -1,0 +1,480 @@
+import { createClient } from '@supabase/supabase-js'
+import type { Database } from '@/types/database.types'
+import { NewebPayService, type OnetimePaymentParams, type RecurringPaymentParams } from './newebpay-service'
+
+export interface CreateOnetimeOrderParams {
+  companyId: string
+  paymentType: 'subscription' | 'token_package' | 'lifetime'
+  relatedId: string
+  amount: number
+  description: string
+  email: string
+}
+
+export interface CreateRecurringOrderParams {
+  companyId: string
+  planId: string
+  amount: number
+  description: string
+  email: string
+  periodType: 'D' | 'W' | 'M' | 'Y'
+  periodPoint?: string
+  periodStartType: 1 | 2 | 3
+  periodTimes?: number
+}
+
+export class PaymentService {
+  private supabase: ReturnType<typeof createClient<Database>>
+  private newebpay: NewebPayService
+
+  constructor(
+    supabase: ReturnType<typeof createClient<Database>>,
+    newebpay: NewebPayService
+  ) {
+    this.supabase = supabase
+    this.newebpay = newebpay
+  }
+
+  private generateOrderNo(): string {
+    const timestamp = Date.now()
+    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0')
+    return `ORD${timestamp}${random}`
+  }
+
+  private generateMandateNo(): string {
+    const timestamp = Date.now()
+    const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0')
+    return `MAN${timestamp}${random}`
+  }
+
+  async createOnetimePayment(params: CreateOnetimeOrderParams): Promise<{
+    success: boolean
+    orderId?: string
+    orderNo?: string
+    paymentForm?: {
+      merchantId: string
+      tradeInfo: string
+      tradeSha: string
+      version: string
+      apiUrl: string
+    }
+    error?: string
+  }> {
+    const orderNo = this.generateOrderNo()
+
+    const { data: orderData, error: orderError } = await this.supabase
+      .from('payment_orders')
+      .insert({
+        company_id: params.companyId,
+        order_no: orderNo,
+        order_type: 'onetime',
+        payment_type: params.paymentType,
+        amount: params.amount,
+        item_description: params.description,
+        related_id: params.relatedId,
+        status: 'pending',
+      })
+      .select()
+      .single()
+
+    if (orderError || !orderData) {
+      console.error('[PaymentService] 建立訂單失敗:', orderError)
+      return { success: false, error: '建立訂單失敗' }
+    }
+
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+
+    const paymentParams: OnetimePaymentParams = {
+      orderNo,
+      amount: params.amount,
+      description: params.description,
+      email: params.email,
+      returnUrl: `${baseUrl}/api/payment/callback`,
+      notifyUrl: `${baseUrl}/api/payment/notify`,
+      clientBackUrl: `${baseUrl}/dashboard/billing`,
+    }
+
+    const paymentForm = this.newebpay.createOnetimePayment(paymentParams)
+
+    return {
+      success: true,
+      orderId: orderData.id,
+      orderNo: orderData.order_no,
+      paymentForm,
+    }
+  }
+
+  async createRecurringPayment(params: CreateRecurringOrderParams): Promise<{
+    success: boolean
+    mandateId?: string
+    mandateNo?: string
+    paymentForm?: {
+      merchantId: string
+      postData: string
+      postDataSha: string
+      apiUrl: string
+    }
+    error?: string
+  }> {
+    const mandateNo = this.generateMandateNo()
+
+    const { data: mandateData, error: mandateError } = await this.supabase
+      .from('recurring_mandates')
+      .insert({
+        company_id: params.companyId,
+        plan_id: params.planId,
+        mandate_no: mandateNo,
+        period_type: params.periodType,
+        period_point: params.periodPoint,
+        period_times: params.periodTimes,
+        period_amount: params.amount,
+        total_amount: params.periodTimes ? params.amount * params.periodTimes : null,
+        status: 'pending',
+      })
+      .select()
+      .single()
+
+    if (mandateError || !mandateData) {
+      console.error('[PaymentService] 建立定期定額委託失敗:', mandateError)
+      return { success: false, error: '建立定期定額委託失敗' }
+    }
+
+    const orderNo = this.generateOrderNo()
+
+    const { data: orderData, error: orderError } = await this.supabase
+      .from('payment_orders')
+      .insert({
+        company_id: params.companyId,
+        order_no: orderNo,
+        order_type: 'recurring_first',
+        payment_type: 'subscription',
+        amount: params.amount,
+        item_description: params.description,
+        related_id: params.planId,
+        status: 'pending',
+      })
+      .select()
+      .single()
+
+    if (orderError || !orderData) {
+      console.error('[PaymentService] 建立訂單失敗:', orderError)
+      return { success: false, error: '建立訂單失敗' }
+    }
+
+    await this.supabase
+      .from('recurring_mandates')
+      .update({ first_payment_order_id: orderData.id })
+      .eq('id', mandateData.id)
+
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+
+    const paymentParams: RecurringPaymentParams = {
+      orderNo: mandateNo,
+      amount: params.amount,
+      description: params.description,
+      email: params.email,
+      periodType: params.periodType,
+      periodPoint: params.periodPoint,
+      periodStartType: params.periodStartType,
+      periodTimes: params.periodTimes,
+      returnUrl: `${baseUrl}/api/payment/recurring/callback`,
+      notifyUrl: `${baseUrl}/api/payment/recurring/notify`,
+      clientBackUrl: `${baseUrl}/dashboard/billing`,
+    }
+
+    const paymentForm = this.newebpay.createRecurringPayment(paymentParams)
+
+    return {
+      success: true,
+      mandateId: mandateData.id,
+      mandateNo: mandateData.mandate_no,
+      paymentForm,
+    }
+  }
+
+  async handleOnetimeCallback(tradeInfo: string, tradeSha: string): Promise<{
+    success: boolean
+    error?: string
+  }> {
+    try {
+      const decryptedData = this.newebpay.decryptCallback(tradeInfo, tradeSha)
+
+      const status = decryptedData.Status as string
+      const message = decryptedData.Message as string
+      const orderNo = decryptedData.MerchantOrderNo as string
+      const tradeNo = decryptedData.TradeNo as string
+      const amount = decryptedData.Amt as number
+
+      const { data: orderData, error: findError } = await this.supabase
+        .from('payment_orders')
+        .select('*')
+        .eq('order_no', orderNo)
+        .single()
+
+      if (findError || !orderData) {
+        console.error('[PaymentService] 找不到訂單:', orderNo)
+        return { success: false, error: '找不到訂單' }
+      }
+
+      if (status === 'SUCCESS') {
+        const { error: updateError } = await this.supabase
+          .from('payment_orders')
+          .update({
+            status: 'success',
+            newebpay_status: status,
+            newebpay_message: message,
+            newebpay_trade_no: tradeNo,
+            newebpay_response: decryptedData as unknown as Database['public']['Tables']['payment_orders']['Update']['newebpay_response'],
+            paid_at: new Date().toISOString(),
+          })
+          .eq('id', orderData.id)
+
+        if (updateError) {
+          console.error('[PaymentService] 更新訂單狀態失敗:', updateError)
+          return { success: false, error: '更新訂單狀態失敗' }
+        }
+
+        if (orderData.payment_type === 'token_package' && orderData.related_id) {
+          const { data: packageData } = await this.supabase
+            .from('token_packages')
+            .select('*')
+            .eq('id', orderData.related_id)
+            .single()
+
+          if (packageData) {
+            const { data: subscription } = await this.supabase
+              .from('company_subscriptions')
+              .select('purchased_token_balance')
+              .eq('company_id', orderData.company_id)
+              .single()
+
+            if (subscription) {
+              const newBalance = subscription.purchased_token_balance + packageData.tokens
+
+              await this.supabase
+                .from('company_subscriptions')
+                .update({ purchased_token_balance: newBalance })
+                .eq('company_id', orderData.company_id)
+
+              await this.supabase.from('token_balance_changes').insert({
+                company_id: orderData.company_id,
+                change_type: 'purchase',
+                amount: packageData.tokens,
+                balance_before: subscription.purchased_token_balance,
+                balance_after: newBalance,
+                reference_id: orderData.id,
+                description: `購買 ${packageData.name}`,
+              })
+            }
+          }
+        } else if ((orderData.payment_type === 'subscription' || orderData.payment_type === 'lifetime') && orderData.related_id) {
+          const isLifetime = orderData.payment_type === 'lifetime'
+
+          const { data: planData } = await this.supabase
+            .from('subscription_plans')
+            .select('*')
+            .eq('id', orderData.related_id)
+            .single()
+
+          if (planData) {
+            const now = new Date()
+            const periodStart = now.toISOString()
+            const periodEnd = isLifetime
+              ? null
+              : new Date(now.getFullYear() + 1, now.getMonth(), now.getDate()).toISOString()
+
+            await this.supabase.from('company_subscriptions').upsert({
+              company_id: orderData.company_id,
+              plan_id: orderData.related_id,
+              status: 'active',
+              purchased_token_balance: 0,
+              monthly_quota_balance: planData.base_tokens,
+              monthly_token_quota: planData.base_tokens,
+              is_lifetime: isLifetime,
+              lifetime_discount: isLifetime ? 0.8 : 1.0,
+              current_period_start: periodStart,
+              current_period_end: periodEnd,
+            })
+
+            await this.supabase.from('token_balance_changes').insert({
+              company_id: orderData.company_id,
+              change_type: 'quota_renewal',
+              amount: planData.base_tokens,
+              balance_before: 0,
+              balance_after: planData.base_tokens,
+              description: `訂閱 ${planData.name} 方案${isLifetime ? '（終身）' : ''}`,
+            })
+          }
+        }
+
+        return { success: true }
+      } else {
+        const { error: updateError } = await this.supabase
+          .from('payment_orders')
+          .update({
+            status: 'failed',
+            newebpay_status: status,
+            newebpay_message: message,
+            newebpay_response: decryptedData as unknown as Database['public']['Tables']['payment_orders']['Update']['newebpay_response'],
+            failed_at: new Date().toISOString(),
+            failure_reason: message,
+          })
+          .eq('id', orderData.id)
+
+        if (updateError) {
+          console.error('[PaymentService] 更新訂單狀態失敗:', updateError)
+        }
+
+        return { success: false, error: message }
+      }
+    } catch (error) {
+      console.error('[PaymentService] 處理回調失敗:', error)
+      return { success: false, error: '處理回調失敗' }
+    }
+  }
+
+  async handleRecurringCallback(period: string): Promise<{
+    success: boolean
+    error?: string
+  }> {
+    try {
+      const decryptedData = this.newebpay.decryptPeriodCallback(period)
+
+      const status = decryptedData.Status as string
+      const mandateNo = decryptedData.MerOrderNo as string
+      const periodNo = decryptedData.PeriodNo as string
+
+      const { data: mandateData, error: findError } = await this.supabase
+        .from('recurring_mandates')
+        .select('*')
+        .eq('mandate_no', mandateNo)
+        .single()
+
+      if (findError || !mandateData) {
+        console.error('[PaymentService] 找不到定期定額委託:', mandateNo)
+        return { success: false, error: '找不到定期定額委託' }
+      }
+
+      if (status === 'SUCCESS') {
+        const { error: updateError } = await this.supabase
+          .from('recurring_mandates')
+          .update({
+            status: 'active',
+            newebpay_period_no: periodNo,
+            newebpay_response: decryptedData as unknown as Database['public']['Tables']['payment_orders']['Update']['newebpay_response'],
+            activated_at: new Date().toISOString(),
+            next_payment_date: this.calculateNextPaymentDate(
+              mandateData.period_type,
+              mandateData.period_point || undefined
+            ),
+          })
+          .eq('id', mandateData.id)
+
+        if (updateError) {
+          console.error('[PaymentService] 更新定期定額委託失敗:', updateError)
+          return { success: false, error: '更新定期定額委託失敗' }
+        }
+
+        if (mandateData.first_payment_order_id) {
+          await this.supabase
+            .from('payment_orders')
+            .update({
+              status: 'success',
+              newebpay_status: status,
+              newebpay_response: decryptedData as unknown as Database['public']['Tables']['payment_orders']['Update']['newebpay_response'],
+              paid_at: new Date().toISOString(),
+            })
+            .eq('id', mandateData.first_payment_order_id)
+        }
+
+        const { data: planData } = await this.supabase
+          .from('subscription_plans')
+          .select('*')
+          .eq('id', mandateData.plan_id)
+          .single()
+
+        if (planData) {
+          const now = new Date()
+          const periodStart = now.toISOString()
+          const periodEnd = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate()).toISOString()
+
+          await this.supabase.from('company_subscriptions').upsert({
+            company_id: mandateData.company_id,
+            plan_id: mandateData.plan_id,
+            status: 'active',
+            purchased_token_balance: 0,
+            monthly_quota_balance: planData.base_tokens,
+            monthly_token_quota: planData.base_tokens,
+            is_lifetime: false,
+            lifetime_discount: 1.0,
+            current_period_start: periodStart,
+            current_period_end: periodEnd,
+          })
+
+          await this.supabase.from('token_balance_changes').insert({
+            company_id: mandateData.company_id,
+            change_type: 'quota_renewal',
+            amount: planData.base_tokens,
+            balance_before: 0,
+            balance_after: planData.base_tokens,
+            description: `訂閱 ${planData.name} 方案`,
+          })
+        }
+
+        return { success: true }
+      } else {
+        await this.supabase
+          .from('recurring_mandates')
+          .update({
+            status: 'failed',
+            newebpay_response: decryptedData as unknown as Database['public']['Tables']['payment_orders']['Update']['newebpay_response'],
+          })
+          .eq('id', mandateData.id)
+
+        return { success: false, error: decryptedData.Message as string }
+      }
+    } catch (error) {
+      console.error('[PaymentService] 處理定期定額回調失敗:', error)
+      return { success: false, error: '處理定期定額回調失敗' }
+    }
+  }
+
+  private calculateNextPaymentDate(
+    periodType: 'D' | 'W' | 'M' | 'Y',
+    periodPoint?: string
+  ): string {
+    const now = new Date()
+
+    switch (periodType) {
+      case 'M':
+        const day = periodPoint ? parseInt(periodPoint) : now.getDate()
+        const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, day)
+        return nextMonth.toISOString().split('T')[0]
+
+      case 'Y':
+        const [month, dayOfMonth] = periodPoint ? periodPoint.split(',').map(Number) : [now.getMonth() + 1, now.getDate()]
+        const nextYear = new Date(now.getFullYear() + 1, month - 1, dayOfMonth)
+        return nextYear.toISOString().split('T')[0]
+
+      case 'W':
+        const weekday = periodPoint ? parseInt(periodPoint) : now.getDay()
+        const daysUntilNext = (weekday + 7 - now.getDay()) % 7 || 7
+        const nextWeek = new Date(now)
+        nextWeek.setDate(now.getDate() + daysUntilNext)
+        return nextWeek.toISOString().split('T')[0]
+
+      case 'D':
+        const nextDay = new Date(now)
+        nextDay.setDate(now.getDate() + 1)
+        return nextDay.toISOString().split('T')[0]
+
+      default:
+        return now.toISOString().split('T')[0]
+    }
+  }
+
+  static createInstance(supabase: ReturnType<typeof createClient<Database>>): PaymentService {
+    const newebpay = NewebPayService.createInstance()
+    return new PaymentService(supabase, newebpay)
+  }
+}

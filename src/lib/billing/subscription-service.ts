@@ -72,10 +72,10 @@ export class SubscriptionService {
 
   async getAvailableTokenPlans(): Promise<TokenSubscriptionPlan[]> {
     const { data, error } = await this.supabase
-      .from('token_subscription_plans')
+      .from('subscription_plans')
       .select('*')
-      .eq('is_active', true)
-      .order('sort_order', { ascending: true })
+      .eq('is_lifetime', false)
+      .order('monthly_price', { ascending: true })
 
     if (error) {
       console.error('[SubscriptionService] 取得月訂閱 Token 方案失敗:', error)
@@ -86,10 +86,10 @@ export class SubscriptionService {
       id: plan.id,
       name: plan.name,
       slug: plan.slug,
-      monthlyTokens: plan.monthly_tokens,
+      monthlyTokens: plan.base_tokens,
       monthlyPrice: Number(plan.monthly_price),
-      discountVsOnetime: Number(plan.discount_vs_onetime),
-      description: plan.description || '',
+      discountVsOnetime: 0,
+      description: '',
     }))
   }
 
@@ -205,7 +205,7 @@ export class SubscriptionService {
     planId: string
   ): Promise<{ success: boolean; error?: string }> {
     const { data: planData, error: planError } = await this.supabase
-      .from('token_subscription_plans')
+      .from('subscription_plans')
       .select('*')
       .eq('id', planId)
       .single()
@@ -215,14 +215,16 @@ export class SubscriptionService {
     }
 
     const now = new Date()
-    const periodEnd = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate())
+    const periodEnd = new Date(now.getFullYear(), now.getMonth() + 1, now.getDate())
 
     const { error: subscriptionError } = await this.supabase
-      .from('company_token_subscriptions')
-      .insert({
+      .from('company_subscriptions')
+      .upsert({
         company_id: companyId,
         plan_id: planId,
         status: 'active',
+        monthly_token_quota: planData.base_tokens,
+        monthly_quota_balance: planData.base_tokens,
         current_period_start: now.toISOString(),
         current_period_end: periodEnd.toISOString(),
       })
@@ -239,7 +241,7 @@ export class SubscriptionService {
       .single()
 
     if (subscription) {
-      const newBalance = subscription.purchased_token_balance + planData.monthly_tokens
+      const newBalance = subscription.purchased_token_balance + planData.base_tokens
 
       await this.supabase
         .from('company_subscriptions')
@@ -249,7 +251,7 @@ export class SubscriptionService {
       await this.supabase.from('token_balance_changes').insert({
         company_id: companyId,
         change_type: 'purchase',
-        amount: planData.monthly_tokens,
+        amount: planData.base_tokens,
         balance_before: subscription.purchased_token_balance,
         balance_after: newBalance,
         description: `月訂閱 ${planData.name}`,
@@ -453,14 +455,19 @@ export class SubscriptionService {
     }
 
     const { data: purchaseData, error: purchaseError } = await this.supabase
-      .from('token_purchases')
+      .from('payment_orders')
       .insert({
         company_id: companyId,
-        package_id: packageId,
-        tokens_purchased: packageData.tokens,
-        amount_paid: actualPrice,
-        payment_status: 'completed',
-        payment_id: paymentId,
+        order_no: `TOKEN-${Date.now()}-${Math.random().toString(36).substring(7)}`,
+        order_type: 'onetime',
+        payment_type: 'token_package',
+        amount: actualPrice,
+        currency: 'TWD',
+        item_description: packageData.name,
+        related_id: packageId,
+        newebpay_trade_no: paymentId,
+        status: 'success',
+        paid_at: new Date().toISOString(),
       })
       .select()
       .single()

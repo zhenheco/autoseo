@@ -19,12 +19,11 @@ export class GoogleDriveClient {
       auth.setCredentials({ access_token: config.accessToken });
       this.drive = google.drive({ version: 'v3', auth });
     } else if (config.serviceAccountEmail && config.serviceAccountKey) {
-      const auth = new google.auth.JWT(
-        config.serviceAccountEmail,
-        undefined,
-        config.serviceAccountKey,
-        ['https://www.googleapis.com/auth/drive.file']
-      );
+      const auth = new google.auth.JWT({
+        email: config.serviceAccountEmail,
+        key: config.serviceAccountKey,
+        scopes: ['https://www.googleapis.com/auth/drive.file'],
+      });
       this.drive = google.drive({ version: 'v3', auth });
     } else {
       throw new Error('Google Drive credentials not configured');

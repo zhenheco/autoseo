@@ -2,6 +2,8 @@ import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { Sparkles } from 'lucide-react'
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
@@ -48,79 +50,98 @@ export default async function RegisterPage({
   const params = await searchParams
 
   return (
-    <div className="min-h-screen bg-black flex flex-col">
-      <div className="flex-1 flex items-center justify-center px-4 py-16">
-        <div className="w-full max-w-[450px]">
-          <div className="bg-black rounded-lg p-8 md:p-12">
-            <h1 className="text-white text-center text-5xl font-bold mb-12">
-              註冊 Auto Pilot SEO
-            </h1>
-
-            {params.error && (
-              <div className="mb-6 p-4 bg-red-500/10 border border-red-500 text-red-400 rounded-md text-[14px] text-center">
-                {params.error}
-              </div>
-            )}
-            {params.success && (
-              <div className="mb-6 p-4 bg-green-500/10 border border-green-500 text-green-400 rounded-md text-[14px] text-center">
-                {params.success}
-              </div>
-            )}
-
-            <form action={register} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-white text-[14px] font-semibold">
-                  電子郵件地址
-                </Label>
-                <Input
-                  id="email"
-                  name="email"
-                  type="email"
-                  placeholder="電子郵件地址"
-                  required
-                  className="bg-[#121212] border-gray-700 text-white placeholder:text-gray-500 h-14 text-[14px] rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-white text-[14px] font-semibold">
-                  密碼
-                </Label>
-                <Input
-                  id="password"
-                  name="password"
-                  type="password"
-                  placeholder="密碼（至少 6 個字元）"
-                  required
-                  minLength={6}
-                  className="bg-[#121212] border-gray-700 text-white placeholder:text-gray-500 h-14 text-[14px] rounded-md focus:ring-2 focus:ring-green-500 focus:border-transparent"
-                />
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full h-14 text-[14px] bg-green-500 hover:bg-green-400 hover:scale-105 text-black font-bold rounded-full transition-all mt-8"
-              >
-                註冊
-              </Button>
-            </form>
-
-            <div className="mt-8 pt-8 border-t border-gray-800">
-              <p className="text-gray-400 text-center text-[14px]">
-                已經有帳號了？{' '}
-                <Link href="/login" className="text-white hover:text-green-400 underline font-semibold">
-                  登入 Auto Pilot SEO
-                </Link>
-              </p>
-            </div>
-          </div>
-        </div>
+    <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden p-4">
+      <div className="absolute top-6 right-6 z-50">
+        <ThemeToggle />
       </div>
 
-      <footer className="p-8 text-center text-gray-500 text-[14px]">
-        <p>此網站受 reCAPTCHA 保護，並適用 Google <a href="#" className="underline">隱私權政策</a>與<a href="#" className="underline">服務條款</a>。</p>
-        <p className="mt-2">© 2025 Auto Pilot SEO</p>
-      </footer>
+      <div className="w-full max-w-md relative z-10">
+        <div className="text-center mb-10">
+          <div className="inline-flex items-center justify-center gap-3 mb-6">
+            <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center">
+              <Sparkles className="h-7 w-7 text-primary" />
+            </div>
+          </div>
+          <h1 className="text-3xl font-bold tracking-tight mb-2 text-foreground">
+            開始使用
+          </h1>
+          <p className="text-base text-muted-foreground">建立您的 Auto Pilot SEO 帳號</p>
+        </div>
+
+        <div className="bg-card border border-border rounded-2xl p-8 shadow-lg">
+          {params.success && (
+            <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded-xl text-sm font-medium">
+              {params.success}
+            </div>
+          )}
+          {params.error && (
+            <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400 rounded-xl text-sm font-medium">
+              {params.error}
+            </div>
+          )}
+
+          <form action={register} className="space-y-5">
+            <div className="space-y-2">
+              <Label htmlFor="email" className="text-sm font-medium text-foreground">
+                電子郵件
+              </Label>
+              <Input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="your@email.com"
+                required
+                className="h-11 bg-background border-border focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="password" className="text-sm font-medium text-foreground">
+                密碼
+              </Label>
+              <Input
+                id="password"
+                name="password"
+                type="password"
+                placeholder="至少 6 個字元"
+                required
+                minLength={6}
+                className="h-11 bg-background border-border focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+              />
+            </div>
+
+            <Button
+              type="submit"
+              className="w-full h-11 text-sm font-semibold bg-primary hover:bg-primary/90 transition-colors"
+            >
+              建立帳號
+            </Button>
+          </form>
+
+          <div className="mt-6 pt-6 border-t border-border">
+            <p className="text-center text-sm text-muted-foreground">
+              已經有帳號？{' '}
+              <Link
+                href="/login"
+                className="text-primary hover:text-primary/80 hover:underline underline-offset-4 font-semibold transition-all"
+              >
+                立即登入
+              </Link>
+            </p>
+          </div>
+        </div>
+
+        <p className="text-xs text-center text-muted-foreground mt-8 px-8">
+          註冊即表示您同意我們的{' '}
+          <Link href="/terms" className="underline underline-offset-2 hover:text-foreground transition-all">
+            服務條款
+          </Link>
+          {' '}和{' '}
+          <Link href="/privacy" className="underline underline-offset-2 hover:text-foreground transition-all">
+            隱私政策
+          </Link>
+        </p>
+      </div>
     </div>
   )
 }

@@ -101,10 +101,18 @@ export class ReferralService {
 
     await this.giveSignupReward(referral.id, referredCompanyId)
 
-    await this.supabase
+    const { data: referrerCodeData } = await this.supabase
       .from('company_referral_codes')
-      .update({ total_referrals: this.supabase.rpc('increment', { x: 1 }) as any })
+      .select('total_referrals')
       .eq('company_id', referrerCompanyId)
+      .single()
+
+    if (referrerCodeData) {
+      await this.supabase
+        .from('company_referral_codes')
+        .update({ total_referrals: referrerCodeData.total_referrals + 1 })
+        .eq('company_id', referrerCompanyId)
+    }
 
     return { success: true }
   }
@@ -150,7 +158,6 @@ export class ReferralService {
       balance_after: newBalance,
       reference_id: referralId,
       description: '推薦註冊獎勵',
-      reward_type: 'signup',
     })
   }
 
@@ -203,16 +210,23 @@ export class ReferralService {
         balance_after: newBalance,
         reference_id: referral.id,
         description: '推薦首購獎勵',
-        reward_type: 'first_payment',
       })
 
-      await this.supabase
+      const { data: currentCodeData } = await this.supabase
         .from('company_referral_codes')
-        .update({
-          successful_referrals: this.supabase.rpc('increment', { x: 1 }) as any,
-          total_rewards_tokens: this.supabase.rpc('increment', { x: referrerRewardTokens }) as any,
-        })
+        .select('successful_referrals, total_rewards_tokens')
         .eq('company_id', referral.referrer_company_id)
+        .single()
+
+      if (currentCodeData) {
+        await this.supabase
+          .from('company_referral_codes')
+          .update({
+            successful_referrals: currentCodeData.successful_referrals + 1,
+            total_rewards_tokens: currentCodeData.total_rewards_tokens + referrerRewardTokens,
+          })
+          .eq('company_id', referral.referrer_company_id)
+      }
     }
 
     await this.supabase

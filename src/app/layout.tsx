@@ -18,7 +18,7 @@ export default function RootLayout({
   return (
     <html lang="zh-TW" suppressHydrationWarning>
       <body className={inter.className}>
-        <ThemeProvider defaultTheme="dark" storageKey="autopilot-seo-theme">
+        <ThemeProvider defaultTheme="light" storageKey="autopilot-seo-theme-v2" enableSystem={false}>
           {children}
         </ThemeProvider>
       </body>

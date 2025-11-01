@@ -103,7 +103,7 @@ export interface ResearchOutput {
   relatedKeywords: string[];
   externalReferences?: ExternalReference[];
   executionInfo: {
-    model: string;
+    model?: string;
     executionTime: number;
     tokenUsage: { input: number; output: number };
   };
@@ -171,7 +171,7 @@ export interface StrategyOutput {
   };
   externalReferences?: ExternalReference[];
   executionInfo: {
-    model: string;
+    model?: string;
     executionTime: number;
     tokenUsage: { input: number; output: number };
   };
@@ -222,7 +222,7 @@ export interface WritingOutput {
     gunningFogIndex: number;
   };
   executionInfo: {
-    model: string;
+    model?: string;
     executionTime: number;
     tokenUsage: { input: number; output: number };
   };
@@ -258,7 +258,7 @@ export interface ImageOutput {
   featuredImage: GeneratedImage;
   contentImages: GeneratedImage[];
   executionInfo: {
-    model: string;
+    model?: string;
     totalImages: number;
     executionTime: number;
     totalCost: number;
@@ -299,7 +299,7 @@ export interface MetaOutput {
   canonicalUrl?: string;
   focusKeyphrase: string;
   executionInfo: {
-    model: string;
+    model?: string;
     executionTime: number;
     tokenUsage: { input: number; output: number };
   };
@@ -335,7 +335,7 @@ export interface HTMLOutput {
     external: number;
   };
   executionInfo: {
-    model: string;
+    model?: string;
     executionTime: number;
     tokenUsage: { input: number; output: number };
   };

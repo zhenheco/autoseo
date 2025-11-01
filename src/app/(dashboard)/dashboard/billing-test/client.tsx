@@ -17,6 +17,8 @@ export default function BillingTestClient() {
   const [companySubscriptions, setCompanySubscriptions] = useState<CompanySubscription[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [paymentTesting, setPaymentTesting] = useState(false)
+  const [paymentResult, setPaymentResult] = useState<{ success: boolean; message: string; data?: unknown } | null>(null)
 
   useEffect(() => {
     loadData()
@@ -72,6 +74,130 @@ export default function BillingTestClient() {
       setError(err instanceof Error ? err.message : String(err))
     } finally {
       setLoading(false)
+    }
+  }
+
+  async function testOneTimePayment(pkg: TokenPackage) {
+    try {
+      setPaymentTesting(true)
+      setPaymentResult(null)
+      console.log('🧪 測試單次支付:', pkg)
+
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        throw new Error('用戶未登入')
+      }
+
+      const { data: companies } = await supabase
+        .from('company_members')
+        .select('company_id')
+        .eq('user_id', user.id)
+        .limit(1)
+
+      const companyId = companies?.[0]?.company_id
+      if (!companyId) {
+        throw new Error('找不到公司')
+      }
+
+      const response = await fetch('/api/payment/onetime/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          companyId,
+          paymentType: 'token_package',
+          relatedId: pkg.id,
+          amount: pkg.price,
+          description: `購買 ${pkg.name}`,
+          email: user.email || 'test@example.com',
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || '支付請求失敗')
+      }
+
+      console.log('✅ 單次支付請求成功:', data)
+      setPaymentResult({
+        success: true,
+        message: '支付請求已建立',
+        data,
+      })
+    } catch (err) {
+      console.error('❌ 單次支付測試失敗:', err)
+      setPaymentResult({
+        success: false,
+        message: err instanceof Error ? err.message : String(err),
+      })
+    } finally {
+      setPaymentTesting(false)
+    }
+  }
+
+  async function testRecurringPayment(plan: SubscriptionPlan) {
+    try {
+      setPaymentTesting(true)
+      setPaymentResult(null)
+      console.log('🧪 測試定期定額:', plan)
+
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        throw new Error('用戶未登入')
+      }
+
+      const { data: companies } = await supabase
+        .from('company_members')
+        .select('company_id')
+        .eq('user_id', user.id)
+        .limit(1)
+
+      const companyId = companies?.[0]?.company_id
+      if (!companyId) {
+        throw new Error('找不到公司')
+      }
+
+      const response = await fetch('/api/payment/recurring/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          companyId,
+          planId: plan.id,
+          periodType: 'M',
+          periodPoint: '1',
+          periodAmount: plan.monthly_price,
+          email: user.email || 'test@example.com',
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || '定期定額請求失敗')
+      }
+
+      console.log('✅ 定期定額請求成功:', data)
+      setPaymentResult({
+        success: true,
+        message: '定期定額請求已建立',
+        data,
+      })
+    } catch (err) {
+      console.error('❌ 定期定額測試失敗:', err)
+      setPaymentResult({
+        success: false,
+        message: err instanceof Error ? err.message : String(err),
+      })
+    } finally {
+      setPaymentTesting(false)
     }
   }
 
@@ -161,6 +287,13 @@ export default function BillingTestClient() {
                     </div>
                     <div className="text-xs text-slate-600 dark:text-slate-400">Tokens / 月</div>
                   </div>
+                  <button
+                    onClick={() => testRecurringPayment(plan)}
+                    disabled={paymentTesting}
+                    className="w-full px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 disabled:bg-slate-400 rounded-lg transition-colors"
+                  >
+                    {paymentTesting ? '測試中...' : '測試訂閱'}
+                  </button>
                 </div>
               </div>
             ))}
@@ -239,6 +372,13 @@ export default function BillingTestClient() {
                   <div className="text-xl font-bold text-green-600 dark:text-green-400">
                     ${pkg.price.toLocaleString()}
                   </div>
+                  <button
+                    onClick={() => testOneTimePayment(pkg)}
+                    disabled={paymentTesting}
+                    className="w-full mt-2 px-3 py-1.5 text-xs font-medium text-white bg-green-600 hover:bg-green-700 disabled:bg-slate-400 rounded-lg transition-colors"
+                  >
+                    {paymentTesting ? '測試中...' : '測試購買'}
+                  </button>
                 </div>
               </div>
             ))}
@@ -388,6 +528,62 @@ export default function BillingTestClient() {
             </div>
           </div>
         </section>
+
+        {paymentResult && (
+          <section
+            className={`rounded-2xl shadow-lg p-8 border-2 ${
+              paymentResult.success
+                ? 'bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-800'
+                : 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800'
+            }`}
+          >
+            <div className="flex items-start gap-4">
+              <div
+                className={`flex items-center justify-center w-12 h-12 rounded-full ${
+                  paymentResult.success
+                    ? 'bg-green-100 dark:bg-green-900/30'
+                    : 'bg-red-100 dark:bg-red-900/30'
+                }`}
+              >
+                {paymentResult.success ? (
+                  <Check className="w-6 h-6 text-green-600 dark:text-green-400" />
+                ) : (
+                  <X className="w-6 h-6 text-red-600 dark:text-red-400" />
+                )}
+              </div>
+              <div className="flex-1">
+                <h3
+                  className={`text-xl font-bold mb-2 ${
+                    paymentResult.success
+                      ? 'text-green-900 dark:text-green-100'
+                      : 'text-red-900 dark:text-red-100'
+                  }`}
+                >
+                  {paymentResult.success ? '測試成功' : '測試失敗'}
+                </h3>
+                <p
+                  className={`text-sm mb-4 ${
+                    paymentResult.success
+                      ? 'text-green-700 dark:text-green-300'
+                      : 'text-red-700 dark:text-red-300'
+                  }`}
+                >
+                  {paymentResult.message}
+                </p>
+                {paymentResult.data && (
+                  <details className="mt-4">
+                    <summary className="cursor-pointer text-sm font-medium text-slate-700 dark:text-slate-300">
+                      查看詳細資料
+                    </summary>
+                    <pre className="mt-2 p-4 bg-slate-900 dark:bg-slate-950 rounded-lg overflow-x-auto text-xs text-green-400 font-mono">
+                      {JSON.stringify(paymentResult.data, null, 2)}
+                    </pre>
+                  </details>
+                )}
+              </div>
+            </div>
+          </section>
+        )}
       </div>
     </div>
   )

@@ -1,0 +1,280 @@
+import crypto from 'crypto'
+
+export interface NewebPayConfig {
+  merchantId: string
+  hashKey: string
+  hashIv: string
+  apiUrl: string
+  periodApiUrl?: string
+  version?: string
+}
+
+export interface OnetimePaymentParams {
+  orderNo: string
+  amount: number
+  description: string
+  email: string
+  returnUrl: string
+  notifyUrl: string
+  clientBackUrl?: string
+}
+
+export interface RecurringPaymentParams {
+  orderNo: string
+  amount: number
+  description: string
+  email: string
+  periodType: 'D' | 'W' | 'M' | 'Y'
+  periodPoint?: string
+  periodStartType: 1 | 2 | 3
+  periodTimes?: number
+  returnUrl: string
+  notifyUrl: string
+  clientBackUrl?: string
+}
+
+export interface DecryptedResponse {
+  [key: string]: string | number | undefined
+}
+
+export class NewebPayService {
+  private config: NewebPayConfig
+
+  constructor(config: NewebPayConfig) {
+    this.config = {
+      version: '2.0',
+      periodApiUrl: 'https://ccore.newebpay.com/MPG/period',
+      ...config,
+    }
+  }
+
+  private aesEncrypt(data: string): string {
+    const cipher = crypto.createCipheriv(
+      'aes-256-cbc',
+      this.config.hashKey,
+      this.config.hashIv
+    )
+    let encrypted = cipher.update(data, 'utf8', 'hex')
+    encrypted += cipher.final('hex')
+    return encrypted
+  }
+
+  private aesDecrypt(encryptedData: string): string {
+    const decipher = crypto.createDecipheriv(
+      'aes-256-cbc',
+      this.config.hashKey,
+      this.config.hashIv
+    )
+    let decrypted = decipher.update(encryptedData, 'hex', 'utf8')
+    decrypted += decipher.final('utf8')
+    return decrypted
+  }
+
+  private createCheckValue(tradeInfo: string): string {
+    const data = `HashKey=${this.config.hashKey}&${tradeInfo}&HashIV=${this.config.hashIv}`
+    return crypto.createHash('sha256').update(data).digest('hex').toUpperCase()
+  }
+
+  createOnetimePayment(params: OnetimePaymentParams): {
+    merchantId: string
+    tradeInfo: string
+    tradeSha: string
+    version: string
+    apiUrl: string
+  } {
+    const tradeData = {
+      MerchantID: this.config.merchantId,
+      RespondType: 'JSON',
+      TimeStamp: Math.floor(Date.now() / 1000).toString(),
+      Version: this.config.version,
+      MerchantOrderNo: params.orderNo,
+      Amt: params.amount.toString(),
+      ItemDesc: params.description,
+      Email: params.email,
+      ReturnURL: params.returnUrl,
+      NotifyURL: params.notifyUrl,
+      ClientBackURL: params.clientBackUrl || params.returnUrl,
+    }
+
+    const tradeInfoString = new URLSearchParams(
+      tradeData as Record<string, string>
+    ).toString()
+    const tradeInfo = this.aesEncrypt(tradeInfoString)
+    const tradeSha = this.createCheckValue(tradeInfo)
+
+    return {
+      merchantId: this.config.merchantId,
+      tradeInfo,
+      tradeSha,
+      version: this.config.version!,
+      apiUrl: this.config.apiUrl,
+    }
+  }
+
+  createRecurringPayment(params: RecurringPaymentParams): {
+    merchantId: string
+    postData: string
+    postDataSha: string
+    apiUrl: string
+  } {
+    const periodData: Record<string, string> = {
+      RespondType: 'JSON',
+      TimeStamp: Math.floor(Date.now() / 1000).toString(),
+      Version: '1.0',
+      MerOrderNo: params.orderNo,
+      ProdDesc: params.description,
+      PeriodAmt: params.amount.toString(),
+      PeriodType: params.periodType,
+      PeriodStartType: params.periodStartType.toString(),
+      ReturnURL: params.returnUrl,
+      NotifyURL: params.notifyUrl,
+      BackURL: params.clientBackUrl || params.returnUrl,
+      EmailModify: '1',
+      PayerEmail: params.email,
+    }
+
+    if (params.periodPoint) {
+      periodData.PeriodPoint = params.periodPoint
+    }
+
+    if (params.periodTimes) {
+      periodData.PeriodTimes = params.periodTimes.toString()
+    }
+
+    const postDataString = new URLSearchParams(periodData).toString()
+    const postData = this.aesEncrypt(postDataString)
+    const postDataSha = this.createCheckValue(postData)
+
+    return {
+      merchantId: this.config.merchantId,
+      postData,
+      postDataSha,
+      apiUrl: this.config.periodApiUrl!,
+    }
+  }
+
+  decryptCallback(tradeInfo: string, tradeSha: string): DecryptedResponse {
+    const calculatedSha = this.createCheckValue(tradeInfo)
+
+    if (calculatedSha !== tradeSha.toUpperCase()) {
+      throw new Error('Invalid TradeSha - 簽章驗證失敗')
+    }
+
+    const decryptedData = this.aesDecrypt(tradeInfo)
+
+    const params = new URLSearchParams(decryptedData)
+    const result: DecryptedResponse = {}
+
+    params.forEach((value, key) => {
+      const numValue = Number(value)
+      result[key] = isNaN(numValue) ? value : numValue
+    })
+
+    return result
+  }
+
+  decryptPeriodCallback(period: string): DecryptedResponse {
+    const decryptedData = this.aesDecrypt(period)
+
+    const params = new URLSearchParams(decryptedData)
+    const result: DecryptedResponse = {}
+
+    params.forEach((value, key) => {
+      const numValue = Number(value)
+      result[key] = isNaN(numValue) ? value : numValue
+    })
+
+    return result
+  }
+
+  modifyRecurringStatus(
+    periodNo: string,
+    status: 'suspend' | 'terminate'
+  ): {
+    merchantId: string
+    postData: string
+    postDataSha: string
+    apiUrl: string
+  } {
+    const modifyData = {
+      RespondType: 'JSON',
+      TimeStamp: Math.floor(Date.now() / 1000).toString(),
+      Version: '1.0',
+      PeriodNo: periodNo,
+      AlterType: status === 'suspend' ? 'suspend' : 'terminate',
+    }
+
+    const postDataString = new URLSearchParams(modifyData).toString()
+    const postData = this.aesEncrypt(postDataString)
+    const postDataSha = this.createCheckValue(postData)
+
+    return {
+      merchantId: this.config.merchantId,
+      postData,
+      postDataSha,
+      apiUrl: this.config.periodApiUrl!.replace('/period', '/period/AlterStatus'),
+    }
+  }
+
+  modifyRecurringAmount(
+    periodNo: string,
+    newAmount: number,
+    periodType: 'D' | 'W' | 'M' | 'Y',
+    periodPoint?: string,
+    periodTimes?: number
+  ): {
+    merchantId: string
+    postData: string
+    postDataSha: string
+    apiUrl: string
+  } {
+    const modifyData: Record<string, string> = {
+      RespondType: 'JSON',
+      TimeStamp: Math.floor(Date.now() / 1000).toString(),
+      Version: '1.0',
+      PeriodNo: periodNo,
+      AlterType: 'amount',
+      PeriodAmt: newAmount.toString(),
+      PeriodType: periodType,
+    }
+
+    if (periodPoint) {
+      modifyData.PeriodPoint = periodPoint
+    }
+
+    if (periodTimes) {
+      modifyData.PeriodTimes = periodTimes.toString()
+    }
+
+    const postDataString = new URLSearchParams(modifyData).toString()
+    const postData = this.aesEncrypt(postDataString)
+    const postDataSha = this.createCheckValue(postData)
+
+    return {
+      merchantId: this.config.merchantId,
+      postData,
+      postDataSha,
+      apiUrl: this.config.periodApiUrl!.replace('/period', '/period/AlterAmt'),
+    }
+  }
+
+  static createInstance(): NewebPayService {
+    const merchantId = process.env.NEWEBPAY_MERCHANT_ID
+    const hashKey = process.env.NEWEBPAY_HASH_KEY
+    const hashIv = process.env.NEWEBPAY_HASH_IV
+    const apiUrl = process.env.NEWEBPAY_API_URL || 'https://ccore.newebpay.com/MPG/mpg_gateway'
+    const periodApiUrl = process.env.NEWEBPAY_PERIOD_API_URL || 'https://ccore.newebpay.com/MPG/period'
+
+    if (!merchantId || !hashKey || !hashIv) {
+      throw new Error('NewebPay 環境變數未設定')
+    }
+
+    return new NewebPayService({
+      merchantId,
+      hashKey,
+      hashIv,
+      apiUrl,
+      periodApiUrl,
+    })
+  }
+}

@@ -34,7 +34,9 @@ export function MainContent({ children }: { children: ReactNode }) {
         paddingLeft: collapsed ? '80px' : '256px',
       }}
     >
-      {children}
+      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
+        {children}
+      </div>
     </div>
   )
 }

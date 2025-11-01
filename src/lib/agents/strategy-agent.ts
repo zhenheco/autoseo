@@ -87,7 +87,6 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
 
     } catch (error) {
       console.error('[StrategyAgent] Title generation failed:', error);
-      console.error('[StrategyAgent] Response:', response?.content?.substring(0, 500));
       return this.getFallbackTitles(input.researchData.keyword);
     }
   }
