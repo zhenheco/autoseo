@@ -94,6 +94,21 @@
     font-size: 16px;
   }
 
+  /* 為所有按鈕和可點擊元素添加手指游標 */
+  button,
+  a,
+  [role="button"],
+  [onclick],
+  .clickable,
+  input[type="button"],
+  input[type="submit"],
+  input[type="reset"],
+  select,
+  label[for],
+  .cursor-pointer {
+    cursor: pointer !important;
+  }
+
   h1 {
     font-size: 32px;
   }
