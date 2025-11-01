@@ -19,6 +19,8 @@ export default function PricingPage() {
   const [tokenPackages, setTokenPackages] = useState<TokenPackage[]>([])
   const [aiModels, setAiModels] = useState<AIModel[]>([])
   const [loading, setLoading] = useState(true)
+  const [processingPlanId, setProcessingPlanId] = useState<string | null>(null)
+  const [processingPackageId, setProcessingPackageId] = useState<string | null>(null)
 
   useEffect(() => {
     loadPlans()
@@ -98,6 +100,196 @@ export default function PricingPage() {
     if (!plan.yearly_price) return 0
     const monthlyYearly = plan.monthly_price * 12
     return monthlyYearly - plan.yearly_price
+  }
+
+  const submitPaymentForm = (paymentForm: {
+    merchantId: string
+    tradeInfo?: string
+    tradeSha?: string
+    postData?: string
+    postDataSha?: string
+    version?: string
+    apiUrl: string
+  }) => {
+    const form = document.createElement('form')
+    form.method = 'POST'
+    form.action = paymentForm.apiUrl
+
+    const fields: Record<string, string> = {
+      MerchantID: paymentForm.merchantId,
+    }
+
+    if (paymentForm.tradeInfo && paymentForm.tradeSha) {
+      fields.TradeInfo = paymentForm.tradeInfo
+      fields.TradeSha = paymentForm.tradeSha
+      fields.Version = paymentForm.version || '2.0'
+    } else if (paymentForm.postData && paymentForm.postDataSha) {
+      fields.PostData_ = paymentForm.postData
+      fields.PostData_Sha = paymentForm.postDataSha
+    }
+
+    Object.entries(fields).forEach(([key, value]) => {
+      const input = document.createElement('input')
+      input.type = 'hidden'
+      input.name = key
+      input.value = value
+      form.appendChild(input)
+    })
+
+    document.body.appendChild(form)
+    form.submit()
+  }
+
+  async function handlePlanPurchase(plan: SubscriptionPlan) {
+    try {
+      setProcessingPlanId(plan.id)
+
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user) {
+        router.push('/login?redirect=/pricing')
+        return
+      }
+
+      const { data: companies } = await supabase
+        .from('company_members')
+        .select('company_id')
+        .eq('user_id', user.id)
+        .limit(1)
+
+      const companyId = companies?.[0]?.company_id
+      if (!companyId) {
+        alert('找不到公司資訊，請先完成註冊')
+        return
+      }
+
+      const price = getPlanPrice(plan)
+      const isLifetime = billingPeriod === 'lifetime'
+
+      if (isLifetime) {
+        const response = await fetch('/api/payment/onetime/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            companyId,
+            paymentType: 'lifetime',
+            relatedId: plan.id,
+            amount: price,
+            description: `${plan.name} 終身方案`,
+            email: user.email || '',
+          }),
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.error || '支付請求失敗')
+        }
+
+        if (data.paymentForm) {
+          submitPaymentForm(data.paymentForm)
+        }
+      } else {
+        const periodType = billingPeriod === 'yearly' ? 'Y' : 'M'
+        const amount = billingPeriod === 'yearly' ? plan.yearly_price : plan.monthly_price
+
+        const response = await fetch('/api/payment/recurring/create', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            companyId,
+            planId: plan.id,
+            amount,
+            description: `${plan.name} ${billingPeriod === 'yearly' ? '年繳' : '月繳'}方案`,
+            email: user.email || '',
+            periodType,
+            periodPoint: '1',
+            periodStartType: 2,
+            periodTimes: 0,
+          }),
+        })
+
+        const data = await response.json()
+
+        if (!response.ok) {
+          throw new Error(data.error || '支付請求失敗')
+        }
+
+        if (data.paymentForm) {
+          submitPaymentForm(data.paymentForm)
+        }
+      }
+    } catch (error) {
+      console.error('購買失敗:', error)
+      alert(error instanceof Error ? error.message : '購買失敗，請稍後再試')
+    } finally {
+      setProcessingPlanId(null)
+    }
+  }
+
+  async function handleTokenPackagePurchase(pkg: TokenPackage) {
+    try {
+      setProcessingPackageId(pkg.id)
+
+      const supabase = createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (!user) {
+        router.push('/login?redirect=/pricing')
+        return
+      }
+
+      const { data: companies } = await supabase
+        .from('company_members')
+        .select('company_id')
+        .eq('user_id', user.id)
+        .limit(1)
+
+      const companyId = companies?.[0]?.company_id
+      if (!companyId) {
+        alert('找不到公司資訊，請先完成註冊')
+        return
+      }
+
+      const response = await fetch('/api/payment/onetime/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          companyId,
+          paymentType: 'token_package',
+          relatedId: pkg.id,
+          amount: pkg.price,
+          description: `購買 ${pkg.name}`,
+          email: user.email || '',
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || '支付請求失敗')
+      }
+
+      if (data.paymentForm) {
+        submitPaymentForm(data.paymentForm)
+      }
+    } catch (error) {
+      console.error('購買失敗:', error)
+      alert(error instanceof Error ? error.message : '購買失敗，請稍後再試')
+    } finally {
+      setProcessingPackageId(null)
+    }
   }
 
   const renderFeatureList = (features: Record<string, unknown>) => {
@@ -399,14 +591,18 @@ export default function PricingPage() {
                   </ul>
 
                   <Button
+                    onClick={() => handlePlanPurchase(plan)}
+                    disabled={processingPlanId === plan.id}
                     className={`w-full group/button mt-auto ${
                       isPopular
                         ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30'
                         : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
                     }`}
                   >
-                    <span>開始使用</span>
-                    <ArrowRight className="w-4 h-4 ml-2 group-hover/button:translate-x-1 transition-transform" />
+                    <span>{processingPlanId === plan.id ? '處理中...' : '開始使用'}</span>
+                    {processingPlanId !== plan.id && (
+                      <ArrowRight className="w-4 h-4 ml-2 group-hover/button:translate-x-1 transition-transform" />
+                    )}
                   </Button>
                 </div>
 
@@ -445,8 +641,13 @@ export default function PricingPage() {
                   <div className="text-xl font-bold text-green-600 dark:text-green-400">
                     NT$ {pkg.price.toLocaleString()}
                   </div>
-                  <Button size="sm" className="w-full bg-green-600 hover:bg-green-700 text-white">
-                    購買
+                  <Button
+                    size="sm"
+                    onClick={() => handleTokenPackagePurchase(pkg)}
+                    disabled={processingPackageId === pkg.id}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
+                  >
+                    {processingPackageId === pkg.id ? '處理中...' : '購買'}
                   </Button>
                 </div>
               </div>
