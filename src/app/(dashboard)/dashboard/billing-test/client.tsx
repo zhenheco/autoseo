@@ -409,9 +409,6 @@ export default function BillingTestClient() {
                     <th className="px-6 py-4 text-center text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       層級
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                      倍率
-                    </th>
                     <th className="px-6 py-4 text-right text-xs font-semibold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
                       Input
                     </th>
@@ -441,11 +438,6 @@ export default function BillingTestClient() {
                           }`}
                         >
                           {model.tier === 'basic' ? '基礎' : '進階'}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400 text-sm font-bold">
-                          {model.multiplier}x
                         </span>
                       </td>
                       <td className="px-6 py-4 text-right text-sm text-slate-600 dark:text-slate-400 font-mono">

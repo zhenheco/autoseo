@@ -1,17 +1,23 @@
 'use client'
 
 import { useState, useEffect, type ReactNode } from 'react'
+import { useRouter } from 'next/navigation'
 import { createClient } from '@/lib/supabase/client'
 import type { Tables } from '@/types/database.types'
-import { Check, Sparkles, Zap, ArrowRight } from 'lucide-react'
+import { Check, Sparkles, Zap, ArrowRight, CreditCard, Crown, Infinity, Cpu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 
 type SubscriptionPlan = Tables<'subscription_plans'>
+type TokenPackage = Tables<'token_packages'>
+type AIModel = Tables<'ai_model_pricing'>
 
 export default function PricingPage() {
-  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly'>('monthly')
+  const router = useRouter()
+  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly' | 'lifetime'>('monthly')
   const [plans, setPlans] = useState<SubscriptionPlan[]>([])
+  const [tokenPackages, setTokenPackages] = useState<TokenPackage[]>([])
+  const [aiModels, setAiModels] = useState<AIModel[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -21,31 +27,55 @@ export default function PricingPage() {
   async function loadPlans() {
     try {
       const supabase = createClient()
-      const { data, error } = await supabase
-        .from('subscription_plans')
-        .select('*')
-        .eq('is_lifetime', false)
-        .order('monthly_price', { ascending: true })
+      const [plansRes, packagesRes, modelsRes] = await Promise.all([
+        supabase
+          .from('subscription_plans')
+          .select('*')
+          .order('is_lifetime', { ascending: true })
+          .order('monthly_price', { ascending: true }),
+        supabase
+          .from('token_packages')
+          .select('*')
+          .eq('is_active', true)
+          .order('price', { ascending: true }),
+        supabase
+          .from('ai_model_pricing')
+          .select('*')
+          .eq('is_active', true)
+          .order('tier', { ascending: false })
+          .order('provider', { ascending: true })
+      ])
 
-      if (error) throw error
+      if (plansRes.error) throw plansRes.error
+      if (packagesRes.error) throw packagesRes.error
+      if (modelsRes.error) throw modelsRes.error
 
-      // 重新排序：確保 Agency 在最右邊
-      if (data) {
-        const sortedPlans = [...data].sort((a, b) => {
-          // 根據價格判斷方案等級
+      if (plansRes.data) {
+        const monthlyPlans = plansRes.data.filter(p => !p.is_lifetime)
+        const sortedPlans = [...monthlyPlans].sort((a, b) => {
           const priceA = a.monthly_price
           const priceB = b.monthly_price
 
-          // Starter < Professional < Business < Agency
-          if (priceA < 500) return -1 // Starter
+          if (priceA < 500) return -1
           if (priceB < 500) return 1
-          if (priceA < 2000) return -1 // Professional
+          if (priceA < 2000) return -1
           if (priceB < 2000) return 1
-          if (priceA < 5000) return -1 // Business
+          if (priceA < 5000) return -1
           if (priceB < 5000) return 1
-          return 0 // Agency
+          return 0
         })
         setPlans(sortedPlans)
+      }
+
+      if (packagesRes.data) {
+        const displayedPackages = packagesRes.data.filter(pkg =>
+          ['entry-10k', 'standard-50k', 'advanced-100k'].includes(pkg.slug)
+        )
+        setTokenPackages(displayedPackages)
+      }
+
+      if (modelsRes.data) {
+        setAiModels(modelsRes.data)
       }
     } catch (error) {
       console.error('Failed to load plans:', error)
@@ -55,6 +85,9 @@ export default function PricingPage() {
   }
 
   const getPlanPrice = (plan: SubscriptionPlan) => {
+    if (billingPeriod === 'lifetime' && plan.lifetime_price) {
+      return plan.lifetime_price
+    }
     if (billingPeriod === 'yearly' && plan.yearly_price) {
       return plan.yearly_price
     }
@@ -268,6 +301,19 @@ export default function PricingPage() {
                 省 20%
               </Badge>
             </button>
+            <button
+              onClick={() => setBillingPeriod('lifetime')}
+              className={`relative px-6 py-2.5 rounded-full text-sm font-medium transition-all ${
+                billingPeriod === 'lifetime'
+                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/25'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              <span>終身</span>
+              <Badge className="absolute -top-2 -right-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 text-xs px-1.5 py-0">
+                <Crown className="w-3 h-3" />
+              </Badge>
+            </button>
           </div>
         </div>
 
@@ -298,9 +344,11 @@ export default function PricingPage() {
 
                 <div
                   className={`relative h-full flex flex-col rounded-3xl border glass-effect p-8 transition-all duration-500 ${
-                    isPopular
-                      ? 'border-primary/50 shadow-2xl shadow-primary/30 hover:shadow-primary/40'
-                      : 'border-border/50 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/20'
+                    billingPeriod === 'lifetime'
+                      ? 'border-purple-300 dark:border-purple-700 bg-gradient-to-br from-purple-50/50 via-pink-50/50 to-purple-50/50 dark:from-purple-900/10 dark:via-pink-900/10 dark:to-purple-900/10 shadow-2xl shadow-purple-500/20 hover:shadow-purple-500/30'
+                      : isPopular
+                        ? 'border-primary/50 shadow-2xl shadow-primary/30 hover:shadow-primary/40'
+                        : 'border-border/50 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/20'
                   }`}
                 >
                   <div className="mb-8">
@@ -309,18 +357,27 @@ export default function PricingPage() {
                     <div className="mb-1">
                       <div className="text-lg text-muted-foreground mb-1">NT$</div>
                       <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-bold">
+                        <span className={`text-4xl font-bold ${billingPeriod === 'lifetime' ? 'bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent' : ''}`}>
                           {price.toLocaleString()}
                         </span>
                         <span className="text-muted-foreground">
-                          {billingPeriod === 'yearly' ? '/ 年' : '/ 月'}
+                          {billingPeriod === 'lifetime' ? '' : billingPeriod === 'yearly' ? '/ 年' : '/ 月'}
                         </span>
                       </div>
+                      {billingPeriod === 'lifetime' && (
+                        <p className="text-sm text-muted-foreground">一次付費</p>
+                      )}
                     </div>
 
                     {billingPeriod === 'yearly' && savings > 0 && (
                       <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">
                         每年省下 NT$ {savings.toLocaleString()}
+                      </p>
+                    )}
+                    {billingPeriod === 'lifetime' && (
+                      <p className="text-sm text-purple-600 dark:text-purple-400 font-medium flex items-center gap-1">
+                        <Check className="w-4 h-4" />
+                        永久 8 折購買優惠
                       </p>
                     )}
                   </div>
@@ -331,6 +388,9 @@ export default function PricingPage() {
                     </div>
                     <div className="text-sm text-muted-foreground">
                       Tokens / 月
+                    </div>
+                    <div className="text-xs text-muted-foreground/70 mt-1">
+                      每月重置
                     </div>
                   </div>
 
@@ -358,15 +418,111 @@ export default function PricingPage() {
           })}
         </div>
 
-        <div className="text-center space-y-4">
-          <p className="text-muted-foreground">
-            需要更多 Token？可隨時購買額外的 Token 包，永不過期
-          </p>
-          <Button variant="outline" className="group">
-            查看 Token 購買方案
-            <ArrowRight className="w-4 h-4 ml-2 group-hover:translate-x-1 transition-transform" />
-          </Button>
-        </div>
+        <section className="mt-24">
+          <div className="text-center mb-12 space-y-4">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 backdrop-blur-sm">
+              <CreditCard className="w-4 h-4 text-green-600 dark:text-green-400" />
+              <span className="text-sm font-medium text-green-700 dark:text-green-300">Token 購買包</span>
+            </div>
+            <h2 className="text-4xl font-bold">彈性加值，永不過期</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              一次性購買 Token 包，永久有效不過期。終身會員享 8 折優惠
+            </p>
+          </div>
+
+          <div className="flex justify-center">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl">
+              {tokenPackages.map((pkg) => (
+              <div
+                key={pkg.id}
+                className="group relative bg-white dark:bg-slate-800 rounded-xl p-5 shadow-md hover:shadow-xl transition-all duration-300 border border-slate-200 dark:border-slate-700 hover:border-green-400 dark:hover:border-green-500"
+              >
+                <div className="text-center space-y-3">
+                  <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                    {(pkg.tokens / 1000).toLocaleString()}K
+                  </div>
+                  <div className="text-xs text-slate-500 dark:text-slate-400">Tokens</div>
+                  <div className="text-xl font-bold text-green-600 dark:text-green-400">
+                    NT$ {pkg.price.toLocaleString()}
+                  </div>
+                  <Button size="sm" className="w-full bg-green-600 hover:bg-green-700 text-white">
+                    購買
+                  </Button>
+                </div>
+              </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="mt-24">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="p-2 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg">
+              <Cpu className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h2 className="text-2xl font-bold">AI 模型定價</h2>
+              <p className="text-sm text-muted-foreground">動態計費，透明價格</p>
+            </div>
+          </div>
+          <div className="bg-card rounded-2xl shadow-lg overflow-hidden border border-border">
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-muted/50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      模型
+                    </th>
+                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      供應商
+                    </th>
+                    <th className="px-6 py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      層級
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      Input / 1M Token
+                    </th>
+                    <th className="px-6 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                      Output / 1M Token
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {aiModels.map((model) => (
+                    <tr
+                      key={model.id}
+                      className="hover:bg-muted/50 transition-colors"
+                    >
+                      <td className="px-6 py-4 text-sm font-medium">
+                        {model.model_name}
+                      </td>
+                      <td className="px-6 py-4 text-sm text-muted-foreground capitalize">
+                        {model.provider}
+                      </td>
+                      <td className="px-6 py-4 text-center">
+                        <span
+                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                            model.tier === 'basic'
+                              ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
+                              : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
+                          }`}
+                        >
+                          {model.tier === 'basic' ? '基礎' : '進階'}
+                        </span>
+                      </td>
+                      <td className="px-6 py-4 text-right text-sm text-muted-foreground font-mono">
+                        ${model.input_price_per_1m.toFixed(3)}
+                      </td>
+                      <td className="px-6 py-4 text-right text-sm text-muted-foreground font-mono">
+                        ${model.output_price_per_1m.toFixed(3)}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
       </div>
     </div>
   )
