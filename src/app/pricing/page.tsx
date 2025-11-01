@@ -2,11 +2,22 @@
 
 import { useState, useEffect, type ReactNode } from 'react'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import type { Tables } from '@/types/database.types'
-import { Check, Sparkles, Zap, ArrowRight, CreditCard, Crown, Infinity, Cpu } from 'lucide-react'
+import { Check, Sparkles, Zap, ArrowRight, CreditCard, Crown, Infinity, Cpu, User, LogOut, LayoutDashboard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
+import { ThemeToggle } from '@/components/ui/theme-toggle'
 
 type SubscriptionPlan = Tables<'subscription_plans'>
 type TokenPackage = Tables<'token_packages'>
@@ -21,10 +32,35 @@ export default function PricingPage() {
   const [loading, setLoading] = useState(true)
   const [processingPlanId, setProcessingPlanId] = useState<string | null>(null)
   const [processingPackageId, setProcessingPackageId] = useState<string | null>(null)
+  const [userEmail, setUserEmail] = useState<string | null>(null)
 
   useEffect(() => {
     loadPlans()
+    loadUser()
   }, [])
+
+  async function loadUser() {
+    try {
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+      if (user) {
+        setUserEmail(user.email || null)
+      }
+    } catch (error) {
+      console.error('Failed to load user:', error)
+    }
+  }
+
+  async function handleLogout() {
+    try {
+      const supabase = createClient()
+      await supabase.auth.signOut()
+      router.push('/login')
+      router.refresh()
+    } catch (error) {
+      console.error('Failed to logout:', error)
+    }
+  }
 
   async function loadPlans() {
     try {
@@ -111,22 +147,31 @@ export default function PricingPage() {
     version?: string
     apiUrl: string
   }) => {
+    console.log('[表單提交] 開始建立表單')
+    console.log('[表單提交] 目標 URL:', paymentForm.apiUrl)
+
     const form = document.createElement('form')
     form.method = 'POST'
     form.action = paymentForm.apiUrl
 
-    const fields: Record<string, string> = {
-      MerchantID: paymentForm.merchantId,
-    }
+    const fields: Record<string, string> = {}
 
     if (paymentForm.tradeInfo && paymentForm.tradeSha) {
+      // 單次付款使用 MerchantID（無底線）
+      console.log('[表單提交] 單次付款模式')
+      fields.MerchantID = paymentForm.merchantId
       fields.TradeInfo = paymentForm.tradeInfo
       fields.TradeSha = paymentForm.tradeSha
       fields.Version = paymentForm.version || '2.0'
-    } else if (paymentForm.postData && paymentForm.postDataSha) {
+    } else if (paymentForm.postData) {
+      // 定期定額使用 MerchantID_（有底線）
+      // 注意：建立委託 API 只需要 MerchantID_ 和 PostData_ 兩個參數（不需要 PostData_Sha）
+      console.log('[表單提交] 定期定額模式')
+      fields.MerchantID_ = paymentForm.merchantId
       fields.PostData_ = paymentForm.postData
-      fields.PostData_Sha = paymentForm.postDataSha
     }
+
+    console.log('[表單提交] 表單欄位:', Object.keys(fields))
 
     Object.entries(fields).forEach(([key, value]) => {
       const input = document.createElement('input')
@@ -137,6 +182,7 @@ export default function PricingPage() {
     })
 
     document.body.appendChild(form)
+    console.log('[表單提交] 正在提交表單到:', form.action)
     form.submit()
   }
 
@@ -223,6 +269,8 @@ export default function PricingPage() {
         }
 
         if (data.paymentForm) {
+          console.log('[定期定額] 準備提交表單，paymentForm:', data.paymentForm)
+          console.log('[定期定額] API URL:', data.paymentForm.apiUrl)
           submitPaymentForm(data.paymentForm)
         }
       }
@@ -447,6 +495,69 @@ export default function PricingPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-background to-primary/5 relative overflow-hidden">
+      <header className="sticky top-0 z-50 h-16 border-b border-border bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60">
+        <div className="flex h-full items-center justify-between px-6 max-w-7xl mx-auto">
+          <div className="flex items-center gap-8">
+            <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
+                <Sparkles className="h-5 w-5 text-primary-foreground" />
+              </div>
+              <span className="font-semibold text-lg">AutoPilot SEO</span>
+            </Link>
+          </div>
+
+          <div className="flex items-center gap-3">
+            <ThemeToggle />
+
+            {userEmail ? (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-9 w-9 rounded-full ring-2 ring-primary/20 hover:ring-primary/40 transition-all">
+                    <Avatar className="h-9 w-9">
+                      <AvatarImage src="" alt="User avatar" />
+                      <AvatarFallback className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground">
+                        <User className="h-4 w-4" />
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end" forceMount>
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">使用者帳號</p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {userEmail}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/dashboard" className="cursor-pointer">
+                      <LayoutDashboard className="mr-2 h-4 w-4" />
+                      <span>控制台</span>
+                    </Link>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem
+                    onClick={handleLogout}
+                    className="cursor-pointer"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>登出</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ) : (
+              <Link href="/login">
+                <Button variant="outline" size="sm">
+                  登入
+                </Button>
+              </Link>
+            )}
+          </div>
+        </div>
+      </header>
+
       <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--border))_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border))_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
 
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl opacity-20 animate-pulse" />

@@ -30,16 +30,16 @@ export interface PaymentResult {
   success: boolean
   orderId?: string
   error?: string
-  subscription?: Database['public']['Tables']['subscriptions']['Row']
-  tokenUsage?: Database['public']['Tables']['token_usage']['Row']
-  transaction?: Database['public']['Tables']['payment_transactions']['Row']
+  subscription?: Database['public']['Tables']['company_subscriptions']['Row']
+  tokenUsage?: Database['public']['Tables']['token_usage_logs']['Row']
+  transaction?: Database['public']['Tables']['payment_orders']['Row']
 }
 
 export interface PaymentContext {
   supabase: any // SupabaseClient type
   paymentData: PaymentData
   userId: string
-  existingTransaction?: Database['public']['Tables']['payment_transactions']['Row']
+  existingTransaction?: Database['public']['Tables']['payment_orders']['Row']
 }
 
 /**

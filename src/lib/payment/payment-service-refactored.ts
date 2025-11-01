@@ -84,13 +84,13 @@ export class PaymentServiceRefactored {
         .insert({
           order_no: orderNo,
           company_id: params.companyId,
+          order_type: 'onetime',  // Always onetime for token packages
           payment_type: params.paymentType,
           related_id: params.relatedId,
           amount: params.amount,
+          currency: 'TWD',
           status: 'pending',
-          description: params.description,
-          email: params.email,
-          referral_code: params.referralCode,
+          item_description: params.description,
           created_at: new Date().toISOString()
         })
 
@@ -103,15 +103,30 @@ export class PaymentServiceRefactored {
       }
 
       // 準備支付參數
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3168'
       const paymentParams: OnetimePaymentParams = {
-        MerchantOrderNo: orderNo,
-        Amt: params.amount,
-        ItemDesc: params.description,
-        Email: params.email
+        orderNo: orderNo,
+        amount: params.amount,
+        description: params.description,
+        email: params.email,
+        returnUrl: `${appUrl}/payment/result`,
+        notifyUrl: `${appUrl}/api/payment/onetime/callback`,
+        clientBackUrl: `${appUrl}/payment/cancel`
       }
 
-      // 生成支付表單
-      const formHtml = this.newebpay.generateOnetimePaymentForm(paymentParams)
+      // 生成支付資料
+      const paymentData = this.newebpay.createOnetimePayment(paymentParams)
+
+      // 產生 HTML 表單
+      const formHtml = `
+        <form id="payment-form" method="POST" action="${paymentData.apiUrl}">
+          <input type="hidden" name="MerchantID" value="${paymentData.merchantId}" />
+          <input type="hidden" name="TradeInfo" value="${paymentData.tradeInfo}" />
+          <input type="hidden" name="TradeSha" value="${paymentData.tradeSha}" />
+          <input type="hidden" name="Version" value="${paymentData.version}" />
+        </form>
+        <script>document.getElementById('payment-form').submit();</script>
+      `
 
       return {
         success: true,
@@ -129,11 +144,18 @@ export class PaymentServiceRefactored {
   /**
    * 處理一次性支付回調（使用策略模式）
    */
-  async handleOnetimeCallback(encryptedData: string): Promise<PaymentResult> {
+  async handleOnetimeCallback(tradeInfo: string, tradeSha: string): Promise<PaymentResult> {
     try {
       // 解密數據
-      const decryptedData = this.newebpay.decryptOnetimeCallback(encryptedData)
-      const paymentData = decryptedData.Result as PaymentData
+      const decryptedData = this.newebpay.decryptCallback(tradeInfo, tradeSha)
+      // 處理 decryptedData 可能沒有 Result 或 Result 不是對象的情況
+      if (!decryptedData.Result || typeof decryptedData.Result !== 'object') {
+        return {
+          success: false,
+          error: 'Invalid payment data format'
+        }
+      }
+      const paymentData = decryptedData as unknown as PaymentData
 
       // 獲取訂單信息
       const { data: order } = await this.supabase
@@ -160,7 +182,6 @@ export class PaymentServiceRefactored {
       // 補充支付數據
       paymentData.productType = productType
       paymentData.userId = order.company_id
-      paymentData.referralCode = order.referral_code
 
       // 根據產品類型添加額外信息
       if (productType === 'subscription') {
@@ -203,7 +224,7 @@ export class PaymentServiceRefactored {
       // 更新訂單狀態
       await this.updateOrderStatus(
         paymentData.MerchantOrderNo,
-        result.success ? 'completed' : 'failed'
+        result.success ? 'success' : 'failed'
       )
 
       return result
@@ -228,21 +249,19 @@ export class PaymentServiceRefactored {
       const orderNo = this.generateOrderNo()
       const mandateNo = this.generateMandateNo()
 
-      // 記錄訂單
+      // 記錄訂單到 payment_orders 表
       const { error: dbError } = await this.supabase
-        .from('recurring_orders')
+        .from('payment_orders')
         .insert({
           order_no: orderNo,
           company_id: params.companyId,
-          plan_id: params.planId,
+          order_type: 'recurring_first',  // 定期扣款的第一次
+          payment_type: 'subscription',
           amount: params.amount,
-          period_type: params.periodType,
-          period_point: params.periodPoint,
-          period_start_type: params.periodStartType,
-          period_times: params.periodTimes,
+          currency: 'TWD',
+          item_description: params.description || '定期扣款訂閱',
+          related_id: params.planId || null,  // 使用 plan_id 作為 related_id
           status: 'pending',
-          description: params.description,
-          email: params.email,
           created_at: new Date().toISOString()
         })
 
@@ -255,21 +274,32 @@ export class PaymentServiceRefactored {
       }
 
       // 準備支付參數
+      const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3168'
       const paymentParams: RecurringPaymentParams = {
-        MerNo: mandateNo,
-        MerMemberID: params.companyId,
-        MerchantOrderNo: orderNo,
-        PeriodAmt: params.amount,
-        ProdDesc: params.description,
-        PayerEmail: params.email,
-        PeriodType: params.periodType,
-        PeriodPoint: params.periodPoint || '',
-        PeriodStartType: params.periodStartType,
-        PeriodTimes: params.periodTimes?.toString() || ''
+        orderNo: orderNo,
+        amount: params.amount,
+        description: params.description,
+        email: params.email,
+        periodType: params.periodType,
+        periodPoint: params.periodPoint,
+        periodStartType: params.periodStartType,
+        periodTimes: params.periodTimes,
+        returnUrl: `${appUrl}/payment/result`,
+        notifyUrl: `${appUrl}/api/payment/recurring/callback`,
+        clientBackUrl: `${appUrl}/payment/cancel`
       }
 
-      // 生成支付表單
-      const formHtml = this.newebpay.generateRecurringPaymentForm(paymentParams)
+      // 生成支付資料
+      const paymentData = this.newebpay.createRecurringPayment(paymentParams)
+
+      // 產生 HTML 表單
+      const formHtml = `
+        <form id="payment-form" method="POST" action="${paymentData.apiUrl}">
+          <input type="hidden" name="MerchantID" value="${paymentData.merchantId}" />
+          <input type="hidden" name="PostData_" value="${paymentData.postData}" />
+        </form>
+        <script>document.getElementById('payment-form').submit();</script>
+      `
 
       return {
         success: true,
@@ -287,13 +317,13 @@ export class PaymentServiceRefactored {
   /**
    * 處理定期扣款回調
    */
-  async handleRecurringCallback(encryptedData: string): Promise<{
+  async handleRecurringCallback(period: string): Promise<{
     success: boolean
     data?: any
     error?: string
   }> {
     try {
-      const decryptedData = this.newebpay.decryptRecurringCallback(encryptedData)
+      const decryptedData = this.newebpay.decryptPeriodCallback(period)
 
       // 處理定期扣款邏輯
       // 這部分可以根據需要擴展
@@ -333,7 +363,7 @@ export class PaymentServiceRefactored {
    */
   private async updateOrderStatus(
     orderNo: string,
-    status: 'pending' | 'completed' | 'failed'
+    status: 'pending' | 'success' | 'failed'
   ): Promise<void> {
     await this.supabase
       .from('payment_orders')

@@ -112,7 +112,7 @@ export function SettingsClient({
                     variant="outline"
                     size="sm"
                     type="button"
-                    onClick={() => router.push('/dashboard/billing-test')}
+                    onClick={() => router.push('/pricing')}
                   >
                     升級方案
                   </Button>

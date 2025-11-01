@@ -16,8 +16,8 @@ export interface SubscriptionActivationParams {
 
 export interface SubscriptionActivationResult {
   success: boolean
-  subscription?: Database['public']['Tables']['subscriptions']['Row']
-  tokenUsage?: Database['public']['Tables']['token_usage']['Row']
+  subscription?: Database['public']['Tables']['company_subscriptions']['Row']
+  tokenUsage?: Database['public']['Tables']['token_usage_logs']['Row']
   error?: string
 }
 
@@ -102,7 +102,7 @@ export class SubscriptionActivationService {
     return {
       success: true,
       subscription,
-      tokenUsage
+      tokenUsage: tokenUsage || undefined
     }
   }
 
@@ -111,9 +111,9 @@ export class SubscriptionActivationService {
    */
   private async checkExistingSubscription(
     userId: string
-  ): Promise<Database['public']['Tables']['subscriptions']['Row'] | null> {
+  ): Promise<Database['public']['Tables']['company_subscriptions']['Row'] | null> {
     const { data } = await this.supabase
-      .from('subscriptions')
+      .from('company_subscriptions')
       .select('*')
       .eq('user_id', userId)
       .eq('status', 'active')
@@ -129,13 +129,13 @@ export class SubscriptionActivationService {
     userId: string,
     plan: string,
     amount: number
-  ): Promise<Database['public']['Tables']['subscriptions']['Row'] | null> {
+  ): Promise<Database['public']['Tables']['company_subscriptions']['Row'] | null> {
     const now = new Date()
     const startDate = now.toISOString()
     const endDate = this.calculateEndDate(plan, now)
 
     const { data, error } = await this.supabase
-      .from('subscriptions')
+      .from('company_subscriptions')
       .insert({
         user_id: userId,
         plan,
@@ -161,12 +161,12 @@ export class SubscriptionActivationService {
    * 升級訂閱
    */
   private async upgradeSubscription(
-    existing: Database['public']['Tables']['subscriptions']['Row'],
+    existing: Database['public']['Tables']['company_subscriptions']['Row'],
     newPlan: string,
     amount: number
   ): Promise<SubscriptionActivationResult> {
     const { data, error } = await this.supabase
-      .from('subscriptions')
+      .from('company_subscriptions')
       .update({
         plan: newPlan,
         price: amount,
@@ -182,12 +182,12 @@ export class SubscriptionActivationService {
     }
 
     // 更新 token usage
-    const tokenUsage = await this.updateTokenUsage(existing.user_id, newPlan)
+    const tokenUsage = await this.updateTokenUsage(existing.company_id, newPlan)
 
     return {
       success: true,
       subscription: data,
-      tokenUsage
+      tokenUsage: tokenUsage || undefined
     }
   }
 
@@ -197,12 +197,12 @@ export class SubscriptionActivationService {
   private async updateTokenUsage(
     userId: string,
     plan: string
-  ): Promise<Database['public']['Tables']['token_usage']['Row'] | null> {
+  ): Promise<Database['public']['Tables']['token_usage_logs']['Row'] | null> {
     const tokenQuota = this.getTokenQuota(plan)
 
     // 先嘗試更新
     const { data: updateData, error: updateError } = await this.supabase
-      .from('token_usage')
+      .from('token_usage_logs')
       .update({
         total_tokens: tokenQuota,
         updated_at: new Date().toISOString()
@@ -217,7 +217,7 @@ export class SubscriptionActivationService {
 
     // 如果更新失敗，創建新記錄
     const { data: insertData, error: insertError } = await this.supabase
-      .from('token_usage')
+      .from('token_usage_logs')
       .insert({
         user_id: userId,
         total_tokens: tokenQuota,

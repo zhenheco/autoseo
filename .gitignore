@@ -47,3 +47,8 @@ yarn-error.log*
 
 # Supabase
 supabase/.env
+
+# Cloudflare
+.open-next/
+.dev.vars
+.wrangler/

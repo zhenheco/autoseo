@@ -10,7 +10,9 @@
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "db:migrate": "node scripts/run-migrations.js",
-    "db:generate-types": "supabase gen types typescript --project-id YOUR_PROJECT_REF > src/types/database.types.ts"
+    "db:generate-types": "supabase gen types typescript --project-id YOUR_PROJECT_REF > src/types/database.types.ts",
+    "preview:cf": "opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy:cf": "opennextjs-cloudflare build && opennextjs-cloudflare deploy"
   },
   "keywords": [],
   "author": "",
@@ -51,6 +53,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@opennextjs/cloudflare": "^1.11.0",
     "@playwright/test": "^1.56.1",
     "@tailwindcss/postcss": "^4.1.16",
     "@types/jest": "^30.0.0",
@@ -66,6 +69,7 @@
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.15",
     "tailwindcss-animate": "^1.0.7",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3",
+    "wrangler": "^4.45.3"
   }
 }

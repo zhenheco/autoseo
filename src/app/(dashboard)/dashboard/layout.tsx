@@ -95,14 +95,18 @@ export default async function DashboardLayout({
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <form action={logout} className="w-full">
-                        <button type="submit" className="flex w-full items-center cursor-pointer">
-                          <LogOut className="mr-2 h-4 w-4" />
-                          <span>登出</span>
-                        </button>
-                      </form>
-                    </DropdownMenuItem>
+                    <form action={logout} id="logout-form">
+                      <DropdownMenuItem
+                        onClick={(e) => {
+                          e.preventDefault()
+                          const form = document.getElementById('logout-form') as HTMLFormElement
+                          form?.requestSubmit()
+                        }}
+                      >
+                        <LogOut className="mr-2 h-4 w-4" />
+                        <span>登出</span>
+                      </DropdownMenuItem>
+                    </form>
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>

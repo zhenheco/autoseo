@@ -4,6 +4,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { createArticle } from './actions'
 
+export const dynamic = 'force-dynamic'
+
 export default async function NewArticlePage() {
   return (
     <div className="container mx-auto p-8 max-w-2xl">

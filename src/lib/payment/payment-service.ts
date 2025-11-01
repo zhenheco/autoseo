@@ -111,7 +111,7 @@ export class PaymentService {
     paymentForm?: {
       merchantId: string
       postData: string
-      postDataSha: string
+      postDataSha?: string  // 定期定額不需要 postDataSha
       apiUrl: string
     }
     error?: string
@@ -168,13 +168,23 @@ export class PaymentService {
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
+    // 確保 periodPoint 是兩位數格式
+    let formattedPeriodPoint: string | undefined
+    if (params.periodPoint && params.periodType === 'M') {
+      // 月繳需要兩位數格式 (01-31)
+      const day = parseInt(params.periodPoint)
+      formattedPeriodPoint = day.toString().padStart(2, '0')
+    } else {
+      formattedPeriodPoint = params.periodPoint
+    }
+
     const paymentParams: RecurringPaymentParams = {
       orderNo: mandateNo,
       amount: params.amount,
       description: params.description,
       email: params.email,
       periodType: params.periodType,
-      periodPoint: params.periodPoint,
+      periodPoint: formattedPeriodPoint,
       periodStartType: params.periodStartType,
       periodTimes: params.periodTimes,
       returnUrl: `${baseUrl}/api/payment/recurring/callback`,
@@ -331,6 +341,11 @@ export class PaymentService {
       console.error('[PaymentService] 處理回調失敗:', error)
       return { success: false, error: '處理回調失敗' }
     }
+  }
+
+  // 解密 TradeInfo 格式的定期定額回調
+  decryptTradeInfoForRecurring(tradeInfo: string, tradeSha: string): any {
+    return this.newebpay.decryptCallback(tradeInfo, tradeSha)
   }
 
   async handleRecurringCallback(period: string): Promise<{

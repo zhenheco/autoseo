@@ -80,11 +80,11 @@ export abstract class BasePaymentStrategy implements PaymentStrategy {
   protected async createTransaction(
     context: PaymentContext,
     status: 'pending' | 'completed' | 'failed' = 'completed'
-  ): Promise<Database['public']['Tables']['payment_transactions']['Row'] | null> {
+  ): Promise<Database['public']['Tables']['payment_orders']['Row'] | null> {
     const { supabase, paymentData, userId } = context
 
     const { data, error } = await supabase
-      .from('payment_transactions')
+      .from('payment_orders')
       .insert({
         order_no: paymentData.MerchantOrderNo,
         user_id: userId,

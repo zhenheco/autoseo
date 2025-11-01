@@ -114,13 +114,15 @@ export class NewebPayService {
   createRecurringPayment(params: RecurringPaymentParams): {
     merchantId: string
     postData: string
-    postDataSha: string
     apiUrl: string
   } {
+    // 注意：定期定額 API 必須使用 Version 1.5
+    // 加密資料內部也需要 MerchantID_（根據文件要求）
     const periodData: Record<string, string> = {
+      MerchantID_: this.config.merchantId,  // 注意：加密內也需要 MerchantID_
       RespondType: 'JSON',
       TimeStamp: Math.floor(Date.now() / 1000).toString(),
-      Version: '1.0',
+      Version: '1.5',  // 必須是 1.5，不能是 1.0
       MerOrderNo: params.orderNo,
       ProdDesc: params.description,
       PeriodAmt: params.amount.toString(),
@@ -131,24 +133,36 @@ export class NewebPayService {
       BackURL: params.clientBackUrl || params.returnUrl,
       EmailModify: '1',
       PayerEmail: params.email,
+      CREDIT: '1',
     }
 
     if (params.periodPoint) {
-      periodData.PeriodPoint = params.periodPoint
+      // 確保月繳的日期是兩位數格式 (01-31)
+      if (params.periodType === 'M') {
+        const day = parseInt(params.periodPoint)
+        const formattedDay = day.toString().padStart(2, '0')
+        console.log('[NewebPay] 格式化 PeriodPoint: ', params.periodPoint, ' -> ', formattedDay)
+        periodData.PeriodPoint = formattedDay
+      } else {
+        periodData.PeriodPoint = params.periodPoint
+      }
     }
 
-    if (params.periodTimes) {
+    // 只有當 periodTimes 不是無限期（0 或未設定）時才傳送
+    console.log('[NewebPay] PeriodTimes 原始值: ', params.periodTimes)
+    if (params.periodTimes !== undefined && params.periodTimes !== null && params.periodTimes !== 0) {
+      console.log('[NewebPay] 設定 PeriodTimes: ', params.periodTimes)
       periodData.PeriodTimes = params.periodTimes.toString()
+    } else {
+      console.log('[NewebPay] 不傳送 PeriodTimes (無限期)')
     }
 
     const postDataString = new URLSearchParams(periodData).toString()
     const postData = this.aesEncrypt(postDataString)
-    const postDataSha = this.createCheckValue(postData)
 
     return {
       merchantId: this.config.merchantId,
       postData,
-      postDataSha,
       apiUrl: this.config.periodApiUrl!,
     }
   }
