@@ -148,13 +148,14 @@ export class NewebPayService {
       }
     }
 
-    // 只有當 periodTimes 不是無限期（0 或未設定）時才傳送
+    // NewebPay 定期定額要求必須提供 PeriodTimes，無限期訂閱使用 99
     console.log('[NewebPay] PeriodTimes 原始值: ', params.periodTimes)
-    if (params.periodTimes !== undefined && params.periodTimes !== null && params.periodTimes !== 0) {
+    if (params.periodTimes === 0 || params.periodTimes === undefined || params.periodTimes === null) {
+      console.log('[NewebPay] 設定 PeriodTimes 為 99 (無限期)')
+      periodData.PeriodTimes = '99'
+    } else {
       console.log('[NewebPay] 設定 PeriodTimes: ', params.periodTimes)
       periodData.PeriodTimes = params.periodTimes.toString()
-    } else {
-      console.log('[NewebPay] 不傳送 PeriodTimes (無限期)')
     }
 
     const postDataString = new URLSearchParams(periodData).toString()
