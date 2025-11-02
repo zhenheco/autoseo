@@ -122,7 +122,17 @@ async function handleCallback(request: NextRequest) {
         // 定期定額授權回調
         console.log('[Payment Callback] 處理定期定額授權回調')
         decryptedData = paymentService.decryptPeriodCallback(period!)
-        orderNo = decryptedData.MerOrderNo as string
+
+        // 記錄完整解密資料（診斷用）
+        console.log('[Payment Callback] 定期定額解密資料:', JSON.stringify(decryptedData, null, 2))
+
+        // 嘗試多個可能的欄位名稱
+        orderNo = (decryptedData.MerOrderNo || decryptedData.PeriodNo || decryptedData.MandateNo) as string
+
+        if (!orderNo) {
+          console.error('[Payment Callback] 無法從解密資料取得 orderNo，可用欄位:', Object.keys(decryptedData))
+          throw new Error('無法取得訂單編號')
+        }
       } else {
         // 一般付款回調
         console.log('[Payment Callback] 處理一般付款回調')
@@ -130,15 +140,53 @@ async function handleCallback(request: NextRequest) {
         orderNo = (decryptedData.MerOrderNo || decryptedData.MerchantOrderNo) as string
       }
 
-      console.log('[Payment Callback] 解密成功，立即重定向:', {
-        orderNo,
-        status: decryptedData.Status,
-        isPeriodCallback,
-        decryptedData
-      })
+      console.log('[Payment Callback] 解密成功，orderNo:', orderNo)
 
-      // 立即返回，不等待訂單查詢
-      // 前端會輪詢訂單狀態
+      // 對於定期定額，等待 NotifyURL 處理完成（最多 10 秒）
+      if (isPeriodCallback) {
+        console.log('[Payment Callback] 等待 NotifyURL 處理完成...')
+
+        for (let attempt = 1; attempt <= 5; attempt++) {
+          const { data: mandate } = await supabase
+            .from('recurring_mandates')
+            .select('status')
+            .eq('mandate_no', orderNo)
+            .maybeSingle()
+
+          if (mandate && mandate.status === 'active') {
+            console.log(`[Payment Callback] NotifyURL 已完成 (嘗試 ${attempt}/5)`)
+            const redirectUrl = `${baseUrl}/dashboard/billing?payment=success&orderNo=${encodeURIComponent(orderNo)}`
+            return new NextResponse(
+              `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>處理中...</title>
+</head>
+<body>
+  <script>
+    window.location.href = "${redirectUrl}";
+  </script>
+</body>
+</html>`,
+              {
+                status: 200,
+                headers: { 'Content-Type': 'text/html; charset=utf-8' }
+              }
+            )
+          }
+
+          console.log(`[Payment Callback] NotifyURL 尚未完成 (嘗試 ${attempt}/5)`)
+
+          if (attempt < 5) {
+            await new Promise(resolve => setTimeout(resolve, 2000))
+          }
+        }
+
+        console.log('[Payment Callback] NotifyURL 10 秒內未完成，前端繼續輪詢')
+      }
+
+      // 返回 pending 狀態，前端會輪詢訂單狀態
       const redirectUrl = `${baseUrl}/dashboard/billing?payment=pending&orderNo=${encodeURIComponent(orderNo)}`
 
       return new NextResponse(
