@@ -62,6 +62,13 @@ export class PaymentService {
   }> {
     const orderNo = this.generateOrderNo()
 
+    console.log('[PaymentService] 建立單次付款訂單:', {
+      orderNo,
+      companyId: params.companyId,
+      amount: params.amount,
+      paymentType: params.paymentType
+    })
+
     const { data: orderData, error: orderError } = await this.supabase
       .from('payment_orders')
       .insert({
@@ -78,9 +85,14 @@ export class PaymentService {
       .single()
 
     if (orderError || !orderData) {
-      console.error('[PaymentService] 建立訂單失敗:', orderError)
+      console.error('[PaymentService] 建立訂單失敗:', { orderNo, error: orderError })
       return { success: false, error: '建立訂單失敗' }
     }
+
+    console.log('[PaymentService] 訂單建立成功:', {
+      orderId: orderData.id,
+      orderNo: orderData.order_no
+    })
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
@@ -215,16 +227,49 @@ export class PaymentService {
       const tradeNo = decryptedData.TradeNo as string
       const amount = decryptedData.Amt as number
 
-      const { data: orderData, error: findError } = await this.supabase
-        .from('payment_orders')
-        .select<'*', Database['public']['Tables']['payment_orders']['Row']>('*')
-        .eq('order_no', orderNo)
-        .single()
+      console.log('[PaymentService] 處理付款通知:', {
+        orderNo,
+        status,
+        tradeNo,
+        amount
+      })
+
+      // 加入重試機制，最多重試 3 次，每次間隔 1 秒
+      let orderData: Database['public']['Tables']['payment_orders']['Row'] | null = null
+      let findError: unknown = null
+
+      for (let attempt = 1; attempt <= 3; attempt++) {
+        const { data, error } = await this.supabase
+          .from('payment_orders')
+          .select<'*', Database['public']['Tables']['payment_orders']['Row']>('*')
+          .eq('order_no', orderNo)
+          .single()
+
+        if (data && !error) {
+          orderData = data
+          findError = null
+          break
+        }
+
+        findError = error
+        console.log(`[PaymentService] 查詢訂單失敗 (嘗試 ${attempt}/3):`, { orderNo, error })
+
+        if (attempt < 3) {
+          // 等待 1 秒後重試
+          await new Promise(resolve => setTimeout(resolve, 1000))
+        }
+      }
 
       if (findError || !orderData) {
-        console.error('[PaymentService] 找不到訂單:', orderNo)
+        console.error('[PaymentService] 找不到訂單（已重試3次）:', {
+          orderNo,
+          tradeNo,
+          error: findError
+        })
         return { success: false, error: '找不到訂單' }
       }
+
+      console.log('[PaymentService] 找到訂單:', { id: orderData.id, status: orderData.status })
 
       if (status === 'SUCCESS') {
         const { error: updateError } = await this.supabase
