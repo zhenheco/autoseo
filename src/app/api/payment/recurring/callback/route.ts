@@ -57,8 +57,12 @@ async function handleCallback(request: NextRequest) {
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
-    // 如果有錯誤狀態，直接返回錯誤
-    if (status && status !== 'SUCCESS' && status !== '1') {
+    // 定期定額授權使用 Period 參數，一般付款使用 TradeInfo/TradeSha
+    const isPeriodCallback = !!period
+    const isTradeCallback = !!tradeInfo && !!tradeSha
+
+    // 只在一般付款時檢查 Status，定期定額授權不檢查（因為 ReturnURL 可能不帶 Status）
+    if (!isPeriodCallback && status && status !== 'SUCCESS' && status !== '1') {
       console.error('[Payment Callback] 付款失敗，狀態:', status, '訊息:', message)
       const redirectUrl = `${baseUrl}/dashboard/billing?payment=failed&error=${encodeURIComponent(message || '付款失敗')}`
       return new NextResponse(
@@ -80,10 +84,6 @@ async function handleCallback(request: NextRequest) {
         }
       )
     }
-
-    // 定期定額授權使用 Period 參數，一般付款使用 TradeInfo/TradeSha
-    const isPeriodCallback = !!period
-    const isTradeCallback = !!tradeInfo && !!tradeSha
 
     if (!isPeriodCallback && !isTradeCallback) {
       console.error('[Payment Callback] 缺少必要參數')
