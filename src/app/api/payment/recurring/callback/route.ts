@@ -85,8 +85,26 @@ async function handleCallback(request: NextRequest) {
     // 如果有錯誤狀態，直接返回錯誤
     if (status && status !== 'SUCCESS' && status !== '1') {
       console.error('[Recurring Callback] 付款失敗，狀態:', status, '訊息:', message)
-      const redirectUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-      return NextResponse.redirect(`${redirectUrl}/dashboard/billing?subscription=failed&error=${encodeURIComponent(message || '付款失敗')}`)
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+      const redirectUrl = `${baseUrl}/dashboard/billing?subscription=failed&error=${encodeURIComponent(message || '付款失敗')}`
+      return new NextResponse(
+        `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>處理中...</title>
+</head>
+<body>
+  <script>
+    window.location.href = "${redirectUrl}";
+  </script>
+</body>
+</html>`,
+        {
+          status: 200,
+          headers: { 'Content-Type': 'text/html; charset=utf-8' }
+        }
+      )
     }
 
     // 檢查是否有任何可用的參數
@@ -96,8 +114,26 @@ async function handleCallback(request: NextRequest) {
 
       // 如果完全沒有參數，可能是用戶直接訪問此 URL
       if (Object.keys(params).length === 0) {
-        const redirectUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-        return NextResponse.redirect(`${redirectUrl}/dashboard/billing`)
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+        const redirectUrl = `${baseUrl}/dashboard/billing`
+        return new NextResponse(
+          `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>處理中...</title>
+</head>
+<body>
+  <script>
+    window.location.href = "${redirectUrl}";
+  </script>
+</body>
+</html>`,
+          {
+            status: 200,
+            headers: { 'Content-Type': 'text/html; charset=utf-8' }
+          }
+        )
       }
 
       return NextResponse.json(
@@ -121,13 +157,33 @@ async function handleCallback(request: NextRequest) {
       console.log('[Recurring Callback] 處理 Period 參數')
       const result = await paymentService.handleRecurringCallback(period)
 
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+      let redirectUrl: string
+
       if (result.success) {
-        const redirectUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-        return NextResponse.redirect(`${redirectUrl}/dashboard/billing?subscription=success`)
+        redirectUrl = `${baseUrl}/dashboard/billing?subscription=success`
       } else {
-        const redirectUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-        return NextResponse.redirect(`${redirectUrl}/dashboard/billing?subscription=failed&error=${encodeURIComponent(result.error || '訂閱失敗')}`)
+        redirectUrl = `${baseUrl}/dashboard/billing?subscription=failed&error=${encodeURIComponent(result.error || '訂閱失敗')}`
       }
+
+      return new NextResponse(
+        `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>處理中...</title>
+</head>
+<body>
+  <script>
+    window.location.href = "${redirectUrl}";
+  </script>
+</body>
+</html>`,
+        {
+          status: 200,
+          headers: { 'Content-Type': 'text/html; charset=utf-8' }
+        }
+      )
     }
 
     // 如果有 TradeInfo 參數，可能是一般付款回調格式
@@ -165,21 +221,93 @@ async function handleCallback(request: NextRequest) {
             throw dbError
           }
 
-          const redirectUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-          return NextResponse.redirect(`${redirectUrl}/dashboard/billing?subscription=success`)
+          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+          const redirectUrl = `${baseUrl}/dashboard/billing?subscription=success`
+          return new NextResponse(
+            `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>處理中...</title>
+</head>
+<body>
+  <script>
+    window.location.href = "${redirectUrl}";
+  </script>
+</body>
+</html>`,
+            {
+              status: 200,
+              headers: { 'Content-Type': 'text/html; charset=utf-8' }
+            }
+          )
         } else {
-          const redirectUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-          return NextResponse.redirect(`${redirectUrl}/dashboard/billing?subscription=failed&error=${encodeURIComponent(decryptedData.Message || '訂閱失敗')}`)
+          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+          const redirectUrl = `${baseUrl}/dashboard/billing?subscription=failed&error=${encodeURIComponent(decryptedData.Message || '訂閱失敗')}`
+          return new NextResponse(
+            `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>處理中...</title>
+</head>
+<body>
+  <script>
+    window.location.href = "${redirectUrl}";
+  </script>
+</body>
+</html>`,
+            {
+              status: 200,
+              headers: { 'Content-Type': 'text/html; charset=utf-8' }
+            }
+          )
         }
       } catch (error) {
         console.error('[Recurring Callback] 處理 TradeInfo 失敗:', error)
-        const redirectUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-        return NextResponse.redirect(`${redirectUrl}/dashboard/billing?subscription=error`)
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+        const redirectUrl = `${baseUrl}/dashboard/billing?subscription=error`
+        return new NextResponse(
+          `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>處理中...</title>
+</head>
+<body>
+  <script>
+    window.location.href = "${redirectUrl}";
+  </script>
+</body>
+</html>`,
+          {
+            status: 200,
+            headers: { 'Content-Type': 'text/html; charset=utf-8' }
+          }
+        )
       }
     }
   } catch (error) {
     console.error('[API] 處理定期定額回調失敗:', error)
-    const redirectUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    return NextResponse.redirect(`${redirectUrl}/dashboard/billing?subscription=error`)
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+    const redirectUrl = `${baseUrl}/dashboard/billing?subscription=error`
+    return new NextResponse(
+      `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>處理中...</title>
+</head>
+<body>
+  <script>
+    window.location.href = "${redirectUrl}";
+  </script>
+</body>
+</html>`,
+      {
+        status: 200,
+        headers: { 'Content-Type': 'text/html; charset=utf-8' }
+      }
+    )
   }
 }
