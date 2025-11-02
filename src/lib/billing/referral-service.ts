@@ -38,7 +38,13 @@ export class ReferralService {
       .from('company_referral_codes')
       .select('*')
       .eq('company_id', companyId)
-      .single()
+      .single<{
+        company_id: string
+        referral_code: string
+        total_referrals: number
+        successful_referrals: number
+        total_rewards_tokens: number
+      }>()
 
     if (error || !data) {
       console.error('[ReferralService] 取得推薦碼失敗:', error)
@@ -59,7 +65,7 @@ export class ReferralService {
       .from('company_referral_codes')
       .select('company_id')
       .eq('referral_code', code)
-      .single()
+      .single<{ company_id: string }>()
 
     if (error || !data) {
       return { valid: false }
@@ -77,7 +83,7 @@ export class ReferralService {
       .from('referrals')
       .select('id')
       .eq('referred_company_id', referredCompanyId)
-      .single()
+      .single<{ id: string }>()
 
     if (existing) {
       return { success: false, error: '此公司已使用過推薦碼' }
@@ -92,7 +98,7 @@ export class ReferralService {
         status: 'pending',
       })
       .select()
-      .single()
+      .single<{ id: string; referrer_company_id: string; referred_company_id: string }>()
 
     if (referralError) {
       console.error('[ReferralService] 建立推薦關係失敗:', referralError)
@@ -105,7 +111,7 @@ export class ReferralService {
       .from('company_referral_codes')
       .select('total_referrals')
       .eq('company_id', referrerCompanyId)
-      .single()
+      .single<{ total_referrals: number }>()
 
     if (referrerCodeData) {
       await this.supabase
@@ -128,7 +134,7 @@ export class ReferralService {
       .select('purchased_token_balance')
       .eq('company_id', referredCompanyId)
       .eq('status', 'active')
-      .single()
+      .single<{ purchased_token_balance: number }>()
 
     if (!subscription) {
       console.error('[ReferralService] 找不到被推薦者的訂閱')
@@ -170,7 +176,7 @@ export class ReferralService {
       .select('*')
       .eq('referred_company_id', referredCompanyId)
       .eq('status', 'pending')
-      .single()
+      .single<{ id: string; referrer_company_id: string; referred_company_id: string }>()
 
     if (referralError || !referral) {
       return { success: false }
@@ -183,7 +189,7 @@ export class ReferralService {
       .select('purchased_token_balance')
       .eq('company_id', referral.referrer_company_id)
       .eq('status', 'active')
-      .single()
+      .single<{ purchased_token_balance: number }>()
 
     if (referrerSubscription) {
       const newBalance = referrerSubscription.purchased_token_balance + referrerRewardTokens
@@ -216,7 +222,7 @@ export class ReferralService {
         .from('company_referral_codes')
         .select('successful_referrals, total_rewards_tokens')
         .eq('company_id', referral.referrer_company_id)
-        .single()
+        .single<{ successful_referrals: number; total_rewards_tokens: number }>()
 
       if (currentCodeData) {
         await this.supabase
@@ -279,7 +285,18 @@ export class ReferralService {
       return []
     }
 
-    return (data || []).map(r => ({
+    type ReferralRewardRow = {
+      id: string
+      referral_id: string
+      company_id: string
+      reward_type: string
+      token_amount: number | null
+      cash_amount: number | null
+      description: string | null
+      created_at: string | null
+    }
+
+    return ((data || []) as ReferralRewardRow[]).map(r => ({
       id: r.id,
       referralId: r.referral_id,
       companyId: r.company_id,
