@@ -64,18 +64,18 @@ curl -I https://seo.zhenhe-dm.com
 #### 必要的環境變數（Production）
 
 ```
-NEXT_PUBLIC_SUPABASE_URL=https://vdjzeregvyimgzflfalv.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkanplcmVndnlpbWd6ZmxmYWx2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjEyMTU2NTcsImV4cCI6MjA3Njc5MTY1N30.vnDDYppbat655WQcvbytCorL3ZhkFOuuqonJciUmwo8
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkanplcmVndnlpbWd6ZmxmYWx2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTIxNTY1NywiZXhwIjoyMDc2NzkxNjU3fQ.DSL9Ckh3S0ii5Xv-s0I87XZ0cRHI6_hwJ_s3xE1E-og
-SUPABASE_DB_URL=postgresql://postgres.vdjzeregvyimgzflfalv:RO6yOOtaw5KIhtCz@aws-1-ap-south-1.pooler.supabase.com:5432/postgres
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
+SUPABASE_DB_URL=postgresql://postgres.your-project:your-password@region.pooler.supabase.com:5432/postgres
 
-NEWEBPAY_MERCHANT_ID=MS357073141
-NEWEBPAY_HASH_KEY=7hyqDDb3qQmHfz1BDF5FqYtdlshGAvPQ
-NEWEBPAY_HASH_IV=CGFoFgbiAPYMbSlP
+NEWEBPAY_MERCHANT_ID=your_merchant_id
+NEWEBPAY_HASH_KEY=your_hash_key
+NEWEBPAY_HASH_IV=your_hash_iv
 NEWEBPAY_API_URL=https://ccore.newebpay.com/MPG/mpg_gateway
 
-GMAIL_USER=acejou27@gmail.com
-GMAIL_APP_PASSWORD=dfqd heed rwvq rkjc
+GMAIL_USER=your_email@gmail.com
+GMAIL_APP_PASSWORD=your_gmail_app_password
 
 NEXT_PUBLIC_APP_URL=https://seo.zhenhe-dm.com
 COMPANY_NAME=Auto Pilot SEO
