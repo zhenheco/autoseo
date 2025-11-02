@@ -400,6 +400,11 @@ export class PaymentService {
     return this.newebpay.decryptCallback(tradeInfo, tradeSha)
   }
 
+  // 解密 Period 格式的定期定額授權回調
+  decryptPeriodCallback(period: string): any {
+    return this.newebpay.decryptPeriodCallback(period)
+  }
+
   async handleRecurringCallback(period: string): Promise<{
     success: boolean
     error?: string

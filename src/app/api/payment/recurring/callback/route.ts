@@ -20,6 +20,7 @@ async function handleCallback(request: NextRequest) {
     const params: Record<string, string> = {}
     let tradeInfo: string | null = null
     let tradeSha: string | null = null
+    let period: string | null = null
     let status: string | null = null
     let message: string | null = null
 
@@ -30,6 +31,7 @@ async function handleCallback(request: NextRequest) {
       })
       tradeInfo = searchParams.get('TradeInfo') || searchParams.get('tradeInfo')
       tradeSha = searchParams.get('TradeSha') || searchParams.get('tradeSha')
+      period = searchParams.get('Period') || searchParams.get('period')
       status = searchParams.get('Status') || searchParams.get('status')
       message = searchParams.get('Message') || searchParams.get('message')
     } else {
@@ -39,11 +41,19 @@ async function handleCallback(request: NextRequest) {
       })
       tradeInfo = formData.get('TradeInfo') as string || formData.get('tradeInfo') as string
       tradeSha = formData.get('TradeSha') as string || formData.get('tradeSha') as string
+      period = formData.get('Period') as string || formData.get('period') as string
       status = formData.get('Status') as string || formData.get('status') as string
       message = formData.get('Message') as string || formData.get('message') as string
     }
 
-    console.log('[Payment Callback] 解析結果:', { hasTradeInfo: !!tradeInfo, hasTradeSha: !!tradeSha, status, message })
+    console.log('[Payment Callback] 解析結果:', {
+      hasTradeInfo: !!tradeInfo,
+      hasTradeSha: !!tradeSha,
+      hasPeriod: !!period,
+      status,
+      message,
+      allParams: Object.keys(params)
+    })
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
 
@@ -71,8 +81,12 @@ async function handleCallback(request: NextRequest) {
       )
     }
 
-    if (!tradeInfo || !tradeSha) {
-      console.error('[Payment Callback] 缺少 TradeInfo 或 TradeSha')
+    // 定期定額授權使用 Period 參數，一般付款使用 TradeInfo/TradeSha
+    const isPeriodCallback = !!period
+    const isTradeCallback = !!tradeInfo && !!tradeSha
+
+    if (!isPeriodCallback && !isTradeCallback) {
+      console.error('[Payment Callback] 缺少必要參數')
       const redirectUrl = Object.keys(params).length === 0
         ? `${baseUrl}/dashboard/billing`
         : `${baseUrl}/dashboard/billing?payment=error`
@@ -96,16 +110,32 @@ async function handleCallback(request: NextRequest) {
       )
     }
 
-    // 解密 TradeInfo 獲取 orderNo，但不查詢訂單
+    // 解密獲取 orderNo
     const supabase = await createClient()
     const paymentService = PaymentService.createInstance(supabase)
 
     try {
-      const decryptedData = paymentService.decryptTradeInfoForRecurring(tradeInfo, tradeSha)
-      // 定期定額使用 MerOrderNo，一般付款使用 MerchantOrderNo
-      const orderNo = (decryptedData.MerOrderNo || decryptedData.MerchantOrderNo) as string
+      let orderNo: string
+      let decryptedData: Record<string, unknown>
 
-      console.log('[Payment Callback] 解密成功，立即重定向:', { orderNo, status: decryptedData.Status, decryptedData })
+      if (isPeriodCallback) {
+        // 定期定額授權回調
+        console.log('[Payment Callback] 處理定期定額授權回調')
+        decryptedData = paymentService.decryptPeriodCallback(period!)
+        orderNo = decryptedData.MerOrderNo as string
+      } else {
+        // 一般付款回調
+        console.log('[Payment Callback] 處理一般付款回調')
+        decryptedData = paymentService.decryptTradeInfoForRecurring(tradeInfo!, tradeSha!)
+        orderNo = (decryptedData.MerOrderNo || decryptedData.MerchantOrderNo) as string
+      }
+
+      console.log('[Payment Callback] 解密成功，立即重定向:', {
+        orderNo,
+        status: decryptedData.Status,
+        isPeriodCallback,
+        decryptedData
+      })
 
       // 立即返回，不等待訂單查詢
       // 前端會輪詢訂單狀態
