@@ -175,7 +175,7 @@ export default async function BillingPage({
                         訂單編號：{order.order_no}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        {order.created_at && new Date(order.created_at).toLocaleString('zh-TW')}
+                        {order.created_at && new Date(order.created_at).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}
                       </p>
                     </div>
                   </div>

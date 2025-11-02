@@ -102,9 +102,10 @@ async function handleCallback(request: NextRequest) {
 
     try {
       const decryptedData = paymentService.decryptTradeInfoForRecurring(tradeInfo, tradeSha)
-      const orderNo = decryptedData.MerchantOrderNo as string
+      // 定期定額使用 MerOrderNo，一般付款使用 MerchantOrderNo
+      const orderNo = (decryptedData.MerOrderNo || decryptedData.MerchantOrderNo) as string
 
-      console.log('[Payment Callback] 解密成功，立即重定向:', { orderNo, status: decryptedData.Status })
+      console.log('[Payment Callback] 解密成功，立即重定向:', { orderNo, status: decryptedData.Status, decryptedData })
 
       // 立即返回，不等待訂單查詢
       // 前端會輪詢訂單狀態
