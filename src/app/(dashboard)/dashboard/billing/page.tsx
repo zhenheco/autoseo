@@ -1,11 +1,11 @@
 import { getUser, getUserPrimaryCompany } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
-import { CheckCircle2, XCircle, Clock, CreditCard, Calendar, Package, AlertTriangle } from 'lucide-react'
+import { CreditCard, Calendar, Package, AlertTriangle, CheckCircle2, XCircle, Clock } from 'lucide-react'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Database } from '@/types/database.types'
+import { PaymentStatusChecker } from '@/components/billing/PaymentStatusChecker'
 
 type PaymentOrder = Database['public']['Tables']['payment_orders']['Row']
 type Subscription = Database['public']['Tables']['company_subscriptions']['Row']
@@ -13,7 +13,7 @@ type Subscription = Database['public']['Tables']['company_subscriptions']['Row']
 export default async function BillingPage({
   searchParams,
 }: {
-  searchParams: Promise<{ payment?: string; subscription?: string; error?: string }>
+  searchParams: Promise<{ payment?: string; subscription?: string; error?: string; orderNo?: string }>
 }) {
   const user = await getUser()
 
@@ -43,11 +43,6 @@ export default async function BillingPage({
     .eq('status', 'active')
     .single()
 
-  const params = await searchParams
-  const paymentStatus = params.payment
-  const subscriptionType = params.subscription
-  const errorMessage = params.error
-
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -66,36 +61,7 @@ export default async function BillingPage({
         </Link>
       </div>
 
-      {paymentStatus === 'success' && (
-        <Alert className="border-green-500/50 bg-green-500/10">
-          <CheckCircle2 className="h-5 w-5 text-green-500" />
-          <AlertTitle className="text-green-500">付款成功</AlertTitle>
-          <AlertDescription>
-            您的付款已成功處理。
-            {subscriptionType && ` 您的 ${subscriptionType} 訂閱已啟用。`}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {paymentStatus === 'failed' && (
-        <Alert className="border-red-500/50 bg-red-500/10">
-          <XCircle className="h-5 w-5 text-red-500" />
-          <AlertTitle className="text-red-500">付款失敗</AlertTitle>
-          <AlertDescription>
-            {errorMessage ? `錯誤訊息：${errorMessage}` : '付款處理失敗，請稍後再試或聯繫客服。'}
-          </AlertDescription>
-        </Alert>
-      )}
-
-      {paymentStatus === 'pending' && (
-        <Alert className="border-yellow-500/50 bg-yellow-500/10">
-          <Clock className="h-5 w-5 text-yellow-500" />
-          <AlertTitle className="text-yellow-500">處理中</AlertTitle>
-          <AlertDescription>
-            您的付款正在處理中，請稍候...
-          </AlertDescription>
-        </Alert>
-      )}
+      <PaymentStatusChecker />
 
       <div className="grid gap-6 md:grid-cols-2">
         <Card className="border-border/50 bg-card/50 backdrop-blur-sm rounded-xl">
