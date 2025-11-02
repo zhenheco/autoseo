@@ -166,7 +166,8 @@ export default function PricingPage() {
 
     const formData = {
       apiUrl: paymentForm.apiUrl,
-      postData: fields
+      postData: paymentForm.postData,
+      merchantId: paymentForm.merchantId
     }
 
     const encodedFormData = encodeURIComponent(JSON.stringify(formData))
