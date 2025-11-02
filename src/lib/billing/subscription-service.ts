@@ -49,7 +49,7 @@ export class SubscriptionService {
   async getAvailablePlans(): Promise<SubscriptionPlan[]> {
     const { data, error } = await this.supabase
       .from('subscription_plans')
-      .select('*')
+      .select<'*', Database['public']['Tables']['subscription_plans']['Row']>('*')
       .order('monthly_price', { ascending: true })
 
     if (error) {
@@ -73,7 +73,7 @@ export class SubscriptionService {
   async getAvailableTokenPlans(): Promise<TokenSubscriptionPlan[]> {
     const { data, error } = await this.supabase
       .from('subscription_plans')
-      .select('*')
+      .select<'*', Database['public']['Tables']['subscription_plans']['Row']>('*')
       .eq('is_lifetime', false)
       .order('monthly_price', { ascending: true })
 
@@ -96,7 +96,7 @@ export class SubscriptionService {
   async getCompanySubscription(companyId: string): Promise<CompanySubscription | null> {
     const { data, error } = await this.supabase
       .from('company_subscriptions')
-      .select('*')
+      .select<'*', Database['public']['Tables']['company_subscriptions']['Row']>('*')
       .eq('company_id', companyId)
       .single()
 
@@ -133,7 +133,7 @@ export class SubscriptionService {
   ): Promise<{ success: boolean; subscription?: CompanySubscription; error?: string }> {
     const { data: planData, error: planError } = await this.supabase
       .from('subscription_plans')
-      .select('*')
+      .select<'*', Database['public']['Tables']['subscription_plans']['Row']>('*')
       .eq('id', planId)
       .single()
 
@@ -163,7 +163,7 @@ export class SubscriptionService {
         current_period_start: periodStart,
         current_period_end: periodEnd,
       })
-      .select()
+      .select<'*', Database['public']['Tables']['company_subscriptions']['Row']>()
       .single()
 
     if (subscriptionError) {
@@ -206,7 +206,7 @@ export class SubscriptionService {
   ): Promise<{ success: boolean; error?: string }> {
     const { data: planData, error: planError } = await this.supabase
       .from('subscription_plans')
-      .select('*')
+      .select<'*', Database['public']['Tables']['subscription_plans']['Row']>('*')
       .eq('id', planId)
       .single()
 
@@ -236,7 +236,7 @@ export class SubscriptionService {
 
     const { data: subscription } = await this.supabase
       .from('company_subscriptions')
-      .select('purchased_token_balance')
+      .select<'purchased_token_balance', { purchased_token_balance: number }>('purchased_token_balance')
       .eq('company_id', companyId)
       .single()
 
@@ -277,7 +277,7 @@ export class SubscriptionService {
 
     const { data: newPlan, error: planError } = await this.supabase
       .from('subscription_plans')
-      .select('*')
+      .select<'*', Database['public']['Tables']['subscription_plans']['Row']>('*')
       .eq('id', newPlanId)
       .single()
 
@@ -434,7 +434,7 @@ export class SubscriptionService {
   ): Promise<{ success: boolean; error?: string }> {
     const { data: packageData, error: packageError } = await this.supabase
       .from('token_packages')
-      .select('*')
+      .select<'*', Database['public']['Tables']['token_packages']['Row']>('*')
       .eq('id', packageId)
       .single()
 
@@ -469,7 +469,7 @@ export class SubscriptionService {
         status: 'success',
         paid_at: new Date().toISOString(),
       })
-      .select()
+      .select<'*', Database['public']['Tables']['payment_orders']['Row']>()
       .single()
 
     if (purchaseError) {

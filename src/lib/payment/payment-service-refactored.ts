@@ -160,7 +160,7 @@ export class PaymentServiceRefactored {
       // 獲取訂單信息
       const { data: order } = await this.supabase
         .from('payment_orders')
-        .select('*')
+        .select<'*', Database['public']['Tables']['payment_orders']['Row']>('*')
         .eq('order_no', paymentData.MerchantOrderNo)
         .single()
 

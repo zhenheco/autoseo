@@ -203,7 +203,7 @@ export class TokenBillingService {
 
     const { data: existingStats } = await this.supabase
       .from('monthly_token_usage_stats')
-      .select('*')
+      .select<'*', Database['public']['Tables']['monthly_token_usage_stats']['Row']>('*')
       .eq('company_id', companyId)
       .eq('year', year)
       .eq('month', month)

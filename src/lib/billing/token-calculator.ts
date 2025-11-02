@@ -115,7 +115,7 @@ export class TokenCalculator {
   private async refreshPricingCache(): Promise<void> {
     const { data, error } = await this.supabase
       .from('ai_model_pricing')
-      .select('*')
+      .select<'*', Database['public']['Tables']['ai_model_pricing']['Row']>('*')
       .eq('is_active', true)
 
     if (error) {

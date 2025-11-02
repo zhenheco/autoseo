@@ -74,7 +74,7 @@ export class PaymentService {
         related_id: params.relatedId,
         status: 'pending',
       })
-      .select()
+      .select<'*', Database['public']['Tables']['payment_orders']['Row']>()
       .single()
 
     if (orderError || !orderData) {
@@ -131,7 +131,7 @@ export class PaymentService {
         total_amount: params.periodTimes ? params.amount * params.periodTimes : null,
         status: 'pending',
       })
-      .select()
+      .select<'*', Database['public']['Tables']['recurring_mandates']['Row']>()
       .single()
 
     if (mandateError || !mandateData) {
@@ -153,7 +153,7 @@ export class PaymentService {
         related_id: params.planId,
         status: 'pending',
       })
-      .select()
+      .select<'*', Database['public']['Tables']['payment_orders']['Row']>()
       .single()
 
     if (orderError || !orderData) {
@@ -217,7 +217,7 @@ export class PaymentService {
 
       const { data: orderData, error: findError } = await this.supabase
         .from('payment_orders')
-        .select('*')
+        .select<'*', Database['public']['Tables']['payment_orders']['Row']>('*')
         .eq('order_no', orderNo)
         .single()
 
@@ -247,14 +247,14 @@ export class PaymentService {
         if (orderData.payment_type === 'token_package' && orderData.related_id) {
           const { data: packageData } = await this.supabase
             .from('token_packages')
-            .select('*')
+            .select<'*', Database['public']['Tables']['token_packages']['Row']>('*')
             .eq('id', orderData.related_id)
             .single()
 
           if (packageData) {
             const { data: subscription } = await this.supabase
               .from('company_subscriptions')
-              .select('purchased_token_balance')
+              .select<'purchased_token_balance', { purchased_token_balance: number }>('purchased_token_balance')
               .eq('company_id', orderData.company_id)
               .single()
 
@@ -282,7 +282,7 @@ export class PaymentService {
 
           const { data: planData } = await this.supabase
             .from('subscription_plans')
-            .select('*')
+            .select<'*', Database['public']['Tables']['subscription_plans']['Row']>('*')
             .eq('id', orderData.related_id)
             .single()
 
@@ -361,7 +361,7 @@ export class PaymentService {
 
       const { data: mandateData, error: findError } = await this.supabase
         .from('recurring_mandates')
-        .select('*')
+        .select<'*', Database['public']['Tables']['recurring_mandates']['Row']>('*')
         .eq('mandate_no', mandateNo)
         .single()
 
@@ -404,7 +404,7 @@ export class PaymentService {
 
         const { data: planData } = await this.supabase
           .from('subscription_plans')
-          .select('*')
+          .select<'*', Database['public']['Tables']['subscription_plans']['Row']>('*')
           .eq('id', mandateData.plan_id)
           .single()
 
