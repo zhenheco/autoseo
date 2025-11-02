@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextRequest } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 import { PaymentService } from '@/lib/payment/payment-service'
 
@@ -10,11 +10,18 @@ export async function POST(request: NextRequest) {
     const tradeInfo = formData.get('TradeInfo') as string
     const tradeSha = formData.get('TradeSha') as string
 
+    console.log('[API Notify] 收到付款通知:', {
+      hasTradeInfo: !!tradeInfo,
+      hasTradeSha: !!tradeSha,
+      timestamp: new Date().toISOString()
+    })
+
     if (!tradeInfo || !tradeSha) {
-      return NextResponse.json(
-        { error: '缺少必要參數' },
-        { status: 400 }
-      )
+      console.error('[API Notify] 缺少必要參數')
+      return new Response('Status=FAILED&Message=' + encodeURIComponent('缺少必要參數'), {
+        status: 200,
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+      })
     }
 
     const paymentService = PaymentService.createInstance(supabase)
@@ -22,18 +29,24 @@ export async function POST(request: NextRequest) {
     const result = await paymentService.handleOnetimeCallback(tradeInfo, tradeSha)
 
     if (result.success) {
-      return NextResponse.json({ Status: 'SUCCESS' })
+      console.log('[API Notify] 處理成功，回應 SUCCESS')
+      return new Response('Status=SUCCESS', {
+        status: 200,
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+      })
     } else {
-      return NextResponse.json(
-        { Status: 'FAILED', Message: result.error },
-        { status: 400 }
-      )
+      console.error('[API Notify] 處理失敗:', result.error)
+      return new Response('Status=FAILED&Message=' + encodeURIComponent(result.error || '處理失敗'), {
+        status: 200,
+        headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+      })
     }
   } catch (error) {
-    console.error('[API] 處理支付通知失敗:', error)
-    return NextResponse.json(
-      { Status: 'FAILED', Message: '處理支付通知失敗' },
-      { status: 500 }
-    )
+    console.error('[API Notify] 處理支付通知失敗:', error)
+    const errorMessage = error instanceof Error ? error.message : '處理支付通知失敗'
+    return new Response('Status=FAILED&Message=' + encodeURIComponent(errorMessage), {
+      status: 200,
+      headers: { 'Content-Type': 'text/plain; charset=utf-8' }
+    })
   }
 }

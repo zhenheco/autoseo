@@ -234,11 +234,12 @@ export class PaymentService {
         amount
       })
 
-      // 加入重試機制，最多重試 3 次，每次間隔 1 秒
+      // 加入重試機制，最多重試 10 次，使用指數退避
+      // 重試間隔: 100ms, 200ms, 400ms, 800ms, 1000ms, 1000ms...
       let orderData: Database['public']['Tables']['payment_orders']['Row'] | null = null
       let findError: unknown = null
 
-      for (let attempt = 1; attempt <= 3; attempt++) {
+      for (let attempt = 1; attempt <= 10; attempt++) {
         const { data, error } = await this.supabase
           .from('payment_orders')
           .select<'*', Database['public']['Tables']['payment_orders']['Row']>('*')
@@ -248,20 +249,23 @@ export class PaymentService {
         if (data && !error) {
           orderData = data
           findError = null
+          console.log(`[PaymentService] 成功找到訂單 (第 ${attempt} 次嘗試)`)
           break
         }
 
         findError = error
-        console.log(`[PaymentService] 查詢訂單失敗 (嘗試 ${attempt}/3):`, { orderNo, error })
+        console.log(`[PaymentService] 查詢訂單失敗 (嘗試 ${attempt}/10):`, { orderNo, error })
 
-        if (attempt < 3) {
-          // 等待 1 秒後重試
-          await new Promise(resolve => setTimeout(resolve, 1000))
+        if (attempt < 10) {
+          // 指數退避：100ms, 200ms, 400ms, 800ms, 然後固定 1000ms
+          const delay = Math.min(100 * Math.pow(2, attempt - 1), 1000)
+          console.log(`[PaymentService] 等待 ${delay}ms 後重試`)
+          await new Promise(resolve => setTimeout(resolve, delay))
         }
       }
 
       if (findError || !orderData) {
-        console.error('[PaymentService] 找不到訂單（已重試3次）:', {
+        console.error('[PaymentService] 找不到訂單（已重試10次，總計約7-8秒）:', {
           orderNo,
           tradeNo,
           error: findError
