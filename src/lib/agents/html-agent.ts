@@ -258,7 +258,7 @@ export class HTMLAgent extends BaseAgent<HTMLInput, HTMLOutput> {
     headings.forEach((heading) => {
       const text = heading.textContent || '';
       if (text.toLowerCase().includes(sectionName.toLowerCase())) {
-        let section = heading.nextElementSibling;
+        const section = heading.nextElementSibling;
         if (section) {
           results.push(section);
         }

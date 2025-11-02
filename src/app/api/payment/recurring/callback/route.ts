@@ -19,7 +19,7 @@ async function handleCallback(request: NextRequest) {
     console.log('[Recurring Callback] Headers:', Object.fromEntries(request.headers.entries()))
 
     const supabase = await createClient()
-    let params: Record<string, string> = {}
+    const params: Record<string, string> = {}
     let period: string | null = null
     let tradeInfo: string | null = null
     let tradeSha: string | null = null

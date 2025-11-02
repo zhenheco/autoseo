@@ -41,9 +41,10 @@ export class GoogleDriveClient {
         parents: [this.folderId],
       };
 
+      const { Readable } = await import('stream');
       const media = {
         mimeType,
-        body: require('stream').Readable.from(imageBuffer),
+        body: Readable.from(imageBuffer),
       };
 
       const response = await this.drive.files.create({

@@ -1,5 +1,6 @@
 'use client'
 
+import React from 'react'
 import { cn } from "@/lib/utils"
 
 export function BackgroundGradientMesh({ className }: { className?: string }) {
@@ -55,14 +56,14 @@ export function FloatingShapes() {
 }
 
 export function ParticleField({ count = 30 }: { count?: number }) {
-  const particles = Array.from({ length: count }, (_, i) => ({
+  const [particles] = React.useState(() => Array.from({ length: count }, (_, i) => ({
     id: i,
     size: Math.random() * 4 + 2,
     x: Math.random() * 100,
     y: Math.random() * 100,
     duration: Math.random() * 10 + 10,
     delay: Math.random() * 5
-  }))
+  })))
 
   return (
     <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">

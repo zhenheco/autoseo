@@ -283,7 +283,7 @@ export default function Home() {
                 >
                   <div className="text-6xl mb-6">{testimonial.avatar}</div>
                   <p className="text-xl leading-relaxed mb-8 text-foreground">
-                    "{testimonial.content}"
+                    &ldquo;{testimonial.content}&rdquo;
                   </p>
                   <div>
                     <div className="font-semibold text-lg">{testimonial.name}</div>
