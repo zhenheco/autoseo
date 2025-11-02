@@ -183,7 +183,22 @@ export class ResellerService {
       return []
     }
 
-    return (data || []).map(c => ({
+    type CommissionRow = {
+      id: string
+      reseller_id: string
+      order_type: string
+      order_id: string
+      customer_company_id: string
+      order_amount: string | number
+      commission_rate: string | number
+      commission_amount: string | number
+      status: string
+      paid_at: string | null
+      notes: string | null
+      created_at: string | null
+    }
+
+    return ((data || []) as CommissionRow[]).map(c => ({
       id: c.id,
       resellerId: c.reseller_id,
       orderType: c.order_type as 'subscription' | 'token_package' | 'lifetime',
