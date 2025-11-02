@@ -28,20 +28,24 @@ function AuthorizingContent() {
     try {
       const formData = JSON.parse(decodeURIComponent(paymentForm))
 
-      if (formRef.current && formData.apiUrl && formData.postData) {
+      if (formRef.current && formData.apiUrl && formData.postData && formData.merchantId) {
         formRef.current.action = formData.apiUrl
 
         setTimeout(() => {
           setStatus('submitting')
         }, 0)
 
-        Object.keys(formData.postData).forEach(key => {
-          const input = document.createElement('input')
-          input.type = 'hidden'
-          input.name = key
-          input.value = formData.postData[key]
-          formRef.current?.appendChild(input)
-        })
+        const merchantInput = document.createElement('input')
+        merchantInput.type = 'hidden'
+        merchantInput.name = 'MerchantID_'
+        merchantInput.value = formData.merchantId
+        formRef.current.appendChild(merchantInput)
+
+        const postDataInput = document.createElement('input')
+        postDataInput.type = 'hidden'
+        postDataInput.name = 'PostData_'
+        postDataInput.value = formData.postData
+        formRef.current.appendChild(postDataInput)
 
         setTimeout(() => {
           formRef.current?.submit()
