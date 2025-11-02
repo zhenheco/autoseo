@@ -191,15 +191,22 @@ export class NewebPayService {
   decryptPeriodCallback(period: string): DecryptedResponse {
     const decryptedData = this.aesDecrypt(period)
 
-    const params = new URLSearchParams(decryptedData)
-    const result: DecryptedResponse = {}
+    // 嘗試解析為 JSON（定期定額授權回調使用 JSON 格式）
+    try {
+      const jsonData = JSON.parse(decryptedData)
+      return jsonData
+    } catch (e) {
+      // 如果不是 JSON，則使用 URLSearchParams 解析
+      const params = new URLSearchParams(decryptedData)
+      const result: DecryptedResponse = {}
 
-    params.forEach((value, key) => {
-      const numValue = Number(value)
-      result[key] = isNaN(numValue) ? value : numValue
-    })
+      params.forEach((value, key) => {
+        const numValue = Number(value)
+        result[key] = isNaN(numValue) ? value : numValue
+      })
 
-    return result
+      return result
+    }
   }
 
   modifyRecurringStatus(

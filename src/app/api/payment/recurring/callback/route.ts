@@ -129,11 +129,18 @@ async function handleCallback(request: NextRequest) {
         // 記錄完整解密資料（診斷用）
         console.log('[Payment Callback] 定期定額解密資料:', JSON.stringify(decryptedData, null, 2))
 
-        // 嘗試多個可能的欄位名稱
-        orderNo = (decryptedData.MerOrderNo || decryptedData.PeriodNo || decryptedData.MandateNo) as string
+        // Period 回調的結構: { Status, Message, Result: { MerchantOrderNo, ... } }
+        const result = (decryptedData as any).Result
+        if (result && result.MerchantOrderNo) {
+          orderNo = result.MerchantOrderNo as string
+        } else {
+          // 向後兼容：嘗試其他可能的欄位名稱
+          orderNo = (decryptedData.MerOrderNo || decryptedData.PeriodNo || decryptedData.MandateNo) as string
+        }
 
         if (!orderNo) {
-          console.error('[Payment Callback] 無法從解密資料取得 orderNo，可用欄位:', Object.keys(decryptedData))
+          console.error('[Payment Callback] 無法從解密資料取得 orderNo')
+          console.error('[Payment Callback] decryptedData 結構:', JSON.stringify(decryptedData, null, 2))
           throw new Error('無法取得訂單編號')
         }
       } else {
