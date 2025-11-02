@@ -14,8 +14,10 @@ export async function POST(request: NextRequest) {
 
 async function handleCallback(request: NextRequest) {
   try {
+    console.log('='.repeat(80))
     console.log('[Payment Callback] 收到回調請求 - Method:', request.method)
     console.log('[Payment Callback] URL:', request.url)
+    console.log('[Payment Callback] Headers:', Object.fromEntries(request.headers.entries()))
 
     const params: Record<string, string> = {}
     let tradeInfo: string | null = null
@@ -52,7 +54,8 @@ async function handleCallback(request: NextRequest) {
       hasPeriod: !!period,
       status,
       message,
-      allParams: Object.keys(params)
+      allParams: Object.keys(params),
+      fullParams: params  // 記錄所有參數的完整內容
     })
 
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
@@ -230,7 +233,12 @@ async function handleCallback(request: NextRequest) {
       )
     }
   } catch (error) {
-    console.error('[Payment Callback] 處理回調失敗:', error)
+    console.error('='.repeat(80))
+    console.error('[Payment Callback] 處理回調失敗 - 最外層 catch')
+    console.error('[Payment Callback] 錯誤類型:', error instanceof Error ? error.constructor.name : typeof error)
+    console.error('[Payment Callback] 錯誤訊息:', error instanceof Error ? error.message : String(error))
+    console.error('[Payment Callback] 錯誤堆疊:', error instanceof Error ? error.stack : '無堆疊資訊')
+    console.error('='.repeat(80))
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     const redirectUrl = `${baseUrl}/dashboard/billing?payment=error`
     return new NextResponse(
