@@ -14,9 +14,9 @@ export async function POST(request: NextRequest) {
 
 async function handleCallback(request: NextRequest) {
   try {
-    console.log('[Recurring Callback] 收到回調請求 - Method:', request.method)
-    console.log('[Recurring Callback] URL:', request.url)
-    console.log('[Recurring Callback] Headers:', Object.fromEntries(request.headers.entries()))
+    console.log('[Payment Callback] 收到回調請求 - Method:', request.method)
+    console.log('[Payment Callback] URL:', request.url)
+    console.log('[Payment Callback] Headers:', Object.fromEntries(request.headers.entries()))
 
     const supabase = await createClient()
     const params: Record<string, string> = {}
@@ -29,7 +29,7 @@ async function handleCallback(request: NextRequest) {
     if (request.method === 'GET') {
       // GET 請求：從 URL 參數獲取
       const searchParams = request.nextUrl.searchParams
-      console.log('[Recurring Callback] URL 參數列表:')
+      console.log('[Payment Callback] URL 參數列表:')
       searchParams.forEach((value, key) => {
         console.log(`  ${key}: ${value}`)
         params[key] = value
@@ -54,7 +54,7 @@ async function handleCallback(request: NextRequest) {
     } else {
       // POST 請求：從 FormData 獲取
       const formData = await request.formData()
-      console.log('[Recurring Callback] FormData 參數列表:')
+      console.log('[Payment Callback] FormData 參數列表:')
       formData.forEach((value, key) => {
         console.log(`  ${key}: ${value.toString()}`)
         params[key] = value.toString()
@@ -74,17 +74,17 @@ async function handleCallback(request: NextRequest) {
       message = formData.get('Message') as string || formData.get('message') as string
     }
 
-    console.log('[Recurring Callback] 解析結果:')
+    console.log('[Payment Callback] 解析結果:')
     console.log('  Period:', period ? `${period.substring(0, 50)}...` : 'null')
     console.log('  TradeInfo:', tradeInfo ? `${tradeInfo.substring(0, 50)}...` : 'null')
     console.log('  TradeSha:', tradeSha ? `${tradeSha.substring(0, 50)}...` : 'null')
     console.log('  Status:', status)
     console.log('  Message:', message)
-    console.log('[Recurring Callback] 所有參數:', params)
+    console.log('[Payment Callback] 所有參數:', params)
 
     // 如果有錯誤狀態，直接返回錯誤
     if (status && status !== 'SUCCESS' && status !== '1') {
-      console.error('[Recurring Callback] 付款失敗，狀態:', status, '訊息:', message)
+      console.error('[Payment Callback] 付款失敗，狀態:', status, '訊息:', message)
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
       const redirectUrl = `${baseUrl}/dashboard/billing?subscription=failed&error=${encodeURIComponent(message || '付款失敗')}`
       return new NextResponse(
@@ -109,8 +109,8 @@ async function handleCallback(request: NextRequest) {
 
     // 檢查是否有任何可用的參數
     if (!period && !tradeInfo) {
-      console.error('[Recurring Callback] 缺少 Period 或 TradeInfo 參數')
-      console.error('[Recurring Callback] 收到的所有參數:', params)
+      console.error('[Payment Callback] 缺少 Period 或 TradeInfo 參數')
+      console.error('[Payment Callback] 收到的所有參數:', params)
 
       // 如果完全沒有參數，可能是用戶直接訪問此 URL
       if (Object.keys(params).length === 0) {
@@ -136,17 +136,25 @@ async function handleCallback(request: NextRequest) {
         )
       }
 
-      return NextResponse.json(
+      const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+      const redirectUrl = `${baseUrl}/dashboard/billing?payment=error`
+      return new NextResponse(
+        `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>處理中...</title>
+</head>
+<body>
+  <script>
+    window.location.href = "${redirectUrl}";
+  </script>
+</body>
+</html>`,
         {
-          error: '缺少必要參數',
-          receivedParams: params,
-          debug: {
-            hasperiod: !!period,
-            hasTradeInfo: !!tradeInfo,
-            paramCount: Object.keys(params).length
-          }
-        },
-        { status: 400 }
+          status: 200,
+          headers: { 'Content-Type': 'text/html; charset=utf-8' }
+        }
       )
     }
 
@@ -154,7 +162,7 @@ async function handleCallback(request: NextRequest) {
 
     // 如果有 Period 參數，使用定期定額回調處理
     if (period) {
-      console.log('[Recurring Callback] 處理 Period 參數')
+      console.log('[Payment Callback] 處理定期定額付款 (Period)')
       const result = await paymentService.handleRecurringCallback(period)
 
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
@@ -186,87 +194,46 @@ async function handleCallback(request: NextRequest) {
       )
     }
 
-    // 如果有 TradeInfo 參數，可能是一般付款回調格式
+    // 如果有 TradeInfo 參數，處理單次付款
     if (tradeInfo && tradeSha) {
-      console.log('[Recurring Callback] 處理 TradeInfo 參數')
+      console.log('[Payment Callback] 處理單次付款 (TradeInfo)')
 
       try {
-        // 解密 TradeInfo
-        const decryptedData = paymentService.decryptTradeInfoForRecurring(tradeInfo, tradeSha)
-        console.log('[Recurring Callback] 解密資料:', decryptedData)
+        const result = await paymentService.handleOnetimeCallback(tradeInfo, tradeSha)
 
-        // 檢查是否為定期定額成功
-        if (decryptedData.Status === 'SUCCESS' || decryptedData.Status === '1') {
-          // 建立訂閱記錄
-          const { data: { user } } = await supabase.auth.getUser()
-          if (!user) {
-            throw new Error('未找到用戶')
-          }
-
-          const subscription = {
-            user_id: user.id,
-            plan_id: decryptedData.MerOrderNo || decryptedData.MerchantOrderNo, // 訂單編號包含計劃資訊
-            period_no: decryptedData.PeriodNo || decryptedData.TradeNo, // 委託編號
-            status: 'active',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-          }
-
-          const { error: dbError } = await supabase
-            .from('subscriptions')
-            .insert(subscription)
-
-          if (dbError) {
-            console.error('[Recurring Callback] 資料庫錯誤:', dbError)
-            throw dbError
-          }
-
-          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-          const redirectUrl = `${baseUrl}/dashboard/billing?subscription=success`
-          return new NextResponse(
-            `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>處理中...</title>
-</head>
-<body>
-  <script>
-    window.location.href = "${redirectUrl}";
-  </script>
-</body>
-</html>`,
-            {
-              status: 200,
-              headers: { 'Content-Type': 'text/html; charset=utf-8' }
-            }
-          )
-        } else {
-          const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-          const redirectUrl = `${baseUrl}/dashboard/billing?subscription=failed&error=${encodeURIComponent(decryptedData.Message || '訂閱失敗')}`
-          return new NextResponse(
-            `<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <title>處理中...</title>
-</head>
-<body>
-  <script>
-    window.location.href = "${redirectUrl}";
-  </script>
-</body>
-</html>`,
-            {
-              status: 200,
-              headers: { 'Content-Type': 'text/html; charset=utf-8' }
-            }
-          )
-        }
-      } catch (error) {
-        console.error('[Recurring Callback] 處理 TradeInfo 失敗:', error)
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-        const redirectUrl = `${baseUrl}/dashboard/billing?subscription=error`
+        let redirectUrl: string
+
+        if (result.success) {
+          console.log('[Payment Callback] 單次付款處理成功')
+          redirectUrl = `${baseUrl}/dashboard/billing?payment=success`
+        } else {
+          console.error('[Payment Callback] 單次付款處理失敗:', result.error)
+          redirectUrl = `${baseUrl}/dashboard/billing?payment=failed&error=${encodeURIComponent(result.error || '支付失敗')}`
+        }
+
+        return new NextResponse(
+          `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>處理中...</title>
+</head>
+<body>
+  <script>
+    window.location.href = "${redirectUrl}";
+  </script>
+</body>
+</html>`,
+          {
+            status: 200,
+            headers: { 'Content-Type': 'text/html; charset=utf-8' }
+          }
+        )
+      } catch (error) {
+        console.error('[Payment Callback] 處理單次付款失敗:', error)
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+        const redirectUrl = `${baseUrl}/dashboard/billing?payment=error`
         return new NextResponse(
           `<!DOCTYPE html>
 <html>
@@ -288,9 +255,9 @@ async function handleCallback(request: NextRequest) {
       }
     }
   } catch (error) {
-    console.error('[API] 處理定期定額回調失敗:', error)
+    console.error('[Payment Callback] 處理回調失敗:', error)
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    const redirectUrl = `${baseUrl}/dashboard/billing?subscription=error`
+    const redirectUrl = `${baseUrl}/dashboard/billing?payment=error`
     return new NextResponse(
       `<!DOCTYPE html>
 <html>
