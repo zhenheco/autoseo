@@ -412,9 +412,21 @@ export class PaymentService {
     try {
       const decryptedData = this.newebpay.decryptPeriodCallback(period)
 
+      console.log('[PaymentService] NotifyURL 解密資料:', JSON.stringify(decryptedData, null, 2))
+
+      // Period 回調的結構: { Status, Message, Result: { MerchantOrderNo, PeriodNo, ... } }
       const status = decryptedData.Status as string
-      const mandateNo = decryptedData.MerOrderNo as string
-      const periodNo = decryptedData.PeriodNo as string
+      const result = (decryptedData as any).Result
+
+      if (!result || !result.MerchantOrderNo) {
+        console.error('[PaymentService] 解密資料結構錯誤，缺少 Result.MerchantOrderNo')
+        return { success: false, error: '解密資料結構錯誤' }
+      }
+
+      const mandateNo = result.MerchantOrderNo as string
+      const periodNo = result.PeriodNo as string
+
+      console.log('[PaymentService] NotifyURL 提取資訊:', { status, mandateNo, periodNo })
 
       const { data: mandateData, error: findError } = await this.supabase
         .from('recurring_mandates')
@@ -423,9 +435,15 @@ export class PaymentService {
         .single()
 
       if (findError || !mandateData) {
-        console.error('[PaymentService] 找不到定期定額委託:', mandateNo)
+        console.error('[PaymentService] 找不到定期定額委託:', mandateNo, findError)
         return { success: false, error: '找不到定期定額委託' }
       }
+
+      console.log('[PaymentService] 找到定期定額委託:', {
+        mandateId: mandateData.id,
+        mandateNo: mandateData.mandate_no,
+        currentStatus: mandateData.status
+      })
 
       if (status === 'SUCCESS') {
         const { error: updateError } = await this.supabase

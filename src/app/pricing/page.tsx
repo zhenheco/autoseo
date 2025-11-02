@@ -147,43 +147,33 @@ export default function PricingPage() {
     version?: string
     apiUrl: string
   }) => {
-    console.log('[表單提交] 開始建立表單')
+    console.log('[表單提交] 準備重定向到授權頁面')
     console.log('[表單提交] 目標 URL:', paymentForm.apiUrl)
-
-    const form = document.createElement('form')
-    form.method = 'POST'
-    form.action = paymentForm.apiUrl
 
     const fields: Record<string, string> = {}
 
     if (paymentForm.tradeInfo && paymentForm.tradeSha) {
-      // 單次付款使用 MerchantID（無底線）
       console.log('[表單提交] 單次付款模式')
       fields.MerchantID = paymentForm.merchantId
       fields.TradeInfo = paymentForm.tradeInfo
       fields.TradeSha = paymentForm.tradeSha
       fields.Version = paymentForm.version || '2.0'
     } else if (paymentForm.postData) {
-      // 定期定額使用 MerchantID_（有底線）
-      // 注意：建立委託 API 只需要 MerchantID_ 和 PostData_ 兩個參數（不需要 PostData_Sha）
       console.log('[表單提交] 定期定額模式')
       fields.MerchantID_ = paymentForm.merchantId
       fields.PostData_ = paymentForm.postData
     }
 
-    console.log('[表單提交] 表單欄位:', Object.keys(fields))
+    const formData = {
+      apiUrl: paymentForm.apiUrl,
+      postData: fields
+    }
 
-    Object.entries(fields).forEach(([key, value]) => {
-      const input = document.createElement('input')
-      input.type = 'hidden'
-      input.name = key
-      input.value = value
-      form.appendChild(input)
-    })
+    const encodedFormData = encodeURIComponent(JSON.stringify(formData))
+    const authorizingUrl = `/dashboard/billing/authorizing?paymentForm=${encodedFormData}`
 
-    document.body.appendChild(form)
-    console.log('[表單提交] 正在提交表單到:', form.action)
-    form.submit()
+    console.log('[表單提交] 重定向到:', authorizingUrl)
+    router.push(authorizingUrl)
   }
 
   async function handlePlanPurchase(plan: SubscriptionPlan) {

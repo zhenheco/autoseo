@@ -152,19 +152,21 @@ async function handleCallback(request: NextRequest) {
 
       console.log('[Payment Callback] 解密成功，orderNo:', orderNo)
 
-      // 對於定期定額，等待 NotifyURL 處理完成（最多 10 秒）
+      // 對於定期定額，等待 NotifyURL 處理完成（最多 5 秒）
       if (isPeriodCallback) {
         console.log('[Payment Callback] 等待 NotifyURL 處理完成...')
 
-        for (let attempt = 1; attempt <= 5; attempt++) {
+        // 減少等待時間和次數：3 次 x 1 秒 = 3 秒
+        for (let attempt = 1; attempt <= 3; attempt++) {
           const { data: mandate } = await supabase
             .from('recurring_mandates')
-            .select('status')
+            .select('status, first_payment_order_id')
             .eq('mandate_no', orderNo)
             .maybeSingle()
 
+          // 檢查 mandate 是否存在且狀態為 active（表示 NotifyURL 已處理完成）
           if (mandate && mandate.status === 'active') {
-            console.log(`[Payment Callback] NotifyURL 已完成 (嘗試 ${attempt}/5)`)
+            console.log(`[Payment Callback] NotifyURL 已完成，狀態為 active (嘗試 ${attempt}/3)`)
             const redirectUrl = `${baseUrl}/dashboard/billing?payment=success&orderNo=${encodeURIComponent(orderNo)}`
             return new NextResponse(
               `<!DOCTYPE html>
@@ -186,14 +188,14 @@ async function handleCallback(request: NextRequest) {
             )
           }
 
-          console.log(`[Payment Callback] NotifyURL 尚未完成 (嘗試 ${attempt}/5)`)
+          console.log(`[Payment Callback] NotifyURL 尚未完成 (嘗試 ${attempt}/3)，mandate:`, mandate ? 'found' : 'not found', mandate?.status)
 
-          if (attempt < 5) {
-            await new Promise(resolve => setTimeout(resolve, 2000))
+          if (attempt < 3) {
+            await new Promise(resolve => setTimeout(resolve, 1000))
           }
         }
 
-        console.log('[Payment Callback] NotifyURL 10 秒內未完成，前端繼續輪詢')
+        console.log('[Payment Callback] NotifyURL 3 秒內未完成，前端繼續輪詢')
       }
 
       // 返回 pending 狀態，前端會輪詢訂單狀態
