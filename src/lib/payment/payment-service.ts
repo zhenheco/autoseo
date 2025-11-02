@@ -427,6 +427,7 @@ export class PaymentService {
       const periodNo = result.PeriodNo as string
 
       console.log('[PaymentService] NotifyURL 提取資訊:', { status, mandateNo, periodNo })
+      console.log('[PaymentService] 準備查詢委託 mandate_no:', mandateNo)
 
       const { data: mandateData, error: findError } = await this.supabase
         .from('recurring_mandates')
@@ -435,7 +436,10 @@ export class PaymentService {
         .single()
 
       if (findError || !mandateData) {
-        console.error('[PaymentService] 找不到定期定額委託:', mandateNo, findError)
+        console.error('[PaymentService] 找不到定期定額委託')
+        console.error('[PaymentService] mandate_no:', mandateNo)
+        console.error('[PaymentService] 資料庫錯誤:', findError)
+        console.error('[PaymentService] 完整解密資料:', JSON.stringify(decryptedData, null, 2))
         return { success: false, error: '找不到定期定額委託' }
       }
 

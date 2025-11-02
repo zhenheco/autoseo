@@ -11,6 +11,7 @@ export function PaymentStatusChecker() {
   const [status, setStatus] = useState<'checking' | 'success' | 'failed' | null>(null)
   const [message, setMessage] = useState<string>('')
   const [pollCount, setPollCount] = useState(0)
+  const [errorCount, setErrorCount] = useState(0)
 
   useEffect(() => {
     const paymentStatus = searchParams.get('payment')
@@ -70,6 +71,15 @@ export function PaymentStatusChecker() {
           }
         } catch (error) {
           console.error('[PaymentStatusChecker] 查詢訂單狀態失敗:', error)
+          const newErrorCount = errorCount + 1
+          setErrorCount(newErrorCount)
+
+          if (newErrorCount >= 3 || pollCount >= 85) {
+            setStatus('failed')
+            setMessage('無法確認付款狀態，請重新整理頁面或聯繫客服')
+            return
+          }
+
           setPollCount(prev => prev + 1)
         }
       }

@@ -201,6 +201,26 @@ async function handleCallback(request: NextRequest) {
             )
           } catch (error) {
             console.error('[Payment Callback] 處理授權成功失敗:', error)
+            const errorMessage = error instanceof Error ? error.message : '處理授權失敗'
+            const redirectUrl = `${baseUrl}/dashboard/billing?payment=error&error=${encodeURIComponent(errorMessage)}`
+            return new NextResponse(
+              `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>處理失敗</title>
+</head>
+<body>
+  <script>
+    window.location.href = "${redirectUrl}";
+  </script>
+</body>
+</html>`,
+              {
+                status: 200,
+                headers: { 'Content-Type': 'text/html; charset=utf-8' }
+              }
+            )
           }
         }
       }
