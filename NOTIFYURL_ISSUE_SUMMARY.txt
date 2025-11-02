@@ -1,0 +1,56 @@
+緊急問題診斷：NotifyURL 沒有被調用
+=====================================
+
+核心發現
+-------
+藍新金流定期定額授權的行為與一般付款完全不同：
+
+1. ReturnURL 被調用（授權成功）- 同步
+2. NotifyURL 根本不會被調用（在授權階段）
+
+NotifyURL 只在"定期扣款"時才由藍新後台調用，不是授權確認的一部分。
+
+問題代碼位置
+-----------
+/src/app/api/payment/recurring/callback/route.ts:156-199
+
+當前邏輯：
+  → ReturnURL 接收回調後，等待 NotifyURL 更新狀態
+  → 等待 3 秒後仍未見 NotifyURL，返回 pending
+  → 前端輪詢但永遠看不到成功
+
+正確邏輯應該是：
+  → ReturnURL 接收回調後，直接從 Period 參數解密更新狀態為 active
+  → 立即返回成功重定向
+  → NotifyURL 用於後續定期扣款的通知
+
+藍新金流流程對比
+---------------
+
+【一般付款】
+用戶支付 → ReturnURL 回調 → 顯示成功
+
+【定期定額授權】
+用戶授權 → ReturnURL 回調 → 直接設置為 active（NOT WAIT FOR NOTIFYURL!）
+
+【定期扣款（每月/周/日）】
+藍新後台扣款 → NotifyURL 回調 → 更新扣款狀態
+
+解決方案
+-------
+在 /src/app/api/payment/recurring/callback/route.ts 中：
+1. 移除 NotifyURL 等待邏輯（第 156-199 行）
+2. 直接從 Period 參數解密並設置 status = 'active'
+3. 立即返回成功重定向
+
+預期修復後的行為
+---------------
+1. 用戶完成授權
+2. ReturnURL 收到回調
+3. 系統直接設置 mandate status = active
+4. 前端立即顯示成功（不是 pending）
+5. NotifyURL 等待後續定期扣款時的通知
+
+診斷文件
+-------
+完整診斷報告：/Volumes/500G/Claudecode/Auto-pilot-SEO/NOTIFYURL_DIAGNOSIS.md
