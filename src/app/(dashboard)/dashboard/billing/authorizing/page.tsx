@@ -1,10 +1,10 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
 
-export default function AuthorizingPage() {
+function AuthorizingContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const formRef = useRef<HTMLFormElement>(null)
@@ -15,8 +15,10 @@ export default function AuthorizingPage() {
     const paymentForm = searchParams.get('paymentForm')
 
     if (!paymentForm) {
-      setStatus('error')
-      setErrorMessage('缺少付款表單資料')
+      setTimeout(() => {
+        setStatus('error')
+        setErrorMessage('缺少付款表單資料')
+      }, 0)
       setTimeout(() => {
         router.push('/dashboard/billing')
       }, 3000)
@@ -28,7 +30,10 @@ export default function AuthorizingPage() {
 
       if (formRef.current && formData.apiUrl && formData.postData) {
         formRef.current.action = formData.apiUrl
-        setStatus('submitting')
+
+        setTimeout(() => {
+          setStatus('submitting')
+        }, 0)
 
         Object.keys(formData.postData).forEach(key => {
           const input = document.createElement('input')
@@ -44,8 +49,10 @@ export default function AuthorizingPage() {
       }
     } catch (error) {
       console.error('[Authorizing] 解析付款表單失敗:', error)
-      setStatus('error')
-      setErrorMessage('付款表單資料格式錯誤')
+      setTimeout(() => {
+        setStatus('error')
+        setErrorMessage('付款表單資料格式錯誤')
+      }, 0)
       setTimeout(() => {
         router.push('/dashboard/billing')
       }, 3000)
@@ -94,7 +101,10 @@ export default function AuthorizingPage() {
               </div>
 
               <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
-                <div className="h-full animate-pulse bg-gradient-to-r from-blue-500 to-indigo-500" style={{ width: '75%' }} />
+                <div
+                  className="h-full animate-pulse bg-gradient-to-r from-blue-500 to-indigo-500"
+                  style={{ width: '75%' }}
+                />
               </div>
 
               <div className="flex items-center space-x-2 text-sm text-gray-500">
@@ -125,5 +135,28 @@ export default function AuthorizingPage() {
         style={{ display: 'none' }}
       />
     </div>
+  )
+}
+
+export default function AuthorizingPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+          <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-xl">
+            <div className="flex flex-col items-center space-y-6">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              </div>
+              <div className="text-center">
+                <h2 className="text-2xl font-bold text-gray-900">載入中...</h2>
+              </div>
+            </div>
+          </div>
+        </div>
+      }
+    >
+      <AuthorizingContent />
+    </Suspense>
   )
 }

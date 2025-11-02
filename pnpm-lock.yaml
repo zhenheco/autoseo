@@ -69,7 +69,7 @@ importers:
         specifier: ^16.4.1
         version: 16.4.1
       next:
-        specifier: ^15.1.0
+        specifier: ^15.5.6
         version: 15.5.6(@babel/core@7.28.5)(@playwright/test@1.56.1)(react-dom@19.2.0(react@19.2.0))(react@19.2.0)
       nodemailer:
         specifier: ^7.0.10
@@ -4160,7 +4160,6 @@ packages:
   rclone.js@0.6.6:
     resolution: {integrity: sha512-Dxh34cab/fNjFq5SSm0fYLNkGzG2cQSBy782UW9WwxJCEiVO4cGXkvaXcNlgv817dK8K8PuQ+NHUqSAMMhWujQ==}
     engines: {node: '>=12'}
-    cpu: [arm, arm64, mips, mipsel, x32, x64]
     os: [darwin, freebsd, linux, openbsd, sunos, win32]
     hasBin: true
 

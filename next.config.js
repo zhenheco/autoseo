@@ -7,9 +7,6 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: false,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
   images: {
     remotePatterns: [
       {
@@ -21,6 +18,7 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['googleapis', 'lucide-react', '@radix-ui/react-icons'],
   },
+  turbopack: {},
   webpack: (config, { isServer }) => {
     if (isServer) {
       config.externals.push({
