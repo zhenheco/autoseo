@@ -77,20 +77,25 @@ export function PaymentStatusChecker() {
       // 立即執行一次
       pollOrderStatus()
 
-      // 每 2 秒輪詢一次，最多輪詢 30 次（60 秒）
+      // 每 3 秒輪詢一次，最多輪詢 90 次（270 秒 = 4.5 分鐘）
+      let currentPollCount = 0
+      const maxPolls = 90
+      const pollInterval = 3000
+
       const interval = setInterval(() => {
-        if (pollCount >= 30) {
+        currentPollCount++
+        if (currentPollCount >= maxPolls) {
           clearInterval(interval)
           setStatus('failed')
-          setMessage('付款確認超時，請稍後重新整理頁面')
+          setMessage('付款確認超時，請重新整理頁面或聯繫客服')
           return
         }
         pollOrderStatus()
-      }, 2000)
+      }, pollInterval)
 
       return () => clearInterval(interval)
     }
-  }, [searchParams, router, pollCount])
+  }, [searchParams, router])
 
   if (!status) {
     return null
@@ -105,7 +110,7 @@ export function PaymentStatusChecker() {
           {message}
           <br />
           <span className="text-xs text-muted-foreground">
-            這可能需要幾秒鐘，請稍候...（{pollCount}/30）
+            這可能需要幾秒鐘，請稍候...（{pollCount}/90）
           </span>
         </AlertDescription>
       </Alert>

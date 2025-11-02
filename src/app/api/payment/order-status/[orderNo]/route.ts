@@ -20,32 +20,55 @@ export async function GET(
     }
 
     // 使用重試機制查詢訂單，應對 Supabase 複製延遲
-    // 支援 order_no（一般訂單）和 mandate_no（定期定額委託）
     let orderData: Database['public']['Tables']['payment_orders']['Row'] | null = null
     let lastError: unknown = null
 
     // 重試 5 次，每次間隔 1 秒
     for (let attempt = 1; attempt <= 5; attempt++) {
-      const { data, error } = await supabase
-        .from('payment_orders')
-        .select<'*', Database['public']['Tables']['payment_orders']['Row']>('*')
-        .or(`order_no.eq.${orderNo},mandate_no.eq.${orderNo}`)
-        .maybeSingle()
+      // 判斷是查詢一般訂單還是定期定額委託
+      if (orderNo.startsWith('MAN')) {
+        // 查詢 recurring_mandates 表
+        const { data: mandate, error } = await supabase
+          .from('recurring_mandates')
+          .select('*, payment_orders!first_payment_order_id(*)')
+          .eq('mandate_no', orderNo)
+          .maybeSingle()
 
-      if (data && !error) {
-        orderData = data
-        lastError = null
-        console.log(`[Order Status API] 找到訂單 (嘗試 ${attempt}/5):`, {
-          orderNo,
-          foundOrderNo: data.order_no,
-          foundMandateNo: (data as { mandate_no?: string }).mandate_no,
-          status: data.status
-        })
-        break
+        if (mandate && !error && mandate.payment_orders) {
+          orderData = mandate.payment_orders as Database['public']['Tables']['payment_orders']['Row']
+          lastError = null
+          console.log(`[Order Status API] 找到定期定額委託 (嘗試 ${attempt}/5):`, {
+            mandateNo: orderNo,
+            foundOrderNo: orderData.order_no,
+            mandateStatus: mandate.status,
+            orderStatus: orderData.status
+          })
+          break
+        }
+
+        lastError = error
+        console.log(`[Order Status API] 查詢委託失敗 (嘗試 ${attempt}/5):`, { orderNo, error })
+      } else {
+        // 查詢 payment_orders 表
+        const { data, error } = await supabase
+          .from('payment_orders')
+          .select<'*', Database['public']['Tables']['payment_orders']['Row']>('*')
+          .eq('order_no', orderNo)
+          .maybeSingle()
+
+        if (data && !error) {
+          orderData = data
+          lastError = null
+          console.log(`[Order Status API] 找到訂單 (嘗試 ${attempt}/5):`, {
+            orderNo,
+            status: data.status
+          })
+          break
+        }
+
+        lastError = error
+        console.log(`[Order Status API] 查詢訂單失敗 (嘗試 ${attempt}/5):`, { orderNo, error })
       }
-
-      lastError = error
-      console.log(`[Order Status API] 查詢訂單失敗 (嘗試 ${attempt}/5):`, { orderNo, error })
 
       if (attempt < 5) {
         await new Promise(resolve => setTimeout(resolve, 1000))
