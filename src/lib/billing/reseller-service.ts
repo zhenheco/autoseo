@@ -40,32 +40,25 @@ export class ResellerService {
       .from('resellers')
       .select('*')
       .eq('company_id', companyId)
-      .single<{
-        id: string
-        company_id: string
-        commission_rate: string | number
-        status: string
-        total_referrals: number
-        total_revenue: string | number
-        total_commission: string | number
-        notes: string | null
-        created_at: string | null
-      }>()
+      .single()
 
     if (error || !data) {
       return null
     }
 
+    type ResellerRow = Database['public']['Tables']['resellers']['Row']
+    const row = data as ResellerRow
+
     return {
-      id: data.id,
-      companyId: data.company_id,
-      commissionRate: Number(data.commission_rate),
-      status: data.status as 'active' | 'suspended' | 'terminated',
-      totalReferrals: data.total_referrals,
-      totalRevenue: Number(data.total_revenue),
-      totalCommission: Number(data.total_commission),
-      notes: data.notes,
-      createdAt: data.created_at || '',
+      id: row.id,
+      companyId: row.company_id,
+      commissionRate: Number(row.commission_rate),
+      status: row.status as 'active' | 'suspended' | 'terminated',
+      totalReferrals: row.total_referrals,
+      totalRevenue: Number(row.total_revenue),
+      totalCommission: Number(row.total_commission),
+      notes: row.notes,
+      createdAt: row.created_at || '',
     }
   }
 

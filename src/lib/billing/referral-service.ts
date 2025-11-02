@@ -38,25 +38,22 @@ export class ReferralService {
       .from('company_referral_codes')
       .select('*')
       .eq('company_id', companyId)
-      .single<{
-        company_id: string
-        referral_code: string
-        total_referrals: number
-        successful_referrals: number
-        total_rewards_tokens: number
-      }>()
+      .single()
 
     if (error || !data) {
       console.error('[ReferralService] 取得推薦碼失敗:', error)
       return null
     }
 
+    type ReferralCodeRow = Database['public']['Tables']['company_referral_codes']['Row']
+    const row = data as ReferralCodeRow
+
     return {
-      companyId: data.company_id,
-      code: data.referral_code,
-      totalReferrals: data.total_referrals,
-      successfulReferrals: data.successful_referrals,
-      totalRewardsTokens: data.total_rewards_tokens,
+      companyId: row.company_id,
+      code: row.referral_code,
+      totalReferrals: row.total_referrals,
+      successfulReferrals: row.successful_referrals,
+      totalRewardsTokens: row.total_rewards_tokens,
     }
   }
 
@@ -65,13 +62,16 @@ export class ReferralService {
       .from('company_referral_codes')
       .select('company_id')
       .eq('referral_code', code)
-      .single<{ company_id: string }>()
+      .single()
 
     if (error || !data) {
       return { valid: false }
     }
 
-    return { valid: true, companyId: data.company_id }
+    type ReferralCodeRow = Database['public']['Tables']['company_referral_codes']['Row']
+    const row = data as Pick<ReferralCodeRow, 'company_id'>
+
+    return { valid: true, companyId: row.company_id }
   }
 
   async createReferral(
