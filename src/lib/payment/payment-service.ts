@@ -429,25 +429,44 @@ export class PaymentService {
       console.log('[PaymentService] NotifyURL 提取資訊:', { status, mandateNo, periodNo })
       console.log('[PaymentService] 準備查詢委託 mandate_no:', mandateNo)
 
-      const { data: mandateData, error: findError } = await this.supabase
-        .from('recurring_mandates')
-        .select<'*', Database['public']['Tables']['recurring_mandates']['Row']>('*')
-        .eq('mandate_no', mandateNo)
-        .single()
+      let mandateData: Database['public']['Tables']['recurring_mandates']['Row'] | null = null
+      let lastError: unknown = null
 
-      if (findError || !mandateData) {
-        console.error('[PaymentService] 找不到定期定額委託')
+      for (let attempt = 1; attempt <= 5; attempt++) {
+        console.log(`[PaymentService] 查詢委託嘗試 ${attempt}/5`)
+
+        const { data, error } = await this.supabase
+          .from('recurring_mandates')
+          .select<'*', Database['public']['Tables']['recurring_mandates']['Row']>('*')
+          .eq('mandate_no', mandateNo)
+          .maybeSingle()
+
+        if (data && !error) {
+          mandateData = data
+          lastError = null
+          console.log(`[PaymentService] 找到委託 (嘗試 ${attempt}/5):`, {
+            mandateId: data.id,
+            mandateNo: data.mandate_no,
+            currentStatus: data.status
+          })
+          break
+        }
+
+        lastError = error
+        console.log(`[PaymentService] 查詢失敗 (嘗試 ${attempt}/5):`, { mandateNo, error })
+
+        if (attempt < 5) {
+          await new Promise(resolve => setTimeout(resolve, 1000))
+        }
+      }
+
+      if (!mandateData) {
+        console.error('[PaymentService] 重試 5 次後仍找不到定期定額委託')
         console.error('[PaymentService] mandate_no:', mandateNo)
-        console.error('[PaymentService] 資料庫錯誤:', findError)
+        console.error('[PaymentService] 最後錯誤:', lastError)
         console.error('[PaymentService] 完整解密資料:', JSON.stringify(decryptedData, null, 2))
         return { success: false, error: '找不到定期定額委託' }
       }
-
-      console.log('[PaymentService] 找到定期定額委託:', {
-        mandateId: mandateData.id,
-        mandateNo: mandateData.mandate_no,
-        currentStatus: mandateData.status
-      })
 
       if (status === 'SUCCESS') {
         const { error: updateError } = await this.supabase
