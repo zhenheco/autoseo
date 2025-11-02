@@ -18,6 +18,17 @@ const nextConfig = {
       },
     ],
   },
+  experimental: {
+    optimizePackageImports: ['googleapis', 'lucide-react', '@radix-ui/react-icons'],
+  },
+  webpack: (config, { isServer }) => {
+    if (isServer) {
+      config.externals.push({
+        'googleapis': 'commonjs googleapis',
+      });
+    }
+    return config;
+  },
 };
 
 module.exports = nextConfig;

@@ -5,21 +5,20 @@
   "main": "index.js",
   "scripts": {
     "dev": "next dev -p 3168",
-    "build": "next build",
+    "build": "NODE_OPTIONS='--max-old-space-size=4096' next build",
     "start": "next start",
     "lint": "next lint",
     "type-check": "tsc --noEmit",
     "db:migrate": "node scripts/run-migrations.js",
     "db:generate-types": "supabase gen types typescript --project-id YOUR_PROJECT_REF > src/types/database.types.ts",
-    "preview:cf": "next build && opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "deploy:cf": "next build && opennextjs-cloudflare build && opennextjs-cloudflare deploy"
+    "preview:cf": "NODE_OPTIONS='--max-old-space-size=4096' next build && opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy:cf-workers": "NODE_OPTIONS='--max-old-space-size=4096' next build && opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "deploy:pages": "NODE_OPTIONS='--max-old-space-size=4096' next build && opennextjs-cloudflare build && wrangler pages deploy .open-next --project-name=auto-pilot-seo"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.67.0",
-    "@hookform/resolvers": "^5.2.2",
     "@radix-ui/react-alert-dialog": "^1.1.15",
     "@radix-ui/react-avatar": "^1.1.10",
     "@radix-ui/react-dialog": "^1.1.15",
@@ -29,8 +28,6 @@
     "@radix-ui/react-select": "^2.2.6",
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tabs": "^1.1.13",
-    "@radix-ui/react-toast": "^1.2.15",
-    "@supabase/auth-helpers-nextjs": "^0.10.0",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.76.1",
     "@types/jsdom": "^27.0.0",
@@ -47,7 +44,6 @@
     "openai": "^6.7.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
-    "react-hook-form": "^7.65.0",
     "tailwind-merge": "^3.3.1",
     "uuid": "^13.0.0",
     "zod": "^4.1.12"
