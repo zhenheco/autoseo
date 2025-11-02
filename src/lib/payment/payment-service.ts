@@ -234,17 +234,18 @@ export class PaymentService {
         amount
       })
 
-      // 加入重試機制，最多重試 10 次，使用指數退避
-      // 重試間隔: 100ms, 200ms, 400ms, 800ms, 1000ms, 1000ms...
+      // 加入重試機制，應對 Supabase 多區域複製延遲
+      // 重試策略：最多重試 20 次，總等待時間約 20-25 秒
+      // 重試間隔: 500ms, 1000ms, 1500ms, 2000ms, 然後固定 2000ms
       let orderData: Database['public']['Tables']['payment_orders']['Row'] | null = null
       let findError: unknown = null
 
-      for (let attempt = 1; attempt <= 10; attempt++) {
+      for (let attempt = 1; attempt <= 20; attempt++) {
         const { data, error } = await this.supabase
           .from('payment_orders')
           .select<'*', Database['public']['Tables']['payment_orders']['Row']>('*')
           .eq('order_no', orderNo)
-          .single()
+          .maybeSingle() // 使用 maybeSingle() 避免 PGRST116 錯誤
 
         if (data && !error) {
           orderData = data
@@ -254,21 +255,23 @@ export class PaymentService {
         }
 
         findError = error
-        console.log(`[PaymentService] 查詢訂單失敗 (嘗試 ${attempt}/10):`, { orderNo, error })
+        console.log(`[PaymentService] 查詢訂單失敗 (嘗試 ${attempt}/20):`, { orderNo, error })
 
-        if (attempt < 10) {
-          // 指數退避：100ms, 200ms, 400ms, 800ms, 然後固定 1000ms
-          const delay = Math.min(100 * Math.pow(2, attempt - 1), 1000)
-          console.log(`[PaymentService] 等待 ${delay}ms 後重試`)
+        if (attempt < 20) {
+          // 更長的重試間隔，應對 Supabase 複製延遲
+          // 500ms, 1000ms, 1500ms, 2000ms, 2000ms...
+          const delay = Math.min(500 * attempt, 2000)
+          console.log(`[PaymentService] 等待 ${delay}ms 後重試 (應對資料庫複製延遲)`)
           await new Promise(resolve => setTimeout(resolve, delay))
         }
       }
 
       if (findError || !orderData) {
-        console.error('[PaymentService] 找不到訂單（已重試10次，總計約7-8秒）:', {
+        console.error('[PaymentService] 找不到訂單（已重試20次，總計約20-25秒）:', {
           orderNo,
           tradeNo,
-          error: findError
+          error: findError,
+          hint: '可能是 Supabase 多區域複製延遲超過預期'
         })
         return { success: false, error: '找不到訂單' }
       }
