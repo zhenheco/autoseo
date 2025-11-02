@@ -40,7 +40,17 @@ export class ResellerService {
       .from('resellers')
       .select('*')
       .eq('company_id', companyId)
-      .single()
+      .single<{
+        id: string
+        company_id: string
+        commission_rate: string | number
+        status: string
+        total_referrals: number
+        total_revenue: string | number
+        total_commission: string | number
+        notes: string | null
+        created_at: string | null
+      }>()
 
     if (error || !data) {
       return null
@@ -101,7 +111,20 @@ export class ResellerService {
         status: 'pending',
       })
       .select()
-      .single()
+      .single<{
+        id: string
+        reseller_id: string
+        order_type: string
+        order_id: string
+        customer_company_id: string
+        order_amount: string | number
+        commission_rate: string | number
+        commission_amount: string | number
+        status: string
+        paid_at: string | null
+        notes: string | null
+        created_at: string | null
+      }>()
 
     if (commissionError) {
       console.error('[ResellerService] 建立佣金記錄失敗:', commissionError)
