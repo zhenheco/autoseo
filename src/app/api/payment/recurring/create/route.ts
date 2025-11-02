@@ -30,7 +30,8 @@ export async function POST(request: NextRequest) {
       periodTimes,
     } = body
 
-    if (!companyId || !planId || !amount || !description || !email || !periodType || !periodStartType) {
+    // periodTimes 可以是 0（表示無限期），所以不檢查它的 truthy 值
+    if (!companyId || !planId || !amount || !description || !email || !periodType || periodStartType === undefined) {
       return NextResponse.json(
         { error: '缺少必要參數' },
         { status: 400 }
