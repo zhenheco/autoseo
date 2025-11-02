@@ -20,6 +20,7 @@ export async function GET(
     }
 
     // 使用重試機制查詢訂單，應對 Supabase 複製延遲
+    // 支援 order_no（一般訂單）和 mandate_no（定期定額委託）
     let orderData: Database['public']['Tables']['payment_orders']['Row'] | null = null
     let lastError: unknown = null
 
@@ -28,12 +29,18 @@ export async function GET(
       const { data, error } = await supabase
         .from('payment_orders')
         .select<'*', Database['public']['Tables']['payment_orders']['Row']>('*')
-        .eq('order_no', orderNo)
+        .or(`order_no.eq.${orderNo},mandate_no.eq.${orderNo}`)
         .maybeSingle()
 
       if (data && !error) {
         orderData = data
         lastError = null
+        console.log(`[Order Status API] 找到訂單 (嘗試 ${attempt}/5):`, {
+          orderNo,
+          foundOrderNo: data.order_no,
+          foundMandateNo: (data as { mandate_no?: string }).mandate_no,
+          status: data.status
+        })
         break
       }
 
