@@ -18,53 +18,19 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { canUpgrade, getUpgradeBlockReason, type BillingPeriod } from '@/lib/subscription/upgrade-rules'
 
 type SubscriptionPlan = Tables<'subscription_plans'>
 type TokenPackage = Tables<'token_packages'>
 type AIModel = Tables<'ai_model_pricing'>
 
-const TIER_HIERARCHY: Record<string, number> = {
-  'free': 0,
-  'starter': 1,
-  'business': 2,
-  'professional': 3,
-  'agency': 4,
-}
-
-function canUpgrade(
+function canUpgradeWrapper(
   currentTier: string | null,
-  currentBillingPeriod: 'monthly' | 'yearly' | 'lifetime',
+  currentBillingPeriod: BillingPeriod,
   targetPlan: SubscriptionPlan,
-  targetBillingPeriod: 'monthly' | 'yearly' | 'lifetime'
+  targetBillingPeriod: BillingPeriod
 ): boolean {
-  if (!currentTier) return true
-
-  const currentTierLevel = TIER_HIERARCHY[currentTier] ?? 0
-  const targetTierLevel = TIER_HIERARCHY[targetPlan.slug] ?? 0
-
-  if (currentBillingPeriod === 'lifetime') {
-    return false
-  }
-
-  if (targetTierLevel > currentTierLevel) {
-    return true
-  }
-
-  if (targetTierLevel === currentTierLevel) {
-    if (currentBillingPeriod === 'monthly' && (targetBillingPeriod === 'yearly' || targetBillingPeriod === 'lifetime')) {
-      return true
-    }
-    if (currentBillingPeriod === 'yearly' && targetBillingPeriod === 'lifetime') {
-      return true
-    }
-    return false
-  }
-
-  if (targetTierLevel < currentTierLevel) {
-    return false
-  }
-
-  return false
+  return canUpgrade(currentTier, currentBillingPeriod, targetPlan.slug, targetBillingPeriod)
 }
 
 export default function PricingPage() {
@@ -78,7 +44,7 @@ export default function PricingPage() {
   const [processingPackageId, setProcessingPackageId] = useState<string | null>(null)
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [currentTier, setCurrentTier] = useState<string | null>(null)
-  const [currentBillingPeriod, setCurrentBillingPeriod] = useState<'monthly' | 'yearly' | 'lifetime'>('monthly')
+  const [currentBillingPeriod, setCurrentBillingPeriod] = useState<BillingPeriod>('monthly')
 
   useEffect(() => {
     loadPlans()
@@ -793,7 +759,7 @@ export default function PricingPage() {
                     onClick={() => handlePlanPurchase(plan)}
                     disabled={
                       processingPlanId === plan.id ||
-                      !canUpgrade(currentTier, currentBillingPeriod, plan, billingPeriod)
+                      !canUpgradeWrapper(currentTier, currentBillingPeriod, plan, billingPeriod)
                     }
                     className={`w-full group/button mt-auto ${
                       isPopular
@@ -804,13 +770,13 @@ export default function PricingPage() {
                     <span>
                       {processingPlanId === plan.id
                         ? '處理中...'
-                        : !canUpgrade(currentTier, currentBillingPeriod, plan, billingPeriod)
+                        : !canUpgradeWrapper(currentTier, currentBillingPeriod, plan, billingPeriod)
                           ? (currentTier === plan.slug && currentBillingPeriod === billingPeriod)
                             ? '目前方案'
                             : '無法升級'
                           : '開始使用'}
                     </span>
-                    {processingPlanId !== plan.id && canUpgrade(currentTier, currentBillingPeriod, plan, billingPeriod) && (
+                    {processingPlanId !== plan.id && canUpgradeWrapper(currentTier, currentBillingPeriod, plan, billingPeriod) && (
                       <ArrowRight className="w-4 h-4 ml-2 group-hover/button:translate-x-1 transition-transform" />
                     )}
                   </Button>
