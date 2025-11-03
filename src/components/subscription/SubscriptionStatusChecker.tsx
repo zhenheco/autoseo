@@ -16,9 +16,12 @@ export function SubscriptionStatusChecker() {
     const mandateNo = searchParams.get('mandateNo')
     const error = searchParams.get('error')
 
+    // 使用 setTimeout 將 setState 延遲到下一個事件循環
     if (paymentStatus === 'failed' || paymentStatus === 'error') {
-      setStatus('failed')
-      setMessage(error || '訂閱失敗')
+      setTimeout(() => {
+        setStatus('failed')
+        setMessage(error || '訂閱失敗')
+      }, 0)
       setTimeout(() => {
         router.replace('/dashboard/subscription')
       }, 5000)
@@ -26,8 +29,10 @@ export function SubscriptionStatusChecker() {
     }
 
     if (paymentStatus === 'success') {
-      setStatus('success')
-      setMessage('訂閱成功！您的方案已更新')
+      setTimeout(() => {
+        setStatus('success')
+        setMessage('訂閱成功！您的方案已更新')
+      }, 0)
       setTimeout(() => {
         router.replace('/dashboard/subscription')
         window.location.reload()
@@ -36,8 +41,10 @@ export function SubscriptionStatusChecker() {
     }
 
     if (paymentStatus === 'pending' && mandateNo) {
-      setStatus('checking')
-      setMessage('正在處理您的訂閱...')
+      setTimeout(() => {
+        setStatus('checking')
+        setMessage('正在處理您的訂閱...')
+      }, 0)
 
       setTimeout(() => {
         router.replace('/dashboard/subscription')
