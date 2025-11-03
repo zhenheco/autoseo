@@ -408,6 +408,7 @@ export class PaymentService {
   async handleRecurringCallback(period: string): Promise<{
     success: boolean
     error?: string
+    warnings?: string[]
   }> {
     try {
       const decryptedData = this.newebpay.decryptPeriodCallback(period)
