@@ -47,6 +47,20 @@ export class PaymentService {
     return `MAN${timestamp}${random}`
   }
 
+  private mapPlanSlugToTier(slug: string): 'free' | 'basic' | 'pro' | 'enterprise' {
+    const mapping: Record<string, 'free' | 'basic' | 'pro' | 'enterprise'> = {
+      'free': 'free',
+      'starter': 'basic',
+      'professional': 'pro',
+      'business': 'pro',
+      'agency': 'enterprise',
+      'lifetime-starter': 'basic',
+      'lifetime-professional': 'pro',
+      'lifetime-business': 'pro',
+    }
+    return mapping[slug] || 'free'
+  }
+
   async createOnetimePayment(params: CreateOnetimeOrderParams): Promise<{
     success: boolean
     orderId?: string
@@ -596,7 +610,7 @@ export class PaymentService {
             const currentBalance = companyData?.seo_token_balance || 0
             const newBalance = currentBalance + planData.base_tokens
 
-            const subscriptionTier = planData.slug as 'free' | 'basic' | 'pro' | 'enterprise'
+            const subscriptionTier = this.mapPlanSlugToTier(planData.slug)
             const subscriptionEndsAt = mandateData.period_type === 'M'
               ? this.calculateNextPaymentDate(mandateData.period_type, mandateData.period_point || undefined)
               : mandateData.period_type === 'Y'
