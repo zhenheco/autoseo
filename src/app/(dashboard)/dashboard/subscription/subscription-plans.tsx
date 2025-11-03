@@ -74,6 +74,7 @@ export function SubscriptionPlans({ plans, companyId, userEmail, currentTier }: 
     if (slug.includes('starter')) return 'basic'
     if (slug.includes('professional')) return 'pro'
     if (slug.includes('business')) return 'pro'
+    if (slug.includes('agency')) return 'enterprise'
     return 'free'
   }
 

@@ -19,15 +19,26 @@
  */
 
 /**
- * 方案階層定義
+ * 方案階層定義（支援 subscription_plans.slug 和 companies.subscription_tier）
  * 數字越大表示階層越高
+ *
+ * 注意：此處同時支援方案 slug 和公司 tier
+ * - Plan slugs: agency, professional, business, starter, free
+ * - Company tiers: enterprise, pro, basic, free
+ * - Mapping: agency → enterprise, professional/business → pro, starter → basic
  */
 export const TIER_HIERARCHY: Record<string, number> = {
+  // Plan slugs (subscription_plans.slug)
   'free': 0,
   'starter': 1,
   'business': 2,
   'professional': 3,
   'agency': 4,
+
+  // Company tiers (companies.subscription_tier) - same hierarchy values
+  'basic': 1,    // maps to starter
+  'pro': 3,      // maps to professional/business
+  'enterprise': 4, // maps to agency
 }
 
 /**

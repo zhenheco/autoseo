@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import type { Tables } from '@/types/database.types'
-import { Check, Sparkles, Zap, ArrowRight, CreditCard, Crown, Infinity, Cpu, User, LogOut, LayoutDashboard } from 'lucide-react'
+import { Check, Sparkles, Zap, ArrowRight, CreditCard, Crown, Cpu, User, LogOut, LayoutDashboard } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -18,7 +18,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
-import { canUpgrade, getUpgradeBlockReason, type BillingPeriod } from '@/lib/subscription/upgrade-rules'
+import { canUpgrade, type BillingPeriod, TIER_HIERARCHY } from '@/lib/subscription/upgrade-rules'
 
 type SubscriptionPlan = Tables<'subscription_plans'>
 type TokenPackage = Tables<'token_packages'>
@@ -31,6 +31,20 @@ function canUpgradeWrapper(
   targetBillingPeriod: BillingPeriod
 ): boolean {
   return canUpgrade(currentTier, currentBillingPeriod, targetPlan.slug, targetBillingPeriod)
+}
+
+function isCurrentPlan(
+  currentTier: string | null,
+  currentBillingPeriod: BillingPeriod,
+  targetPlan: SubscriptionPlan,
+  targetBillingPeriod: BillingPeriod
+): boolean {
+  if (!currentTier) return false
+
+  const currentLevel = TIER_HIERARCHY[currentTier] ?? 0
+  const targetLevel = TIER_HIERARCHY[targetPlan.slug] ?? 0
+
+  return currentLevel === targetLevel && currentBillingPeriod === targetBillingPeriod
 }
 
 export default function PricingPage() {
@@ -771,7 +785,7 @@ export default function PricingPage() {
                       {processingPlanId === plan.id
                         ? '處理中...'
                         : !canUpgradeWrapper(currentTier, currentBillingPeriod, plan, billingPeriod)
-                          ? (currentTier === plan.slug && currentBillingPeriod === billingPeriod)
+                          ? isCurrentPlan(currentTier, currentBillingPeriod, plan, billingPeriod)
                             ? '目前方案'
                             : '無法升級'
                           : '開始使用'}
