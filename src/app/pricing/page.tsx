@@ -23,6 +23,50 @@ type SubscriptionPlan = Tables<'subscription_plans'>
 type TokenPackage = Tables<'token_packages'>
 type AIModel = Tables<'ai_model_pricing'>
 
+const TIER_HIERARCHY: Record<string, number> = {
+  'free': 0,
+  'starter': 1,
+  'business': 2,
+  'professional': 3,
+  'enterprise': 4,
+}
+
+function canUpgrade(
+  currentTier: string | null,
+  currentBillingPeriod: 'monthly' | 'yearly' | 'lifetime',
+  targetPlan: SubscriptionPlan,
+  targetBillingPeriod: 'monthly' | 'yearly' | 'lifetime'
+): boolean {
+  if (!currentTier) return true
+
+  const currentTierLevel = TIER_HIERARCHY[currentTier] ?? 0
+  const targetTierLevel = TIER_HIERARCHY[targetPlan.slug] ?? 0
+
+  if (currentBillingPeriod === 'lifetime') {
+    return false
+  }
+
+  if (targetTierLevel > currentTierLevel) {
+    return true
+  }
+
+  if (targetTierLevel === currentTierLevel) {
+    if (currentBillingPeriod === 'monthly' && (targetBillingPeriod === 'yearly' || targetBillingPeriod === 'lifetime')) {
+      return true
+    }
+    if (currentBillingPeriod === 'yearly' && targetBillingPeriod === 'lifetime') {
+      return true
+    }
+    return false
+  }
+
+  if (targetTierLevel < currentTierLevel) {
+    return false
+  }
+
+  return false
+}
+
 export default function PricingPage() {
   const router = useRouter()
   const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly' | 'lifetime'>('monthly')
@@ -34,6 +78,7 @@ export default function PricingPage() {
   const [processingPackageId, setProcessingPackageId] = useState<string | null>(null)
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [currentTier, setCurrentTier] = useState<string | null>(null)
+  const [currentBillingPeriod, setCurrentBillingPeriod] = useState<'monthly' | 'yearly' | 'lifetime'>('monthly')
 
   useEffect(() => {
     loadPlans()
@@ -62,6 +107,33 @@ export default function PricingPage() {
 
           if (company) {
             setCurrentTier(company.subscription_tier)
+
+            const { data: mandate } = await supabase
+              .from('recurring_mandates')
+              .select('period_type, subscription_plan_id')
+              .eq('company_id', member.company_id)
+              .eq('status', 'active')
+              .order('created_at', { ascending: false })
+              .limit(1)
+              .maybeSingle()
+
+            if (mandate) {
+              const { data: plan } = await supabase
+                .from('subscription_plans')
+                .select('is_lifetime')
+                .eq('id', mandate.subscription_plan_id)
+                .single()
+
+              if (plan?.is_lifetime) {
+                setCurrentBillingPeriod('lifetime')
+              } else if (mandate.period_type === 'Y') {
+                setCurrentBillingPeriod('yearly')
+              } else {
+                setCurrentBillingPeriod('monthly')
+              }
+            } else {
+              setCurrentBillingPeriod('monthly')
+            }
           }
         }
       }
@@ -716,7 +788,10 @@ export default function PricingPage() {
 
                   <Button
                     onClick={() => handlePlanPurchase(plan)}
-                    disabled={processingPlanId === plan.id || currentTier === plan.slug}
+                    disabled={
+                      processingPlanId === plan.id ||
+                      !canUpgrade(currentTier, currentBillingPeriod, plan, billingPeriod)
+                    }
                     className={`w-full group/button mt-auto ${
                       isPopular
                         ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30'
@@ -726,11 +801,13 @@ export default function PricingPage() {
                     <span>
                       {processingPlanId === plan.id
                         ? '處理中...'
-                        : currentTier === plan.slug
-                          ? '目前方案'
+                        : !canUpgrade(currentTier, currentBillingPeriod, plan, billingPeriod)
+                          ? (currentTier === plan.slug && currentBillingPeriod === billingPeriod)
+                            ? '目前方案'
+                            : '無法升級'
                           : '開始使用'}
                     </span>
-                    {processingPlanId !== plan.id && currentTier !== plan.slug && (
+                    {processingPlanId !== plan.id && canUpgrade(currentTier, currentBillingPeriod, plan, billingPeriod) && (
                       <ArrowRight className="w-4 h-4 ml-2 group-hover/button:translate-x-1 transition-transform" />
                     )}
                   </Button>
