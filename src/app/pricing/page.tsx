@@ -28,7 +28,7 @@ const TIER_HIERARCHY: Record<string, number> = {
   'starter': 1,
   'business': 2,
   'professional': 3,
-  'enterprise': 4,
+  'agency': 4,
 }
 
 function canUpgrade(
@@ -106,8 +106,6 @@ export default function PricingPage() {
             .single()
 
           if (company) {
-            setCurrentTier(company.subscription_tier)
-
             const { data: mandate } = await supabase
               .from('recurring_mandates')
               .select('period_type, subscription_plan_id')
@@ -120,18 +118,23 @@ export default function PricingPage() {
             if (mandate) {
               const { data: plan } = await supabase
                 .from('subscription_plans')
-                .select('is_lifetime')
+                .select('slug, is_lifetime')
                 .eq('id', mandate.subscription_plan_id)
                 .single()
 
-              if (plan?.is_lifetime) {
-                setCurrentBillingPeriod('lifetime')
-              } else if (mandate.period_type === 'Y') {
-                setCurrentBillingPeriod('yearly')
-              } else {
-                setCurrentBillingPeriod('monthly')
+              if (plan) {
+                setCurrentTier(plan.slug)
+
+                if (plan.is_lifetime) {
+                  setCurrentBillingPeriod('lifetime')
+                } else if (mandate.period_type === 'Y') {
+                  setCurrentBillingPeriod('yearly')
+                } else {
+                  setCurrentBillingPeriod('monthly')
+                }
               }
             } else {
+              setCurrentTier(company.subscription_tier)
               setCurrentBillingPeriod('monthly')
             }
           }
