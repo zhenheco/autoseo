@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Button } from '@/components/ui/button'
 import { Check } from 'lucide-react'
 import { useState } from 'react'
+import { useRouter } from 'next/navigation'
 import type { Database } from '@/types/database.types'
 
 type Plan = Database['public']['Tables']['subscription_plans']['Row']
@@ -17,6 +18,7 @@ interface SubscriptionPlansProps {
 
 export function SubscriptionPlans({ plans, companyId, userEmail, currentTier }: SubscriptionPlansProps) {
   const [loading, setLoading] = useState<string | null>(null)
+  const router = useRouter()
 
   const handleSubscribe = async (plan: Plan) => {
     try {
@@ -32,30 +34,31 @@ export function SubscriptionPlans({ plans, companyId, userEmail, currentTier }: 
         }),
       })
 
+      if (!response.ok) {
+        throw new Error(`API 錯誤: ${response.status}`)
+      }
+
       const data = await response.json()
 
-      if (data.success && data.paymentForm) {
-        const form = document.createElement('form')
-        form.method = 'POST'
-        form.action = data.paymentForm.action
+      if (!data.success) {
+        throw new Error(data.error || '未知錯誤')
+      }
 
-        Object.entries(data.paymentForm.params).forEach(([key, value]) => {
-          const input = document.createElement('input')
-          input.type = 'hidden'
-          input.name = key
-          input.value = value as string
-          form.appendChild(input)
-        })
+      if (data.paymentForm) {
+        const formData = {
+          apiUrl: data.paymentForm.apiUrl,
+          postData: data.paymentForm.postData,
+          merchantId: data.paymentForm.merchantId
+        }
 
-        document.body.appendChild(form)
-        form.submit()
+        const encodedForm = encodeURIComponent(JSON.stringify(formData))
+        router.push(`/dashboard/billing/authorizing?paymentForm=${encodedForm}`)
       } else {
-        alert(`訂閱失敗: ${data.error || '未知錯誤'}`)
+        throw new Error('缺少付款表單資料')
       }
     } catch (error) {
       console.error('訂閱錯誤:', error)
-      alert('訂閱失敗，請稍後再試')
-    } finally {
+      alert(`訂閱失敗: ${error instanceof Error ? error.message : '請稍後再試'}`)
       setLoading(null)
     }
   }

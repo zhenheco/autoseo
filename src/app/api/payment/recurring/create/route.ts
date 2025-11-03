@@ -24,7 +24,10 @@ export async function POST(request: NextRequest) {
       periodStartType,
     } = body
 
+    console.log('[API] 收到建立定期定額請求:', { planId, periodType, periodStartType })
+
     if (!planId || !periodType || periodStartType === undefined) {
+      console.error('[API] 缺少必要參數:', { planId, periodType, periodStartType })
       return NextResponse.json(
         { error: '缺少必要參數' },
         { status: 400 }
@@ -86,19 +89,37 @@ export async function POST(request: NextRequest) {
       periodTimes,
     })
 
+    console.log('[API] PaymentService 回應:', {
+      success: result.success,
+      mandateId: result.mandateId,
+      mandateNo: result.mandateNo,
+      hasPaymentForm: !!result.paymentForm,
+      error: result.error
+    })
+
     if (!result.success) {
+      console.error('[API] PaymentService 回傳失敗:', result.error)
       return NextResponse.json(
         { error: result.error },
         { status: 500 }
       )
     }
 
-    return NextResponse.json({
+    const response = {
       success: true,
       mandateId: result.mandateId,
       mandateNo: result.mandateNo,
       paymentForm: result.paymentForm,
+    }
+
+    console.log('[API] 回傳給前端:', {
+      success: response.success,
+      mandateId: response.mandateId,
+      mandateNo: response.mandateNo,
+      paymentFormKeys: response.paymentForm ? Object.keys(response.paymentForm) : []
     })
+
+    return NextResponse.json(response)
   } catch (error) {
     console.error('[API] 建立定期定額支付失敗:', error)
     return NextResponse.json(

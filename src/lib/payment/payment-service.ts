@@ -142,7 +142,17 @@ export class PaymentService {
     }
     error?: string
   }> {
+    console.log('[PaymentService] 建立定期定額委託 - 收到參數:', {
+      companyId: params.companyId,
+      planId: params.planId,
+      amount: params.amount,
+      periodType: params.periodType,
+      periodPoint: params.periodPoint,
+      periodStartType: params.periodStartType
+    })
+
     const mandateNo = this.generateMandateNo()
+    console.log('[PaymentService] 生成委託編號:', mandateNo)
 
     const { data: mandateData, error: mandateError } = await this.supabase
       .from('recurring_mandates')
@@ -161,9 +171,19 @@ export class PaymentService {
       .single()
 
     if (mandateError || !mandateData) {
-      console.error('[PaymentService] 建立定期定額委託失敗:', mandateError)
+      console.error('[PaymentService] 建立定期定額委託失敗:', {
+        mandateNo,
+        error: mandateError,
+        errorMessage: mandateError?.message,
+        errorDetails: mandateError?.details
+      })
       return { success: false, error: '建立定期定額委託失敗' }
     }
+
+    console.log('[PaymentService] 委託寫入資料庫成功:', {
+      mandateId: mandateData.id,
+      mandateNo: mandateData.mandate_no
+    })
 
     const orderNo = this.generateOrderNo()
 
@@ -219,6 +239,14 @@ export class PaymentService {
     }
 
     const paymentForm = this.newebpay.createRecurringPayment(paymentParams)
+
+    console.log('[PaymentService] 定期定額委託建立完成:', {
+      success: true,
+      mandateId: mandateData.id,
+      mandateNo: mandateData.mandate_no,
+      orderNo: orderData.order_no,
+      orderId: orderData.id
+    })
 
     return {
       success: true,
