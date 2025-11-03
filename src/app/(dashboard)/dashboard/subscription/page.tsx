@@ -53,7 +53,7 @@ export default async function SubscriptionPage() {
         <div className="mb-8 p-4 rounded-lg bg-muted">
           <div className="flex justify-between items-center mb-2">
             <h2 className="font-semibold">目前方案</h2>
-            <a href="#plans" className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
+            <a href="/pricing" className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
               升級方案
             </a>
           </div>

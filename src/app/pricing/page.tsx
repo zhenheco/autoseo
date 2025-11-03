@@ -33,6 +33,7 @@ export default function PricingPage() {
   const [processingPlanId, setProcessingPlanId] = useState<string | null>(null)
   const [processingPackageId, setProcessingPackageId] = useState<string | null>(null)
   const [userEmail, setUserEmail] = useState<string | null>(null)
+  const [currentTier, setCurrentTier] = useState<string | null>(null)
 
   useEffect(() => {
     loadPlans()
@@ -45,6 +46,24 @@ export default function PricingPage() {
       const { data: { user } } = await supabase.auth.getUser()
       if (user) {
         setUserEmail(user.email || null)
+
+        const { data: member } = await supabase
+          .from('company_members')
+          .select('company_id')
+          .eq('user_id', user.id)
+          .single()
+
+        if (member) {
+          const { data: company } = await supabase
+            .from('companies')
+            .select('subscription_tier')
+            .eq('id', member.company_id)
+            .single()
+
+          if (company) {
+            setCurrentTier(company.subscription_tier)
+          }
+        }
       }
     } catch (error) {
       console.error('Failed to load user:', error)
@@ -697,15 +716,21 @@ export default function PricingPage() {
 
                   <Button
                     onClick={() => handlePlanPurchase(plan)}
-                    disabled={processingPlanId === plan.id}
+                    disabled={processingPlanId === plan.id || currentTier === plan.slug}
                     className={`w-full group/button mt-auto ${
                       isPopular
                         ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30'
                         : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
                     }`}
                   >
-                    <span>{processingPlanId === plan.id ? '處理中...' : '開始使用'}</span>
-                    {processingPlanId !== plan.id && (
+                    <span>
+                      {processingPlanId === plan.id
+                        ? '處理中...'
+                        : currentTier === plan.slug
+                          ? '目前方案'
+                          : '開始使用'}
+                    </span>
+                    {processingPlanId !== plan.id && currentTier !== plan.slug && (
                       <ArrowRight className="w-4 h-4 ml-2 group-hover/button:translate-x-1 transition-transform" />
                     )}
                   </Button>
