@@ -25,6 +25,8 @@ interface Company {
   name: string
   slug: string
   subscription_tier: string
+  seo_token_balance?: number
+  subscription_ends_at?: string
 }
 
 interface SettingsClientProps {
@@ -121,13 +123,13 @@ export function SettingsClient({
                   <div className="grid grid-cols-2 gap-4 p-3 rounded-md bg-muted">
                     <div>
                       <p className="text-xs text-muted-foreground">Token 餘額</p>
-                      <p className="font-medium">{(company as { seo_token_balance?: number }).seo_token_balance?.toLocaleString() || 0}</p>
+                      <p className="font-medium">{company.seo_token_balance?.toLocaleString() || 0}</p>
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">到期日</p>
                       <p className="font-medium">
-                        {(company as { subscription_ends_at?: string }).subscription_ends_at
-                          ? new Date((company as { subscription_ends_at: string }).subscription_ends_at).toLocaleDateString('zh-TW')
+                        {company.subscription_ends_at
+                          ? new Date(company.subscription_ends_at).toLocaleDateString('zh-TW')
                           : '無'}
                       </p>
                     </div>

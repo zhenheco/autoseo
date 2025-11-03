@@ -19,19 +19,12 @@ export async function POST(request: NextRequest) {
 
     const body = await request.json()
     const {
-      companyId,
       planId,
-      amount,
-      description,
-      email,
       periodType,
-      periodPoint,
       periodStartType,
-      periodTimes,
     } = body
 
-    // periodTimes 可以是 0（表示無限期），所以不檢查它的 truthy 值
-    if (!companyId || !planId || !amount || !description || !email || !periodType || periodStartType === undefined) {
+    if (!planId || !periodType || periodStartType === undefined) {
       return NextResponse.json(
         { error: '缺少必要參數' },
         { status: 400 }
@@ -40,17 +33,43 @@ export async function POST(request: NextRequest) {
 
     const { data: membership } = await authClient
       .from('company_members')
-      .select('role')
-      .eq('company_id', companyId)
+      .select('company_id')
       .eq('user_id', user.id)
       .single()
 
     if (!membership) {
       return NextResponse.json(
-        { error: '無權限存取此公司' },
+        { error: '找不到使用者所屬公司' },
         { status: 403 }
       )
     }
+
+    const companyId = membership.company_id
+
+    const { data: plan } = await authClient
+      .from('subscription_plans')
+      .select('*')
+      .eq('id', planId)
+      .single()
+
+    if (!plan) {
+      return NextResponse.json(
+        { error: '找不到訂閱方案' },
+        { status: 404 }
+      )
+    }
+
+    const amount = plan.monthly_price || 0
+    const description = `${plan.name} 月繳訂閱`
+    const email = user.email || ''
+
+    let periodPoint: string | undefined
+    if (periodType === 'M') {
+      const today = new Date()
+      periodPoint = today.getDate().toString()
+    }
+
+    const periodTimes = 0
 
     const supabase = createAdminClient()
     const paymentService = PaymentService.createInstance(supabase)
