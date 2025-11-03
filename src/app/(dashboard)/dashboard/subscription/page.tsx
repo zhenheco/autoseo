@@ -2,7 +2,6 @@ import { getUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { SubscriptionPlans } from './subscription-plans'
-import { TokenPackages } from './token-packages'
 import { PaymentHistory } from './payment-history'
 import { SubscriptionStatusChecker } from '@/components/subscription/SubscriptionStatusChecker'
 import type { Database } from '@/types/database.types'
@@ -38,12 +37,6 @@ export default async function SubscriptionPage() {
     .eq('is_active', true)
     .eq('is_recurring', true)
     .order('monthly_price', { ascending: true })
-
-  const { data: tokenPackages } = await supabase
-    .from('token_packages')
-    .select<'*', Database['public']['Tables']['token_packages']['Row']>('*')
-    .eq('is_active', true)
-    .order('price', { ascending: true })
 
   const { data: paymentOrders } = await supabase
     .from('payment_orders')
@@ -86,15 +79,6 @@ export default async function SubscriptionPage() {
           </div>
         </div>
       )}
-
-      <div className="mb-12">
-        <h2 className="text-2xl font-bold mb-6">Token 包購買</h2>
-        <TokenPackages
-          packages={tokenPackages || []}
-          companyId={member.company_id}
-          userEmail={user.email || ''}
-        />
-      </div>
 
       <div className="mb-12">
         <h2 className="text-2xl font-bold mb-6">訂閱方案</h2>
