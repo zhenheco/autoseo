@@ -72,10 +72,10 @@ export function SubscriptionPlans({ plans, companyId, userEmail, currentTier }: 
 
   const getTierFromSlug = (slug: string): string => {
     if (slug.includes('starter')) return 'basic'
-    if (slug.includes('professional')) return 'pro'
     if (slug.includes('business')) return 'pro'
+    if (slug.includes('professional')) return 'pro'
     if (slug.includes('agency')) return 'enterprise'
-    return 'free'
+    return 'basic' // 預設返回最低階層
   }
 
   return (
