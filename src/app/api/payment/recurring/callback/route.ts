@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/server'
 import { PaymentService } from '@/lib/payment/payment-service'
 
 // 處理 GET 請求（藍新金流使用 GET 重定向）
@@ -113,8 +113,8 @@ async function handleCallback(request: NextRequest) {
       )
     }
 
-    // 解密獲取 orderNo
-    const supabase = await createClient()
+    // 解密獲取 orderNo（使用 Service Role Key 以繞過 RLS）
+    const supabase = createAdminClient()
     const paymentService = PaymentService.createInstance(supabase)
 
     try {

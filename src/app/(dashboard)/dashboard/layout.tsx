@@ -13,12 +13,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { signOut } from '@/lib/auth'
-import { User, LogOut, Settings, Bell, Search } from 'lucide-react'
+import { User, Settings, Bell, Search } from 'lucide-react'
 import { Sidebar } from '@/components/dashboard/sidebar'
 import { Input } from '@/components/ui/input'
 import { DashboardLayoutClient, MainContent } from '@/components/dashboard/dashboard-layout-client'
+import { LogoutButton } from '@/components/dashboard/logout-button'
 
-async function logout() {
+async function performLogout() {
   'use server'
   await signOut()
   redirect('/login')
@@ -95,17 +96,8 @@ export default async function DashboardLayout({
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <form action={logout} id="logout-form">
-                      <DropdownMenuItem
-                        onClick={(e) => {
-                          e.preventDefault()
-                          const form = document.getElementById('logout-form') as HTMLFormElement
-                          form?.requestSubmit()
-                        }}
-                      >
-                        <LogOut className="mr-2 h-4 w-4" />
-                        <span>登出</span>
-                      </DropdownMenuItem>
+                    <form action={performLogout} id="logout-form">
+                      <LogoutButton />
                     </form>
                   </DropdownMenuContent>
                 </DropdownMenu>
