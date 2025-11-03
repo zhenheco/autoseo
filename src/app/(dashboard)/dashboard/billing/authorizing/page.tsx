@@ -21,7 +21,7 @@ function AuthorizingContent() {
         setErrorMessage('缺少付款表單資料')
       }, 0)
       setTimeout(() => {
-        router.push('/dashboard/billing')
+        router.push('/dashboard/subscription')
       }, 3000)
       return
     }
@@ -103,7 +103,7 @@ function AuthorizingContent() {
         setErrorMessage('付款表單資料格式錯誤')
       }, 0)
       setTimeout(() => {
-        router.push('/dashboard/billing')
+        router.push('/dashboard/subscription')
       }, 3000)
     }
 

@@ -21,7 +21,7 @@ export async function POST(request: NextRequest) {
     if (!tradeInfo || !tradeSha) {
       console.error('[API Callback] 缺少必要參數')
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-      const redirectUrl = `${baseUrl}/dashboard/billing?payment=failed&error=${encodeURIComponent('缺少必要參數')}`
+      const redirectUrl = `${baseUrl}/dashboard/subscription?payment=failed&error=${encodeURIComponent('缺少必要參數')}`
       return new NextResponse(
         `<!DOCTYPE html>
 <html>
@@ -51,10 +51,10 @@ export async function POST(request: NextRequest) {
 
     if (result.success) {
       console.log('[API Callback] 付款處理成功')
-      redirectUrl = `${baseUrl}/dashboard/billing?payment=success`
+      redirectUrl = `${baseUrl}/dashboard/subscription?payment=success`
     } else {
       console.error('[API Callback] 付款處理失敗:', result.error)
-      redirectUrl = `${baseUrl}/dashboard/billing?payment=failed&error=${encodeURIComponent(result.error || '支付失敗')}`
+      redirectUrl = `${baseUrl}/dashboard/subscription?payment=failed&error=${encodeURIComponent(result.error || '支付失敗')}`
     }
 
     return new NextResponse(
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('[API Callback] 處理支付回調失敗:', error)
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    const redirectUrl = `${baseUrl}/dashboard/billing?payment=error`
+    const redirectUrl = `${baseUrl}/dashboard/subscription?payment=error`
     return new NextResponse(
       `<!DOCTYPE html>
 <html>

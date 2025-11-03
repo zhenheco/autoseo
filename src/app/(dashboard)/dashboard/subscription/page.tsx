@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { SubscriptionPlans } from './subscription-plans'
 import { TokenPackages } from './token-packages'
+import { PaymentHistory } from './payment-history'
 import { SubscriptionStatusChecker } from '@/components/subscription/SubscriptionStatusChecker'
 import type { Database } from '@/types/database.types'
 
@@ -43,6 +44,13 @@ export default async function SubscriptionPage() {
     .select<'*', Database['public']['Tables']['token_packages']['Row']>('*')
     .eq('is_active', true)
     .order('price', { ascending: true })
+
+  const { data: paymentOrders } = await supabase
+    .from('payment_orders')
+    .select<'*', Database['public']['Tables']['payment_orders']['Row']>('*')
+    .eq('company_id', member.company_id)
+    .order('created_at', { ascending: false })
+    .limit(10)
 
   return (
     <div className="container mx-auto p-8">
@@ -88,7 +96,7 @@ export default async function SubscriptionPage() {
         />
       </div>
 
-      <div>
+      <div className="mb-12">
         <h2 className="text-2xl font-bold mb-6">訂閱方案</h2>
         <SubscriptionPlans
           plans={plans || []}
@@ -97,6 +105,8 @@ export default async function SubscriptionPage() {
           currentTier={company?.subscription_tier || 'free'}
         />
       </div>
+
+      <PaymentHistory orders={paymentOrders || []} />
     </div>
   )
 }

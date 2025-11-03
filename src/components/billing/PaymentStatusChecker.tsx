@@ -53,13 +53,13 @@ export function PaymentStatusChecker() {
               setMessage('付款成功')
               // 清除 URL 參數，更新為成功狀態
               setTimeout(() => {
-                router.replace('/dashboard/billing?payment=success')
+                router.replace('/dashboard/subscription?payment=success')
               }, 2000)
             } else if (data.order.status === 'failed') {
               setStatus('failed')
               setMessage(data.order.newebpayMessage || '付款失敗')
               setTimeout(() => {
-                router.replace(`/dashboard/billing?payment=failed&error=${encodeURIComponent(data.order.newebpayMessage || '付款失敗')}`)
+                router.replace(`/dashboard/subscription?payment=failed&error=${encodeURIComponent(data.order.newebpayMessage || '付款失敗')}`)
               }, 2000)
             } else {
               // 訂單仍在處理中，繼續輪詢

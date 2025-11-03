@@ -117,7 +117,7 @@ export class PaymentService {
       email: params.email,
       returnUrl: `${baseUrl}/api/payment/callback`,
       notifyUrl: `${baseUrl}/api/payment/notify`,
-      clientBackUrl: `${baseUrl}/dashboard/billing`,
+      clientBackUrl: `${baseUrl}/dashboard/subscription`,
     }
 
     const paymentForm = this.newebpay.createOnetimePayment(paymentParams)
