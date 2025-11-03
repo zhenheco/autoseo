@@ -67,7 +67,7 @@ async function handleCallback(request: NextRequest) {
     // 只在一般付款時檢查 Status，定期定額授權不檢查（因為 ReturnURL 可能不帶 Status）
     if (!isPeriodCallback && status && status !== 'SUCCESS' && status !== '1') {
       console.error('[Payment Callback] 付款失敗，狀態:', status, '訊息:', message)
-      const redirectUrl = `${baseUrl}/dashboard/billing?payment=failed&error=${encodeURIComponent(message || '付款失敗')}`
+      const redirectUrl = `${baseUrl}/dashboard/subscription?payment=failed&error=${encodeURIComponent(message || '付款失敗')}`
       return new NextResponse(
         `<!DOCTYPE html>
 <html>
@@ -91,8 +91,8 @@ async function handleCallback(request: NextRequest) {
     if (!isPeriodCallback && !isTradeCallback) {
       console.error('[Payment Callback] 缺少必要參數')
       const redirectUrl = Object.keys(params).length === 0
-        ? `${baseUrl}/dashboard/billing`
-        : `${baseUrl}/dashboard/billing?payment=error`
+        ? `${baseUrl}/dashboard/subscription`
+        : `${baseUrl}/dashboard/subscription?payment=error`
       return new NextResponse(
         `<!DOCTYPE html>
 <html>
@@ -179,8 +179,8 @@ async function handleCallback(request: NextRequest) {
 
             console.log('[Payment Callback] 授權成功，所有資料已更新（包含訂閱和代幣）')
 
-            // 立即返回成功
-            const redirectUrl = `${baseUrl}/dashboard/billing?payment=success&orderNo=${encodeURIComponent(orderNo)}`
+            // 立即返回成功，使用 mandateNo 參數
+            const redirectUrl = `${baseUrl}/dashboard/subscription?payment=success&mandateNo=${encodeURIComponent(orderNo)}`
             return new NextResponse(
               `<!DOCTYPE html>
 <html>
@@ -202,7 +202,7 @@ async function handleCallback(request: NextRequest) {
           } catch (error) {
             console.error('[Payment Callback] 處理授權成功失敗:', error)
             const errorMessage = error instanceof Error ? error.message : '處理授權失敗'
-            const redirectUrl = `${baseUrl}/dashboard/billing?payment=error&error=${encodeURIComponent(errorMessage)}`
+            const redirectUrl = `${baseUrl}/dashboard/subscription?payment=error&error=${encodeURIComponent(errorMessage)}`
             return new NextResponse(
               `<!DOCTYPE html>
 <html>
@@ -225,8 +225,8 @@ async function handleCallback(request: NextRequest) {
         }
       }
 
-      // 返回 pending 狀態，前端會輪詢訂單狀態
-      const redirectUrl = `${baseUrl}/dashboard/billing?payment=pending&orderNo=${encodeURIComponent(orderNo)}`
+      // 返回 pending 狀態，前端會輪詢訂單狀態（使用 mandateNo）
+      const redirectUrl = `${baseUrl}/dashboard/subscription?payment=pending&mandateNo=${encodeURIComponent(orderNo)}`
 
       return new NextResponse(
         `<!DOCTYPE html>
@@ -248,7 +248,7 @@ async function handleCallback(request: NextRequest) {
       )
     } catch (error) {
       console.error('[Payment Callback] 解密失敗:', error)
-      const redirectUrl = `${baseUrl}/dashboard/billing?payment=error`
+      const redirectUrl = `${baseUrl}/dashboard/subscription?payment=error`
       return new NextResponse(
         `<!DOCTYPE html>
 <html>
@@ -276,7 +276,7 @@ async function handleCallback(request: NextRequest) {
     console.error('[Payment Callback] 錯誤堆疊:', error instanceof Error ? error.stack : '無堆疊資訊')
     console.error('='.repeat(80))
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    const redirectUrl = `${baseUrl}/dashboard/billing?payment=error`
+    const redirectUrl = `${baseUrl}/dashboard/subscription?payment=error`
     return new NextResponse(
       `<!DOCTYPE html>
 <html>

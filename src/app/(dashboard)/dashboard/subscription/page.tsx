@@ -2,6 +2,7 @@ import { getUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { SubscriptionPlans } from './subscription-plans'
+import { SubscriptionStatusChecker } from '@/components/subscription/SubscriptionStatusChecker'
 import type { Database } from '@/types/database.types'
 
 export default async function SubscriptionPage() {
@@ -44,6 +45,8 @@ export default async function SubscriptionPage() {
           選擇適合您的訂閱方案
         </p>
       </div>
+
+      <SubscriptionStatusChecker />
 
       {company && (
         <div className="mb-8 p-4 rounded-lg bg-muted">

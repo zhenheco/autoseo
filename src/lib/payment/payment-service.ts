@@ -215,7 +215,7 @@ export class PaymentService {
       periodTimes: params.periodTimes,
       returnUrl: `${baseUrl}/api/payment/recurring/callback`,
       notifyUrl: `${baseUrl}/api/payment/recurring/notify`,
-      clientBackUrl: `${baseUrl}/dashboard/billing`,
+      clientBackUrl: `${baseUrl}/dashboard/subscription`,
     }
 
     const paymentForm = this.newebpay.createRecurringPayment(paymentParams)
