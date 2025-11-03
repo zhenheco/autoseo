@@ -1,6 +1,6 @@
 import { getUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
-import { createServerClient } from '@/lib/supabase/server'
+import { createClient } from '@/lib/supabase/server'
 import { SubscriptionPlans } from './subscription-plans'
 import type { Database } from '@/types/database.types'
 
@@ -11,7 +11,7 @@ export default async function SubscriptionPage() {
     redirect('/login')
   }
 
-  const supabase = await createServerClient()
+  const supabase = await createClient()
 
   const { data: member } = await supabase
     .from('company_members')
