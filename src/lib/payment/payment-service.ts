@@ -488,22 +488,38 @@ export class PaymentService {
       }
 
       if (status === 'SUCCESS') {
-        console.log('[PaymentService] 開始處理授權成功邏輯')
+        const isFirstAuthorization = mandateData.status === 'pending'
+        const isRecurringBilling = mandateData.status === 'active'
+
+        console.log('[PaymentService] 開始處理授權成功邏輯:', {
+          isFirstAuthorization,
+          isRecurringBilling,
+          currentStatus: mandateData.status,
+        })
+
         let authorizationSuccess = false
         const businessLogicErrors: string[] = []
 
+        const mandateUpdate: Database['public']['Tables']['recurring_mandates']['Update'] = {
+          newebpay_response: decryptedData as unknown as Database['public']['Tables']['payment_orders']['Update']['newebpay_response'],
+          next_payment_date: this.calculateNextPaymentDate(
+            mandateData.period_type,
+            mandateData.period_point || undefined
+          ),
+        }
+
+        if (isFirstAuthorization) {
+          mandateUpdate.status = 'active'
+          mandateUpdate.newebpay_period_no = periodNo
+          mandateUpdate.activated_at = new Date().toISOString()
+          mandateUpdate.periods_paid = 1
+        } else if (isRecurringBilling) {
+          mandateUpdate.periods_paid = (mandateData.periods_paid || 0) + 1
+        }
+
         const { error: updateError } = await this.supabase
           .from('recurring_mandates')
-          .update({
-            status: 'active',
-            newebpay_period_no: periodNo,
-            newebpay_response: decryptedData as unknown as Database['public']['Tables']['payment_orders']['Update']['newebpay_response'],
-            activated_at: new Date().toISOString(),
-            next_payment_date: this.calculateNextPaymentDate(
-              mandateData.period_type,
-              mandateData.period_point || undefined
-            ),
-          })
+          .update(mandateUpdate)
           .eq('id', mandateData.id)
 
         if (updateError) {
@@ -567,20 +583,66 @@ export class PaymentService {
             console.log('[PaymentService] ✅ 訂閱已創建')
           }
 
+          const { data: companyData, error: companyQueryError } = await this.supabase
+            .from('companies')
+            .select('seo_token_balance')
+            .eq('id', mandateData.company_id)
+            .single()
+
+          if (companyQueryError) {
+            console.error('[PaymentService] ❌ 查詢公司資料失敗:', companyQueryError)
+            businessLogicErrors.push('查詢公司資料失敗')
+          } else {
+            const currentBalance = companyData?.seo_token_balance || 0
+            const newBalance = currentBalance + planData.base_tokens
+
+            const subscriptionTier = planData.slug as 'free' | 'basic' | 'pro' | 'enterprise'
+            const subscriptionEndsAt = mandateData.period_type === 'M'
+              ? this.calculateNextPaymentDate(mandateData.period_type, mandateData.period_point || undefined)
+              : mandateData.period_type === 'Y'
+              ? new Date(now.getFullYear() + 1, now.getMonth(), now.getDate()).toISOString()
+              : periodEnd
+
+            const { error: companyUpdateError } = await this.supabase
+              .from('companies')
+              .update({
+                subscription_tier: subscriptionTier,
+                subscription_ends_at: subscriptionEndsAt,
+                seo_token_balance: newBalance,
+                updated_at: now.toISOString(),
+              })
+              .eq('id', mandateData.company_id)
+
+            if (companyUpdateError) {
+              console.error('[PaymentService] ❌ 更新公司訂閱資料失敗:', companyUpdateError)
+              businessLogicErrors.push('更新公司訂閱資料失敗')
+            } else {
+              console.log('[PaymentService] ✅ 公司訂閱資料已更新:', {
+                subscription_tier: subscriptionTier,
+                subscription_ends_at: subscriptionEndsAt,
+                seo_token_balance: newBalance,
+              })
+            }
+          }
+
+          const description = isFirstAuthorization
+            ? `訂閱 ${planData.name} 方案（首次授權）`
+            : `定期定額扣款 - ${planData.name} 方案（第 ${mandateUpdate.periods_paid} 期）`
+
           const { error: tokenError } = await this.supabase.from('token_balance_changes').insert({
             company_id: mandateData.company_id,
-            change_type: 'quota_renewal',
+            change_type: isFirstAuthorization ? 'purchase' : 'quota_renewal',
             amount: planData.base_tokens,
-            balance_before: 0,
-            balance_after: planData.base_tokens,
-            description: `訂閱 ${planData.name} 方案`,
+            balance_before: companyData?.seo_token_balance || 0,
+            balance_after: (companyData?.seo_token_balance || 0) + planData.base_tokens,
+            description,
           })
 
           if (tokenError) {
-            console.error('[PaymentService] ❌ 添加代幣失敗:', tokenError)
-            businessLogicErrors.push('添加代幣失敗')
+            console.error('[PaymentService] ❌ 添加代幣記錄失敗:', tokenError)
+            businessLogicErrors.push('添加代幣記錄失敗')
           } else {
-            console.log('[PaymentService] ✅ 代幣已添加')
+            console.log('[PaymentService] ✅ 代幣記錄已添加')
           }
         }
 

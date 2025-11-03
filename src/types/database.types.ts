@@ -249,6 +249,10 @@ export type Database = {
           name: string
           slug: string
           owner_id: string
+          subscription_tier: 'free' | 'basic' | 'pro' | 'enterprise'
+          subscription_ends_at: string | null
+          seo_token_balance: number
+          newebpay_customer_id: string | null
           created_at: string
           updated_at: string
         }
@@ -257,6 +261,10 @@ export type Database = {
           name: string
           slug: string
           owner_id: string
+          subscription_tier?: 'free' | 'basic' | 'pro' | 'enterprise'
+          subscription_ends_at?: string | null
+          seo_token_balance?: number
+          newebpay_customer_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -265,6 +273,10 @@ export type Database = {
           name?: string
           slug?: string
           owner_id?: string
+          subscription_tier?: 'free' | 'basic' | 'pro' | 'enterprise'
+          subscription_ends_at?: string | null
+          seo_token_balance?: number
+          newebpay_customer_id?: string | null
           created_at?: string
           updated_at?: string
         }

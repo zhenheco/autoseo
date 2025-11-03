@@ -30,18 +30,16 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode
 }) {
-  // 暫時停用認證檢查，允許未登入使用者訪問 dashboard
-  // TODO: 未來需要重新啟用認證系統
-  // const user = await getUser()
+  const user = await getUser()
 
-  // if (!user) {
-  //   redirect('/login')
-  // }
+  if (!user) {
+    redirect('/login')
+  }
 
   return (
     <DashboardLayoutClient>
       <div className="min-h-screen bg-background">
-        <Sidebar />
+        <Sidebar userEmail={user.email} />
 
         <MainContent>
           <header className="sticky top-0 z-30 h-16 border-b border-border bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60">
@@ -84,7 +82,7 @@ export default async function DashboardLayout({
                       <div className="flex flex-col space-y-1">
                         <p className="text-sm font-medium leading-none">使用者帳號</p>
                         <p className="text-xs leading-none text-muted-foreground">
-                          user@example.com
+                          {user.email}
                         </p>
                       </div>
                     </DropdownMenuLabel>

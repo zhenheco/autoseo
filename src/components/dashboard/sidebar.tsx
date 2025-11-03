@@ -39,7 +39,11 @@ const navItems = [
   },
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+  userEmail?: string
+}
+
+export function Sidebar({ userEmail = 'user@example.com' }: SidebarProps) {
   const pathname = usePathname()
   const { collapsed, setCollapsed } = useSidebar()
 
@@ -117,7 +121,7 @@ export function Sidebar() {
                   使用者
                 </p>
                 <p className="text-xs text-sidebar-foreground/60 truncate">
-                  user@example.com
+                  {userEmail}
                 </p>
               </div>
             )}
