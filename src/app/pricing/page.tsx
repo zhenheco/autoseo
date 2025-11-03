@@ -167,6 +167,9 @@ export default function PricingPage() {
     const formData = {
       apiUrl: paymentForm.apiUrl,
       postData: paymentForm.postData,
+      tradeInfo: paymentForm.tradeInfo,
+      tradeSha: paymentForm.tradeSha,
+      version: paymentForm.version,
       merchantId: paymentForm.merchantId
     }
 

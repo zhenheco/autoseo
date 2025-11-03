@@ -115,7 +115,7 @@ export class PaymentService {
       amount: params.amount,
       description: params.description,
       email: params.email,
-      returnUrl: `${baseUrl}/api/payment/recurring/callback`,
+      returnUrl: `${baseUrl}/api/payment/callback`,
       notifyUrl: `${baseUrl}/api/payment/notify`,
       clientBackUrl: `${baseUrl}/dashboard/billing`,
     }

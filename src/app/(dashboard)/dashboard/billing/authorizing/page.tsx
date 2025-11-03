@@ -10,6 +10,7 @@ function AuthorizingContent() {
   const formRef = useRef<HTMLFormElement>(null)
   const [status, setStatus] = useState<'loading' | 'submitting' | 'error'>('loading')
   const [errorMessage, setErrorMessage] = useState<string>('')
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
 
   useEffect(() => {
     const paymentForm = searchParams.get('paymentForm')
@@ -25,30 +26,74 @@ function AuthorizingContent() {
       return
     }
 
+    timeoutRef.current = setTimeout(() => {
+      if (status !== 'submitting') {
+        setStatus('error')
+        setErrorMessage('連接金流服務超時，請重試')
+      }
+    }, 5000)
+
     try {
       const formData = JSON.parse(decodeURIComponent(paymentForm))
 
-      if (formRef.current && formData.apiUrl && formData.postData && formData.merchantId) {
+      if (formRef.current && formData.apiUrl) {
         formRef.current.action = formData.apiUrl
 
         setTimeout(() => {
           setStatus('submitting')
         }, 0)
 
-        const merchantInput = document.createElement('input')
-        merchantInput.type = 'hidden'
-        merchantInput.name = 'MerchantID_'
-        merchantInput.value = formData.merchantId
-        formRef.current.appendChild(merchantInput)
+        if (formData.postData && formData.merchantId) {
+          const merchantInput = document.createElement('input')
+          merchantInput.type = 'hidden'
+          merchantInput.name = 'MerchantID_'
+          merchantInput.value = formData.merchantId
+          formRef.current.appendChild(merchantInput)
 
-        const postDataInput = document.createElement('input')
-        postDataInput.type = 'hidden'
-        postDataInput.name = 'PostData_'
-        postDataInput.value = formData.postData
-        formRef.current.appendChild(postDataInput)
+          const postDataInput = document.createElement('input')
+          postDataInput.type = 'hidden'
+          postDataInput.name = 'PostData_'
+          postDataInput.value = formData.postData
+          formRef.current.appendChild(postDataInput)
+        } else if (formData.tradeInfo && formData.tradeSha && formData.merchantId) {
+          const merchantInput = document.createElement('input')
+          merchantInput.type = 'hidden'
+          merchantInput.name = 'MerchantID'
+          merchantInput.value = formData.merchantId
+          formRef.current.appendChild(merchantInput)
+
+          const tradeInfoInput = document.createElement('input')
+          tradeInfoInput.type = 'hidden'
+          tradeInfoInput.name = 'TradeInfo'
+          tradeInfoInput.value = formData.tradeInfo
+          formRef.current.appendChild(tradeInfoInput)
+
+          const tradeShaInput = document.createElement('input')
+          tradeShaInput.type = 'hidden'
+          tradeShaInput.name = 'TradeSha'
+          tradeShaInput.value = formData.tradeSha
+          formRef.current.appendChild(tradeShaInput)
+
+          const versionInput = document.createElement('input')
+          versionInput.type = 'hidden'
+          versionInput.name = 'Version'
+          versionInput.value = formData.version || '2.0'
+          formRef.current.appendChild(versionInput)
+        } else {
+          throw new Error('缺少必要的付款表單欄位')
+        }
 
         setTimeout(() => {
-          formRef.current?.submit()
+          try {
+            formRef.current?.submit()
+            if (timeoutRef.current) {
+              clearTimeout(timeoutRef.current)
+            }
+          } catch (submitError) {
+            console.error('[Authorizing] 提交表單失敗:', submitError)
+            setStatus('error')
+            setErrorMessage('提交失敗，請檢查瀏覽器設定')
+          }
         }, 500)
       }
     } catch (error) {
@@ -61,7 +106,13 @@ function AuthorizingContent() {
         router.push('/dashboard/billing')
       }, 3000)
     }
-  }, [searchParams, router])
+
+    return () => {
+      if (timeoutRef.current) {
+        clearTimeout(timeoutRef.current)
+      }
+    }
+  }, [searchParams, router, status])
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -87,7 +138,20 @@ function AuthorizingContent() {
               <div className="text-center">
                 <h2 className="text-2xl font-bold text-gray-900">處理失敗</h2>
                 <p className="mt-2 text-gray-600">{errorMessage}</p>
-                <p className="mt-4 text-sm text-gray-500">即將返回計費頁面...</p>
+                <div className="mt-6 flex gap-4 justify-center">
+                  <button
+                    onClick={() => window.location.reload()}
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  >
+                    重新嘗試
+                  </button>
+                  <button
+                    onClick={() => router.push('/dashboard/billing')}
+                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
+                  >
+                    返回計費中心
+                  </button>
+                </div>
               </div>
             </>
           ) : (
