@@ -350,14 +350,68 @@ export class PaymentService {
             return { success: false, error: 'Token 包不存在' }
           }
 
-          const { data: company, error: companyError } = await this.supabase
-            .from('companies')
-            .select<'seo_token_balance', { seo_token_balance: number }>('seo_token_balance')
-            .eq('id', orderData.company_id)
-            .single()
+          console.log('[PaymentService] Token 包資料:', {
+            packageId: packageData.id,
+            packageName: packageData.name,
+            tokens: packageData.tokens
+          })
+
+          console.log('[PaymentService] 準備查詢公司, company_id:', orderData.company_id)
+
+          // 加入重試機制查詢公司
+          let company: { seo_token_balance: number } | null = null
+          let companyError: unknown = null
+
+          for (let attempt = 1; attempt <= 10; attempt++) {
+            console.log(`[PaymentService] 查詢公司嘗試 ${attempt}/10, company_id: ${orderData.company_id}`)
+
+            const { data, error } = await this.supabase
+              .from('companies')
+              .select<'seo_token_balance', { seo_token_balance: number }>('seo_token_balance')
+              .eq('id', orderData.company_id)
+              .maybeSingle()
+
+            console.log(`[PaymentService] 查詢結果 (嘗試 ${attempt}/10):`, {
+              hasData: !!data,
+              error: error?.message || null,
+              errorCode: error?.code || null
+            })
+
+            if (data && !error) {
+              company = data
+              companyError = null
+              console.log(`[PaymentService] 找到公司 (嘗試 ${attempt}/10), seo_token_balance:`, data.seo_token_balance)
+              break
+            }
+
+            companyError = error
+            console.log(`[PaymentService] 查詢公司失敗 (嘗試 ${attempt}/10):`, {
+              company_id: orderData.company_id,
+              error
+            })
+
+            if (attempt < 10) {
+              const delay = Math.min(1000 * attempt, 3000)
+              console.log(`[PaymentService] 等待 ${delay}ms 後重試`)
+              await new Promise(resolve => setTimeout(resolve, delay))
+            }
+          }
 
           if (companyError || !company) {
-            console.error('[PaymentService] 查詢公司失敗:', companyError)
+            console.error('[PaymentService] 重試 10 次後仍查詢公司失敗:', {
+              company_id: orderData.company_id,
+              error: companyError
+            })
+
+            // 列出最近的公司記錄以供診斷
+            const { data: recentCompanies } = await this.supabase
+              .from('companies')
+              .select('id, name, created_at')
+              .order('created_at', { ascending: false })
+              .limit(5)
+
+            console.error('[PaymentService] 最近 5 筆公司記錄:', recentCompanies)
+
             return { success: false, error: '查詢公司失敗' }
           }
 
