@@ -118,9 +118,6 @@ export function Sidebar({ userEmail = 'user@example.com' }: SidebarProps) {
             {!collapsed && (
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-sidebar-foreground truncate">
-                  使用者
-                </p>
-                <p className="text-xs text-sidebar-foreground/60 truncate">
                   {userEmail}
                 </p>
               </div>
