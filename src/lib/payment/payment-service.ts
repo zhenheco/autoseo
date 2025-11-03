@@ -469,6 +469,10 @@ export class PaymentService {
       }
 
       if (status === 'SUCCESS') {
+        console.log('[PaymentService] 開始處理授權成功邏輯')
+        let authorizationSuccess = false
+        const businessLogicErrors: string[] = []
+
         const { error: updateError } = await this.supabase
           .from('recurring_mandates')
           .update({
@@ -484,12 +488,15 @@ export class PaymentService {
           .eq('id', mandateData.id)
 
         if (updateError) {
-          console.error('[PaymentService] 更新定期定額委託失敗:', updateError)
-          return { success: false, error: '更新定期定額委託失敗' }
+          console.error('[PaymentService] ❌ 更新定期定額委託失敗:', updateError)
+          businessLogicErrors.push('更新委託狀態失敗')
+        } else {
+          console.log('[PaymentService] ✅ 委託狀態已更新為 active')
+          authorizationSuccess = true
         }
 
         if (mandateData.first_payment_order_id) {
-          await this.supabase
+          const { error: orderUpdateError } = await this.supabase
             .from('payment_orders')
             .update({
               status: 'success',
@@ -498,20 +505,30 @@ export class PaymentService {
               paid_at: new Date().toISOString(),
             })
             .eq('id', mandateData.first_payment_order_id)
+
+          if (orderUpdateError) {
+            console.error('[PaymentService] ❌ 更新訂單狀態失敗:', orderUpdateError)
+            businessLogicErrors.push('更新訂單狀態失敗')
+          } else {
+            console.log('[PaymentService] ✅ 訂單狀態已更新為 success')
+          }
         }
 
-        const { data: planData } = await this.supabase
+        const { data: planData, error: planError } = await this.supabase
           .from('subscription_plans')
           .select<'*', Database['public']['Tables']['subscription_plans']['Row']>('*')
           .eq('id', mandateData.plan_id)
           .single()
 
-        if (planData) {
+        if (planError || !planData) {
+          console.error('[PaymentService] ❌ 查詢方案失敗:', planError)
+          businessLogicErrors.push('查詢方案失敗')
+        } else {
           const now = new Date()
           const periodStart = now.toISOString()
           const periodEnd = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate()).toISOString()
 
-          await this.supabase.from('company_subscriptions').upsert({
+          const { error: subscriptionError } = await this.supabase.from('company_subscriptions').upsert({
             company_id: mandateData.company_id,
             plan_id: mandateData.plan_id,
             status: 'active',
@@ -524,7 +541,14 @@ export class PaymentService {
             current_period_end: periodEnd,
           })
 
-          await this.supabase.from('token_balance_changes').insert({
+          if (subscriptionError) {
+            console.error('[PaymentService] ❌ 創建訂閱失敗:', subscriptionError)
+            businessLogicErrors.push('創建訂閱失敗')
+          } else {
+            console.log('[PaymentService] ✅ 訂閱已創建')
+          }
+
+          const { error: tokenError } = await this.supabase.from('token_balance_changes').insert({
             company_id: mandateData.company_id,
             change_type: 'quota_renewal',
             amount: planData.base_tokens,
@@ -532,9 +556,24 @@ export class PaymentService {
             balance_after: planData.base_tokens,
             description: `訂閱 ${planData.name} 方案`,
           })
+
+          if (tokenError) {
+            console.error('[PaymentService] ❌ 添加代幣失敗:', tokenError)
+            businessLogicErrors.push('添加代幣失敗')
+          } else {
+            console.log('[PaymentService] ✅ 代幣已添加')
+          }
         }
 
-        return { success: true }
+        if (businessLogicErrors.length > 0) {
+          console.warn('[PaymentService] ⚠️ 授權成功但部分業務邏輯失敗:', businessLogicErrors)
+          if (!authorizationSuccess) {
+            return { success: false, error: '授權處理失敗: ' + businessLogicErrors.join(', ') }
+          }
+        }
+
+        console.log('[PaymentService] ✅ 授權成功處理完成')
+        return { success: true, warnings: businessLogicErrors.length > 0 ? businessLogicErrors : undefined }
       } else {
         await this.supabase
           .from('recurring_mandates')
