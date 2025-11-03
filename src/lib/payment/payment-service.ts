@@ -695,8 +695,8 @@ export class PaymentService {
     switch (periodType) {
       case 'M':
         const day = periodPoint ? parseInt(periodPoint) : now.getDate()
-        const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, day)
-        return nextMonth.toISOString().split('T')[0]
+        const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, day, 0, 0, 0, 0)
+        return nextMonth.toISOString()
 
       case 'Y':
         const [month, dayOfMonth] = periodPoint ? periodPoint.split(',').map(Number) : [now.getMonth() + 1, now.getDate()]

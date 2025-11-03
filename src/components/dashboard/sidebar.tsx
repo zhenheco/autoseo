@@ -11,6 +11,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  CreditCard,
 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -31,6 +32,11 @@ const navItems = [
     title: '網站管理',
     href: '/dashboard/websites',
     icon: Globe,
+  },
+  {
+    title: '訂閱方案',
+    href: '/dashboard/subscription',
+    icon: CreditCard,
   },
   {
     title: '設定',
