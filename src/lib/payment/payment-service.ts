@@ -266,21 +266,30 @@ export class PaymentService {
       // 記錄完整的解密資料以便診斷
       console.log('[PaymentService] 解密後的完整資料:', JSON.stringify(decryptedData, null, 2))
 
-      // 藍新金流單次付款的 response 結構是巢狀的，資料在 Result 物件裡
-      if (!decryptedData.Result || typeof decryptedData.Result !== 'object') {
-        console.error('[PaymentService] 單次付款 response 格式錯誤: Result 不存在或不是物件')
-        return {
-          success: false,
-          error: 'Invalid payment data format: Result missing or invalid'
-        }
-      }
-
       const status = decryptedData.Status as string
       const message = decryptedData.Message as string
-      const result = decryptedData.Result as Record<string, any>
-      const orderNo = result.MerchantOrderNo as string
-      const tradeNo = result.TradeNo as string
-      const amount = result.Amt as number
+
+      // 藍新金流單次付款有兩種格式：
+      // 1. JSON 格式（巢狀）: {Status, Message, Result: {MerchantOrderNo, TradeNo, Amt, ...}}
+      // 2. URLSearchParams 格式（扁平）: {Status, Message, MerchantOrderNo, TradeNo, Amt, ...}
+      let orderNo: string
+      let tradeNo: string
+      let amount: number
+
+      if (decryptedData.Result && typeof decryptedData.Result === 'object') {
+        // JSON 格式：資料在 Result 物件裡
+        console.log('[PaymentService] 使用 JSON 格式（Result 物件）')
+        const result = decryptedData.Result as Record<string, any>
+        orderNo = result.MerchantOrderNo as string
+        tradeNo = result.TradeNo as string
+        amount = result.Amt as number
+      } else {
+        // URLSearchParams 格式：資料在最外層
+        console.log('[PaymentService] 使用扁平格式（最外層）')
+        orderNo = decryptedData.MerchantOrderNo as string
+        tradeNo = decryptedData.TradeNo as string
+        amount = decryptedData.Amt as number
+      }
 
       console.log('[PaymentService] 處理付款通知:', {
         orderNo,

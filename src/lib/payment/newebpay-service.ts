@@ -177,15 +177,28 @@ export class NewebPayService {
 
     const decryptedData = this.aesDecrypt(tradeInfo)
 
-    const params = new URLSearchParams(decryptedData)
-    const result: DecryptedResponse = {}
+    // 藍新金流單次付款有兩種回傳格式：
+    // 1. JSON 格式（較新版本）: {"Status": "SUCCESS", "Message": "...", "Result": {...}}
+    // 2. URLSearchParams 格式（較舊版本或特定付款方式）: Status=SUCCESS&Message=...&MerchantOrderNo=...
 
-    params.forEach((value, key) => {
-      const numValue = Number(value)
-      result[key] = isNaN(numValue) ? value : numValue
-    })
+    // 先嘗試解析為 JSON
+    try {
+      const jsonData = JSON.parse(decryptedData)
+      console.log('[NewebPayService] 解密為 JSON 格式')
+      return jsonData
+    } catch (e) {
+      // 如果不是 JSON，則使用 URLSearchParams 解析（扁平格式）
+      console.log('[NewebPayService] 解密為 URLSearchParams 格式')
+      const params = new URLSearchParams(decryptedData)
+      const result: DecryptedResponse = {}
 
-    return result
+      params.forEach((value, key) => {
+        const numValue = Number(value)
+        result[key] = isNaN(numValue) ? value : numValue
+      })
+
+      return result
+    }
   }
 
   decryptPeriodCallback(period: string): DecryptedResponse {

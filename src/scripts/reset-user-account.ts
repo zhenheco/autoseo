@@ -62,13 +62,14 @@ async function resetUserAccount() {
     }
     console.log('✓ 成功停用 active mandates')
 
-    // 3. 重置 company 的訂閱為 free
-    console.log('\n重置 company 訂閱為 free...')
+    // 3. 重置 company 的訂閱為 free，並將 token 歸零
+    console.log('\n重置 company 訂閱為 free 並清空 token...')
     const { error: updateCompanyError } = await supabase
       .from('companies')
       .update({
         subscription_tier: 'free',
-        subscription_ends_at: null
+        subscription_ends_at: null,
+        seo_token_balance: 0
       })
       .eq('id', company.id)
 
