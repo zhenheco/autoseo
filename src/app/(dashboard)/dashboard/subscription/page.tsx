@@ -47,18 +47,16 @@ export default async function SubscriptionPage() {
 
   return (
     <div className="container mx-auto p-8">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold">訂閱方案</h1>
-        <p className="text-muted-foreground mt-2">
-          選擇適合您的訂閱方案
-        </p>
-      </div>
-
       <SubscriptionStatusChecker />
 
       {company && (
         <div className="mb-8 p-4 rounded-lg bg-muted">
-          <h2 className="font-semibold mb-2">目前方案</h2>
+          <div className="flex justify-between items-center mb-2">
+            <h2 className="font-semibold">目前方案</h2>
+            <a href="#plans" className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
+              升級方案
+            </a>
+          </div>
           <div className="grid grid-cols-3 gap-4">
             <div>
               <p className="text-sm text-muted-foreground">方案類型</p>
@@ -80,8 +78,7 @@ export default async function SubscriptionPage() {
         </div>
       )}
 
-      <div className="mb-12">
-        <h2 className="text-2xl font-bold mb-6">訂閱方案</h2>
+      <div id="plans" className="mb-12">
         <SubscriptionPlans
           plans={plans || []}
           companyId={member.company_id}
