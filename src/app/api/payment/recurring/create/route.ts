@@ -1,14 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { PaymentService } from '@/lib/payment/payment-service'
 
 export async function POST(request: NextRequest) {
   try {
-    const supabase = await createClient()
+    const authClient = await createClient()
 
     const {
       data: { user },
-    } = await supabase.auth.getUser()
+    } = await authClient.auth.getUser()
 
     if (!user) {
       return NextResponse.json(
@@ -38,7 +38,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { data: membership } = await supabase
+    const { data: membership } = await authClient
       .from('company_members')
       .select('role')
       .eq('company_id', companyId)
@@ -52,6 +52,7 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const supabase = createAdminClient()
     const paymentService = PaymentService.createInstance(supabase)
 
     const result = await paymentService.createRecurringPayment({

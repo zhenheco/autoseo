@@ -433,8 +433,8 @@ export class PaymentService {
       let mandateData: Database['public']['Tables']['recurring_mandates']['Row'] | null = null
       let lastError: unknown = null
 
-      for (let attempt = 1; attempt <= 5; attempt++) {
-        console.log(`[PaymentService] 查詢委託嘗試 ${attempt}/5`)
+      for (let attempt = 1; attempt <= 10; attempt++) {
+        console.log(`[PaymentService] 查詢委託嘗試 ${attempt}/10`)
 
         const { data, error } = await this.supabase
           .from('recurring_mandates')
@@ -442,10 +442,17 @@ export class PaymentService {
           .eq('mandate_no', mandateNo)
           .maybeSingle()
 
+        console.log(`[PaymentService] 查詢結果 (嘗試 ${attempt}/10):`, {
+          mandateNo,
+          hasData: !!data,
+          error: error?.message || null,
+          errorCode: error?.code || null
+        })
+
         if (data && !error) {
           mandateData = data
           lastError = null
-          console.log(`[PaymentService] 找到委託 (嘗試 ${attempt}/5):`, {
+          console.log(`[PaymentService] 找到委託 (嘗試 ${attempt}/10):`, {
             mandateId: data.id,
             mandateNo: data.mandate_no,
             currentStatus: data.status
@@ -454,18 +461,29 @@ export class PaymentService {
         }
 
         lastError = error
-        console.log(`[PaymentService] 查詢失敗 (嘗試 ${attempt}/5):`, { mandateNo, error })
+        console.log(`[PaymentService] 查詢失敗 (嘗試 ${attempt}/10):`, { mandateNo, error })
 
-        if (attempt < 5) {
-          await new Promise(resolve => setTimeout(resolve, 1000))
+        if (attempt < 10) {
+          const delay = Math.min(1000 * attempt, 3000)
+          console.log(`[PaymentService] 等待 ${delay}ms 後重試`)
+          await new Promise(resolve => setTimeout(resolve, delay))
         }
       }
 
       if (!mandateData) {
-        console.error('[PaymentService] 重試 5 次後仍找不到定期定額委託')
+        console.error('[PaymentService] 重試 10 次後仍找不到定期定額委託')
         console.error('[PaymentService] mandate_no:', mandateNo)
         console.error('[PaymentService] 最後錯誤:', lastError)
         console.error('[PaymentService] 完整解密資料:', JSON.stringify(decryptedData, null, 2))
+
+        const { data: allMandates } = await this.supabase
+          .from('recurring_mandates')
+          .select('mandate_no, id, status, created_at')
+          .order('created_at', { ascending: false })
+          .limit(10)
+
+        console.error('[PaymentService] 最近 10 筆 mandates:', allMandates)
+
         return { success: false, error: '找不到定期定額委託' }
       }
 
