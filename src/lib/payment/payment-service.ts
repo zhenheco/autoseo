@@ -339,76 +339,79 @@ export class PaymentService {
         }
 
         if (orderData.payment_type === 'token_package' && orderData.related_id) {
-          const { data: packageData } = await this.supabase
+          const { data: packageData, error: packageError } = await this.supabase
             .from('token_packages')
             .select<'*', Database['public']['Tables']['token_packages']['Row']>('*')
             .eq('id', orderData.related_id)
             .single()
 
-          if (packageData) {
-            const { data: subscription } = await this.supabase
-              .from('company_subscriptions')
-              .select<'purchased_token_balance', { purchased_token_balance: number }>('purchased_token_balance')
-              .eq('company_id', orderData.company_id)
-              .single()
-
-            if (subscription) {
-              const newBalance = subscription.purchased_token_balance + packageData.tokens
-
-              await this.supabase
-                .from('company_subscriptions')
-                .update({ purchased_token_balance: newBalance })
-                .eq('company_id', orderData.company_id)
-
-              await this.supabase.from('token_balance_changes').insert({
-                company_id: orderData.company_id,
-                change_type: 'purchase',
-                amount: packageData.tokens,
-                balance_before: subscription.purchased_token_balance,
-                balance_after: newBalance,
-                reference_id: orderData.id,
-                description: `購買 ${packageData.name}`,
-              })
-            }
+          if (packageError || !packageData) {
+            console.error('[PaymentService] Token 包不存在:', packageError)
+            return { success: false, error: 'Token 包不存在' }
           }
-        } else if ((orderData.payment_type === 'subscription' || orderData.payment_type === 'lifetime') && orderData.related_id) {
-          const isLifetime = orderData.payment_type === 'lifetime'
 
-          const { data: planData } = await this.supabase
+          const { data: company, error: companyError } = await this.supabase
+            .from('companies')
+            .select<'seo_token_balance', { seo_token_balance: number }>('seo_token_balance')
+            .eq('id', orderData.company_id)
+            .single()
+
+          if (companyError || !company) {
+            console.error('[PaymentService] 查詢公司失敗:', companyError)
+            return { success: false, error: '查詢公司失敗' }
+          }
+
+          const newBalance = company.seo_token_balance + packageData.tokens
+
+          const { error: updateError } = await this.supabase
+            .from('companies')
+            .update({ seo_token_balance: newBalance })
+            .eq('id', orderData.company_id)
+
+          if (updateError) {
+            console.error('[PaymentService] 更新 Token 餘額失敗:', updateError)
+            return { success: false, error: '更新 Token 餘額失敗' }
+          }
+
+          console.log('[PaymentService] Token 包處理成功:', {
+            packageName: packageData.name,
+            tokens: packageData.tokens,
+            balanceBefore: company.seo_token_balance,
+            balanceAfter: newBalance
+          })
+        } else if (orderData.payment_type === 'lifetime' && orderData.related_id) {
+          const { data: planData, error: planError } = await this.supabase
             .from('subscription_plans')
             .select<'*', Database['public']['Tables']['subscription_plans']['Row']>('*')
             .eq('id', orderData.related_id)
             .single()
 
-          if (planData) {
-            const now = new Date()
-            const periodStart = now.toISOString()
-            const periodEnd = isLifetime
-              ? null
-              : new Date(now.getFullYear() + 1, now.getMonth(), now.getDate()).toISOString()
-
-            await this.supabase.from('company_subscriptions').upsert({
-              company_id: orderData.company_id,
-              plan_id: orderData.related_id,
-              status: 'active',
-              purchased_token_balance: 0,
-              monthly_quota_balance: planData.base_tokens,
-              monthly_token_quota: planData.base_tokens,
-              is_lifetime: isLifetime,
-              lifetime_discount: isLifetime ? 0.8 : 1.0,
-              current_period_start: periodStart,
-              current_period_end: periodEnd,
-            })
-
-            await this.supabase.from('token_balance_changes').insert({
-              company_id: orderData.company_id,
-              change_type: 'quota_renewal',
-              amount: planData.base_tokens,
-              balance_before: 0,
-              balance_after: planData.base_tokens,
-              description: `訂閱 ${planData.name} 方案${isLifetime ? '（終身）' : ''}`,
-            })
+          if (planError || !planData) {
+            console.error('[PaymentService] 終身方案不存在:', planError)
+            return { success: false, error: '終身方案不存在' }
           }
+
+          const tier = this.mapPlanSlugToTier(planData.slug)
+
+          const { error: updateError } = await this.supabase
+            .from('companies')
+            .update({
+              subscription_tier: tier,
+              subscription_ends_at: null,
+            })
+            .eq('id', orderData.company_id)
+
+          if (updateError) {
+            console.error('[PaymentService] 更新終身訂閱失敗:', updateError)
+            return { success: false, error: '更新終身訂閱失敗' }
+          }
+
+          console.log('[PaymentService] 終身方案處理成功:', {
+            planName: planData.name,
+            planSlug: planData.slug,
+            tier,
+            companyId: orderData.company_id
+          })
         }
 
         return { success: true }
