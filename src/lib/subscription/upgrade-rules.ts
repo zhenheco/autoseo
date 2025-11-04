@@ -23,26 +23,26 @@
  * 數字越大表示階層越高
  *
  * 實際方案階層（由低到高）：
- * 1. Starter (starter slug → basic tier)
- * 2. Business (business slug → pro tier)
- * 3. Professional (professional slug → pro tier)
- * 4. Agency (agency slug → enterprise tier)
+ * 1. Starter (NT$599 月費) → starter slug → basic tier
+ * 2. Professional (NT$2,499 月費) → professional slug → pro tier
+ * 3. Business (NT$5,999 月費) → business slug → pro tier
+ * 4. Agency (NT$11,999 月費) → agency slug → enterprise tier
  *
  * 注意：
- * - Professional 和 Business 都映射到 pro tier（同階層）
+ * - 階層順序與實際定價一致
+ * - Professional 和 Business 雖然都是 pro tier，但 Business 階層較高
  * - 系統使用方案 slug 進行比較和升級判斷
  */
 export const TIER_HIERARCHY: Record<string, number> = {
-  // Plan slugs (subscription_plans.slug)
+  // Plan slugs (subscription_plans.slug) - 修正順序
   'starter': 1,
-  'business': 2,
-  'professional': 3,
+  'professional': 2,  // 從 3 改為 2
+  'business': 3,      // 從 2 改為 3
   'agency': 4,
 
   // Company tiers (companies.subscription_tier) - same hierarchy values
-  'free': 0,         // free tier (no active subscription)
   'basic': 1,        // maps to starter
-  'pro': 2,          // maps to business/professional (取較低值以允許同 tier 升級)
+  'pro': 2,          // maps to professional/business (取較低值以允許同 tier 升級)
   'enterprise': 4,   // maps to agency
 }
 
@@ -50,6 +50,30 @@ export const TIER_HIERARCHY: Record<string, number> = {
  * 計費週期類型
  */
 export type BillingPeriod = 'monthly' | 'yearly' | 'lifetime'
+
+/**
+ * 檢查目標計費週期是否比當前週期短
+ *
+ * @param current - 當前計費週期
+ * @param target - 目標計費週期
+ * @returns true 表示目標週期比當前週期短，false 表示相同或更長
+ *
+ * @example
+ * isBillingPeriodShorter('yearly', 'monthly') // true (年→月 是縮短)
+ * isBillingPeriodShorter('monthly', 'yearly') // false (月→年 是延長)
+ * isBillingPeriodShorter('lifetime', 'yearly') // true (終身→年 是縮短)
+ */
+function isBillingPeriodShorter(
+  current: BillingPeriod,
+  target: BillingPeriod
+): boolean {
+  const periodValue: Record<BillingPeriod, number> = {
+    'monthly': 1,
+    'yearly': 2,
+    'lifetime': 3
+  }
+  return periodValue[target] < periodValue[current]
+}
 
 /**
  * 驗證訂閱方案升級是否符合業務規則
@@ -98,13 +122,22 @@ export function canUpgrade(
   const currentTierLevel = TIER_HIERARCHY[currentTierSlug] ?? 0
   const targetTierLevel = TIER_HIERARCHY[targetPlanSlug] ?? 0
 
-  // 終身方案 → 不允許任何變更
+  // 終身方案特殊規則
   if (currentBillingPeriod === 'lifetime') {
+    // 允許升級到更高階層的終身方案
+    if (targetTierLevel > currentTierLevel && targetBillingPeriod === 'lifetime') {
+      return true
+    }
+    // 其他情況都不允許（降級或縮短週期）
     return false
   }
 
-  // 升級到更高階層 → 允許（任何計費週期）
+  // 升級到更高階層 → 檢查計費週期
   if (targetTierLevel > currentTierLevel) {
+    // 計費週期不能縮短
+    if (isBillingPeriodShorter(currentBillingPeriod, targetBillingPeriod)) {
+      return false
+    }
     return true
   }
 
@@ -152,35 +185,44 @@ export function getUpgradeBlockReason(
   const currentTierLevel = TIER_HIERARCHY[currentTierSlug] ?? 0
   const targetTierLevel = TIER_HIERARCHY[targetPlanSlug] ?? 0
 
+  // 終身方案特殊處理
   if (currentBillingPeriod === 'lifetime') {
+    // 如果目標階層 > 當前階層但不是終身
+    if (targetTierLevel > currentTierLevel && targetBillingPeriod !== 'lifetime') {
+      return '終身方案不能變更為月繳或年繳'
+    }
+    // 如果目標階層 < 當前階層
+    if (targetTierLevel < currentTierLevel) {
+      return '無法降級到低階層方案'
+    }
+    // 如果目標階層 = 當前階層
+    if (targetTierLevel === currentTierLevel) {
+      return '目前方案'
+    }
     return '終身方案無法變更'
   }
 
+  // 降級
   if (targetTierLevel < currentTierLevel) {
     return '無法降級到低階層方案'
   }
 
+  // 跨階層升級但縮短計費週期
+  if (targetTierLevel > currentTierLevel) {
+    if (isBillingPeriodShorter(currentBillingPeriod, targetBillingPeriod)) {
+      return '跨階層升級不能縮短計費週期'
+    }
+    return null
+  }
+
+  // 同階層
   if (targetTierLevel === currentTierLevel) {
-    if (currentBillingPeriod === targetBillingPeriod) {
-      return '目前方案'
-    }
-
-    // 月繳 → 年繳或終身 (allowed)
-    if (currentBillingPeriod === 'monthly' &&
-        (targetBillingPeriod === 'yearly' || targetBillingPeriod === 'lifetime')) {
-      return null
-    }
-
-    // 年繳 → 終身 (allowed)
-    if (currentBillingPeriod === 'yearly' && targetBillingPeriod === 'lifetime') {
-      return null
-    }
-
-    // 年繳 → 月繳 (blocked)
     if (currentBillingPeriod === 'yearly' && targetBillingPeriod === 'monthly') {
       return '年繳無法變更為月繳'
     }
-
+    if (currentBillingPeriod === targetBillingPeriod) {
+      return '目前方案'
+    }
     return '無法縮短計費週期'
   }
 

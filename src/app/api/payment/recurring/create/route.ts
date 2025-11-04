@@ -63,61 +63,38 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    // 升級驗證：檢查用戶當前訂閱狀態
-    const { data: currentMandate } = await authClient
-      .from('recurring_mandates')
-      .select('period_type, subscription_plan_id, subscription_plans(slug, is_lifetime)')
-      .eq('company_id', companyId)
-      .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle()
+    const { data: company } = await authClient
+      .from('companies')
+      .select('subscription_tier, subscription_period')
+      .eq('id', companyId)
+      .single()
 
-    let currentTierSlug: string | null = null
-    let currentBillingPeriod: BillingPeriod = 'monthly'
-
-    if (currentMandate && currentMandate.subscription_plans) {
-      const planData = currentMandate.subscription_plans
-      const currentPlan = Array.isArray(planData) ? planData[0] : planData
-
-      if (currentPlan && typeof currentPlan === 'object') {
-        currentTierSlug = (currentPlan as { slug: string }).slug
-
-        if ((currentPlan as { is_lifetime: boolean }).is_lifetime) {
-          currentBillingPeriod = 'lifetime'
-        } else if (currentMandate.period_type === 'Y') {
-          currentBillingPeriod = 'yearly'
-        } else {
-          currentBillingPeriod = 'monthly'
-        }
-      }
+    if (!company) {
+      return NextResponse.json(
+        { error: '找不到公司資料' },
+        { status: 404 }
+      )
     }
 
-    // 驗證升級規則
-    const targetBillingPeriod: BillingPeriod = periodType === 'Y' ? 'yearly' : 'monthly'
+    const currentTierSlug = company.subscription_tier || null
+    const currentBillingPeriod = (company.subscription_period as BillingPeriod) || 'monthly'
+    const targetBillingPeriod = periodType === 'M' ? 'monthly' : (periodType === 'Y' ? 'yearly' : 'monthly')
+
+    console.log('[API] 升級驗證:', {
+      currentTier: currentTierSlug,
+      currentPeriod: currentBillingPeriod,
+      targetTier: plan.slug,
+      targetPeriod: targetBillingPeriod
+    })
 
     if (!canUpgrade(currentTierSlug, currentBillingPeriod, plan.slug, targetBillingPeriod)) {
       const reason = getUpgradeBlockReason(currentTierSlug, currentBillingPeriod, plan.slug, targetBillingPeriod)
-      console.error('[API] 升級驗證失敗:', {
-        currentTierSlug,
-        currentBillingPeriod,
-        targetPlanSlug: plan.slug,
-        targetBillingPeriod,
-        reason
-      })
-
+      console.warn('[API] 升級驗證失敗:', reason)
       return NextResponse.json(
         { error: reason || '無法升級到此方案' },
         { status: 400 }
       )
     }
-
-    console.log('[API] 升級驗證通過:', {
-      currentTierSlug,
-      currentBillingPeriod,
-      targetPlanSlug: plan.slug,
-      targetBillingPeriod
-    })
 
     const amount = plan.monthly_price || 0
     const description = `${plan.name} 月繳訂閱`
