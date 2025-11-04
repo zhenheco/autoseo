@@ -400,26 +400,86 @@ export class ParallelOrchestrator {
 
   private async getBrandVoice(websiteId: string): Promise<BrandVoice> {
     const supabase = await this.getSupabase();
-    const { data, error } = await supabase
+    const { data: brandVoices, error } = await supabase
       .from('brand_voices')
       .select('*')
-      .eq('website_id', websiteId)
-      .single();
+      .eq('website_id', websiteId);
 
-    if (error) throw error;
-    return data;
+    if (error) {
+      console.error('[Orchestrator] 查詢 brand_voices 失敗:', error);
+      // 返回預設 brand voice
+      return {
+        id: '',
+        website_id: websiteId,
+        tone_of_voice: '專業、友善、易懂',
+        target_audience: '一般網路使用者',
+        keywords: [],
+      };
+    }
+
+    const brandVoice = brandVoices?.[0];
+    if (!brandVoice) {
+      console.warn('[Orchestrator] website_id 沒有對應的 brand_voices，使用預設值');
+      return {
+        id: '',
+        website_id: websiteId,
+        tone_of_voice: '專業、友善、易懂',
+        target_audience: '一般網路使用者',
+        keywords: [],
+      };
+    }
+
+    return brandVoice;
   }
 
   private async getWorkflowSettings(websiteId: string): Promise<WorkflowSettings> {
     const supabase = await this.getSupabase();
-    const { data, error } = await supabase
+    const { data: workflowSettings, error } = await supabase
       .from('workflow_settings')
       .select('*')
-      .eq('website_id', websiteId)
-      .single();
+      .eq('website_id', websiteId);
 
-    if (error) throw error;
-    return data;
+    if (error) {
+      console.error('[Orchestrator] 查詢 workflow_settings 失敗:', error);
+      // 返回預設 workflow settings
+      return {
+        id: '',
+        website_id: websiteId,
+        serp_analysis_enabled: true,
+        competitor_count: 10,
+        content_length_min: 1000,
+        content_length_max: 3000,
+        keyword_density_min: 1,
+        keyword_density_max: 3,
+        quality_threshold: 80,
+        auto_publish: false,
+        serp_model: 'perplexity-research',
+        content_model: 'deepseek-chat',
+        meta_model: 'deepseek-chat',
+      };
+    }
+
+    const workflowSetting = workflowSettings?.[0];
+    if (!workflowSetting) {
+      console.warn('[Orchestrator] website_id 沒有對應的 workflow_settings，使用預設值');
+      return {
+        id: '',
+        website_id: websiteId,
+        serp_analysis_enabled: true,
+        competitor_count: 10,
+        content_length_min: 1000,
+        content_length_max: 3000,
+        keyword_density_min: 1,
+        keyword_density_max: 3,
+        quality_threshold: 80,
+        auto_publish: false,
+        serp_model: 'perplexity-research',
+        content_model: 'deepseek-chat',
+        meta_model: 'deepseek-chat',
+      };
+    }
+
+    return workflowSetting;
   }
 
   private async getAgentConfig(websiteId: string): Promise<AgentConfig & {
