@@ -113,6 +113,29 @@ export default function ArticlesPage() {
     })),
   ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
+  const handleClearJobs = async () => {
+    if (!confirm(`確定要清除 ${jobs.length} 個進行中的任務嗎？`)) {
+      return
+    }
+
+    try {
+      const response = await fetch('/api/articles/jobs/clear', {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        const data = await response.json()
+        alert(`已清除 ${data.deletedCount} 個任務`)
+        fetchData()
+      } else {
+        alert('清除失敗')
+      }
+    } catch (error) {
+      console.error('Clear jobs error:', error)
+      alert('清除失敗')
+    }
+  }
+
   return (
     <div className="h-screen flex flex-col">
       <div className="p-6 border-b">
@@ -123,7 +146,14 @@ export default function ArticlesPage() {
               共 {articles.length} 篇文章，{jobs.length} 個任務進行中
             </p>
           </div>
-          <ArticleGenerationButtonsWrapper />
+          <div className="flex gap-2">
+            {jobs.length > 0 && (
+              <Button variant="outline" onClick={handleClearJobs}>
+                清除進行中任務 ({jobs.length})
+              </Button>
+            )}
+            <ArticleGenerationButtonsWrapper />
+          </div>
         </div>
       </div>
 
