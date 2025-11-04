@@ -430,43 +430,41 @@ export class ParallelOrchestrator {
   }> {
     const supabase = await this.getSupabase();
 
-    const { data: agentConfig, error: configError } = await supabase
+    const { data: agentConfigs, error: configError } = await supabase
       .from('agent_configs')
       .select('*')
-      .eq('website_id', websiteId)
-      .single();
+      .eq('website_id', websiteId);
+
+    let agentConfig = agentConfigs?.[0];
 
     if (configError) {
       console.error('[Orchestrator] 查詢 agent_configs 失敗:', configError);
-      console.log('[Orchestrator] 使用預設配置並嘗試自動創建 agent_configs');
+      console.warn('[Orchestrator] 回滾到預設配置，並嘗試自動創建');
 
       try {
-        const { error: createError } = await supabase
-          .from('agent_configs')
-          .insert({
-            website_id: websiteId,
-            research_model: 'deepseek-reasoner',
-            complex_processing_model: 'deepseek-reasoner',
-            simple_processing_model: 'deepseek-chat',
-            image_model: 'gpt-image-1-mini',
-            research_temperature: 0.7,
-            research_max_tokens: 4000,
-            image_size: '1024x1024',
-            image_count: 3,
-            meta_enabled: true,
-          });
-
-        if (createError) {
-          console.error('[Orchestrator] 自動創建 agent_configs 失敗:', createError);
-          console.warn('[Orchestrator] 回滾到預設配置');
-        } else {
-          console.log('[Orchestrator] agent_configs 已自動創建');
-        }
+        await this.ensureAgentConfigExists(websiteId);
       } catch (autoCreateError) {
-        console.error('[Orchestrator] 自動創建過程出錯:', autoCreateError);
+        console.error('[Orchestrator] 自動創建 agent_configs 失敗:', autoCreateError);
       }
 
       return this.getDefaultAgentConfig();
+    }
+
+    if (!agentConfig) {
+      console.warn('[Orchestrator] website_id 沒有對應的 agent_configs，開始自動創建');
+
+      try {
+        const created = await this.ensureAgentConfigExists(websiteId);
+        if (created) {
+          agentConfig = created;
+        } else {
+          console.warn('[Orchestrator] 自動創建失敗，使用預設配置');
+          return this.getDefaultAgentConfig();
+        }
+      } catch (autoCreateError) {
+        console.error('[Orchestrator] 自動創建過程出錯:', autoCreateError);
+        return this.getDefaultAgentConfig();
+      }
     }
 
     const modelIds = [
@@ -499,26 +497,78 @@ export class ParallelOrchestrator {
       writing_model: agentConfig.simple_processing_model || 'deepseek-chat',
       image_model: agentConfig.image_model || 'gpt-image-1-mini',
 
-      research_temperature: agentConfig.research_temperature,
+      research_temperature: agentConfig.research_temperature || 0.7,
       strategy_temperature: 0.7,
       writing_temperature: 0.7,
-      research_max_tokens: agentConfig.research_max_tokens,
+      research_max_tokens: agentConfig.research_max_tokens || 4000,
       strategy_max_tokens: 4000,
       writing_max_tokens: 8000,
 
-      image_size: agentConfig.image_size,
-      image_count: agentConfig.image_count,
+      image_size: agentConfig.image_size || '1024x1024',
+      image_count: agentConfig.image_count || 3,
 
-      meta_enabled: agentConfig.meta_enabled,
+      meta_enabled: agentConfig.meta_enabled !== false,
       meta_model: agentConfig.meta_model || agentConfig.simple_processing_model || 'deepseek-chat',
-      meta_temperature: agentConfig.meta_temperature,
-      meta_max_tokens: agentConfig.meta_max_tokens,
+      meta_temperature: agentConfig.meta_temperature || 0.7,
+      meta_max_tokens: agentConfig.meta_max_tokens || 2000,
 
       complexModel: modelsMap.get(agentConfig.complex_processing_model),
       simpleModel: modelsMap.get(agentConfig.simple_processing_model),
       imageModelInfo: modelsMap.get(agentConfig.image_model),
       researchModelInfo: modelsMap.get(agentConfig.research_model),
     };
+  }
+
+  private async ensureAgentConfigExists(websiteId: string): Promise<any | null> {
+    const supabase = await this.getSupabase();
+
+    try {
+      const { data: existing } = await supabase
+        .from('agent_configs')
+        .select('*')
+        .eq('website_id', websiteId)
+        .limit(1);
+
+      if (existing && existing.length > 0) {
+        console.log('[Orchestrator] agent_configs 已存在');
+        return existing[0];
+      }
+
+      const defaultConfig = {
+        website_id: websiteId,
+        research_model: 'deepseek-reasoner',
+        complex_processing_model: 'deepseek-reasoner',
+        simple_processing_model: 'deepseek-chat',
+        image_model: 'gpt-image-1-mini',
+        research_temperature: 0.7,
+        research_max_tokens: 4000,
+        image_size: '1024x1024',
+        image_count: 3,
+        meta_enabled: true,
+        meta_model: 'deepseek-chat',
+        meta_temperature: 0.7,
+        meta_max_tokens: 2000,
+      };
+
+      console.log('[Orchestrator] 正在為 website_id 創建 agent_configs:', websiteId);
+
+      const { data: created, error: createError } = await supabase
+        .from('agent_configs')
+        .insert(defaultConfig)
+        .select('*')
+        .single();
+
+      if (createError) {
+        console.error('[Orchestrator] 創建 agent_configs 失敗:', createError);
+        return null;
+      }
+
+      console.log('[Orchestrator] agent_configs 已成功創建:', websiteId);
+      return created;
+    } catch (error) {
+      console.error('[Orchestrator] ensureAgentConfigExists 出錯:', error);
+      return null;
+    }
   }
 
   private async getPreviousArticles(websiteId: string): Promise<PreviousArticle[]> {
