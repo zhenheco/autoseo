@@ -558,11 +558,11 @@ export class ParallelOrchestrator {
       image_model: agentConfig.image_model || 'gpt-image-1-mini',
 
       research_temperature: agentConfig.research_temperature || 0.7,
-      strategy_temperature: 0.7,
-      writing_temperature: 0.7,
-      research_max_tokens: agentConfig.research_max_tokens || 4000,
-      strategy_max_tokens: 4000,
-      writing_max_tokens: 8000,
+      strategy_temperature: agentConfig.strategy_temperature || 0.7,
+      writing_temperature: agentConfig.writing_temperature || 0.7,
+      research_max_tokens: agentConfig.research_max_tokens || 16000,
+      strategy_max_tokens: agentConfig.strategy_max_tokens || 16000,
+      writing_max_tokens: agentConfig.writing_max_tokens || 16000,
 
       image_size: agentConfig.image_size || '1024x1024',
       image_count: agentConfig.image_count || 3,
@@ -570,7 +570,7 @@ export class ParallelOrchestrator {
       meta_enabled: agentConfig.meta_enabled !== false,
       meta_model: agentConfig.meta_model || agentConfig.simple_processing_model || 'deepseek-chat',
       meta_temperature: agentConfig.meta_temperature || 0.7,
-      meta_max_tokens: agentConfig.meta_max_tokens || 2000,
+      meta_max_tokens: agentConfig.meta_max_tokens || 16000,
 
       complexModel: modelsMap.get(agentConfig.complex_processing_model),
       simpleModel: modelsMap.get(agentConfig.simple_processing_model),
@@ -601,13 +601,17 @@ export class ParallelOrchestrator {
         simple_processing_model: 'deepseek-chat',
         image_model: 'gpt-image-1-mini',
         research_temperature: 0.7,
-        research_max_tokens: 4000,
+        research_max_tokens: 16000,
+        strategy_temperature: 0.7,
+        strategy_max_tokens: 16000,
+        writing_temperature: 0.7,
+        writing_max_tokens: 16000,
         image_size: '1024x1024',
         image_count: 3,
         meta_enabled: true,
         meta_model: 'deepseek-chat',
         meta_temperature: 0.7,
-        meta_max_tokens: 2000,
+        meta_max_tokens: 16000,
       };
 
       console.log('[Orchestrator] 正在為 website_id 創建 agent_configs:', websiteId);

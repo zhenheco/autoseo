@@ -19,6 +19,10 @@ const IMAGE_MODELS = {
     provider: 'openai' as const,
     pricing: { '1024x1024': 0.015 },
   },
+  'gpt-image-1-mini': {
+    provider: 'openai' as const,
+    pricing: { '1024x1024': 0.015 },
+  },
 };
 
 export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
