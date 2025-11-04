@@ -1,5 +1,175 @@
 # 問題解決記錄
 
+## 2025-11-04: 訂閱升級規則系統實作
+
+### 實作內容
+- **目標**: 實作完整的訂閱升級規則驗證系統
+- **範圍**: 階層定義修正、終身方案升級、跨階層計費週期規則、後端 API 驗證
+
+### 關鍵修正
+
+#### 1. 階層定義修正
+**問題**: 代碼中的階層順序與實際定價不符
+- **錯誤順序**: Starter (1) < Business (2) < Professional (3) < Agency (4)
+- **正確順序**: Starter (1) < Professional (2) < Business (3) < Agency (4)
+- **實際定價**: NT$599 < NT$2,499 < NT$5,999 < NT$11,999
+
+**修正**:
+```typescript
+export const TIER_HIERARCHY: Record<string, number> = {
+  'starter': 1,
+  'professional': 2,  // 從 3 改為 2
+  'business': 3,      // 從 2 改為 3
+  'agency': 4,
+}
+```
+
+#### 2. 終身方案升級規則
+**新增規則**:
+- ✅ **允許**: 終身 Starter → 終身 Professional/Business/Agency
+- ✅ **允許**: 終身 Professional → 終身 Business/Agency
+- ✅ **允許**: 終身 Business → 終身 Agency
+- ❌ **不允許**: 終身方案 → 月繳/年繳方案（任何階層）
+- ❌ **不允許**: 終身方案降級（如：終身 Business → 終身 Starter）
+
+**實作邏輯**:
+```typescript
+if (currentBillingPeriod === 'lifetime') {
+  // 允許升級到更高階層的終身方案
+  if (targetTierLevel > currentTierLevel && targetBillingPeriod === 'lifetime') {
+    return true
+  }
+  // 其他情況都不允許
+  return false
+}
+```
+
+#### 3. 跨階層計費週期規則
+**新增規則**:
+- ✅ **允許**: 階層提升 + 計費週期延長（如：月繳 Starter → 年繳 Business）
+- ✅ **允許**: 階層提升 + 計費週期相同（如：年繳 Professional → 年繳 Agency）
+- ❌ **不允許**: 階層提升 + 計費週期縮短（如：年繳 Starter → 月繳 Agency）
+
+**實作邏輯**:
+```typescript
+if (targetTierLevel > currentTierLevel) {
+  // 計費週期不能縮短
+  if (isBillingPeriodShorter(currentBillingPeriod, targetBillingPeriod)) {
+    return false
+  }
+  return true
+}
+```
+
+#### 4. 輔助函式
+新增 `isBillingPeriodShorter()` 函式比較計費週期：
+```typescript
+function isBillingPeriodShorter(
+  current: BillingPeriod,
+  target: BillingPeriod
+): boolean {
+  const periodValue: Record<BillingPeriod, number> = {
+    'monthly': 1,
+    'yearly': 2,
+    'lifetime': 3
+  }
+  return periodValue[target] < periodValue[current]
+}
+```
+
+#### 5. 後端 API 驗證
+在 `/api/payment/recurring/create` 加入升級規則驗證：
+```typescript
+// 查詢當前訂閱狀態
+const { data: company } = await authClient
+  .from('companies')
+  .select('subscription_tier, subscription_period')
+  .eq('id', companyId)
+  .single()
+
+// 驗證升級規則
+if (!canUpgrade(currentTierSlug, currentBillingPeriod, plan.slug, targetBillingPeriod)) {
+  const reason = getUpgradeBlockReason(currentTierSlug, currentBillingPeriod, plan.slug, targetBillingPeriod)
+  return NextResponse.json({ error: reason || '無法升級到此方案' }, { status: 400 })
+}
+```
+
+### 升級規則矩陣
+
+| 當前方案 | 當前週期 | 目標方案 | 目標週期 | 允許？ | 規則 |
+|---------|---------|---------|---------|-------|------|
+| Starter | 月繳 | Professional | 年繳 | ✅ | 跨階層延長 |
+| Starter | 月繳 | Business | 月繳 | ✅ | 跨階層同週期 |
+| Starter | 年繳 | Professional | 月繳 | ❌ | 跨階層縮短 |
+| Starter | 終身 | Professional | 終身 | ✅ | 終身跨階層升級 |
+| Starter | 終身 | Professional | 年繳 | ❌ | 終身不能縮短週期 |
+| Professional | 月繳 | Professional | 年繳 | ✅ | 同階層延長 |
+| Professional | 年繳 | Professional | 月繳 | ❌ | 同階層縮短 |
+| Business | 終身 | Starter | 終身 | ❌ | 不能降級 |
+
+### 錯誤訊息
+
+更新 `getUpgradeBlockReason()` 提供友善的錯誤訊息：
+- 「終身方案不能變更為月繳或年繳」
+- 「跨階層升級不能縮短計費週期」
+- 「無法降級到低階層方案」
+- 「年繳無法變更為月繳」
+- 「目前方案」
+
+### 技術細節
+
+#### 修改的檔案
+1. `src/lib/subscription/upgrade-rules.ts`
+   - 修正 `TIER_HIERARCHY` 階層定義
+   - 新增 `isBillingPeriodShorter()` 輔助函式
+   - 重構 `canUpgrade()` 邏輯
+   - 更新 `getUpgradeBlockReason()` 錯誤訊息
+
+2. `src/app/api/payment/recurring/create/route.ts`
+   - 加入 `canUpgrade` 和 `getUpgradeBlockReason` import
+   - 查詢當前公司訂閱狀態
+   - 在建立訂單前驗證升級規則
+   - 返回友善的錯誤訊息
+
+3. OpenSpec 文件
+   - `openspec/changes/implement-subscription-upgrade-rules/proposal.md`
+   - `openspec/changes/implement-subscription-upgrade-rules/specs/subscription-upgrade-validation/spec.md`
+   - `openspec/changes/implement-subscription-upgrade-rules/tasks.md`
+
+#### 驗證結果
+- ✅ TypeScript 類型檢查通過 (`npm run type-check`)
+- ✅ Next.js 建置成功 (`npm run build`)
+- ✅ 前端 pricing page 已正確使用共用升級規則
+- ✅ 後端 API 已加入升級驗證
+
+### 經驗教訓
+
+1. **階層定義要與實際定價一致**
+   - 代碼中的邏輯順序必須反映真實的產品階層
+   - 錯誤的階層定義會導致升級/降級判斷錯誤
+
+2. **終身方案需要特殊處理**
+   - 終身方案可以升級，但有嚴格限制
+   - 不能縮短計費週期，不能降級
+
+3. **跨階層升級要考慮計費週期**
+   - 不能單純允許所有階層提升
+   - 必須確保計費週期不縮短
+
+4. **前後端共用驗證邏輯**
+   - 使用相同的 `upgrade-rules.ts` 模組
+   - 確保前端顯示和後端驗證一致
+   - 避免「前端顯示可升級但後端拒絕」的情況
+
+5. **友善的錯誤訊息**
+   - 針對不同情況提供具體的錯誤原因
+   - 幫助用戶理解為什麼不能升級
+
+### 相關 Commits
+- `ede9b55`: 實作: 完整的訂閱升級規則驗證系統
+
+---
+
 ## 2025-11-04: Token 包購買「找不到訂單」問題
 
 ### 問題現象
@@ -95,6 +265,151 @@ const supabase = createAdminClient()
 - `e081fb9`: 修正: 單次購買回調使用 Admin Client 繞過 RLS（部分修正，但還有問題）
 - `65d3b7d`: 診斷: 加入詳細日誌以診斷單次購買解密問題
 - 下一個 commit: 修正: 單次購買支援 JSON 格式解析
+
+---
+
+## 2025-11-04: 支付加密「Invalid initialization vector」錯誤
+
+### 問題現象
+- **症狀**: 所有支付操作（單次購買和定期定額訂閱）都失敗，報錯 `TypeError: Invalid initialization vector`
+- **影響範圍**: 整個支付系統完全無法運作
+- **錯誤代碼**: `ERR_CRYPTO_INVALID_IV`
+
+### 錯誤日誌
+```
+2025-11-04 08:34:50.187 [error] [API] 建立定期定額支付失敗: TypeError: Invalid initialization vector
+    at f.aesEncrypt (.next/server/chunks/9366.js:1:1019)
+    at f.createRecurringPayment (.next/server/chunks/9366.js:1:2956)
+    code: 'ERR_CRYPTO_INVALID_IV'
+```
+
+### 根本原因分析
+
+#### 調查過程
+1. **初步假設**: Pricing 頁面代碼修改導致
+   - 使用者報告：早上正常運作，改升級邏輯後失敗
+   - ❌ 檢查 git 歷史：只有邏輯修改，沒有加密代碼變更
+
+2. **檢查代碼修改歷史**:
+   - `b7b5a41`: 修正 payment_orders.mandate_id
+   - `6d6a460`: 修正 Pricing 顯示錯誤狀態
+   - `9c4b16c`: 實作訂閱升級規則驗證系統
+   - ✅ 都是業務邏輯，沒有碰觸加密
+
+3. **驗證密鑰長度**:
+   ```bash
+   node -e "console.log(Buffer.from('7hyqDDb3qQmHfz1BDF5FqYtdlshGAvPQ').length)"  # 32 ✅
+   node -e "console.log(Buffer.from('CGFoFgbiAPYMbSlP').length)"  # 16 ✅
+   ```
+
+4. **本地加密測試**:
+   ```typescript
+   const crypto = require('crypto');
+   const cipher = crypto.createCipheriv(
+     'aes-256-cbc',
+     Buffer.from('7hyqDDb3qQmHfz1BDF5FqYtdlshGAvPQ', 'utf8'),
+     Buffer.from('CGFoFgbiAPYMbSlP', 'utf8')
+   );
+   // ✅ 本地測試成功
+   ```
+
+5. **最終發現**: **Vercel 環境變數損壞** ✅
+   - 環境變數可能包含空格、換行符或編碼問題
+   - 儘管 Vercel Dashboard 顯示已加密，實際值可能損壞
+   - 與代碼修改時間點重疊純屬巧合
+
+#### 關鍵發現
+
+| 項目 | 狀態 | 說明 |
+|------|------|------|
+| 密鑰長度 | ✅ 正確 | HashKey=32 bytes, HashIV=16 bytes |
+| 本地測試 | ✅ 成功 | 使用相同密鑰加密成功 |
+| 代碼修改 | ✅ 無關 | 只有業務邏輯修改 |
+| 環境變數 | ❌ 損壞 | Vercel 上的值可能包含隱藏字元 |
+
+**為什麼環境變數會損壞？**
+- 可能在設定時意外複製了空格或換行符
+- 可能編碼方式不正確
+- Vercel CLI 的 `vercel env add` 如果不用 `echo -n`，會自動加上換行符
+
+### 修正方案
+
+#### 清除並重新設定環境變數
+使用 `echo -n` 確保沒有尾隨換行符：
+
+```bash
+# 1. 移除舊的環境變數
+vercel env rm NEWEBPAY_HASH_KEY production --scope acejou27s-projects --yes
+vercel env rm NEWEBPAY_HASH_IV production --scope acejou27s-projects --yes
+
+# 2. 使用 echo -n 重新設定（避免換行符）
+echo -n "7hyqDDb3qQmHfz1BDF5FqYtdlshGAvPQ" | vercel env add NEWEBPAY_HASH_KEY production --scope acejou27s-projects
+echo -n "CGFoFgbiAPYMbSlP" | vercel env add NEWEBPAY_HASH_IV production --scope acejou27s-projects
+
+# 3. 觸發重新部署
+vercel --prod --scope acejou27s-projects --yes
+```
+
+### 測試結果
+✅ **2025-11-04 修正成功**
+- 重新設定環境變數後立即正常
+- Token 包購買功能正常
+- 定期定額訂閱功能正常
+- 加密/解密正常運作
+
+### 經驗教訓
+
+1. **環境變數設定要小心**
+   - 永遠使用 `echo -n` 避免尾隨換行符
+   - 驗證環境變數長度（在部署後使用 `wrangler` 或 Vercel CLI 檢查）
+   - 不要直接從編輯器複製貼上（可能包含隱藏字元）
+
+2. **錯誤診斷要系統性**
+   - 即使使用者報告與代碼修改時間點重疊，也要驗證因果關係
+   - 本地測試成功 + 線上失敗 = 環境問題，而非代碼問題
+   - 比對成功的部分（本地）和失敗的部分（線上）找出差異
+
+3. **AES-256-CBC 加密要求**
+   - Key 必須**完全** 32 bytes（不能多也不能少）
+   - IV 必須**完全** 16 bytes（不能多也不能少）
+   - 任何多餘的空格、換行符都會導致長度不正確
+
+4. **時間點巧合的陷阱**
+   - 使用者報告「改完代碼後就壞了」不代表是代碼問題
+   - 可能是環境變數在同一時間點被意外修改
+   - 需要獨立驗證每個可能的原因
+
+### 預防措施
+
+1. **環境變數設定標準流程**:
+   ```bash
+   # 永遠使用這種方式設定
+   echo -n "YOUR_VALUE" | vercel env add VAR_NAME production
+
+   # 不要使用這種方式（會加換行符）
+   vercel env add VAR_NAME production
+   # 然後手動輸入值 ❌
+   ```
+
+2. **部署後驗證**:
+   ```bash
+   # 檢查環境變數是否正確設定
+   vercel env ls production --scope your-scope
+
+   # 測試關鍵功能
+   curl -X POST https://your-domain.com/api/payment/test
+   ```
+
+3. **監控和告警**:
+   - 設定 Vercel 或 Sentry 監控加密錯誤
+   - 關鍵環境變數修改時發送通知
+
+### 相關檔案
+- `src/lib/payment/newebpay-service.ts:51-60` - AES 加密函式
+- `src/lib/payment/newebpay-service.ts:298-316` - 環境變數載入
+
+### 相關 Commits
+- 將在下一個 commit 中記錄此修復
 
 ---
 
