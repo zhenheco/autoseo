@@ -27,6 +27,11 @@ export interface WorkflowSettings {
 }
 
 export interface AgentConfig {
+  // 新的模型配置系統
+  complex_processing_model?: string;  // 複雜處理（研究、策略）
+  simple_processing_model?: string;   // 簡單功能（寫作、分類、標籤）
+
+  // 舊的配置（向後相容）
   research_model: string;
   strategy_model: string;
   writing_model: string;
@@ -492,5 +497,14 @@ export interface AICompletionResponse {
 }
 
 export interface AIClientConfig {
+  // API Keys
+  deepseekApiKey?: string;
   openrouterApiKey?: string;
+  openaiApiKey?: string;
+  perplexityApiKey?: string;
+
+  // 配置
+  maxRetries?: number;
+  timeout?: number;
+  enableFallback?: boolean;
 }

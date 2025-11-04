@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { getUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
+import { ArticleGenerationButtonsWrapper } from '@/components/articles/ArticleGenerationButtonsWrapper'
 
 export const dynamic = 'force-dynamic'
 
@@ -64,20 +65,18 @@ export default async function ArticlesPage() {
 
   return (
     <div className="container mx-auto p-8">
-      <div className="mb-8 flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold">文章管理</h1>
-          <p className="text-muted-foreground mt-2">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold mb-2">文章管理</h1>
+        <div className="flex items-center justify-between">
+          <p className="text-muted-foreground">
             {userRole === 'writer' || userRole === 'viewer'
               ? '您的文章列表'
               : '管理您的 SEO 文章和發布狀態'}
           </p>
+          {canCreateArticle && (
+            <ArticleGenerationButtonsWrapper />
+          )}
         </div>
-        {canCreateArticle && (
-          <Link href="/dashboard/articles/new">
-            <Button>生成新文章</Button>
-          </Link>
-        )}
       </div>
 
       <Card>

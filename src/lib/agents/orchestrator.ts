@@ -11,6 +11,7 @@ import { HTMLAgent } from './html-agent';
 import { CategoryAgent } from './category-agent';
 import { WordPressClient } from '@/lib/wordpress/client';
 import { PerplexityClient } from '@/lib/perplexity/client';
+import { getAPIRouter } from '@/lib/ai/api-router';
 import type {
   ArticleGenerationInput,
   ArticleGenerationResult,
@@ -20,6 +21,7 @@ import type {
   PreviousArticle,
   AIClientConfig,
 } from '@/types/agents';
+import type { AIModel } from '@/types/ai-models';
 import { AgentExecutionContext } from './base-agent';
 
 export class ParallelOrchestrator {
@@ -420,54 +422,74 @@ export class ParallelOrchestrator {
     return data;
   }
 
-  private async getAgentConfig(websiteId: string): Promise<AgentConfig> {
+  private async getAgentConfig(websiteId: string): Promise<AgentConfig & {
+    complexModel?: AIModel;
+    simpleModel?: AIModel;
+    imageModelInfo?: AIModel;
+    researchModelInfo?: AIModel;
+  }> {
     const supabase = await this.getSupabase();
 
-    const { data: website, error: websiteError } = await supabase
-      .from('website_configs')
-      .select('company_id')
-      .eq('id', websiteId)
+    const { data: agentConfig, error: configError } = await supabase
+      .from('agent_configs')
+      .select('*')
+      .eq('website_id', websiteId)
       .single();
 
-    if (websiteError) throw websiteError;
+    if (configError) {
+      console.error('[Orchestrator] 查詢 agent_configs 失敗:', configError);
+      throw configError;
+    }
 
-    const { data: company, error: companyError } = await supabase
-      .from('companies')
-      .select('ai_model_preferences')
-      .eq('id', website.company_id)
-      .single();
+    const modelIds = [
+      agentConfig.complex_processing_model,
+      agentConfig.simple_processing_model,
+      agentConfig.image_model,
+      agentConfig.research_model,
+    ].filter(Boolean);
 
-    if (companyError) throw companyError;
+    const { data: models, error: modelsError } = await supabase
+      .from('ai_models')
+      .select('*')
+      .in('model_id', modelIds);
 
-    const preferences = company.ai_model_preferences || {};
+    if (modelsError) {
+      console.error('[Orchestrator] 查詢 ai_models 失敗:', modelsError);
+    }
 
-    // Research: 使用思考模式 (reasoner) 進行深度分析
-    const researchModel = preferences.research_model || 'deepseek/deepseek-reasoner';
-
-    // Strategy: 使用 chat 模式（reasoner 不支援 JSON 格式）
-    const strategyModel = preferences.strategy_model || 'deepseek/deepseek-chat';
-
-    // Writing/Meta/Category: 使用非思考模式 (chat) 保持流暢性
-    const writingModel = preferences.writing_model || 'deepseek/deepseek-chat';
-    const cheapModel = preferences.meta_model || 'deepseek/deepseek-chat';
+    const modelsMap = new Map<string, AIModel>();
+    (models || []).forEach((model: AIModel) => {
+      modelsMap.set(model.model_id, model);
+    });
 
     return {
-      research_model: researchModel,
-      strategy_model: strategyModel,
-      writing_model: writingModel,
-      image_model: preferences.image_model || 'none',
-      research_temperature: 0.3,
+      complex_processing_model: agentConfig.complex_processing_model,
+      simple_processing_model: agentConfig.simple_processing_model,
+
+      research_model: agentConfig.research_model || agentConfig.complex_processing_model || 'deepseek-reasoner',
+      strategy_model: agentConfig.complex_processing_model || 'deepseek-reasoner',
+      writing_model: agentConfig.simple_processing_model || 'deepseek-chat',
+      image_model: agentConfig.image_model || 'gpt-image-1-mini',
+
+      research_temperature: agentConfig.research_temperature,
       strategy_temperature: 0.7,
       writing_temperature: 0.7,
-      research_max_tokens: 4000,
+      research_max_tokens: agentConfig.research_max_tokens,
       strategy_max_tokens: 4000,
       writing_max_tokens: 8000,
-      image_size: '1024x1024',
-      image_count: 3,
-      meta_enabled: true,
-      meta_model: cheapModel,
-      meta_temperature: 0.7,
-      meta_max_tokens: 2000,
+
+      image_size: agentConfig.image_size,
+      image_count: agentConfig.image_count,
+
+      meta_enabled: agentConfig.meta_enabled,
+      meta_model: agentConfig.meta_model || agentConfig.simple_processing_model || 'deepseek-chat',
+      meta_temperature: agentConfig.meta_temperature,
+      meta_max_tokens: agentConfig.meta_max_tokens,
+
+      complexModel: modelsMap.get(agentConfig.complex_processing_model),
+      simpleModel: modelsMap.get(agentConfig.simple_processing_model),
+      imageModelInfo: modelsMap.get(agentConfig.image_model),
+      researchModelInfo: modelsMap.get(agentConfig.research_model),
     };
   }
 
@@ -494,7 +516,10 @@ export class ParallelOrchestrator {
 
   private getAIConfig(): AIClientConfig {
     return {
+      deepseekApiKey: process.env.DEEPSEEK_API_KEY,
       openrouterApiKey: process.env.OPENROUTER_API_KEY,
+      openaiApiKey: process.env.OPENAI_API_KEY,
+      perplexityApiKey: process.env.PERPLEXITY_API_KEY,
     };
   }
 

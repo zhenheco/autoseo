@@ -5,11 +5,11 @@ import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(request: NextRequest) {
   try {
-    const { keyword, title, mode } = await request.json();
+    const { keywords } = await request.json();
 
-    if (!keyword || typeof keyword !== 'string') {
+    if (!keywords || !Array.isArray(keywords) || keywords.length === 0) {
       return NextResponse.json(
-        { error: 'Keyword is required' },
+        { error: 'Keywords array is required' },
         { status: 400 }
       );
     }
@@ -47,47 +47,50 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const articleJobId = uuidv4();
-
-    const { error: jobError } = await supabase
-      .from('article_jobs')
-      .insert({
-        id: articleJobId,
-        website_id: websiteId,
-        keywords: keyword,
-        status: 'pending',
-        metadata: {
-          mode: mode || 'single',
-          title: title || null,
-        },
-      });
-
-    if (jobError) {
-      console.error('Failed to create article job:', jobError);
-      return NextResponse.json(
-        { error: 'Failed to create article job' },
-        { status: 500 }
-      );
-    }
-
+    const jobIds: string[] = [];
     const orchestrator = new ParallelOrchestrator();
 
-    orchestrator.execute({
-      articleJobId,
-      companyId: membership.company_id,
-      websiteId,
-      keyword,
-    }).catch((error) => {
-      console.error('Article generation error:', error);
-    });
+    for (const keyword of keywords) {
+      const articleJobId = uuidv4();
+      jobIds.push(articleJobId);
+
+      const { error: jobError } = await supabase
+        .from('article_jobs')
+        .insert({
+          id: articleJobId,
+          website_id: websiteId,
+          keywords: keyword,
+          status: 'pending',
+          metadata: {
+            mode: 'batch',
+            batchIndex: keywords.indexOf(keyword),
+            totalBatch: keywords.length,
+          },
+        });
+
+      if (jobError) {
+        console.error('Failed to create article job:', jobError);
+        continue;
+      }
+
+      orchestrator.execute({
+        articleJobId,
+        companyId: membership.company_id,
+        websiteId,
+        keyword,
+      }).catch((error) => {
+        console.error(`Article generation error for ${keyword}:`, error);
+      });
+    }
 
     return NextResponse.json({
       success: true,
-      articleJobId,
-      message: 'Article generation started',
+      jobIds,
+      totalJobs: jobIds.length,
+      message: 'Batch article generation started',
     });
   } catch (error) {
-    console.error('Generate article error:', error);
+    console.error('Batch generate error:', error);
     return NextResponse.json(
       { error: 'Internal server error', details: (error as Error).message },
       { status: 500 }

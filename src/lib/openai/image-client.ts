@@ -3,6 +3,10 @@
  *
  * 支援 OpenAI 官方圖片生成 API
  * API 文件: https://platform.openai.com/docs/guides/images
+ *
+ * Rate Limits (gpt-image-1-mini):
+ * - TPM: 800,000 tokens per minute
+ * - RPM: 50 images per minute
  */
 
 export interface OpenAIImageGenerationOptions {
