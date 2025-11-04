@@ -124,11 +124,6 @@ export function ArticleGenerationButtons({
                     placeholder="例如：SEO 優化技巧"
                     value={singleKeyword}
                     onChange={(e) => setSingleKeyword(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === 'Enter') {
-                        handleGenerateTitles();
-                      }
-                    }}
                   />
                 </div>
                 <Button

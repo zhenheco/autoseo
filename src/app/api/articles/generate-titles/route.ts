@@ -38,13 +38,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: website, error: websiteError } = await supabase
+    const { data: websites, error: websiteError } = await supabase
       .from('website_configs')
       .select('id')
       .eq('company_id', membership.company_id)
-      .single();
+      .limit(1);
 
-    if (!website || websiteError) {
+    if (!websites || websites.length === 0 || websiteError) {
       console.error('Website error:', websiteError);
       return NextResponse.json(
         { error: 'No website configured' },
@@ -52,7 +52,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const websiteId = website.id;
+    const websiteId = websites[0].id;
 
     const { data: agentConfig } = await supabase
       .from('agent_configs')

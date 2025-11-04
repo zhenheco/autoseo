@@ -24,28 +24,36 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: membership } = await supabase
+    const { data: membership, error: membershipError } = await supabase
       .from('company_members')
-      .select('company_id, website_configs(id)')
+      .select('company_id')
       .eq('user_id', user.id)
       .eq('status', 'active')
       .single();
 
-    if (!membership || !membership.company_id) {
+    if (!membership || membershipError) {
+      console.error('Membership error:', membershipError);
       return NextResponse.json(
         { error: 'No active company membership' },
         { status: 403 }
       );
     }
 
-    const websiteId = (membership.website_configs as any)?.[0]?.id;
+    const { data: websites, error: websiteError } = await supabase
+      .from('website_configs')
+      .select('id')
+      .eq('company_id', membership.company_id)
+      .limit(1);
 
-    if (!websiteId) {
+    if (!websites || websites.length === 0 || websiteError) {
+      console.error('Website error:', websiteError);
       return NextResponse.json(
         { error: 'No website configured' },
         { status: 404 }
       );
     }
+
+    const websiteId = websites[0].id;
 
     const jobIds: string[] = [];
     const orchestrator = new ParallelOrchestrator();
