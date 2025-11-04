@@ -85,6 +85,10 @@ export async function POST(request: NextRequest) {
 
       if (agentConfigError) {
         console.error('Failed to create agent config:', agentConfigError);
+        return NextResponse.json(
+          { error: 'Failed to create agent configuration', details: agentConfigError.message },
+          { status: 500 }
+        );
       }
 
       websites = [newWebsite];

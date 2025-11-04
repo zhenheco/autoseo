@@ -438,7 +438,35 @@ export class ParallelOrchestrator {
 
     if (configError) {
       console.error('[Orchestrator] 查詢 agent_configs 失敗:', configError);
-      throw configError;
+      console.log('[Orchestrator] 使用預設配置並嘗試自動創建 agent_configs');
+
+      try {
+        const { error: createError } = await supabase
+          .from('agent_configs')
+          .insert({
+            website_id: websiteId,
+            research_model: 'deepseek-reasoner',
+            complex_processing_model: 'deepseek-reasoner',
+            simple_processing_model: 'deepseek-chat',
+            image_model: 'gpt-image-1-mini',
+            research_temperature: 0.7,
+            research_max_tokens: 4000,
+            image_size: '1024x1024',
+            image_count: 3,
+            meta_enabled: true,
+          });
+
+        if (createError) {
+          console.error('[Orchestrator] 自動創建 agent_configs 失敗:', createError);
+          console.warn('[Orchestrator] 回滾到預設配置');
+        } else {
+          console.log('[Orchestrator] agent_configs 已自動創建');
+        }
+      } catch (autoCreateError) {
+        console.error('[Orchestrator] 自動創建過程出錯:', autoCreateError);
+      }
+
+      return this.getDefaultAgentConfig();
     }
 
     const modelIds = [
@@ -512,6 +540,34 @@ export class ParallelOrchestrator {
       keywords: article.keywords || [],
       excerpt: (article.generated_content || '').substring(0, 200),
     }));
+  }
+
+  private getDefaultAgentConfig(): AgentConfig & {
+    complexModel?: AIModel;
+    simpleModel?: AIModel;
+    imageModelInfo?: AIModel;
+    researchModelInfo?: AIModel;
+  } {
+    return {
+      complex_processing_model: 'deepseek-reasoner',
+      simple_processing_model: 'deepseek-chat',
+      research_model: 'deepseek-reasoner',
+      strategy_model: 'deepseek-reasoner',
+      writing_model: 'deepseek-chat',
+      image_model: 'gpt-image-1-mini',
+      research_temperature: 0.7,
+      strategy_temperature: 0.7,
+      writing_temperature: 0.7,
+      research_max_tokens: 4000,
+      strategy_max_tokens: 4000,
+      writing_max_tokens: 8000,
+      image_size: '1024x1024',
+      image_count: 3,
+      meta_enabled: true,
+      meta_model: 'deepseek-chat',
+      meta_temperature: 0.7,
+      meta_max_tokens: 2000,
+    };
   }
 
   private getAIConfig(): AIClientConfig {
