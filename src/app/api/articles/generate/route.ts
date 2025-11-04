@@ -55,6 +55,7 @@ export async function POST(request: NextRequest) {
         .insert({
           company_id: membership.company_id,
           website_name: '',
+          wordpress_url: '',
         })
         .select('id')
         .single();
