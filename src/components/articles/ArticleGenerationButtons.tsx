@@ -12,13 +12,18 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
-import { FileText, Plus, Trash2, Sparkles } from 'lucide-react';
+import { Sparkles, Plus, Trash2, FileText } from 'lucide-react';
 import { Checkbox } from '@/components/ui/checkbox';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 
 interface ArticleGenerationButtonsProps {
-  onSingleGenerate: (keyword: string, selectedTitle?: string) => void;
-  onBatchGenerate: (keywords: string[]) => void;
+  onBatchGenerate: (items: GenerationItem[]) => void;
 }
 
 interface TitleItem {
@@ -27,8 +32,14 @@ interface TitleItem {
   title: string;
 }
 
+interface GenerationItem {
+  keyword: string;
+  title: string;
+  targetLanguage: string;
+  wordCount: string;
+}
+
 export function ArticleGenerationButtons({
-  onSingleGenerate,
   onBatchGenerate,
 }: ArticleGenerationButtonsProps) {
   const [keyword, setKeyword] = useState('');
@@ -38,6 +49,10 @@ export function ArticleGenerationButtons({
   const [isGeneratingTitles, setIsGeneratingTitles] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [customTitle, setCustomTitle] = useState('');
+
+  // 批次設定選項
+  const [targetLanguage, setTargetLanguage] = useState('zh-TW');
+  const [wordCount, setWordCount] = useState('1500');
 
   const handleGenerateIdeas = async () => {
     if (!keyword.trim()) return;
@@ -109,10 +124,14 @@ export function ArticleGenerationButtons({
       return;
     }
 
-    titleQueue.forEach(item => {
-      onSingleGenerate(item.keyword, item.title);
-    });
+    const items: GenerationItem[] = titleQueue.map(item => ({
+      keyword: item.keyword,
+      title: item.title,
+      targetLanguage,
+      wordCount,
+    }));
 
+    onBatchGenerate(items);
     setTitleQueue([]);
     setDialogOpen(false);
   };
@@ -129,143 +148,195 @@ export function ArticleGenerationButtons({
         <DialogTrigger asChild>
           <Button variant="default" className="gap-2">
             <FileText className="h-4 w-4" />
-            文章生成
+            批次文章生成
           </Button>
         </DialogTrigger>
-        <DialogContent className="sm:max-w-[800px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[1000px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>文章生成器</DialogTitle>
+            <DialogTitle>批次文章生成</DialogTitle>
             <DialogDescription>
-              輸入關鍵字生成標題，或自行輸入標題
+              輸入關鍵字生成標題，選擇後批次生成文章
             </DialogDescription>
           </DialogHeader>
 
-          <div className="space-y-6 py-4">
-            {/* 關鍵字輸入區 */}
-            <div className="space-y-3">
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <Label htmlFor="keyword">關鍵字</Label>
-                  <Input
-                    id="keyword"
-                    placeholder="例如：SEO 優化技巧"
-                    value={keyword}
-                    onChange={(e) => setKeyword(e.target.value)}
-                  />
+          <div className="grid grid-cols-[1fr_300px] gap-6 py-4">
+            {/* 左側：標題生成區 */}
+            <div className="space-y-6">
+              {/* 關鍵字輸入 */}
+              <div className="space-y-3">
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <Label htmlFor="keyword">關鍵字</Label>
+                    <Input
+                      id="keyword"
+                      placeholder="例如：SEO 優化技巧"
+                      value={keyword}
+                      onChange={(e) => setKeyword(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    <Button
+                      onClick={handleGenerateIdeas}
+                      disabled={!keyword.trim() || isGeneratingTitles}
+                      variant="secondary"
+                    >
+                      <Sparkles className="h-4 w-4 mr-2" />
+                      {isGeneratingTitles ? '生成中...' : 'Generate Ideas'}
+                    </Button>
+                  </div>
                 </div>
-                <div className="flex items-end">
-                  <Button
-                    onClick={handleGenerateIdeas}
-                    disabled={!keyword.trim() || isGeneratingTitles}
-                    variant="secondary"
-                  >
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    {isGeneratingTitles ? '生成中...' : 'Generate Ideas'}
-                  </Button>
+
+                {/* 自訂標題 */}
+                <div className="flex gap-2">
+                  <div className="flex-1">
+                    <Label htmlFor="custom-title">或自行輸入標題</Label>
+                    <Input
+                      id="custom-title"
+                      placeholder="輸入自訂標題"
+                      value={customTitle}
+                      onChange={(e) => setCustomTitle(e.target.value)}
+                    />
+                  </div>
+                  <div className="flex items-end">
+                    <Button
+                      onClick={handleAddCustomTitle}
+                      disabled={!keyword.trim() || !customTitle.trim()}
+                      variant="outline"
+                    >
+                      <Plus className="h-4 w-4 mr-2" />
+                      添加
+                    </Button>
+                  </div>
                 </div>
               </div>
 
-              {/* 自訂標題 */}
-              <div className="flex gap-2">
-                <div className="flex-1">
-                  <Label htmlFor="custom-title">或自行輸入標題</Label>
-                  <Input
-                    id="custom-title"
-                    placeholder="輸入自訂標題"
-                    value={customTitle}
-                    onChange={(e) => setCustomTitle(e.target.value)}
-                  />
+              {/* 生成的標題選擇區 */}
+              {generatedTitles.length > 0 && (
+                <div className="space-y-3 border rounded-lg p-4 bg-muted/30">
+                  <div className="flex justify-between items-center">
+                    <Label>生成的標題（選擇要添加的）</Label>
+                    <Button
+                      onClick={handleAddTitles}
+                      disabled={selectedTitles.size === 0}
+                      size="sm"
+                    >
+                      Add Titles ({selectedTitles.size})
+                    </Button>
+                  </div>
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                    {generatedTitles.map((title, index) => (
+                      <div
+                        key={index}
+                        className="flex items-start gap-3 p-3 bg-background rounded border hover:border-primary/50 cursor-pointer"
+                        onClick={() => handleToggleTitle(index)}
+                      >
+                        <Checkbox
+                          checked={selectedTitles.has(index)}
+                          onCheckedChange={() => handleToggleTitle(index)}
+                        />
+                        <span className="flex-1 text-sm">{title}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
-                <div className="flex items-end">
-                  <Button
-                    onClick={handleAddCustomTitle}
-                    disabled={!keyword.trim() || !customTitle.trim()}
-                    variant="outline"
-                  >
-                    <Plus className="h-4 w-4 mr-2" />
-                    添加
-                  </Button>
+              )}
+
+              {/* 待生成列表 */}
+              {titleQueue.length > 0 && (
+                <div className="space-y-3 border rounded-lg p-4">
+                  <div className="flex justify-between items-center">
+                    <Label>待生成列表 ({titleQueue.length})</Label>
+                    <Button
+                      onClick={handleStartGeneration}
+                      variant="default"
+                    >
+                      Start Generation
+                    </Button>
+                  </div>
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto">
+                    {titleQueue.map((item) => (
+                      <div
+                        key={item.id}
+                        className="flex items-start gap-3 p-3 bg-background rounded border"
+                      >
+                        <div className="flex-1 space-y-1">
+                          <div className="text-xs text-muted-foreground">
+                            關鍵字: {item.keyword}
+                          </div>
+                          <Input
+                            value={item.title}
+                            onChange={(e) => handleTitleEdit(item.id, e.target.value)}
+                            className="text-sm"
+                          />
+                        </div>
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveTitle(item.id)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {titleQueue.length === 0 && generatedTitles.length === 0 && (
+                <div className="text-center py-12 text-muted-foreground">
+                  <FileText className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                  <p>輸入關鍵字並點擊 Generate Ideas 開始</p>
+                </div>
+              )}
+            </div>
+
+            {/* 右側：生成選項 */}
+            <div className="space-y-4 border-l pl-6">
+              <div>
+                <h3 className="font-semibold mb-4">生成選項</h3>
+              </div>
+
+              <div className="space-y-3">
+                <div className="space-y-2">
+                  <Label htmlFor="target-language">目標語言</Label>
+                  <Select value={targetLanguage} onValueChange={setTargetLanguage}>
+                    <SelectTrigger id="target-language">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="zh-TW">繁體中文</SelectItem>
+                      <SelectItem value="zh-CN">简体中文</SelectItem>
+                      <SelectItem value="en">English</SelectItem>
+                      <SelectItem value="ja">日本語</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="word-count">文章字數</Label>
+                  <Select value={wordCount} onValueChange={setWordCount}>
+                    <SelectTrigger id="word-count">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="800">800 字</SelectItem>
+                      <SelectItem value="1200">1200 字</SelectItem>
+                      <SelectItem value="1500">1500 字</SelectItem>
+                      <SelectItem value="2000">2000 字</SelectItem>
+                      <SelectItem value="3000">3000 字</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="pt-4 space-y-2 border-t">
+                  <div className="text-sm text-muted-foreground">
+                    <p>• 批次生成模式</p>
+                    <p>• 所有文章使用相同設定</p>
+                    <p>• 生成後可在列表中查看</p>
+                  </div>
                 </div>
               </div>
             </div>
-
-            {/* 生成的標題選擇區 */}
-            {generatedTitles.length > 0 && (
-              <div className="space-y-3 border rounded-lg p-4 bg-muted/30">
-                <div className="flex justify-between items-center">
-                  <Label>生成的標題（選擇要添加的）</Label>
-                  <Button
-                    onClick={handleAddTitles}
-                    disabled={selectedTitles.size === 0}
-                    size="sm"
-                  >
-                    Add Titles ({selectedTitles.size})
-                  </Button>
-                </div>
-                <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                  {generatedTitles.map((title, index) => (
-                    <div
-                      key={index}
-                      className="flex items-start gap-3 p-3 bg-background rounded border hover:border-primary/50 cursor-pointer"
-                      onClick={() => handleToggleTitle(index)}
-                    >
-                      <Checkbox
-                        checked={selectedTitles.has(index)}
-                        onCheckedChange={() => handleToggleTitle(index)}
-                      />
-                      <span className="flex-1 text-sm">{title}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* 待生成列表 */}
-            {titleQueue.length > 0 && (
-              <div className="space-y-3 border rounded-lg p-4">
-                <div className="flex justify-between items-center">
-                  <Label>待生成列表 ({titleQueue.length})</Label>
-                  <Button
-                    onClick={handleStartGeneration}
-                    variant="default"
-                  >
-                    Start Generation
-                  </Button>
-                </div>
-                <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                  {titleQueue.map((item) => (
-                    <div
-                      key={item.id}
-                      className="flex items-start gap-3 p-3 bg-background rounded border"
-                    >
-                      <div className="flex-1 space-y-1">
-                        <div className="text-xs text-muted-foreground">
-                          關鍵字: {item.keyword}
-                        </div>
-                        <Input
-                          value={item.title}
-                          onChange={(e) => handleTitleEdit(item.id, e.target.value)}
-                          className="text-sm"
-                        />
-                      </div>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => handleRemoveTitle(item.id)}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {titleQueue.length === 0 && generatedTitles.length === 0 && (
-              <div className="text-center py-8 text-muted-foreground">
-                輸入關鍵字並點擊 Generate Ideas 開始
-              </div>
-            )}
           </div>
         </DialogContent>
       </Dialog>

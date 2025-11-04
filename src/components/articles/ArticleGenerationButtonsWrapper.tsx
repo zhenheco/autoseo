@@ -5,51 +5,34 @@ import { ArticleGenerationButtons } from './ArticleGenerationButtons';
 import { useState } from 'react';
 import { toast } from 'sonner';
 
+interface GenerationItem {
+  keyword: string;
+  title: string;
+  targetLanguage: string;
+  wordCount: string;
+}
+
 export function ArticleGenerationButtonsWrapper() {
   const router = useRouter();
   const [isGenerating, setIsGenerating] = useState(false);
 
-  const handleSingleGenerate = async (keyword: string, selectedTitle?: string) => {
+  const handleBatchGenerate = async (items: GenerationItem[]) => {
     setIsGenerating(true);
     try {
-      const response = await fetch('/api/articles/generate', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          keyword,
-          title: selectedTitle,
-          mode: 'single',
-        }),
-      });
+      // 將 items 轉換為 batch API 需要的格式
+      const keywords = items.map(item => item.keyword);
 
-      if (!response.ok) {
-        throw new Error('生成文章失敗');
-      }
-
-      const data = await response.json();
-
-      toast.success('文章生成已開始', {
-        description: '請稍後查看文章列表',
-      });
-
-      router.refresh();
-    } catch (error) {
-      console.error('Single generate error:', error);
-      toast.error('生成失敗', {
-        description: (error as Error).message,
-      });
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const handleBatchGenerate = async (keywords: string[]) => {
-    setIsGenerating(true);
-    try {
       const response = await fetch('/api/articles/generate-batch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ keywords }),
+        body: JSON.stringify({
+          keywords,
+          // 可以將其他設定也傳給 API（未來擴展用）
+          options: {
+            targetLanguage: items[0]?.targetLanguage || 'zh-TW',
+            wordCount: items[0]?.wordCount || '1500',
+          }
+        }),
       });
 
       if (!response.ok) {
@@ -58,7 +41,7 @@ export function ArticleGenerationButtonsWrapper() {
 
       const data = await response.json();
 
-      toast.success(`已提交 ${keywords.length} 篇文章生成任務`, {
+      toast.success(`已提交 ${items.length} 篇文章生成任務`, {
         description: '請稍後查看文章列表',
       });
 
@@ -75,7 +58,6 @@ export function ArticleGenerationButtonsWrapper() {
 
   return (
     <ArticleGenerationButtons
-      onSingleGenerate={handleSingleGenerate}
       onBatchGenerate={handleBatchGenerate}
     />
   );
