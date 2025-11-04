@@ -39,13 +39,37 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: websites, error: websiteError } = await supabase
+    const websiteQuery = await supabase
       .from('website_configs')
       .select('id')
       .eq('company_id', membership.company_id)
       .limit(1);
 
-    if (!websites || websites.length === 0 || websiteError) {
+    let websites = websiteQuery.data;
+    const websiteError = websiteQuery.error;
+
+    if ((!websites || websites.length === 0) && !websiteError) {
+      console.log('Creating default website config for company:', membership.company_id);
+      const { data: newWebsite, error: createError } = await supabase
+        .from('website_configs')
+        .insert({
+          company_id: membership.company_id,
+        })
+        .select('id')
+        .single();
+
+      if (createError || !newWebsite) {
+        console.error('Failed to create website config:', createError);
+        return NextResponse.json(
+          { error: 'Failed to create website configuration' },
+          { status: 500 }
+        );
+      }
+
+      websites = [newWebsite];
+    }
+
+    if (!websites || websites.length === 0) {
       console.error('Website error:', websiteError);
       return NextResponse.json(
         { error: 'No website configured' },
