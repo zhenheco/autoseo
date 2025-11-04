@@ -22,36 +22,44 @@ const navItems = [
     title: 'Dashboard',
     href: '/dashboard',
     icon: LayoutDashboard,
+    roles: ['owner', 'admin', 'editor'],
   },
   {
     title: '文章管理',
     href: '/dashboard/articles',
     icon: FileText,
+    roles: ['owner', 'admin', 'editor', 'writer', 'viewer'],
   },
   {
     title: '網站管理',
     href: '/dashboard/websites',
     icon: Globe,
+    roles: ['owner', 'admin', 'editor'],
   },
   {
     title: '訂閱方案',
     href: '/dashboard/subscription',
     icon: CreditCard,
+    roles: ['owner', 'admin'],
   },
   {
     title: '設定',
     href: '/dashboard/settings',
     icon: Settings,
+    roles: ['owner', 'admin'],
   },
 ]
 
 interface SidebarProps {
   userEmail?: string
+  userRole?: string
 }
 
-export function Sidebar({ userEmail = 'user@example.com' }: SidebarProps) {
+export function Sidebar({ userEmail = 'user@example.com', userRole = 'viewer' }: SidebarProps) {
   const pathname = usePathname()
   const { collapsed, setCollapsed } = useSidebar()
+
+  const filteredNavItems = navItems.filter(item => item.roles.includes(userRole))
 
   return (
     <aside
@@ -87,7 +95,7 @@ export function Sidebar({ userEmail = 'user@example.com' }: SidebarProps) {
         </div>
 
         <nav className="flex-1 space-y-1 p-4">
-          {navItems.map((item) => {
+          {filteredNavItems.map((item) => {
             const isActive = pathname === item.href
             const Icon = item.icon
 

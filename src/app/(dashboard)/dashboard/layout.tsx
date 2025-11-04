@@ -36,10 +36,22 @@ export default async function DashboardLayout({
     redirect('/login')
   }
 
+  const { createClient } = await import('@/lib/supabase/server')
+  const supabase = await createClient()
+
+  const { data: membership } = await supabase
+    .from('company_members')
+    .select('role, company_id')
+    .eq('user_id', user.id)
+    .eq('status', 'active')
+    .single()
+
+  const userRole = membership?.role || 'viewer'
+
   return (
     <DashboardLayoutClient>
       <div className="min-h-screen bg-background">
-        <Sidebar userEmail={user.email} />
+        <Sidebar userEmail={user.email} userRole={userRole} />
 
         <MainContent>
           <header className="sticky top-0 z-30 h-16 border-b border-border bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60">

@@ -1,14 +1,16 @@
-import { createAdminClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+import { getUser } from '@/lib/auth'
+import { redirect } from 'next/navigation'
 
 export const dynamic = 'force-dynamic'
 
-async function getAllArticles() {
+async function getArticles(userId: string, userRole: string) {
   const supabase = createAdminClient()
 
-  const { data, error } = await supabase
+  let query = supabase
     .from('generated_articles')
     .select(`
       id,
@@ -20,10 +22,17 @@ async function getAllArticles() {
       reading_time,
       wordpress_post_url,
       created_at,
-      published_at
+      published_at,
+      created_by
     `)
     .order('created_at', { ascending: false })
     .limit(100)
+
+  if (userRole === 'writer' || userRole === 'viewer') {
+    query = query.eq('created_by', userId)
+  }
+
+  const { data, error } = await query
 
   if (error) {
     console.error('獲取文章失敗:', error)
@@ -34,7 +43,24 @@ async function getAllArticles() {
 }
 
 export default async function ArticlesPage() {
-  const articles = await getAllArticles()
+  const user = await getUser()
+
+  if (!user) {
+    redirect('/login')
+  }
+
+  const supabase = await createClient()
+  const { data: membership } = await supabase
+    .from('company_members')
+    .select('role')
+    .eq('user_id', user.id)
+    .eq('status', 'active')
+    .single()
+
+  const userRole = membership?.role || 'viewer'
+  const articles = await getArticles(user.id, userRole)
+
+  const canCreateArticle = ['owner', 'admin', 'editor', 'writer'].includes(userRole)
 
   return (
     <div className="container mx-auto p-8">
@@ -42,17 +68,23 @@ export default async function ArticlesPage() {
         <div>
           <h1 className="text-3xl font-bold">文章管理</h1>
           <p className="text-muted-foreground mt-2">
-            管理您的 SEO 文章和發布狀態
+            {userRole === 'writer' || userRole === 'viewer'
+              ? '您的文章列表'
+              : '管理您的 SEO 文章和發布狀態'}
           </p>
         </div>
-        <Link href="/dashboard/articles/new">
-          <Button>生成新文章</Button>
-        </Link>
+        {canCreateArticle && (
+          <Link href="/dashboard/articles/new">
+            <Button>生成新文章</Button>
+          </Link>
+        )}
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>所有文章</CardTitle>
+          <CardTitle>
+            {userRole === 'writer' || userRole === 'viewer' ? '我的文章' : '所有文章'}
+          </CardTitle>
           <CardDescription>共 {articles.length} 篇文章</CardDescription>
         </CardHeader>
         <CardContent>
