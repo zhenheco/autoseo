@@ -1,7 +1,7 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
+import { redirect, RedirectType } from 'next/navigation'
 import { signIn } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 
@@ -25,15 +25,15 @@ export async function login(formData: FormData) {
     revalidatePath('/', 'layout')
 
     if (userRole === 'writer' || userRole === 'viewer') {
-      redirect('/dashboard/articles')
+      redirect('/dashboard/articles', RedirectType.replace)
     } else {
-      redirect('/dashboard')
+      redirect('/dashboard', RedirectType.replace)
     }
   } catch (error) {
-    if (error instanceof Error && error.message === 'NEXT_REDIRECT') {
+    if (error && typeof error === 'object' && 'digest' in error && typeof error.digest === 'string' && error.digest.startsWith('NEXT_REDIRECT')) {
       throw error
     }
     const errorMessage = error instanceof Error ? error.message : '登入失敗'
-    redirect(`/login?error=${encodeURIComponent(errorMessage)}`)
+    redirect(`/login?error=${encodeURIComponent(errorMessage)}`, RedirectType.replace)
   }
 }
