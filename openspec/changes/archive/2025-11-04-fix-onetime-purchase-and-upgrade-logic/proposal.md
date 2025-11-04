@@ -3,6 +3,45 @@
 ## Why
 用戶在購買 Token 包和終身方案時遇到「找不到訂單」錯誤，雖然付款成功但無法使用購買的服務。同時，訂閱升級規則不明確導致用戶可以看到不符合業務邏輯的升級選項（例如降級或終身方案再變更）。這影響了用戶體驗和業務收入，需要立即修復單次購買流程並規範化升級規則驗證。
 
+## What Changes
+
+### Phase 1: 修復單次購買核心問題
+1. **RLS 權限修正**
+   - 將單次購買回調路由 (`/api/payment/callback`, `/api/payment/notify`) 改用 `createAdminClient()`
+   - 修正檔案: `src/app/api/payment/callback/route.ts`, `src/app/api/payment/notify/route.ts`
+
+2. **JSON 解析統一**
+   - 修正 `decryptCallback()` 支援 JSON 格式（與定期定額相同）
+   - 修正 `handleOnetimeCallback()` 處理兩種格式（JSON 和 URLSearchParams）
+   - 修正檔案: `src/lib/payment/newebpay.ts`, `src/lib/payment/payment-service.ts`
+
+### Phase 2: 實作升級規則驗證系統
+1. **創建升級規則函式庫**
+   - 新增檔案: `src/lib/subscription/upgrade-rules.ts`
+   - 實作 `TIER_HIERARCHY`, `canUpgrade()`, `getUpgradeBlockReason()`
+   - 包含完整 JSDoc 註解和使用範例
+
+2. **前端整合**
+   - 修正 `src/app/pricing/page.tsx` 的 `loadUser()` 查詢當前訂閱狀態
+   - 使用 `canUpgrade()` 驗證按鈕是否可點擊
+
+3. **後端驗證**
+   - 修正 `src/app/api/payment/recurring/create/route.ts` 加入升級驗證
+   - 不符合規則時返回 400 錯誤並記錄日誌
+
+4. **測試**
+   - 新增檔案: `src/lib/subscription/upgrade-rules.test.ts`（19 個單元測試）
+   - 新增檔案: `src/scripts/test-upgrade-rules.ts`（6 個端到端測試）
+   - 新增檔案: `src/scripts/create-test-user.ts`（測試環境準備）
+
+### Phase 3: 文件和驗證
+1. **測試計劃**
+   - 新增檔案: `TEST_PLAN.md`（完整測試案例）
+   - 新增檔案: `MANUAL_TEST_GUIDE.md`（手動測試指南）
+
+2. **問題記錄**
+   - 更新 `ISSUELOG.md` 記錄所有問題和解決方案
+
 ## 問題描述
 
 目前系統存在兩個關鍵問題：
