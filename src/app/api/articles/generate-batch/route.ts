@@ -82,18 +82,21 @@ export async function POST(request: NextRequest) {
     const websiteId = websites[0].id;
 
     const jobIds: string[] = [];
+    const failedKeywords: string[] = [];
     const orchestrator = new ParallelOrchestrator();
 
     for (const keyword of keywords) {
       const articleJobId = uuidv4();
-      jobIds.push(articleJobId);
 
       const { error: jobError } = await supabase
         .from('article_jobs')
         .insert({
           id: articleJobId,
+          job_id: articleJobId,
+          company_id: membership.company_id,
           website_id: websiteId,
-          keywords: keyword,
+          user_id: user.id,
+          keywords: [keyword],
           status: 'pending',
           metadata: {
             mode: 'batch',
@@ -104,8 +107,11 @@ export async function POST(request: NextRequest) {
 
       if (jobError) {
         console.error('Failed to create article job:', jobError);
+        failedKeywords.push(keyword);
         continue;
       }
+
+      jobIds.push(articleJobId);
 
       orchestrator.execute({
         articleJobId,
@@ -121,6 +127,8 @@ export async function POST(request: NextRequest) {
       success: true,
       jobIds,
       totalJobs: jobIds.length,
+      failedJobs: failedKeywords.length,
+      failedKeywords,
       message: 'Batch article generation started',
     });
   } catch (error) {

@@ -87,8 +87,11 @@ export async function POST(request: NextRequest) {
       .from('article_jobs')
       .insert({
         id: articleJobId,
+        job_id: articleJobId,
+        company_id: membership.company_id,
         website_id: websiteId,
-        keywords: keyword,
+        user_id: user.id,
+        keywords: [keyword],
         status: 'pending',
         metadata: {
           mode: mode || 'single',
