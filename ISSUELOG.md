@@ -43,7 +43,110 @@
 
 ### 相關 Commits
 - `67b3499`: 文檔: 記錄 token 包購買問題的成功解決
-- 下一個 commit: 實作升級規則驗證系統
+- `9c4b16c`: 實作升級規則驗證系統（Phase 2.1-2.5）
+- 下一個 commit: 修正 getUpgradeBlockReason 邏輯並完成測試
+
+---
+
+## 2025-11-04: 升級規則測試與修正
+
+### 測試過程
+
+#### 建立測試環境
+1. **建立測試用戶**: `test-upgrade@zhenhe-co.com`
+   - Script: `src/scripts/create-test-user.ts`
+   - 公司 tier: free
+   - 無 active mandate
+
+2. **建立自動化測試**: `src/scripts/test-upgrade-rules.ts`
+   - 6 個端到端測試案例
+   - 涵蓋所有升級規則場景
+
+#### 測試結果（第一次）
+- **失敗**: Test 2 (同階層升級：月繳→年繳)
+- **原因**: `getUpgradeBlockReason()` 返回「無法縮短計費週期」而非 `null`
+
+### 問題分析
+
+**根本原因**:
+`getUpgradeBlockReason()` 在處理同階層升級時的邏輯錯誤：
+
+```typescript
+// 錯誤邏輯（修正前）
+if (targetTierLevel === currentTierLevel) {
+  if (currentBillingPeriod === 'yearly' && targetBillingPeriod === 'monthly') {
+    return '年繳無法變更為月繳'
+  }
+  if (currentBillingPeriod === targetBillingPeriod) {
+    return '目前方案'
+  }
+  return '無法縮短計費週期'  // ← 錯誤：月繳→年繳也會返回這個
+}
+```
+
+**問題**: 當月繳嘗試升級到年繳時：
+1. `targetTierLevel === currentTierLevel` ✅ 成立（同階層）
+2. `currentBillingPeriod === 'yearly' && targetBillingPeriod === 'monthly'` ❌ 不成立
+3. `currentBillingPeriod === targetBillingPeriod` ❌ 不成立
+4. 直接返回「無法縮短計費週期」❌ 錯誤！
+
+### 修正方案
+
+**修正邏輯**（明確檢查允許的升級路徑）:
+```typescript
+if (targetTierLevel === currentTierLevel) {
+  if (currentBillingPeriod === targetBillingPeriod) {
+    return '目前方案'
+  }
+
+  // 月繳 → 年繳或終身 (allowed)
+  if (currentBillingPeriod === 'monthly' &&
+      (targetBillingPeriod === 'yearly' || targetBillingPeriod === 'lifetime')) {
+    return null  // ← 允許升級
+  }
+
+  // 年繳 → 終身 (allowed)
+  if (currentBillingPeriod === 'yearly' && targetBillingPeriod === 'lifetime') {
+    return null  // ← 允許升級
+  }
+
+  // 年繳 → 月繳 (blocked)
+  if (currentBillingPeriod === 'yearly' && targetBillingPeriod === 'monthly') {
+    return '年繳無法變更為月繳'
+  }
+
+  return '無法縮短計費週期'
+}
+```
+
+### 測試結果（修正後）
+
+✅ **所有測試通過！**
+
+1. **自動化測試**: 6/6 通過
+   - Test 1: 無訂閱用戶（Free Tier）✅
+   - Test 2: 同階層升級（月繳→年繳）✅
+   - Test 3: 同階層降級（年繳→月繳）✅
+   - Test 4: 跨階層升級（Starter→Business）✅
+   - Test 5: 跨階層降級（Business→Starter）✅
+   - Test 6: 終身方案限制 ✅
+
+2. **單元測試**: 19/19 通過
+   - 所有原有測試保持通過
+   - 無回歸問題
+
+3. **TypeScript 類型檢查**: 通過
+   - 無類型錯誤
+
+### 經驗教訓
+
+1. **邏輯正確性**: `canUpgrade()` 正確實作了升級規則，但 `getUpgradeBlockReason()` 未完全對應
+2. **測試驅動開發**: 自動化測試立即發現了邏輯錯誤
+3. **明確性優於簡潔性**: 明確列出所有允許的升級路徑比使用 catch-all 邏輯更可靠
+4. **同步函式對**: `canUpgrade()` 和 `getUpgradeBlockReason()` 應該保持邏輯一致
+
+### 相關 Commits
+- 下一個 commit: 修正 getUpgradeBlockReason 邏輯並完成所有測試
 
 ---
 

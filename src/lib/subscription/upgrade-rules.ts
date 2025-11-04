@@ -161,12 +161,26 @@ export function getUpgradeBlockReason(
   }
 
   if (targetTierLevel === currentTierLevel) {
-    if (currentBillingPeriod === 'yearly' && targetBillingPeriod === 'monthly') {
-      return '年繳無法變更為月繳'
-    }
     if (currentBillingPeriod === targetBillingPeriod) {
       return '目前方案'
     }
+
+    // 月繳 → 年繳或終身 (allowed)
+    if (currentBillingPeriod === 'monthly' &&
+        (targetBillingPeriod === 'yearly' || targetBillingPeriod === 'lifetime')) {
+      return null
+    }
+
+    // 年繳 → 終身 (allowed)
+    if (currentBillingPeriod === 'yearly' && targetBillingPeriod === 'lifetime') {
+      return null
+    }
+
+    // 年繳 → 月繳 (blocked)
+    if (currentBillingPeriod === 'yearly' && targetBillingPeriod === 'monthly') {
+      return '年繳無法變更為月繳'
+    }
+
     return '無法縮短計費週期'
   }
 
