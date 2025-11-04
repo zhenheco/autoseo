@@ -90,17 +90,18 @@ export async function POST(request: NextRequest) {
 
     const router = getAPIRouter();
 
-    const prompt = `Generate 10 creative and SEO-optimized article titles for the keyword: "${keyword}".
+    const prompt = `請根據關鍵字「${keyword}」，生成 10 個帶有數字的吸引人標題。
 
-Requirements:
-- Each title should be engaging and click-worthy
-- Include the keyword naturally
-- Vary the title formats (How-to, List, Question, etc.)
-- Make them suitable for blog articles
-- Return ONLY a JSON array of 10 strings, no other text
+要求：
+- 每個標題都要包含數字（例如：5個、10種、3步驟）
+- 標題要吸引人，讓人想點擊
+- 每行一個標題
+- 不要加編號，直接列出標題
 
-Example format:
-["Title 1", "Title 2", "Title 3", ...]`;
+範例格式：
+5個關於SEO的實用技巧
+10種提升網站流量的方法
+3個步驟讓你的內容更吸引人`;
 
     const response = await router.complete({
       model,
@@ -108,17 +109,17 @@ Example format:
       prompt,
       temperature: 0.9,
       maxTokens: 1000,
-      responseFormat: 'json',
     });
 
-    let titles: string[] = [];
-    try {
-      titles = JSON.parse(response.content);
-      if (!Array.isArray(titles) || titles.length === 0) {
-        throw new Error('Invalid response format');
-      }
-    } catch (parseError) {
-      console.error('Failed to parse titles:', parseError);
+    const titles = response.content
+      .split('\n')
+      .map(line => line.trim())
+      .filter(line => line.length > 0)
+      .filter(line => !line.match(/^(標題|範例|格式|要求|例如)/))
+      .slice(0, 10);
+
+    if (titles.length === 0) {
+      console.error('No valid titles generated:', response.content);
       return NextResponse.json(
         { error: 'Failed to generate titles' },
         { status: 500 }
