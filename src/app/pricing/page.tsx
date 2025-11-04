@@ -59,6 +59,7 @@ export default function PricingPage() {
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [currentTier, setCurrentTier] = useState<string | null>(null)
   const [currentBillingPeriod, setCurrentBillingPeriod] = useState<BillingPeriod>('monthly')
+  const [hasNoActiveMandate, setHasNoActiveMandate] = useState(false)
 
   useEffect(() => {
     loadPlans()
@@ -114,8 +115,9 @@ export default function PricingPage() {
                 }
               }
             } else {
-              setCurrentTier(company.subscription_tier)
+              setCurrentTier(null)
               setCurrentBillingPeriod('monthly')
+              setHasNoActiveMandate(true)
             }
           }
         }
@@ -788,7 +790,9 @@ export default function PricingPage() {
                           ? isCurrentPlan(currentTier, currentBillingPeriod, plan, billingPeriod)
                             ? '目前方案'
                             : '無法升級'
-                          : '開始使用'}
+                          : hasNoActiveMandate
+                            ? '重新訂閱'
+                            : '開始使用'}
                     </span>
                     {processingPlanId !== plan.id && canUpgradeWrapper(currentTier, currentBillingPeriod, plan, billingPeriod) && (
                       <ArrowRight className="w-4 h-4 ml-2 group-hover/button:translate-x-1 transition-transform" />
