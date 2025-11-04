@@ -1,6 +1,6 @@
 # Subscription Upgrade Validation Specification
 
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: 階層定義正確性
 
@@ -204,8 +204,6 @@
 - 前端顯示所有方案的「開始使用」按鈕
 
 ---
-
-## ADDED Requirements
 
 ### Requirement: 前端升級驗證
 
