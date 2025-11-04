@@ -28,7 +28,8 @@ ADD CONSTRAINT check_member_identity CHECK (
 
 -- 修改唯一性約束：允許同一 email 有多個 pending 邀請（不同公司）
 -- 但同一用戶在同一公司只能有一個記錄
-DROP INDEX IF EXISTS company_members_company_id_user_id_key;
+ALTER TABLE company_members
+DROP CONSTRAINT IF EXISTS company_members_company_id_user_id_key;
 
 CREATE UNIQUE INDEX IF NOT EXISTS unique_active_member
 ON company_members(company_id, user_id)
