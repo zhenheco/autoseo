@@ -127,7 +127,7 @@ export function SettingsClient({
                     </div>
                     <div>
                       <p className="text-xs text-muted-foreground">到期日</p>
-                      <p className="font-medium">
+                      <p className="font-medium" suppressHydrationWarning>
                         {company.subscription_ends_at
                           ? new Date(company.subscription_ends_at).toLocaleDateString('zh-TW')
                           : '無'}

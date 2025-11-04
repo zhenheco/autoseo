@@ -4,7 +4,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { Sparkles } from 'lucide-react'
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
 async function register(formData: FormData) {
@@ -12,13 +12,13 @@ async function register(formData: FormData) {
 
   const email = formData.get('email') as string
   const password = formData.get('password') as string
+  const invitationId = formData.get('invitation') as string
 
   if (!email || !password) {
-    redirect('/register?error=' + encodeURIComponent('請輸入電子郵件和密碼'))
-  }
-
-  if (email !== 'ace@zhenhe-co.com') {
-    redirect('/register?error=' + encodeURIComponent('此電子郵件無法註冊，請使用 ace@zhenhe-co.com'))
+    const redirectUrl = invitationId
+      ? `/register?invitation=${invitationId}&email=${encodeURIComponent(email || '')}&error=${encodeURIComponent('請輸入電子郵件和密碼')}`
+      : '/register?error=' + encodeURIComponent('請輸入電子郵件和密碼')
+    redirect(redirectUrl)
   }
 
   const supabase = await createClient()
@@ -32,7 +32,26 @@ async function register(formData: FormData) {
   })
 
   if (error) {
-    redirect('/register?error=' + encodeURIComponent(error.message))
+    const redirectUrl = invitationId
+      ? `/register?invitation=${invitationId}&email=${encodeURIComponent(email)}&error=${encodeURIComponent(error.message)}`
+      : '/register?error=' + encodeURIComponent(error.message)
+    redirect(redirectUrl)
+  }
+
+  if (data.user && invitationId) {
+    const adminClient = createAdminClient()
+    const { error: updateError } = await adminClient
+      .from('company_members')
+      .update({
+        user_id: data.user.id,
+        status: 'active',
+        joined_at: new Date().toISOString(),
+      })
+      .eq('id', invitationId)
+
+    if (updateError) {
+      console.error('更新邀請狀態失敗:', updateError)
+    }
   }
 
   if (data.user) {
@@ -45,7 +64,7 @@ async function register(formData: FormData) {
 export default async function RegisterPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; success?: string }>
+  searchParams: Promise<{ error?: string; success?: string; invitation?: string; email?: string }>
 }) {
   const params = await searchParams
 
@@ -81,6 +100,9 @@ export default async function RegisterPage({
           )}
 
           <form action={register} className="space-y-5">
+            {params.invitation && (
+              <input type="hidden" name="invitation" value={params.invitation} />
+            )}
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium text-foreground">
                 電子郵件
@@ -90,6 +112,7 @@ export default async function RegisterPage({
                 name="email"
                 type="email"
                 placeholder="your@email.com"
+                defaultValue={params.email || ''}
                 required
                 className="h-11 bg-background border-border focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               />

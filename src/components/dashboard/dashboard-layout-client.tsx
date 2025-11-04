@@ -30,13 +30,9 @@ export function MainContent({ children }: { children: ReactNode }) {
   return (
     <div
       className="transition-all duration-300"
-      style={{
-        paddingLeft: collapsed ? '80px' : '256px',
-      }}
+      style={{ paddingLeft: collapsed ? '80px' : '256px' }}
     >
-      <div className="mx-auto max-w-[1600px] px-4 sm:px-6 lg:px-8">
-        {children}
-      </div>
+      {children}
     </div>
   )
 }
