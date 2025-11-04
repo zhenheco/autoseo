@@ -1,6 +1,5 @@
 import { BaseAgent } from './base-agent';
 import type { HTMLInput, HTMLOutput } from '@/types/agents';
-import { JSDOM } from 'jsdom';
 
 export class HTMLAgent extends BaseAgent<HTMLInput, HTMLOutput> {
   get agentName(): string {
@@ -10,15 +9,15 @@ export class HTMLAgent extends BaseAgent<HTMLInput, HTMLOutput> {
   protected async process(input: HTMLInput): Promise<HTMLOutput> {
     let html = input.html;
 
-    html = this.insertInternalLinks(html, input.internalLinks);
+    html = await this.insertInternalLinks(html, input.internalLinks);
 
-    html = this.insertExternalReferences(html, input.externalReferences);
+    html = await this.insertExternalReferences(html, input.externalReferences);
 
-    html = this.insertFAQSchema(html);
+    html = await this.insertFAQSchema(html);
 
-    html = this.optimizeForWordPress(html);
+    html = await this.optimizeForWordPress(html);
 
-    const linkCount = this.countLinks(html);
+    const linkCount = await this.countLinks(html);
 
     return {
       html,
@@ -27,14 +26,15 @@ export class HTMLAgent extends BaseAgent<HTMLInput, HTMLOutput> {
     };
   }
 
-  private insertInternalLinks(
+  private async insertInternalLinks(
     html: string,
     internalLinks: HTMLInput['internalLinks']
-  ): string {
+  ): Promise<string> {
     if (!internalLinks || internalLinks.length === 0) {
       return html;
     }
 
+    const { JSDOM } = await import('jsdom');
     const dom = new JSDOM(html);
     const document = dom.window.document;
     const body = document.body;
@@ -112,14 +112,15 @@ export class HTMLAgent extends BaseAgent<HTMLInput, HTMLOutput> {
     return body.innerHTML;
   }
 
-  private insertExternalReferences(
+  private async insertExternalReferences(
     html: string,
     externalRefs: HTMLInput['externalReferences']
-  ): string {
+  ): Promise<string> {
     if (!externalRefs || externalRefs.length === 0) {
       return html;
     }
 
+    const { JSDOM } = await import('jsdom');
     const dom = new JSDOM(html);
     const document = dom.window.document;
     const body = document.body;
@@ -203,7 +204,8 @@ export class HTMLAgent extends BaseAgent<HTMLInput, HTMLOutput> {
     return body.innerHTML;
   }
 
-  private optimizeForWordPress(html: string): string {
+  private async optimizeForWordPress(html: string): Promise<string> {
+    const { JSDOM } = await import('jsdom');
     const dom = new JSDOM(html);
     const document = dom.window.document;
     const body = document.body;
@@ -291,7 +293,8 @@ export class HTMLAgent extends BaseAgent<HTMLInput, HTMLOutput> {
       .replace(/^-+|-+$/g, '');
   }
 
-  private insertFAQSchema(html: string): string {
+  private async insertFAQSchema(html: string): Promise<string> {
+    const { JSDOM } = await import('jsdom');
     const dom = new JSDOM(html);
     const document = dom.window.document;
     const body = document.body;
@@ -358,7 +361,8 @@ export class HTMLAgent extends BaseAgent<HTMLInput, HTMLOutput> {
     return body.innerHTML;
   }
 
-  private countLinks(html: string): { internal: number; external: number } {
+  private async countLinks(html: string): Promise<{ internal: number; external: number }> {
+    const { JSDOM } = await import('jsdom');
     const dom = new JSDOM(html);
     const document = dom.window.document;
     const body = document.body;

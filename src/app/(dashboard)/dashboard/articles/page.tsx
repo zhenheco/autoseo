@@ -11,7 +11,7 @@ export const dynamic = 'force-dynamic'
 async function getArticles(userId: string, userRole: string) {
   const supabase = createAdminClient()
 
-  let query = supabase
+  const query = supabase
     .from('generated_articles')
     .select(`
       id,
@@ -23,15 +23,10 @@ async function getArticles(userId: string, userRole: string) {
       reading_time,
       wordpress_post_url,
       created_at,
-      published_at,
-      created_by
+      published_at
     `)
     .order('created_at', { ascending: false })
     .limit(100)
-
-  if (userRole === 'writer' || userRole === 'viewer') {
-    query = query.eq('created_by', userId)
-  }
 
   const { data, error } = await query
 

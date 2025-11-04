@@ -204,7 +204,7 @@ export function ArticleGenerationButtons({
               <Label htmlFor="batch-keywords">關鍵字列表</Label>
               <Textarea
                 id="batch-keywords"
-                placeholder="關鍵字1&#10;關鍵字2&#10;關鍵字3&#10;&#10;或&#10;&#10;關鍵字1, 關鍵字2, 關鍵字3"
+                placeholder={`關鍵字1\n關鍵字2\n關鍵字3\n\n或\n\n關鍵字1, 關鍵字2, 關鍵字3`}
                 value={batchKeywords}
                 onChange={(e) => setBatchKeywords(e.target.value)}
                 rows={10}
