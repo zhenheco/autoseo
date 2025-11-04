@@ -178,18 +178,29 @@ export class NewebPayService {
     const decryptedData = this.aesDecrypt(tradeInfo)
     console.log('[NewebPayService] AES 解密後的原始資料:', decryptedData.substring(0, 200))
 
-    const params = new URLSearchParams(decryptedData)
-    const result: DecryptedResponse = {}
+    // 藍新金流單次購買也可能回傳 JSON 格式（與定期定額相同）
+    // 先嘗試解析為 JSON，失敗才用 URLSearchParams
+    try {
+      const jsonData = JSON.parse(decryptedData)
+      console.log('[NewebPayService] 成功解析為 JSON 格式')
+      console.log('[NewebPayService] JSON 解析結果 keys:', Object.keys(jsonData))
+      return jsonData
+    } catch (e) {
+      // 如果不是 JSON，則使用 URLSearchParams 解析（向後兼容）
+      console.log('[NewebPayService] JSON 解析失敗，使用 URLSearchParams 解析')
+      const params = new URLSearchParams(decryptedData)
+      const result: DecryptedResponse = {}
 
-    params.forEach((value, key) => {
-      const numValue = Number(value)
-      result[key] = isNaN(numValue) ? value : numValue
-    })
+      params.forEach((value, key) => {
+        const numValue = Number(value)
+        result[key] = isNaN(numValue) ? value : numValue
+      })
 
-    console.log('[NewebPayService] URLSearchParams 解析結果:', JSON.stringify(result, null, 2))
-    console.log('[NewebPayService] 解析後的 keys:', Object.keys(result))
+      console.log('[NewebPayService] URLSearchParams 解析結果:', JSON.stringify(result, null, 2))
+      console.log('[NewebPayService] 解析後的 keys:', Object.keys(result))
 
-    return result
+      return result
+    }
   }
 
   decryptPeriodCallback(period: string): DecryptedResponse {

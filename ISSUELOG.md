@@ -92,6 +92,66 @@ const supabase = createAdminClient()
 
 ### 相關 Commits
 - `85ccc47`: 修正: 單次購買公司查詢失敗 - 加入重試機制和診斷日誌（這個其實沒解決問題，但有助於診斷）
-- 下一個 commit: 修正: 單次購買使用正確的 Admin Client 繞過 RLS
+- `e081fb9`: 修正: 單次購買回調使用 Admin Client 繞過 RLS（部分修正，但還有問題）
+- `65d3b7d`: 診斷: 加入詳細日誌以診斷單次購買解密問題
+- 下一個 commit: 修正: 單次購買支援 JSON 格式解析
+
+---
+
+## 2025-11-04: Token 包購買「orderNo 為 undefined」問題（續）
+
+### 新發現的問題
+使用 Admin Client 後，RLS 問題解決了，但仍然「找不到訂單」。
+
+### 根本原因
+通過詳細日誌發現：
+
+**藍新金流單次購買回傳 JSON 格式**：
+```json
+{
+  "Status": "SUCCESS",
+  "Message": "授權成功",
+  "Result": {
+    "MerchantOrderNo": "ORD17622286946227218",
+    "TradeNo": "25110411582872444",
+    "Amt": 1299,
+    ...
+  }
+}
+```
+
+**但 `decryptCallback` 使用 URLSearchParams 解析**：
+```typescript
+const params = new URLSearchParams(decryptedData)  // ❌ 錯誤
+// 結果: 整個 JSON 字串變成一個 key
+{
+  "{\"Status\":\"SUCCESS\",...}": 0
+}
+```
+
+**所以**：
+- `decryptedData.MerchantOrderNo` = `undefined` ❌
+- `decryptedData.Status` = `undefined` ❌
+- 無法取得任何資料
+
+**為什麼定期定額沒問題？**
+```typescript
+decryptPeriodCallback(period: string) {
+  try {
+    return JSON.parse(decryptedData)  // ✅ 先嘗試 JSON
+  } catch {
+    // 失敗才用 URLSearchParams
+  }
+}
+```
+
+### 修正方案
+將 `decryptCallback` 改成和 `decryptPeriodCallback` 相同的邏輯：
+1. 先嘗試 `JSON.parse()`
+2. 失敗才用 `URLSearchParams`（向後兼容）
+
+修改 `handleOnetimeCallback` 處理兩種格式：
+1. JSON 格式（有 Result 物件）
+2. URLSearchParams 格式（扁平結構）
 
 ---

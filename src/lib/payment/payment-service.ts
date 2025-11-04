@@ -267,11 +267,33 @@ export class PaymentService {
       console.log('[PaymentService] 解密後的完整資料:', JSON.stringify(decryptedData, null, 2))
       console.log('[PaymentService] 解密資料的 keys:', Object.keys(decryptedData))
 
-      const status = decryptedData.Status as string
-      const message = decryptedData.Message as string
-      const orderNo = decryptedData.MerchantOrderNo as string
-      const tradeNo = decryptedData.TradeNo as string
-      const amount = decryptedData.Amt as number
+      // 藍新金流單次購買可能回傳兩種格式：
+      // 1. JSON 格式（有 Result 物件）: {Status, Message, Result: {MerchantOrderNo, TradeNo, Amt, ...}}
+      // 2. URLSearchParams 格式（扁平）: {Status, Message, MerchantOrderNo, TradeNo, Amt, ...}
+      let status: string
+      let message: string
+      let orderNo: string
+      let tradeNo: string
+      let amount: number
+
+      if (decryptedData.Result && typeof decryptedData.Result === 'object') {
+        // JSON 格式：資料在 Result 物件裡
+        console.log('[PaymentService] 使用 JSON 格式（有 Result 物件）')
+        const result = decryptedData.Result as Record<string, any>
+        status = decryptedData.Status as string
+        message = decryptedData.Message as string
+        orderNo = result.MerchantOrderNo as string
+        tradeNo = result.TradeNo as string
+        amount = result.Amt as number
+      } else {
+        // URLSearchParams 格式：資料在最外層
+        console.log('[PaymentService] 使用扁平格式（無 Result 物件）')
+        status = decryptedData.Status as string
+        message = decryptedData.Message as string
+        orderNo = decryptedData.MerchantOrderNo as string
+        tradeNo = decryptedData.TradeNo as string
+        amount = decryptedData.Amt as number
+      }
 
       console.log('[PaymentService] 處理付款通知:', {
         orderNo,
