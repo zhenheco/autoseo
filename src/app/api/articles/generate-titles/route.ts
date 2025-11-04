@@ -53,6 +53,7 @@ export async function POST(request: NextRequest) {
         .from('website_configs')
         .insert({
           company_id: membership.company_id,
+          website_name: '',
         })
         .select('id')
         .single();
