@@ -263,6 +263,10 @@ export class PaymentService {
     try {
       const decryptedData = this.newebpay.decryptCallback(tradeInfo, tradeSha)
 
+      // 記錄完整的解密資料結構
+      console.log('[PaymentService] 解密後的完整資料:', JSON.stringify(decryptedData, null, 2))
+      console.log('[PaymentService] 解密資料的 keys:', Object.keys(decryptedData))
+
       const status = decryptedData.Status as string
       const message = decryptedData.Message as string
       const orderNo = decryptedData.MerchantOrderNo as string
@@ -273,7 +277,9 @@ export class PaymentService {
         orderNo,
         status,
         tradeNo,
-        amount
+        amount,
+        hasOrderNo: !!orderNo,
+        hasStatus: !!status
       })
 
       // 加入重試機制，應對 Supabase 多區域複製延遲

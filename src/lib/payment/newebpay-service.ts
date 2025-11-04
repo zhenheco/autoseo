@@ -176,6 +176,7 @@ export class NewebPayService {
     }
 
     const decryptedData = this.aesDecrypt(tradeInfo)
+    console.log('[NewebPayService] AES 解密後的原始資料:', decryptedData.substring(0, 200))
 
     const params = new URLSearchParams(decryptedData)
     const result: DecryptedResponse = {}
@@ -184,6 +185,9 @@ export class NewebPayService {
       const numValue = Number(value)
       result[key] = isNaN(numValue) ? value : numValue
     })
+
+    console.log('[NewebPayService] URLSearchParams 解析結果:', JSON.stringify(result, null, 2))
+    console.log('[NewebPayService] 解析後的 keys:', Object.keys(result))
 
     return result
   }
