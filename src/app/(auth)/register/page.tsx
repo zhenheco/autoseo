@@ -40,6 +40,22 @@ async function register(formData: FormData) {
 
   if (data.user && invitationId) {
     const adminClient = createAdminClient()
+
+    const { data: invitation } = await adminClient
+      .from('company_members')
+      .select('invited_email')
+      .eq('id', invitationId)
+      .eq('status', 'pending')
+      .single()
+
+    if (!invitation) {
+      redirect('/register?error=' + encodeURIComponent('無效的邀請連結'))
+    }
+
+    if (invitation.invited_email && invitation.invited_email !== email) {
+      redirect('/register?error=' + encodeURIComponent('請使用受邀的電子郵件地址註冊'))
+    }
+
     const { error: updateError } = await adminClient
       .from('company_members')
       .update({
@@ -51,6 +67,7 @@ async function register(formData: FormData) {
 
     if (updateError) {
       console.error('更新邀請狀態失敗:', updateError)
+      redirect('/register?error=' + encodeURIComponent('邀請激活失敗，請聯絡管理員'))
     }
   }
 

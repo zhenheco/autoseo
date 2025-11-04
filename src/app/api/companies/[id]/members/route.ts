@@ -93,6 +93,7 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     const invitationData = {
       company_id: companyId,
       user_id: userId,
+      invited_email: !inviteeUser ? email : null,
       role,
       status: memberStatus,
       invited_by: user.id,
