@@ -67,6 +67,26 @@ export async function POST(request: NextRequest) {
         );
       }
 
+      // 創建對應的 agent_configs
+      const { error: agentConfigError } = await supabase
+        .from('agent_configs')
+        .insert({
+          website_id: newWebsite.id,
+          research_model: 'deepseek-reasoner',
+          complex_processing_model: 'deepseek-reasoner',
+          simple_processing_model: 'deepseek-chat',
+          image_model: 'gpt-image-1-mini',
+          research_temperature: 0.7,
+          research_max_tokens: 4000,
+          image_size: '1024x1024',
+          image_count: 3,
+          meta_enabled: true,
+        });
+
+      if (agentConfigError) {
+        console.error('Failed to create agent config:', agentConfigError);
+      }
+
       websites = [newWebsite];
     }
 

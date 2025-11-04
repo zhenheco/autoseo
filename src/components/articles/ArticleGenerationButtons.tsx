@@ -37,6 +37,7 @@ interface GenerationItem {
   title: string;
   targetLanguage: string;
   wordCount: string;
+  imageCount: string;
 }
 
 export function ArticleGenerationButtons({
@@ -53,6 +54,7 @@ export function ArticleGenerationButtons({
   // 批次設定選項
   const [targetLanguage, setTargetLanguage] = useState('zh-TW');
   const [wordCount, setWordCount] = useState('1500');
+  const [imageCount, setImageCount] = useState('3');
 
   const handleGenerateIdeas = async () => {
     if (!keyword.trim()) return;
@@ -129,6 +131,7 @@ export function ArticleGenerationButtons({
       title: item.title,
       targetLanguage,
       wordCount,
+      imageCount,
     }));
 
     onBatchGenerate(items);
@@ -304,10 +307,21 @@ export function ArticleGenerationButtons({
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="zh-TW">繁體中文</SelectItem>
-                      <SelectItem value="zh-CN">简体中文</SelectItem>
+                      <SelectItem value="zh-TW">繁體中文 (Traditional Chinese)</SelectItem>
+                      <SelectItem value="zh-CN">简体中文 (Simplified Chinese)</SelectItem>
                       <SelectItem value="en">English</SelectItem>
-                      <SelectItem value="ja">日本語</SelectItem>
+                      <SelectItem value="ja">日本語 (Japanese)</SelectItem>
+                      <SelectItem value="ko">한국어 (Korean)</SelectItem>
+                      <SelectItem value="es">Español (Spanish)</SelectItem>
+                      <SelectItem value="fr">Français (French)</SelectItem>
+                      <SelectItem value="de">Deutsch (German)</SelectItem>
+                      <SelectItem value="pt">Português (Portuguese)</SelectItem>
+                      <SelectItem value="it">Italiano (Italian)</SelectItem>
+                      <SelectItem value="ru">Русский (Russian)</SelectItem>
+                      <SelectItem value="ar">العربية (Arabic)</SelectItem>
+                      <SelectItem value="th">ไทย (Thai)</SelectItem>
+                      <SelectItem value="vi">Tiếng Việt (Vietnamese)</SelectItem>
+                      <SelectItem value="id">Bahasa Indonesia (Indonesian)</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -324,8 +338,29 @@ export function ArticleGenerationButtons({
                       <SelectItem value="1500">1500 字</SelectItem>
                       <SelectItem value="2000">2000 字</SelectItem>
                       <SelectItem value="3000">3000 字</SelectItem>
+                      <SelectItem value="5000">5000 字</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="image-count">圖片數量</Label>
+                  <Select value={imageCount} onValueChange={setImageCount}>
+                    <SelectTrigger id="image-count">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="0">不使用圖片</SelectItem>
+                      <SelectItem value="1">1 張圖片</SelectItem>
+                      <SelectItem value="2">2 張圖片</SelectItem>
+                      <SelectItem value="3">3 張圖片</SelectItem>
+                      <SelectItem value="5">5 張圖片</SelectItem>
+                      <SelectItem value="8">8 張圖片</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <p className="text-xs text-muted-foreground">
+                    圖片將插入在 H2 標題下方
+                  </p>
                 </div>
 
                 <div className="pt-4 space-y-2 border-t">
