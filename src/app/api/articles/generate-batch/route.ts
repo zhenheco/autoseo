@@ -5,11 +5,13 @@ import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(request: NextRequest) {
   try {
-    const { keywords } = await request.json();
+    const { keywords, items, options } = await request.json();
 
-    if (!keywords || !Array.isArray(keywords) || keywords.length === 0) {
+    const generationItems = items || keywords?.map((kw: string) => ({ keyword: kw, title: kw })) || [];
+
+    if (!generationItems || generationItems.length === 0) {
       return NextResponse.json(
-        { error: 'Keywords array is required' },
+        { error: 'Items or keywords array is required' },
         { status: 400 }
       );
     }
@@ -105,11 +107,13 @@ export async function POST(request: NextRequest) {
     const websiteId = websites[0].id;
 
     const jobIds: string[] = [];
-    const failedKeywords: string[] = [];
+    const failedItems: string[] = [];
     const orchestrator = new ParallelOrchestrator();
 
-    for (const keyword of keywords) {
+    for (const item of generationItems) {
       const articleJobId = uuidv4();
+      const keyword = item.keyword || item.title;
+      const title = item.title || item.keyword;
 
       const { error: jobError } = await supabase
         .from('article_jobs')
@@ -123,14 +127,18 @@ export async function POST(request: NextRequest) {
           status: 'pending',
           metadata: {
             mode: 'batch',
-            batchIndex: keywords.indexOf(keyword),
-            totalBatch: keywords.length,
+            title,
+            batchIndex: generationItems.indexOf(item),
+            totalBatch: generationItems.length,
+            targetLanguage: options?.targetLanguage || 'zh-TW',
+            wordCount: options?.wordCount || '1500',
+            imageCount: options?.imageCount || '3',
           },
         });
 
       if (jobError) {
         console.error('Failed to create article job:', jobError);
-        failedKeywords.push(keyword);
+        failedItems.push(title);
         continue;
       }
 
@@ -140,9 +148,12 @@ export async function POST(request: NextRequest) {
         articleJobId,
         companyId: membership.company_id,
         websiteId,
-        keyword,
+        keyword: title,
+        targetLanguage: options?.targetLanguage,
+        wordCount: parseInt(options?.wordCount || '1500'),
+        imageCount: parseInt(options?.imageCount || '3'),
       }).catch((error) => {
-        console.error(`Article generation error for ${keyword}:`, error);
+        console.error(`Article generation error for ${title}:`, error);
       });
     }
 
@@ -150,8 +161,8 @@ export async function POST(request: NextRequest) {
       success: true,
       jobIds,
       totalJobs: jobIds.length,
-      failedJobs: failedKeywords.length,
-      failedKeywords,
+      failedJobs: failedItems.length,
+      failedItems,
       message: 'Batch article generation started',
     });
   } catch (error) {

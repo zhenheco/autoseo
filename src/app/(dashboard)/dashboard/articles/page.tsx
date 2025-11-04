@@ -93,14 +93,20 @@ export default function ArticlesPage() {
     ...jobs.map(job => ({
       type: 'job' as const,
       id: job.id,
+      keyword: job.keywords[0] || '',
       title: job.metadata?.title || job.keywords.join(', '),
+      displayTitle: job.metadata?.title
+        ? `${job.keywords[0] || ''} - ${job.metadata.title}`
+        : job.keywords.join(', '),
       status: job.status,
       created_at: job.created_at,
     })),
     ...articles.map(article => ({
       type: 'article' as const,
       id: article.id,
+      keyword: '',
       title: article.title || '未命名文章',
+      displayTitle: article.title || '未命名文章',
       status: 'completed',
       created_at: article.created_at,
       article,
@@ -154,7 +160,7 @@ export default function ArticlesPage() {
                       <div className="flex items-start gap-3">
                         <div className="mt-1">{getStatusIcon(item.status)}</div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-medium truncate">{item.title}</h3>
+                          <h3 className="font-medium truncate">{item.displayTitle}</h3>
                           <p className="text-xs text-muted-foreground mt-1">
                             {new Date(item.created_at).toLocaleString('zh-TW')}
                           </p>

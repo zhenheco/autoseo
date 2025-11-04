@@ -428,6 +428,9 @@ export interface ArticleGenerationInput {
   websiteId: string;
   keyword: string;
   region?: string;
+  targetLanguage?: string;
+  wordCount?: number;
+  imageCount?: number;
 }
 
 export interface ArticleGenerationResult {

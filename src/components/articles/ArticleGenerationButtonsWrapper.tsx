@@ -20,14 +20,14 @@ export function ArticleGenerationButtonsWrapper() {
   const handleBatchGenerate = async (items: GenerationItem[]) => {
     setIsGenerating(true);
     try {
-      // 將 items 轉換為 batch API 需要的格式
-      const keywords = items.map(item => item.keyword);
-
       const response = await fetch('/api/articles/generate-batch', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          keywords,
+          items: items.map(item => ({
+            keyword: item.keyword,
+            title: item.title,
+          })),
           options: {
             targetLanguage: items[0]?.targetLanguage || 'zh-TW',
             wordCount: items[0]?.wordCount || '1500',
