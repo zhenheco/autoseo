@@ -10,6 +10,7 @@ interface GenerationItem {
   title: string;
   targetLanguage: string;
   wordCount: string;
+  imageCount: string;
 }
 
 export function ArticleGenerationButtonsWrapper() {
@@ -27,10 +28,10 @@ export function ArticleGenerationButtonsWrapper() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           keywords,
-          // 可以將其他設定也傳給 API（未來擴展用）
           options: {
             targetLanguage: items[0]?.targetLanguage || 'zh-TW',
             wordCount: items[0]?.wordCount || '1500',
+            imageCount: items[0]?.imageCount || '3',
           }
         }),
       });
@@ -42,9 +43,10 @@ export function ArticleGenerationButtonsWrapper() {
       const data = await response.json();
 
       toast.success(`已提交 ${items.length} 篇文章生成任務`, {
-        description: '請稍後查看文章列表',
+        description: '文章正在生成中，請稍後查看列表',
       });
 
+      window.dispatchEvent(new Event('articlesUpdated'));
       router.refresh();
     } catch (error) {
       console.error('Batch generate error:', error);
