@@ -665,6 +665,7 @@ export class PaymentService {
               newebpay_status: status,
               newebpay_response: decryptedData as unknown as Database['public']['Tables']['payment_orders']['Update']['newebpay_response'],
               paid_at: new Date().toISOString(),
+              mandate_id: mandateData.id,
             })
             .eq('id', mandateData.first_payment_order_id)
 
