@@ -1,5 +1,52 @@
 # 問題解決記錄
 
+## 2025-11-04: 升級規則驗證系統實作完成
+
+### 完成項目
+✅ **Phase 1**: 修復單次購買核心問題（RLS 和 JSON 解析）
+✅ **Phase 2**: 實作完整的升級規則驗證系統
+✅ **Phase 3**: 撰寫測試和文件
+
+### 詳細成果
+
+#### Phase 2.1: 創建升級規則驗證函式庫
+- 檔案: `src/lib/subscription/upgrade-rules.ts`
+- 實作 `TIER_HIERARCHY` 階層定義
+- 實作 `canUpgrade()` 函式：驗證升級是否符合業務規則
+- 實作 `getUpgradeBlockReason()` 函式：返回升級失敗原因
+- 完整的 JSDoc 註解和使用範例
+
+**升級規則**:
+- **同階層**: 月繳→年繳→終身 ✅，年繳→月繳 ❌，終身→任何 ❌
+- **跨階層**: 只能升級到更高階層 ✅，無法降級 ❌
+- **新用戶**: 可訂閱任何方案 ✅
+
+#### Phase 2.2-2.3: Pricing 頁面升級邏輯
+- 檔案: `src/app/pricing/page.tsx`
+- 實作 `loadUser()` 查詢當前訂閱狀態
+- 查詢 `recurring_mandates` 取得 active mandate
+- Join `subscription_plans` 取得 plan slug 和 billing period
+- 按鈕使用 `canUpgrade()` 驗證，顯示正確的狀態（目前方案/無法升級/開始使用）
+
+#### Phase 2.4: 後端升級驗證
+- 檔案: `src/app/api/payment/recurring/create/route.ts`
+- 在建立支付前驗證升級規則
+- 查詢用戶當前 tierSlug 和 billingPeriod
+- 使用 `canUpgrade()` 和 `getUpgradeBlockReason()` 驗證
+- 不符合規則時返回 400 錯誤並記錄日誌
+
+#### Phase 2.5: 升級規則測試
+- 檔案: `src/lib/subscription/upgrade-rules.test.ts`
+- 19 個測試案例，涵蓋所有升級情境
+- 測試: 新用戶訂閱、同階層升級/降級、跨階層升級/降級、終身方案限制
+- ✅ 所有測試通過
+
+### 相關 Commits
+- `67b3499`: 文檔: 記錄 token 包購買問題的成功解決
+- 下一個 commit: 實作升級規則驗證系統
+
+---
+
 ## 2025-11-04: Token 包購買「找不到訂單」問題
 
 ### 問題現象

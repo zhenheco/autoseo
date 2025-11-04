@@ -40,6 +40,7 @@ export const TIER_HIERARCHY: Record<string, number> = {
   'agency': 4,
 
   // Company tiers (companies.subscription_tier) - same hierarchy values
+  'free': 0,         // free tier (no active subscription)
   'basic': 1,        // maps to starter
   'pro': 2,          // maps to business/professional (取較低值以允許同 tier 升級)
   'enterprise': 4,   // maps to agency
