@@ -6,8 +6,11 @@ import { TokenPackages } from './token-packages'
 import { PaymentHistory } from './payment-history'
 import { SubscriptionStatusChecker } from '@/components/subscription/SubscriptionStatusChecker'
 import type { Database } from '@/types/database.types'
+import { checkPagePermission } from '@/lib/permissions'
 
 export default async function SubscriptionPage() {
+  await checkPagePermission('canAccessSubscription')
+
   const user = await getUser()
 
   if (!user) {

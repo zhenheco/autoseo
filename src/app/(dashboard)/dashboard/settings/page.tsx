@@ -2,12 +2,15 @@ import { getUser, getUserPrimaryCompany, getCompanyMembers } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { SettingsClient } from './settings-client'
 import { createClient } from '@/lib/supabase/server'
+import { checkPagePermission } from '@/lib/permissions'
 
 export default async function SettingsPage({
   searchParams,
 }: {
   searchParams: Promise<{ error?: string; success?: string; info?: string }>
 }) {
+  await checkPagePermission('canAccessSettings')
+
   const params = await searchParams
   const user = await getUser()
 

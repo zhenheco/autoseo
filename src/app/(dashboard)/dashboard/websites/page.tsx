@@ -7,6 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { deleteWebsite } from './actions'
+import { checkPagePermission } from '@/lib/permissions'
 
 async function getCompanyWebsites(companyId: string) {
   const supabase = await createClient()
@@ -27,6 +28,8 @@ export default async function WebsitesPage({
 }: {
   searchParams: Promise<{ error?: string; success?: string }>
 }) {
+  await checkPagePermission('canAccessWebsites')
+
   const user = await getUser()
 
   if (!user) {

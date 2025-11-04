@@ -3,8 +3,11 @@ import { redirect } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatCard } from '@/components/dashboard/stat-card'
 import { FileText, Globe, TrendingUp, DollarSign, Users, ArrowUpRight } from 'lucide-react'
+import { checkPagePermission } from '@/lib/permissions'
 
 export default async function DashboardPage() {
+  await checkPagePermission('canAccessDashboard')
+
   const user = await getUser()
 
   if (!user) {
