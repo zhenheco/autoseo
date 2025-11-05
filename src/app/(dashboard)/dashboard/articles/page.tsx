@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ArticleGenerationButtonsWrapper } from '@/components/articles/ArticleGenerationButtonsWrapper'
-import { Loader2, CheckCircle2, Clock, FileText } from 'lucide-react'
+import { Loader2, CheckCircle2, Clock, FileText, Trash2 } from 'lucide-react'
 
 interface Article {
   id: string
@@ -149,6 +149,38 @@ export default function ArticlesPage() {
     }
   }
 
+  const handleDeleteItem = async (item: typeof combinedItems[0], e: React.MouseEvent) => {
+    e.stopPropagation()
+
+    const itemType = item.type === 'job' ? '任務' : '文章'
+    if (!confirm(`確定要刪除這個${itemType}嗎？`)) {
+      return
+    }
+
+    try {
+      const endpoint = item.type === 'job'
+        ? `/api/articles/jobs/${item.id}`
+        : `/api/articles/${item.id}`
+
+      const response = await fetch(endpoint, {
+        method: 'DELETE',
+      })
+
+      if (response.ok) {
+        if (selectedArticle?.id === item.id) {
+          setSelectedArticle(null)
+        }
+        await fetchData()
+      } else {
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        alert(`刪除失敗: ${errorData.error || response.statusText}`)
+      }
+    } catch (error) {
+      console.error('Delete item error:', error)
+      alert(`刪除失敗: ${(error as Error).message}`)
+    }
+  }
+
   return (
     <div className="h-screen flex flex-col">
       <div className="p-6 border-b">
@@ -217,6 +249,14 @@ export default function ArticlesPage() {
                             </div>
                           )}
                         </div>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={(e) => handleDeleteItem(item, e)}
+                          className="shrink-0 text-muted-foreground hover:text-destructive"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </div>
                   ))}

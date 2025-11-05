@@ -11,18 +11,36 @@ export async function DELETE() {
     const { data: { user } } = await supabase.auth.getUser();
 
     if (!user) {
+      console.log('[Clear Jobs] No user authenticated');
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { data: membership } = await supabase
+    console.log('[Clear Jobs] User:', user.id);
+
+    const { data: membership, error: membershipError } = await supabase
       .from('company_members')
       .select('company_id')
       .eq('user_id', user.id)
       .eq('status', 'active')
       .single();
 
-    if (!membership) {
+    if (membershipError || !membership) {
+      console.log('[Clear Jobs] No active membership:', membershipError);
       return NextResponse.json({ error: 'No active company membership' }, { status: 403 });
+    }
+
+    console.log('[Clear Jobs] Company ID:', membership.company_id);
+
+    // 先查詢有多少任務
+    const { data: existingJobs, error: queryError } = await supabase
+      .from('article_jobs')
+      .select('id, status')
+      .eq('company_id', membership.company_id)
+      .in('status', ['pending', 'processing']);
+
+    console.log('[Clear Jobs] Found jobs to delete:', existingJobs?.length || 0);
+    if (queryError) {
+      console.error('[Clear Jobs] Query error:', queryError);
     }
 
     // 刪除所有 pending 和 processing 狀態的 jobs
@@ -34,9 +52,11 @@ export async function DELETE() {
       .select('id');
 
     if (error) {
-      console.error('Failed to clear jobs:', error);
+      console.error('[Clear Jobs] Delete error:', error);
       return NextResponse.json({ error: 'Failed to clear jobs' }, { status: 500 });
     }
+
+    console.log('[Clear Jobs] Successfully deleted:', deletedJobs?.length || 0);
 
     return NextResponse.json({
       success: true,
@@ -44,7 +64,7 @@ export async function DELETE() {
       message: `已清除 ${deletedJobs?.length || 0} 個任務`,
     });
   } catch (error) {
-    console.error('Clear jobs error:', error);
+    console.error('[Clear Jobs] Unexpected error:', error);
     return NextResponse.json(
       { error: 'Internal server error', details: (error as Error).message },
       { status: 500 }

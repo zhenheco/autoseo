@@ -35,38 +35,35 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
 關鍵字: ${input.keyword}
 地區: ${input.region || 'Taiwan'}
 
-請提供以下分析（以 JSON 格式回答）:
+請分析以下項目：
 
-{
-  "searchIntent": "informational | commercial | transactional | navigational",
-  "intentConfidence": 0-1 之間的數字,
-  "topRankingFeatures": {
-    "contentLength": {
-      "min": 估計最短字數,
-      "max": 估計最長字數,
-      "avg": 估計平均字數
-    },
-    "titlePatterns": ["標題模式 1", "標題模式 2"],
-    "structurePatterns": ["結構模式 1", "結構模式 2"],
-    "commonTopics": ["常見主題 1", "常見主題 2"],
-    "commonFormats": ["格式類型 1", "格式類型 2"]
-  },
-  "contentGaps": ["內容缺口 1", "內容缺口 2"],
-  "competitorAnalysis": [
-    {
-      "url": "相關權威網站 URL",
-      "title": "標題",
-      "position": 1,
-      "domain": "網域",
-      "estimatedWordCount": 估計字數,
-      "strengths": ["優勢 1", "優勢 2"],
-      "weaknesses": ["弱點 1", "弱點 2"],
-      "uniqueAngles": ["獨特角度 1", "獨特角度 2"]
-    }
-  ],
-  "recommendedStrategy": "推薦的內容策略描述",
-  "relatedKeywords": ["相關關鍵字 1", "相關關鍵字 2"]
-}`;
+1. **搜尋意圖** (searchIntent):
+   - 類型：informational（資訊型）、commercial（商業型）、transactional（交易型）、navigational（導航型）
+   - 信心度 (intentConfidence): 0-1 之間
+
+2. **高排名內容特徵** (topRankingFeatures):
+   - 內容長度：最短、最長、平均字數
+   - 標題模式：常見的標題結構
+   - 內容結構：段落組織方式
+   - 常見主題：經常討論的子主題
+   - 常見格式：列表、教學、比較等
+
+3. **內容缺口** (contentGaps):
+   - 列出競爭對手沒有深入探討的角度
+
+4. **競爭對手分析** (competitorAnalysis):
+   - 列出 3-5 個相關權威網站
+   - 每個網站的標題、網域、字數估計
+   - 優勢和弱點
+   - 獨特切入角度
+
+5. **推薦策略** (recommendedStrategy):
+   - 基於以上分析，提出內容創作建議
+
+6. **相關關鍵字** (relatedKeywords):
+   - 列出 5-10 個相關搜尋詞
+
+請用結構化的方式回答，每個項目分開說明。`;
 
     const response = await this.complete(prompt, {
       model: input.model,
@@ -80,29 +77,94 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
         return this.getFallbackAnalysis(input.keyword);
       }
 
-      let content = response.content.trim();
+      const content = response.content.trim();
+
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        content = jsonMatch[0];
+        try {
+          const parsed = JSON.parse(jsonMatch[0]);
+          if (parsed.searchIntent && parsed.topRankingFeatures) {
+            return parsed;
+          }
+        } catch {
+          console.log('[ResearchAgent] JSON parsing failed, parsing structured text');
+        }
       }
 
-      const parsed = JSON.parse(content);
-
-      if (!parsed.searchIntent || !parsed.topRankingFeatures) {
-        console.warn('[ResearchAgent] Incomplete analysis, using fallback');
-        return this.getFallbackAnalysis(input.keyword);
-      }
-
-      return parsed;
+      return this.parseStructuredText(content, input.keyword);
 
     } catch (parseError) {
-      this.log('error', 'JSON parsing failed', {
+      this.log('error', 'Analysis parsing failed', {
         error: parseError,
         content: response.content.substring(0, 500),
       });
       console.warn('[ResearchAgent] Parse error, using fallback analysis');
       return this.getFallbackAnalysis(input.keyword);
     }
+  }
+
+  private parseStructuredText(content: string, keyword: string): Omit<ResearchOutput, 'keyword' | 'region' | 'externalReferences' | 'executionInfo'> {
+    const searchIntent = this.extractSearchIntent(content);
+    const intentConfidence = 0.8;
+
+    const contentLengthMatch = content.match(/(\d+)\s*-\s*(\d+)\s*字/);
+    const minLength = contentLengthMatch ? parseInt(contentLengthMatch[1]) : 1000;
+    const maxLength = contentLengthMatch ? parseInt(contentLengthMatch[2]) : 3000;
+    const avgLength = Math.floor((minLength + maxLength) / 2);
+
+    const titlePatterns = this.extractListItems(content, /標題模式|標題結構/);
+    const structurePatterns = this.extractListItems(content, /內容結構|段落組織/);
+    const commonTopics = this.extractListItems(content, /常見主題|子主題/);
+    const commonFormats = this.extractListItems(content, /常見格式|格式類型/);
+    const contentGaps = this.extractListItems(content, /內容缺口|缺乏|沒有/);
+    const relatedKeywords = this.extractListItems(content, /相關關鍵字|相關搜尋|LSI/);
+
+    return {
+      searchIntent,
+      intentConfidence,
+      topRankingFeatures: {
+        contentLength: { min: minLength, max: maxLength, avg: avgLength },
+        titlePatterns: titlePatterns.length > 0 ? titlePatterns : [`${keyword}完整指南`, `如何${keyword}`],
+        structurePatterns: structurePatterns.length > 0 ? structurePatterns : ['介紹', '步驟說明', '總結'],
+        commonTopics: commonTopics.length > 0 ? commonTopics : ['基礎概念', '實用技巧'],
+        commonFormats: commonFormats.length > 0 ? commonFormats : ['教學文章', '指南'],
+      },
+      contentGaps: contentGaps.length > 0 ? contentGaps : ['缺少實際案例', '缺少詳細步驟'],
+      competitorAnalysis: [],
+      recommendedStrategy: this.extractStrategy(content, keyword),
+      relatedKeywords: relatedKeywords.length > 0 ? relatedKeywords : [`${keyword}教學`, `${keyword}技巧`],
+    };
+  }
+
+  private extractSearchIntent(content: string): 'informational' | 'commercial' | 'transactional' | 'navigational' {
+    const lowerContent = content.toLowerCase();
+    if (lowerContent.includes('transactional') || lowerContent.includes('交易型')) return 'transactional';
+    if (lowerContent.includes('commercial') || lowerContent.includes('商業型')) return 'commercial';
+    if (lowerContent.includes('navigational') || lowerContent.includes('導航型')) return 'navigational';
+    return 'informational';
+  }
+
+  private extractListItems(content: string, pattern: RegExp): string[] {
+    const section = content.split(/\d+\./g).find(s => pattern.test(s));
+    if (!section) return [];
+
+    const items: string[] = [];
+    const lines = section.split('\n');
+    for (const line of lines) {
+      const match = line.match(/[-•]\s*(.+)/);
+      if (match && match[1].trim()) {
+        items.push(match[1].trim().replace(/[:：].*$/, ''));
+      }
+    }
+    return items.slice(0, 5);
+  }
+
+  private extractStrategy(content: string, keyword: string): string {
+    const strategyMatch = content.match(/推薦策略|建議策略[\s\S]{0,300}/);
+    if (strategyMatch) {
+      return strategyMatch[0].replace(/推薦策略|建議策略[：:]?\s*/, '').trim().substring(0, 200);
+    }
+    return `創建全面且實用的${keyword}內容，包含基礎知識和實用案例`;
   }
 
   private getFallbackAnalysis(keyword: string): Omit<ResearchOutput, 'keyword' | 'region' | 'externalReferences' | 'executionInfo'> {
