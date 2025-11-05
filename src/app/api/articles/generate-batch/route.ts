@@ -79,16 +79,16 @@ export async function POST(request: NextRequest) {
           simple_processing_model: 'deepseek-chat',
           image_model: 'gpt-image-1-mini',
           research_temperature: 0.7,
-          research_max_tokens: 16000,
+          research_max_tokens: 64000,
           strategy_temperature: 0.7,
-          strategy_max_tokens: 16000,
+          strategy_max_tokens: 64000,
           writing_temperature: 0.7,
-          writing_max_tokens: 16000,
+          writing_max_tokens: 64000,
           image_size: '1024x1024',
           image_count: 3,
           meta_enabled: true,
           meta_temperature: 0.7,
-          meta_max_tokens: 16000,
+          meta_max_tokens: 64000,
         });
 
       if (agentConfigError) {

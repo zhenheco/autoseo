@@ -560,9 +560,9 @@ export class ParallelOrchestrator {
       research_temperature: agentConfig.research_temperature || 0.7,
       strategy_temperature: agentConfig.strategy_temperature || 0.7,
       writing_temperature: agentConfig.writing_temperature || 0.7,
-      research_max_tokens: agentConfig.research_max_tokens || 16000,
-      strategy_max_tokens: agentConfig.strategy_max_tokens || 16000,
-      writing_max_tokens: agentConfig.writing_max_tokens || 16000,
+      research_max_tokens: agentConfig.research_max_tokens || 64000,
+      strategy_max_tokens: agentConfig.strategy_max_tokens || 64000,
+      writing_max_tokens: agentConfig.writing_max_tokens || 64000,
 
       image_size: agentConfig.image_size || '1024x1024',
       image_count: agentConfig.image_count || 3,
@@ -672,15 +672,15 @@ export class ParallelOrchestrator {
       research_temperature: 0.7,
       strategy_temperature: 0.7,
       writing_temperature: 0.7,
-      research_max_tokens: 16000,
-      strategy_max_tokens: 16000,
-      writing_max_tokens: 16000,
+      research_max_tokens: 64000,
+      strategy_max_tokens: 64000,
+      writing_max_tokens: 64000,
       image_size: '1024x1024',
       image_count: 3,
       meta_enabled: true,
       meta_model: 'deepseek-chat',
       meta_temperature: 0.7,
-      meta_max_tokens: 16000,
+      meta_max_tokens: 64000,
     };
   }
 

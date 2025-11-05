@@ -60,7 +60,7 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
       const response = await this.complete(prompt, {
         model: input.model,
         temperature: input.temperature || 0.3,
-        maxTokens: Math.min(input.maxTokens || 16000, 500),
+        maxTokens: Math.min(input.maxTokens || 64000, 1000),
         format: 'json',
       });
 
@@ -179,7 +179,7 @@ ${topGaps.join('\n')}
       apiResponse = await this.complete(prompt, {
         model: input.model,
         temperature: input.temperature || 0.5,
-        maxTokens: Math.floor((input.maxTokens || 16000) * 0.8),
+        maxTokens: Math.floor((input.maxTokens || 64000) * 0.9),
         format: 'json',
       });
 

@@ -71,7 +71,7 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
     const response = await this.complete(prompt, {
       model: input.model,
       temperature: input.temperature || 0.3,
-      maxTokens: input.maxTokens || 16000,
+      maxTokens: input.maxTokens || 64000,
     });
 
     try {
