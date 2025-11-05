@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { OAuthButtons, OAuthDivider } from '@/components/auth/oauth-buttons'
 import { Sparkles } from 'lucide-react'
 
 export default async function LoginPage({
@@ -44,6 +45,11 @@ export default async function LoginPage({
               {params.error}
             </div>
           )}
+
+          {/* OAuth 登入按鈕 */}
+          <OAuthButtons redirectTo="/dashboard" actionText="登入" />
+
+          <OAuthDivider />
 
           <form action={login} className="space-y-5">
             <div className="space-y-2">

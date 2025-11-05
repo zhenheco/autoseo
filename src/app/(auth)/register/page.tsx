@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
+import { OAuthButtons, OAuthDivider } from '@/components/auth/oauth-buttons'
 import { Sparkles } from 'lucide-react'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
@@ -113,6 +114,21 @@ export default async function RegisterPage({
           {params.error && (
             <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400 rounded-xl text-sm font-medium">
               {params.error}
+            </div>
+          )}
+
+          {/* OAuth 註冊按鈕（只在非邀請註冊時顯示） */}
+          {!params.invitation && (
+            <>
+              <OAuthButtons redirectTo="/dashboard" actionText="註冊" />
+              <OAuthDivider />
+            </>
+          )}
+
+          {/* 邀請註冊提示 */}
+          {params.invitation && (
+            <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-400 rounded-xl text-sm">
+              您正在透過邀請連結註冊，請使用受邀的電子郵件地址。
             </div>
           )}
 
