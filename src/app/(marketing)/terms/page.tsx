@@ -142,7 +142,7 @@ export default function TermsPage() {
                 如對服務條款有任何疑問，請聯絡：
               </p>
               <p className="text-slate-600 dark:text-slate-300 mt-2">
-                Email: support@auto-pilot-seo.com
+                Email: service@zhenhe-dm.com
               </p>
             </section>
 
