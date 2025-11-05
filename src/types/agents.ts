@@ -119,6 +119,7 @@ export interface StrategyInput {
   researchData: ResearchOutput;
   brandVoice: BrandVoice;
   targetWordCount: number;
+  title?: string;
   model: string;
   temperature: number;
   maxTokens: number;

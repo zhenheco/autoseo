@@ -7,9 +7,9 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
   }
 
   protected async process(input: StrategyInput): Promise<StrategyOutput> {
-    const titleOptions = await this.generateTitleOptions(input);
+    const selectedTitle = input.title || input.researchData.keyword;
 
-    const outline = await this.generateOutline(input, titleOptions[0]);
+    const outline = await this.generateOutline(input, selectedTitle);
 
     const sectionDistribution = this.calculateWordDistribution(
       input.targetWordCount,
@@ -17,8 +17,8 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
     );
 
     return {
-      titleOptions,
-      selectedTitle: titleOptions[0],
+      titleOptions: [selectedTitle],
+      selectedTitle,
       outline,
       targetWordCount: input.targetWordCount,
       sectionWordDistribution: sectionDistribution,
@@ -165,38 +165,31 @@ ${topGaps.join('\n')}
 4. 字數分配要合理，總和應接近目標字數
 
 ## 輸出格式
-請在推理後，輸出以下 JSON 格式：
-{
-  "reasoning_summary": "簡要說明大綱設計的策略思考",
-  "outline": {
-    "introduction": {
-      "hook": "吸引讀者的開場",
-      "context": "背景說明",
-      "thesis": "核心論點",
-      "wordCount": 200
-    },
-    "mainSections": [
-      {
-        "heading": "主要段落標題",
-        "subheadings": ["子標題1"],
-        "keyPoints": ["重點1"],
-        "targetWordCount": 400,
-        "keywords": ["相關關鍵字"]
-      }
-    ],
-    "conclusion": {
-      "summary": "總結重點",
-      "callToAction": "行動呼籲",
-      "wordCount": 150
-    },
-    "faq": [
-      {
-        "question": "常見問題",
-        "answerOutline": "答案大綱"
-      }
-    ]
-  }
-}`;
+請用結構化的方式回答，按以下格式組織：
+
+### 前言 (Introduction)
+- 開場鉤子：[吸引讀者的開場方式]
+- 背景說明：[提供相關背景資訊]
+- 核心論點：[文章主要觀點]
+- 字數：約 200 字
+
+### 主要段落 (Main Sections)
+針對每個主要段落（最多4個），請說明：
+- 段落標題：[段落主題]
+- 子標題：[列出子標題]
+- 關鍵重點：[列出3個重點]
+- 目標字數：[建議字數]
+- 相關關鍵字：[列出相關關鍵字]
+
+### 結論 (Conclusion)
+- 重點總結：[回顧核心要點]
+- 行動呼籲：[鼓勵讀者採取行動]
+- 字數：約 150 字
+
+### 常見問題 (FAQ)
+列出 1-2 個相關問題和答案大綱。
+
+請以清晰分段的方式回答，每個項目用明確的標記區分。`;
 
     let apiResponse;
     try {
@@ -204,7 +197,6 @@ ${topGaps.join('\n')}
         model: input.model,
         temperature: input.temperature || 0.5,
         maxTokens: Math.floor((input.maxTokens || 64000) * 0.9),
-        format: 'json',
       });
 
       if (!apiResponse.content || apiResponse.content.trim() === '') {
@@ -212,70 +204,130 @@ ${topGaps.join('\n')}
         return this.getFallbackOutline(input.researchData.keyword, input.targetWordCount);
       }
 
-      let content = apiResponse.content.trim();
+      const content = apiResponse.content.trim();
 
-      // 嘗試解析新格式（包含 reasoning_summary 和 outline）
-      let parsed;
-      try {
-        const fullMatch = content.match(/\{[\s\S]*"outline"[\s\S]*\}/);
-        if (fullMatch) {
-          parsed = JSON.parse(fullMatch[0]);
-          if (parsed.outline) {
-            console.log('[StrategyAgent] Parsed outline with reasoning:', {
-              reasoning: parsed.reasoning_summary?.substring(0, 100),
-              hasSections: !!parsed.outline.mainSections
-            });
-            content = JSON.stringify(parsed.outline);
-          }
-        }
-      } catch (e) {
-        console.warn('[StrategyAgent] Failed to parse new format, trying legacy:', e);
-      }
-
-      // 回退到舊格式
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
-        content = jsonMatch[0];
-      }
-
-      let jsonStr = content.replace(/,(\s*[}\]])/g, '$1');
-
-      if (!jsonStr.endsWith('}')) {
-        const lastBrace = jsonStr.lastIndexOf('}');
-        const lastBracket = jsonStr.lastIndexOf(']');
-        const lastValid = Math.max(lastBrace, lastBracket);
-        if (lastValid > 0) {
-          jsonStr = jsonStr.substring(0, lastValid + 1);
+        try {
+          const parsed = JSON.parse(jsonMatch[0]);
+          if (parsed.outline?.mainSections) {
+            console.log('[StrategyAgent] Successfully parsed outline from JSON');
+            return parsed.outline;
+          }
+          if (parsed.mainSections) {
+            console.log('[StrategyAgent] Successfully parsed outline from direct JSON');
+            return parsed;
+          }
+        } catch (e) {
+          console.warn('[StrategyAgent] JSON parsing failed, parsing structured text:', e);
         }
       }
 
-      const openBraces = (jsonStr.match(/\{/g) || []).length;
-      const closeBraces = (jsonStr.match(/\}/g) || []).length;
-      const openBrackets = (jsonStr.match(/\[/g) || []).length;
-      const closeBrackets = (jsonStr.match(/\]/g) || []).length;
-
-      if (openBrackets > closeBrackets) {
-        jsonStr += ']'.repeat(openBrackets - closeBrackets);
-      }
-      if (openBraces > closeBraces) {
-        jsonStr += '}'.repeat(openBraces - closeBraces);
-      }
-
-      const outline = JSON.parse(jsonStr);
-
-      if (!outline.mainSections || outline.mainSections.length === 0) {
-        console.warn('[StrategyAgent] Invalid outline structure, using fallback');
-        return this.getFallbackOutline(input.researchData.keyword, input.targetWordCount);
-      }
-
-      return outline;
+      return this.parseOutlineText(content, input.researchData.keyword, input.targetWordCount);
 
     } catch (error) {
       console.error('[StrategyAgent] Outline generation failed:', error);
       console.error('[StrategyAgent] Response (first 500):', apiResponse?.content?.substring(0, 500));
-      console.error('[StrategyAgent] Response (last 300):', apiResponse?.content?.substring(Math.max(0, (apiResponse?.content?.length || 0) - 300)));
       return this.getFallbackOutline(input.researchData.keyword, input.targetWordCount);
     }
+  }
+
+  private parseOutlineText(content: string, keyword: string, targetWordCount: number): StrategyOutput['outline'] {
+    const introMatch = content.match(/### 前言[\s\S]*?(?=###|$)/);
+    const mainMatch = content.match(/### 主要段落[\s\S]*?(?=### 結論|$)/);
+    const conclusionMatch = content.match(/### 結論[\s\S]*?(?=### 常見問題|$)/);
+    const faqMatch = content.match(/### 常見問題[\s\S]*$/);
+
+    const extractListItems = (text: string): string[] => {
+      const items: string[] = [];
+      const lines = text.split('\n');
+      for (const line of lines) {
+        const match = line.match(/[-•]\s*(.+?)[：:]\s*(.+)/);
+        if (match && match[2]) {
+          items.push(match[2].trim().replace(/\[|\]/g, ''));
+        }
+      }
+      return items;
+    };
+
+    const introduction = introMatch ? {
+      hook: extractListItems(introMatch[0])[0] || `${keyword}是什麼？為什麼重要？`,
+      context: extractListItems(introMatch[0])[1] || `${keyword}的基本概念與應用場景`,
+      thesis: extractListItems(introMatch[0])[2] || `本文將深入探討${keyword}的各個面向`,
+      wordCount: 200,
+    } : {
+      hook: `${keyword}是什麼？為什麼重要？`,
+      context: `${keyword}的基本概念與應用場景`,
+      thesis: `本文將深入探討${keyword}的各個面向`,
+      wordCount: 200,
+    };
+
+    const mainSections: Array<{
+      heading: string;
+      subheadings: string[];
+      keyPoints: string[];
+      targetWordCount: number;
+      keywords: string[];
+    }> = [];
+
+    if (mainMatch) {
+      const sectionBlocks = mainMatch[0].split(/- 段落標題/).slice(1);
+      const sectionWordCount = Math.floor((targetWordCount - 350) / Math.min(sectionBlocks.length, 4));
+
+      for (let i = 0; i < Math.min(sectionBlocks.length, 4); i++) {
+        const block = sectionBlocks[i];
+        const headingMatch = block.match(/[：:]\s*(.+?)(?:\n|$)/);
+        const subheadingsMatch = block.match(/- 子標題[：:]\s*(.+?)(?:\n|$)/);
+        const keyPointsMatch = block.match(/- 關鍵重點[：:]\s*(.+?)(?:\n|$)/);
+        const keywordsMatch = block.match(/- 相關關鍵字[：:]\s*(.+?)(?:\n|$)/);
+
+        mainSections.push({
+          heading: headingMatch ? headingMatch[1].trim().replace(/\[|\]/g, '') : `${keyword}重點${i + 1}`,
+          subheadings: subheadingsMatch ? subheadingsMatch[1].split(/[、,，]/).map(s => s.trim().replace(/\[|\]/g, '')).slice(0, 2) : [],
+          keyPoints: keyPointsMatch ? keyPointsMatch[1].split(/[、,，]/).map(s => s.trim().replace(/\[|\]/g, '')).slice(0, 3) : [],
+          targetWordCount: sectionWordCount,
+          keywords: keywordsMatch ? keywordsMatch[1].split(/[、,，]/).map(s => s.trim().replace(/\[|\]/g, '')).slice(0, 3) : [keyword],
+        });
+      }
+    }
+
+    if (mainSections.length === 0) {
+      console.warn('[StrategyAgent] No main sections parsed, using fallback');
+      return this.getFallbackOutline(keyword, targetWordCount);
+    }
+
+    const conclusion = conclusionMatch ? {
+      summary: extractListItems(conclusionMatch[0])[0] || `${keyword}的核心要點回顧`,
+      callToAction: extractListItems(conclusionMatch[0])[1] || `開始實踐${keyword}，提升您的能力`,
+      wordCount: 150,
+    } : {
+      summary: `${keyword}的核心要點回顧`,
+      callToAction: `開始實踐${keyword}，提升您的能力`,
+      wordCount: 150,
+    };
+
+    const faq: Array<{ question: string; answerOutline: string }> = [];
+    if (faqMatch) {
+      const faqLines = faqMatch[0].split('\n').filter(line => line.trim());
+      for (let i = 0; i < faqLines.length && faq.length < 2; i++) {
+        const match = faqLines[i].match(/[?？](.+)/);
+        if (match) {
+          faq.push({
+            question: faqLines[i].trim(),
+            answerOutline: faqLines[i + 1]?.trim() || '詳細說明',
+          });
+        }
+      }
+    }
+
+    if (faq.length === 0) {
+      faq.push(
+        { question: `${keyword}適合新手嗎？`, answerOutline: '適合，本文從基礎講起' },
+        { question: `學習${keyword}需要多久？`, answerOutline: '視個人情況，通常 1-3 個月' }
+      );
+    }
+
+    return { introduction, mainSections, conclusion, faq };
   }
 
   private getFallbackOutline(keyword: string, targetWordCount: number): StrategyOutput['outline'] {

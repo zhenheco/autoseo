@@ -28,27 +28,32 @@ export const BUSINESS_RULES = {
       research: {
         defaultModel: 'deepseek/deepseek-reasoner',
         temperature: 0.3,
-        maxTokens: 4000,
+        maxTokens: 64000,
       },
       strategy: {
         defaultModel: 'deepseek/deepseek-chat',
         temperature: 0.7,
-        maxTokens: 4000,
+        maxTokens: 64000,
       },
       outline: {
         defaultModel: 'deepseek/deepseek-chat',
         temperature: 0.7,
-        maxTokens: 8000,
+        maxTokens: 64000,
+      },
+      writing: {
+        defaultModel: 'deepseek/deepseek-chat',
+        temperature: 0.7,
+        maxTokens: 64000,
       },
       seoOptimization: {
         defaultModel: 'openai/gpt-4o',
         temperature: 0.5,
-        maxTokens: 2000,
+        maxTokens: 16000,
       },
       metaGeneration: {
         defaultModel: 'openai/gpt-4o-mini',
         temperature: 0.3,
-        maxTokens: 1000,
+        maxTokens: 4000,
       },
     },
   },
