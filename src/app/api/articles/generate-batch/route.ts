@@ -154,7 +154,7 @@ export async function POST(request: NextRequest) {
         articleJobId,
         companyId: membership.company_id,
         websiteId,
-        keyword: title,
+        title: title,
         targetLanguage: options?.targetLanguage,
         wordCount: parseInt(options?.wordCount || '1500'),
         imageCount: parseInt(options?.imageCount || '3'),

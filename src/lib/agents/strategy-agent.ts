@@ -7,7 +7,7 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
   }
 
   protected async process(input: StrategyInput): Promise<StrategyOutput> {
-    const selectedTitle = input.title || input.researchData.keyword;
+    const selectedTitle = input.title || input.researchData.title;
 
     const outline = await this.generateOutline(input, selectedTitle);
 
@@ -46,15 +46,15 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
   }
 
   private async generateTitleOptions(input: StrategyInput): Promise<string[]> {
-    const prompt = `你是 SEO 專家。為關鍵字「${input.researchData.keyword}」生成 3 個標題。
+    const prompt = `你是 SEO 專家。為文章標題「${input.researchData.title}」生成 3 個標題。
 
 ## 推理步驟
-1. 分析關鍵字意圖和目標受眾
+1. 分析標題意圖和目標受眾
 2. 考慮 SEO 最佳實踐（包含關鍵字、適當長度）
 3. 評估標題吸引力和點擊率潛力
 
 ## 要求
-- 包含關鍵字「${input.researchData.keyword}」
+- 包含關鍵字「${input.researchData.title}」
 - 50-60 字元
 - 使用數字或問句提升吸引力
 
@@ -80,7 +80,7 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
 
       if (!response.content || response.content.trim() === '') {
         console.warn('[StrategyAgent] Empty response, using fallback titles');
-        return this.getFallbackTitles(input.researchData.keyword);
+        return this.getFallbackTitles(input.researchData.title);
       }
 
       const content = response.content.trim();
@@ -116,19 +116,19 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
       }
 
       console.warn('[StrategyAgent] Invalid title format, using fallback');
-      return this.getFallbackTitles(input.researchData.keyword);
+      return this.getFallbackTitles(input.researchData.title);
 
     } catch (error) {
       console.error('[StrategyAgent] Title generation failed:', error);
-      return this.getFallbackTitles(input.researchData.keyword);
+      return this.getFallbackTitles(input.researchData.title);
     }
   }
 
-  private getFallbackTitles(keyword: string): string[] {
+  private getFallbackTitles(title: string): string[] {
     return [
-      `${keyword}完整指南：從入門到精通`,
-      `2025 最新${keyword}教學：實用技巧大公開`,
-      `${keyword}全攻略：專家推薦的 10 個關鍵重點`,
+      `${title}完整指南：從入門到精通`,
+      `2025 最新${title}教學：實用技巧大公開`,
+      `${title}全攻略：專家推薦的 10 個關鍵重點`,
     ];
   }
 
@@ -139,7 +139,7 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
     const topCompetitors = input.researchData.competitorAnalysis.slice(0, 3);
     const topGaps = input.researchData.contentGaps.slice(0, 3);
 
-    const prompt = `為「${input.researchData.keyword}」生成文章大綱。
+    const prompt = `為「${selectedTitle}」生成文章大綱。
 
 ## 背景資訊
 - 標題：${selectedTitle}
@@ -201,7 +201,7 @@ ${topGaps.join('\n')}
 
       if (!apiResponse.content || apiResponse.content.trim() === '') {
         console.warn('[StrategyAgent] Empty outline response, using fallback');
-        return this.getFallbackOutline(input.researchData.keyword, input.targetWordCount);
+        return this.getFallbackOutline(selectedTitle, input.targetWordCount);
       }
 
       const content = apiResponse.content.trim();
@@ -223,16 +223,16 @@ ${topGaps.join('\n')}
         }
       }
 
-      return this.parseOutlineText(content, input.researchData.keyword, input.targetWordCount);
+      return this.parseOutlineText(content, selectedTitle, input.targetWordCount);
 
     } catch (error) {
       console.error('[StrategyAgent] Outline generation failed:', error);
       console.error('[StrategyAgent] Response (first 500):', apiResponse?.content?.substring(0, 500));
-      return this.getFallbackOutline(input.researchData.keyword, input.targetWordCount);
+      return this.getFallbackOutline(selectedTitle, input.targetWordCount);
     }
   }
 
-  private parseOutlineText(content: string, keyword: string, targetWordCount: number): StrategyOutput['outline'] {
+  private parseOutlineText(content: string, title: string, targetWordCount: number): StrategyOutput['outline'] {
     const introMatch = content.match(/### 前言[\s\S]*?(?=###|$)/);
     const mainMatch = content.match(/### 主要段落[\s\S]*?(?=### 結論|$)/);
     const conclusionMatch = content.match(/### 結論[\s\S]*?(?=### 常見問題|$)/);
@@ -251,14 +251,14 @@ ${topGaps.join('\n')}
     };
 
     const introduction = introMatch ? {
-      hook: extractListItems(introMatch[0])[0] || `${keyword}是什麼？為什麼重要？`,
-      context: extractListItems(introMatch[0])[1] || `${keyword}的基本概念與應用場景`,
-      thesis: extractListItems(introMatch[0])[2] || `本文將深入探討${keyword}的各個面向`,
+      hook: extractListItems(introMatch[0])[0] || `${title}為什麼重要？`,
+      context: extractListItems(introMatch[0])[1] || `${title}的背景說明`,
+      thesis: extractListItems(introMatch[0])[2] || `本文將深入探討${title}的各個面向`,
       wordCount: 200,
     } : {
-      hook: `${keyword}是什麼？為什麼重要？`,
-      context: `${keyword}的基本概念與應用場景`,
-      thesis: `本文將深入探討${keyword}的各個面向`,
+      hook: `${title}為什麼重要？`,
+      context: `${title}的背景說明`,
+      thesis: `本文將深入探討${title}的各個面向`,
       wordCount: 200,
     };
 
@@ -282,27 +282,27 @@ ${topGaps.join('\n')}
         const keywordsMatch = block.match(/- 相關關鍵字[：:]\s*(.+?)(?:\n|$)/);
 
         mainSections.push({
-          heading: headingMatch ? headingMatch[1].trim().replace(/\[|\]/g, '') : `${keyword}重點${i + 1}`,
+          heading: headingMatch ? headingMatch[1].trim().replace(/\[|\]/g, '') : `${title}重點${i + 1}`,
           subheadings: subheadingsMatch ? subheadingsMatch[1].split(/[、,，]/).map(s => s.trim().replace(/\[|\]/g, '')).slice(0, 2) : [],
           keyPoints: keyPointsMatch ? keyPointsMatch[1].split(/[、,，]/).map(s => s.trim().replace(/\[|\]/g, '')).slice(0, 3) : [],
           targetWordCount: sectionWordCount,
-          keywords: keywordsMatch ? keywordsMatch[1].split(/[、,，]/).map(s => s.trim().replace(/\[|\]/g, '')).slice(0, 3) : [keyword],
+          keywords: keywordsMatch ? keywordsMatch[1].split(/[、,，]/).map(s => s.trim().replace(/\[|\]/g, '')).slice(0, 3) : [title],
         });
       }
     }
 
     if (mainSections.length === 0) {
       console.warn('[StrategyAgent] No main sections parsed, using fallback');
-      return this.getFallbackOutline(keyword, targetWordCount);
+      return this.getFallbackOutline(title, targetWordCount);
     }
 
     const conclusion = conclusionMatch ? {
-      summary: extractListItems(conclusionMatch[0])[0] || `${keyword}的核心要點回顧`,
-      callToAction: extractListItems(conclusionMatch[0])[1] || `開始實踐${keyword}，提升您的能力`,
+      summary: extractListItems(conclusionMatch[0])[0] || `${title}的核心要點回顧`,
+      callToAction: extractListItems(conclusionMatch[0])[1] || `開始實踐${title}，提升您的能力`,
       wordCount: 150,
     } : {
-      summary: `${keyword}的核心要點回顧`,
-      callToAction: `開始實踐${keyword}，提升您的能力`,
+      summary: `${title}的核心要點回顧`,
+      callToAction: `開始實踐${title}，提升您的能力`,
       wordCount: 150,
     };
 
@@ -322,60 +322,60 @@ ${topGaps.join('\n')}
 
     if (faq.length === 0) {
       faq.push(
-        { question: `${keyword}適合新手嗎？`, answerOutline: '適合，本文從基礎講起' },
-        { question: `學習${keyword}需要多久？`, answerOutline: '視個人情況，通常 1-3 個月' }
+        { question: `${title}適合新手嗎？`, answerOutline: '適合，本文從基礎講起' },
+        { question: `學習${title}需要多久？`, answerOutline: '視個人情況，通常 1-3 個月' }
       );
     }
 
     return { introduction, mainSections, conclusion, faq };
   }
 
-  private getFallbackOutline(keyword: string, targetWordCount: number): StrategyOutput['outline'] {
+  private getFallbackOutline(title: string, targetWordCount: number): StrategyOutput['outline'] {
     const sectionCount = 3;
     const sectionWordCount = Math.floor((targetWordCount - 350) / sectionCount);
 
     return {
       introduction: {
-        hook: `${keyword}是什麼？為什麼重要？`,
-        context: `${keyword}的基本概念與應用場景`,
-        thesis: `本文將深入探討${keyword}的各個面向`,
+        hook: `${title}是什麼？為什麼重要？`,
+        context: `${title}的基本概念與應用場景`,
+        thesis: `本文將深入探討${title}的各個面向`,
         wordCount: 200,
       },
       mainSections: [
         {
-          heading: `${keyword}基礎知識`,
+          heading: `${title}基礎知識`,
           subheadings: ['核心概念', '重要術語'],
           keyPoints: ['定義與原理', '應用範圍', '基本特點'],
           targetWordCount: sectionWordCount,
-          keywords: [keyword, '基礎', '入門'],
+          keywords: [title, '基礎', '入門'],
         },
         {
-          heading: `${keyword}實用技巧`,
+          heading: `${title}實用技巧`,
           subheadings: ['進階方法', '常見問題'],
           keyPoints: ['實用策略', '避免錯誤', '最佳實踐'],
           targetWordCount: sectionWordCount,
-          keywords: [keyword, '技巧', '方法'],
+          keywords: [title, '技巧', '方法'],
         },
         {
-          heading: `${keyword}案例分析`,
+          heading: `${title}案例分析`,
           subheadings: ['成功案例', '經驗分享'],
           keyPoints: ['實際應用', '效果評估', '經驗總結'],
           targetWordCount: sectionWordCount,
-          keywords: [keyword, '案例', '實戰'],
+          keywords: [title, '案例', '實戰'],
         },
       ],
       conclusion: {
-        summary: `${keyword}的核心要點回顧`,
-        callToAction: `開始實踐${keyword}，提升您的能力`,
+        summary: `${title}的核心要點回顧`,
+        callToAction: `開始實踐${title}，提升您的能力`,
         wordCount: 150,
       },
       faq: [
         {
-          question: `${keyword}適合新手嗎？`,
+          question: `${title}適合新手嗎？`,
           answerOutline: '適合，本文從基礎講起',
         },
         {
-          question: `學習${keyword}需要多久？`,
+          question: `學習${title}需要多久？`,
           answerOutline: '視個人情況，通常 1-3 個月',
         },
       ],
@@ -391,7 +391,7 @@ ${topGaps.join('\n')}
     }
 
     try {
-      const prompt = `為關鍵字 "${input.researchData.keyword}" 生成 5 個 LSI 關鍵字。
+      const prompt = `為文章標題 "${input.researchData.title}" 生成 5 個 LSI 關鍵字。
 
 輸出格式（必須是純 JSON 陣列）:
 ["關鍵字1", "關鍵字2", "關鍵字3", "關鍵字4", "關鍵字5"]`;

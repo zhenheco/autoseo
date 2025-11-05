@@ -7,9 +7,11 @@ export async function POST(request: NextRequest) {
   try {
     const { keyword, title, mode } = await request.json();
 
-    if (!keyword || typeof keyword !== 'string') {
+    const articleTitle = title || keyword;
+
+    if (!articleTitle || typeof articleTitle !== 'string') {
       return NextResponse.json(
-        { error: 'Keyword is required' },
+        { error: 'Title is required' },
         { status: 400 }
       );
     }
@@ -114,11 +116,11 @@ export async function POST(request: NextRequest) {
         company_id: membership.company_id,
         website_id: websiteId,
         user_id: user.id,
-        keywords: [keyword],
+        keywords: [articleTitle],
         status: 'pending',
         metadata: {
           mode: mode || 'single',
-          title: title || null,
+          title: articleTitle,
         },
       });
 
@@ -136,7 +138,7 @@ export async function POST(request: NextRequest) {
       articleJobId,
       companyId: membership.company_id,
       websiteId,
-      keyword,
+      title: articleTitle,
     }).catch((error) => {
       console.error('Article generation error:', error);
     });

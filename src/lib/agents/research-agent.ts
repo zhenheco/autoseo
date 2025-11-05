@@ -8,12 +8,12 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
   }
 
   protected async process(input: ResearchInput): Promise<ResearchOutput> {
-    const analysis = await this.analyzeKeyword(input);
+    const analysis = await this.analyzeTitle(input);
 
-    const externalReferences = await this.fetchExternalReferences(input.keyword);
+    const externalReferences = await this.fetchExternalReferences(input.title);
 
     return {
-      keyword: input.keyword,
+      title: input.title,
       region: input.region,
       searchIntent: analysis.searchIntent,
       intentConfidence: analysis.intentConfidence,
@@ -27,12 +27,12 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
     };
   }
 
-  private async analyzeKeyword(
+  private async analyzeTitle(
     input: ResearchInput
-  ): Promise<Omit<ResearchOutput, 'keyword' | 'region' | 'externalReferences' | 'executionInfo'>> {
-    const prompt = `你是一位 SEO 專家，請針對關鍵字「${input.keyword}」進行深入分析。
+  ): Promise<Omit<ResearchOutput, 'title' | 'region' | 'externalReferences' | 'executionInfo'>> {
+    const prompt = `你是一位 SEO 專家，請針對文章標題「${input.title}」進行深入分析。
 
-關鍵字: ${input.keyword}
+文章標題: ${input.title}
 地區: ${input.region || 'Taiwan'}
 
 請分析以下項目：
@@ -74,7 +74,7 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
     try {
       if (!response.content || response.content.trim() === '') {
         console.warn('[ResearchAgent] Empty response, using fallback analysis');
-        return this.getFallbackAnalysis(input.keyword);
+        return this.getFallbackAnalysis(input.title);
       }
 
       const content = response.content.trim();
@@ -91,7 +91,7 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
         }
       }
 
-      return this.parseStructuredText(content, input.keyword);
+      return this.parseStructuredText(content, input.title);
 
     } catch (parseError) {
       this.log('error', 'Analysis parsing failed', {
@@ -99,11 +99,11 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
         content: response.content.substring(0, 500),
       });
       console.warn('[ResearchAgent] Parse error, using fallback analysis');
-      return this.getFallbackAnalysis(input.keyword);
+      return this.getFallbackAnalysis(input.title);
     }
   }
 
-  private parseStructuredText(content: string, keyword: string): Omit<ResearchOutput, 'keyword' | 'region' | 'externalReferences' | 'executionInfo'> {
+  private parseStructuredText(content: string, title: string): Omit<ResearchOutput, 'title' | 'region' | 'externalReferences' | 'executionInfo'> {
     const searchIntent = this.extractSearchIntent(content);
     const intentConfidence = 0.8;
 
@@ -124,15 +124,15 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
       intentConfidence,
       topRankingFeatures: {
         contentLength: { min: minLength, max: maxLength, avg: avgLength },
-        titlePatterns: titlePatterns.length > 0 ? titlePatterns : [`${keyword}完整指南`, `如何${keyword}`],
+        titlePatterns: titlePatterns.length > 0 ? titlePatterns : [title, `${title}完整指南`],
         structurePatterns: structurePatterns.length > 0 ? structurePatterns : ['介紹', '步驟說明', '總結'],
         commonTopics: commonTopics.length > 0 ? commonTopics : ['基礎概念', '實用技巧'],
         commonFormats: commonFormats.length > 0 ? commonFormats : ['教學文章', '指南'],
       },
       contentGaps: contentGaps.length > 0 ? contentGaps : ['缺少實際案例', '缺少詳細步驟'],
       competitorAnalysis: [],
-      recommendedStrategy: this.extractStrategy(content, keyword),
-      relatedKeywords: relatedKeywords.length > 0 ? relatedKeywords : [`${keyword}教學`, `${keyword}技巧`],
+      recommendedStrategy: this.extractStrategy(content, title),
+      relatedKeywords: relatedKeywords.length > 0 ? relatedKeywords : [`${title}教學`, `${title}技巧`],
     };
   }
 
@@ -159,21 +159,21 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
     return items.slice(0, 5);
   }
 
-  private extractStrategy(content: string, keyword: string): string {
+  private extractStrategy(content: string, title: string): string {
     const strategyMatch = content.match(/推薦策略|建議策略[\s\S]{0,300}/);
     if (strategyMatch) {
       return strategyMatch[0].replace(/推薦策略|建議策略[：:]?\s*/, '').trim().substring(0, 200);
     }
-    return `創建全面且實用的${keyword}內容，包含基礎知識和實用案例`;
+    return `創建全面且實用的「${title}」內容，包含基礎知識和實用案例`;
   }
 
-  private getFallbackAnalysis(keyword: string): Omit<ResearchOutput, 'keyword' | 'region' | 'externalReferences' | 'executionInfo'> {
+  private getFallbackAnalysis(title: string): Omit<ResearchOutput, 'title' | 'region' | 'externalReferences' | 'executionInfo'> {
     return {
       searchIntent: 'informational',
       intentConfidence: 0.7,
       topRankingFeatures: {
         contentLength: { min: 1000, max: 3000, avg: 1500 },
-        titlePatterns: [`${keyword}完整指南`, `${keyword}教學`, `如何使用${keyword}`],
+        titlePatterns: [title, `${title}完整指南`, `${title}教學`],
         structurePatterns: ['介紹', '步驟說明', '常見問題', '總結'],
         commonTopics: ['基礎概念', '實用技巧', '進階應用'],
         commonFormats: ['教學文章', '指南', '列表文章'],
@@ -181,8 +181,8 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
       contentGaps: ['缺少實際案例', '缺少詳細步驟', '缺少常見問題解答'],
       competitorAnalysis: [
         {
-          url: `https://example.com/${keyword}`,
-          title: `${keyword}相關內容`,
+          url: `https://example.com/articles`,
+          title: `${title}相關內容`,
           position: 1,
           domain: 'example.com',
           estimatedWordCount: 1500,
@@ -191,16 +191,16 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
           uniqueAngles: ['實用技巧', '案例分析'],
         },
       ],
-      recommendedStrategy: `創建全面且實用的${keyword}指南，包含基礎概念、實用技巧和案例分析`,
-      relatedKeywords: [`${keyword}教學`, `${keyword}技巧`, `${keyword}入門`, `如何${keyword}`],
+      recommendedStrategy: `創建全面且實用的「${title}」指南，包含基礎概念、實用技巧和案例分析`,
+      relatedKeywords: [`${title}教學`, `${title}技巧`, `${title}入門`],
     };
   }
 
-  private async fetchExternalReferences(keyword: string): Promise<ExternalReference[]> {
+  private async fetchExternalReferences(title: string): Promise<ExternalReference[]> {
     try {
       const perplexity = getPerplexityClient();
 
-      const query = `找出關於「${keyword}」最權威和最新的 5 個外部來源，要求必須包含實際可訪問的 URL。
+      const query = `找出關於「${title}」最權威和最新的 5 個外部來源，要求必須包含實際可訪問的 URL。
 
 請按以下優先順序尋找：
 1. Wikipedia 或百科全書
@@ -211,7 +211,7 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
 
 對於每個來源，請明確列出完整的 URL 連結。`;
 
-      console.log('[ResearchAgent] 開始 Perplexity 搜尋:', keyword);
+      console.log('[ResearchAgent] 開始 Perplexity 搜尋:', title);
 
       const result = await perplexity.search(query, {
         return_citations: true,
@@ -237,14 +237,14 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
             url,
             title: this.extractTitleFromUrl(url),
             type,
-            description: `關於 ${keyword} 的權威來源`,
+            description: `關於「${title}」的權威來源`,
           });
         }
       }
 
       if (references.length === 0) {
         console.warn('[ResearchAgent] 無法從 Perplexity 獲取引用，使用預設來源');
-        return this.getDefaultExternalReferences(keyword);
+        return this.getDefaultExternalReferences(title);
       }
 
       console.log('[ResearchAgent] 成功獲取', references.length, '個外部引用');
@@ -252,7 +252,7 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
 
     } catch (error) {
       console.error('[ResearchAgent] 獲取外部引用錯誤:', error);
-      return this.getDefaultExternalReferences(keyword);
+      return this.getDefaultExternalReferences(title);
     }
   }
 
@@ -289,13 +289,13 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
     }
   }
 
-  private getDefaultExternalReferences(keyword: string): ExternalReference[] {
+  private getDefaultExternalReferences(title: string): ExternalReference[] {
     return [
       {
-        url: `https://en.wikipedia.org/wiki/${encodeURIComponent(keyword.replace(/ /g, '_'))}`,
-        title: `${keyword} - Wikipedia`,
+        url: `https://en.wikipedia.org/wiki/${encodeURIComponent(title.replace(/ /g, '_'))}`,
+        title: `${title} - Wikipedia`,
         type: 'wikipedia',
-        description: `關於 ${keyword} 的百科全書資訊`,
+        description: `關於「${title}」的百科全書資訊`,
       },
     ];
   }

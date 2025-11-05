@@ -80,7 +80,7 @@ describe('ParallelOrchestrator', () => {
     articleJobId: 'test-job',
     companyId: 'test-company',
     websiteId: 'test-website',
-    keyword: 'test keyword',
+    title: 'test keyword',
     region: 'Taiwan',
   };
 

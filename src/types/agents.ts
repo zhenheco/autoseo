@@ -65,7 +65,7 @@ export interface Keyword {
 
 // Research Agent Types
 export interface ResearchInput {
-  keyword: string;
+  title: string;
   region?: string;
   competitorCount: number;
   model: string;
@@ -82,7 +82,7 @@ export interface SERPResult {
 }
 
 export interface ResearchOutput {
-  keyword: string;
+  title: string;
   region?: string;
   searchIntent: 'informational' | 'commercial' | 'transactional' | 'navigational';
   intentConfidence: number;
@@ -427,7 +427,7 @@ export interface ArticleGenerationInput {
   articleJobId: string;
   companyId: string;
   websiteId: string;
-  keyword: string;
+  title: string;
   region?: string;
   targetLanguage?: string;
   wordCount?: number;

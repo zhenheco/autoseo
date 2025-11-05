@@ -129,7 +129,7 @@ export class BatchProcessor {
           articleJobId: job.id,
           websiteId: job.website_id,
           companyId: job.company_id,
-          keyword: job.keywords[0],
+          title: job.keywords[0],
           region: job.region || 'en-US',
         });
 

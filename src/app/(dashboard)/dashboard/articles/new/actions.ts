@@ -17,7 +17,7 @@ export async function createArticle(formData: FormData) {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        keyword: keyword.trim(),
+        title: keyword.trim(),
       }),
     })
 

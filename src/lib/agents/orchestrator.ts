@@ -78,7 +78,7 @@ export class ParallelOrchestrator {
       const phase1Start = Date.now();
       const researchAgent = new ResearchAgent(aiConfig, context);
       const researchOutput = await researchAgent.execute({
-        keyword: input.keyword,
+        title: input.title,
         region: input.region,
         competitorCount: workflowSettings.competitor_count,
         model: agentConfig.research_model,
@@ -139,7 +139,7 @@ export class ParallelOrchestrator {
       const metaAgent = new MetaAgent(aiConfig, context);
       const metaOutput = await metaAgent.execute({
         content: writingOutput,
-        keyword: input.keyword,
+        keyword: input.title,
         titleOptions: strategyOutput.titleOptions,
         model: agentConfig.meta_model,
         temperature: agentConfig.meta_temperature,
@@ -238,7 +238,7 @@ export class ParallelOrchestrator {
       const categoryOutput = await categoryAgent.generateCategories({
         title: metaOutput.seo.title,
         content: writingOutput.html || writingOutput.markdown || '',
-        keywords: [input.keyword, ...strategyOutput.keywords.slice(0, 5)],
+        keywords: [input.title, ...strategyOutput.keywords.slice(0, 5)],
         outline: strategyOutput,
         language: input.region?.startsWith('zh') ? 'zh-TW' : 'en',
         existingCategories,
@@ -264,7 +264,7 @@ export class ParallelOrchestrator {
             tags: categoryOutput.tags.map(t => t.name),
             seoTitle: metaOutput.seo.title,
             seoDescription: metaOutput.seo.description,
-            focusKeyword: categoryOutput.focusKeywords[0] || input.keyword,
+            focusKeyword: categoryOutput.focusKeywords[0] || input.title,
           }, workflowSettings.auto_publish ? 'publish' : 'draft');
 
           result.wordpress = {
@@ -315,7 +315,7 @@ export class ParallelOrchestrator {
             .from('article_jobs')
             .upsert({
               id: input.articleJobId,
-              keywords: input.keyword || '',
+              keywords: input.title || '',
               status: 'storage_preparing',
               metadata: { message: '準備儲存文章到資料庫' },
             }, {
