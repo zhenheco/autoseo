@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
           research_model: 'deepseek-reasoner',
           complex_processing_model: 'deepseek-reasoner',
           simple_processing_model: 'deepseek-chat',
-          image_model: 'dall-e-3',
+          image_model: 'gpt-image-1-mini',
           research_temperature: 0.7,
           research_max_tokens: 64000,
           strategy_temperature: 0.7,

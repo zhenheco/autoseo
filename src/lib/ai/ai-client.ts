@@ -190,6 +190,49 @@ export class AIClient {
     size?: string;
   }): Promise<{ url: string; revisedPrompt?: string }> {
     try {
+      // 使用 OpenAI 官方 API 處理 gpt-image-1 系列模型
+      if (options.model.includes('gpt-image-1')) {
+        const apiKey = process.env.OPENAI_API_KEY;
+        if (!apiKey) {
+          throw new Error('OPENAI_API_KEY is not set');
+        }
+
+        // OpenAI 圖片 API 的 quality 參數：low, medium, high, auto
+        // 'standard' → 'medium', 'hd' → 'high'
+        const qualityMap: Record<string, string> = {
+          'standard': 'medium',
+          'hd': 'high',
+        };
+        const quality = qualityMap[options.quality || 'standard'] || 'medium';
+
+        const response = await fetch('https://api.openai.com/v1/images/generations', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: options.model,
+            prompt: prompt,
+            n: 1,
+            size: options.size || '1024x1024',
+            quality: quality,
+          }),
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(`OpenAI API error: ${JSON.stringify(error)}`);
+        }
+
+        const data = await response.json();
+        return {
+          url: data.data[0].url,
+          revisedPrompt: data.data[0].revised_prompt || prompt,
+        };
+      }
+
+      // 使用 OpenRouter 處理其他模型（如 dall-e-3）
       const response = await callOpenRouter({
         model: options.model,
         messages: [
