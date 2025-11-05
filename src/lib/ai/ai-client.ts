@@ -95,8 +95,25 @@ export class AIClient {
           console.log(`[AIClient] ✅ Fallback 成功使用: ${currentModel} (原: ${options.model})`);
         }
 
+        const message = response.choices[0].message;
+
+        const content =
+          (message as any).reasoning_content ||
+          message.content ||
+          (message as any).reasoning ||
+          (message as any).thinking ||
+          '';
+
+        console.log('[AIClient] DeepSeek response extraction:', {
+          hasContent: !!message.content,
+          hasReasoningContent: !!(message as any).reasoning_content,
+          hasReasoning: !!(message as any).reasoning,
+          hasThinking: !!(message as any).thinking,
+          contentLength: content?.length || 0,
+        });
+
         return {
-          content: response.choices[0].message.content || '',
+          content,
           usage: {
             promptTokens: response.usage?.prompt_tokens || 0,
             completionTokens: response.usage?.completion_tokens || 0,
