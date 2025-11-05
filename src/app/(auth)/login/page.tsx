@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { login } from './actions'
+import { authenticateUser } from './actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
@@ -29,9 +29,9 @@ export default async function LoginPage({
             </div>
           </div>
           <h1 className="text-3xl font-bold tracking-tight mb-2 text-foreground">
-            歡迎回來
+            歡迎使用 Auto Pilot SEO
           </h1>
-          <p className="text-base text-muted-foreground">登入您的 Auto Pilot SEO 帳號</p>
+          <p className="text-base text-muted-foreground">使用 Google 帳號或 Email 快速開始</p>
         </div>
 
         <div className="bg-card border border-border rounded-2xl p-8 shadow-lg">
@@ -46,12 +46,12 @@ export default async function LoginPage({
             </div>
           )}
 
-          {/* OAuth 登入按鈕 */}
-          <OAuthButtons redirectTo="/dashboard" actionText="登入" />
+          {/* OAuth 登入/註冊按鈕 */}
+          <OAuthButtons redirectTo="/dashboard" actionText="繼續" />
 
           <OAuthDivider />
 
-          <form action={login} className="space-y-5">
+          <form action={authenticateUser} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium text-foreground">
                 電子郵件
@@ -93,25 +93,19 @@ export default async function LoginPage({
               type="submit"
               className="w-full h-11 text-sm font-semibold bg-primary hover:bg-primary/90 transition-colors"
             >
-              登入帳號
+              繼續
             </Button>
           </form>
 
           <div className="mt-6 pt-6 border-t border-border">
-            <p className="text-center text-sm text-muted-foreground">
-              還沒有帳號？{' '}
-              <Link
-                href="/register"
-                className="text-primary hover:text-primary/80 hover:underline underline-offset-4 font-semibold transition-all"
-              >
-                立即註冊
-              </Link>
+            <p className="text-center text-xs text-muted-foreground">
+              首次使用將自動建立帳號 • 已有帳號將直接登入
             </p>
           </div>
         </div>
 
         <p className="text-xs text-center text-muted-foreground mt-8 px-8">
-          登入即表示您同意我們的{' '}
+          繼續即表示您同意我們的{' '}
           <Link href="/terms" className="underline underline-offset-2 hover:text-foreground transition-all">
             服務條款
           </Link>

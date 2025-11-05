@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
-import { OAuthButtons, OAuthDivider } from '@/components/auth/oauth-buttons'
 import { Sparkles } from 'lucide-react'
 import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
@@ -86,6 +85,11 @@ export default async function RegisterPage({
 }) {
   const params = await searchParams
 
+  // 如果沒有邀請參數，重定向到登入頁
+  if (!params.invitation) {
+    redirect('/login')
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden p-4">
       <div className="absolute top-6 right-6 z-50">
@@ -100,9 +104,9 @@ export default async function RegisterPage({
             </div>
           </div>
           <h1 className="text-3xl font-bold tracking-tight mb-2 text-foreground">
-            開始使用
+            接受邀請
           </h1>
-          <p className="text-base text-muted-foreground">建立您的 Auto Pilot SEO 帳號</p>
+          <p className="text-base text-muted-foreground">使用受邀的電子郵件完成註冊</p>
         </div>
 
         <div className="bg-card border border-border rounded-2xl p-8 shadow-lg">
@@ -117,25 +121,13 @@ export default async function RegisterPage({
             </div>
           )}
 
-          {/* OAuth 註冊按鈕（只在非邀請註冊時顯示） */}
-          {!params.invitation && (
-            <>
-              <OAuthButtons redirectTo="/dashboard" actionText="註冊" />
-              <OAuthDivider />
-            </>
-          )}
-
           {/* 邀請註冊提示 */}
-          {params.invitation && (
-            <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-400 rounded-xl text-sm">
-              您正在透過邀請連結註冊，請使用受邀的電子郵件地址。
-            </div>
-          )}
+          <div className="mb-6 p-4 bg-blue-500/10 border border-blue-500/20 text-blue-700 dark:text-blue-400 rounded-xl text-sm">
+            您正在透過邀請連結註冊，請使用受邀的電子郵件地址完成帳號建立。
+          </div>
 
           <form action={register} className="space-y-5">
-            {params.invitation && (
-              <input type="hidden" name="invitation" value={params.invitation} />
-            )}
+            <input type="hidden" name="invitation" value={params.invitation} />
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium text-foreground">
                 電子郵件
