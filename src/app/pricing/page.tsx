@@ -441,19 +441,6 @@ export default function PricingPage() {
       )
     }
 
-    if (features.batch_generation) {
-      items.push(
-        <li key="batch" className="flex items-start gap-3 group">
-          <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
-            <Check className="h-3 w-3 text-primary" />
-          </div>
-          <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-            無限篇文章生成
-          </span>
-        </li>
-      )
-    }
-
     if (features.team_members) {
       items.push(
         <li key="team" className="flex items-start gap-3 group">
