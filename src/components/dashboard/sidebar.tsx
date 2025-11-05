@@ -19,7 +19,7 @@ import { useSidebar } from './dashboard-layout-client'
 
 const navItems = [
   {
-    title: 'Dashboard',
+    title: '儀表版',
     href: '/dashboard',
     icon: LayoutDashboard,
     roles: ['owner', 'admin', 'editor'],
