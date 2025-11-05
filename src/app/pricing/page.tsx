@@ -448,7 +448,7 @@ export default function PricingPage() {
             <Check className="h-3 w-3 text-primary" />
           </div>
           <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-            {String(features.batch_generation)} 篇批量生成
+            無限篇文章生成
           </span>
         </li>
       )
@@ -464,38 +464,6 @@ export default function PricingPage() {
             {features.team_members === -1
               ? '無限團隊成員'
               : `${features.team_members} 個團隊成員`}
-          </span>
-        </li>
-      )
-    }
-
-    if (features.seo_score) {
-      items.push(
-        <li key="seo" className="flex items-start gap-3 group">
-          <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
-            <Check className="h-3 w-3 text-primary" />
-          </div>
-          <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-            SEO 分數優化
-          </span>
-        </li>
-      )
-    }
-
-    if (features.scheduling) {
-      const schedText =
-        features.scheduling === 'basic'
-          ? '基礎排程'
-          : features.scheduling === 'advanced'
-            ? '進階排程'
-            : '智能排程'
-      items.push(
-        <li key="schedule" className="flex items-start gap-3 group">
-          <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
-            <Check className="h-3 w-3 text-primary" />
-          </div>
-          <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-            {schedText}
           </span>
         </li>
       )
@@ -850,14 +818,7 @@ export default function PricingPage() {
                     <td className="px-6 py-4 text-center">無限制</td>
                   </tr>
                   <tr className="hover:bg-muted/30">
-                    <td className="px-6 py-4 font-medium">圖片生成</td>
-                    <td className="px-6 py-4 text-center">無限制</td>
-                    <td className="px-6 py-4 text-center bg-primary/5">無限制</td>
-                    <td className="px-6 py-4 text-center">無限制</td>
-                    <td className="px-6 py-4 text-center">無限制</td>
-                  </tr>
-                  <tr className="hover:bg-muted/30">
-                    <td className="px-6 py-4 font-medium">批次生成</td>
+                    <td className="px-6 py-4 font-medium">圖片 & 文章生成</td>
                     <td className="px-6 py-4 text-center">無限制</td>
                     <td className="px-6 py-4 text-center bg-primary/5">無限制</td>
                     <td className="px-6 py-4 text-center">無限制</td>
