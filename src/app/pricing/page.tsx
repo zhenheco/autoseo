@@ -441,19 +441,6 @@ export default function PricingPage() {
       )
     }
 
-    if (features.batch_generation) {
-      items.push(
-        <li key="batch" className="flex items-start gap-3 group">
-          <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
-            <Check className="h-3 w-3 text-primary" />
-          </div>
-          <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-            {String(features.batch_generation)} 篇批量生成
-          </span>
-        </li>
-      )
-    }
-
     if (features.team_members) {
       items.push(
         <li key="team" className="flex items-start gap-3 group">
@@ -464,38 +451,6 @@ export default function PricingPage() {
             {features.team_members === -1
               ? '無限團隊成員'
               : `${features.team_members} 個團隊成員`}
-          </span>
-        </li>
-      )
-    }
-
-    if (features.seo_score) {
-      items.push(
-        <li key="seo" className="flex items-start gap-3 group">
-          <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
-            <Check className="h-3 w-3 text-primary" />
-          </div>
-          <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-            SEO 分數優化
-          </span>
-        </li>
-      )
-    }
-
-    if (features.scheduling) {
-      const schedText =
-        features.scheduling === 'basic'
-          ? '基礎排程'
-          : features.scheduling === 'advanced'
-            ? '進階排程'
-            : '智能排程'
-      items.push(
-        <li key="schedule" className="flex items-start gap-3 group">
-          <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
-            <Check className="h-3 w-3 text-primary" />
-          </div>
-          <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-            {schedText}
           </span>
         </li>
       )
@@ -667,9 +622,9 @@ export default function PricingPage() {
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              <span>年繳</span>
+              <span>年繳 (省 20%)</span>
               <Badge className="absolute -top-2 -right-2 bg-emerald-500 hover:bg-emerald-600 text-white border-0 text-xs px-1.5 py-0">
-                省 20%
+                最划算
               </Badge>
             </button>
             <button
@@ -680,7 +635,7 @@ export default function PricingPage() {
                   : 'text-muted-foreground hover:text-foreground'
               }`}
             >
-              <span>終身</span>
+              <span>終身方案</span>
               <Badge className="absolute -top-2 -right-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 text-xs px-1.5 py-0">
                 <Crown className="w-3 h-3" />
               </Badge>
@@ -740,15 +695,14 @@ export default function PricingPage() {
                       )}
                     </div>
 
-                    {billingPeriod === 'yearly' && savings > 0 && (
+                    {billingPeriod === 'yearly' && (
                       <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">
-                        每年省下 NT$ {savings.toLocaleString()}
+                        相當於月繳 10 個月費用
                       </p>
                     )}
                     {billingPeriod === 'lifetime' && (
-                      <p className="text-sm text-purple-600 dark:text-purple-400 font-medium flex items-center gap-1">
-                        <Check className="w-4 h-4" />
-                        永久 8 折購買優惠
+                      <p className="text-sm text-purple-600 dark:text-purple-400 font-medium">
+                        一次付清，終身享有
                       </p>
                     )}
                   </div>
@@ -804,44 +758,162 @@ export default function PricingPage() {
           })}
         </div>
 
-        <section className="mt-24">
-          <div className="text-center mb-12 space-y-4">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-900/20 backdrop-blur-sm">
-              <CreditCard className="w-4 h-4 text-green-600 dark:text-green-400" />
-              <span className="text-sm font-medium text-green-700 dark:text-green-300">Token 購買包</span>
-            </div>
-            <h2 className="text-4xl font-bold">彈性加值，永不過期</h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              一次性購買 Token 包，永久有效不過期。終身會員享 8 折優惠
+        {/* 功能比較表 */}
+        <section className="mb-24">
+          <div className="text-center mb-12">
+            <h2 className="text-4xl font-bold mb-4">功能完整比較</h2>
+            <p className="text-lg text-muted-foreground">
+              選擇最適合您需求的方案
             </p>
           </div>
 
-          <div className="flex justify-center">
+          <div className="max-w-6xl mx-auto overflow-x-auto">
+            <div className="bg-card rounded-2xl shadow-xl border border-border overflow-hidden">
+              <table className="w-full">
+                <thead className="bg-muted/50">
+                  <tr>
+                    <th className="px-6 py-4 text-left text-sm font-semibold">功能</th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold">STARTER</th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold bg-primary/5">
+                      PROFESSIONAL
+                      <div className="text-xs font-normal text-primary mt-1">最受歡迎</div>
+                    </th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold">BUSINESS</th>
+                    <th className="px-6 py-4 text-center text-sm font-semibold">AGENCY</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  <tr className="hover:bg-muted/30">
+                    <td className="px-6 py-4 font-medium">每月 Tokens</td>
+                    <td className="px-6 py-4 text-center">25K</td>
+                    <td className="px-6 py-4 text-center bg-primary/5 font-semibold text-primary">100K</td>
+                    <td className="px-6 py-4 text-center">300K</td>
+                    <td className="px-6 py-4 text-center">750K</td>
+                  </tr>
+                  <tr className="hover:bg-muted/30">
+                    <td className="px-6 py-4 font-medium">使用者席位</td>
+                    <td className="px-6 py-4 text-center">1</td>
+                    <td className="px-6 py-4 text-center bg-primary/5">3</td>
+                    <td className="px-6 py-4 text-center">10</td>
+                    <td className="px-6 py-4 text-center">無限制</td>
+                  </tr>
+                  <tr className="hover:bg-muted/30">
+                    <td className="px-6 py-4 font-medium">WordPress 網站</td>
+                    <td className="px-6 py-4 text-center">1</td>
+                    <td className="px-6 py-4 text-center bg-primary/5">5</td>
+                    <td className="px-6 py-4 text-center">無限制</td>
+                    <td className="px-6 py-4 text-center">無限制</td>
+                  </tr>
+                  <tr className="hover:bg-muted/30">
+                    <td className="px-6 py-4 font-medium">圖片 & 文章生成</td>
+                    <td className="px-6 py-4 text-center">無限制</td>
+                    <td className="px-6 py-4 text-center bg-primary/5">無限制</td>
+                    <td className="px-6 py-4 text-center">無限制</td>
+                    <td className="px-6 py-4 text-center">無限制</td>
+                  </tr>
+                  <tr className="hover:bg-muted/30">
+                    <td className="px-6 py-4 font-medium">API 存取</td>
+                    <td className="px-6 py-4 text-center text-muted-foreground">—</td>
+                    <td className="px-6 py-4 text-center bg-primary/5">
+                      <Check className="w-5 h-5 text-primary mx-auto" />
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <Check className="w-5 h-5 text-primary mx-auto" />
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <Check className="w-5 h-5 text-primary mx-auto" />
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-muted/30">
+                    <td className="px-6 py-4 font-medium">團隊協作功能</td>
+                    <td className="px-6 py-4 text-center text-muted-foreground">—</td>
+                    <td className="px-6 py-4 text-center bg-primary/5 text-muted-foreground">—</td>
+                    <td className="px-6 py-4 text-center">
+                      <Check className="w-5 h-5 text-primary mx-auto" />
+                    </td>
+                    <td className="px-6 py-4 text-center">
+                      <Check className="w-5 h-5 text-primary mx-auto" />
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-muted/30">
+                    <td className="px-6 py-4 font-medium">白標 (White-Label)</td>
+                    <td className="px-6 py-4 text-center text-muted-foreground">—</td>
+                    <td className="px-6 py-4 text-center bg-primary/5 text-muted-foreground">—</td>
+                    <td className="px-6 py-4 text-center text-muted-foreground">—</td>
+                    <td className="px-6 py-4 text-center">
+                      <Check className="w-5 h-5 text-primary mx-auto" />
+                    </td>
+                  </tr>
+                  <tr className="hover:bg-muted/30">
+                    <td className="px-6 py-4 font-medium">客服支援</td>
+                    <td className="px-6 py-4 text-center">標準支援</td>
+                    <td className="px-6 py-4 text-center bg-primary/5">優先支援</td>
+                    <td className="px-6 py-4 text-center">專屬客戶經理</td>
+                    <td className="px-6 py-4 text-center">專屬客戶經理</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </section>
+
+        {/* Token 購買包作為誘餌方案 */}
+        <section className="mb-16">
+          <div className="text-center mb-12 space-y-4">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 backdrop-blur-sm">
+              <CreditCard className="w-4 h-4 text-amber-600 dark:text-amber-400" />
+              <span className="text-sm font-medium text-amber-700 dark:text-amber-300">彈性加值包（用完再買）</span>
+            </div>
+            <h2 className="text-4xl font-bold">彈性加值，永不過期</h2>
+            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+              一次性購買 Token 包，永久有效不過期
+            </p>
+          </div>
+
+          <div className="flex justify-center mb-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl">
-              {tokenPackages.map((pkg) => (
-              <div
-                key={pkg.id}
-                className="group relative bg-white dark:bg-slate-800 rounded-xl p-5 shadow-md hover:shadow-xl transition-all duration-300 border border-slate-200 dark:border-slate-700 hover:border-green-400 dark:hover:border-green-500"
-              >
-                <div className="text-center space-y-3">
-                  <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                    {(pkg.tokens / 1000).toLocaleString()}K
-                  </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400">Tokens</div>
-                  <div className="text-xl font-bold text-green-600 dark:text-green-400">
-                    NT$ {pkg.price.toLocaleString()}
-                  </div>
-                  <Button
-                    size="sm"
-                    onClick={() => handleTokenPackagePurchase(pkg)}
-                    disabled={processingPackageId === pkg.id}
-                    className="w-full bg-green-600 hover:bg-green-700 text-white disabled:opacity-50"
+              {tokenPackages.map((pkg) => {
+                const perTokenPrice = (pkg.price / (pkg.tokens / 1000)).toFixed(2)
+                return (
+                  <div
+                    key={pkg.id}
+                    className="group relative bg-card rounded-xl p-6 shadow-md hover:shadow-xl transition-all duration-300 border border-border hover:border-amber-400 dark:hover:border-amber-500"
                   >
-                    {processingPackageId === pkg.id ? '處理中...' : '購買'}
-                  </Button>
-                </div>
-              </div>
-              ))}
+                    <div className="text-center space-y-3">
+                      <div className="text-3xl font-bold">
+                        {(pkg.tokens / 1000).toLocaleString()}K
+                      </div>
+                      <div className="text-xs text-muted-foreground">Tokens</div>
+                      <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                        NT$ {pkg.price.toLocaleString()}
+                      </div>
+                      <div className="text-xs text-muted-foreground">
+                        單價: NT$ {perTokenPrice} / 1K
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => handleTokenPackagePurchase(pkg)}
+                        disabled={processingPackageId === pkg.id}
+                        className="w-full bg-amber-600 hover:bg-amber-700 text-white disabled:opacity-50"
+                      >
+                        {processingPackageId === pkg.id ? '處理中...' : '購買'}
+                      </Button>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </div>
+
+          <div className="text-center space-y-4">
+            <p className="text-sm text-muted-foreground">
+              💡 <span className="font-medium">提示：</span>訂閱 <span className="text-primary font-semibold">STARTER 方案</span> (NT$ 699)，每月即享 <span className="text-primary font-semibold">25K Tokens</span>，更划算！
+            </p>
+            <div className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800">
+              <Crown className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              <p className="text-sm font-medium text-purple-700 dark:text-purple-300">
+                所有<span className="font-bold">終身會員</span>，皆享 Token 購買包 <span className="font-bold text-lg">8 折優惠</span>
+              </p>
             </div>
           </div>
         </section>
@@ -867,9 +939,6 @@ export default function PricingPage() {
                     <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                       供應商
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      層級
-                    </th>
                     <th className="px-6 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                       Input / 1M Token
                     </th>
@@ -889,17 +958,6 @@ export default function PricingPage() {
                       </td>
                       <td className="px-6 py-4 text-sm text-muted-foreground capitalize">
                         {model.provider}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            model.tier === 'basic'
-                              ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-                              : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
-                          }`}
-                        >
-                          {model.tier === 'basic' ? '基礎' : '進階'}
-                        </span>
                       </td>
                       <td className="px-6 py-4 text-right text-sm text-muted-foreground font-mono">
                         ${model.input_price_per_1m.toFixed(3)}
