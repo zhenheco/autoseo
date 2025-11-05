@@ -991,9 +991,6 @@ export default function PricingPage() {
                     <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                       供應商
                     </th>
-                    <th className="px-6 py-4 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      層級
-                    </th>
                     <th className="px-6 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                       Input / 1M Token
                     </th>
@@ -1013,17 +1010,6 @@ export default function PricingPage() {
                       </td>
                       <td className="px-6 py-4 text-sm text-muted-foreground capitalize">
                         {model.provider}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span
-                          className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
-                            model.tier === 'basic'
-                              ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-300'
-                              : 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-300'
-                          }`}
-                        >
-                          {model.tier === 'basic' ? '基礎' : '進階'}
-                        </span>
                       </td>
                       <td className="px-6 py-4 text-right text-sm text-muted-foreground font-mono">
                         ${model.input_price_per_1m.toFixed(3)}
