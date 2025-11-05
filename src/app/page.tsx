@@ -133,7 +133,7 @@ export default function Home() {
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-16">
               <Button asChild size="lg" className="w-full sm:w-auto bg-primary hover:bg-primary/90 text-lg px-8 py-6">
-                <Link href="/signup" className="gap-2">
+                <Link href="/login" className="gap-2">
                   <Rocket className="h-5 w-5" />
                   立即開始免費試用
                   <ArrowRight className="h-5 w-5" />
@@ -320,14 +320,14 @@ export default function Home() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="bg-primary hover:bg-primary/90 group text-lg px-10 py-7">
-                <Link href="/signup" className="gap-2">
+                <Link href="/login" className="gap-2">
                   <Rocket className="h-5 w-5" />
                   免費開始使用
                   <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="text-lg px-10 py-7 border-border hover:border-primary/50">
-                <Link href="/login">已有帳號？登入</Link>
+                <Link href="/pricing">查看定價方案</Link>
               </Button>
             </div>
           </div>

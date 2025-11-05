@@ -98,8 +98,14 @@ export default async function LoginPage({
           </form>
 
           <div className="mt-6 pt-6 border-t border-border">
-            <p className="text-center text-xs text-muted-foreground">
-              首次使用將自動建立帳號 • 已有帳號將直接登入
+            <p className="text-center text-sm text-muted-foreground">
+              還沒有帳號？{' '}
+              <Link
+                href="/signup"
+                className="text-primary hover:text-primary/80 hover:underline underline-offset-4 font-semibold transition-all"
+              >
+                立即註冊
+              </Link>
             </p>
           </div>
         </div>
