@@ -17,7 +17,6 @@ INSERT INTO subscription_plans (name, slug, monthly_price, yearly_price, base_to
     "models": ["deepseek-chat", "gemini-2-flash", "gpt-5-mini"],
     "wordpress_sites": 1,
     "images_per_article": -1,
-    "batch_generation": -1,
     "team_members": 1,
     "user_seats": 1,
     "brand_voices": 0,
@@ -39,7 +38,6 @@ INSERT INTO subscription_plans (name, slug, monthly_price, yearly_price, base_to
     "models": "all",
     "wordpress_sites": 5,
     "images_per_article": -1,
-    "batch_generation": -1,
     "team_members": 3,
     "user_seats": 3,
     "brand_voices": 1,
@@ -61,7 +59,6 @@ INSERT INTO subscription_plans (name, slug, monthly_price, yearly_price, base_to
     "models": "all",
     "wordpress_sites": -1,
     "images_per_article": -1,
-    "batch_generation": -1,
     "team_members": 10,
     "user_seats": 10,
     "brand_voices": 3,
@@ -83,7 +80,6 @@ INSERT INTO subscription_plans (name, slug, monthly_price, yearly_price, base_to
     "models": "all",
     "wordpress_sites": -1,
     "images_per_article": -1,
-    "batch_generation": -1,
     "team_members": -1,
     "user_seats": -1,
     "brand_voices": -1,
@@ -122,7 +118,6 @@ COMMENT ON COLUMN subscription_plans.features IS '功能特性：
 - models: 可用的 AI 模型
 - wordpress_sites: WordPress 網站數量 (-1 = 無限)
 - images_per_article: 每篇文章圖片數量 (-1 = 無限)
-- batch_generation: 批次生成數量 (-1 = 無限)
 - team_members: 團隊成員數量 (-1 = 無限)
 - user_seats: 使用者席位數量 (-1 = 無限)
 - brand_voices: 品牌聲音數量 (-1 = 無限)
