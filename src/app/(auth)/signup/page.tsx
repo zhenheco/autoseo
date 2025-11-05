@@ -1,22 +1,21 @@
 import Link from 'next/link'
-import { authenticateUser } from './actions'
+import { signup } from './actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
 import { OAuthButtons, OAuthDivider } from '@/components/auth/oauth-buttons'
-import { Sparkles } from 'lucide-react'
+import { Sparkles, Mail } from 'lucide-react'
 
-export default async function LoginPage({
+export default async function SignupPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; success?: string }>
+  searchParams: Promise<{ error?: string }>
 }) {
   const params = await searchParams
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden p-4">
-
       <div className="absolute top-6 right-6 z-50">
         <ThemeToggle />
       </div>
@@ -29,29 +28,24 @@ export default async function LoginPage({
             </div>
           </div>
           <h1 className="text-3xl font-bold tracking-tight mb-2 text-foreground">
-            歡迎使用 Auto Pilot SEO
+            建立新帳號
           </h1>
-          <p className="text-base text-muted-foreground">使用 Google 帳號或 Email 快速開始</p>
+          <p className="text-base text-muted-foreground">使用 Google 帳號或 Email 快速註冊</p>
         </div>
 
         <div className="bg-card border border-border rounded-2xl p-8 shadow-lg">
-          {params.success && (
-            <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded-xl text-sm font-medium animate-in fade-in slide-in-from-top-2 duration-300">
-              {params.success}
-            </div>
-          )}
           {params.error && (
             <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400 rounded-xl text-sm font-medium animate-in fade-in slide-in-from-top-2 duration-300">
               {params.error}
             </div>
           )}
 
-          {/* OAuth 登入/註冊按鈕 */}
-          <OAuthButtons redirectTo="/dashboard" actionText="繼續" />
+          {/* OAuth 註冊按鈕 */}
+          <OAuthButtons redirectTo="/dashboard" actionText="註冊" />
 
           <OAuthDivider />
 
-          <form action={authenticateUser} className="space-y-5">
+          <form action={signup} className="space-y-5">
             <div className="space-y-2">
               <Label htmlFor="email" className="text-sm font-medium text-foreground">
                 電子郵件
@@ -67,54 +61,57 @@ export default async function LoginPage({
             </div>
 
             <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password" className="text-sm font-medium text-foreground">
-                  密碼
-                </Label>
-                <Link
-                  href="/forgot-password"
-                  className="text-sm text-primary hover:text-primary/80 hover:underline underline-offset-4 font-medium transition-all"
-                >
-                  忘記密碼？
-                </Link>
-              </div>
+              <Label htmlFor="password" className="text-sm font-medium text-foreground">
+                密碼
+              </Label>
               <Input
                 id="password"
                 name="password"
                 type="password"
-                placeholder="••••••••"
+                placeholder="至少 6 個字元"
                 required
                 minLength={6}
                 className="h-11 bg-background border-border focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
               />
+              <p className="text-xs text-muted-foreground">
+                密碼至少需要 6 個字元
+              </p>
+            </div>
+
+            {/* Email 驗證提示 */}
+            <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
+              <div className="flex gap-3">
+                <Mail className="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                <div className="text-sm text-blue-700 dark:text-blue-400">
+                  <p className="font-medium mb-1">需要驗證電子郵件</p>
+                  <p className="text-xs">註冊後請檢查您的信箱，點擊驗證連結以啟用帳號</p>
+                </div>
+              </div>
             </div>
 
             <Button
               type="submit"
               className="w-full h-11 text-sm font-semibold bg-primary hover:bg-primary/90 transition-colors"
             >
-              繼續
+              建立帳號
             </Button>
           </form>
 
-          <div className="mt-6 pt-6 border-t border-border space-y-4">
-            <p className="text-center text-xs text-muted-foreground">
-              首次使用將自動建立帳號 • 已有帳號將直接登入
-            </p>
+          <div className="mt-6 pt-6 border-t border-border">
             <p className="text-center text-sm text-muted-foreground">
-              還沒有帳號？{' '}
+              已經有帳號？{' '}
               <Link
-                href="/signup"
+                href="/login"
                 className="text-primary hover:text-primary/80 hover:underline underline-offset-4 font-semibold transition-all"
               >
-                立即註冊
+                立即登入
               </Link>
             </p>
           </div>
         </div>
 
         <p className="text-xs text-center text-muted-foreground mt-8 px-8">
-          繼續即表示您同意我們的{' '}
+          註冊即表示您同意我們的{' '}
           <Link href="/terms" className="underline underline-offset-2 hover:text-foreground transition-all">
             服務條款
           </Link>
