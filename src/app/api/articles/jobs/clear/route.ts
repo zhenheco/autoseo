@@ -31,24 +31,26 @@ export async function DELETE() {
 
     console.log('[Clear Jobs] Company ID:', membership.company_id);
 
-    // 先查詢有多少任務
+    // 先查詢所有非 completed 狀態的任務
     const { data: existingJobs, error: queryError } = await supabase
       .from('article_jobs')
-      .select('id, status')
+      .select('id, status, keywords')
       .eq('company_id', membership.company_id)
-      .in('status', ['pending', 'processing']);
+      .neq('status', 'completed');
 
     console.log('[Clear Jobs] Found jobs to delete:', existingJobs?.length || 0);
+    console.log('[Clear Jobs] Job statuses:', existingJobs?.map(j => ({ id: j.id.substring(0, 8), status: j.status })));
+
     if (queryError) {
       console.error('[Clear Jobs] Query error:', queryError);
     }
 
-    // 刪除所有 pending 和 processing 狀態的 jobs
+    // 刪除所有非 completed 狀態的 jobs（包括 pending, processing, failed 等）
     const { data: deletedJobs, error } = await supabase
       .from('article_jobs')
       .delete()
       .eq('company_id', membership.company_id)
-      .in('status', ['pending', 'processing'])
+      .neq('status', 'completed')
       .select('id');
 
     if (error) {

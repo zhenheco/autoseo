@@ -1,6 +1,6 @@
 import { BaseAgent } from './base-agent';
 import type { ImageInput, ImageOutput, GeneratedImage } from '@/types/agents';
-import { GoogleDriveClient } from '@/lib/storage/google-drive-client';
+import { GoogleDriveClient, getGoogleDriveConfig } from '@/lib/storage/google-drive-client';
 
 const IMAGE_MODELS = {
   'dall-e-3': {
@@ -55,7 +55,7 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
 
     for (let i = 0; i < sectionsNeedingImages; i++) {
       const section = input.outline.mainSections[i];
-      const image = await this.generateContentImage(input, section);
+      const image = await this.generateContentImage(input, section, i);
       contentImages.push(image);
     }
 
@@ -87,22 +87,26 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
     });
 
     let finalUrl = result.url;
+    let storage: 'openai' | 'google-drive' = 'openai';
 
-    if (process.env.GOOGLE_DRIVE_FOLDER_ID) {
+    const driveConfig = getGoogleDriveConfig();
+    if (driveConfig) {
       try {
-        const driveClient = new GoogleDriveClient({
-          folderId: process.env.GOOGLE_DRIVE_FOLDER_ID,
-          accessToken: process.env.GOOGLE_DRIVE_ACCESS_TOKEN,
-        });
+        const driveClient = new GoogleDriveClient(driveConfig);
+        const timestamp = Date.now();
+        const filename = `article-hero-${timestamp}.jpg`;
 
-        const filename = `featured-${Date.now()}.jpg`;
         const uploaded = await driveClient.uploadFromUrl(result.url, filename);
         finalUrl = uploaded.url;
+        storage = 'google-drive';
 
         console.log(`[ImageAgent] Uploaded featured image to Google Drive: ${uploaded.fileId}`);
       } catch (error) {
-        console.warn('[ImageAgent] Failed to upload to Google Drive, using original URL:', error);
+        const err = error as Error;
+        console.warn('[ImageAgent] Failed to upload to Google Drive, using original URL:', err.message);
       }
+    } else {
+      console.log('[GoogleDrive] Not configured, using OpenAI URL');
     }
 
     const [width, height] = input.size.split('x').map(Number);
@@ -119,7 +123,8 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
 
   private async generateContentImage(
     input: ImageInput,
-    section: ImageInput['outline']['mainSections'][0]
+    section: ImageInput['outline']['mainSections'][0],
+    index: number
   ): Promise<GeneratedImage> {
     const prompt = this.buildContentImagePrompt(input, section);
 
@@ -131,20 +136,20 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
 
     let finalUrl = result.url;
 
-    if (process.env.GOOGLE_DRIVE_FOLDER_ID) {
+    const driveConfig = getGoogleDriveConfig();
+    if (driveConfig) {
       try {
-        const driveClient = new GoogleDriveClient({
-          folderId: process.env.GOOGLE_DRIVE_FOLDER_ID,
-          accessToken: process.env.GOOGLE_DRIVE_ACCESS_TOKEN,
-        });
+        const driveClient = new GoogleDriveClient(driveConfig);
+        const timestamp = Date.now();
+        const filename = `article-content-${index + 1}-${timestamp}.jpg`;
 
-        const filename = `content-${Date.now()}.jpg`;
         const uploaded = await driveClient.uploadFromUrl(result.url, filename);
         finalUrl = uploaded.url;
 
         console.log(`[ImageAgent] Uploaded content image to Google Drive: ${uploaded.fileId}`);
       } catch (error) {
-        console.warn('[ImageAgent] Failed to upload to Google Drive, using original URL:', error);
+        const err = error as Error;
+        console.warn('[ImageAgent] Failed to upload to Google Drive, using original URL:', err.message);
       }
     }
 

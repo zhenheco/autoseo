@@ -11,6 +11,7 @@
     "type-check": "tsc --noEmit",
     "db:migrate": "node scripts/run-migrations.js",
     "db:generate-types": "supabase gen types typescript --project-id YOUR_PROJECT_REF > src/types/database.types.ts",
+    "google-drive:authorize": "tsx scripts/google-drive-authorize.ts",
     "preview:cf": "NODE_OPTIONS='--max-old-space-size=4096' next build && opennextjs-cloudflare build && opennextjs-cloudflare preview",
     "deploy:cf-workers": "NODE_OPTIONS='--max-old-space-size=4096' next build && opennextjs-cloudflare build && opennextjs-cloudflare deploy",
     "deploy:pages": "NODE_OPTIONS='--max-old-space-size=4096' next build && opennextjs-cloudflare build && wrangler pages deploy .open-next --project-name=auto-pilot-seo"
@@ -68,6 +69,7 @@
     "postcss": "^8.5.6",
     "tailwindcss": "^4.1.15",
     "tailwindcss-animate": "^1.0.7",
+    "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "wrangler": "^4.45.3"
   },

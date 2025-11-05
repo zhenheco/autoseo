@@ -45,11 +45,21 @@ export default function ArticlesPage() {
 
       if (articlesRes.ok) {
         const data = await articlesRes.json()
+        console.log('[ArticlesPage] Fetched articles:', data.articles?.length || 0, 'articles')
+        if (data.articles?.length > 0) {
+          console.log('[ArticlesPage] First article sample:', {
+            id: data.articles[0].id,
+            title: data.articles[0].title,
+            hasHtmlContent: !!data.articles[0].html_content,
+            htmlContentLength: data.articles[0].html_content?.length || 0
+          })
+        }
         setArticles(data.articles || [])
       }
 
       if (jobsRes.ok) {
         const data = await jobsRes.json()
+        console.log('[ArticlesPage] Fetched jobs:', data.jobs?.length || 0, 'jobs')
         setJobs(data.jobs || [])
       }
     } catch (error) {
@@ -222,12 +232,20 @@ export default function ArticlesPage() {
                     <div
                       key={item.id}
                       onClick={() => {
-                        if (item.type === 'article' && item.article) {
+                        console.log('[ArticlesPage] Item clicked:', {
+                          type: item.type,
+                          id: item.id,
+                          hasArticle: item.type === 'article' && 'article' in item && !!item.article
+                        })
+                        if (item.type === 'article' && 'article' in item && item.article) {
+                          console.log('[ArticlesPage] Setting selected article:', item.article.id)
                           setSelectedArticle(item.article)
+                        } else {
+                          console.log('[ArticlesPage] Cannot select: type or article missing')
                         }
                       }}
                       className={`p-4 rounded-lg border cursor-pointer transition-colors ${
-                        selectedArticle?.id === item.id
+                        item.type === 'article' && 'article' in item && selectedArticle?.id === item.article?.id
                           ? 'border-primary bg-primary/5'
                           : 'hover:border-primary/50 hover:bg-muted/50'
                       }`}
