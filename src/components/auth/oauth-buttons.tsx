@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { createClient } from '@/lib/supabase/client'
 import { Button } from '@/components/ui/button'
+import type { Provider as SupabaseProvider } from '@supabase/supabase-js'
 
 type Provider = 'google' | 'line'
 
@@ -34,8 +35,9 @@ export function OAuthButtons({
       setIsLoading(provider)
       const supabase = createClient()
 
+      // 使用類型斷言，因為 LINE 可能需要作為 Custom OAuth Provider
       const { error } = await supabase.auth.signInWithOAuth({
-        provider,
+        provider: provider as SupabaseProvider,
         options: {
           redirectTo: `${window.location.origin}/auth/callback?next=${redirectTo}`,
           queryParams: {
