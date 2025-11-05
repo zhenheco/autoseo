@@ -78,29 +78,53 @@ ${input.content.markdown.substring(0, 500)}...
     } catch (error) {
       console.error('[MetaAgent] JSON parse error:', error);
       console.error('[MetaAgent] Response content:', response.content);
-      throw new Error(`Failed to parse meta data: ${error instanceof Error ? error.message : 'Unknown error'}`);
+      console.error('[MetaAgent] Using fallback meta data based on input');
+
+      metaData = this.getFallbackMetaData(input);
     }
 
     return {
-      title: metaData.title,
-      description: metaData.description,
-      slug: this.sanitizeSlug(metaData.slug),
+      title: metaData.title || input.titleOptions[0] || input.keyword,
+      description: metaData.description || `關於${input.keyword}的完整指南`,
+      slug: this.sanitizeSlug(metaData.slug || input.keyword),
       seo: {
-        title: metaData.title,
-        description: metaData.description,
-        keywords: metaData.keywords || [],
+        title: metaData.title || input.titleOptions[0] || input.keyword,
+        description: metaData.description || `關於${input.keyword}的完整指南`,
+        keywords: metaData.keywords || [input.keyword],
       },
       openGraph: {
-        title: metaData.openGraph.title,
-        description: metaData.openGraph.description,
+        title: metaData.openGraph?.title || metaData.title || input.titleOptions[0] || input.keyword,
+        description: metaData.openGraph?.description || metaData.description || `關於${input.keyword}的完整指南`,
         type: 'article',
       },
       twitterCard: {
         card: 'summary_large_image',
-        title: metaData.twitterCard.title,
-        description: metaData.twitterCard.description,
+        title: metaData.twitterCard?.title || metaData.title || input.titleOptions[0] || input.keyword,
+        description: metaData.twitterCard?.description || metaData.description || `關於${input.keyword}的完整指南`,
       },
-      focusKeyphrase: metaData.focusKeyphrase,
+      focusKeyphrase: metaData.focusKeyphrase || input.keyword,
+    };
+  }
+
+  private getFallbackMetaData(input: MetaInput) {
+    const title = input.titleOptions[0] || input.keyword;
+    const description = `關於${input.keyword}的詳細介紹與完整指南。${input.content.markdown.substring(0, 100).replace(/[#*\[\]]/g, '')}...`;
+    const slug = this.sanitizeSlug(input.keyword);
+
+    return {
+      title,
+      description: description.substring(0, 160),
+      slug,
+      keywords: [input.keyword],
+      openGraph: {
+        title,
+        description: description.substring(0, 160),
+      },
+      twitterCard: {
+        title,
+        description: description.substring(0, 160),
+      },
+      focusKeyphrase: input.keyword,
     };
   }
 

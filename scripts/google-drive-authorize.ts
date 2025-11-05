@@ -1,5 +1,9 @@
 import { google } from 'googleapis';
 import * as readline from 'readline';
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+
+dotenv.config({ path: path.join(__dirname, '..', '.env.local') });
 
 const SCOPES = ['https://www.googleapis.com/auth/drive.file'];
 const REDIRECT_URI = 'http://localhost:3168/api/google-drive/auth/callback';
