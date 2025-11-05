@@ -48,13 +48,22 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
   private async generateTitleOptions(input: StrategyInput): Promise<string[]> {
     const prompt = `你是 SEO 專家。為關鍵字「${input.researchData.keyword}」生成 3 個標題。
 
-要求：
+## 推理步驟
+1. 分析關鍵字意圖和目標受眾
+2. 考慮 SEO 最佳實踐（包含關鍵字、適當長度）
+3. 評估標題吸引力和點擊率潛力
+
+## 要求
 - 包含關鍵字「${input.researchData.keyword}」
 - 50-60 字元
-- 使用數字或問句
+- 使用數字或問句提升吸引力
 
-**只輸出 JSON 陣列，不要任何解釋：**
-["標題1", "標題2", "標題3"]`;
+## 輸出格式
+請在推理後，輸出以下 JSON 格式：
+{
+  "reasoning_summary": "簡要說明選擇這些標題的原因",
+  "titles": ["標題1", "標題2", "標題3"]
+}`;
 
     try {
       const response = await this.complete(prompt, {
@@ -96,7 +105,10 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
           return parsed.slice(0, 3);
         }
         if (parsed.titles && Array.isArray(parsed.titles) && parsed.titles.length >= 3) {
-          console.log('[StrategyAgent] Successfully parsed titles from .titles property');
+          console.log('[StrategyAgent] Successfully parsed titles from .titles property', {
+            reasoning: parsed.reasoning_summary?.substring(0, 100),
+            titlesCount: parsed.titles.length
+          });
           return parsed.titles.slice(0, 3);
         }
       } catch (e) {
@@ -129,49 +141,61 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
 
     const prompt = `為「${input.researchData.keyword}」生成文章大綱。
 
-標題：${selectedTitle}
-目標字數：${input.targetWordCount}
+## 背景資訊
+- 標題：${selectedTitle}
+- 目標字數：${input.targetWordCount}
 
-競爭對手優勢：
+## 競爭對手優勢
 ${topCompetitors.map(c => `- ${c.strengths.slice(0, 2).join('、')}`).join('\n')}
 
-內容缺口：
+## 內容缺口（需要補足）
 ${topGaps.join('\n')}
 
-**重要規則：**
+## 推理步驟
+1. 分析目標關鍵字和讀者需求
+2. 評估競爭對手的優勢，思考如何超越
+3. 識別內容缺口，規劃獨特價值
+4. 設計結構化大綱，確保邏輯流暢
+5. 分配字數比例，平衡深度與廣度
+
+## 重要規則
 1. mainSections 最多 4 個
 2. 每個 section 的 keyPoints 最多 3 個，每個最多 20 字
 3. faq 最多 2 個
-4. **只輸出 JSON，不要解釋**
+4. 字數分配要合理，總和應接近目標字數
 
-**JSON 格式：**
+## 輸出格式
+請在推理後，輸出以下 JSON 格式：
 {
-  "introduction": {
-    "hook": "開場",
-    "context": "背景",
-    "thesis": "論點",
-    "wordCount": 200
-  },
-  "mainSections": [
-    {
-      "heading": "標題",
-      "subheadings": ["子標題1"],
-      "keyPoints": ["重點1"],
-      "targetWordCount": 400,
-      "keywords": ["關鍵字1"]
-    }
-  ],
-  "conclusion": {
-    "summary": "總結",
-    "callToAction": "行動",
-    "wordCount": 150
-  },
-  "faq": [
-    {
-      "question": "問題",
-      "answerOutline": "答案大綱"
-    }
-  ]
+  "reasoning_summary": "簡要說明大綱設計的策略思考",
+  "outline": {
+    "introduction": {
+      "hook": "吸引讀者的開場",
+      "context": "背景說明",
+      "thesis": "核心論點",
+      "wordCount": 200
+    },
+    "mainSections": [
+      {
+        "heading": "主要段落標題",
+        "subheadings": ["子標題1"],
+        "keyPoints": ["重點1"],
+        "targetWordCount": 400,
+        "keywords": ["相關關鍵字"]
+      }
+    ],
+    "conclusion": {
+      "summary": "總結重點",
+      "callToAction": "行動呼籲",
+      "wordCount": 150
+    },
+    "faq": [
+      {
+        "question": "常見問題",
+        "answerOutline": "答案大綱"
+      }
+    ]
+  }
 }`;
 
     let apiResponse;
@@ -189,6 +213,26 @@ ${topGaps.join('\n')}
       }
 
       let content = apiResponse.content.trim();
+
+      // 嘗試解析新格式（包含 reasoning_summary 和 outline）
+      let parsed;
+      try {
+        const fullMatch = content.match(/\{[\s\S]*"outline"[\s\S]*\}/);
+        if (fullMatch) {
+          parsed = JSON.parse(fullMatch[0]);
+          if (parsed.outline) {
+            console.log('[StrategyAgent] Parsed outline with reasoning:', {
+              reasoning: parsed.reasoning_summary?.substring(0, 100),
+              hasSections: !!parsed.outline.mainSections
+            });
+            content = JSON.stringify(parsed.outline);
+          }
+        }
+      } catch (e) {
+        console.warn('[StrategyAgent] Failed to parse new format, trying legacy:', e);
+      }
+
+      // 回退到舊格式
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       if (jsonMatch) {
         content = jsonMatch[0];
