@@ -1,5 +1,5 @@
 -- =====================================================
--- 2025 定價重構 - 優化價值曲線與功能差異化
+-- 2025 定價重構 - 優化價值曲線與功能差異化（最終版）
 -- =====================================================
 
 -- 1. 清空現有方案資料
@@ -9,7 +9,7 @@ TRUNCATE token_packages CASCADE;
 -- 2. 更新月費方案（新定價結構）
 INSERT INTO subscription_plans (name, slug, monthly_price, yearly_price, base_tokens, features, limits, is_lifetime, lifetime_price) VALUES
 
--- ==================== 月費方案 ====================
+-- ==================== 月費方案（包含終身價格） ====================
 
 -- STARTER (入門版)
 ('STARTER', 'starter', 699, 6990, 25000,
@@ -20,8 +20,6 @@ INSERT INTO subscription_plans (name, slug, monthly_price, yearly_price, base_to
     "batch_generation": -1,
     "team_members": 1,
     "user_seats": 1,
-    "scheduling": "basic",
-    "seo_score": true,
     "brand_voices": 0,
     "api_access": false,
     "team_collaboration": false,
@@ -33,7 +31,7 @@ INSERT INTO subscription_plans (name, slug, monthly_price, yearly_price, base_to
     "white_label": false,
     "dedicated_manager": false
   }'::jsonb,
-  false, NULL),
+  false, 17475),
 
 -- PROFESSIONAL (專業版) - 最受歡迎
 ('PROFESSIONAL', 'professional', 2499, 24990, 100000,
@@ -44,8 +42,6 @@ INSERT INTO subscription_plans (name, slug, monthly_price, yearly_price, base_to
     "batch_generation": -1,
     "team_members": 3,
     "user_seats": 3,
-    "scheduling": "advanced",
-    "seo_score": true,
     "brand_voices": 1,
     "api_access": true,
     "team_collaboration": false,
@@ -57,7 +53,7 @@ INSERT INTO subscription_plans (name, slug, monthly_price, yearly_price, base_to
     "white_label": false,
     "dedicated_manager": false
   }'::jsonb,
-  false, NULL),
+  false, 62475),
 
 -- BUSINESS (商務版)
 ('BUSINESS', 'business', 5999, 59990, 300000,
@@ -68,8 +64,6 @@ INSERT INTO subscription_plans (name, slug, monthly_price, yearly_price, base_to
     "batch_generation": -1,
     "team_members": 10,
     "user_seats": 10,
-    "scheduling": "smart",
-    "seo_score": true,
     "brand_voices": 3,
     "api_access": true,
     "team_collaboration": true,
@@ -81,7 +75,7 @@ INSERT INTO subscription_plans (name, slug, monthly_price, yearly_price, base_to
     "white_label": false,
     "dedicated_manager": true
   }'::jsonb,
-  false, NULL),
+  false, 149975),
 
 -- AGENCY (代理商版)
 ('AGENCY', 'agency', 11990, 119900, 750000,
@@ -92,8 +86,6 @@ INSERT INTO subscription_plans (name, slug, monthly_price, yearly_price, base_to
     "batch_generation": -1,
     "team_members": -1,
     "user_seats": -1,
-    "scheduling": "smart",
-    "seo_score": true,
     "brand_voices": -1,
     "api_access": true,
     "team_collaboration": true,
@@ -105,109 +97,7 @@ INSERT INTO subscription_plans (name, slug, monthly_price, yearly_price, base_to
     "white_label": true,
     "dedicated_manager": true
   }'::jsonb,
-  false, NULL),
-
--- ==================== 終身方案 ====================
-
--- LIFETIME_STARTER (終身入門版)
-('LIFETIME_STARTER', 'lifetime-starter', 0, 0, 25000,
-  '{
-    "models": ["deepseek-chat", "gemini-2-flash", "gpt-5-mini"],
-    "wordpress_sites": 1,
-    "images_per_article": -1,
-    "batch_generation": -1,
-    "team_members": 1,
-    "user_seats": 1,
-    "scheduling": "basic",
-    "seo_score": true,
-    "brand_voices": 0,
-    "api_access": false,
-    "team_collaboration": false,
-    "white_label": false,
-    "support_level": "standard",
-    "lifetime_token_discount": 0.8
-  }'::jsonb,
-  '{
-    "priority_support": false,
-    "white_label": false,
-    "dedicated_manager": false
-  }'::jsonb,
-  true, 17475),
-
--- LIFETIME_PROFESSIONAL (終身專業版)
-('LIFETIME_PROFESSIONAL', 'lifetime-professional', 0, 0, 100000,
-  '{
-    "models": "all",
-    "wordpress_sites": 5,
-    "images_per_article": -1,
-    "batch_generation": -1,
-    "team_members": 3,
-    "user_seats": 3,
-    "scheduling": "advanced",
-    "seo_score": true,
-    "brand_voices": 1,
-    "api_access": true,
-    "team_collaboration": false,
-    "white_label": false,
-    "support_level": "priority",
-    "lifetime_token_discount": 0.8
-  }'::jsonb,
-  '{
-    "priority_support": true,
-    "white_label": false,
-    "dedicated_manager": false
-  }'::jsonb,
-  true, 62475),
-
--- LIFETIME_BUSINESS (終身商務版)
-('LIFETIME_BUSINESS', 'lifetime-business', 0, 0, 300000,
-  '{
-    "models": "all",
-    "wordpress_sites": -1,
-    "images_per_article": -1,
-    "batch_generation": -1,
-    "team_members": 10,
-    "user_seats": 10,
-    "scheduling": "smart",
-    "seo_score": true,
-    "brand_voices": 3,
-    "api_access": true,
-    "team_collaboration": true,
-    "white_label": false,
-    "support_level": "dedicated",
-    "lifetime_token_discount": 0.8
-  }'::jsonb,
-  '{
-    "priority_support": true,
-    "white_label": false,
-    "dedicated_manager": true
-  }'::jsonb,
-  true, 149975),
-
--- LIFETIME_AGENCY (終身代理商版) - 新增
-('LIFETIME_AGENCY', 'lifetime-agency', 0, 0, 750000,
-  '{
-    "models": "all",
-    "wordpress_sites": -1,
-    "images_per_article": -1,
-    "batch_generation": -1,
-    "team_members": -1,
-    "user_seats": -1,
-    "scheduling": "smart",
-    "seo_score": true,
-    "brand_voices": -1,
-    "api_access": true,
-    "team_collaboration": true,
-    "white_label": true,
-    "support_level": "dedicated",
-    "lifetime_token_discount": 0.8
-  }'::jsonb,
-  '{
-    "priority_support": true,
-    "white_label": true,
-    "dedicated_manager": true
-  }'::jsonb,
-  true, 299750);
+  false, 299750);
 
 -- 3. 更新 Token 購買包（新定價）
 INSERT INTO token_packages (name, slug, tokens, price, bonus_tokens, description) VALUES
@@ -235,14 +125,11 @@ COMMENT ON COLUMN subscription_plans.features IS '功能特性：
 - batch_generation: 批次生成數量 (-1 = 無限)
 - team_members: 團隊成員數量 (-1 = 無限)
 - user_seats: 使用者席位數量 (-1 = 無限)
-- scheduling: 排程等級 (basic, advanced, smart)
-- seo_score: SEO 分數優化
 - brand_voices: 品牌聲音數量 (-1 = 無限)
 - api_access: API 存取權限
 - team_collaboration: 團隊協作功能
 - white_label: 白標服務
-- support_level: 客服等級 (standard, priority, dedicated)
-- lifetime_token_discount: 終身會員 Token 購買折扣 (僅終身方案)';
+- support_level: 客服等級 (standard, priority, dedicated)';
 
 COMMENT ON COLUMN subscription_plans.monthly_price IS '月費價格（台幣）';
 COMMENT ON COLUMN subscription_plans.yearly_price IS '年費價格（台幣），相當於月費 × 10';
