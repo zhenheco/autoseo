@@ -232,8 +232,12 @@ export default function ArticlesPage() {
                     <div
                       key={item.id}
                       onClick={() => {
-                        console.log('[ArticlesPage] Item clicked:', { type: item.type, id: item.id, hasArticle: !!item.article })
-                        if (item.type === 'article' && item.article) {
+                        console.log('[ArticlesPage] Item clicked:', {
+                          type: item.type,
+                          id: item.id,
+                          hasArticle: item.type === 'article' && 'article' in item && !!item.article
+                        })
+                        if (item.type === 'article' && 'article' in item && item.article) {
                           console.log('[ArticlesPage] Setting selected article:', item.article.id)
                           setSelectedArticle(item.article)
                         } else {
@@ -241,7 +245,7 @@ export default function ArticlesPage() {
                         }
                       }}
                       className={`p-4 rounded-lg border cursor-pointer transition-colors ${
-                        item.type === 'article' && selectedArticle?.id === item.article?.id
+                        item.type === 'article' && 'article' in item && selectedArticle?.id === item.article?.id
                           ? 'border-primary bg-primary/5'
                           : 'hover:border-primary/50 hover:bg-muted/50'
                       }`}
