@@ -672,15 +672,15 @@ export class ParallelOrchestrator {
       research_temperature: 0.7,
       strategy_temperature: 0.7,
       writing_temperature: 0.7,
-      research_max_tokens: 4000,
-      strategy_max_tokens: 4000,
-      writing_max_tokens: 8000,
+      research_max_tokens: 16000,
+      strategy_max_tokens: 16000,
+      writing_max_tokens: 16000,
       image_size: '1024x1024',
       image_count: 3,
       meta_enabled: true,
       meta_model: 'deepseek-chat',
       meta_temperature: 0.7,
-      meta_max_tokens: 2000,
+      meta_max_tokens: 16000,
     };
   }
 
@@ -695,13 +695,18 @@ export class ParallelOrchestrator {
 
   private async getWordPressConfig(websiteId: string): Promise<any> {
     const supabase = await this.getSupabase();
-    const { data, error } = await supabase
+    const { data: configs, error } = await supabase
       .from('website_configs')
       .select('wordpress_url, wp_username, wp_app_password, wp_enabled, wordpress_access_token, wordpress_refresh_token')
-      .eq('id', websiteId)
-      .single();
+      .eq('id', websiteId);
 
-    if (error || !data?.wp_enabled) {
+    if (error) {
+      console.error('[Orchestrator] 查詢 website_configs 失敗:', error);
+      return null;
+    }
+
+    const data = configs?.[0];
+    if (!data?.wp_enabled) {
       return null;
     }
 
