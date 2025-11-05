@@ -1,10 +1,9 @@
-# OAuth 登入設定指南
+# Google OAuth 登入設定指南
 
-本文件說明如何在 Supabase 中設定 Google 和 LINE OAuth 登入功能。
+本文件說明如何在 Supabase 中設定 Google OAuth 登入功能。
 
 ## 目錄
 - [Google OAuth 設定](#google-oauth-設定)
-- [LINE OAuth 設定](#line-oauth-設定)
 - [Supabase 設定](#supabase-設定)
 - [測試流程](#測試流程)
 
@@ -61,56 +60,6 @@ http://localhost:54321/auth/v1/callback
 
 ---
 
-## LINE OAuth 設定
-
-### 步驟 1：建立 LINE Developers 帳號
-
-1. 前往 [LINE Developers Console](https://developers.line.biz/console/)
-2. 使用 LINE 帳號登入
-3. 如果沒有 Provider，先建立一個
-
-### 步驟 2：建立 LINE Login Channel
-
-1. 在 Provider 下點選「Create a new channel」
-2. 選擇「LINE Login」
-3. 填寫以下資訊：
-   - **Channel name**: `Auto Pilot SEO`
-   - **Channel description**: `Auto Pilot SEO 文章自動化平台`
-   - **App types**: Web app
-   - **Email address**: 您的 email
-
-### 步驟 3：設定 Callback URL
-
-1. 在 Channel 設定頁面找到「LINE Login settings」
-2. 設定 **Callback URL**：
-   ```
-   https://<your-project-ref>.supabase.co/auth/v1/callback
-   ```
-
-3. 同時設定 **本地開發 URL**（可選）：
-   ```
-   http://localhost:54321/auth/v1/callback
-   ```
-
-### 步驟 4：取得憑證
-
-在「Basic settings」頁籤中找到：
-- **Channel ID**（渠道 ID）
-- **Channel Secret**（渠道密鑰）
-
-**請妥善保存這兩個值！**
-
-### 步驟 5：設定權限範圍（Scopes）
-
-在「LINE Login」頁籤中，確認以下權限已啟用：
-- ✅ `profile` - 取得使用者基本資料
-- ✅ `openid` - OpenID Connect
-- ✅ `email` - 取得使用者 email（**重要**）
-
-**⚠️ 注意**：請確保啟用 `email` 權限，否則無法自動連結帳號！
-
----
-
 ## Supabase 設定
 
 ### 步驟 1：進入 Supabase Dashboard
@@ -129,21 +78,7 @@ http://localhost:54321/auth/v1/callback
 4. 設定「Authorized redirect URIs」（Supabase 會自動顯示正確的 URL）
 5. 點選「Save」
 
-### 步驟 3：設定 LINE Provider
-
-**⚠️ 注意**：Supabase 可能沒有內建 LINE Provider，需要手動設定
-
-1. 如果沒有看到 LINE Provider，請聯絡 Supabase 支援或使用 Custom OAuth Provider
-2. 設定方式：
-   - Provider name: `line`
-   - Authorization endpoint: `https://access.line.me/oauth2/v2.1/authorize`
-   - Token endpoint: `https://api.line.me/oauth2/v2.1/token`
-   - User info endpoint: `https://api.line.me/v2/profile`
-   - Client ID: 您的 LINE Channel ID
-   - Client Secret: 您的 LINE Channel Secret
-   - Scopes: `profile openid email`
-
-### 步驟 4：啟用帳號連結（Account Linking）
+### 步驟 3：啟用帳號連結（Account Linking）
 
 這個設定可以讓相同 email 的帳號自動連結：
 
@@ -155,7 +90,7 @@ http://localhost:54321/auth/v1/callback
 
 **效果**：當使用者用 `test@gmail.com` 註冊後，再用 Google `test@gmail.com` 登入時，會自動連結為同一個帳號。
 
-### 步驟 5：設定 Site URL
+### 步驟 4：設定 Site URL
 
 1. 前往「Authentication」→「URL Configuration」
 2. 設定 **Site URL**：
@@ -184,7 +119,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000  # 開發環境
 # NEXT_PUBLIC_APP_URL=https://your-domain.com  # 正式環境
 ```
 
-**不需要額外的 Google 或 LINE 環境變數**，因為 Supabase 會處理！
+**不需要額外的 Google 環境變數**，因為 Supabase 會處理！
 
 ---
 
@@ -202,21 +137,7 @@ NEXT_PUBLIC_APP_URL=http://localhost:3000  # 開發環境
    - 建立免費訂閱
    - 重定向到 Dashboard
 
-### 2. 測試 LINE 登入
-
-1. 前往 `http://localhost:3000/login`
-2. 點選「使用 LINE 登入」按鈕
-3. 使用 LINE 帳號登入
-4. 授權後應該會自動建立帳號和公司
-
-### 3. 測試帳號連結
-
-1. 用 Email/Password 註冊 `test@gmail.com`
-2. 登出
-3. 用 Google 登入 `test@gmail.com`
-4. 應該會自動連結，不會建立重複帳號
-
-### 4. 檢查資料庫
+### 2. 檢查資料庫
 
 使用 Supabase SQL Editor 執行：
 
@@ -250,19 +171,17 @@ LIMIT 10;
 ### Q1: Google 登入後沒有建立公司？
 **A**: 檢查資料庫 Trigger 是否正確設定（見 `supabase/migrations/` 資料夾）
 
-### Q2: LINE 登入顯示「invalid_request」？
-**A**: 檢查：
-1. Callback URL 是否正確
-2. Channel Secret 是否正確
-3. 是否啟用了 `email` scope
-
-### Q3: Email 衝突錯誤？
+### Q2: Email 衝突錯誤？
 **A**: 確認 Supabase「Link accounts with same email」已啟用
 
-### Q4: 本地開發無法測試 OAuth？
+### Q3: 本地開發無法測試 OAuth？
 **A**:
 1. 使用 `http://localhost:54321` 而非 `http://localhost:3000`
 2. 或使用 ngrok 建立臨時 HTTPS URL
+
+### Q4: Callback 失敗？
+**A**: 確認 Google OAuth 設定中的 Callback URL 為：
+   `https://<project-ref>.supabase.co/auth/v1/callback`
 
 ---
 
@@ -280,7 +199,6 @@ LIMIT 10;
 
 - [Supabase Auth Documentation](https://supabase.com/docs/guides/auth)
 - [Google OAuth 2.0 文件](https://developers.google.com/identity/protocols/oauth2)
-- [LINE Login API 文件](https://developers.line.biz/en/docs/line-login/)
 
 ---
 
