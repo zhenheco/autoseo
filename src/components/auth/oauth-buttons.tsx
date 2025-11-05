@@ -61,7 +61,7 @@ export function OAuthButtons({
     <Button
       type="button"
       variant="outline"
-      className="w-full h-11 text-sm font-medium bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 border-gray-300 dark:border-gray-700 transition-colors"
+      className="w-full h-11 text-sm font-medium bg-white hover:bg-gray-50 border-gray-300 text-gray-700 transition-colors"
       onClick={handleGoogleSignIn}
       disabled={isLoading}
     >
