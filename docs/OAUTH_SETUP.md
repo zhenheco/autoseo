@@ -78,17 +78,42 @@ http://localhost:54321/auth/v1/callback
 4. 設定「Authorized redirect URIs」（Supabase 會自動顯示正確的 URL）
 5. 點選「Save」
 
-### 步驟 3：啟用帳號連結（Account Linking）
+### 步驟 3：設定帳號連結（Account Linking）
 
 這個設定可以讓相同 email 的帳號自動連結：
 
-1. 前往「Authentication」→「Settings」
-2. 找到「User Signups」區塊
-3. 啟用「Enable email confirmations」（建議）
-4. 找到「Link accounts with same email」
-5. **啟用此選項**
+1. 前往「Authentication」→「Providers」
+2. 滾動到底部，找到「Security and User Management」或類似區塊
+3. 尋找以下任一選項：
+   - **「Link accounts with same email」**
+   - **「Automatic account linking」**
+   - **「Allow duplicate emails」**（設為 OFF 以啟用自動連結）
+4. **啟用自動連結功能**
+
+**如果找不到此選項**：
+- Supabase 可能已預設啟用此功能
+- 或者在「Authentication」→「Settings」→「Advanced Settings」中
+- 也可能在「Authentication」→「Policies」中
+
+**測試方法**：
+1. 用 Email/Password 註冊 `test@gmail.com`
+2. 登出後用 Google `test@gmail.com` 登入
+3. 檢查是否自動連結（使用下方的 SQL 查詢）
+
+**驗證 SQL**：
+```sql
+-- 檢查相同 email 是否有多個帳號
+SELECT email, COUNT(*) as account_count
+FROM auth.users
+WHERE email = 'test@gmail.com'
+GROUP BY email;
+-- 應該只有 1 個帳號
+```
 
 **效果**：當使用者用 `test@gmail.com` 註冊後，再用 Google `test@gmail.com` 登入時，會自動連結為同一個帳號。
+
+**如果無法設定帳號連結**：
+系統仍能正常運作，但使用者需要記住用哪種方式註冊（Email 或 Google），並持續使用同一種方式登入。
 
 ### 步驟 4：設定 Site URL
 
