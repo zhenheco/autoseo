@@ -119,20 +119,33 @@ export default function ArticlesPage() {
     }
 
     try {
+      console.log('[ArticlesPage] Clearing jobs, current count:', jobs.length)
+
       const response = await fetch('/api/articles/jobs/clear', {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
       })
+
+      console.log('[ArticlesPage] Clear response status:', response.status)
 
       if (response.ok) {
         const data = await response.json()
+        console.log('[ArticlesPage] Clear response:', data)
         alert(`已清除 ${data.deletedCount} 個任務`)
-        fetchData()
+
+        await fetchData()
+
+        console.log('[ArticlesPage] After refresh, jobs count:', jobs.length)
       } else {
-        alert('清除失敗')
+        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
+        console.error('[ArticlesPage] Clear failed:', errorData)
+        alert(`清除失敗: ${errorData.error || response.statusText}`)
       }
     } catch (error) {
-      console.error('Clear jobs error:', error)
-      alert('清除失敗')
+      console.error('[ArticlesPage] Clear jobs error:', error)
+      alert(`清除失敗: ${(error as Error).message}`)
     }
   }
 

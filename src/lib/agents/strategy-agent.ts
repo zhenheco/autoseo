@@ -64,22 +64,43 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
         format: 'json',
       });
 
+      console.log('[StrategyAgent] Raw title response:', {
+        contentLength: response.content?.length || 0,
+        preview: response.content?.substring(0, 200)
+      });
+
       if (!response.content || response.content.trim() === '') {
         console.warn('[StrategyAgent] Empty response, using fallback titles');
         return this.getFallbackTitles(input.researchData.keyword);
       }
 
-      const jsonMatch = response.content.match(/\[[\s\S]*?\]/);
-      if (jsonMatch) {
-        const parsed = JSON.parse(jsonMatch[0]);
-        if (Array.isArray(parsed) && parsed.length >= 3) {
-          return parsed.slice(0, 3);
+      const content = response.content.trim();
+
+      const arrayMatch = content.match(/\[[\s\S]*?\]/);
+      if (arrayMatch) {
+        try {
+          const parsed = JSON.parse(arrayMatch[0]);
+          if (Array.isArray(parsed) && parsed.length >= 3) {
+            console.log('[StrategyAgent] Successfully parsed titles from array match');
+            return parsed.slice(0, 3);
+          }
+        } catch (e) {
+          console.warn('[StrategyAgent] Failed to parse array match:', e);
         }
       }
 
-      const parsed = JSON.parse(response.content.trim());
-      if (Array.isArray(parsed) && parsed.length >= 3) {
-        return parsed.slice(0, 3);
+      try {
+        const parsed = JSON.parse(content);
+        if (Array.isArray(parsed) && parsed.length >= 3) {
+          console.log('[StrategyAgent] Successfully parsed titles from full content');
+          return parsed.slice(0, 3);
+        }
+        if (parsed.titles && Array.isArray(parsed.titles) && parsed.titles.length >= 3) {
+          console.log('[StrategyAgent] Successfully parsed titles from .titles property');
+          return parsed.titles.slice(0, 3);
+        }
+      } catch (e) {
+        console.warn('[StrategyAgent] Failed to parse full content as JSON:', e);
       }
 
       console.warn('[StrategyAgent] Invalid title format, using fallback');
