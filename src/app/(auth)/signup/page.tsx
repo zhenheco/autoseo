@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
-import { OAuthButtons, OAuthDivider } from '@/components/auth/oauth-buttons'
 import { Sparkles, Mail } from 'lucide-react'
 
 export default async function SignupPage({
@@ -30,7 +29,7 @@ export default async function SignupPage({
           <h1 className="text-3xl font-bold tracking-tight mb-2 text-foreground">
             建立新帳號
           </h1>
-          <p className="text-base text-muted-foreground">使用 Google 帳號或 Email 快速註冊</p>
+          <p className="text-base text-muted-foreground">輸入您的 Email 以建立新帳號</p>
         </div>
 
         <div className="bg-card border border-border rounded-2xl p-8 shadow-lg">
@@ -39,11 +38,6 @@ export default async function SignupPage({
               {params.error}
             </div>
           )}
-
-          {/* OAuth 註冊按鈕 */}
-          <OAuthButtons redirectTo="/dashboard" actionText="註冊" />
-
-          <OAuthDivider />
 
           <form action={signup} className="space-y-5">
             <div className="space-y-2">
