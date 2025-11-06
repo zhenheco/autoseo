@@ -7,10 +7,11 @@ import { getUserSubscriptionTier } from '@/lib/permissions'
 export default async function UnauthorizedPage({
   searchParams,
 }: {
-  searchParams: { reason?: string }
+  searchParams: Promise<{ reason?: string }>
 }) {
+  const params = await searchParams
   const subscriptionTier = await getUserSubscriptionTier()
-  const isFreePlan = searchParams.reason === 'free-plan' || subscriptionTier === 'free'
+  const isFreePlan = params.reason === 'free-plan' || subscriptionTier === 'free'
 
   // 免費方案限制的友善提示
   if (isFreePlan) {
