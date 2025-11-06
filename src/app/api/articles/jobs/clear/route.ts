@@ -45,25 +45,49 @@ export async function DELETE() {
       console.error('[Clear Jobs] Query error:', queryError);
     }
 
+    // 如果沒有找到任何任務，提前返回
+    if (!existingJobs || existingJobs.length === 0) {
+      console.log('[Clear Jobs] No jobs found to delete');
+      return NextResponse.json({
+        success: true,
+        deletedCount: 0,
+        message: '沒有找到需要清除的任務',
+        diagnostic: {
+          totalJobs: 0,
+          queryConditions: `status != 'completed' AND company_id = '${membership.company_id}'`,
+        },
+      });
+    }
+
     // 刪除所有非 completed 狀態的 jobs（包括 pending, processing, failed 等）
     const { data: deletedJobs, error } = await supabase
       .from('article_jobs')
       .delete()
       .eq('company_id', membership.company_id)
       .neq('status', 'completed')
-      .select('id');
+      .select('id, status');
 
     if (error) {
       console.error('[Clear Jobs] Delete error:', error);
       return NextResponse.json({ error: 'Failed to clear jobs' }, { status: 500 });
     }
 
-    console.log('[Clear Jobs] Successfully deleted:', deletedJobs?.length || 0);
+    const deletedCount = deletedJobs?.length || 0;
+    console.log('[Clear Jobs] Successfully deleted:', deletedCount);
+    console.log('[Clear Jobs] Deleted job IDs:', deletedJobs?.map(j => j.id.substring(0, 8)));
+
+    // 驗證刪除數量與查詢數量是否一致
+    if (deletedCount !== existingJobs.length) {
+      console.warn(
+        `[Clear Jobs] Mismatch: Found ${existingJobs.length} jobs but deleted ${deletedCount}`
+      );
+    }
 
     return NextResponse.json({
       success: true,
-      deletedCount: deletedJobs?.length || 0,
-      message: `已清除 ${deletedJobs?.length || 0} 個任務`,
+      deletedCount,
+      message: `已清除 ${deletedCount} 個任務`,
+      deletedJobs: deletedJobs?.map(j => ({ id: j.id, status: j.status })),
     });
   } catch (error) {
     console.error('[Clear Jobs] Unexpected error:', error);
