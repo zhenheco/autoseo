@@ -35,6 +35,14 @@ export default async function SubscriptionPage() {
     .eq('id', member.company_id)
     .single()
 
+  // 取得新的訂閱資訊
+  const { data: companySubscription } = await supabase
+    .from('company_subscriptions')
+    .select('monthly_quota_balance, purchased_token_balance, monthly_token_quota, current_period_end')
+    .eq('company_id', member.company_id)
+    .eq('status', 'active')
+    .single()
+
   const { data: plans } = await supabase
     .from('subscription_plans')
     .select<'*', Database['public']['Tables']['subscription_plans']['Row']>('*')
@@ -60,27 +68,37 @@ export default async function SubscriptionPage() {
       <SubscriptionStatusChecker />
 
       {company && (
-        <div className="mb-8 p-4 rounded-lg bg-muted">
-          <div className="flex justify-between items-center mb-2">
-            <h2 className="font-semibold">目前方案</h2>
+        <div className="mb-8 p-6 rounded-lg bg-gradient-to-br from-card to-muted border border-border shadow-sm">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-xl font-semibold">目前方案</h2>
             <a href="/pricing" className="px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors">
               升級方案
             </a>
           </div>
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <p className="text-sm text-muted-foreground">方案類型</p>
-              <p className="font-medium">{company.subscription_tier === 'free' ? '免費方案' : company.subscription_tier.toUpperCase()}</p>
+              <p className="text-sm text-muted-foreground mb-1">方案類型</p>
+              <p className="text-lg font-semibold">{company.subscription_tier === 'free' ? '免費方案' : company.subscription_tier.toUpperCase()}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Token 餘額</p>
-              <p className="font-medium">{company.seo_token_balance?.toLocaleString() || 0}</p>
+              <p className="text-sm text-muted-foreground mb-1">月配額</p>
+              <p className="text-lg font-semibold">
+                {companySubscription?.monthly_quota_balance?.toLocaleString() || 0} / {companySubscription?.monthly_token_quota?.toLocaleString() || 0}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">剩餘 / 總額</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">到期日</p>
-              <p className="font-medium">
-                {company.subscription_ends_at
-                  ? new Date(company.subscription_ends_at).toLocaleDateString('zh-TW')
+              <p className="text-sm text-muted-foreground mb-1">購買 Tokens</p>
+              <p className="text-lg font-semibold">
+                {companySubscription?.purchased_token_balance?.toLocaleString() || 0}
+              </p>
+              <p className="text-xs text-success mt-1">永不過期</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">配額重置日</p>
+              <p className="text-lg font-semibold">
+                {companySubscription?.current_period_end
+                  ? new Date(companySubscription.current_period_end).toLocaleDateString('zh-TW', { month: 'short', day: 'numeric' })
                   : '無'}
               </p>
             </div>

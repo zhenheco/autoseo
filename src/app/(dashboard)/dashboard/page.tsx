@@ -2,8 +2,11 @@ import { getUser, getUserCompanies } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { StatCard } from '@/components/dashboard/stat-card'
+import { TokenBalanceCard } from '@/components/dashboard/TokenBalanceCard'
+import { UpgradePromptCard } from '@/components/dashboard/UpgradePromptCard'
 import { FileText, Globe, TrendingUp } from 'lucide-react'
-import { checkPagePermission } from '@/lib/permissions'
+import { checkPagePermission, getUserSubscriptionTier } from '@/lib/permissions'
+import { createClient } from '@/lib/supabase/server'
 
 export default async function DashboardPage() {
   await checkPagePermission('canAccessDashboard')
@@ -15,6 +18,30 @@ export default async function DashboardPage() {
   }
 
   const companies = await getUserCompanies(user.id)
+  const subscriptionTier = await getUserSubscriptionTier()
+
+  // 取得 token 餘額
+  const supabase = await createClient()
+  const { data: membership } = await supabase
+    .from('company_members')
+    .select('company_id')
+    .eq('user_id', user.id)
+    .eq('status', 'active')
+    .single()
+
+  let tokenBalance = 0
+  if (membership) {
+    const { data: subscription } = await supabase
+      .from('company_subscriptions')
+      .select('monthly_quota_balance, purchased_token_balance')
+      .eq('company_id', membership.company_id)
+      .eq('status', 'active')
+      .single()
+
+    if (subscription) {
+      tokenBalance = subscription.monthly_quota_balance + subscription.purchased_token_balance
+    }
+  }
 
   return (
     <div className="space-y-6">
@@ -44,18 +71,15 @@ export default async function DashboardPage() {
           iconBgColor="bg-success/10"
           iconColor="text-success"
         />
-        <div className="relative overflow-hidden rounded-xl border border-border/30 bg-muted/30 backdrop-blur-sm p-6 opacity-60">
-          <div className="flex items-center justify-between">
-            <div className="space-y-2">
-              <p className="text-sm font-medium text-muted-foreground">月流量</p>
-              <p className="text-2xl font-bold text-muted-foreground">🚧 待開發</p>
-            </div>
-            <div className="rounded-full bg-muted/50 p-3">
-              <TrendingUp className="h-6 w-6 text-muted-foreground" />
-            </div>
-          </div>
-        </div>
+        <TokenBalanceCard />
       </div>
+
+      {/* 免費用戶升級提示 */}
+      {subscriptionTier === 'free' && (
+        <div className="mt-6">
+          <UpgradePromptCard currentTier={subscriptionTier} tokenBalance={tokenBalance} />
+        </div>
+      )}
 
       <Card className="border-border/30 bg-muted/30 backdrop-blur-sm rounded-xl opacity-60">
         <CardHeader>
