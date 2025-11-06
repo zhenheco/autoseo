@@ -80,13 +80,15 @@ export default async function WebsitesPage({
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {websites && websites.length > 0 ? (
           websites.map((website: any) => (
-            <Card key={website.id}>
-              <CardHeader>
-                <CardTitle className="text-lg">{website.site_name || website.website_name}</CardTitle>
-                <CardDescription className="break-all">
-                  {website.site_url || website.wordpress_url}
-                </CardDescription>
-              </CardHeader>
+            <Card key={website.id} className="hover:shadow-lg transition-shadow">
+              <Link href={`/dashboard/websites/${website.id}`}>
+                <CardHeader className="cursor-pointer">
+                  <CardTitle className="text-lg">{website.site_name || website.website_name}</CardTitle>
+                  <CardDescription className="break-all">
+                    {website.site_url || website.wordpress_url}
+                  </CardDescription>
+                </CardHeader>
+              </Link>
               <CardContent>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
@@ -97,8 +99,13 @@ export default async function WebsitesPage({
                     />
                   </div>
                   <div className="flex gap-2 pt-2">
-                    <Link href={`/dashboard/websites/${website.id}/edit`} className="flex-1">
-                      <Button variant="outline" size="sm" className="w-full">
+                    <Link href={`/dashboard/websites/${website.id}`} className="flex-1">
+                      <Button variant="default" size="sm" className="w-full">
+                        查看文章
+                      </Button>
+                    </Link>
+                    <Link href={`/dashboard/websites/${website.id}/edit`}>
+                      <Button variant="outline" size="sm">
                         編輯
                       </Button>
                     </Link>
