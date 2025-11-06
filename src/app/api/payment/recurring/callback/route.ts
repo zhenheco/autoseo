@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { PaymentService } from '@/lib/payment/payment-service'
+import { calculateAndCreateCommission } from '@/lib/affiliate/commission'
 
 // 處理 GET 請求（藍新金流使用 GET 重定向）
 export async function GET(request: NextRequest) {
@@ -178,6 +179,36 @@ async function handleCallback(request: NextRequest) {
             }
 
             console.log('[Payment Callback] 授權成功，所有資料已更新（包含訂閱和代幣）')
+
+            // 計算並創建佣金（異步執行，不阻塞返回）
+            try {
+              // 查詢訂單資訊
+              const { data: paymentOrder } = await supabase
+                .from('payment_orders')
+                .select('id, company_id, order_type, payment_type, amount, paid_at')
+                .eq('order_no', orderNo)
+                .single()
+
+              if (paymentOrder && paymentOrder.payment_type === 'subscription') {
+                console.log('[Affiliate] 開始計算佣金，訂單:', paymentOrder.id)
+
+                const commissionResult = await calculateAndCreateCommission({
+                  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
+                  supabaseServiceKey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
+                  paymentOrder: paymentOrder as any,
+                  mandateId: periodNo,
+                })
+
+                if (commissionResult.success) {
+                  console.log('[Affiliate] 佣金創建成功:', commissionResult.commission_id)
+                } else {
+                  console.log('[Affiliate] 佣金創建失敗或無需創建:', commissionResult.message)
+                }
+              }
+            } catch (commissionError) {
+              // 佣金計算失敗不影響支付流程
+              console.error('[Affiliate] 佣金計算錯誤:', commissionError)
+            }
 
             // 立即返回成功，使用 mandateNo 參數
             const redirectUrl = `${baseUrl}/dashboard/subscription?payment=success&mandateNo=${encodeURIComponent(orderNo)}`
