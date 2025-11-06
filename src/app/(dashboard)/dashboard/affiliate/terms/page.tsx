@@ -307,7 +307,7 @@ export default function TermsPage() {
           <div>
             <h4 className="font-semibold mb-1">8.2 爭議解決</h4>
             <p>
-              因本條款產生的爭議，雙方應先協商解決。協商不成時，同意以台灣台北地方法院為第一審管轄法院。
+              因本條款產生的爭議，雙方應先協商解決。協商不成時，同意以台灣桃園地方法院為第一審管轄法院。
             </p>
           </div>
 
@@ -335,7 +335,7 @@ export default function TermsPage() {
         <CardContent className="text-sm text-gray-700">
           <p className="mb-2">如對本條款有任何疑問，請聯絡我們：</p>
           <ul className="space-y-1 pl-4">
-            <li>• Email: affiliate@yourplatform.com</li>
+            <li>• Email: service@zhenhe-co.com</li>
             <li>• 客服時間：週一至週五 9:00-18:00（台灣時間）</li>
           </ul>
         </CardContent>
