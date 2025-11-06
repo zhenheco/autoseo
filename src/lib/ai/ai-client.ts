@@ -62,29 +62,37 @@ export class AIClient {
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
         const estimatedTokens = options.maxTokens || 2000;
-        const rateLimiter = getRateLimiter(currentModel);
+        const isDeepSeekModel = currentModel.includes('deepseek');
 
-        await rateLimiter.acquire(estimatedTokens);
+        if (!isDeepSeekModel) {
+          const rateLimiter = getRateLimiter(currentModel);
+          await rateLimiter.acquire(estimatedTokens);
+        }
 
         const responseFormat = options.responseFormat ||
           (options.format === 'json' ? { type: 'json_object' } : undefined);
 
         let response;
-        const isDeepSeekModel = currentModel.includes('deepseek');
 
         if (isDeepSeekModel) {
           let deepseekModel = 'deepseek-chat';
+          let maxTokensLimit = 8192;
+
           if (currentModel.includes('reasoner')) {
             deepseekModel = 'deepseek-reasoner';
+            maxTokensLimit = 64000;
           } else if (currentModel.includes('chat') || currentModel.includes('v3.2-exp')) {
             deepseekModel = 'deepseek-chat';
+            maxTokensLimit = 8192;
           }
+
+          const maxTokens = Math.min(options.maxTokens ?? 2000, maxTokensLimit);
 
           response = await this.callDeepSeekAPI({
             model: deepseekModel,
             messages,
             temperature: options.temperature ?? 0.7,
-            max_tokens: options.maxTokens ?? 2000,
+            max_tokens: maxTokens,
             response_format: responseFormat,
           });
         } else {
@@ -119,7 +127,10 @@ export class AIClient {
         });
 
         const totalTokens = response.usage?.total_tokens || 0;
-        rateLimiter.reportUsage(totalTokens);
+        if (!isDeepSeekModel) {
+          const rateLimiter = getRateLimiter(currentModel);
+          rateLimiter.reportUsage(totalTokens);
+        }
 
         return {
           content,
