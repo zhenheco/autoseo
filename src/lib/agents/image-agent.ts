@@ -1,6 +1,7 @@
 import { BaseAgent } from './base-agent';
 import type { ImageInput, ImageOutput, GeneratedImage } from '@/types/agents';
 import { GoogleDriveClient, getGoogleDriveConfig } from '@/lib/storage/google-drive-client';
+import { processBase64Image, formatFileSize, calculateCompressionRatio } from '@/lib/image-processor';
 
 const IMAGE_MODELS = {
   'dall-e-3': {
@@ -34,7 +35,7 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
     if (input.model === 'none') {
       console.warn('[ImageAgent] Image generation skipped (model is "none")');
       return {
-        featuredImage: null as any,  // TypeScript workaround
+        featuredImage: null as any,
         contentImages: [],
         executionInfo: {
           model: 'none',
@@ -45,7 +46,19 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
       };
     }
 
-    const featuredImage = await this.generateFeaturedImage(input);
+    const successfulImages: GeneratedImage[] = [];
+    const failedImages: number[] = [];
+
+    let featuredImage: GeneratedImage | null = null;
+    try {
+      featuredImage = await this.generateFeaturedImageWithRetry(input, 3);
+      successfulImages.push(featuredImage);
+      console.log('[ImageAgent] ✅ Featured image generated successfully');
+    } catch (error) {
+      const err = error as Error;
+      console.error('[ImageAgent] ❌ Featured image generation failed after retries:', err.message);
+      failedImages.push(0);
+    }
 
     const contentImages: GeneratedImage[] = [];
     const sectionsNeedingImages = Math.min(
@@ -55,26 +68,97 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
 
     for (let i = 0; i < sectionsNeedingImages; i++) {
       const section = input.outline.mainSections[i];
-      const image = await this.generateContentImage(input, section, i);
-      contentImages.push(image);
+      try {
+        const image = await this.generateContentImageWithRetry(input, section, i, 3);
+        contentImages.push(image);
+        successfulImages.push(image);
+        console.log(`[ImageAgent] ✅ Content image ${i + 1}/${sectionsNeedingImages} generated successfully`);
+      } catch (error) {
+        const err = error as Error;
+        console.warn(`[ImageAgent] ⚠️ Content image ${i + 1} failed after retries: ${err.message}`);
+        failedImages.push(i + 1);
+      }
+    }
+
+    if (failedImages.length > 0) {
+      console.warn(`[ImageAgent] ⚠️ Failed images (positions): ${failedImages.join(', ')}`);
     }
 
     const totalCost = this.calculateTotalCost(
-      [featuredImage, ...contentImages],
+      successfulImages,
       input.model,
       input.size
     );
+
+    if (!featuredImage) {
+      throw new Error('Featured image generation failed completely');
+    }
 
     return {
       featuredImage,
       contentImages,
       executionInfo: {
         model: input.model,
-        totalImages: 1 + contentImages.length,
+        totalImages: successfulImages.length,
         executionTime: this.startTime ? Date.now() - this.startTime : 0,
         totalCost,
       },
     };
+  }
+
+  private async generateFeaturedImageWithRetry(input: ImageInput, maxRetries: number): Promise<GeneratedImage> {
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`[ImageAgent] 🎨 Generating featured image (attempt ${attempt}/${maxRetries})...`);
+        const image = await this.generateFeaturedImage(input);
+        return image;
+      } catch (error) {
+        lastError = error as Error;
+        console.warn(`[ImageAgent] ⚠️ Featured image attempt ${attempt} failed: ${lastError.message}`);
+
+        if (attempt < maxRetries) {
+          const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
+          console.log(`[ImageAgent] ⏳ Retrying in ${delay}ms...`);
+          await this.sleep(delay);
+        }
+      }
+    }
+
+    throw new Error(`Featured image generation failed after ${maxRetries} attempts: ${lastError?.message}`);
+  }
+
+  private async generateContentImageWithRetry(
+    input: ImageInput,
+    section: ImageInput['outline']['mainSections'][0],
+    index: number,
+    maxRetries: number
+  ): Promise<GeneratedImage> {
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`[ImageAgent] 🎨 Generating content image ${index + 1} (attempt ${attempt}/${maxRetries})...`);
+        const image = await this.generateContentImage(input, section, index);
+        return image;
+      } catch (error) {
+        lastError = error as Error;
+        console.warn(`[ImageAgent] ⚠️ Content image ${index + 1} attempt ${attempt} failed: ${lastError.message}`);
+
+        if (attempt < maxRetries) {
+          const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
+          console.log(`[ImageAgent] ⏳ Retrying in ${delay}ms...`);
+          await this.sleep(delay);
+        }
+      }
+    }
+
+    throw new Error(`Content image ${index + 1} generation failed after ${maxRetries} attempts: ${lastError?.message}`);
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   private async generateFeaturedImage(input: ImageInput): Promise<GeneratedImage> {
@@ -92,15 +176,32 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
     const driveConfig = getGoogleDriveConfig();
     if (driveConfig) {
       try {
+        console.log('[ImageAgent] 📦 Processing and compressing featured image...');
+
+        const processed = await processBase64Image(result.url, {
+          format: 'jpeg',
+          quality: 85,
+          maxWidth: 1920,
+          maxHeight: 1920,
+        });
+
+        const originalSize = Buffer.from(result.url.split(',')[1], 'base64').length;
+        const compressionRatio = calculateCompressionRatio(originalSize, processed.size);
+
+        console.log(`[ImageAgent] ✅ Compressed: ${formatFileSize(originalSize)} → ${formatFileSize(processed.size)} (${compressionRatio}% reduction)`);
+
         const driveClient = new GoogleDriveClient(driveConfig);
         const timestamp = Date.now();
         const filename = `article-hero-${timestamp}.jpg`;
 
-        const uploaded = await driveClient.uploadFromUrl(result.url, filename);
+        const base64Jpeg = processed.buffer.toString('base64');
+        const dataUrl = `data:image/jpeg;base64,${base64Jpeg}`;
+
+        const uploaded = await driveClient.uploadFromUrl(dataUrl, filename);
         finalUrl = uploaded.url;
         storage = 'google-drive';
 
-        console.log(`[ImageAgent] Uploaded featured image to Google Drive: ${uploaded.fileId}`);
+        console.log(`[ImageAgent] ☁️ Uploaded featured image to Google Drive: ${uploaded.fileId}`);
       } catch (error) {
         const err = error as Error;
         console.warn('[ImageAgent] Failed to upload to Google Drive, using original URL:', err.message);
@@ -139,14 +240,31 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
     const driveConfig = getGoogleDriveConfig();
     if (driveConfig) {
       try {
+        console.log(`[ImageAgent] 📦 Processing and compressing content image ${index + 1}...`);
+
+        const processed = await processBase64Image(result.url, {
+          format: 'jpeg',
+          quality: 85,
+          maxWidth: 1920,
+          maxHeight: 1920,
+        });
+
+        const originalSize = Buffer.from(result.url.split(',')[1], 'base64').length;
+        const compressionRatio = calculateCompressionRatio(originalSize, processed.size);
+
+        console.log(`[ImageAgent] ✅ Compressed: ${formatFileSize(originalSize)} → ${formatFileSize(processed.size)} (${compressionRatio}% reduction)`);
+
         const driveClient = new GoogleDriveClient(driveConfig);
         const timestamp = Date.now();
         const filename = `article-content-${index + 1}-${timestamp}.jpg`;
 
-        const uploaded = await driveClient.uploadFromUrl(result.url, filename);
+        const base64Jpeg = processed.buffer.toString('base64');
+        const dataUrl = `data:image/jpeg;base64,${base64Jpeg}`;
+
+        const uploaded = await driveClient.uploadFromUrl(dataUrl, filename);
         finalUrl = uploaded.url;
 
-        console.log(`[ImageAgent] Uploaded content image to Google Drive: ${uploaded.fileId}`);
+        console.log(`[ImageAgent] ☁️ Uploaded content image ${index + 1} to Google Drive: ${uploaded.fileId}`);
       } catch (error) {
         const err = error as Error;
         console.warn('[ImageAgent] Failed to upload to Google Drive, using original URL:', err.message);
