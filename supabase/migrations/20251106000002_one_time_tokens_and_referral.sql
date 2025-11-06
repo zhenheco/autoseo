@@ -260,3 +260,19 @@ GRANT EXECUTE ON FUNCTION award_referral_bonus() TO postgres;
 -- 5. 註解說明
 COMMENT ON FUNCTION award_referral_bonus() IS '當被推薦人首次付款成功時，自動給推薦人發放 50,000 tokens 獎勵';
 COMMENT ON TRIGGER trigger_award_referral_bonus ON payment_orders IS '監聽付款狀態變更，自動發放推薦獎勵';
+
+-- 6. 增加推薦計數的 RPC 函數（原子操作）
+CREATE OR REPLACE FUNCTION increment_referral_count(p_company_id UUID)
+RETURNS VOID AS $$
+BEGIN
+  UPDATE company_referral_codes
+  SET total_referrals = total_referrals + 1
+  WHERE company_id = p_company_id;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+GRANT EXECUTE ON FUNCTION increment_referral_count(UUID) TO service_role;
+GRANT EXECUTE ON FUNCTION increment_referral_count(UUID) TO postgres;
+GRANT EXECUTE ON FUNCTION increment_referral_count(UUID) TO authenticated;
+
+COMMENT ON FUNCTION increment_referral_count(UUID) IS '原子性地增加公司的推薦計數';

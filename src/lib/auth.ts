@@ -137,13 +137,10 @@ export async function signUp(email: string, password: string) {
           status: 'pending', // 等待首次付款
         })
 
-      // 更新推薦人的推薦統計
-      await supabase
-        .from('company_referral_codes')
-        .update({
-          total_referrals: supabase.raw('total_referrals + 1')
-        })
-        .eq('referral_code', referrerCode)
+      // 更新推薦人的推薦統計 (使用 RPC 函數來原子性地增加計數)
+      await supabase.rpc('increment_referral_count', {
+        p_company_id: referrerData.company_id
+      })
     }
   }
 
