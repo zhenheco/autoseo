@@ -74,7 +74,6 @@ export async function updateWebsite(formData: FormData) {
   const siteUrl = formData.get('siteUrl') as string
   const wpUsername = formData.get('wpUsername') as string
   const wpPassword = formData.get('wpPassword') as string
-  const isActive = formData.get('isActive') === 'on'
 
   if (!websiteId || !companyId || !siteName || !siteUrl || !wpUsername) {
     redirect(`/dashboard/websites/${websiteId}/edit?error=` + encodeURIComponent('缺少必要欄位'))
@@ -106,7 +105,6 @@ export async function updateWebsite(formData: FormData) {
     website_name: siteName,
     wordpress_url: siteUrl.replace(/\/$/, ''), // 移除尾部斜線
     wp_username: wpUsername,
-    is_active: isActive,
   }
 
   // 只有在提供新密碼時才更新
@@ -134,14 +132,14 @@ export async function updateWebsite(formData: FormData) {
 export async function toggleWebsiteStatus(formData: FormData) {
   const user = await getUser()
   if (!user) {
-    redirect('/login')
+    throw new Error('未登入')
   }
 
   const websiteId = formData.get('websiteId') as string
   const currentStatus = formData.get('currentStatus') === 'true'
 
   if (!websiteId) {
-    redirect('/dashboard/websites?error=' + encodeURIComponent('缺少網站 ID'))
+    throw new Error('缺少網站 ID')
   }
 
   const supabase = await createClient()
@@ -154,7 +152,7 @@ export async function toggleWebsiteStatus(formData: FormData) {
     .single()
 
   if (!website) {
-    redirect('/dashboard/websites?error=' + encodeURIComponent('找不到該網站'))
+    throw new Error('找不到該網站')
   }
 
   // 檢查使用者是否有權限
@@ -166,7 +164,7 @@ export async function toggleWebsiteStatus(formData: FormData) {
     .single()
 
   if (!membership || (membership.role !== 'owner' && membership.role !== 'admin')) {
-    redirect('/dashboard/websites?error=' + encodeURIComponent('您沒有權限修改網站狀態'))
+    throw new Error('您沒有權限修改網站狀態')
   }
 
   // 切換狀態
@@ -176,11 +174,10 @@ export async function toggleWebsiteStatus(formData: FormData) {
     .eq('id', websiteId)
 
   if (error) {
-    redirect('/dashboard/websites?error=' + encodeURIComponent(error.message))
+    throw new Error(error.message)
   }
 
   revalidatePath('/dashboard/websites')
-  redirect('/dashboard/websites')
 }
 
 /**

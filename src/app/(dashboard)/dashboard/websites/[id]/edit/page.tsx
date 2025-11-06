@@ -125,19 +125,6 @@ export default async function EditWebsitePage({
               </p>
             </div>
 
-            <div className="flex items-center space-x-2">
-              <input
-                type="checkbox"
-                id="is-active"
-                name="isActive"
-                defaultChecked={website.is_active}
-                className="h-4 w-4 rounded border-gray-300"
-              />
-              <Label htmlFor="is-active" className="cursor-pointer">
-                啟用網站
-              </Label>
-            </div>
-
             <div className="flex gap-4">
               <Button type="submit">儲存變更</Button>
               <Link href="/dashboard/websites">
