@@ -2,10 +2,8 @@ import { getUser } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
 import { Users, Gift, Link as LinkIcon, TrendingUp } from 'lucide-react'
 import { ReferralLinkCard } from '@/components/referrals/ReferralLinkCard'
-import { ReferralStatsCard } from '@/components/referrals/ReferralStatsCard'
 import { ReferralHistoryTable } from '@/components/referrals/ReferralHistoryTable'
 
 export default async function ReferralsPage() {
