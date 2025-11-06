@@ -4,6 +4,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import Link from 'next/link'
 import { createWebsite } from './actions'
 
 export default async function NewWebsitePage() {
@@ -96,9 +97,11 @@ export default async function NewWebsitePage() {
 
             <div className="flex gap-4">
               <Button type="submit">新增網站</Button>
-              <Button type="button" variant="outline" onClick={() => window.history.back()}>
-                取消
-              </Button>
+              <Link href="/dashboard/websites">
+                <Button type="button" variant="outline">
+                  取消
+                </Button>
+              </Link>
             </div>
           </form>
         </CardContent>

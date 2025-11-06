@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import Link from 'next/link'
 import { updateWebsite } from '../../actions'
 
 async function getWebsite(websiteId: string, companyId: string) {
@@ -139,9 +140,11 @@ export default async function EditWebsitePage({
 
             <div className="flex gap-4">
               <Button type="submit">儲存變更</Button>
-              <Button type="button" variant="outline" onClick={() => window.history.back()}>
-                取消
-              </Button>
+              <Link href="/dashboard/websites">
+                <Button type="button" variant="outline">
+                  取消
+                </Button>
+              </Link>
             </div>
           </form>
         </CardContent>
