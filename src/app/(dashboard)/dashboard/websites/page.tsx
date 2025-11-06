@@ -81,9 +81,9 @@ export default async function WebsitesPage({
           websites.map((website: any) => (
             <Card key={website.id}>
               <CardHeader>
-                <CardTitle className="text-lg">{website.site_name}</CardTitle>
+                <CardTitle className="text-lg">{website.site_name || website.website_name}</CardTitle>
                 <CardDescription className="break-all">
-                  {website.site_url}
+                  {website.site_url || website.wordpress_url}
                 </CardDescription>
               </CardHeader>
               <CardContent>

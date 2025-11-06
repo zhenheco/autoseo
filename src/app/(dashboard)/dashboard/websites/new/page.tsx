@@ -7,7 +7,11 @@ import { Label } from '@/components/ui/label'
 import Link from 'next/link'
 import { createWebsite } from './actions'
 
-export default async function NewWebsitePage() {
+export default async function NewWebsitePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>
+}) {
   const user = await getUser()
 
   if (!user) {
@@ -24,6 +28,8 @@ export default async function NewWebsitePage() {
     )
   }
 
+  const params = await searchParams
+
   return (
     <div className="container mx-auto p-8 max-w-2xl">
       <div className="mb-8">
@@ -32,6 +38,13 @@ export default async function NewWebsitePage() {
           連接您的 WordPress 網站以開始自動發布文章
         </p>
       </div>
+
+      {/* 錯誤訊息顯示 */}
+      {params.error && (
+        <div className="mb-6 rounded-md bg-destructive/15 p-4 text-sm text-destructive">
+          {params.error}
+        </div>
+      )}
 
       <Card>
         <CardHeader>

@@ -103,10 +103,8 @@ export async function updateWebsite(formData: FormData) {
 
   // 準備更新資料
   const updateData: any = {
-    site_name: siteName,
-    website_name: siteName, // 支援舊欄位名稱
-    site_url: siteUrl.replace(/\/$/, ''), // 移除尾部斜線
-    wordpress_url: siteUrl.replace(/\/$/, ''), // 支援舊欄位名稱
+    website_name: siteName,
+    wordpress_url: siteUrl.replace(/\/$/, ''), // 移除尾部斜線
     wp_username: wpUsername,
     is_active: isActive,
   }
