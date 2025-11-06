@@ -172,7 +172,8 @@ export class ParallelOrchestrator {
 
       writingOutput.html = htmlOutput.html;
 
-      await this.updateJobStatus(input.articleJobId, 'html_completed', {
+      await this.updateJobStatus(input.articleJobId, 'processing', {
+        current_phase: 'html_completed',
         html: htmlOutput,
       });
 
@@ -241,7 +242,8 @@ export class ParallelOrchestrator {
       });
       result.category = categoryOutput;
 
-      await this.updateJobStatus(input.articleJobId, 'category_completed', {
+      await this.updateJobStatus(input.articleJobId, 'processing', {
+        current_phase: 'category_completed',
         category: categoryOutput,
       });
 
@@ -268,7 +270,8 @@ export class ParallelOrchestrator {
             status: publishResult.post.status,
           };
 
-          await this.updateJobStatus(input.articleJobId, 'wordpress_published', {
+          await this.updateJobStatus(input.articleJobId, 'processing', {
+            current_phase: 'wordpress_published',
             wordpress: result.wordpress,
           });
         } catch (wpError) {
