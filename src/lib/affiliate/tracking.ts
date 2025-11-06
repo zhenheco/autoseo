@@ -115,5 +115,6 @@ export function getClientIp(request: NextRequest): string | null {
   if (forwardedFor) {
     return forwardedFor.split(',')[0].trim()
   }
-  return request.ip || null
+  const realIp = request.headers.get('x-real-ip')
+  return realIp || null
 }
