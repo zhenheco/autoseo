@@ -64,6 +64,9 @@ export class TokenBillingService {
     usageType: 'article_generation' | 'title_generation' | 'image_description' | 'perplexity_analysis' = 'article_generation',
     metadata: Record<string, unknown> = {}
   ): Promise<BilledCompletionResult> {
+    // 先檢查並重置配額（如果需要）
+    await this.checkAndResetMonthlyQuota(companyId)
+
     const estimateResult = await this.calculator.estimateArticleTokens({
       wordCount: typeof prompt === 'string' ? prompt.length : 1000,
       model: options.model,
@@ -254,6 +257,62 @@ export class TokenBillingService {
     return this.calculator.getAvailableModels()
   }
 
+  /**
+   * 檢查並重置每月配額（如果週期已過）
+   * 免費方案每月重置 20,000 tokens
+   */
+  async checkAndResetMonthlyQuota(companyId: string): Promise<void> {
+    const { data: subscription } = await this.supabase
+      .from('company_subscriptions')
+      .select('id, current_period_end, monthly_token_quota, monthly_quota_balance')
+      .eq('company_id', companyId)
+      .eq('status', 'active')
+      .single()
+
+    if (!subscription) {
+      console.error('[TokenBillingService] 找不到有效訂閱')
+      return
+    }
+
+    const now = new Date()
+    const periodEnd = new Date(subscription.current_period_end!)
+
+    // 檢查週期是否已過
+    if (now > periodEnd) {
+      console.log(`[TokenBillingService] 重置公司 ${companyId} 的月配額`)
+
+      // 計算新的週期
+      const newPeriodStart = now
+      const newPeriodEnd = new Date(now)
+      newPeriodEnd.setMonth(newPeriodEnd.getMonth() + 1)
+
+      // 重置月配額為完整配額
+      const { error } = await this.supabase
+        .from('company_subscriptions')
+        .update({
+          monthly_quota_balance: subscription.monthly_token_quota,
+          current_period_start: newPeriodStart.toISOString(),
+          current_period_end: newPeriodEnd.toISOString(),
+        })
+        .eq('id', subscription.id)
+
+      if (error) {
+        console.error('[TokenBillingService] 重置配額失敗:', error)
+        return
+      }
+
+      // 記錄重置事件
+      await this.supabase.from('token_balance_changes').insert({
+        company_id: companyId,
+        change_type: 'monthly_reset',
+        amount: subscription.monthly_token_quota - subscription.monthly_quota_balance,
+        balance_before: subscription.monthly_quota_balance,
+        balance_after: subscription.monthly_token_quota,
+        description: '每月配額重置',
+      })
+    }
+  }
+
   async getCurrentBalance(
     companyId: string
   ): Promise<{
@@ -261,6 +320,9 @@ export class TokenBillingService {
     monthlyQuota: number
     purchased: number
   }> {
+    // 先檢查並重置配額（如果需要）
+    await this.checkAndResetMonthlyQuota(companyId)
+
     const { data } = await this.supabase
       .from('company_subscriptions')
       .select('monthly_quota_balance, purchased_token_balance')

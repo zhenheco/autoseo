@@ -54,12 +54,42 @@ export async function signUp(email: string, password: string) {
 
   if (memberError) throw memberError
 
-  // 4. 建立免費訂閱
+  // 4. 取得免費方案
+  const { data: freePlan, error: planError } = await supabase
+    .from('subscription_plans')
+    .select('id, base_tokens')
+    .eq('slug', 'free')
+    .single()
+
+  if (planError || !freePlan) {
+    console.error('無法取得免費方案:', planError)
+    throw new Error('免費方案設定錯誤')
+  }
+
+  // 5. 建立免費訂閱（使用新的 token-based 系統）
   const periodStart = new Date()
   const periodEnd = new Date()
-  periodEnd.setDate(periodEnd.getDate() + 30)
+  periodEnd.setMonth(periodEnd.getMonth() + 1) // 一個月後
 
   const { error: subscriptionError } = await supabase
+    .from('company_subscriptions')
+    .insert({
+      company_id: company.id,
+      plan_id: freePlan.id,
+      status: 'active',
+      monthly_token_quota: freePlan.base_tokens, // 20,000 tokens
+      monthly_quota_balance: freePlan.base_tokens, // 初始餘額 = 配額
+      purchased_token_balance: 0, // 免費用戶沒有購買的 tokens
+      current_period_start: periodStart.toISOString(),
+      current_period_end: periodEnd.toISOString(),
+      is_lifetime: false,
+      lifetime_discount: 1.0,
+    })
+
+  if (subscriptionError) throw subscriptionError
+
+  // 6. 也保留舊的 subscriptions 表記錄（向後兼容）
+  await supabase
     .from('subscriptions')
     .insert({
       company_id: company.id,
@@ -70,8 +100,6 @@ export async function signUp(email: string, password: string) {
       current_period_start: periodStart.toISOString(),
       current_period_end: periodEnd.toISOString(),
     })
-
-  if (subscriptionError) throw subscriptionError
 
   return { user: authData.user, company }
 }

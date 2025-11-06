@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { ArticleGenerationButtonsWrapper } from '@/components/articles/ArticleGenerationButtonsWrapper'
+import { TokenBalanceDisplay } from '@/components/billing/TokenBalanceDisplay'
 import { Loader2, CheckCircle2, Clock, FileText, Trash2 } from 'lucide-react'
 import { sanitizeArticleHtml } from '@/lib/security/html-sanitizer'
 
@@ -231,6 +232,11 @@ export default function ArticlesPage() {
 
       <div className="flex-1 flex overflow-hidden">
         <div className="w-1/2 border-r overflow-y-auto">
+          {/* Token 餘額顯示 */}
+          <div className="p-4 border-b">
+            <TokenBalanceDisplay />
+          </div>
+
           <Card className="rounded-none border-0 shadow-none">
             <CardHeader>
               <CardTitle>所有文章</CardTitle>
