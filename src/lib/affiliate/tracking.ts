@@ -62,7 +62,8 @@ export async function logTrackingEvent({
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
     const forwardedFor = request.headers.get('x-forwarded-for')
-    const ip = forwardedFor ? forwardedFor.split(',')[0] : request.ip || null
+    const realIp = request.headers.get('x-real-ip')
+    const ip = forwardedFor ? forwardedFor.split(',')[0].trim() : (realIp || null)
 
     const data = {
       affiliate_code: affiliateCode,
