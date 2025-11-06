@@ -60,6 +60,77 @@ export async function deleteWebsite(formData: FormData) {
 }
 
 /**
+ * 更新 WordPress 網站
+ */
+export async function updateWebsite(formData: FormData) {
+  const user = await getUser()
+  if (!user) {
+    redirect('/login')
+  }
+
+  const websiteId = formData.get('websiteId') as string
+  const companyId = formData.get('companyId') as string
+  const siteName = formData.get('siteName') as string
+  const siteUrl = formData.get('siteUrl') as string
+  const wpUsername = formData.get('wpUsername') as string
+  const wpPassword = formData.get('wpPassword') as string
+  const isActive = formData.get('isActive') === 'on'
+
+  if (!websiteId || !companyId || !siteName || !siteUrl || !wpUsername) {
+    redirect(`/dashboard/websites/${websiteId}/edit?error=` + encodeURIComponent('缺少必要欄位'))
+  }
+
+  // 檢查 URL 格式
+  try {
+    new URL(siteUrl)
+  } catch {
+    redirect(`/dashboard/websites/${websiteId}/edit?error=` + encodeURIComponent('無效的網站 URL'))
+  }
+
+  const supabase = await createClient()
+
+  // 檢查使用者是否有權限更新網站
+  const { data: membership } = await supabase
+    .from('company_members')
+    .select('role')
+    .eq('company_id', companyId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (!membership || (membership.role !== 'owner' && membership.role !== 'admin')) {
+    redirect('/dashboard/websites?error=' + encodeURIComponent('您沒有權限更新網站'))
+  }
+
+  // 準備更新資料
+  const updateData: any = {
+    site_name: siteName,
+    website_name: siteName, // 支援舊欄位名稱
+    site_url: siteUrl.replace(/\/$/, ''), // 移除尾部斜線
+    wordpress_url: siteUrl.replace(/\/$/, ''), // 支援舊欄位名稱
+    wp_username: wpUsername,
+    is_active: isActive,
+  }
+
+  // 只有在提供新密碼時才更新
+  if (wpPassword && wpPassword.trim() !== '') {
+    updateData.wp_app_password = wpPassword
+  }
+
+  // 更新網站記錄
+  const { error } = await supabase
+    .from('website_configs')
+    .update(updateData)
+    .eq('id', websiteId)
+
+  if (error) {
+    redirect(`/dashboard/websites/${websiteId}/edit?error=` + encodeURIComponent(error.message))
+  }
+
+  revalidatePath('/dashboard/websites')
+  redirect('/dashboard/websites?success=' + encodeURIComponent('網站已更新'))
+}
+
+/**
  * 更新 Brand Voice 設定
  */
 export async function updateBrandVoice(formData: FormData) {
