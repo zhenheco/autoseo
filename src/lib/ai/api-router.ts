@@ -6,6 +6,7 @@
 import { getDeepSeekClient } from '@/lib/deepseek/client';
 import { callOpenRouter } from '@/lib/openrouter';
 import { getOpenAIImageClient } from '@/lib/openai/image-client';
+import { getOpenAITextClient } from '@/lib/openai/text-client';
 import { getPerplexityClient } from '@/lib/perplexity/client';
 import type {
   APIProvider,
@@ -213,6 +214,9 @@ export class APIRouter {
       case 'deepseek':
         return this.callDeepSeekAPI(model, messages, temperature, maxTokens, responseFormat);
 
+      case 'openai':
+        return this.callOpenAIAPI(model, messages, temperature, maxTokens, responseFormat);
+
       case 'openrouter':
         return this.callOpenRouterAPI(model, messages, temperature, maxTokens, responseFormat);
 
@@ -263,6 +267,45 @@ export class APIRouter {
       },
       model: result.model,
       api_provider: 'deepseek',
+    };
+  }
+
+  /**
+   * 呼叫 OpenAI 官方 API
+   */
+  private async callOpenAIAPI(
+    model: string,
+    messages: AIMessage[],
+    temperature?: number,
+    maxTokens?: number,
+    responseFormat?: 'text' | 'json'
+  ): Promise<UnifiedAPIResponse> {
+    const client = getOpenAITextClient({
+      apiKey: this.config.openaiApiKey,
+      maxRetries: this.config.maxRetries,
+      timeout: this.config.timeout,
+    });
+
+    const result = await client.complete({
+      model: model.replace('openai/', ''),
+      messages,
+      temperature,
+      max_tokens: maxTokens,
+      response_format: responseFormat === 'json' ? { type: 'json_object' } : undefined,
+    });
+
+    return {
+      content: result.content,
+      usage: {
+        input_tokens: result.usage.prompt_tokens,
+        output_tokens: result.usage.completion_tokens,
+        total_tokens: result.usage.total_tokens,
+        billing_input_tokens: result.usage.prompt_tokens,
+        billing_output_tokens: result.usage.completion_tokens,
+        total_billing_tokens: result.usage.total_tokens,
+      },
+      model: result.model,
+      api_provider: 'openai',
     };
   }
 
@@ -350,14 +393,14 @@ export class APIRouter {
     if (model.startsWith('deepseek') || model === 'deepseek-reasoner' || model === 'deepseek-chat') {
       return 'deepseek';
     }
-    if (model.startsWith('openai/') || model.startsWith('google/') || model.startsWith('anthropic/')) {
+    if (model.startsWith('openai/') || model.includes('gpt-') || model.includes('dall-e') || model.includes('gpt-image')) {
+      return 'openai';
+    }
+    if (model.startsWith('google/') || model.startsWith('anthropic/')) {
       return 'openrouter';
     }
     if (model.includes('sonar')) {
       return 'perplexity';
-    }
-    if (model.includes('dall-e') || model.includes('gpt-image')) {
-      return 'openai';
     }
     return 'openrouter'; // 預設使用 OpenRouter
   }

@@ -86,8 +86,9 @@ export class ParallelOrchestrator {
       phaseTimings.research = Date.now() - phase1Start;
       result.research = researchOutput;
 
-      await this.updateJobStatus(input.articleJobId, 'research_completed', {
+      await this.updateJobStatus(input.articleJobId, 'processing', {
         research: researchOutput,
+        current_phase: 'research_completed',
       });
 
       const phase2Start = Date.now();
@@ -103,8 +104,9 @@ export class ParallelOrchestrator {
       phaseTimings.strategy = Date.now() - phase2Start;
       result.strategy = strategyOutput;
 
-      await this.updateJobStatus(input.articleJobId, 'strategy_completed', {
+      await this.updateJobStatus(input.articleJobId, 'processing', {
         strategy: strategyOutput,
+        current_phase: 'strategy_completed',
       });
 
       const phase3Start = Date.now();
@@ -128,7 +130,8 @@ export class ParallelOrchestrator {
       result.writing = writingOutput;
       result.image = imageOutput;
 
-      await this.updateJobStatus(input.articleJobId, 'content_completed', {
+      await this.updateJobStatus(input.articleJobId, 'processing', {
+        current_phase: 'content_completed',
         writing: writingOutput,
         image: imageOutput,
       });
@@ -151,7 +154,8 @@ export class ParallelOrchestrator {
         metaOutput.twitterCard.image = imageOutput.featuredImage.url;
       }
 
-      await this.updateJobStatus(input.articleJobId, 'meta_completed', {
+      await this.updateJobStatus(input.articleJobId, 'processing', {
+        current_phase: 'meta_completed',
         meta: metaOutput,
       });
 
@@ -748,25 +752,32 @@ export class ParallelOrchestrator {
     status: string,
     data: any
   ): Promise<void> {
+    console.log(`[Orchestrator] 更新任務狀態: ${articleJobId.substring(0, 8)}... -> ${status}`);
+
     const supabase = await this.getSupabase();
 
-    // 使用 upsert 確保 job 記錄存在
-    //只在初始建立時需要 keywords
-    const jobData: any = {
-      id: articleJobId,
+    // 使用 update 只更新狀態和 metadata，不影響其他欄位
+    const updateData: any = {
       status,
       metadata: data,
     };
 
-    // 如果 data 包含 keywords，則加入
+    // 如果 data 包含 keywords，則更新 keywords
     if (data && typeof data === 'object' && 'keywords' in data) {
-      jobData.keywords = data.keywords;
+      updateData.keywords = data.keywords;
     }
 
-    await supabase
+    const { data: result, error } = await supabase
       .from('article_jobs')
-      .upsert(jobData, {
-        onConflict: 'id',
-      });
+      .update(updateData)
+      .eq('id', articleJobId)
+      .select();
+
+    if (error) {
+      console.error(`[Orchestrator] ❌ 更新狀態失敗:`, error);
+      throw error;
+    }
+
+    console.log(`[Orchestrator] ✅ 狀態已更新:`, result);
   }
 }
