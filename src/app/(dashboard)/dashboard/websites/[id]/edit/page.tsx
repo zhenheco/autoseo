@@ -1,16 +1,32 @@
 import { getUser, getUserPrimaryCompany } from '@/lib/auth'
 import { redirect } from 'next/navigation'
+import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import Link from 'next/link'
-import { createWebsite } from './actions'
+import { updateWebsite } from '../../actions'
 
-export default async function NewWebsitePage({
-  searchParams,
+async function getWebsite(websiteId: string, companyId: string) {
+  const supabase = await createClient()
+
+  const { data, error } = await supabase
+    .from('website_configs')
+    .select('*')
+    .eq('id', websiteId)
+    .eq('company_id', companyId)
+    .single()
+
+  if (error) throw error
+
+  return data
+}
+
+export default async function EditWebsitePage({
+  params,
 }: {
-  searchParams: Promise<{ error?: string }>
+  params: Promise<{ id: string }>
 }) {
   const user = await getUser()
 
@@ -28,33 +44,32 @@ export default async function NewWebsitePage({
     )
   }
 
-  const params = await searchParams
+  const { id } = await params
+  const website = await getWebsite(id, company.id)
+
+  if (!website) {
+    redirect('/dashboard/websites?error=' + encodeURIComponent('找不到該網站'))
+  }
 
   return (
     <div className="container mx-auto p-8 max-w-2xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">新增 WordPress 網站</h1>
+        <h1 className="text-3xl font-bold">編輯 WordPress 網站</h1>
         <p className="text-muted-foreground mt-2">
-          連接您的 WordPress 網站以開始自動發布文章
+          更新您的 WordPress 網站設定
         </p>
       </div>
-
-      {/* 錯誤訊息顯示 */}
-      {params.error && (
-        <div className="mb-6 rounded-md bg-destructive/15 p-4 text-sm text-destructive">
-          {params.error}
-        </div>
-      )}
 
       <Card>
         <CardHeader>
           <CardTitle>網站資訊</CardTitle>
           <CardDescription>
-            請輸入您的 WordPress 網站資訊。您需要使用 WordPress 應用密碼進行驗證。
+            修改您的 WordPress 網站資訊。留空密碼欄位表示不更改密碼。
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={createWebsite} className="space-y-6">
+          <form action={updateWebsite} className="space-y-6">
+            <input type="hidden" name="websiteId" value={website.id} />
             <input type="hidden" name="companyId" value={company.id} />
 
             <div className="space-y-2">
@@ -63,6 +78,7 @@ export default async function NewWebsitePage({
                 id="site-name"
                 name="siteName"
                 placeholder="我的部落格"
+                defaultValue={website.site_name || website.website_name || ''}
                 required
               />
               <p className="text-xs text-muted-foreground">
@@ -77,6 +93,7 @@ export default async function NewWebsitePage({
                 name="siteUrl"
                 type="url"
                 placeholder="https://your-blog.com"
+                defaultValue={website.site_url || website.wordpress_url || ''}
                 required
               />
               <p className="text-xs text-muted-foreground">
@@ -90,6 +107,7 @@ export default async function NewWebsitePage({
                 id="wp-username"
                 name="wpUsername"
                 placeholder="admin"
+                defaultValue={website.wp_username || ''}
                 required
               />
             </div>
@@ -100,16 +118,15 @@ export default async function NewWebsitePage({
                 id="wp-password"
                 name="wpPassword"
                 type="password"
-                placeholder="xxxx xxxx xxxx xxxx xxxx xxxx"
-                required
+                placeholder="留空表示不更改"
               />
               <p className="text-xs text-muted-foreground">
-                請至 WordPress 後台 → 使用者 → 個人資料 → 應用程式密碼 建立新的應用密碼
+                請至 WordPress 後台 → 使用者 → 個人資料 → 應用程式密碼 建立新的應用密碼。留空表示不更改現有密碼。
               </p>
             </div>
 
             <div className="flex gap-4">
-              <Button type="submit">新增網站</Button>
+              <Button type="submit">儲存變更</Button>
               <Link href="/dashboard/websites">
                 <Button type="button" variant="outline">
                   取消

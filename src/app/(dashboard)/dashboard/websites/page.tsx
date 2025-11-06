@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { deleteWebsite } from './actions'
 import { checkPagePermission } from '@/lib/permissions'
+import { WebsiteStatusToggle } from './website-status-toggle'
 
 async function getCompanyWebsites(companyId: string) {
   const supabase = await createClient()
@@ -81,24 +82,19 @@ export default async function WebsitesPage({
           websites.map((website: any) => (
             <Card key={website.id}>
               <CardHeader>
-                <CardTitle className="text-lg">{website.site_name}</CardTitle>
+                <CardTitle className="text-lg">{website.site_name || website.website_name}</CardTitle>
                 <CardDescription className="break-all">
-                  {website.site_url}
+                  {website.site_url || website.wordpress_url}
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">狀態</span>
-                    <span className={website.is_active ? 'text-green-600' : 'text-gray-400'}>
-                      {website.is_active ? '啟用' : '停用'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">CNAME</span>
-                    <span className={website.cname_verified ? 'text-green-600' : 'text-gray-400'}>
-                      {website.cname_verified ? '已驗證' : '未驗證'}
-                    </span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">狀態</span>
+                    <WebsiteStatusToggle
+                      websiteId={website.id}
+                      initialStatus={website.is_active}
+                    />
                   </div>
                   <div className="flex gap-2 pt-2">
                     <Link href={`/dashboard/websites/${website.id}/edit`} className="flex-1">

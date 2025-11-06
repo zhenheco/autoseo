@@ -53,16 +53,16 @@ export async function createWebsite(formData: FormData) {
     .from('website_configs')
     .insert({
       company_id: companyId,
-      site_name: siteName,
-      site_url: siteUrl.replace(/\/$/, ''), // 移除尾部斜線
+      website_name: siteName,
+      wordpress_url: siteUrl.replace(/\/$/, ''), // 移除尾部斜線
       wp_username: wpUsername,
       wp_app_password: wpPassword, // TODO: 應該加密儲存
       is_active: true,
-      cname_verified: false,
     })
 
   if (error) {
-    redirect('/dashboard/websites/new?error=' + encodeURIComponent(error.message))
+    console.error('新增網站錯誤:', error)
+    redirect('/dashboard/websites/new?error=' + encodeURIComponent(error.message || '新增網站失敗'))
   }
 
   revalidatePath('/dashboard/websites')

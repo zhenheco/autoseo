@@ -60,6 +60,127 @@ export async function deleteWebsite(formData: FormData) {
 }
 
 /**
+ * 更新 WordPress 網站
+ */
+export async function updateWebsite(formData: FormData) {
+  const user = await getUser()
+  if (!user) {
+    redirect('/login')
+  }
+
+  const websiteId = formData.get('websiteId') as string
+  const companyId = formData.get('companyId') as string
+  const siteName = formData.get('siteName') as string
+  const siteUrl = formData.get('siteUrl') as string
+  const wpUsername = formData.get('wpUsername') as string
+  const wpPassword = formData.get('wpPassword') as string
+
+  if (!websiteId || !companyId || !siteName || !siteUrl || !wpUsername) {
+    redirect(`/dashboard/websites/${websiteId}/edit?error=` + encodeURIComponent('缺少必要欄位'))
+  }
+
+  // 檢查 URL 格式
+  try {
+    new URL(siteUrl)
+  } catch {
+    redirect(`/dashboard/websites/${websiteId}/edit?error=` + encodeURIComponent('無效的網站 URL'))
+  }
+
+  const supabase = await createClient()
+
+  // 檢查使用者是否有權限更新網站
+  const { data: membership } = await supabase
+    .from('company_members')
+    .select('role')
+    .eq('company_id', companyId)
+    .eq('user_id', user.id)
+    .single()
+
+  if (!membership || (membership.role !== 'owner' && membership.role !== 'admin')) {
+    redirect('/dashboard/websites?error=' + encodeURIComponent('您沒有權限更新網站'))
+  }
+
+  // 準備更新資料
+  const updateData: any = {
+    website_name: siteName,
+    wordpress_url: siteUrl.replace(/\/$/, ''), // 移除尾部斜線
+    wp_username: wpUsername,
+  }
+
+  // 只有在提供新密碼時才更新
+  if (wpPassword && wpPassword.trim() !== '') {
+    updateData.wp_app_password = wpPassword
+  }
+
+  // 更新網站記錄
+  const { error } = await supabase
+    .from('website_configs')
+    .update(updateData)
+    .eq('id', websiteId)
+
+  if (error) {
+    redirect(`/dashboard/websites/${websiteId}/edit?error=` + encodeURIComponent(error.message))
+  }
+
+  revalidatePath('/dashboard/websites')
+  redirect('/dashboard/websites?success=' + encodeURIComponent('網站已更新'))
+}
+
+/**
+ * 切換網站啟用狀態
+ */
+export async function toggleWebsiteStatus(formData: FormData) {
+  const user = await getUser()
+  if (!user) {
+    throw new Error('未登入')
+  }
+
+  const websiteId = formData.get('websiteId') as string
+  const currentStatus = formData.get('currentStatus') === 'true'
+
+  if (!websiteId) {
+    throw new Error('缺少網站 ID')
+  }
+
+  const supabase = await createClient()
+
+  // 取得網站資訊以檢查權限
+  const { data: website } = await supabase
+    .from('website_configs')
+    .select('company_id')
+    .eq('id', websiteId)
+    .single()
+
+  if (!website) {
+    throw new Error('找不到該網站')
+  }
+
+  // 檢查使用者是否有權限
+  const { data: membership } = await supabase
+    .from('company_members')
+    .select('role')
+    .eq('company_id', website.company_id)
+    .eq('user_id', user.id)
+    .single()
+
+  if (!membership || (membership.role !== 'owner' && membership.role !== 'admin')) {
+    throw new Error('您沒有權限修改網站狀態')
+  }
+
+  // 切換狀態
+  const { error } = await supabase
+    .from('website_configs')
+    .update({ is_active: !currentStatus })
+    .eq('id', websiteId)
+
+  if (error) {
+    throw new Error(error.message)
+  }
+
+  revalidatePath('/dashboard/websites')
+}
+
+/**
  * 更新 Brand Voice 設定
  */
 export async function updateBrandVoice(formData: FormData) {
