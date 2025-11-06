@@ -226,10 +226,33 @@ export class AIClient {
         }
 
         const data = await response.json();
-        return {
-          url: data.data[0].url,
-          revisedPrompt: data.data[0].revised_prompt || prompt,
-        };
+
+        if (!data.data || !data.data[0]) {
+          throw new Error('Invalid OpenAI image response structure');
+        }
+
+        const imageData = data.data[0];
+
+        if (imageData.b64_json) {
+          const base64Data = imageData.b64_json;
+          const dataUrl = `data:image/png;base64,${base64Data}`;
+
+          console.log('[AIClient] Generated image from b64_json (base64 length:', base64Data.length, ')');
+
+          return {
+            url: dataUrl,
+            revisedPrompt: imageData.revised_prompt || prompt,
+          };
+        } else if (imageData.url) {
+          console.log('[AIClient] Generated image from URL:', imageData.url);
+
+          return {
+            url: imageData.url,
+            revisedPrompt: imageData.revised_prompt || prompt,
+          };
+        } else {
+          throw new Error('No image URL or b64_json in OpenAI response');
+        }
       }
 
       // 使用 OpenRouter 處理其他模型（如 dall-e-3）

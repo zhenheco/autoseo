@@ -158,7 +158,8 @@ async function testArticleGeneration() {
       articleJobId: articleJob.id,
       companyId: testCompanyId,
       websiteId: testWebsiteId,
-      keyword: testKeyword,
+      userId: testUserId,
+      title: testKeyword,
       region: 'TW',
     };
 

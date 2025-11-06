@@ -427,6 +427,7 @@ export interface ArticleGenerationInput {
   articleJobId: string;
   companyId: string;
   websiteId: string;
+  userId?: string;
   title: string;
   region?: string;
   targetLanguage?: string;
@@ -460,7 +461,6 @@ export interface ArticleGenerationResult {
       strategy: number;
       contentGeneration: number;
       metaGeneration: number;
-      qualityCheck: number;
     };
     parallelSpeedup: number;
   };

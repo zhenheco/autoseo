@@ -1,10 +1,11 @@
-# Google Drive 認證能力規格
+# google-drive-auth Specification
 
-## ADDED Requirements
+## Purpose
+TBD - created by archiving change add-google-drive-oauth-integration. Update Purpose after archive.
+## Requirements
+### Requirement: OAuth Authorization Flow
 
-### Requirement: System MUST OAuth 授權流程啟動
-
-當使用者點擊「連接 Google Drive」按鈕時，系統必須啟動 Google OAuth 2.0 授權流程。
+The system MUST initiate Google OAuth 2.0 authorization flow when user clicks "Connect Google Drive" button.
 
 #### Scenario: 使用者從設定頁面啟動授權
 
@@ -28,9 +29,9 @@
 **Then** 系統執行與首次授權相同的流程
 **And** 舊的 tokens 會在新 tokens 成功儲存後被覆蓋
 
-### Requirement: System MUST OAuth Callback 處理
+### Requirement: OAuth Callback Handling
 
-當使用者完成授權並被重定向回系統時，系統必須安全地處理 OAuth callback。
+The system MUST securely handle OAuth callback when user completes authorization and is redirected back.
 
 #### Scenario: 成功授權的 callback
 
@@ -65,9 +66,9 @@
 **Then** 系統記錄錯誤詳情
 **And** 重定向使用者回設定頁面並顯示錯誤訊息：「連接失敗，請重試」
 
-### Requirement: System MUST Token 加密與儲存
+### Requirement: Token Encryption and Storage
 
-系統必須安全地儲存 Google Drive refresh token。
+The system MUST securely store Google Drive refresh tokens.
 
 #### Scenario: 加密 refresh token
 
@@ -93,9 +94,9 @@
 **Then** 拋出錯誤：「Encryption key not configured」
 **And** 不執行加密或解密操作
 
-### Requirement: System MUST 連接狀態檢查
+### Requirement: Connection Status Check
 
-系統必須提供 API 讓前端檢查 Google Drive 連接狀態。
+The system MUST provide API for frontend to check Google Drive connection status.
 
 #### Scenario: 檢查已連接的狀態
 
@@ -126,9 +127,9 @@
 **When** 嘗試調用 `/api/google-drive/status`
 **Then** 返回 401 錯誤：「Unauthorized」
 
-### Requirement: System MUST 中斷連接功能
+### Requirement: Disconnect Functionality
 
-使用者必須能夠中斷與 Google Drive 的連接。
+The system MUST allow users to disconnect from Google Drive.
 
 #### Scenario: 使用者中斷連接
 
@@ -149,9 +150,9 @@
 **When** 使用者調用 `/api/google-drive/disconnect`
 **Then** 返回 400 錯誤：「Not connected to Google Drive」
 
-### Requirement: System MUST Token 自動刷新
+### Requirement: Token Auto-Refresh
 
-系統必須在 access_token 過期前自動刷新。
+The system MUST automatically refresh access tokens before expiration.
 
 #### Scenario: 檢測到 access_token 即將過期
 
@@ -180,9 +181,9 @@
 **And** 如果 3 次都失敗，拋出錯誤
 **And** 不清除 refresh_token（可能是暫時性錯誤）
 
-### Requirement: System MUST 環境變數配置
+### Requirement: Environment Variables Configuration
 
-系統必須從環境變數讀取 Google OAuth 配置。
+The system MUST read Google OAuth configuration from environment variables.
 
 #### Scenario: 正確配置的環境變數
 
@@ -204,9 +205,9 @@ NEXT_PUBLIC_APP_URL=https://yourdomain.com
 **Then** 拋出錯誤：「Google Drive OAuth credentials not configured」
 **And** 在設定頁面顯示管理員通知
 
-### Requirement: System MUST 資料庫 Schema
+### Requirement: Database Schema
 
-資料庫必須包含必要的欄位來儲存 OAuth tokens。
+The database MUST include necessary fields to store OAuth tokens.
 
 #### Scenario: 執行資料庫 migration
 
@@ -225,3 +226,4 @@ NEXT_PUBLIC_APP_URL=https://yourdomain.com
 **When** 查詢 `WHERE google_drive_refresh_token IS NOT NULL`
 **Then** 返回所有已連接 Google Drive 的公司
 **And** 查詢使用索引 `idx_companies_drive_connected` 提升效能
+

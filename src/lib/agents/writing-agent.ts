@@ -14,9 +14,11 @@ export class WritingAgent extends BaseAgent<WritingInput, WritingOutput> {
     let cleanedMarkdown = markdown;
     // 移除開頭的 H1
     cleanedMarkdown = cleanedMarkdown.replace(/^#\s+.+?\n\n?/, '');
-    // 移除開頭的 H2（如果標題與文章標題相同）
-    const titleRegex = new RegExp(`^##\\s+${input.strategy.selectedTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\n\\n?`, 'm');
-    cleanedMarkdown = cleanedMarkdown.replace(titleRegex, '');
+    // 移除開頭的 H2（如果標題與文章標題相同且標題存在）
+    if (input.strategy.selectedTitle) {
+      const titleRegex = new RegExp(`^##\\s+${input.strategy.selectedTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\n\\n?`, 'm');
+      cleanedMarkdown = cleanedMarkdown.replace(titleRegex, '');
+    }
 
     const html = await marked(cleanedMarkdown);
 

@@ -2,9 +2,9 @@
 
 ## ADDED Requirements
 
-### Requirement: System MUST 管理員 OAuth Token 配置
+### Requirement: Admin OAuth Token Configuration
 
-系統必須使用管理員的 Google Drive OAuth token 進行所有上傳操作。
+The system MUST use admin Google Drive OAuth token for all upload operations.
 
 #### Scenario: 從環境變數讀取 refresh token
 
@@ -28,9 +28,9 @@ GOOGLE_DRIVE_FOLDER_ID=1bui3yaSLGaBEftFQBt_X2qCmBt3OoYYy
 **And** 回退至使用 OpenAI 圖片 URL（不上傳至 Drive）
 **And** 不拋出錯誤（graceful degradation）
 
-### Requirement: System MUST GoogleDriveClient 初始化
+### Requirement: GoogleDriveClient Initialization
 
-系統必須正確初始化 GoogleDriveClient 並支援 OAuth 認證。
+The system MUST properly initialize GoogleDriveClient with OAuth authentication support.
 
 #### Scenario: 使用 OAuth refresh token 初始化
 
@@ -61,9 +61,9 @@ interface GoogleDriveOAuthConfig {
 }
 ```
 
-### Requirement: System MUST 圖片上傳功能
+### Requirement: Image Upload
 
-系統必須支援將圖片上傳至管理員的 Google Drive。
+The system MUST support uploading images to admin Google Drive.
 
 #### Scenario: 從 URL 上傳圖片
 
@@ -108,9 +108,9 @@ interface GoogleDriveOAuthConfig {
 **And** 確保圖片可以通過直連 URL 公開存取
 **And** 不需要登入即可查看
 
-### Requirement: System MUST Token 自動刷新
+### Requirement: Token Auto-Refresh
 
-系統必須在 access_token 過期時自動刷新。
+The system MUST automatically refresh access tokens upon expiration.
 
 #### Scenario: Access token 自動刷新
 
@@ -130,9 +130,9 @@ interface GoogleDriveOAuthConfig {
 **And** 拋出錯誤
 **And** 後續上傳請求都會失敗直到重新授權
 
-### Requirement: System MUST 整合至 Image Agent
+### Requirement: Image Agent Integration
 
-系統必須在文章圖片生成時自動上傳至 Google Drive。
+The system MUST automatically upload images to Google Drive when article images are generated.
 
 #### Scenario: 生成圖片並上傳至 Drive
 
@@ -162,9 +162,9 @@ interface GoogleDriveOAuthConfig {
 **And** 不阻塞文章生成流程
 **And** 返回成功結果（使用原始 URL）
 
-### Requirement: System MUST 資料夾管理
+### Requirement: Folder Management
 
-系統必須將所有圖片上傳至指定的 Google Drive 資料夾。
+The system MUST upload all images to the specified Google Drive folder.
 
 #### Scenario: 使用環境變數中的資料夾 ID
 
@@ -181,9 +181,9 @@ interface GoogleDriveOAuthConfig {
 **Then** 拋出錯誤：「GOOGLE_DRIVE_FOLDER_ID not configured」
 **And** 不執行上傳操作
 
-### Requirement: System MUST 檔案命名規範
+### Requirement: File Naming Conventions
 
-系統必須使用清晰的檔案命名規則。
+The system MUST use clear file naming conventions.
 
 #### Scenario: 文章主圖命名
 
@@ -199,9 +199,9 @@ interface GoogleDriveOAuthConfig {
 **Then** 檔名格式為：`article-{articleId}-content-{index}-{timestamp}.jpg`
 **Example**: `article-123-content-2-1705305600000.jpg`
 
-### Requirement: System MUST 錯誤處理與日誌
+### Requirement: Error Handling and Logging
 
-系統必須完善處理所有可能的錯誤情況。
+The system MUST comprehensively handle all possible error scenarios.
 
 #### Scenario: 記錄上傳開始
 
@@ -222,9 +222,9 @@ interface GoogleDriveOAuthConfig {
 **Then** 記錄錯誤：`[GoogleDrive] Upload failed: {filename} - {error.message}`
 **And** 不阻塞主要流程
 
-### Requirement: System MUST 初次授權流程（管理員）
+### Requirement: Initial Authorization Flow
 
-管理員必須能夠透過命令列工具完成首次 OAuth 授權。
+The admin MUST be able to complete initial OAuth authorization via command line tool.
 
 #### Scenario: 執行授權腳本
 

@@ -1,6 +1,12 @@
 import { google } from 'googleapis';
 import type { drive_v3 } from 'googleapis';
 
+export interface GoogleDriveServiceAccountConfig {
+  clientEmail: string;
+  privateKey: string;
+  folderId: string;
+}
+
 export interface GoogleDriveOAuthConfig {
   refreshToken: string;
   clientId: string;
@@ -9,39 +15,41 @@ export interface GoogleDriveOAuthConfig {
   redirectUri?: string;
 }
 
+export type GoogleDriveConfig = GoogleDriveServiceAccountConfig | GoogleDriveOAuthConfig;
+
+function isServiceAccountConfig(config: GoogleDriveConfig): config is GoogleDriveServiceAccountConfig {
+  return 'clientEmail' in config && 'privateKey' in config;
+}
+
 export class GoogleDriveClient {
   private drive: drive_v3.Drive;
-  private oauth2Client: InstanceType<typeof google.auth.OAuth2>;
   private folderId: string;
 
-  constructor(config: GoogleDriveOAuthConfig) {
+  constructor(config: GoogleDriveConfig) {
     this.folderId = config.folderId;
 
-    const redirectUri = config.redirectUri || 'http://localhost:3168/api/google-drive/auth/callback';
+    if (isServiceAccountConfig(config)) {
+      const auth = new google.auth.JWT({
+        email: config.clientEmail,
+        key: config.privateKey,
+        scopes: ['https://www.googleapis.com/auth/drive.file'],
+      });
 
-    this.oauth2Client = new google.auth.OAuth2(
-      config.clientId,
-      config.clientSecret,
-      redirectUri
-    );
+      this.drive = google.drive({ version: 'v3', auth });
+    } else {
+      const redirectUri = config.redirectUri || 'http://localhost:3168/api/google-drive/auth/callback';
 
-    this.oauth2Client.setCredentials({
-      refresh_token: config.refreshToken
-    });
+      const oauth2Client = new google.auth.OAuth2(
+        config.clientId,
+        config.clientSecret,
+        redirectUri
+      );
 
-    this.drive = google.drive({ version: 'v3', auth: this.oauth2Client });
-  }
+      oauth2Client.setCredentials({
+        refresh_token: config.refreshToken
+      });
 
-  private async ensureValidToken(): Promise<void> {
-    try {
-      const { credentials } = await this.oauth2Client.refreshAccessToken();
-      this.oauth2Client.setCredentials(credentials);
-    } catch (error) {
-      const err = error as Error & { response?: { data?: { error?: string } } };
-      if (err.response?.data?.error === 'invalid_grant') {
-        throw new Error('Google Drive authorization revoked. Please re-authorize using: npm run google-drive:authorize');
-      }
-      throw new Error(`Failed to refresh Google Drive token: ${err.message}`);
+      this.drive = google.drive({ version: 'v3', auth: oauth2Client });
     }
   }
 
@@ -50,8 +58,6 @@ export class GoogleDriveClient {
     filename: string,
     mimeType: string = 'image/jpeg'
   ): Promise<{ url: string; fileId: string }> {
-    await this.ensureValidToken();
-
     try {
       const fileMetadata = {
         name: filename,
@@ -99,14 +105,32 @@ export class GoogleDriveClient {
     try {
       console.log(`[GoogleDrive] Starting upload: ${filename}`);
 
-      const response = await fetch(imageUrl);
-      if (!response.ok) {
-        throw new Error(`Failed to fetch image: ${response.statusText}`);
-      }
+      let buffer: Buffer;
+      let mimeType: string;
 
-      const arrayBuffer = await response.arrayBuffer();
-      const buffer = Buffer.from(arrayBuffer);
-      const mimeType = response.headers.get('content-type') || 'image/jpeg';
+      if (imageUrl.startsWith('data:')) {
+        const matches = imageUrl.match(/^data:(.+?);base64,(.+)$/);
+        if (!matches) {
+          throw new Error('Invalid data URL format');
+        }
+
+        mimeType = matches[1];
+        const base64Data = matches[2];
+        buffer = Buffer.from(base64Data, 'base64');
+
+        console.log(`[GoogleDrive] Converting data URL to buffer (${buffer.length} bytes)`);
+      } else {
+        const response = await fetch(imageUrl);
+        if (!response.ok) {
+          throw new Error(`Failed to fetch image: ${response.statusText}`);
+        }
+
+        const arrayBuffer = await response.arrayBuffer();
+        buffer = Buffer.from(arrayBuffer);
+        mimeType = response.headers.get('content-type') || 'image/jpeg';
+
+        console.log(`[GoogleDrive] Downloaded from URL (${buffer.length} bytes)`);
+      }
 
       const result = await this.uploadImage(buffer, filename, mimeType);
 
@@ -121,8 +145,6 @@ export class GoogleDriveClient {
   }
 
   async deleteFile(fileId: string): Promise<void> {
-    await this.ensureValidToken();
-
     try {
       await this.drive.files.delete({ fileId });
     } catch (error) {
@@ -132,15 +154,26 @@ export class GoogleDriveClient {
   }
 }
 
-export function getGoogleDriveConfig(): GoogleDriveOAuthConfig | null {
+export function getGoogleDriveConfig(): GoogleDriveConfig | null {
+  const serviceAccountEmail = process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT_EMAIL;
+  const serviceAccountKey = process.env.GOOGLE_DRIVE_SERVICE_ACCOUNT_KEY;
+  const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
+
+  if (serviceAccountEmail && serviceAccountKey && folderId) {
+    return {
+      clientEmail: serviceAccountEmail,
+      privateKey: serviceAccountKey.replace(/\\n/g, '\n'),
+      folderId,
+    };
+  }
+
   const refreshToken = process.env.GOOGLE_DRIVE_REFRESH_TOKEN;
   const clientId = process.env.GOOGLE_DRIVE_CLIENT_ID;
   const clientSecret = process.env.GOOGLE_DRIVE_CLIENT_SECRET;
-  const folderId = process.env.GOOGLE_DRIVE_FOLDER_ID;
 
-  if (!refreshToken || !clientId || !clientSecret || !folderId) {
-    return null;
+  if (refreshToken && clientId && clientSecret && folderId) {
+    return { refreshToken, clientId, clientSecret, folderId };
   }
 
-  return { refreshToken, clientId, clientSecret, folderId };
+  return null;
 }

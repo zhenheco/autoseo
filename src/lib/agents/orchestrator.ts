@@ -5,7 +5,6 @@ import { ResearchAgent } from './research-agent';
 import { StrategyAgent } from './strategy-agent';
 import { WritingAgent } from './writing-agent';
 import { ImageAgent } from './image-agent';
-import { QualityAgent } from './quality-agent';
 import { MetaAgent } from './meta-agent';
 import { HTMLAgent } from './html-agent';
 import { CategoryAgent } from './category-agent';
@@ -46,7 +45,6 @@ export class ParallelOrchestrator {
       strategy: 0,
       contentGeneration: 0,
       metaGeneration: 0,
-      qualityCheck: 0,
     };
 
     const result: ArticleGenerationResult = {
@@ -174,22 +172,7 @@ export class ParallelOrchestrator {
         html: htmlOutput,
       });
 
-      const phase5Start = Date.now();
-      const qualityAgent = new QualityAgent(aiConfig, context);
-      const qualityOutput = await qualityAgent.execute({
-        content: writingOutput,
-        images: imageOutput,
-        meta: metaOutput,
-        thresholds: {
-          quality_threshold: workflowSettings.quality_threshold,
-          content_length_min: workflowSettings.content_length_min,
-          content_length_max: workflowSettings.content_length_max,
-          keyword_density_min: workflowSettings.keyword_density_min,
-          keyword_density_max: workflowSettings.keyword_density_max,
-        },
-      });
-      phaseTimings.qualityCheck = Date.now() - phase5Start;
-      result.quality = qualityOutput;
+      // QualityAgent 已移除 - 品質檢查由其他 agents 負責
 
       // Phase 6: Category and Tag Selection
       const phase6Start = Date.now();
@@ -229,8 +212,16 @@ export class ParallelOrchestrator {
         }
       }
 
-      // CategoryAgent 使用 DeepSeek 自己的 API，需要移除 OpenRouter 前綴和版本後綴
-      let categoryModel = agentConfig.meta_model.replace('deepseek/', '');
+      // CategoryAgent 使用 DeepSeek 自己的 API
+      // 如果 meta_model 不是 DeepSeek 模型，使用預設的 deepseek-chat
+      let categoryModel = agentConfig.meta_model || 'deepseek-chat';
+      if (categoryModel.startsWith('deepseek/')) {
+        categoryModel = categoryModel.replace('deepseek/', '');
+      }
+      // 如果不是 deepseek-chat 或 deepseek-reasoner，使用預設值
+      if (!categoryModel.startsWith('deepseek-')) {
+        categoryModel = 'deepseek-chat';
+      }
       // 移除 :free 等版本後綴，DeepSeek API 只接受 deepseek-chat 或 deepseek-reasoner
       categoryModel = categoryModel.replace(/:.*$/, '').replace(/-v[\d.]+/, '');
       console.log(`[Orchestrator] CategoryAgent model: ${agentConfig.meta_model} -> ${categoryModel}`);
@@ -287,36 +278,63 @@ export class ParallelOrchestrator {
         phaseTimings.research +
         phaseTimings.strategy +
         phaseTimings.contentGeneration +
-        phaseTimings.metaGeneration +
-        phaseTimings.qualityCheck;
+        phaseTimings.metaGeneration;
       const parallelSpeedup = serialTime / totalTime;
 
-      result.success = qualityOutput.passed;
+      result.success = !!(result.writing && result.meta);
       result.executionStats = {
         totalTime,
         phases: phaseTimings,
         parallelSpeedup,
       };
 
-      const finalStatus = qualityOutput.passed ? 'completed' : 'quality_failed';
+      const finalStatus = result.success ? 'completed' : 'failed';
       await this.updateJobStatus(input.articleJobId, finalStatus, result);
 
-      // Phase 8: 儲存文章到資料庫（如果品質通過或已發布到 WordPress）
-      if (qualityOutput.passed || result.wordpress) {
+      // Phase 8: 儲存文章到資料庫（如果生成成功或已發布到 WordPress）
+      if (result.success || result.wordpress) {
         try {
           const articleStorage = new ArticleStorageService(supabase);
 
-          // 取得 user ID，如果沒有認證則使用預設測試 UUID
-          const { data: userData } = await supabase.auth.getUser();
-          const userId = userData.user?.id || '00000000-0000-0000-0000-000000000000';
+          // 取得 user ID：優先使用 input.userId，否則從認證取得，最後從 article_job 查詢
+          let userId = input.userId;
+
+          if (!userId) {
+            const { data: userData } = await supabase.auth.getUser();
+            userId = userData.user?.id;
+          }
+
+          // 如果仍然沒有 userId，從 article_job 的 company_members 查詢
+          if (!userId && input.articleJobId) {
+            const { data: jobData } = await supabase
+              .from('article_jobs')
+              .select('company_id')
+              .eq('id', input.articleJobId)
+              .single();
+
+            if (jobData) {
+              const { data: memberData } = await supabase
+                .from('company_members')
+                .select('user_id')
+                .eq('company_id', jobData.company_id)
+                .limit(1)
+                .single();
+
+              userId = memberData?.user_id;
+            }
+          }
+
+          if (!userId) {
+            throw new Error('無法取得有效的 user_id，文章儲存失敗');
+          }
 
           // 在儲存文章前，先確保 article_job 記錄存在
           const { error: upsertError } = await supabase
             .from('article_jobs')
             .upsert({
               id: input.articleJobId,
-              keywords: input.title || '',
-              status: 'storage_preparing',
+              keywords: input.title ? [input.title] : [],
+              status: 'processing',
               metadata: { message: '準備儲存文章到資料庫' },
             }, {
               onConflict: 'id',

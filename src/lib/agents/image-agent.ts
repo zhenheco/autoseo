@@ -186,9 +186,10 @@ ${styleGuide}
 Requirements:
 - Eye-catching and professional
 - Relevant to the article topic
-- No text overlays
+- IMPORTANT: No text, no words, no letters, no Chinese characters - pure visual image only
 - Suitable for blog header/social media
-- High visual impact`;
+- High visual impact
+- Use symbols, icons, or illustrations instead of any text`;
   }
 
   private buildContentImagePrompt(
@@ -216,7 +217,8 @@ Requirements:
 - Clear and informative
 - Supports the text content
 - Professional quality
-- No text overlays`;
+- IMPORTANT: No text, no words, no letters, no Chinese characters - pure visual image only
+- Use symbols, icons, or illustrations instead of any text`;
   }
 
   private calculateTotalCost(

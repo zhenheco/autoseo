@@ -7,7 +7,7 @@ config({ path: resolve(process.cwd(), '.env.local') });
 
 console.log('Environment variables check:');
 console.log('OPENAI_API_KEY:', process.env.OPENAI_API_KEY ?
-  `${process.env.OPENAI_API_KEY.substring(0, 20)}...` :
+  '✅ SET' :
   '❌ NOT SET');
 console.log('Key length:', process.env.OPENAI_API_KEY?.length || 0);
-console.log('Key starts with:', process.env.OPENAI_API_KEY?.substring(0, 10));
+console.log('Key format valid:', process.env.OPENAI_API_KEY?.startsWith('sk-') ? '✅' : '❌');
