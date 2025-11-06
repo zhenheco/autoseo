@@ -89,7 +89,8 @@ export class GoogleDriveClient {
         },
       });
 
-      const directUrl = `https://drive.google.com/uc?export=view&id=${fileId}`;
+      // 使用 drive.usercontent.google.com 確保可以直接嵌入
+      const directUrl = `https://drive.usercontent.google.com/download?id=${fileId}&export=download`;
 
       return {
         url: directUrl,

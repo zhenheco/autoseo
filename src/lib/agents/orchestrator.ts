@@ -19,6 +19,7 @@ import type {
   AgentConfig,
   PreviousArticle,
   AIClientConfig,
+  GeneratedImage,
 } from '@/types/agents';
 import type { AIModel } from '@/types/ai-models';
 import { AgentExecutionContext } from './base-agent';
@@ -171,6 +172,15 @@ export class ParallelOrchestrator {
       });
 
       writingOutput.html = htmlOutput.html;
+
+      // 插入圖片到 HTML 中
+      if (imageOutput) {
+        writingOutput.html = this.insertImagesToHtml(
+          writingOutput.html,
+          imageOutput.featuredImage,
+          imageOutput.contentImages
+        );
+      }
 
       await this.updateJobStatus(input.articleJobId, 'processing', {
         current_phase: 'html_completed',
@@ -782,5 +792,91 @@ export class ParallelOrchestrator {
     }
 
     console.log(`[Orchestrator] ✅ 狀態已更新:`, result);
+  }
+
+  private insertImagesToHtml(
+    html: string,
+    featuredImage: GeneratedImage | null,
+    contentImages: GeneratedImage[]
+  ): string {
+    let modifiedHtml = html;
+
+    // 1. 在第一個 <p> 標籤之後插入精選圖片
+    if (featuredImage) {
+      const featuredImageHtml = `<figure class="wp-block-image size-large">
+  <img src="${featuredImage.url}" alt="${featuredImage.altText}" width="${featuredImage.width}" height="${featuredImage.height}" />
+  <figcaption>${featuredImage.altText}</figcaption>
+</figure>\n\n`;
+
+      const firstPTagIndex = modifiedHtml.indexOf('</p>');
+      if (firstPTagIndex !== -1) {
+        modifiedHtml =
+          modifiedHtml.slice(0, firstPTagIndex + 4) +
+          '\n\n' +
+          featuredImageHtml +
+          modifiedHtml.slice(firstPTagIndex + 4);
+      }
+    }
+
+    // 2. 智能分配內文圖片到 H2/H3 標題
+    if (contentImages.length > 0) {
+      // 找出所有 H2 和 H3 位置
+      const h2Regex = /<h2[^>]*>.*?<\/h2>/g;
+      const h3Regex = /<h3[^>]*>.*?<\/h3>/g;
+      let match;
+      const h2Positions: number[] = [];
+      const h3Positions: number[] = [];
+
+      while ((match = h2Regex.exec(modifiedHtml)) !== null) {
+        h2Positions.push(match.index + match[0].length);
+      }
+
+      while ((match = h3Regex.exec(modifiedHtml)) !== null) {
+        h3Positions.push(match.index + match[0].length);
+      }
+
+      // 計算分配策略
+      const h2Count = h2Positions.length;
+      const imageCount = contentImages.length;
+
+      let insertPositions: number[] = [];
+
+      if (imageCount <= Math.ceil(h2Count / 2)) {
+        // 情況 1: 圖片數 ≤ H2數/2，每兩個 H2 放一張
+        // 例如: 3個H2，2張圖 → 放在第1、第3個H2後
+        const step = Math.max(1, Math.floor(h2Count / imageCount));
+        for (let i = 0; i < imageCount && i * step < h2Count; i++) {
+          insertPositions.push(h2Positions[i * step]);
+        }
+      } else if (imageCount <= h2Count) {
+        // 情況 2: H2數/2 < 圖片數 ≤ H2數，優先填滿 H2
+        // 例如: 3個H2，3張圖 → 每個H2後各放一張
+        insertPositions = h2Positions.slice(0, imageCount);
+      } else {
+        // 情況 3: 圖片數 > H2數，先填滿 H2，剩餘放到 H3
+        // 例如: 3個H2，5張圖 → 3張放H2，2張放H3
+        insertPositions = [...h2Positions];
+        const remainingImages = imageCount - h2Count;
+        const h3ToUse = h3Positions.slice(0, remainingImages);
+        insertPositions = [...insertPositions, ...h3ToUse].sort((a, b) => a - b);
+      }
+
+      // 從後往前插入，避免位置偏移
+      for (let i = Math.min(insertPositions.length, imageCount) - 1; i >= 0; i--) {
+        const image = contentImages[i];
+        const imageHtml = `\n\n<figure class="wp-block-image size-large">
+  <img src="${image.url}" alt="${image.altText}" width="${image.width}" height="${image.height}" />
+  <figcaption>${image.altText}</figcaption>
+</figure>\n\n`;
+
+        const position = insertPositions[i];
+        modifiedHtml =
+          modifiedHtml.slice(0, position) +
+          imageHtml +
+          modifiedHtml.slice(position);
+      }
+    }
+
+    return modifiedHtml;
   }
 }

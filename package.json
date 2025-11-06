@@ -41,6 +41,7 @@
     "googleapis": "^164.1.0",
     "isomorphic-dompurify": "^2.31.0",
     "jsdom": "^27.0.1",
+    "linkedom": "^0.18.12",
     "lucide-react": "^0.546.0",
     "marked": "^16.4.1",
     "next": "^15.5.6",

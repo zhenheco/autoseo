@@ -34,25 +34,24 @@ export class HTMLAgent extends BaseAgent<HTMLInput, HTMLOutput> {
       return html;
     }
 
-    const { JSDOM } = await import('jsdom');
-    const dom = new JSDOM(html);
-    const document = dom.window.document;
+    const { parseHTML } = await import('linkedom');
+    const { document } = parseHTML(html);
     const body = document.body;
 
     const walker = document.createTreeWalker(
       body,
-      dom.window.NodeFilter.SHOW_TEXT,
+      1, // NodeFilter.SHOW_TEXT
       {
         acceptNode: (node: Node) => {
           const element = node as unknown as HTMLElement;
           const parent = element.parentElement;
-          if (!parent) return dom.window.NodeFilter.FILTER_REJECT;
+          if (!parent) return 2; // NodeFilter.FILTER_REJECT
 
           if (['A', 'SCRIPT', 'STYLE', 'CODE', 'PRE'].includes(parent.tagName)) {
-            return dom.window.NodeFilter.FILTER_REJECT;
+            return 2; // NodeFilter.FILTER_REJECT
           }
 
-          return dom.window.NodeFilter.FILTER_ACCEPT;
+          return 1; // NodeFilter.FILTER_ACCEPT
         },
       }
     );
@@ -120,9 +119,8 @@ export class HTMLAgent extends BaseAgent<HTMLInput, HTMLOutput> {
       return html;
     }
 
-    const { JSDOM } = await import('jsdom');
-    const dom = new JSDOM(html);
-    const document = dom.window.document;
+    const { parseHTML } = await import('linkedom');
+    const { document } = parseHTML(html);
     const body = document.body;
 
     for (const ref of externalRefs) {
@@ -138,18 +136,18 @@ export class HTMLAgent extends BaseAgent<HTMLInput, HTMLOutput> {
 
       const walker = document.createTreeWalker(
         section,
-        dom.window.NodeFilter.SHOW_TEXT,
+        1, // NodeFilter.SHOW_TEXT
         {
           acceptNode: (node: Node) => {
             const element = node as unknown as HTMLElement;
             const parent = element.parentElement;
-            if (!parent) return dom.window.NodeFilter.FILTER_REJECT;
+            if (!parent) return 2; // NodeFilter.FILTER_REJECT
 
             if (['A', 'SCRIPT', 'STYLE', 'CODE', 'PRE'].includes(parent.tagName)) {
-              return dom.window.NodeFilter.FILTER_REJECT;
+              return 2; // NodeFilter.FILTER_REJECT
             }
 
-            return dom.window.NodeFilter.FILTER_ACCEPT;
+            return 1; // NodeFilter.FILTER_ACCEPT
           },
         }
       );
@@ -205,9 +203,8 @@ export class HTMLAgent extends BaseAgent<HTMLInput, HTMLOutput> {
   }
 
   private async optimizeForWordPress(html: string): Promise<string> {
-    const { JSDOM } = await import('jsdom');
-    const dom = new JSDOM(html);
-    const document = dom.window.document;
+    const { parseHTML } = await import('linkedom');
+    const { document } = parseHTML(html);
     const body = document.body;
 
     const images = body.querySelectorAll('img');
@@ -294,9 +291,8 @@ export class HTMLAgent extends BaseAgent<HTMLInput, HTMLOutput> {
   }
 
   private async insertFAQSchema(html: string): Promise<string> {
-    const { JSDOM } = await import('jsdom');
-    const dom = new JSDOM(html);
-    const document = dom.window.document;
+    const { parseHTML } = await import('linkedom');
+    const { document } = parseHTML(html);
     const body = document.body;
 
     const faqHeadings = Array.from(body.querySelectorAll('h2, h3')).filter((h) =>
@@ -362,9 +358,8 @@ export class HTMLAgent extends BaseAgent<HTMLInput, HTMLOutput> {
   }
 
   private async countLinks(html: string): Promise<{ internal: number; external: number }> {
-    const { JSDOM } = await import('jsdom');
-    const dom = new JSDOM(html);
-    const document = dom.window.document;
+    const { parseHTML } = await import('linkedom');
+    const { document } = parseHTML(html);
     const body = document.body;
 
     const allLinks = body.querySelectorAll('a');

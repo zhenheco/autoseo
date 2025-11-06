@@ -3,6 +3,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
 import { sanitizeArticleHtml } from '@/lib/security/html-sanitizer'
 
 async function getArticle(articleId: string) {
@@ -103,12 +104,16 @@ export default async function ArticlePreviewPage({
           <Card>
             <CardHeader>
               <CardTitle>特色圖片</CardTitle>
+              <CardDescription>此圖片已包含在文章 HTML 內容中</CardDescription>
             </CardHeader>
             <CardContent>
-              <img
+              <Image
                 src={article.featured_image_url}
                 alt={article.featured_image_alt || article.title}
+                width={1024}
+                height={1024}
                 className="w-full max-w-2xl rounded-lg"
+                unoptimized={article.featured_image_url.includes('drive.google.com')}
               />
               {article.featured_image_alt && (
                 <p className="text-sm text-muted-foreground mt-2">
