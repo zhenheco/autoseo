@@ -5,7 +5,9 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import type { AffiliateDashboardStats } from '@/types/affiliate.types'
+import { Badge } from '@/components/ui/badge'
+import type { AffiliateDashboardStats, AffiliateReferral } from '@/types/affiliate.types'
+import { CheckCircle2, XCircle, Users } from 'lucide-react'
 
 export default function AffiliateDashboardPage() {
   const router = useRouter()
@@ -14,9 +16,12 @@ export default function AffiliateDashboardPage() {
   const [affiliateCode, setAffiliateCode] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [recentReferrals, setRecentReferrals] = useState<AffiliateReferral[]>([])
+  const [referralsLoading, setReferralsLoading] = useState(true)
 
   useEffect(() => {
     fetchStats()
+    fetchRecentReferrals()
   }, [])
 
   const fetchStats = async () => {
@@ -40,6 +45,20 @@ export default function AffiliateDashboardPage() {
       setError(err instanceof Error ? err.message : '載入失敗')
     } finally {
       setLoading(false)
+    }
+  }
+
+  const fetchRecentReferrals = async () => {
+    try {
+      const response = await fetch('/api/affiliate/referrals?limit=5')
+      if (response.ok) {
+        const data = await response.json()
+        setRecentReferrals(data.referrals || [])
+      }
+    } catch (err) {
+      console.error('獲取推薦客戶失敗:', err)
+    } finally {
+      setReferralsLoading(false)
     }
   }
 
@@ -267,7 +286,7 @@ export default function AffiliateDashboardPage() {
                 更新銀行帳戶
               </Button>
             </Link>
-            <Link href="/docs/AFFILIATE_TAX_NOTICE.md" target="_blank">
+            <Link href="/dashboard/affiliate/tax-notice" target="_blank">
               <Button variant="outline" className="w-full justify-start">
                 稅務須知
               </Button>
@@ -275,6 +294,85 @@ export default function AffiliateDashboardPage() {
           </CardContent>
         </Card>
       </div>
+
+      {/* 最近推薦客戶 */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center justify-between">
+            <div>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="h-5 w-5" />
+                最近推薦客戶
+              </CardTitle>
+              <CardDescription>顯示最近 5 位推薦客戶</CardDescription>
+            </div>
+            <Link href="/dashboard/affiliate/referrals">
+              <Button variant="outline" size="sm">
+                查看全部
+              </Button>
+            </Link>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {referralsLoading ? (
+            <div className="space-y-3">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-16 animate-pulse rounded-lg bg-gray-100"></div>
+              ))}
+            </div>
+          ) : recentReferrals.length > 0 ? (
+            <div className="space-y-3">
+              {recentReferrals.map((referral) => (
+                <div
+                  key={referral.id}
+                  className="flex items-center justify-between rounded-lg border p-4 hover:bg-gray-50"
+                >
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2">
+                      <p className="font-medium">推薦客戶 #{referral.id.slice(0, 8)}</p>
+                      {referral.is_active ? (
+                        <Badge variant="default" className="flex items-center gap-1">
+                          <CheckCircle2 className="h-3 w-3" />
+                          活躍
+                        </Badge>
+                      ) : (
+                        <Badge variant="secondary" className="flex items-center gap-1">
+                          <XCircle className="h-3 w-3" />
+                          非活躍
+                        </Badge>
+                      )}
+                    </div>
+                    <div className="mt-1 flex gap-4 text-sm text-gray-600">
+                      <span>註冊：{new Date(referral.registered_at).toLocaleDateString('zh-TW')}</span>
+                      {referral.first_payment_at && (
+                        <span>
+                          首次付款：{new Date(referral.first_payment_at).toLocaleDateString('zh-TW')}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm text-gray-600">累計訂單</p>
+                    <p className="font-semibold">{referral.total_payments} 筆</p>
+                  </div>
+                  <div className="ml-4 text-right">
+                    <p className="text-sm text-gray-600">生命週期價值</p>
+                    <p className="font-semibold text-green-600">
+                      NT$ {referral.lifetime_value?.toLocaleString() || 0}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="rounded-lg bg-gray-50 p-8 text-center">
+              <Users className="mx-auto h-12 w-12 text-gray-400" />
+              <p className="mt-4 text-gray-600">尚無推薦客戶</p>
+              <p className="mt-2 text-sm text-gray-500">分享您的推薦連結開始賺取佣金</p>
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* 最後更新時間 */}
       {stats?.lastPaymentDate && (

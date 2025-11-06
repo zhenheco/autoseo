@@ -182,10 +182,22 @@ export default function AffiliateApplyPage() {
             />
             <span className="text-sm text-gray-700">
               我已閱讀並同意
-              <Link href="/docs/AFFILIATE_TAX_NOTICE.md" className="text-blue-600 hover:underline">
+              <Link
+                href="/dashboard/affiliate/tax-notice"
+                target="_blank"
+                className="text-blue-600 hover:underline mx-1"
+              >
                 聯盟行銷夥伴稅務須知
               </Link>
-              及相關條款 <span className="text-red-500">*</span>
+              及
+              <Link
+                href="/dashboard/affiliate/terms"
+                target="_blank"
+                className="text-blue-600 hover:underline mx-1"
+              >
+                服務條款
+              </Link>
+              <span className="text-red-500">*</span>
             </span>
           </label>
         </div>
