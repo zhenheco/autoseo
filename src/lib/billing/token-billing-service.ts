@@ -259,7 +259,7 @@ export class TokenBillingService {
 
   /**
    * 檢查並重置每月配額（如果週期已過）
-   * 免費方案每月重置 20,000 tokens
+   * 僅適用於付費方案，免費方案使用一次性 tokens
    */
   async checkAndResetMonthlyQuota(companyId: string): Promise<void> {
     const { data: subscription } = await this.supabase
@@ -274,8 +274,13 @@ export class TokenBillingService {
       return
     }
 
+    // 免費方案（月配額為 0）不需要重置
+    if (subscription.monthly_token_quota === 0 || !subscription.current_period_end) {
+      return
+    }
+
     const now = new Date()
-    const periodEnd = new Date(subscription.current_period_end!)
+    const periodEnd = new Date(subscription.current_period_end)
 
     // 檢查週期是否已過
     if (now > periodEnd) {

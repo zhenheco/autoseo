@@ -77,30 +77,40 @@ export function TokenBalanceCard() {
               {formatNumber(balance.balance.total)}
             </p>
 
-            {/* 使用進度條 */}
+            {/* 使用進度條或餘額資訊 */}
             <div className="space-y-1">
-              <div className="flex items-center gap-2">
-                <span className={cn(
-                  "text-sm font-medium",
-                  usagePercentage > 90 ? "text-red-600" : usagePercentage > 70 ? "text-orange-600" : "text-success"
-                )}>
-                  {usagePercentage.toFixed(0)}% 已使用
-                </span>
-                {isFree && (
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700">
+              {isFree ? (
+                // 免費方案：顯示一次性餘額
+                <div className="flex items-center gap-2">
+                  <span className="text-sm font-medium text-muted-foreground">
+                    一次性 Token 餘額
+                  </span>
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
                     免費方案
                   </span>
-                )}
-              </div>
-              <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
-                <div
-                  className={cn(
-                    "h-full rounded-full transition-all",
-                    usagePercentage > 90 ? "bg-red-500" : usagePercentage > 70 ? "bg-orange-500" : "bg-green-500"
-                  )}
-                  style={{ width: `${Math.min(usagePercentage, 100)}%` }}
-                />
-              </div>
+                </div>
+              ) : (
+                // 付費方案：顯示使用進度
+                <>
+                  <div className="flex items-center gap-2">
+                    <span className={cn(
+                      "text-sm font-medium",
+                      usagePercentage > 90 ? "text-red-600" : usagePercentage > 70 ? "text-orange-600" : "text-success"
+                    )}>
+                      {usagePercentage.toFixed(0)}% 已使用
+                    </span>
+                  </div>
+                  <div className="h-1.5 w-full overflow-hidden rounded-full bg-muted">
+                    <div
+                      className={cn(
+                        "h-full rounded-full transition-all",
+                        usagePercentage > 90 ? "bg-red-500" : usagePercentage > 70 ? "bg-orange-500" : "bg-green-500"
+                      )}
+                      style={{ width: `${Math.min(usagePercentage, 100)}%` }}
+                    />
+                  </div>
+                </>
+              )}
             </div>
           </div>
           <div className={cn(
