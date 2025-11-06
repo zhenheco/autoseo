@@ -78,7 +78,11 @@ export async function GET(request: NextRequest) {
       lastPaymentDate: lastPaymentDate || null,
     }
 
-    return NextResponse.json(stats)
+    return NextResponse.json({
+      ...stats,
+      affiliate_code: affiliate.affiliate_code,
+      status: affiliate.status,
+    })
   } catch (error) {
     console.error('API 錯誤:', error)
     return NextResponse.json({ error: '伺服器錯誤' }, { status: 500 })
