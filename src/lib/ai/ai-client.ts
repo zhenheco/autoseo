@@ -1,4 +1,5 @@
 import { callOpenRouter } from '@/lib/openrouter';
+import { getRateLimiter } from '@/lib/rate-limit/rate-limiter';
 import type {
   AIClientConfig,
   AICompletionOptions,
@@ -60,6 +61,11 @@ export class AIClient {
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
+        const estimatedTokens = options.maxTokens || 2000;
+        const rateLimiter = getRateLimiter(currentModel);
+
+        await rateLimiter.acquire(estimatedTokens);
+
         const responseFormat = options.responseFormat ||
           (options.format === 'json' ? { type: 'json_object' } : undefined);
 
@@ -112,12 +118,15 @@ export class AIClient {
           contentLength: content?.length || 0,
         });
 
+        const totalTokens = response.usage?.total_tokens || 0;
+        rateLimiter.reportUsage(totalTokens);
+
         return {
           content,
           usage: {
             promptTokens: response.usage?.prompt_tokens || 0,
             completionTokens: response.usage?.completion_tokens || 0,
-            totalTokens: response.usage?.total_tokens || 0,
+            totalTokens,
           },
           model: response.model,
         };
@@ -138,7 +147,8 @@ export class AIClient {
           }
 
           if (attempt < maxRetries) {
-            const delay = Math.min(1000 * Math.pow(2, attempt), 60000);
+            const delays = [5000, 10000, 20000];
+            const delay = delays[attempt - 1] || 20000;
             console.log(`[AIClient] Rate limit hit, retrying in ${delay}ms (attempt ${attempt}/${maxRetries})`);
             await new Promise(resolve => setTimeout(resolve, delay));
             continue;

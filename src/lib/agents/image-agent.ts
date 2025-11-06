@@ -119,7 +119,8 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
         console.warn(`[ImageAgent] ⚠️ Featured image attempt ${attempt} failed: ${lastError.message}`);
 
         if (attempt < maxRetries) {
-          const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
+          const delays = [5000, 10000, 20000];
+          const delay = delays[attempt - 1] || 20000;
           console.log(`[ImageAgent] ⏳ Retrying in ${delay}ms...`);
           await this.sleep(delay);
         }
@@ -147,7 +148,8 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
         console.warn(`[ImageAgent] ⚠️ Content image ${index + 1} attempt ${attempt} failed: ${lastError.message}`);
 
         if (attempt < maxRetries) {
-          const delay = Math.min(1000 * Math.pow(2, attempt - 1), 10000);
+          const delays = [5000, 10000, 20000];
+          const delay = delays[attempt - 1] || 20000;
           console.log(`[ImageAgent] ⏳ Retrying in ${delay}ms...`);
           await this.sleep(delay);
         }
