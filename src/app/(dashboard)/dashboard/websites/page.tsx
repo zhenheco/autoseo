@@ -6,7 +6,7 @@ import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { deleteWebsite } from './actions'
+import { deleteWebsite, toggleWebsiteStatus } from './actions'
 import { checkPagePermission } from '@/lib/permissions'
 
 async function getCompanyWebsites(companyId: string) {
@@ -88,17 +88,25 @@ export default async function WebsitesPage({
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">狀態</span>
-                    <span className={website.is_active ? 'text-green-600' : 'text-gray-400'}>
-                      {website.is_active ? '啟用' : '停用'}
-                    </span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">CNAME</span>
-                    <span className={website.cname_verified ? 'text-green-600' : 'text-gray-400'}>
-                      {website.cname_verified ? '已驗證' : '未驗證'}
-                    </span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm text-muted-foreground">狀態</span>
+                    <form action={toggleWebsiteStatus} className="inline">
+                      <input type="hidden" name="websiteId" value={website.id} />
+                      <input type="hidden" name="currentStatus" value={website.is_active} />
+                      <button
+                        type="submit"
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                          website.is_active ? 'bg-green-600' : 'bg-gray-300'
+                        }`}
+                        aria-label="切換網站狀態"
+                      >
+                        <span
+                          className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
+                            website.is_active ? 'translate-x-6' : 'translate-x-1'
+                          }`}
+                        />
+                      </button>
+                    </form>
                   </div>
                   <div className="flex gap-2 pt-2">
                     <Link href={`/dashboard/websites/${website.id}/edit`} className="flex-1">
