@@ -5,7 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { checkPagePermission } from '@/lib/permissions'
-import { ArrowLeft, ExternalLink, FileText, Clock, BarChart3, Calendar } from 'lucide-react'
+import { ArrowLeft, ExternalLink, FileText, Clock, Calendar } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 
 export const dynamic = 'force-dynamic'
@@ -114,9 +114,6 @@ export default async function WebsiteDetailPage({
   const totalArticles = articles.length
   const publishedArticles = articles.filter(a => a.status === 'published').length
   const totalWords = articles.reduce((sum, a) => sum + (a.word_count || 0), 0)
-  const avgQualityScore = articles.length > 0
-    ? (articles.reduce((sum, a) => sum + (a.quality_score || 0), 0) / articles.length).toFixed(1)
-    : '0'
 
   return (
     <div className="container mx-auto p-8">
@@ -154,7 +151,7 @@ export default async function WebsiteDetailPage({
           </div>
         </CardHeader>
         <CardContent>
-          <div className="grid gap-4 md:grid-cols-4">
+          <div className="grid gap-4 md:grid-cols-3">
             <div className="flex items-center gap-3">
               <FileText className="h-8 w-8 text-blue-600" />
               <div>
@@ -174,13 +171,6 @@ export default async function WebsiteDetailPage({
               <div>
                 <p className="text-2xl font-bold">{totalWords.toLocaleString()}</p>
                 <p className="text-sm text-muted-foreground">總字數</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <BarChart3 className="h-8 w-8 text-orange-600" />
-              <div>
-                <p className="text-2xl font-bold">{avgQualityScore}</p>
-                <p className="text-sm text-muted-foreground">平均質量分數</p>
               </div>
             </div>
           </div>
@@ -246,12 +236,6 @@ export default async function WebsiteDetailPage({
                       <Clock className="h-4 w-4" />
                       <span>{article.reading_time || 0} 分鐘閱讀</span>
                     </div>
-                    {article.quality_score !== null && (
-                      <div className="flex items-center gap-2">
-                        <BarChart3 className="h-4 w-4" />
-                        <span>質量: {article.quality_score.toFixed(1)}</span>
-                      </div>
-                    )}
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
                       <span>{formatDate(article.created_at)}</span>
