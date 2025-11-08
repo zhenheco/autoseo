@@ -324,9 +324,9 @@ export default function PricingPage() {
             description: `${plan.name} ${billingPeriod === 'yearly' ? '年繳' : '月繳'}方案`,
             email: user.email || '',
             periodType,
-            periodPoint: '1',
+            periodPoint: '01',
             periodStartType: 2,
-            periodTimes: 0,
+            periodTimes: 12,
           }),
         })
 

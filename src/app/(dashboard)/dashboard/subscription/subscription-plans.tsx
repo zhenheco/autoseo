@@ -30,7 +30,9 @@ export function SubscriptionPlans({ plans, companyId, userEmail, currentTier }: 
         body: JSON.stringify({
           planId: plan.id,
           periodType: 'M',
+          periodPoint: '01',
           periodStartType: 2,
+          periodTimes: 12,
         }),
       })
 
