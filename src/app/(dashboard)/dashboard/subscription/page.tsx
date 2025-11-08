@@ -43,8 +43,8 @@ export default async function SubscriptionPage() {
     .eq('status', 'active')
     .single()
 
-  // 判斷是否為免費方案
-  const isFree = companySubscription?.monthly_token_quota === 0
+  // 判斷是否為免費方案（使用 companies.subscription_tier 而非 monthly_token_quota）
+  const isFree = company?.subscription_tier === 'free'
 
   const { data: plans } = await supabase
     .from('subscription_plans')

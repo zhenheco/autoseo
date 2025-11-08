@@ -680,18 +680,28 @@ export class PaymentService {
           const periodStart = now.toISOString()
           const periodEnd = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate()).toISOString()
 
-          // 先刪除該公司的所有舊訂閱記錄，確保只有一個 active subscription
+          // 查詢舊的訂閱記錄，保留 purchased_token_balance
+          const { data: oldSubscription } = await this.supabase
+            .from('company_subscriptions')
+            .select('purchased_token_balance')
+            .eq('company_id', mandateData.company_id)
+            .eq('status', 'active')
+            .single()
+
+          const preservedPurchasedBalance = oldSubscription?.purchased_token_balance || 0
+
+          // 刪除該公司的所有舊訂閱記錄
           await this.supabase
             .from('company_subscriptions')
             .delete()
             .eq('company_id', mandateData.company_id)
 
-          // 創建新的訂閱記錄
+          // 創建新的訂閱記錄，保留購買的 Token
           const { error: subscriptionError } = await this.supabase.from('company_subscriptions').insert({
             company_id: mandateData.company_id,
             plan_id: mandateData.plan_id,
             status: 'active',
-            purchased_token_balance: 0,
+            purchased_token_balance: preservedPurchasedBalance,
             monthly_quota_balance: planData.base_tokens,
             monthly_token_quota: planData.base_tokens,
             is_lifetime: false,
@@ -707,58 +717,47 @@ export class PaymentService {
             console.log('[PaymentService] ✅ 訂閱已創建')
           }
 
-          const { data: companyData, error: companyQueryError } = await this.supabase
+          // 更新公司的訂閱層級和到期時間
+          const subscriptionTier = this.mapPlanSlugToTier(planData.slug)
+          const subscriptionEndsAt = mandateData.period_type === 'M'
+            ? this.calculateNextPaymentDate(mandateData.period_type, mandateData.period_point || undefined)
+            : mandateData.period_type === 'Y'
+            ? new Date(now.getFullYear() + 1, now.getMonth(), now.getDate()).toISOString()
+            : periodEnd
+
+          const { error: companyUpdateError } = await this.supabase
             .from('companies')
-            .select('seo_token_balance')
+            .update({
+              subscription_tier: subscriptionTier,
+              subscription_ends_at: subscriptionEndsAt,
+              updated_at: now.toISOString(),
+            })
             .eq('id', mandateData.company_id)
-            .single()
 
-          if (companyQueryError) {
-            console.error('[PaymentService] ❌ 查詢公司資料失敗:', companyQueryError)
-            businessLogicErrors.push('查詢公司資料失敗')
+          if (companyUpdateError) {
+            console.error('[PaymentService] ❌ 更新公司訂閱資料失敗:', companyUpdateError)
+            businessLogicErrors.push('更新公司訂閱資料失敗')
           } else {
-            const currentBalance = companyData?.seo_token_balance || 0
-            const newBalance = currentBalance + planData.base_tokens
-
-            const subscriptionTier = this.mapPlanSlugToTier(planData.slug)
-            const subscriptionEndsAt = mandateData.period_type === 'M'
-              ? this.calculateNextPaymentDate(mandateData.period_type, mandateData.period_point || undefined)
-              : mandateData.period_type === 'Y'
-              ? new Date(now.getFullYear() + 1, now.getMonth(), now.getDate()).toISOString()
-              : periodEnd
-
-            const { error: companyUpdateError } = await this.supabase
-              .from('companies')
-              .update({
-                subscription_tier: subscriptionTier,
-                subscription_ends_at: subscriptionEndsAt,
-                seo_token_balance: newBalance,
-                updated_at: now.toISOString(),
-              })
-              .eq('id', mandateData.company_id)
-
-            if (companyUpdateError) {
-              console.error('[PaymentService] ❌ 更新公司訂閱資料失敗:', companyUpdateError)
-              businessLogicErrors.push('更新公司訂閱資料失敗')
-            } else {
-              console.log('[PaymentService] ✅ 公司訂閱資料已更新:', {
-                subscription_tier: subscriptionTier,
-                subscription_ends_at: subscriptionEndsAt,
-                seo_token_balance: newBalance,
-              })
-            }
+            console.log('[PaymentService] ✅ 公司訂閱資料已更新:', {
+              subscription_tier: subscriptionTier,
+              subscription_ends_at: subscriptionEndsAt,
+            })
           }
 
+          // 記錄月配額的獲得（首次訂閱或續約）
           const description = isFirstAuthorization
-            ? `訂閱 ${planData.name} 方案（首次授權）`
-            : `定期定額扣款 - ${planData.name} 方案（第 ${mandateUpdate.periods_paid} 期）`
+            ? `訂閱 ${planData.name} 方案（首次授權）- 月配額 ${planData.base_tokens?.toLocaleString()} Tokens`
+            : `定期定額扣款 - ${planData.name} 方案（第 ${mandateUpdate.periods_paid} 期）- 月配額 ${planData.base_tokens?.toLocaleString()} Tokens`
+
+          // 計算總餘額（月配額 + 購買配額）
+          const totalBalance = planData.base_tokens + preservedPurchasedBalance
 
           const { error: tokenError } = await this.supabase.from('token_balance_changes').insert({
             company_id: mandateData.company_id,
-            change_type: isFirstAuthorization ? 'purchase' : 'quota_renewal',
+            change_type: isFirstAuthorization ? 'subscription' : 'quota_renewal',
             amount: planData.base_tokens,
-            balance_before: companyData?.seo_token_balance || 0,
-            balance_after: (companyData?.seo_token_balance || 0) + planData.base_tokens,
+            balance_before: preservedPurchasedBalance,
+            balance_after: totalBalance,
             description,
           })
 
