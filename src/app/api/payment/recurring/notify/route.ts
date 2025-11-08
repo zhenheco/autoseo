@@ -41,7 +41,23 @@ export async function POST(request: NextRequest) {
     }
   } catch (error) {
     console.error('[API Recurring Notify] 處理定期定額通知失敗:', error)
-    const errorMessage = error instanceof Error ? error.message : '處理定期定額通知失敗'
+    console.error('[API Recurring Notify] 錯誤類型:', error instanceof Error ? error.constructor.name : typeof error)
+    console.error('[API Recurring Notify] 錯誤訊息:', error instanceof Error ? error.message : String(error))
+
+    // 檢測是否為解密錯誤
+    const isDecryptError = error instanceof Error && error.message.includes('bad decrypt')
+    if (isDecryptError) {
+      console.error('[API Recurring Notify] 🔴 解密失敗 - 請檢查環境變數')
+      console.error('[API Recurring Notify] 建議：')
+      console.error('  1. 確認 NEWEBPAY_HASH_KEY 長度為 32 bytes')
+      console.error('  2. 確認 NEWEBPAY_HASH_IV 長度為 16 bytes')
+      console.error('  3. 確認沒有包含空格或換行符')
+      console.error('  4. 確認與藍新金流後台設定一致')
+    }
+
+    const errorMessage = isDecryptError
+      ? '訂閱處理失敗 - 環境變數配置錯誤'
+      : (error instanceof Error ? error.message : '處理定期定額通知失敗')
     return new Response('Status=FAILED&Message=' + encodeURIComponent(errorMessage), {
       status: 200,
       headers: { 'Content-Type': 'text/plain; charset=utf-8' }

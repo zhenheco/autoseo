@@ -204,23 +204,54 @@ export class NewebPayService {
   }
 
   decryptPeriodCallback(period: string): DecryptedResponse {
-    const decryptedData = this.aesDecrypt(period)
+    console.log('[NewebPay] 開始解密 Period 參數:', {
+      periodLength: period.length,
+      periodPrefix: period.substring(0, 50),
+      hashKeyLength: this.config.hashKey.length,
+      hashIvLength: this.config.hashIv.length,
+    })
 
-    // 嘗試解析為 JSON（定期定額授權回調使用 JSON 格式）
     try {
-      const jsonData = JSON.parse(decryptedData)
-      return jsonData
-    } catch (e) {
-      // 如果不是 JSON，則使用 URLSearchParams 解析
-      const params = new URLSearchParams(decryptedData)
-      const result: DecryptedResponse = {}
-
-      params.forEach((value, key) => {
-        const numValue = Number(value)
-        result[key] = isNaN(numValue) ? value : numValue
+      const decryptedData = this.aesDecrypt(period)
+      console.log('[NewebPay] ✅ 解密成功:', {
+        decryptedLength: decryptedData.length,
+        decryptedPrefix: decryptedData.substring(0, 100),
       })
 
-      return result
+      // 嘗試解析為 JSON（定期定額授權回調使用 JSON 格式）
+      try {
+        const jsonData = JSON.parse(decryptedData)
+        console.log('[NewebPay] ✅ JSON 解析成功:', {
+          keys: Object.keys(jsonData),
+          hasStatus: 'Status' in jsonData,
+          hasResult: 'Result' in jsonData,
+        })
+        return jsonData
+      } catch (e) {
+        console.log('[NewebPay] 非 JSON 格式，使用 URLSearchParams 解析')
+        // 如果不是 JSON，則使用 URLSearchParams 解析
+        const params = new URLSearchParams(decryptedData)
+        const result: DecryptedResponse = {}
+
+        params.forEach((value, key) => {
+          const numValue = Number(value)
+          result[key] = isNaN(numValue) ? value : numValue
+        })
+
+        return result
+      }
+    } catch (error) {
+      console.error('[NewebPay] ❌ Period 解密失敗:', {
+        error: error instanceof Error ? error.message : String(error),
+        errorCode: error instanceof Error && 'code' in error ? (error as any).code : undefined,
+        periodLength: period.length,
+        hashKeyLength: this.config.hashKey.length,
+        hashIvLength: this.config.hashIv.length,
+        suggestion: this.config.hashKey.length !== 32 || this.config.hashIv.length !== 16
+          ? '請檢查環境變數 NEWEBPAY_HASH_KEY 和 NEWEBPAY_HASH_IV 的長度和內容'
+          : '請確認藍新金流後台的 HashKey/HashIV 設定與程式碼一致',
+      })
+      throw error
     }
   }
 
@@ -305,6 +336,34 @@ export class NewebPayService {
     if (!merchantId || !hashKey || !hashIv) {
       throw new Error('NewebPay 環境變數未設定')
     }
+
+    // 驗證 HashKey 長度
+    if (hashKey.length !== 32) {
+      console.error('[NewebPay] HashKey 長度錯誤:', {
+        expected: 32,
+        actual: hashKey.length,
+        hasNewline: hashKey.includes('\n'),
+        hasSpace: hashKey.includes(' '),
+      })
+      throw new Error(`HashKey 長度必須為 32 bytes，實際為 ${hashKey.length} bytes`)
+    }
+
+    // 驗證 HashIV 長度
+    if (hashIv.length !== 16) {
+      console.error('[NewebPay] HashIV 長度錯誤:', {
+        expected: 16,
+        actual: hashIv.length,
+        hasNewline: hashIv.includes('\n'),
+        hasSpace: hashIv.includes(' '),
+      })
+      throw new Error(`HashIV 長度必須為 16 bytes，實際為 ${hashIv.length} bytes`)
+    }
+
+    console.log('[NewebPay] 環境變數驗證通過:', {
+      merchantId: merchantId.substring(0, 8) + '...',
+      hashKeyLength: hashKey.length,
+      hashIvLength: hashIv.length,
+    })
 
     return new NewebPayService({
       merchantId,

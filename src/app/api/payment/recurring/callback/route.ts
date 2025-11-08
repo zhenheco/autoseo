@@ -305,9 +305,24 @@ async function handleCallback(request: NextRequest) {
     console.error('[Payment Callback] 錯誤類型:', error instanceof Error ? error.constructor.name : typeof error)
     console.error('[Payment Callback] 錯誤訊息:', error instanceof Error ? error.message : String(error))
     console.error('[Payment Callback] 錯誤堆疊:', error instanceof Error ? error.stack : '無堆疊資訊')
+
+    // 檢測是否為解密錯誤
+    const isDecryptError = error instanceof Error && error.message.includes('bad decrypt')
+    if (isDecryptError) {
+      console.error('[Payment Callback] 🔴 解密失敗 - 請檢查環境變數')
+      console.error('[Payment Callback] 建議：')
+      console.error('  1. 確認 NEWEBPAY_HASH_KEY 長度為 32 bytes')
+      console.error('  2. 確認 NEWEBPAY_HASH_IV 長度為 16 bytes')
+      console.error('  3. 確認沒有包含空格或換行符')
+      console.error('  4. 確認與藍新金流後台設定一致')
+    }
+
     console.error('='.repeat(80))
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
-    const redirectUrl = `${baseUrl}/dashboard/subscription?payment=error`
+    const errorMessage = isDecryptError
+      ? '訂閱處理失敗，請稍後再試或聯繫客服'
+      : '處理失敗，請重新整理頁面'
+    const redirectUrl = `${baseUrl}/dashboard/subscription?payment=error&error=${encodeURIComponent(errorMessage)}`
     return new NextResponse(
       `<!DOCTYPE html>
 <html>
