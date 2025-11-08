@@ -34,7 +34,7 @@ export default async function UnauthorizedPage({
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
                 {[
                   '連接 1 個 WordPress 網站',
-                  '25,000 tokens/月（多 25%）',
+                  '25,000 tokens/月（多 150%）',
                   '使用全部 AI 模型',
                   '每篇文章無限圖片',
                   '優先客服支援',

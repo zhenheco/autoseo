@@ -1,10 +1,13 @@
 'use client'
 
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Sparkles, Check, ArrowRight, Zap } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import Link from 'next/link'
+import { createClient } from '@/lib/supabase/client'
 
 interface UpgradePromptCardProps {
   currentTier: 'free' | 'basic' | 'pro' | 'enterprise'
@@ -12,6 +15,9 @@ interface UpgradePromptCardProps {
 }
 
 export function UpgradePromptCard({ currentTier, tokenBalance }: UpgradePromptCardProps) {
+  const router = useRouter()
+  const [processingSlug, setProcessingSlug] = useState<string | null>(null)
+
   // 只對免費用戶顯示
   if (currentTier !== 'free') {
     return null
@@ -22,7 +28,9 @@ export function UpgradePromptCard({ currentTier, tokenBalance }: UpgradePromptCa
   const plans = [
     {
       name: 'STARTER',
+      slug: 'starter',
       price: 699,
+      yearlyPrice: 5825, // 699 * 10 = 6990, 83折 = 5825
       tokens: '25K (多 150%)',
       features: [
         '連接 1 個 WordPress 網站',
@@ -36,7 +44,9 @@ export function UpgradePromptCard({ currentTier, tokenBalance }: UpgradePromptCa
     },
     {
       name: 'PROFESSIONAL',
-      price: 1899,
+      slug: 'professional',
+      price: 2499,
+      yearlyPrice: 24990, // 2499 * 12 = 29988, 83折 = 24990
       tokens: '100K',
       features: [
         '連接 5 個 WordPress 網站',
@@ -49,6 +59,89 @@ export function UpgradePromptCard({ currentTier, tokenBalance }: UpgradePromptCa
       borderColor: 'border-primary/50'
     }
   ]
+
+  const handleUpgrade = async (planSlug: string, yearlyPrice: number, planName: string) => {
+    try {
+      setProcessingSlug(planSlug)
+
+      const supabase = createClient()
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        router.push('/login?redirect=/dashboard')
+        return
+      }
+
+      // 獲取公司 ID
+      const { data: membership } = await supabase
+        .from('company_members')
+        .select('company_id')
+        .eq('user_id', user.id)
+        .single()
+
+      if (!membership) {
+        alert('找不到公司資訊')
+        return
+      }
+
+      // 獲取方案 ID
+      const { data: plan } = await supabase
+        .from('subscription_plans')
+        .select('id')
+        .eq('slug', planSlug)
+        .single()
+
+      if (!plan) {
+        alert('找不到方案資訊')
+        return
+      }
+
+      // 創建年繳訂閱
+      const response = await fetch('/api/payment/recurring/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          companyId: membership.company_id,
+          planId: plan.id,
+          amount: yearlyPrice,
+          description: `${planName} 年繳方案`,
+          email: user.email || '',
+          periodType: 'Y',
+          periodPoint: '1',
+          periodStartType: 2,
+          periodTimes: 0,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.error || '支付請求失敗')
+      }
+
+      if (data.paymentForm) {
+        // 提交付款表單
+        const formData = {
+          apiUrl: data.paymentForm.apiUrl,
+          postData: data.paymentForm.postData,
+          tradeInfo: data.paymentForm.tradeInfo,
+          tradeSha: data.paymentForm.tradeSha,
+          version: data.paymentForm.version,
+          merchantId: data.paymentForm.merchantId
+        }
+
+        const encodedFormData = encodeURIComponent(JSON.stringify(formData))
+        router.push(`/dashboard/billing/authorizing?paymentForm=${encodedFormData}`)
+      }
+    } catch (error) {
+      console.error('升級失敗:', error)
+      alert(error instanceof Error ? error.message : '升級失敗，請稍後再試')
+    } finally {
+      setProcessingSlug(null)
+    }
+  }
 
   return (
     <Card className="border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-primary/10 to-primary/5 shadow-lg">
@@ -119,7 +212,8 @@ export function UpgradePromptCard({ currentTier, tokenBalance }: UpgradePromptCa
 
               {/* CTA 按鈕 */}
               <Button
-                asChild
+                onClick={() => handleUpgrade(plan.slug, plan.yearlyPrice, plan.name)}
+                disabled={processingSlug === plan.slug}
                 className={cn(
                   "w-full",
                   plan.isPopular
@@ -128,10 +222,8 @@ export function UpgradePromptCard({ currentTier, tokenBalance }: UpgradePromptCa
                 )}
                 size="sm"
               >
-                <Link href="/pricing">
-                  選擇方案
-                  <ArrowRight className="ml-2 h-3 w-3" />
-                </Link>
+                {processingSlug === plan.slug ? '處理中...' : '立即升級'}
+                {processingSlug !== plan.slug && <ArrowRight className="ml-2 h-3 w-3" />}
               </Button>
             </div>
           ))}

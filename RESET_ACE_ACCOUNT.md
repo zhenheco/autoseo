@@ -2,7 +2,7 @@
 
 ## 📋 概況
 
-將 `ace@zhenhe-co.com` 帳號從 PRO 方案重置為 FREE 方案，提供一次性 20,000 tokens。
+將 `ace@zhenhe-co.com` 帳號從 PRO 方案重置為 FREE 方案，提供一次性 10,000 tokens。
 
 ## ✅ 前端顯示確認
 
@@ -71,7 +71,7 @@ BEGIN
     SET subscription_plan_id = v_free_plan_id,
         monthly_token_quota = 0,          -- FREE 方案沒有月配額
         monthly_quota_balance = 0,
-        purchased_token_balance = 20000,  -- 一次性 20k tokens
+        purchased_token_balance = 10000,  -- 一次性 20k tokens
         current_period_start = NULL,
         current_period_end = NULL,
         status = 'active',
@@ -84,7 +84,7 @@ BEGIN
       current_period_start, current_period_end, status
     ) VALUES (
       v_company_id, v_free_plan_id,
-      0, 0, 20000,
+      0, 0, 10000,
       NULL, NULL, 'active'
     );
   END IF;
@@ -131,8 +131,8 @@ scripts/reset-ace-to-free.sql
 |------|-----|
 | 方案類型 | FREE (免費方案) |
 | 月配額 | 0 / 0 |
-| 購買 Tokens (一次性) | 20,000 |
-| 總餘額 | 20,000 |
+| 購買 Tokens (一次性) | 10,000 |
+| 總餘額 | 10,000 |
 | 配額重置日 | - (FREE 方案無重置) |
 
 ## 🔍 驗證步驟
@@ -141,16 +141,16 @@ scripts/reset-ace-to-free.sql
 2. 前往 `/dashboard/subscription`
 3. 確認顯示：
    - 方案類型：免費方案
-   - 購買 Tokens: 20,000
-   - 總餘額：20,000
+   - 購買 Tokens: 10,000
+   - 總餘額：10,000
 4. 檢查 Dashboard Token 餘額卡片
    - 應顯示「一次性 Token 餘額」
-   - 總餘額：20,000
+   - 總餘額：10,000
 
 ## 🎯 FREE 方案特性
 
 根據目前實現：
-- ✅ **一次性 20,000 tokens** (不會每月重置)
+- ✅ **一次性 10,000 tokens** (不會每月重置)
 - ✅ 可以寫文章
 - ❌ **不能連接 WordPress 網站** (wordpress_sites: 0)
 - ❌ 沒有月配額 (monthly_token_quota: 0)
@@ -165,7 +165,7 @@ scripts/reset-ace-to-free.sql
 subscription_plan_id: <FREE plan UUID>
 monthly_token_quota: 0
 monthly_quota_balance: 0
-purchased_token_balance: 20000
+purchased_token_balance: 10000
 current_period_start: NULL
 current_period_end: NULL
 status: 'active'
