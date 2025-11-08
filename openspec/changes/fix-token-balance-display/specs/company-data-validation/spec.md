@@ -2,17 +2,46 @@
 
 ## ADDED Requirements
 
-### Requirement: Clear Error Messages for Missing Data
-購買流程 SHALL 在資料不存在時回傳清楚的錯誤訊息。
+### Requirement: Fix Query for Non-Existent subscription_period Column
+購買流程 SHALL 移除對不存在的 `companies.subscription_period` 欄位的查詢。
 
-**變更原因**：修正「找不到公司資料」錯誤，加強錯誤診斷能力
+**變更原因**：修正「找不到公司資料」錯誤，該錯誤由查詢不存在的欄位導致
 
 **變更內容**：
-- 在查詢公司資料失敗時記錄詳細日誌
-- 回傳更具體的錯誤訊息給前端
-- 檢查 RLS 政策是否阻擋查詢
+- 移除查詢中的 `subscription_period` 欄位
+- 改為查詢 `company_subscriptions` 表取得週期資訊
+- 加強錯誤日誌，記錄查詢失敗的詳細資訊
 
-#### Scenario: 公司資料存在但 RLS 政策阻擋查詢
+#### Scenario: 移除不存在欄位的查詢
+
+**Given**：
+- `companies` 表沒有 `subscription_period` 欄位
+- 用戶嘗試購買訂閱方案
+
+**When**：
+- API 查詢公司資料：
+  ```typescript
+  // ❌ 舊版（錯誤）
+  const { data: company } = await authClient
+    .from('companies')
+    .select('subscription_tier, subscription_period')
+    .eq('id', companyId)
+    .single()
+
+  // ✅ 新版（正確）
+  const { data: company } = await authClient
+    .from('companies')
+    .select('subscription_tier')
+    .eq('id', companyId)
+    .single()
+  ```
+
+**Then**：
+- 查詢成功，不會因為不存在的欄位而失敗
+- 如需週期資訊，從 `company_subscriptions` 表查詢
+- 不再出現「找不到公司資料」錯誤
+
+#### Scenario: 公司資料不存在時的錯誤處理
 
 **Given**：
 - 用戶 ID 為 `user-123`

@@ -16,24 +16,33 @@
 
 ## 問題描述
 
-根據用戶提供的截圖和錯誤描述，發現以下問題：
+根據用戶回報和診斷結果，發現以下問題：
 
-1. **Token 餘額顯示錯誤**
-   - Dashboard 顯示 20,000 tokens，但免費方案應該是 10,000 tokens（一次性）
-   - 資料來源混亂：部分顯示來自硬編碼，部分來自資料庫
+### 1. Token 餘額顯示錯誤
+- **現象**：Dashboard 和訂閱頁面顯示 20,000 tokens
+- **預期**：免費方案應該顯示 10,000 tokens（一次性配額）
+- **根本原因**：資料庫中 `company_subscriptions.purchased_token_balance = 20000`
 
-2. **訂閱頁面資料錯誤**
-   - 「月配額剩餘」顯示 0/0
-   - 「購買 tokens」顯示 20,000（應該是 10,000）
-   - 「配額重置日」顯示「無」（免費方案正確）
-   - Token 餘額顯示 20,000（錯誤）
+### 2. 購買方案時出現錯誤
+- **現象**：點擊任何方案都出現「找不到公司資料」錯誤
+- **位置**：`src/app/api/payment/recurring/create/route.ts:66-77`
+- **根本原因**：API 查詢不存在的欄位 `companies.subscription_period`
+  ```typescript
+  const { data: company } = await authClient
+    .from('companies')
+    .select('subscription_tier, subscription_period')  // ❌ subscription_period 不存在
+    .eq('id', companyId)
+    .single()
+  ```
+- **錯誤訊息**：`column companies.subscription_period does not exist`
 
-3. **購買方案時出現錯誤**
-   - 錯誤訊息：「找不到公司資料」
-   - 位置：`src/app/api/payment/recurring/create/route.ts:74`
+### 3. 資料庫遷移不完整（PRO→FREE 降級）
+- **殘留欄位**：`companies.seo_token_balance = 460000`（舊 Token 系統）
+- **應該**：使用新的 `company_subscriptions` 表管理 Token
+- **影響**：可能導致資料不一致
 
-4. **文章生成功能錯誤**
-   - 輸入關鍵字生成標題時出現錯誤（需要更多資訊來診斷）
+### 4. 文章生成功能錯誤
+- 輸入關鍵字生成標題時出現錯誤（待進一步診斷）
 
 ## 根本原因分析
 
@@ -49,13 +58,13 @@
 - 前端組件使用了錯誤的硬編碼值
 - API 回傳的資料計算邏輯錯誤
 
-### 2. 公司資料查詢失敗
+### 2. 購買 API 查詢不存在的欄位
 
-在 `src/app/api/payment/recurring/create/route.ts:66-76`:
+**問題程式碼**（`src/app/api/payment/recurring/create/route.ts:66-77`）：
 ```typescript
 const { data: company } = await authClient
   .from('companies')
-  .select('subscription_tier, subscription_period')
+  .select('subscription_tier, subscription_period')  // ❌ subscription_period 不存在
   .eq('id', companyId)
   .single()
 
@@ -67,14 +76,29 @@ if (!company) {
 }
 ```
 
-可能原因：
-- **帳號重置導致資料不一致**：根據 `scripts/complete-reset-ace-fixed.sql`，ace@zhenhe-co.com 帳號曾經被重置過，可能導致：
-  - `company_members` 記錄缺失或狀態不正確
-  - `companies` 記錄缺失
-  - `company_subscriptions` 記錄缺失或重複
-- `companyId` 無效或不存在
-- RLS 政策阻止查詢
-- 資料庫中缺少公司記錄
+**診斷結果**：
+- ❌ `companies` 表**沒有** `subscription_period` 欄位
+- ✅ 公司記錄存在且完整
+- ✅ RLS 政策正常
+- ❌ 查詢失敗導致 `company` 為 `null`，觸發「找不到公司資料」錯誤
+
+**實際 companies 表結構**：
+```typescript
+{
+  id: UUID
+  name: string
+  subscription_tier: 'free' | 'starter' | 'professional' | 'agency'
+  // ❌ 沒有 subscription_period 欄位
+  owner_id: UUID
+  created_at: timestamp
+  updated_at: timestamp
+  // ...其他欄位
+}
+```
+
+**應該改為**：
+- 方案週期資訊應該從 `company_subscriptions` 或 `subscription_plans` 表查詢
+- 或者移除對 `subscription_period` 的依賴
 
 ## 解決方案
 
@@ -102,12 +126,21 @@ if (!company) {
 ### 3. 修正「找不到公司資料」錯誤
 
 **問題**：
-- 購買方案時無法查詢到公司資料
+- API 查詢不存在的 `subscription_period` 欄位導致查詢失敗
 
-**解決**：
-- 加強錯誤日誌，記錄 `companyId` 和查詢條件
-- 檢查 RLS 政策是否正確
-- 在建立訂單前驗證公司存在性
+**解決方案 A**（建議）：
+- 移除對 `subscription_period` 的查詢
+- 只查詢 `subscription_tier`
+- 從 `company_subscriptions` 表取得週期資訊
+
+**解決方案 B**：
+- 新增 `subscription_period` 欄位到 `companies` 表
+- 但這不符合目前的資料庫架構（週期資訊應在 `company_subscriptions`）
+
+**選擇**：採用方案 A，因為：
+1. 不需要修改資料庫結構
+2. 符合目前的架構設計
+3. 週期資訊應該來自訂閱記錄，而非公司記錄
 
 ### 4. 改善錯誤處理和日誌
 

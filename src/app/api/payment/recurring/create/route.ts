@@ -63,21 +63,39 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const { data: company } = await authClient
+    const { data: company, error: companyError } = await authClient
       .from('companies')
-      .select('subscription_tier, subscription_period')
+      .select('subscription_tier')
       .eq('id', companyId)
       .single()
 
-    if (!company) {
+    if (companyError || !company) {
+      console.error('[API] 無法查詢公司資料:', {
+        userId: user.id,
+        companyId,
+        error: companyError?.message,
+        code: companyError?.code
+      })
       return NextResponse.json(
-        { error: '找不到公司資料' },
+        {
+          error: '找不到公司資料',
+          code: 'COMPANY_NOT_FOUND',
+          details: companyError?.message || 'Company ID does not exist in database'
+        },
         { status: 404 }
       )
     }
 
+    // 從 company_subscriptions 取得當前的計費週期
+    const { data: currentSubscription } = await authClient
+      .from('company_subscriptions')
+      .select('plan_id, subscription_plans(slug, billing_period)')
+      .eq('company_id', companyId)
+      .eq('status', 'active')
+      .single()
+
     const currentTierSlug = company.subscription_tier || null
-    const currentBillingPeriod = (company.subscription_period as BillingPeriod) || 'monthly'
+    const currentBillingPeriod = (currentSubscription?.subscription_plans as { billing_period?: BillingPeriod })?.billing_period || 'monthly'
     const targetBillingPeriod = periodType === 'M' ? 'monthly' : (periodType === 'Y' ? 'yearly' : 'monthly')
 
     console.log('[API] 升級驗證:', {
