@@ -69,11 +69,13 @@ export function TokenBalanceDisplay() {
     )
   }
 
-  const usagePercentage = balance.subscription.monthlyTokenQuota > 0
+  // 免費方案判斷：monthly_token_quota = 0
+  const isFree = balance.subscription.monthlyTokenQuota === 0
+
+  const usagePercentage = !isFree && balance.subscription.monthlyTokenQuota > 0
     ? ((balance.subscription.monthlyTokenQuota - balance.balance.monthlyQuota) / balance.subscription.monthlyTokenQuota) * 100
     : 0
 
-  const isFree = balance.subscription.tier === 'free'
   const isLowBalance = balance.balance.total < 5000
 
   return (
@@ -98,43 +100,54 @@ export function TokenBalanceDisplay() {
 
       {/* 餘額明細 */}
       <div className="space-y-2 border-t border-gray-100 pt-3">
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-600">月配額剩餘</span>
-          <span className="font-medium text-gray-900">
-            {formatNumber(balance.balance.monthlyQuota)} / {formatNumber(balance.subscription.monthlyTokenQuota)}
-          </span>
-        </div>
-
-        {balance.balance.purchased > 0 && (
+        {isFree ? (
+          // 免費方案：顯示一次性 Token
           <div className="flex justify-between text-sm">
-            <span className="text-gray-600">購買 tokens</span>
+            <span className="text-gray-600">一次性 Token</span>
             <span className="font-medium text-gray-900">{formatNumber(balance.balance.purchased)}</span>
           </div>
-        )}
+        ) : (
+          // 付費方案：顯示月配額和購買 Token
+          <>
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">月配額剩餘</span>
+              <span className="font-medium text-gray-900">
+                {formatNumber(balance.balance.monthlyQuota)} / {formatNumber(balance.subscription.monthlyTokenQuota)}
+              </span>
+            </div>
 
-        {/* 使用進度條 */}
-        <div className="pt-2">
-          <div className="mb-1 flex justify-between text-xs text-gray-500">
-            <span>本月使用率</span>
-            <span>{usagePercentage.toFixed(1)}%</span>
-          </div>
-          <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
-            <div
-              className={`h-full rounded-full transition-all ${
-                usagePercentage > 90
-                  ? 'bg-red-500'
-                  : usagePercentage > 70
-                  ? 'bg-orange-500'
-                  : 'bg-green-500'
-              }`}
-              style={{ width: `${Math.min(usagePercentage, 100)}%` }}
-            />
-          </div>
-        </div>
+            {balance.balance.purchased > 0 && (
+              <div className="flex justify-between text-sm">
+                <span className="text-gray-600">購買 tokens</span>
+                <span className="font-medium text-gray-900">{formatNumber(balance.balance.purchased)}</span>
+              </div>
+            )}
+
+            {/* 使用進度條 */}
+            <div className="pt-2">
+              <div className="mb-1 flex justify-between text-xs text-gray-500">
+                <span>本月使用率</span>
+                <span>{usagePercentage.toFixed(1)}%</span>
+              </div>
+              <div className="h-2 w-full overflow-hidden rounded-full bg-gray-100">
+                <div
+                  className={`h-full rounded-full transition-all ${
+                    usagePercentage > 90
+                      ? 'bg-red-500'
+                      : usagePercentage > 70
+                      ? 'bg-orange-500'
+                      : 'bg-green-500'
+                  }`}
+                  style={{ width: `${Math.min(usagePercentage, 100)}%` }}
+                />
+              </div>
+            </div>
+          </>
+        )}
       </div>
 
-      {/* 週期資訊 */}
-      {balance.subscription.currentPeriodEnd && (
+      {/* 週期資訊（僅付費方案顯示） */}
+      {!isFree && balance.subscription.currentPeriodEnd && (
         <div className="mt-3 border-t border-gray-100 pt-3">
           <p className="text-xs text-gray-500">
             配額重置：{new Date(balance.subscription.currentPeriodEnd).toLocaleDateString('zh-TW')}
@@ -146,8 +159,8 @@ export function TokenBalanceDisplay() {
       {isFree && (
         <div className="mt-3 rounded-md bg-blue-50 p-3">
           <p className="text-xs text-blue-700">
-            免費方案每月提供 {formatNumber(balance.subscription.monthlyTokenQuota)} tokens，
-            升級可獲得更多配額和功能！
+            免費方案提供一次性 {formatNumber(balance.balance.purchased)} tokens，
+            升級可獲得每月配額和更多功能！
           </p>
         </div>
       )}

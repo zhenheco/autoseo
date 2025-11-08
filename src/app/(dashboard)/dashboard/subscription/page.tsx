@@ -35,13 +35,16 @@ export default async function SubscriptionPage() {
     .eq('id', member.company_id)
     .single()
 
-  // 取得新的訂閱資訊
+  // 從 company_subscriptions 表讀取訂閱資訊
   const { data: companySubscription } = await supabase
     .from('company_subscriptions')
     .select('monthly_quota_balance, purchased_token_balance, monthly_token_quota, current_period_end')
     .eq('company_id', member.company_id)
     .eq('status', 'active')
     .single()
+
+  // 判斷是否為免費方案
+  const isFree = companySubscription?.monthly_token_quota === 0
 
   const { data: plans } = await supabase
     .from('subscription_plans')
@@ -80,28 +83,55 @@ export default async function SubscriptionPage() {
               <p className="text-sm text-muted-foreground mb-1">方案類型</p>
               <p className="text-lg font-semibold">{company.subscription_tier === 'free' ? '免費方案' : company.subscription_tier.toUpperCase()}</p>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">月配額</p>
-              <p className="text-lg font-semibold">
-                {companySubscription?.monthly_quota_balance?.toLocaleString() || 0} / {companySubscription?.monthly_token_quota?.toLocaleString() || 0}
-              </p>
-              <p className="text-xs text-muted-foreground mt-1">剩餘 / 總額</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">購買 Tokens</p>
-              <p className="text-lg font-semibold">
-                {companySubscription?.purchased_token_balance?.toLocaleString() || 0}
-              </p>
-              <p className="text-xs text-success mt-1">永不過期</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">配額重置日</p>
-              <p className="text-lg font-semibold">
-                {companySubscription?.current_period_end
-                  ? new Date(companySubscription.current_period_end).toLocaleDateString('zh-TW', { month: 'short', day: 'numeric' })
-                  : '無'}
-              </p>
-            </div>
+            {isFree ? (
+              <>
+                {/* 免費方案：顯示一次性 Token 餘額 */}
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Token 餘額</p>
+                  <p className="text-lg font-semibold">
+                    {companySubscription?.purchased_token_balance?.toLocaleString() || 0}
+                  </p>
+                  <p className="text-xs text-blue-600 mt-1">一次性配額</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">配額類型</p>
+                  <p className="text-lg font-semibold">永不過期</p>
+                  <p className="text-xs text-muted-foreground mt-1">免費方案</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">升級方案</p>
+                  <a href="/pricing" className="inline-block px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-sm">
+                    查看方案
+                  </a>
+                </div>
+              </>
+            ) : (
+              <>
+                {/* 付費方案：顯示月配額和購買 Token */}
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">月配額</p>
+                  <p className="text-lg font-semibold">
+                    {companySubscription?.monthly_quota_balance?.toLocaleString() || 0} / {companySubscription?.monthly_token_quota?.toLocaleString() || 0}
+                  </p>
+                  <p className="text-xs text-muted-foreground mt-1">剩餘 / 總額</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">購買 Tokens</p>
+                  <p className="text-lg font-semibold">
+                    {companySubscription?.purchased_token_balance?.toLocaleString() || 0}
+                  </p>
+                  <p className="text-xs text-success mt-1">永不過期</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">配額重置日</p>
+                  <p className="text-lg font-semibold">
+                    {companySubscription?.current_period_end
+                      ? new Date(companySubscription.current_period_end).toLocaleDateString('zh-TW', { month: 'short', day: 'numeric' })
+                      : '無'}
+                  </p>
+                </div>
+              </>
+            )}
           </div>
         </div>
       )}

@@ -36,21 +36,29 @@ export async function GET(request: NextRequest) {
       .eq('id', membership.company_id)
       .single()
 
-    // 取得 token 餘額
-    const billingService = new TokenBillingService(supabase)
-    const balance = await billingService.getCurrentBalance(membership.company_id)
-
-    // 取得訂閱詳情
+    // 直接從 company_subscriptions 查詢所有需要的數據
     const { data: subscription } = await supabase
       .from('company_subscriptions')
-      .select('monthly_token_quota, current_period_start, current_period_end, plan_id')
+      .select('monthly_token_quota, monthly_quota_balance, purchased_token_balance, current_period_start, current_period_end, plan_id')
       .eq('company_id', membership.company_id)
       .eq('status', 'active')
       .single()
 
+    if (!subscription) {
+      return NextResponse.json({ error: '找不到有效訂閱' }, { status: 404 })
+    }
+
+    // 免費方案邏輯：monthly_token_quota = 0
+    const isFree = subscription.monthly_token_quota === 0
+
+    // 計算餘額
+    const monthlyQuota = subscription.monthly_quota_balance
+    const purchased = subscription.purchased_token_balance
+    const total = isFree ? purchased : (monthlyQuota + purchased)
+
     // 取得方案資訊
     let planInfo = null
-    if (subscription?.plan_id) {
+    if (subscription.plan_id) {
       const { data: plan } = await supabase
         .from('subscription_plans')
         .select('name, slug, features, limits')
@@ -62,15 +70,15 @@ export async function GET(request: NextRequest) {
 
     return NextResponse.json({
       balance: {
-        total: balance.total,
-        monthlyQuota: balance.monthlyQuota,
-        purchased: balance.purchased,
+        total,
+        monthlyQuota,
+        purchased,
       },
       subscription: {
         tier: company?.subscription_tier || 'free',
-        monthlyTokenQuota: subscription?.monthly_token_quota || 0,
-        currentPeriodStart: subscription?.current_period_start,
-        currentPeriodEnd: subscription?.current_period_end,
+        monthlyTokenQuota: subscription.monthly_token_quota,
+        currentPeriodStart: isFree ? null : subscription.current_period_start,
+        currentPeriodEnd: isFree ? null : subscription.current_period_end,
       },
       plan: planInfo,
     })

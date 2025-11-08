@@ -1,6 +1,6 @@
 import { BaseAgent } from './base-agent';
 import type { ImageInput, ImageOutput, GeneratedImage } from '@/types/agents';
-import { GoogleDriveClient, getGoogleDriveConfig } from '@/lib/storage/google-drive-client';
+import { R2Client, getR2Config } from '@/lib/storage/r2-client';
 import { processBase64Image, formatFileSize, calculateCompressionRatio } from '@/lib/image-processor';
 
 const IMAGE_MODELS = {
@@ -173,10 +173,9 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
     });
 
     let finalUrl = result.url;
-    let storage: 'openai' | 'google-drive' = 'openai';
 
-    const driveConfig = getGoogleDriveConfig();
-    if (driveConfig) {
+    const r2Config = getR2Config();
+    if (r2Config) {
       try {
         console.log('[ImageAgent] 📦 Processing and compressing featured image...');
 
@@ -192,24 +191,26 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
 
         console.log(`[ImageAgent] ✅ Compressed: ${formatFileSize(originalSize)} → ${formatFileSize(processed.size)} (${compressionRatio}% reduction)`);
 
-        const driveClient = new GoogleDriveClient(driveConfig);
+        const r2Client = new R2Client(r2Config);
         const timestamp = Date.now();
         const filename = `article-hero-${timestamp}.jpg`;
 
-        const base64Jpeg = processed.buffer.toString('base64');
-        const dataUrl = `data:image/jpeg;base64,${base64Jpeg}`;
+        const base64Data = processed.buffer.toString('base64');
 
-        const uploaded = await driveClient.uploadFromUrl(dataUrl, filename);
+        const uploaded = await r2Client.uploadImage(
+          base64Data,
+          filename,
+          'image/jpeg'
+        );
         finalUrl = uploaded.url;
-        storage = 'google-drive';
 
-        console.log(`[ImageAgent] ☁️ Uploaded featured image to Google Drive: ${uploaded.fileId}`);
+        console.log(`[ImageAgent] ☁️ Uploaded featured image to R2: ${uploaded.fileKey}`);
       } catch (error) {
         const err = error as Error;
-        console.warn('[ImageAgent] Failed to upload to Google Drive, using original URL:', err.message);
+        console.warn('[ImageAgent] Failed to upload to R2, using original URL:', err.message);
       }
     } else {
-      console.log('[GoogleDrive] Not configured, using OpenAI URL');
+      console.log('[R2] Not configured, using OpenAI URL');
     }
 
     const [width, height] = input.size.split('x').map(Number);
@@ -239,8 +240,8 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
 
     let finalUrl = result.url;
 
-    const driveConfig = getGoogleDriveConfig();
-    if (driveConfig) {
+    const r2Config = getR2Config();
+    if (r2Config) {
       try {
         console.log(`[ImageAgent] 📦 Processing and compressing content image ${index + 1}...`);
 
@@ -256,20 +257,23 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
 
         console.log(`[ImageAgent] ✅ Compressed: ${formatFileSize(originalSize)} → ${formatFileSize(processed.size)} (${compressionRatio}% reduction)`);
 
-        const driveClient = new GoogleDriveClient(driveConfig);
+        const r2Client = new R2Client(r2Config);
         const timestamp = Date.now();
         const filename = `article-content-${index + 1}-${timestamp}.jpg`;
 
-        const base64Jpeg = processed.buffer.toString('base64');
-        const dataUrl = `data:image/jpeg;base64,${base64Jpeg}`;
+        const base64Data = processed.buffer.toString('base64');
 
-        const uploaded = await driveClient.uploadFromUrl(dataUrl, filename);
+        const uploaded = await r2Client.uploadImage(
+          base64Data,
+          filename,
+          'image/jpeg'
+        );
         finalUrl = uploaded.url;
 
-        console.log(`[ImageAgent] ☁️ Uploaded content image ${index + 1} to Google Drive: ${uploaded.fileId}`);
+        console.log(`[ImageAgent] ☁️ Uploaded content image ${index + 1} to R2: ${uploaded.fileKey}`);
       } catch (error) {
         const err = error as Error;
-        console.warn('[ImageAgent] Failed to upload to Google Drive, using original URL:', err.message);
+        console.warn('[ImageAgent] Failed to upload to R2, using original URL:', err.message);
       }
     }
 

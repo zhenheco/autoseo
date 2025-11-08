@@ -20,7 +20,7 @@ export default async function DashboardPage() {
   const companies = await getUserCompanies(user.id)
   const subscriptionTier = await getUserSubscriptionTier()
 
-  // 取得 token 餘額
+  // 從 company_subscriptions 表讀取 token 餘額
   const supabase = await createClient()
   const { data: membership } = await supabase
     .from('company_members')
@@ -33,13 +33,17 @@ export default async function DashboardPage() {
   if (membership) {
     const { data: subscription } = await supabase
       .from('company_subscriptions')
-      .select('monthly_quota_balance, purchased_token_balance')
+      .select('monthly_quota_balance, purchased_token_balance, monthly_token_quota')
       .eq('company_id', membership.company_id)
       .eq('status', 'active')
       .single()
 
     if (subscription) {
-      tokenBalance = subscription.monthly_quota_balance + subscription.purchased_token_balance
+      // 免費方案（monthly_token_quota = 0）只計算購買的 Token
+      const isFree = subscription.monthly_token_quota === 0
+      tokenBalance = isFree
+        ? subscription.purchased_token_balance
+        : (subscription.monthly_quota_balance + subscription.purchased_token_balance)
     }
   }
 

@@ -115,12 +115,12 @@ npx tsx scripts/test-r2-upload.ts
 
 ### ImageAgent 自動整合
 
-系統已經自動整合 R2 儲存到圖片生成流程：
+✅ **已完全整合**：系統已將 R2 作為唯一圖片儲存方案，移除 Google Drive 依賴。
 
 1. **生成文章時**，ImageAgent 會自動：
    - 使用 OpenAI 生成圖片
    - 將圖片壓縮為 JPEG 格式（quality: 85%）
-   - 上傳到 R2 bucket
+   - **上傳到 R2 bucket**（不再使用 Google Drive）
    - 在資料庫中儲存 R2 公開 URL
 
 2. **前端顯示時**，直接使用 R2 URL：
@@ -145,15 +145,13 @@ npx tsx scripts/test-r2-upload.ts
 
 ### Fallback 機制
 
-如果 R2 未配置或上傳失敗，系統會：
+如果 R2 未配置或上傳失敗，系統會自動 fallback：
 
-1. 記錄警告訊息
+1. Console 輸出警告訊息：`[ImageAgent] Failed to upload to R2, using original URL: {error}`
 2. 使用 OpenAI 原始 URL（臨時 URL，60 分鐘有效）
-3. 繼續文章生成流程
+3. 繼續文章生成流程，不中斷
 
-```
-[ImageAgent] Failed to upload to R2, using original URL: Error message
-```
+**不再支援 Google Drive fallback**：專案已完全移除 Google Drive 整合。
 
 ## 成本估算
 
