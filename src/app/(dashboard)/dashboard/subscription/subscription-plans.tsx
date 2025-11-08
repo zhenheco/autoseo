@@ -24,13 +24,17 @@ export function SubscriptionPlans({ plans, companyId, userEmail, currentTier }: 
     try {
       setLoading(plan.id)
 
+      // 使用今天的日期作為每月扣款日
+      const today = new Date()
+      const dayOfMonth = today.getDate().toString().padStart(2, '0')
+
       const response = await fetch('/api/payment/recurring/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           planId: plan.id,
           periodType: 'M',
-          periodPoint: '01',
+          periodPoint: dayOfMonth,
           periodStartType: 2,
           periodTimes: 12,
         }),
