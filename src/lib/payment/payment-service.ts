@@ -216,11 +216,19 @@ export class PaymentService {
 
     // 確保 periodPoint 是兩位數格式
     let formattedPeriodPoint: string | undefined
-    if (params.periodPoint && params.periodType === 'M') {
-      // 月繳需要兩位數格式 (01-31)
-      const day = parseInt(params.periodPoint)
-      formattedPeriodPoint = day.toString().padStart(2, '0')
+    if (params.periodType === 'M') {
+      // 月繳：PeriodPoint 必填，需要兩位數格式 (01-31)
+      if (params.periodPoint) {
+        const day = parseInt(params.periodPoint)
+        formattedPeriodPoint = day.toString().padStart(2, '0')
+      } else {
+        // 如果沒有提供，使用今天的日期
+        const today = new Date()
+        formattedPeriodPoint = today.getDate().toString().padStart(2, '0')
+        console.log('[PaymentService] 未提供 periodPoint，使用今天日期:', formattedPeriodPoint)
+      }
     } else {
+      // 其他週期（D/W/Y）：使用提供的值（可能為 undefined）
       formattedPeriodPoint = params.periodPoint
     }
 

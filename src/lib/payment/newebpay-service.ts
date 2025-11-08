@@ -136,16 +136,22 @@ export class NewebPayService {
       CREDIT: '1',
     }
 
-    if (params.periodPoint) {
-      // 確保月繳的日期是兩位數格式 (01-31)
-      if (params.periodType === 'M') {
+    // 藍新金流要求：月繳必須提供 PeriodPoint（扣款日期 01-31）
+    if (params.periodType === 'M') {
+      if (params.periodPoint) {
+        // 確保月繳的日期是兩位數格式 (01-31)
         const day = parseInt(params.periodPoint)
         const formattedDay = day.toString().padStart(2, '0')
         console.log('[NewebPay] 格式化 PeriodPoint: ', params.periodPoint, ' -> ', formattedDay)
         periodData.PeriodPoint = formattedDay
       } else {
-        periodData.PeriodPoint = params.periodPoint
+        // 月繳必須有 PeriodPoint，這應該由調用方提供
+        console.error('[NewebPay] 警告：月繳缺少 PeriodPoint，這將導致藍新金流回傳 PER10004 錯誤')
+        throw new Error('月繳訂閱必須提供 PeriodPoint（扣款日期）')
       }
+    } else if (params.periodPoint) {
+      // 其他週期如果有提供 PeriodPoint 也設定
+      periodData.PeriodPoint = params.periodPoint
     }
 
     // NewebPay 定期定額要求必須提供 PeriodTimes，無限期訂閱使用 99
