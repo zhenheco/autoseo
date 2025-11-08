@@ -1,5 +1,88 @@
 # 問題解決記錄
 
+## 2025-11-08: 修正定期定額訂閱解密失敗（環境變數換行符問題）
+
+### 問題現象
+- **症狀**: 定期定額訂閱授權成功，但回調解密失敗
+- **錯誤**: `ERR_OSSL_BAD_DECRYPT: error:1C800064:Provider routines::bad decrypt`
+- **影響範圍**: 所有定期定額訂閱無法完成，導致訂閱未建立、Token 餘額顯示 0/0
+
+### 問題日誌
+```
+[NewebPay] ❌ Period 解密失敗: {
+  error: 'error:1C800064:Provider routines::bad decrypt',
+  errorCode: 'ERR_OSSL_BAD_DECRYPT',
+  periodLength: 1280,
+  hashKeyLength: 32,
+  hashIvLength: 16,
+  suggestion: '請確認藍新金流後台的 HashKey/HashIV 設定與程式碼一致'
+}
+```
+
+### 根本原因
+**環境變數包含換行符** ✅
+
+1. **時間點**: 環境變數在 5 小時前被更新（Vercel 顯示「5h ago」）
+2. **問題**: 更新時可能直接複製貼上，包含了尾隨換行符 `\n`
+3. **影響**:
+   - HashKey 實際值變成 `7hyqDDb3qQmHfz1BDF5FqYtdlshGAvPQ\n`（33 bytes 而非 32 bytes）
+   - 導致 AES-256-CBC 解密使用錯誤的 key，產生 BAD_DECRYPT 錯誤
+
+### 調查過程
+1. **檢查 git 歷史**：發現 2025-11-04 曾成功修正相同問題
+2. **查看 ISSUELOG.md**：找到當時使用 `echo -n` 解決換行符問題的記錄
+3. **檢查環境變數更新時間**：Vercel 顯示 HashKey/HashIV 在 5 小時前更新
+4. **確認測試環境憑證**：用戶確認沙盒環境的 key 與記錄一致
+
+### 解決方案
+
+#### 重新設定環境變數（使用 echo -n 避免換行符）
+```bash
+# 1. 移除舊的環境變數
+vercel env rm NEWEBPAY_HASH_KEY production --yes
+vercel env rm NEWEBPAY_HASH_IV production --yes
+
+# 2. 使用 echo -n 重新設定（確保沒有換行符）
+echo -n "7hyqDDb3qQmHfz1BDF5FqYtdlshGAvPQ" | vercel env add NEWEBPAY_HASH_KEY production
+echo -n "CGFoFgbiAPYMbSlP" | vercel env add NEWEBPAY_HASH_IV production
+
+# 3. 觸發重新部署
+vercel --prod --yes
+```
+
+### 測試結果
+✅ **2025-11-08 修正成功**（待驗證）
+- 環境變數已使用 `echo -n` 重新設定
+- 部署已觸發：https://autopilot-bzbygnhwm-acejou27s-projects.vercel.app
+- 等待用戶測試訂閱流程
+
+### 經驗教訓
+
+1. **環境變數設定的標準程序**
+   - ✅ **永遠使用 `echo -n`**：避免尾隨換行符
+   - ❌ **不要直接複製貼上**：可能包含隱藏字元
+   - ✅ **驗證長度**：HashKey 應為 32 bytes，HashIV 應為 16 bytes
+
+2. **問題重現提醒**
+   - 本問題在 2025-11-04 已解決過一次
+   - 需要在文件中更明確標記「永遠使用 echo -n」
+   - 考慮在代碼中加入環境變數長度檢查，提前發現問題
+
+3. **診斷技巧**
+   - 檢查環境變數更新時間（`vercel env ls`）
+   - 查看歷史記錄（ISSUELOG.md 和 git log）
+   - 用戶確認測試環境憑證
+
+### 相關 Commits
+- 待提交：修正環境變數換行符問題
+
+### 待辦事項
+- [ ] 驗證訂閱流程是否正常
+- [ ] 考慮在代碼中加入環境變數長度檢查
+- [ ] 更新部署文件，強調使用 `echo -n` 的重要性
+
+---
+
 ## 2025-11-06: 修復批次刪除 Pending 任務功能
 
 ### 問題描述
