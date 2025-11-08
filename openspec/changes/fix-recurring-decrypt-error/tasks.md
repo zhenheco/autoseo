@@ -52,6 +52,17 @@
 - [x] **執行 TypeScript 類型檢查** - ✅ 通過
   - `npx tsc --noEmit` 無錯誤
 
+### 步驟 5: 修正 PeriodPoint 缺失問題
+- [x] **修正 payment-service.ts** - ✅ 已完成
+  - 自動為月繳訂閱提供 periodPoint（使用今天的日期）
+  - 避免 /dashboard 路由出現 PER10004 錯誤
+  - 程式碼位置: `src/lib/payment/payment-service.ts:217-233`
+
+- [x] **加強 newebpay-service.ts 驗證** - ✅ 已完成
+  - 月繳訂閱缺少 periodPoint 時拋出錯誤
+  - 提供清楚的錯誤訊息
+  - 程式碼位置: `src/lib/payment/newebpay-service.ts:139-155`
+
 原始規格：
 - [ ] **修改 `src/lib/payment/newebpay-service.ts:206-224`**
   ```typescript
@@ -96,16 +107,19 @@
 ### 方案 A: 環境變數問題（最可能）
 **如果 HashKey/HashIV 長度不正確或包含隱藏字元**
 
-- [ ] 重新設定環境變數（使用 `echo -n` 避免換行符）
+- [x] 重新設定環境變數（使用 `echo -n` 避免換行符） - ✅ 已完成
   ```bash
   # 從藍新金流後台複製密鑰
-  echo -n "YOUR_32_CHAR_HASH_KEY" | vercel env add NEWEBPAY_HASH_KEY production
-  echo -n "YOUR_16_CHAR_HASH_IV" | vercel env add NEWEBPAY_HASH_IV production
+  echo -n "7hyqDDb3qQmHfz1BDF5FqYtdlshGAvPQ" | vercel env add NEWEBPAY_HASH_KEY production
+  echo -n "CGFoFgbiAPYMbSlP" | vercel env add NEWEBPAY_HASH_IV production
   ```
+  **診斷發現**: 原先環境變數包含引號，導致實際長度為 52/51 而非 32/16
 
-- [ ] 觸發重新部署
+- [x] 觸發重新部署 - ✅ 已完成
   ```bash
   vercel --prod --yes
+  # 部署 URL: https://autopilot-qsczrl4ce-acejou27s-projects.vercel.app
+  # 狀態: ● Ready (3 分鐘前)
   ```
 
 - [ ] 等待 90 秒後測試訂閱流程
