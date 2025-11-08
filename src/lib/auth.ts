@@ -1,4 +1,6 @@
 import { createClient } from '@/lib/supabase/server'
+import { generateReferralCode } from '@/lib/referral'
+import { cookies } from 'next/headers'
 
 /**
  * 生成唯一的公司 slug
@@ -54,12 +56,96 @@ export async function signUp(email: string, password: string) {
 
   if (memberError) throw memberError
 
-  // 4. 建立免費訂閱
-  const periodStart = new Date()
-  const periodEnd = new Date()
-  periodEnd.setDate(periodEnd.getDate() + 30)
+  // 4. 取得免費方案
+  const { data: freePlan, error: planError } = await supabase
+    .from('subscription_plans')
+    .select('id, base_tokens')
+    .eq('slug', 'free')
+    .single()
 
+  if (planError || !freePlan) {
+    console.error('無法取得免費方案:', planError)
+    throw new Error('免費方案設定錯誤')
+  }
+
+  // 5. 建立免費訂閱（一次性給 10k tokens，不再每月重置）
   const { error: subscriptionError } = await supabase
+    .from('company_subscriptions')
+    .insert({
+      company_id: company.id,
+      plan_id: freePlan.id,
+      status: 'active',
+      monthly_token_quota: 0, // 免費方案不使用月配額
+      monthly_quota_balance: 0,
+      purchased_token_balance: freePlan.base_tokens, // 一次性給 10,000 tokens
+      current_period_start: null,
+      current_period_end: null,
+      is_lifetime: false,
+      lifetime_discount: 1.0,
+    })
+
+  if (subscriptionError) throw subscriptionError
+
+  // 6. 創建推薦碼
+  let referralCode = generateReferralCode()
+
+  // 確保推薦碼唯一
+  let attempts = 0
+  while (attempts < 5) {
+    const { data: existing } = await supabase
+      .from('company_referral_codes')
+      .select('id')
+      .eq('referral_code', referralCode)
+      .single()
+
+    if (!existing) break
+    referralCode = generateReferralCode()
+    attempts++
+  }
+
+  const { error: referralCodeError } = await supabase
+    .from('company_referral_codes')
+    .insert({
+      company_id: company.id,
+      referral_code: referralCode,
+    })
+
+  if (referralCodeError) {
+    console.error('創建推薦碼失敗:', referralCodeError)
+  }
+
+  // 7. 檢查是否有推薦人
+  const cookieStore = await cookies()
+  const referrerCode = cookieStore.get('referral_code')?.value
+
+  if (referrerCode) {
+    // 查找推薦人
+    const { data: referrerData } = await supabase
+      .from('company_referral_codes')
+      .select('company_id')
+      .eq('referral_code', referrerCode)
+      .single()
+
+    if (referrerData) {
+      // 創建推薦關係
+      await supabase
+        .from('referrals')
+        .insert({
+          referrer_company_id: referrerData.company_id,
+          referred_company_id: company.id,
+          referral_code: referrerCode,
+          status: 'pending', // 等待首次付款
+        })
+
+      // 更新推薦人的推薦統計 (使用 RPC 函數來原子性地增加計數)
+      await supabase.rpc('increment_referral_count', {
+        p_company_id: referrerData.company_id
+      })
+    }
+  }
+
+  // 8. 也保留舊的 subscriptions 表記錄（向後兼容）
+  await supabase
     .from('subscriptions')
     .insert({
       company_id: company.id,
@@ -67,11 +153,9 @@ export async function signUp(email: string, password: string) {
       status: 'active',
       monthly_article_limit: 5,
       articles_used_this_month: 0,
-      current_period_start: periodStart.toISOString(),
-      current_period_end: periodEnd.toISOString(),
+      current_period_start: new Date().toISOString(),
+      current_period_end: null,
     })
-
-  if (subscriptionError) throw subscriptionError
 
   return { user: authData.user, company }
 }
