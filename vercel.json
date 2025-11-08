@@ -2,8 +2,12 @@
   "framework": "nextjs",
   "crons": [
     {
-      "path": "/api/cron/daily-tasks",
+      "path": "/api/cron/unlock-commissions",
       "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/check-inactive-affiliates",
+      "schedule": "0 3 * * *"
     }
   ]
 }
