@@ -10,9 +10,28 @@
 3. 購買方案時出現錯誤：「找不到公司資料」
 4. 文章生成功能可能存在錯誤（需進一步診斷）
 
-## 概述
+## What Changes
 
-修正 Dashboard 和訂閱頁面中顯示的 Token 餘額、購買 Token 數量、配額重置日期等資料不正確的問題。
+此變更修正兩個核心問題：
+
+1. **修正購買流程「找不到公司資料」錯誤**
+   - 修改 `src/app/api/payment/recurring/create/route.ts`
+   - 移除對不存在的 `companies.subscription_period` 欄位查詢
+   - 改從 `company_subscriptions` 表取得計費週期資訊
+   - 加強錯誤日誌和錯誤訊息
+
+2. **修正免費方案 Token 餘額顯示錯誤**
+   - 建立資料庫遷移 `supabase/migrations/20251108000000_fix_free_plan_token_balance.sql`
+   - 修正所有免費方案的 `purchased_token_balance` 從 20,000 為 10,000
+   - 驗證 `/api/token-balance` API 和前端顯示邏輯正確
+
+3. **新增診斷工具**
+   - `scripts/diagnose-ace-simple.ts` - 基本帳號診斷
+   - `scripts/check-ownership.ts` - RLS 權限驗證
+   - `scripts/diagnose-purchase-flow.ts` - 購買流程深度診斷
+   - `scripts/fix-free-plan-balance.ts` - Token 餘額修正
+
+詳細的需求變更記錄在 `specs/` 目錄的各個 spec 檔案中。
 
 ## 問題描述
 

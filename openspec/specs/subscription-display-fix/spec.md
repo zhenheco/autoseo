@@ -1,7 +1,8 @@
-# Capability: 訂閱頁面顯示修正
+# subscription-display-fix Specification
 
-## MODIFIED Requirements
-
+## Purpose
+TBD - created by archiving change fix-token-balance-display. Update Purpose after archive.
+## Requirements
 ### Requirement: Plan-Based Token Display
 訂閱頁面 SHALL 根據方案類型正確顯示 Token 資訊。
 
@@ -107,3 +108,4 @@ Dashboard 頁面 SHALL 正確計算並顯示 Token 餘額。
   - 使用進度：「25% 已使用」（5000/20000）
   - 進度條顏色：綠色（使用率 < 70%）
 - 使用率計算：`(monthlyTokenQuota - monthlyQuota) / monthlyTokenQuota * 100`
+

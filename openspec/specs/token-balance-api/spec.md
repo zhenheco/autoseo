@@ -1,7 +1,8 @@
-# Capability: Token 餘額 API 正確性
+# token-balance-api Specification
 
-## MODIFIED Requirements
-
+## Purpose
+TBD - created by archiving change fix-token-balance-display. Update Purpose after archive.
+## Requirements
 ### Requirement: Correct Token Balance Calculation
 Token 餘額 API SHALL 正確計算免費方案和付費方案的餘額。
 
@@ -124,3 +125,4 @@ Token 餘額 API SHALL 包含方案詳細資訊。
     }
   }
   ```
+
