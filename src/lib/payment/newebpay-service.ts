@@ -65,9 +65,41 @@ export class NewebPayService {
       this.config.hashKey,
       this.config.hashIv
     )
+
+    // 關閉自動 padding，使用藍新金流的 PKCS#7 padding
+    decipher.setAutoPadding(false)
+
     let decrypted = decipher.update(encryptedData, 'hex', 'utf8')
     decrypted += decipher.final('utf8')
-    return decrypted
+
+    // 手動移除 PKCS#7 padding
+    return this.stripPKCS7Padding(decrypted)
+  }
+
+  private stripPKCS7Padding(data: string): string {
+    if (!data || data.length === 0) {
+      return data
+    }
+
+    // PKCS#7: 最後一個字節表示 padding 的長度
+    const paddingLength = data.charCodeAt(data.length - 1)
+
+    // 驗證 padding 是否有效
+    if (paddingLength > 0 && paddingLength <= 32) {
+      // 檢查所有 padding 字節是否相同
+      for (let i = 1; i <= paddingLength; i++) {
+        if (data.charCodeAt(data.length - i) !== paddingLength) {
+          // Padding 無效，返回原始資料
+          console.log('[NewebPayService] ⚠️ 無效的 PKCS#7 padding，返回原始資料')
+          return data
+        }
+      }
+
+      // 移除 padding
+      return data.substring(0, data.length - paddingLength)
+    }
+
+    return data
   }
 
   private createCheckValue(tradeInfo: string): string {
