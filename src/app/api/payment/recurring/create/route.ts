@@ -121,10 +121,10 @@ export async function POST(request: NextRequest) {
     let periodPoint: string | undefined
     if (periodType === 'M') {
       const today = new Date()
-      periodPoint = today.getDate().toString()
+      periodPoint = today.getDate().toString().padStart(2, '0')
     }
 
-    const periodTimes = 0
+    const periodTimes = 12
 
     const supabase = createAdminClient()
     const paymentService = PaymentService.createInstance(supabase)

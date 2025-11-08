@@ -680,7 +680,14 @@ export class PaymentService {
           const periodStart = now.toISOString()
           const periodEnd = new Date(now.getFullYear() + 1, now.getMonth(), now.getDate()).toISOString()
 
-          const { error: subscriptionError } = await this.supabase.from('company_subscriptions').upsert({
+          // 先刪除該公司的所有舊訂閱記錄，確保只有一個 active subscription
+          await this.supabase
+            .from('company_subscriptions')
+            .delete()
+            .eq('company_id', mandateData.company_id)
+
+          // 創建新的訂閱記錄
+          const { error: subscriptionError } = await this.supabase.from('company_subscriptions').insert({
             company_id: mandateData.company_id,
             plan_id: mandateData.plan_id,
             status: 'active',
