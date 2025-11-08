@@ -50,7 +50,7 @@ BEGIN
     SET subscription_plan_id = v_free_plan_id,
         monthly_token_quota = 0,
         monthly_quota_balance = 0,
-        purchased_token_balance = 20000, -- 一次性 20k tokens
+        purchased_token_balance = 10000, -- 一次性 10k tokens
         current_period_start = NULL,
         current_period_end = NULL,
         status = 'active',
@@ -74,7 +74,7 @@ BEGIN
       v_free_plan_id,
       0,
       0,
-      20000,
+      10000,
       NULL,
       NULL,
       'active'

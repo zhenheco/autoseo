@@ -80,12 +80,12 @@ export function TokenBalanceCard() {
             {/* 使用進度條或餘額資訊 */}
             <div className="space-y-1">
               {isFree ? (
-                // 免費方案：顯示一次性餘額
+                // 免費方案：顯示一次性餘額（硬編碼文字）
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-muted-foreground">
                     一次性 Token 餘額
                   </span>
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300">
+                  <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500 text-white dark:bg-blue-600 dark:text-white font-medium">
                     免費方案
                   </span>
                 </div>

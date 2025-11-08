@@ -105,7 +105,7 @@ BEGIN
     'active',
     0,                    -- 免費方案不使用月配額
     0,
-    free_plan_tokens,     -- 一次性給 20,000 tokens
+    free_plan_tokens,     -- 一次性給 10,000 tokens
     NULL,
     NULL,
     false,

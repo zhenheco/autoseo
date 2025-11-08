@@ -18,7 +18,7 @@ INSERT INTO subscription_plans (
   'free',
   0,
   0,
-  20000, -- 20k tokens/月
+  10000, -- 10k tokens (一次性)
   false,
   NULL,
   '{
@@ -42,14 +42,14 @@ INSERT INTO subscription_plans (
   }'::jsonb
 )
 ON CONFLICT (slug) DO UPDATE SET
-  base_tokens = 20000,
+  base_tokens = 10000,
   features = EXCLUDED.features,
   limits = EXCLUDED.limits;
 
 -- 2. 添加註解說明
 COMMENT ON TABLE subscription_plans IS '訂閱方案定義
 FREE 方案限制：
-- 20,000 tokens/月（每月重置）
+- 10,000 tokens（一次性，不重置）
 - 只能寫文章（article_generation = true）
 - 不能連接 WordPress 網站（wordpress_sites = 0）
 - 使用基本 AI 模型（deepseek-chat, gemini-2-flash）

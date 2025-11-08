@@ -163,13 +163,13 @@ export default function PricingPage() {
       if (modelsRes.error) throw modelsRes.error
 
       if (plansRes.data) {
-        const monthlyPlans = plansRes.data.filter(p => !p.is_lifetime)
-        const sortedPlans = [...monthlyPlans].sort((a, b) => {
+        // 過濾掉終身方案和免費方案（免費方案只供註冊使用，不在定價頁顯示）
+        const paidPlans = plansRes.data.filter(p => !p.is_lifetime && p.slug !== 'free')
+        const sortedPlans = [...paidPlans].sort((a, b) => {
           const priceA = a.monthly_price
           const priceB = b.monthly_price
 
-          if (priceA < 500) return -1
-          if (priceB < 500) return 1
+          // 按價格排序：STARTER < PROFESSIONAL < BUSINESS < AGENCY
           if (priceA < 2000) return -1
           if (priceB < 2000) return 1
           if (priceA < 5000) return -1

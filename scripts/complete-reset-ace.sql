@@ -20,7 +20,7 @@ INSERT INTO subscription_plans (
   'free',
   0,
   0,
-  20000, -- 20k tokens (一次性，不再每月重置)
+  10000, -- 10k tokens (一次性，不再每月重置)
   false,
   NULL,
   true,
@@ -46,7 +46,7 @@ INSERT INTO subscription_plans (
   }'::jsonb
 )
 ON CONFLICT (slug) DO UPDATE SET
-  base_tokens = 20000,
+  base_tokens = 10000,
   is_active = true,
   is_recurring = false,
   features = EXCLUDED.features,
@@ -102,7 +102,7 @@ BEGIN
     SET subscription_plan_id = v_free_plan_id,
         monthly_token_quota = 0,          -- FREE 方案沒有月配額
         monthly_quota_balance = 0,
-        purchased_token_balance = 20000,  -- 一次性 20k tokens
+        purchased_token_balance = 10000,  -- 一次性 10k tokens
         current_period_start = NULL,
         current_period_end = NULL,
         status = 'active',
@@ -128,7 +128,7 @@ BEGIN
       v_free_plan_id,
       0,
       0,
-      20000,
+      10000,
       NULL,
       NULL,
       'active'

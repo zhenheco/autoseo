@@ -68,7 +68,7 @@ export async function signUp(email: string, password: string) {
     throw new Error('免費方案設定錯誤')
   }
 
-  // 5. 建立免費訂閱（一次性給 20k tokens，不再每月重置）
+  // 5. 建立免費訂閱（一次性給 10k tokens，不再每月重置）
   const { error: subscriptionError } = await supabase
     .from('company_subscriptions')
     .insert({
@@ -77,7 +77,7 @@ export async function signUp(email: string, password: string) {
       status: 'active',
       monthly_token_quota: 0, // 免費方案不使用月配額
       monthly_quota_balance: 0,
-      purchased_token_balance: freePlan.base_tokens, // 一次性給 20,000 tokens
+      purchased_token_balance: freePlan.base_tokens, // 一次性給 10,000 tokens
       current_period_start: null,
       current_period_end: null,
       is_lifetime: false,
