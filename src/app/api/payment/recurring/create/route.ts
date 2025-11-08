@@ -23,9 +23,11 @@ export async function POST(request: NextRequest) {
       planId,
       periodType,
       periodStartType,
+      periodPoint: frontendPeriodPoint,
+      periodTimes: frontendPeriodTimes,
     } = body
 
-    console.log('[API] 收到建立定期定額請求:', { planId, periodType, periodStartType })
+    console.log('[API] 收到建立定期定額請求:', { planId, periodType, periodStartType, frontendPeriodPoint, frontendPeriodTimes })
 
     if (!planId || !periodType || periodStartType === undefined) {
       console.error('[API] 缺少必要參數:', { planId, periodType, periodStartType })
@@ -118,13 +120,9 @@ export async function POST(request: NextRequest) {
     const description = `${plan.name} 月繳訂閱`
     const email = user.email || ''
 
-    let periodPoint: string | undefined
-    if (periodType === 'M') {
-      const today = new Date()
-      periodPoint = today.getDate().toString().padStart(2, '0')
-    }
-
-    const periodTimes = 12
+    // 優先使用前端傳來的 periodPoint 和 periodTimes
+    const periodPoint = frontendPeriodPoint || (periodType === 'M' ? new Date().getDate().toString().padStart(2, '0') : undefined)
+    const periodTimes = frontendPeriodTimes || 12
 
     const supabase = createAdminClient()
     const paymentService = PaymentService.createInstance(supabase)
