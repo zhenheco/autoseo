@@ -317,25 +317,41 @@ export default function PricingPage() {
         const dayOfMonth = today.getDate().toString().padStart(2, '0')
 
         // 年繳和月繳的參數不同
-        const periodPoint = periodType === 'M' ? dayOfMonth : undefined
         const periodTimes = periodType === 'Y' ? 1 : 12
+
+        // 建立請求 body（只在月繳時加入 periodPoint）
+        const requestBody: {
+          companyId: string
+          planId: string
+          amount: number
+          description: string
+          email: string
+          periodType: string
+          periodStartType: number
+          periodTimes: number
+          periodPoint?: string
+        } = {
+          companyId,
+          planId: plan.id,
+          amount: amount || 0,
+          description: `${plan.name} ${billingPeriod === 'yearly' ? '年繳' : '月繳'}方案`,
+          email: user.email || '',
+          periodType,
+          periodStartType: 2,
+          periodTimes,
+        }
+
+        // 只在月繳時加入 periodPoint
+        if (periodType === 'M') {
+          requestBody.periodPoint = dayOfMonth
+        }
 
         const response = await fetch('/api/payment/recurring/create', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            companyId,
-            planId: plan.id,
-            amount,
-            description: `${plan.name} ${billingPeriod === 'yearly' ? '年繳' : '月繳'}方案`,
-            email: user.email || '',
-            periodType,
-            periodPoint,
-            periodStartType: 2,
-            periodTimes,
-          }),
+          body: JSON.stringify(requestBody),
         })
 
         const data = await response.json()
