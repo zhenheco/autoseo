@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache'
 import { redirect, RedirectType } from 'next/navigation'
-import { signIn, signUp } from '@/lib/auth'
+import { signIn } from '@/lib/auth'
 import { createClient } from '@/lib/supabase/server'
 
 /**
