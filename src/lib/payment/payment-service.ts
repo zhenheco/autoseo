@@ -47,18 +47,10 @@ export class PaymentService {
     return `MAN${timestamp}${random}`
   }
 
-  private mapPlanSlugToTier(slug: string): 'free' | 'basic' | 'pro' | 'enterprise' {
-    const mapping: Record<string, 'free' | 'basic' | 'pro' | 'enterprise'> = {
-      'free': 'free',
-      'starter': 'basic',
-      'professional': 'pro',
-      'business': 'pro',
-      'agency': 'enterprise',
-      'lifetime-starter': 'basic',
-      'lifetime-professional': 'pro',
-      'lifetime-business': 'pro',
-    }
-    return mapping[slug] || 'free'
+  private mapPlanSlugToTier(slug: string): string {
+    // 直接返回 plan slug，不要做任何映射
+    // subscription_tier 應該直接存儲實際的 plan slug
+    return slug
   }
 
   async createOnetimePayment(params: CreateOnetimeOrderParams): Promise<{

@@ -35,10 +35,10 @@ export default async function SubscriptionPage() {
     .eq('id', member.company_id)
     .single()
 
-  // 從 company_subscriptions 表讀取訂閱資訊
+  // 從 company_subscriptions 表讀取訂閱資訊（包含 plan 資訊）
   const { data: companySubscription } = await supabase
     .from('company_subscriptions')
-    .select('monthly_quota_balance, purchased_token_balance, monthly_token_quota, current_period_end')
+    .select('monthly_quota_balance, purchased_token_balance, monthly_token_quota, current_period_end, subscription_plans(name, slug)')
     .eq('company_id', member.company_id)
     .eq('status', 'active')
     .single()
@@ -81,7 +81,11 @@ export default async function SubscriptionPage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <p className="text-sm text-muted-foreground mb-1">方案類型</p>
-              <p className="text-lg font-semibold">{company.subscription_tier === 'free' ? '免費方案' : company.subscription_tier.toUpperCase()}</p>
+              <p className="text-lg font-semibold">
+                {company.subscription_tier === 'free'
+                  ? '免費方案'
+                  : (companySubscription?.subscription_plans as { name?: string } | null)?.name || company.subscription_tier}
+              </p>
             </div>
             {isFree ? (
               <>
@@ -126,7 +130,7 @@ export default async function SubscriptionPage() {
                   <p className="text-sm text-muted-foreground mb-1">配額重置日</p>
                   <p className="text-lg font-semibold">
                     {companySubscription?.current_period_end
-                      ? new Date(companySubscription.current_period_end).toLocaleDateString('zh-TW', { month: 'short', day: 'numeric' })
+                      ? new Date(companySubscription.current_period_end).toLocaleDateString('zh-TW', { year: 'numeric', month: 'short', day: 'numeric' })
                       : '無'}
                   </p>
                 </div>
