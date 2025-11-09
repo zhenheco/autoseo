@@ -58,7 +58,9 @@ export async function signup(formData: FormData) {
     // 註冊成功，重定向到登入頁並顯示成功訊息
     redirect(`/login?success=${encodeURIComponent('註冊成功！請檢查您的電子郵件以驗證帳號')}`)
   } catch (error) {
-    const errorMessage = error instanceof Error ? translateErrorMessage(error) : '註冊失敗'
+    // 暫時顯示原始錯誤訊息以便調試
+    const errorMessage = error instanceof Error ? error.message : '註冊失敗'
+    console.error('[Signup Action] 註冊失敗:', error)
     redirect(`/signup?error=${encodeURIComponent(errorMessage)}`)
   }
 }

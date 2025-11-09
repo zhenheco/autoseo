@@ -30,6 +30,8 @@ export async function signUp(email: string, password: string) {
   if (authError) throw authError
   if (!authData.user) throw new Error('註冊失敗')
 
+  console.log('[註冊] Step 1 完成: 使用者帳號建立成功', authData.user.id)
+
   // 2. 建立公司（使用 admin client 避免 RLS 限制）
   const { data: company, error: companyError} = await adminClient
     .from('companies')
@@ -42,7 +44,11 @@ export async function signUp(email: string, password: string) {
     .select()
     .single()
 
-  if (companyError) throw companyError
+  if (companyError) {
+    console.error('[註冊失敗] Step 2: 建立公司失敗', companyError)
+    throw companyError
+  }
+  console.log('[註冊] Step 2 完成: 公司建立成功', company.id)
 
   // 3. 新增成員記錄（設定為 Owner）
   const { error: memberError } = await adminClient
@@ -55,9 +61,14 @@ export async function signUp(email: string, password: string) {
       joined_at: new Date().toISOString(),
     })
 
-  if (memberError) throw memberError
+  if (memberError) {
+    console.error('[註冊失敗] Step 3: 新增成員記錄失敗', memberError)
+    throw memberError
+  }
+  console.log('[註冊] Step 3 完成: 成員記錄建立成功')
 
   // 4. 取得免費方案
+  console.log('[註冊] Step 4: 查詢免費方案...')
   const { data: freePlan, error: planError } = await adminClient
     .from('subscription_plans')
     .select('id, base_tokens')
@@ -65,9 +76,10 @@ export async function signUp(email: string, password: string) {
     .single()
 
   if (planError || !freePlan) {
-    console.error('無法取得免費方案:', planError)
+    console.error('[註冊失敗] Step 4: 無法取得免費方案', { planError, freePlan })
     throw new Error('免費方案設定錯誤')
   }
+  console.log('[註冊] Step 4 完成: 免費方案查詢成功', freePlan)
 
   // 5. 建立免費訂閱（一次性給 10k tokens，不再每月重置）
   const { error: subscriptionError } = await adminClient
@@ -85,7 +97,11 @@ export async function signUp(email: string, password: string) {
       lifetime_discount: 1.0,
     })
 
-  if (subscriptionError) throw subscriptionError
+  if (subscriptionError) {
+    console.error('[註冊失敗] Step 5: 建立訂閱失敗', subscriptionError)
+    throw subscriptionError
+  }
+  console.log('[註冊] Step 5 完成: 訂閱建立成功')
 
   // 6. 創建推薦碼
   let referralCode = generateReferralCode()
