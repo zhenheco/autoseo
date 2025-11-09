@@ -42,9 +42,14 @@ function translateErrorMessage(error: Error): string {
 export async function signup(formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
+  const confirmPassword = formData.get('confirmPassword') as string
 
-  if (!email || !password) {
-    redirect(`/signup?error=${encodeURIComponent('請輸入電子郵件和密碼')}`)
+  if (!email || !password || !confirmPassword) {
+    redirect(`/signup?error=${encodeURIComponent('請填寫所有欄位')}`)
+  }
+
+  if (password !== confirmPassword) {
+    redirect(`/signup?error=${encodeURIComponent('兩次輸入的密碼不一致')}`)
   }
 
   try {

@@ -16,14 +16,11 @@ function translateErrorMessage(error: Error): string {
     return '電子郵件尚未驗證，請檢查您的信箱並點擊驗證連結'
   }
 
-  // 登入憑證錯誤
-  if (message.includes('invalid login credentials') || message.includes('invalid credentials')) {
-    return '帳號或密碼錯誤'
-  }
-
-  // 使用者不存在
-  if (message.includes('user not found')) {
-    return '使用者不存在'
+  // 登入憑證錯誤或使用者不存在 - 統一提示註冊
+  if (message.includes('invalid login credentials') ||
+      message.includes('invalid credentials') ||
+      message.includes('user not found')) {
+    return '此帳號尚未註冊，請先註冊帳號'
   }
 
   // 帳號已存在

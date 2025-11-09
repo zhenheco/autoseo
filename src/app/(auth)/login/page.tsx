@@ -43,6 +43,16 @@ export default async function LoginPage({
           {params.error && (
             <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400 rounded-xl text-sm font-medium animate-in fade-in slide-in-from-top-2 duration-300">
               {params.error}
+              {params.error.includes('尚未註冊') && (
+                <div className="mt-2">
+                  <Link
+                    href="/signup"
+                    className="text-primary hover:text-primary/80 hover:underline underline-offset-4 font-semibold transition-all"
+                  >
+                    前往註冊 →
+                  </Link>
+                </div>
+              )}
             </div>
           )}
 

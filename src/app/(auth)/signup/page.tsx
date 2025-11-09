@@ -72,6 +72,21 @@ export default async function SignupPage({
               </p>
             </div>
 
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword" className="text-sm font-medium text-foreground">
+                確認密碼
+              </Label>
+              <Input
+                id="confirmPassword"
+                name="confirmPassword"
+                type="password"
+                placeholder="再次輸入密碼"
+                required
+                minLength={6}
+                className="h-11 bg-background border-border focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+              />
+            </div>
+
             {/* Email 驗證提示 */}
             <div className="p-4 bg-blue-500/10 border border-blue-500/20 rounded-xl">
               <div className="flex gap-3">
