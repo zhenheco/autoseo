@@ -85,49 +85,9 @@ export async function authenticateUser(formData: FormData) {
       throw loginError
     }
 
-    // 檢查是否為「使用者不存在」的錯誤
+    // 直接顯示錯誤訊息，不自動註冊
     const errorMessage = loginError instanceof Error ? loginError.message : ''
-    const isUserNotFound = errorMessage.toLowerCase().includes('invalid login credentials') || errorMessage.toLowerCase().includes('user not found')
-
-    if (isUserNotFound) {
-      // 使用者不存在，嘗試自動註冊
-      try {
-        const { user } = await signUp(email, password)
-
-        if (user) {
-          // 註冊成功，自動登入
-          const loginData = await signIn(email, password)
-
-          const supabase = await createClient()
-          const { data: membership } = await supabase
-            .from('company_members')
-            .select('role')
-            .eq('user_id', loginData.user.id)
-            .eq('status', 'active')
-            .single()
-
-          const userRole = membership?.role || 'viewer'
-
-          revalidatePath('/', 'layout')
-
-          if (userRole === 'writer' || userRole === 'viewer') {
-            redirect('/dashboard/articles', RedirectType.replace)
-          } else {
-            redirect('/dashboard', RedirectType.replace)
-          }
-        }
-      } catch (signupError) {
-        // 註冊失敗
-        if (signupError && typeof signupError === 'object' && 'digest' in signupError && typeof signupError.digest === 'string' && signupError.digest.startsWith('NEXT_REDIRECT')) {
-          throw signupError
-        }
-        const signupErrorMessage = signupError instanceof Error ? translateErrorMessage(signupError) : '註冊失敗'
-        redirect(`/login?error=${encodeURIComponent(signupErrorMessage)}`, RedirectType.replace)
-      }
-    } else {
-      // 其他登入錯誤（例如密碼錯誤、Email 未驗證等）
-      const translatedError = loginError instanceof Error ? translateErrorMessage(loginError) : errorMessage
-      redirect(`/login?error=${encodeURIComponent(translatedError)}`, RedirectType.replace)
-    }
+    const translatedError = loginError instanceof Error ? translateErrorMessage(loginError) : errorMessage
+    redirect(`/login?error=${encodeURIComponent(translatedError)}`, RedirectType.replace)
   }
 }
