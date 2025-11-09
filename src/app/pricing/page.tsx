@@ -316,6 +316,10 @@ export default function PricingPage() {
         const today = new Date()
         const dayOfMonth = today.getDate().toString().padStart(2, '0')
 
+        // 年繳和月繳的參數不同
+        const periodPoint = periodType === 'M' ? dayOfMonth : undefined
+        const periodTimes = periodType === 'Y' ? 1 : 12
+
         const response = await fetch('/api/payment/recurring/create', {
           method: 'POST',
           headers: {
@@ -328,9 +332,9 @@ export default function PricingPage() {
             description: `${plan.name} ${billingPeriod === 'yearly' ? '年繳' : '月繳'}方案`,
             email: user.email || '',
             periodType,
-            periodPoint: dayOfMonth,
+            periodPoint,
             periodStartType: 2,
-            periodTimes: 12,
+            periodTimes,
           }),
         })
 
