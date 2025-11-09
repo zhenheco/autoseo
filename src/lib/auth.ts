@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { generateReferralCode } from '@/lib/referral'
 import { cookies } from 'next/headers'
 
@@ -16,6 +16,7 @@ function generateSlug(email: string): string {
  */
 export async function signUp(email: string, password: string) {
   const supabase = await createClient()
+  const adminClient = createAdminClient()
 
   // 1. 建立使用者帳號
   const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -29,8 +30,8 @@ export async function signUp(email: string, password: string) {
   if (authError) throw authError
   if (!authData.user) throw new Error('註冊失敗')
 
-  // 2. 建立公司
-  const { data: company, error: companyError } = await supabase
+  // 2. 建立公司（使用 admin client 避免 RLS 限制）
+  const { data: company, error: companyError} = await adminClient
     .from('companies')
     .insert({
       name: `${email.split('@')[0]} 的公司`,
@@ -44,7 +45,7 @@ export async function signUp(email: string, password: string) {
   if (companyError) throw companyError
 
   // 3. 新增成員記錄（設定為 Owner）
-  const { error: memberError } = await supabase
+  const { error: memberError } = await adminClient
     .from('company_members')
     .insert({
       company_id: company.id,
@@ -57,7 +58,7 @@ export async function signUp(email: string, password: string) {
   if (memberError) throw memberError
 
   // 4. 取得免費方案
-  const { data: freePlan, error: planError } = await supabase
+  const { data: freePlan, error: planError } = await adminClient
     .from('subscription_plans')
     .select('id, base_tokens')
     .eq('slug', 'free')
@@ -69,7 +70,7 @@ export async function signUp(email: string, password: string) {
   }
 
   // 5. 建立免費訂閱（一次性給 10k tokens，不再每月重置）
-  const { error: subscriptionError } = await supabase
+  const { error: subscriptionError } = await adminClient
     .from('company_subscriptions')
     .insert({
       company_id: company.id,
@@ -92,7 +93,7 @@ export async function signUp(email: string, password: string) {
   // 確保推薦碼唯一
   let attempts = 0
   while (attempts < 5) {
-    const { data: existing } = await supabase
+    const { data: existing } = await adminClient
       .from('company_referral_codes')
       .select('id')
       .eq('referral_code', referralCode)
@@ -103,7 +104,7 @@ export async function signUp(email: string, password: string) {
     attempts++
   }
 
-  const { error: referralCodeError } = await supabase
+  const { error: referralCodeError } = await adminClient
     .from('company_referral_codes')
     .insert({
       company_id: company.id,
@@ -120,7 +121,7 @@ export async function signUp(email: string, password: string) {
 
   if (referrerCode) {
     // 查找推薦人
-    const { data: referrerData } = await supabase
+    const { data: referrerData } = await adminClient
       .from('company_referral_codes')
       .select('company_id')
       .eq('referral_code', referrerCode)
@@ -128,7 +129,7 @@ export async function signUp(email: string, password: string) {
 
     if (referrerData) {
       // 創建推薦關係
-      await supabase
+      await adminClient
         .from('referrals')
         .insert({
           referrer_company_id: referrerData.company_id,
@@ -138,14 +139,14 @@ export async function signUp(email: string, password: string) {
         })
 
       // 更新推薦人的推薦統計 (使用 RPC 函數來原子性地增加計數)
-      await supabase.rpc('increment_referral_count', {
+      await adminClient.rpc('increment_referral_count', {
         p_company_id: referrerData.company_id
       })
     }
   }
 
   // 8. 也保留舊的 subscriptions 表記錄（向後兼容）
-  await supabase
+  await adminClient
     .from('subscriptions')
     .insert({
       company_id: company.id,
