@@ -13,7 +13,7 @@ function translateErrorMessage(error: Error): string {
 
   // Email 驗證相關
   if (message.includes('email not confirmed')) {
-    return '電子郵件尚未驗證，請檢查您的信箱並點擊驗證連結'
+    return 'EMAIL_NOT_CONFIRMED'
   }
 
   // 登入憑證錯誤或使用者不存在 - 統一提示註冊
@@ -85,6 +85,11 @@ export async function authenticateUser(formData: FormData) {
     // 直接顯示錯誤訊息，不自動註冊
     const errorMessage = loginError instanceof Error ? loginError.message : ''
     const translatedError = loginError instanceof Error ? translateErrorMessage(loginError) : errorMessage
-    redirect(`/login?error=${encodeURIComponent(translatedError)}`, RedirectType.replace)
+
+    if (translatedError === 'EMAIL_NOT_CONFIRMED') {
+      redirect(`/login?error=${encodeURIComponent('電子郵件尚未驗證，請檢查您的信箱並點擊驗證連結或重新發送驗證信')}&unverified=true&email=${encodeURIComponent(email)}`, RedirectType.replace)
+    } else {
+      redirect(`/login?error=${encodeURIComponent(translatedError)}`, RedirectType.replace)
+    }
   }
 }

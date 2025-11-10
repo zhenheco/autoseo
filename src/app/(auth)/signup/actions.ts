@@ -3,21 +3,40 @@
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { signUp } from '@/lib/auth'
+import { createAdminClient } from '@/lib/supabase/server'
 
 /**
  * 將 Supabase 錯誤訊息轉換成中文
  */
-function translateErrorMessage(error: Error): string {
+async function translateErrorMessage(error: Error, email: string): Promise<string> {
   const message = error.message.toLowerCase()
+
+  // 帳號已存在 - 檢查是否已驗證
+  if (message.includes('user already registered') || message.includes('already registered')) {
+    const adminClient = createAdminClient()
+
+    const { data: { users }, error: listError } = await adminClient.auth.admin.listUsers()
+
+    if (!listError && users) {
+      const existingUser = users.find(u => u.email === email)
+
+      if (existingUser) {
+        const isConfirmed = existingUser.email_confirmed_at !== null
+
+        if (isConfirmed) {
+          return 'VERIFIED_USER'
+        } else {
+          return 'UNVERIFIED_USER'
+        }
+      }
+    }
+
+    return '此電子郵件已被註冊，請直接登入'
+  }
 
   // Email 驗證相關
   if (message.includes('email not confirmed')) {
     return '電子郵件尚未驗證，請檢查您的信箱並點擊驗證連結'
-  }
-
-  // 帳號已存在
-  if (message.includes('user already registered') || message.includes('already registered')) {
-    return '此電子郵件已被註冊，請直接登入'
   }
 
   // 密碼相關
@@ -66,7 +85,14 @@ export async function signup(formData: FormData) {
       }
     }
 
-    const errorMessage = error instanceof Error ? translateErrorMessage(error) : '註冊失敗'
-    redirect(`/signup?error=${encodeURIComponent(errorMessage)}`)
+    const errorMessage = error instanceof Error ? await translateErrorMessage(error, email) : '註冊失敗'
+
+    if (errorMessage === 'VERIFIED_USER') {
+      redirect(`/signup?error=${encodeURIComponent('此電子郵件已註冊，請直接登入')}&verified=true`)
+    } else if (errorMessage === 'UNVERIFIED_USER') {
+      redirect(`/signup?error=${encodeURIComponent('此電子郵件已註冊但尚未驗證，請檢查您的信箱或重發驗證信')}&unverified=true&email=${encodeURIComponent(email)}`)
+    } else {
+      redirect(`/signup?error=${encodeURIComponent(errorMessage)}`)
+    }
   }
 }
