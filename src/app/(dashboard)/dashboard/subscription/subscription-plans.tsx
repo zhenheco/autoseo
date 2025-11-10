@@ -104,7 +104,7 @@ export function SubscriptionPlans({ plans, companyId, userEmail, currentTier }: 
             )}
             <CardHeader>
               <CardTitle className="text-2xl">{plan.name}</CardTitle>
-              <CardDescription>每月 {plan.base_tokens?.toLocaleString()} Tokens</CardDescription>
+              <CardDescription>每月 {plan.base_tokens?.toLocaleString()} Credits</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="space-y-2">
@@ -119,7 +119,7 @@ export function SubscriptionPlans({ plans, companyId, userEmail, currentTier }: 
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
                   <Check className="h-4 w-4 text-green-500" />
-                  <span>{plan.base_tokens?.toLocaleString()} Tokens / 月</span>
+                  <span>{plan.base_tokens?.toLocaleString()} Credits / 月</span>
                 </div>
                 {plan.features && Array.isArray(plan.features) && (plan.features as string[]).map((feature, i) => (
                   <div key={i} className="flex items-center gap-2">

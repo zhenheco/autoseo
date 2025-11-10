@@ -714,9 +714,6 @@ export default function PricingPage() {
                           {billingPeriod === 'lifetime' ? '' : billingPeriod === 'yearly' ? '/ 年' : '/ 月'}
                         </span>
                       </div>
-                      {billingPeriod === 'lifetime' && (
-                        <p className="text-sm text-muted-foreground">一次付費</p>
-                      )}
                     </div>
 
                     {billingPeriod === 'yearly' && (
@@ -736,7 +733,7 @@ export default function PricingPage() {
                       {(plan.base_tokens / 1000).toLocaleString()}K
                     </div>
                     <div className="text-sm text-muted-foreground">
-                      Tokens / 月
+                      Credits / 月
                     </div>
                     <div className="text-xs text-muted-foreground/70 mt-1">
                       每月重置
@@ -808,7 +805,7 @@ export default function PricingPage() {
                 </thead>
                 <tbody className="divide-y divide-border">
                   <tr className="hover:bg-muted/30">
-                    <td className="px-6 py-4 font-medium">每月 Tokens</td>
+                    <td className="px-6 py-4 font-medium">每月 Credits</td>
                     <td className="px-6 py-4 text-center">25K</td>
                     <td className="px-6 py-4 text-center bg-primary/5 font-semibold text-primary">100K</td>
                     <td className="px-6 py-4 text-center">300K</td>
@@ -881,7 +878,7 @@ export default function PricingPage() {
           </div>
         </section>
 
-        {/* Token 購買包作為誘餌方案 */}
+        {/* Credit 購買包作為誘餌方案 */}
         <section className="mb-16">
           <div className="text-center mb-12 space-y-4">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 backdrop-blur-sm">
@@ -890,7 +887,7 @@ export default function PricingPage() {
             </div>
             <h2 className="text-4xl font-bold">彈性加值，永不過期</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              一次性購買 Token 包，永久有效不過期
+              一次性購買 Credit 包，永久有效不過期
             </p>
           </div>
 
@@ -907,7 +904,7 @@ export default function PricingPage() {
                       <div className="text-3xl font-bold">
                         {(pkg.tokens / 1000).toLocaleString()}K
                       </div>
-                      <div className="text-xs text-muted-foreground">Tokens</div>
+                      <div className="text-xs text-muted-foreground">Credits</div>
                       <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
                         NT$ {pkg.price.toLocaleString()}
                       </div>
@@ -931,12 +928,12 @@ export default function PricingPage() {
 
           <div className="text-center space-y-4">
             <p className="text-sm text-muted-foreground">
-              💡 <span className="font-medium">提示：</span>訂閱 <span className="text-primary font-semibold">STARTER 方案</span> (NT$ 699)，每月即享 <span className="text-primary font-semibold">25K Tokens</span>，更划算！
+              💡 <span className="font-medium">提示：</span>訂閱 <span className="text-primary font-semibold">STARTER 方案</span> (NT$ 699)，每月即享 <span className="text-primary font-semibold">25K Credits</span>，更划算！
             </p>
             <div className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800">
               <Crown className="w-5 h-5 text-purple-600 dark:text-purple-400" />
               <p className="text-sm font-medium text-purple-700 dark:text-purple-300">
-                所有<span className="font-bold">終身會員</span>，皆享 Token 購買包 <span className="font-bold text-lg">8 折優惠</span>
+                所有<span className="font-bold">終身會員</span>，皆享 Credit 購買包 <span className="font-bold text-lg">8 折優惠</span>
               </p>
             </div>
           </div>

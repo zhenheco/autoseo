@@ -68,7 +68,7 @@ export function TokenBalanceCard() {
         <div className="flex items-start justify-between">
           <div className="flex-1">
             <p className="text-sm font-medium text-muted-foreground mb-3">
-              Token 餘額
+              Credit 餘額
             </p>
             <p className={cn(
               "text-4xl font-bold mb-2 group-hover:text-primary transition-colors",
@@ -83,7 +83,7 @@ export function TokenBalanceCard() {
                 // 免費方案：顯示一次性餘額（硬編碼文字）
                 <div className="flex items-center gap-2">
                   <span className="text-sm font-medium text-muted-foreground">
-                    一次性 Token 餘額
+                    一次性 Credit 餘額
                   </span>
                   <span className="text-xs px-2 py-0.5 rounded-full bg-blue-500 text-white dark:bg-blue-600 dark:text-white font-medium">
                     免費方案
@@ -127,7 +127,7 @@ export function TokenBalanceCard() {
         {/* 警告提示 */}
         {isCritical && (
           <div className="mt-4 p-2 rounded-lg bg-red-50 border border-red-200">
-            <p className="text-xs text-red-700 font-medium">⚠️ Token 即將用完，請儘快購買</p>
+            <p className="text-xs text-red-700 font-medium">⚠️ Credit 即將用完，請儘快購買</p>
           </div>
         )}
       </div>
