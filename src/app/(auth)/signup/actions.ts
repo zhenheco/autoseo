@@ -72,6 +72,25 @@ export async function signup(formData: FormData) {
   }
 
   try {
+    // 先檢查用戶是否已存在
+    const adminClient = createAdminClient()
+    const { data: { users }, error: listError } = await adminClient.auth.admin.listUsers()
+
+    if (!listError && users) {
+      const existingUser = users.find(u => u.email === email)
+
+      if (existingUser) {
+        const isConfirmed = existingUser.email_confirmed_at !== null
+
+        if (isConfirmed) {
+          redirect(`/signup?error=${encodeURIComponent('此電子郵件已註冊，請直接登入')}&verified=true`)
+        } else {
+          redirect(`/signup?error=${encodeURIComponent('此電子郵件已註冊但尚未驗證，請檢查您的信箱或重發驗證信')}&unverified=true&email=${encodeURIComponent(email)}`)
+        }
+      }
+    }
+
+    // 用戶不存在，執行註冊
     await signUp(email, password)
 
     // 註冊成功，停留在註冊頁並顯示成功訊息
@@ -86,13 +105,6 @@ export async function signup(formData: FormData) {
     }
 
     const errorMessage = error instanceof Error ? await translateErrorMessage(error, email) : '註冊失敗'
-
-    if (errorMessage === 'VERIFIED_USER') {
-      redirect(`/signup?error=${encodeURIComponent('此電子郵件已註冊，請直接登入')}&verified=true`)
-    } else if (errorMessage === 'UNVERIFIED_USER') {
-      redirect(`/signup?error=${encodeURIComponent('此電子郵件已註冊但尚未驗證，請檢查您的信箱或重發驗證信')}&unverified=true&email=${encodeURIComponent(email)}`)
-    } else {
-      redirect(`/signup?error=${encodeURIComponent(errorMessage)}`)
-    }
+    redirect(`/signup?error=${encodeURIComponent(errorMessage)}`)
   }
 }
