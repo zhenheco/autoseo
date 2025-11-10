@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
-import { sanitizeArticleHtml } from '@/lib/security/html-sanitizer'
 
 async function getArticle(articleId: string) {
   const supabase = createAdminClient()
@@ -132,7 +131,7 @@ export default async function ArticlePreviewPage({
           <CardContent>
             <div
               className="prose prose-sm max-w-none"
-              dangerouslySetInnerHTML={{ __html: sanitizeArticleHtml(article.html_content) }}
+              dangerouslySetInnerHTML={{ __html: article.html_content }}
             />
           </CardContent>
         </Card>

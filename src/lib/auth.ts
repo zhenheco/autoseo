@@ -273,13 +273,16 @@ export async function getCompanyMembers(companyId: string) {
     }))
   }
 
-  const membersWithUsers = members.map(member => ({
-    ...member,
-    users: users?.find(u => u.id === member.user_id) ? {
-      id: users.find(u => u.id === member.user_id)!.id,
-      email: users.find(u => u.id === member.user_id)!.email
-    } : null
-  }))
+  const membersWithUsers = members.map(member => {
+    const user = users?.find(u => u.id === member.user_id)
+    return {
+      ...member,
+      users: user ? {
+        id: user.id,
+        email: user.email || ''
+      } : null
+    }
+  })
 
   return membersWithUsers
 }

@@ -4,7 +4,6 @@ import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { sanitizeArticleHtml } from '@/lib/security/html-sanitizer'
 
 async function getArticle(articleId: string) {
   const supabase = await createClient()
@@ -156,7 +155,7 @@ export default async function ArticleDetailPage({
                 {article.generated_content.content && (
                   <div
                     className="text-sm leading-relaxed whitespace-pre-wrap"
-                    dangerouslySetInnerHTML={{ __html: sanitizeArticleHtml(article.generated_content.content) }}
+                    dangerouslySetInnerHTML={{ __html: article.generated_content.content }}
                   />
                 )}
               </div>

@@ -6,7 +6,6 @@ import { Button } from '@/components/ui/button'
 import { ArticleGenerationButtonsWrapper } from '@/components/articles/ArticleGenerationButtonsWrapper'
 import { TokenBalanceDisplay } from '@/components/billing/TokenBalanceDisplay'
 import { Loader2, CheckCircle2, Clock, FileText, Trash2 } from 'lucide-react'
-import { sanitizeArticleHtml } from '@/lib/security/html-sanitizer'
 
 interface Article {
   id: string
@@ -347,7 +346,7 @@ export default function ArticlesPage() {
                 <div
                   className="prose prose-sm max-w-none"
                   dangerouslySetInnerHTML={{
-                    __html: sanitizeArticleHtml(selectedArticle.html_content || '<p>內容載入中...</p>'),
+                    __html: selectedArticle.html_content || '<p>內容載入中...</p>',
                   }}
                 />
               </div>

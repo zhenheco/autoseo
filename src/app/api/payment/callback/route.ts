@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/server'
 import { PaymentService } from '@/lib/payment/payment-service'
-import { escapeHtml } from '@/lib/security/html-sanitizer'
 
 export async function POST(request: NextRequest) {
   try {
@@ -23,7 +22,7 @@ export async function POST(request: NextRequest) {
       console.error('[API Callback] 缺少必要參數')
       const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
       const redirectUrl = `${baseUrl}/dashboard/subscription?payment=failed&error=${encodeURIComponent('缺少必要參數')}`
-      const safeRedirectUrl = escapeHtml(redirectUrl)
+      const safeRedirectUrl = redirectUrl.replace(/["'<>]/g, '')
       return new NextResponse(
         `<!DOCTYPE html>
 <html>
@@ -59,7 +58,7 @@ export async function POST(request: NextRequest) {
       redirectUrl = `${baseUrl}/dashboard/subscription?payment=failed&error=${encodeURIComponent(result.error || '支付失敗')}`
     }
 
-    const safeRedirectUrl = escapeHtml(redirectUrl)
+    const safeRedirectUrl = redirectUrl.replace(/["'<>]/g, '')
 
     return new NextResponse(
       `<!DOCTYPE html>
@@ -83,7 +82,7 @@ export async function POST(request: NextRequest) {
     console.error('[API Callback] 處理支付回調失敗:', error)
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
     const redirectUrl = `${baseUrl}/dashboard/subscription?payment=error`
-    const safeRedirectUrl = escapeHtml(redirectUrl)
+    const safeRedirectUrl = redirectUrl.replace(/["'<>]/g, '')
     return new NextResponse(
       `<!DOCTYPE html>
 <html>
