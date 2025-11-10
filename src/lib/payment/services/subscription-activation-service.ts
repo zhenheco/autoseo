@@ -245,52 +245,58 @@ export class SubscriptionActivationService {
     amount: number,
     plan: string
   ): Promise<void> {
-    try {
-      const rules = BUSINESS_RULES.referral
+    // TODO: 推薦系統需要重新設計（目前 public.users 表不存在）
+    console.log('推薦系統功能尚未實作')
 
-      // 查找推薦人
-      const { data: referrer } = await this.supabase
-        .from('users')
-        .select('id')
-        .eq('referral_code', referralCode)
-        .single()
-
-      if (!referrer) {
-        return
-      }
-
-      // 記錄推薦關係
-      await this.supabase.from('referrals').insert({
-        referrer_id: referrer.id,
-        referred_id: userId,
-        status: 'completed',
-        reward_amount: amount * rules.firstPaymentCommissionRate,
-        created_at: new Date().toISOString()
-      })
-
-      // 發放推薦獎勵
-      await this.supabase.rpc('add_referral_reward', {
-        p_user_id: referrer.id,
-        p_amount: amount * rules.firstPaymentCommissionRate
-      })
-    } catch (error) {
-      console.error('Failed to process referral:', error)
-      // 推薦處理失敗不應影響主要流程
-    }
+    // try {
+    //   const rules = BUSINESS_RULES.referral
+    //
+    //   // 查找推薦人
+    //   const { data: referrer } = await this.supabase
+    //     .from('users')
+    //     .select('id')
+    //     .eq('referral_code', referralCode)
+    //     .single()
+    //
+    //   if (!referrer) {
+    //     return
+    //   }
+    //
+    //   // 記錄推薦關係
+    //   await this.supabase.from('referrals').insert({
+    //     referrer_id: referrer.id,
+    //     referred_id: userId,
+    //     status: 'completed',
+    //     reward_amount: amount * rules.firstPaymentCommissionRate,
+    //     created_at: new Date().toISOString()
+    //   })
+    //
+    //   // 發放推薦獎勵
+    //   await this.supabase.rpc('add_referral_reward', {
+    //     p_user_id: referrer.id,
+    //     p_amount: amount * rules.firstPaymentCommissionRate
+    //   })
+    // } catch (error) {
+    //   console.error('Failed to process referral:', error)
+    //   // 推薦處理失敗不應影響主要流程
+    // }
   }
 
   /**
    * 更新用戶狀態
    */
   private async updateUserStatus(userId: string, plan: string): Promise<void> {
-    await this.supabase
-      .from('users')
-      .update({
-        subscription_plan: plan,
-        subscription_status: 'active',
-        updated_at: new Date().toISOString()
-      })
-      .eq('id', userId)
+    // TODO: 用戶狀態更新功能需要重新設計（目前 public.users 表不存在）
+    console.log('用戶狀態更新功能尚未實作')
+
+    // await this.supabase
+    //   .from('users')
+    //   .update({
+    //     subscription_plan: plan,
+    //     subscription_status: 'active',
+    //     updated_at: new Date().toISOString()
+    //   })
+    //   .eq('id', userId)
   }
 
   /**

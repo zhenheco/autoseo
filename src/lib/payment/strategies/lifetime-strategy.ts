@@ -166,33 +166,36 @@ export class LifetimeStrategy extends BasePaymentStrategy {
    * 授予終身會員特權
    */
   private async grantLifetimePrivileges(context: PaymentContext): Promise<void> {
-    const { supabase, userId } = context
+    // TODO: 實作終身會員特權功能（需要建立 public.users 和 user_badges 表）
+    console.log('終身會員特權功能尚未實作')
 
-    try {
-      // 更新用戶角色
-      await supabase
-        .from('users')
-        .update({
-          role: 'lifetime_member',
-          features: {
-            unlimited_tokens: true,
-            priority_support: true,
-            early_access: true,
-            custom_branding: true
-          },
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', userId)
-
-      // 添加終身會員標記
-      await supabase.from('user_badges').insert({
-        user_id: userId,
-        badge_type: 'lifetime_member',
-        granted_at: new Date().toISOString()
-      })
-    } catch (error) {
-      console.error('Failed to grant lifetime privileges:', error)
-    }
+    // const { supabase, userId } = context
+    //
+    // try {
+    //   // 更新用戶角色
+    //   await supabase
+    //     .from('users')
+    //     .update({
+    //       role: 'lifetime_member',
+    //       features: {
+    //         unlimited_tokens: true,
+    //         priority_support: true,
+    //         early_access: true,
+    //         custom_branding: true
+    //       },
+    //       updated_at: new Date().toISOString()
+    //     })
+    //     .eq('id', userId)
+    //
+    //   // 添加終身會員標記
+    //   await supabase.from('user_badges').insert({
+    //     user_id: userId,
+    //     badge_type: 'lifetime_member',
+    //     granted_at: new Date().toISOString()
+    //   })
+    // } catch (error) {
+    //   console.error('Failed to grant lifetime privileges:', error)
+    // }
   }
 
   /**

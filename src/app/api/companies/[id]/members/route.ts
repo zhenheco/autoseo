@@ -59,11 +59,15 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       return NextResponse.json({ error: '編輯者只能邀請 Writer 或 Viewer' }, { status: 403 })
     }
 
-    const { data: inviteeUser } = await supabase
-      .from('users')
-      .select('id')
-      .eq('email', email)
-      .maybeSingle()
+    // 使用 Admin API 查詢 auth.users
+    const adminClient = createAdminClient()
+    const { data: { users: authUsers }, error: getUserError } = await adminClient.auth.admin.listUsers()
+
+    if (getUserError) {
+      console.error('查詢使用者失敗:', getUserError)
+    }
+
+    const inviteeUser = authUsers?.find(u => u.email === email)
 
     let userId: string | null = null
     let memberStatus: 'active' | 'pending' = 'pending'
@@ -101,7 +105,6 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
       joined_at: memberStatus === 'active' ? new Date().toISOString() : null,
     }
 
-    const adminClient = createAdminClient()
     const { data: newMember, error } = await adminClient
       .from('company_members')
       .insert(invitationData)
@@ -116,16 +119,11 @@ export async function POST(request: NextRequest, { params }: RouteParams) {
     if (!inviteeUser) {
       const inviteLink = `${process.env.NEXT_PUBLIC_APP_URL}/register?invitation=${newMember.id}&email=${encodeURIComponent(email)}`
 
-      const { data: inviterData } = await supabase
-        .from('users')
-        .select('email')
-        .eq('id', user.id)
-        .single()
-
+      // 使用當前登入使用者的 email (已從 auth.getUser() 取得)
       const emailSent = await sendCompanyInvitationEmail({
         toEmail: email,
         companyName: company?.name || '',
-        inviterName: inviterData?.email || user.email || '團隊成員',
+        inviterName: user.email || '團隊成員',
         role,
         inviteLink,
       })

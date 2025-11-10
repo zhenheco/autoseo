@@ -32,22 +32,6 @@ export async function signUp(email: string, password: string) {
 
   console.log('[註冊] Step 1 完成: 使用者帳號建立成功', authData.user.id)
 
-  // 1.5. 確保 public.users 表有記錄（防止 foreign key 錯誤）
-  const { error: userInsertError } = await adminClient
-    .from('users')
-    .upsert({
-      id: authData.user.id,
-      email: email,
-    }, {
-      onConflict: 'id'
-    })
-
-  if (userInsertError) {
-    console.error('[註冊失敗] Step 1.5: 建立 users 記錄失敗', userInsertError)
-    throw userInsertError
-  }
-  console.log('[註冊] Step 1.5 完成: users 記錄建立成功')
-
   // 2. 建立公司（使用 admin client 避免 RLS 限制）
   const { data: company, error: companyError} = await adminClient
     .from('companies')
@@ -264,6 +248,7 @@ export async function getUserPrimaryCompany(userId: string) {
  */
 export async function getCompanyMembers(companyId: string) {
   const supabase = await createClient()
+  const adminClient = createAdminClient()
 
   const { data: members, error } = await supabase
     .from('company_members')
@@ -276,15 +261,24 @@ export async function getCompanyMembers(companyId: string) {
 
   if (!members) return []
 
+  // 使用 Admin Client 存取 auth.users
   const userIds = members.map(m => m.user_id)
-  const { data: users } = await supabase
-    .from('users')
-    .select('id, email')
-    .in('id', userIds)
+  const { data: { users }, error: usersError } = await adminClient.auth.admin.listUsers()
+
+  if (usersError) {
+    console.error('獲取使用者資料失敗:', usersError)
+    return members.map(member => ({
+      ...member,
+      users: null
+    }))
+  }
 
   const membersWithUsers = members.map(member => ({
     ...member,
-    users: users?.find(u => u.id === member.user_id) || null
+    users: users?.find(u => u.id === member.user_id) ? {
+      id: users.find(u => u.id === member.user_id)!.id,
+      email: users.find(u => u.id === member.user_id)!.email
+    } : null
   }))
 
   return membersWithUsers
