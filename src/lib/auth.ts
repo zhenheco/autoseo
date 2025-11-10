@@ -32,6 +32,22 @@ export async function signUp(email: string, password: string) {
 
   console.log('[註冊] Step 1 完成: 使用者帳號建立成功', authData.user.id)
 
+  // 1.5. 確保 public.users 表有記錄（防止 foreign key 錯誤）
+  const { error: userInsertError } = await adminClient
+    .from('users')
+    .upsert({
+      id: authData.user.id,
+      email: email,
+    }, {
+      onConflict: 'id'
+    })
+
+  if (userInsertError) {
+    console.error('[註冊失敗] Step 1.5: 建立 users 記錄失敗', userInsertError)
+    throw userInsertError
+  }
+  console.log('[註冊] Step 1.5 完成: users 記錄建立成功')
+
   // 2. 建立公司（使用 admin client 避免 RLS 限制）
   const { data: company, error: companyError} = await adminClient
     .from('companies')

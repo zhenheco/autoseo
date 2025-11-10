@@ -58,6 +58,14 @@ export async function signup(formData: FormData) {
     // 註冊成功，停留在註冊頁並顯示成功訊息
     redirect(`/signup?success=${encodeURIComponent('註冊成功！我們已發送驗證郵件到您的信箱，請點擊郵件中的連結完成驗證')}`)
   } catch (error) {
+    // Next.js redirect() 會拋出 NEXT_REDIRECT 錯誤，需要重新拋出
+    if (error && typeof error === 'object' && 'digest' in error) {
+      const digest = String((error as { digest?: string }).digest || '')
+      if (digest.startsWith('NEXT_REDIRECT')) {
+        throw error
+      }
+    }
+
     const errorMessage = error instanceof Error ? translateErrorMessage(error) : '註冊失敗'
     redirect(`/signup?error=${encodeURIComponent(errorMessage)}`)
   }
