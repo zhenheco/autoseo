@@ -9,7 +9,7 @@ import { Sparkles, Mail } from 'lucide-react'
 export default async function SignupPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>
+  searchParams: Promise<{ error?: string; success?: string }>
 }) {
   const params = await searchParams
 
@@ -33,6 +33,17 @@ export default async function SignupPage({
         </div>
 
         <div className="bg-card border border-border rounded-2xl p-8 shadow-lg">
+          {params.success && (
+            <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded-xl text-sm font-medium animate-in fade-in slide-in-from-top-2 duration-300">
+              <div className="flex gap-3">
+                <Mail className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                <div>
+                  <p className="font-semibold mb-1">註冊成功！</p>
+                  <p className="text-xs">{params.success}</p>
+                </div>
+              </div>
+            </div>
+          )}
           {params.error && (
             <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400 rounded-xl text-sm font-medium animate-in fade-in slide-in-from-top-2 duration-300">
               {params.error}

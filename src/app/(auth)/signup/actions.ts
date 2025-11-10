@@ -55,12 +55,10 @@ export async function signup(formData: FormData) {
   try {
     await signUp(email, password)
 
-    // 註冊成功，重定向到登入頁並顯示成功訊息
-    redirect(`/login?success=${encodeURIComponent('註冊成功！請檢查您的電子郵件以驗證帳號')}`)
+    // 註冊成功，停留在註冊頁並顯示成功訊息
+    redirect(`/signup?success=${encodeURIComponent('註冊成功！我們已發送驗證郵件到您的信箱，請點擊郵件中的連結完成驗證')}`)
   } catch (error) {
-    // 暫時顯示原始錯誤訊息以便調試
-    const errorMessage = error instanceof Error ? error.message : '註冊失敗'
-    console.error('[Signup Action] 註冊失敗:', error)
+    const errorMessage = error instanceof Error ? translateErrorMessage(error) : '註冊失敗'
     redirect(`/signup?error=${encodeURIComponent(errorMessage)}`)
   }
 }
