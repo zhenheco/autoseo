@@ -1,68 +1,15 @@
 'use server'
 
-import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { signUp } from '@/lib/auth'
-import { createAdminClient } from '@/lib/supabase/server'
-
-/**
- * 將 Supabase 錯誤訊息轉換成中文
- */
-async function translateErrorMessage(error: Error, email: string): Promise<string> {
-  const message = error.message.toLowerCase()
-
-  // 帳號已存在 - 檢查是否已驗證
-  if (message.includes('user already registered') || message.includes('already registered')) {
-    const adminClient = createAdminClient()
-
-    const { data: { users }, error: listError } = await adminClient.auth.admin.listUsers()
-
-    if (!listError && users) {
-      const existingUser = users.find(u => u.email === email)
-
-      if (existingUser) {
-        const isConfirmed = existingUser.email_confirmed_at !== null
-
-        if (isConfirmed) {
-          return 'VERIFIED_USER'
-        } else {
-          return 'UNVERIFIED_USER'
-        }
-      }
-    }
-
-    return '此電子郵件已被註冊，請直接登入'
-  }
-
-  // Email 驗證相關
-  if (message.includes('email not confirmed')) {
-    return '電子郵件尚未驗證，請檢查您的信箱並點擊驗證連結'
-  }
-
-  // 密碼相關
-  if (message.includes('password')) {
-    return '密碼格式不符合要求，請使用至少 6 個字元'
-  }
-
-  // Email 格式
-  if (message.includes('invalid email')) {
-    return '電子郵件格式不正確'
-  }
-
-  // 網路錯誤
-  if (message.includes('network') || message.includes('fetch')) {
-    return '網路連線錯誤，請稍後再試'
-  }
-
-  // 預設錯誤
-  return '註冊失敗，請稍後再試'
-}
+import { createClient } from '@/lib/supabase/server'
 
 export async function signup(formData: FormData) {
   const email = formData.get('email') as string
   const password = formData.get('password') as string
   const confirmPassword = formData.get('confirmPassword') as string
 
+  // 基本驗證
   if (!email || !password || !confirmPassword) {
     redirect(`/signup?error=${encodeURIComponent('請填寫所有欄位')}`)
   }
@@ -72,28 +19,33 @@ export async function signup(formData: FormData) {
   }
 
   try {
-    // 先檢查用戶是否已存在
-    const adminClient = createAdminClient()
-    const { data: { users }, error: listError } = await adminClient.auth.admin.listUsers()
+    // 使用 RPC 函數查詢用戶
+    const supabase = await createClient()
+    const { data: userData, error: rpcError } = await supabase.rpc('get_user_by_email', {
+      email_input: email
+    })
 
-    if (!listError && users) {
-      const existingUser = users.find(u => u.email === email)
+    console.log('[Signup] RPC 查詢結果:', { userData, rpcError })
 
-      if (existingUser) {
-        const isConfirmed = existingUser.email_confirmed_at !== null
+    // 檢查用戶是否已存在
+    if (userData && userData.length > 0) {
+      const user = userData[0]
+      const isConfirmed = user.email_confirmed_at !== null
 
-        if (isConfirmed) {
-          redirect(`/signup?error=${encodeURIComponent('此電子郵件已註冊，請直接登入')}&verified=true`)
-        } else {
-          redirect(`/signup?error=${encodeURIComponent('此電子郵件已註冊但尚未驗證，請檢查您的信箱或重發驗證信')}&unverified=true&email=${encodeURIComponent(email)}`)
-        }
+      if (isConfirmed) {
+        // 已驗證用戶
+        redirect(`/signup?error=${encodeURIComponent('此電子郵件已註冊，請直接登入')}&verified=true`)
+      } else {
+        // 未驗證用戶
+        redirect(`/signup?error=${encodeURIComponent('此電子郵件已註冊但尚未驗證，請檢查您的信箱或重發驗證信')}&unverified=true&email=${encodeURIComponent(email)}`)
       }
     }
 
     // 用戶不存在，執行註冊
+    console.log('[Signup] 用戶不存在，執行 signUp')
     await signUp(email, password)
 
-    // 註冊成功，停留在註冊頁並顯示成功訊息
+    // 註冊成功
     redirect(`/signup?success=${encodeURIComponent('註冊成功！我們已發送驗證郵件到您的信箱，請點擊郵件中的連結完成驗證')}`)
   } catch (error) {
     // Next.js redirect() 會拋出 NEXT_REDIRECT 錯誤，需要重新拋出
@@ -104,7 +56,8 @@ export async function signup(formData: FormData) {
       }
     }
 
-    const errorMessage = error instanceof Error ? await translateErrorMessage(error, email) : '註冊失敗'
+    console.error('[Signup] 錯誤:', error)
+    const errorMessage = error instanceof Error ? error.message : '註冊失敗，請稍後再試'
     redirect(`/signup?error=${encodeURIComponent(errorMessage)}`)
   }
 }
