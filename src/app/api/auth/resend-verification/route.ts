@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       type: 'signup',
       email,
       options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3168'}/auth/callback`,
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3168'}/auth/confirm`,
       },
     })
 
