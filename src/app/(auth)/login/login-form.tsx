@@ -6,7 +6,6 @@ import { authenticateUser } from './actions'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { OAuthButtons, OAuthDivider } from '@/components/auth/oauth-buttons'
 import { Loader2 } from 'lucide-react'
 
 interface LoginFormProps {
@@ -97,10 +96,6 @@ export function LoginForm({ error, success, unverified, email }: LoginFormProps)
           )}
         </div>
       )}
-
-      <OAuthButtons redirectTo="/dashboard" actionText="繼續" />
-
-      <OAuthDivider />
 
       <form
         action={async (formData) => {
