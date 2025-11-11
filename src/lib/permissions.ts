@@ -121,7 +121,7 @@ export async function canAccessWebsitesFeature(): Promise<boolean> {
 /**
  * 取得用戶的訂閱層級
  */
-export async function getUserSubscriptionTier(): Promise<'free' | 'basic' | 'pro' | 'enterprise' | null> {
+export async function getUserSubscriptionTier(): Promise<'free' | 'starter' | 'professional' | 'business' | 'agency' | null> {
   const user = await getUser()
   if (!user) return null
 

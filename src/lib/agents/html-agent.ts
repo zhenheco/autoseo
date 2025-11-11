@@ -7,9 +7,7 @@ export class HTMLAgent extends BaseAgent<HTMLInput, HTMLOutput> {
   }
 
   protected async process(input: HTMLInput): Promise<HTMLOutput> {
-    let html = input.html;
-
-    let fullHtml = html;
+    let fullHtml = input.html;
     if (!fullHtml.includes('<html>') && !fullHtml.includes('<!DOCTYPE')) {
       fullHtml = `<!DOCTYPE html>
 <html lang="zh-TW">
@@ -26,25 +24,25 @@ ${fullHtml}
     try {
       fullHtml = await this.insertInternalLinks(fullHtml, input.internalLinks);
     } catch (error) {
-      this.logger.warn('⚠️ Failed to insert internal links, continuing...', { error });
+      console.warn('[HTMLAgent] ⚠️ Failed to insert internal links, continuing...', error);
     }
 
     try {
       fullHtml = await this.insertExternalReferences(fullHtml, input.externalReferences);
     } catch (error) {
-      this.logger.warn('⚠️ Failed to insert external references, continuing...', { error });
+      console.warn('[HTMLAgent] ⚠️ Failed to insert external references, continuing...', error);
     }
 
     try {
       fullHtml = await this.insertFAQSchema(fullHtml);
     } catch (error) {
-      this.logger.warn('⚠️ Failed to insert FAQ schema, continuing...', { error });
+      console.warn('[HTMLAgent] ⚠️ Failed to insert FAQ schema, continuing...', error);
     }
 
     try {
       fullHtml = await this.optimizeForWordPress(fullHtml);
     } catch (error) {
-      this.logger.warn('⚠️ Failed to optimize for WordPress, continuing...', { error });
+      console.warn('[HTMLAgent] ⚠️ Failed to optimize for WordPress, continuing...', error);
     }
 
     const linkCount = await this.countLinks(fullHtml);
@@ -330,7 +328,7 @@ ${fullHtml}
     const body = document.body;
 
     if (!body) {
-      this.logger.warn('⚠️ No body element found in HTML');
+      console.warn('[HTMLAgent] ⚠️ No body element found in HTML');
       return html;
     }
 
@@ -405,7 +403,7 @@ ${fullHtml}
 
     body.appendChild(scriptTag);
 
-    this.logger.info('✅ FAQ Schema inserted', { faqCount: faqItems.length });
+    console.log('[HTMLAgent] ✅ FAQ Schema inserted', { faqCount: faqItems.length });
 
     return body.innerHTML;
   }

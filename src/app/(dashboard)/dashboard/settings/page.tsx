@@ -40,9 +40,16 @@ export default async function SettingsPage({
     redirect('/dashboard')
   }
 
+  const { data: subscriptionPlan } = await supabase
+    .from('subscription_plans')
+    .select('name, slug')
+    .eq('slug', company.subscription_tier)
+    .single()
+
   return (
     <SettingsClient
       company={company}
+      subscriptionPlan={subscriptionPlan}
       searchParams={params}
     />
   )

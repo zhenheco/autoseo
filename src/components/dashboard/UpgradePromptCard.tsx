@@ -10,7 +10,7 @@ import { cn } from '@/lib/utils'
 import { createClient } from '@/lib/supabase/client'
 
 interface UpgradePromptCardProps {
-  currentTier: 'free' | 'basic' | 'pro' | 'enterprise'
+  currentTier: 'free' | 'starter' | 'professional' | 'business' | 'agency'
   tokenBalance: number
 }
 

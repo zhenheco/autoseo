@@ -11,7 +11,7 @@ interface TokenBalance {
     purchased: number
   }
   subscription: {
-    tier: 'free' | 'basic' | 'pro' | 'enterprise'
+    tier: 'free' | 'starter' | 'professional' | 'business' | 'agency'
     monthlyTokenQuota: number
   }
 }

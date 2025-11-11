@@ -79,7 +79,7 @@ export class ParallelOrchestrator {
         strategy_model: agentConfig.strategy_model,
         writing_model: agentConfig.writing_model,
         meta_model: agentConfig.meta_model || agentConfig.simple_processing_model || 'deepseek-chat',
-        image_model: workflowSettings.image_model || 'gpt-image-1-mini',
+        image_model: agentConfig.image_model || 'gpt-image-1-mini',
       });
 
       const phase1Start = Date.now();

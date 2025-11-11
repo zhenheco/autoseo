@@ -47,15 +47,13 @@ export class PaymentService {
     return `MAN${timestamp}${random}`
   }
 
-  private mapPlanSlugToTier(slug: string): 'free' | 'basic' | 'pro' | 'enterprise' {
-    const mapping: Record<string, 'free' | 'basic' | 'pro' | 'enterprise'> = {
-      'free': 'free',
-      'starter': 'basic',
-      'professional': 'pro',
-      'business': 'enterprise',
-      'agency': 'enterprise',
-    }
-    return mapping[slug] || 'free'
+  private mapPlanSlugToTier(slug: string): 'free' | 'starter' | 'professional' | 'business' | 'agency' {
+    const validTiers: Array<'free' | 'starter' | 'professional' | 'business' | 'agency'> = [
+      'free', 'starter', 'professional', 'business', 'agency'
+    ]
+    return validTiers.includes(slug as typeof validTiers[number])
+      ? (slug as typeof validTiers[number])
+      : 'free'
   }
 
   async createOnetimePayment(params: CreateOnetimeOrderParams): Promise<{

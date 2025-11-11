@@ -34,16 +34,11 @@
  * - 系統使用方案 slug 進行比較和升級判斷
  */
 export const TIER_HIERARCHY: Record<string, number> = {
-  // Plan slugs (subscription_plans.slug) - 修正順序
+  'free': 0,
   'starter': 1,
-  'professional': 2,  // 從 3 改為 2
-  'business': 3,      // 從 2 改為 3
+  'professional': 2,
+  'business': 3,
   'agency': 4,
-
-  // Company tiers (companies.subscription_tier) - same hierarchy values
-  'basic': 1,        // maps to starter
-  'pro': 2,          // maps to professional/business (取較低值以允許同 tier 升級)
-  'enterprise': 4,   // maps to agency
 }
 
 /**

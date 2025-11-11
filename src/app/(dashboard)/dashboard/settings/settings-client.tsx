@@ -16,13 +16,20 @@ interface Company {
   subscription_ends_at?: string
 }
 
+interface SubscriptionPlan {
+  name: string
+  slug: string
+}
+
 interface SettingsClientProps {
   company: Company
+  subscriptionPlan: SubscriptionPlan | null
   searchParams: { error?: string; success?: string; info?: string }
 }
 
 export function SettingsClient({
   company,
+  subscriptionPlan,
   searchParams
 }: SettingsClientProps) {
   const router = useRouter()
@@ -75,8 +82,8 @@ export function SettingsClient({
                 <Label>訂閱方案</Label>
                 <div className="space-y-3">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm font-medium uppercase">
-                      {company.subscription_tier === 'free' ? '免費方案' : company.subscription_tier}
+                    <span className="text-sm font-medium">
+                      {subscriptionPlan?.name || '免費方案'}
                     </span>
                     <Button
                       variant="outline"
