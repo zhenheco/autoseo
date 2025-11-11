@@ -31,10 +31,7 @@ export class R2Client {
         secretAccessKey: config.secretAccessKey,
       },
       forcePathStyle: false,
-      requestHandler: {
-        requestTimeout: 30000,
-        httpsAgent: undefined,
-      },
+      maxAttempts: 3,
     });
   }
 
@@ -73,9 +70,19 @@ export class R2Client {
       const err = error as Error;
       console.error('[R2] ❌ Upload failed:', {
         error: err.message,
+        errorName: err.name,
         stack: err.stack,
         fileKey,
       });
+
+      if (err.message.includes('SSL') || err.message.includes('TLS') || err.message.includes('EPROTO')) {
+        console.error('[R2] 🔒 SSL/TLS Error detected - possible causes:');
+        console.error('  1. Incorrect R2 credentials');
+        console.error('  2. Network/firewall blocking Cloudflare R2');
+        console.error('  3. R2 endpoint configuration issue');
+        console.error('  Suggestion: Verify R2 credentials in Vercel Dashboard');
+      }
+
       throw error;
     }
 
