@@ -365,6 +365,10 @@ export class ParallelOrchestrator {
             .from('article_jobs')
             .upsert({
               id: input.articleJobId,
+              job_id: input.articleJobId,
+              company_id: input.companyId,
+              website_id: input.websiteId,
+              user_id: userId,
               keywords: input.title ? [input.title] : [],
               status: 'processing',
               metadata: { message: '準備儲存文章到資料庫' },

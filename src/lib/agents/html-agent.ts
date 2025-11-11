@@ -51,13 +51,19 @@ ${fullHtml}
     try {
       const { parseHTML } = await import('linkedom');
       const { document } = parseHTML(fullHtml);
-      if (document.body) {
-        finalHtml = document.body.innerHTML;
-      } else {
-        console.warn('[HTMLAgent] ⚠️ No body element found after parseHTML, using full HTML');
+
+      try {
+        const bodyElement = document.body;
+        if (bodyElement && bodyElement.innerHTML) {
+          finalHtml = bodyElement.innerHTML;
+        } else {
+          console.warn('[HTMLAgent] ⚠️ No body element or innerHTML, using full HTML');
+        }
+      } catch (bodyError) {
+        console.warn('[HTMLAgent] ⚠️ Cannot access document.body (documentElement may be null), using full HTML');
       }
     } catch (error) {
-      console.warn('[HTMLAgent] ⚠️ Failed to extract body innerHTML, using full HTML', error);
+      console.warn('[HTMLAgent] ⚠️ parseHTML failed, using full HTML', error);
     }
 
     return {

@@ -34,11 +34,17 @@ async function testHTMLAgent() {
   try {
     const { parseHTML } = await import('linkedom');
     const { document } = parseHTML('');
-    console.log('  - document.body存在:', !!document.body);
-    if (document.body) {
-      console.log('✅ 空字符串處理成功（有 body）');
-    } else {
-      console.log('⚠️  空字符串沒有 body，需要 fallback');
+
+    try {
+      const bodyElement = document.body;
+      console.log('  - document.body存在:', !!bodyElement);
+      if (bodyElement) {
+        console.log('✅ 空字符串處理成功（有 body）');
+      } else {
+        console.log('⚠️  空字符串沒有 body，需要 fallback');
+      }
+    } catch (bodyError) {
+      console.log('✅ 正確捕獲 body getter 錯誤，使用 fallback');
     }
   } catch (error) {
     console.error('❌ 空字符串解析失敗:', error);
@@ -88,15 +94,19 @@ async function testHTMLAgent() {
     // 嘗試創造一個會導致 documentElement 為 null 的情況
     const { document } = parseHTML('');
 
-    // 使用 optional chaining 避免錯誤
-    const body = document.body;
-    if (body) {
-      console.log('  - body.innerHTML:', body.innerHTML);
-    } else {
-      console.log('  - body 不存在，documentElement:', document.documentElement);
+    // 使用 nested try-catch 捕獲 getter 錯誤
+    try {
+      const body = document.body;
+      if (body) {
+        console.log('  - body.innerHTML:', body.innerHTML);
+      } else {
+        console.log('  - body 不存在，documentElement:', document.documentElement);
+      }
+    } catch (bodyError) {
+      console.log('✅ Null 檢查成功（正確捕獲 body getter 錯誤）');
     }
 
-    console.log('✅ Null 檢查成功（使用 optional chaining）');
+    console.log('✅ Nested try-catch 正常運作');
   } catch (error) {
     console.error('❌ Null 檢查失敗:', (error as Error).message);
   }
