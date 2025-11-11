@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect, type ReactNode } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/client'
 import type { Tables } from '@/types/database.types'
-import { Check, Sparkles, Zap, ArrowRight, CreditCard, Crown, Cpu, User, LogOut, LayoutDashboard } from 'lucide-react'
+import { Check, Sparkles, ArrowRight, CreditCard, Crown, User, LogOut, LayoutDashboard, Zap } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
@@ -18,47 +18,31 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { ThemeToggle } from '@/components/ui/theme-toggle'
-import { canUpgrade, type BillingPeriod, TIER_HIERARCHY } from '@/lib/subscription/upgrade-rules'
+import { SUPPORT_TIERS, type SupportLevel } from '@/config/support-tiers'
 
 type SubscriptionPlan = Tables<'subscription_plans'>
 type TokenPackage = Tables<'token_packages'>
-type AIModel = Tables<'ai_model_pricing'>
 
-function canUpgradeWrapper(
-  currentTier: string | null,
-  currentBillingPeriod: BillingPeriod,
-  targetPlan: SubscriptionPlan,
-  targetBillingPeriod: BillingPeriod
-): boolean {
-  return canUpgrade(currentTier, currentBillingPeriod, targetPlan.slug, targetBillingPeriod)
-}
-
-function isCurrentPlan(
-  currentTier: string | null,
-  currentBillingPeriod: BillingPeriod,
-  targetPlan: SubscriptionPlan,
-  targetBillingPeriod: BillingPeriod
-): boolean {
-  if (!currentTier) return false
-
-  const currentLevel = TIER_HIERARCHY[currentTier] ?? 0
-  const targetLevel = TIER_HIERARCHY[targetPlan.slug] ?? 0
-
-  return currentLevel === targetLevel && currentBillingPeriod === targetBillingPeriod
+interface PlanFeatures {
+  models?: string[] | 'all'
+  wordpress_sites?: number
+  images_per_article?: number
+  team_members?: number
+  brand_voices?: number
+  api_access?: boolean
+  white_label?: boolean
+  support_level?: SupportLevel
 }
 
 export default function PricingPage() {
   const router = useRouter()
-  const [billingPeriod, setBillingPeriod] = useState<'monthly' | 'yearly' | 'lifetime'>('monthly')
   const [plans, setPlans] = useState<SubscriptionPlan[]>([])
   const [tokenPackages, setTokenPackages] = useState<TokenPackage[]>([])
-  const [aiModels, setAiModels] = useState<AIModel[]>([])
   const [loading, setLoading] = useState(true)
   const [processingPlanId, setProcessingPlanId] = useState<string | null>(null)
   const [processingPackageId, setProcessingPackageId] = useState<string | null>(null)
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const [currentTier, setCurrentTier] = useState<string | null>(null)
-  const [currentBillingPeriod, setCurrentBillingPeriod] = useState<BillingPeriod>('monthly')
 
   useEffect(() => {
     loadPlans()
@@ -79,43 +63,21 @@ export default function PricingPage() {
           .single()
 
         if (member) {
-          const { data: company } = await supabase
-            .from('companies')
-            .select('subscription_tier')
-            .eq('id', member.company_id)
+          const { data: subscription } = await supabase
+            .from('company_subscriptions')
+            .select('plan_id')
+            .eq('company_id', member.company_id)
             .single()
 
-          if (company) {
-            const { data: mandate } = await supabase
-              .from('recurring_mandates')
-              .select('period_type, subscription_plan_id')
-              .eq('company_id', member.company_id)
-              .eq('status', 'active')
-              .order('created_at', { ascending: false })
-              .limit(1)
-              .maybeSingle()
+          if (subscription) {
+            const { data: plan } = await supabase
+              .from('subscription_plans')
+              .select('slug')
+              .eq('id', subscription.plan_id)
+              .single()
 
-            if (mandate) {
-              const { data: plan } = await supabase
-                .from('subscription_plans')
-                .select('slug, is_lifetime')
-                .eq('id', mandate.subscription_plan_id)
-                .single()
-
-              if (plan) {
-                setCurrentTier(plan.slug)
-
-                if (plan.is_lifetime) {
-                  setCurrentBillingPeriod('lifetime')
-                } else if (mandate.period_type === 'Y') {
-                  setCurrentBillingPeriod('yearly')
-                } else {
-                  setCurrentBillingPeriod('monthly')
-                }
-              }
-            } else {
-              setCurrentTier(company.subscription_tier)
-              setCurrentBillingPeriod('monthly')
+            if (plan) {
+              setCurrentTier(plan.slug)
             }
           }
         }
@@ -139,44 +101,25 @@ export default function PricingPage() {
   async function loadPlans() {
     try {
       const supabase = createClient()
-      const [plansRes, packagesRes, modelsRes] = await Promise.all([
+      const [plansRes, packagesRes] = await Promise.all([
         supabase
           .from('subscription_plans')
           .select('*')
-          .order('is_lifetime', { ascending: true })
-          .order('monthly_price', { ascending: true }),
+          .eq('is_lifetime', true)
+          .neq('slug', 'free')
+          .order('lifetime_price', { ascending: true }),
         supabase
           .from('token_packages')
           .select('*')
           .eq('is_active', true)
-          .order('price', { ascending: true }),
-        supabase
-          .from('ai_model_pricing')
-          .select('*')
-          .eq('is_active', true)
-          .order('tier', { ascending: false })
-          .order('provider', { ascending: true })
+          .order('price', { ascending: true })
       ])
 
       if (plansRes.error) throw plansRes.error
       if (packagesRes.error) throw packagesRes.error
-      if (modelsRes.error) throw modelsRes.error
 
       if (plansRes.data) {
-        // 過濾掉終身方案和免費方案（免費方案只供註冊使用，不在定價頁顯示）
-        const paidPlans = plansRes.data.filter(p => !p.is_lifetime && p.slug !== 'free')
-        const sortedPlans = [...paidPlans].sort((a, b) => {
-          const priceA = a.monthly_price
-          const priceB = b.monthly_price
-
-          // 按價格排序：STARTER < PROFESSIONAL < BUSINESS < AGENCY
-          if (priceA < 2000) return -1
-          if (priceB < 2000) return 1
-          if (priceA < 5000) return -1
-          if (priceB < 5000) return 1
-          return 0
-        })
-        setPlans(sortedPlans)
+        setPlans(plansRes.data)
       }
 
       if (packagesRes.data) {
@@ -185,31 +128,11 @@ export default function PricingPage() {
         )
         setTokenPackages(displayedPackages)
       }
-
-      if (modelsRes.data) {
-        setAiModels(modelsRes.data)
-      }
     } catch (error) {
       console.error('Failed to load plans:', error)
     } finally {
       setLoading(false)
     }
-  }
-
-  const getPlanPrice = (plan: SubscriptionPlan) => {
-    if (billingPeriod === 'lifetime' && plan.lifetime_price) {
-      return plan.lifetime_price
-    }
-    if (billingPeriod === 'yearly' && plan.yearly_price) {
-      return plan.yearly_price
-    }
-    return plan.monthly_price
-  }
-
-  const getYearlySavings = (plan: SubscriptionPlan) => {
-    if (!plan.yearly_price) return 0
-    const monthlyYearly = plan.monthly_price * 12
-    return monthlyYearly - plan.yearly_price
   }
 
   const submitPaymentForm = (paymentForm: {
@@ -221,23 +144,6 @@ export default function PricingPage() {
     version?: string
     apiUrl: string
   }) => {
-    console.log('[表單提交] 準備重定向到授權頁面')
-    console.log('[表單提交] 目標 URL:', paymentForm.apiUrl)
-
-    const fields: Record<string, string> = {}
-
-    if (paymentForm.tradeInfo && paymentForm.tradeSha) {
-      console.log('[表單提交] 單次付款模式')
-      fields.MerchantID = paymentForm.merchantId
-      fields.TradeInfo = paymentForm.tradeInfo
-      fields.TradeSha = paymentForm.tradeSha
-      fields.Version = paymentForm.version || '2.0'
-    } else if (paymentForm.postData) {
-      console.log('[表單提交] 定期定額模式')
-      fields.MerchantID_ = paymentForm.merchantId
-      fields.PostData_ = paymentForm.postData
-    }
-
     const formData = {
       apiUrl: paymentForm.apiUrl,
       postData: paymentForm.postData,
@@ -249,8 +155,6 @@ export default function PricingPage() {
 
     const encodedFormData = encodeURIComponent(JSON.stringify(formData))
     const authorizingUrl = `/dashboard/billing/authorizing?paymentForm=${encodedFormData}`
-
-    console.log('[表單提交] 重定向到:', authorizingUrl)
     router.push(authorizingUrl)
   }
 
@@ -280,91 +184,29 @@ export default function PricingPage() {
         return
       }
 
-      const price = getPlanPrice(plan)
-      const isLifetime = billingPeriod === 'lifetime'
-
-      if (isLifetime) {
-        const response = await fetch('/api/payment/onetime/create', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            companyId,
-            paymentType: 'lifetime',
-            relatedId: plan.id,
-            amount: price,
-            description: `${plan.name} 終身方案`,
-            email: user.email || '',
-          }),
-        })
-
-        const data = await response.json()
-
-        if (!response.ok) {
-          throw new Error(data.error || '支付請求失敗')
-        }
-
-        if (data.paymentForm) {
-          submitPaymentForm(data.paymentForm)
-        }
-      } else {
-        const periodType = billingPeriod === 'yearly' ? 'Y' : 'M'
-        const amount = billingPeriod === 'yearly' ? plan.yearly_price : plan.monthly_price
-
-        // 使用今天的日期作為每月扣款日
-        const today = new Date()
-        const dayOfMonth = today.getDate().toString().padStart(2, '0')
-
-        // 年繳和月繳的參數不同
-        const periodTimes = periodType === 'Y' ? 1 : 12
-
-        // 建立請求 body（只在月繳時加入 periodPoint）
-        const requestBody: {
-          companyId: string
-          planId: string
-          amount: number
-          description: string
-          email: string
-          periodType: string
-          periodStartType: number
-          periodTimes: number
-          periodPoint?: string
-        } = {
+      const response = await fetch('/api/payment/onetime/create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
           companyId,
-          planId: plan.id,
-          amount: amount || 0,
-          description: `${plan.name} ${billingPeriod === 'yearly' ? '年繳' : '月繳'}方案`,
+          paymentType: 'lifetime',
+          relatedId: plan.id,
+          amount: plan.lifetime_price || 0,
+          description: `${plan.name} 終身方案`,
           email: user.email || '',
-          periodType,
-          periodStartType: 2,
-          periodTimes,
-        }
+        }),
+      })
 
-        // 只在月繳時加入 periodPoint
-        if (periodType === 'M') {
-          requestBody.periodPoint = dayOfMonth
-        }
+      const data = await response.json()
 
-        const response = await fetch('/api/payment/recurring/create', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(requestBody),
-        })
+      if (!response.ok) {
+        throw new Error(data.error || '支付請求失敗')
+      }
 
-        const data = await response.json()
-
-        if (!response.ok) {
-          throw new Error(data.error || '支付請求失敗')
-        }
-
-        if (data.paymentForm) {
-          console.log('[定期定額] 準備提交表單，paymentForm:', data.paymentForm)
-          console.log('[定期定額] API URL:', data.paymentForm.apiUrl)
-          submitPaymentForm(data.paymentForm)
-        }
+      if (data.paymentForm) {
+        submitPaymentForm(data.paymentForm)
       }
     } catch (error) {
       console.error('購買失敗:', error)
@@ -432,10 +274,10 @@ export default function PricingPage() {
     }
   }
 
-  const renderFeatureList = (features: Record<string, unknown>) => {
-    const items: ReactNode[] = []
+  const renderFeatureList = (features: PlanFeatures) => {
+    const items = []
 
-    if (features.wordpress_sites) {
+    if (features.wordpress_sites !== undefined) {
       items.push(
         <li key="sites" className="flex items-start gap-3 group">
           <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
@@ -450,22 +292,7 @@ export default function PricingPage() {
       )
     }
 
-    if (features.images_per_article) {
-      items.push(
-        <li key="images" className="flex items-start gap-3 group">
-          <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
-            <Check className="h-3 w-3 text-primary" />
-          </div>
-          <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
-            {features.images_per_article === -1
-              ? '無限圖片/文章'
-              : `每篇 ${features.images_per_article} 張圖片`}
-          </span>
-        </li>
-      )
-    }
-
-    if (features.team_members) {
+    if (features.team_members !== undefined) {
       items.push(
         <li key="team" className="flex items-start gap-3 group">
           <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
@@ -480,7 +307,7 @@ export default function PricingPage() {
       )
     }
 
-    if (features.brand_voices) {
+    if (features.brand_voices !== undefined) {
       items.push(
         <li key="voices" className="flex items-start gap-3 group">
           <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
@@ -518,6 +345,20 @@ export default function PricingPage() {
           </div>
           <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
             白標服務
+          </span>
+        </li>
+      )
+    }
+
+    if (features.support_level) {
+      const supportTier = SUPPORT_TIERS[features.support_level]
+      items.push(
+        <li key="support" className="flex items-start gap-3 group">
+          <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
+            <Check className="h-3 w-3 text-primary" />
+          </div>
+          <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
+            {supportTier.label}
           </span>
         </li>
       )
@@ -612,9 +453,9 @@ export default function PricingPage() {
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
         <div className="text-center mb-16 space-y-6">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-primary/20 bg-primary/5 backdrop-blur-sm">
-            <Sparkles className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-primary">簡單透明的定價</span>
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-purple-200 dark:border-purple-800 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 backdrop-blur-sm">
+            <Crown className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+            <span className="text-sm font-medium text-purple-700 dark:text-purple-300">終身定價 - 一次付清，永久享有</span>
           </div>
 
           <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-foreground via-foreground to-foreground/70 bg-clip-text text-transparent">
@@ -626,79 +467,33 @@ export default function PricingPage() {
           </p>
         </div>
 
-        <div className="flex items-center justify-center mb-12">
-          <div className="inline-flex items-center gap-1 p-1 rounded-full border border-border bg-card/50 backdrop-blur-sm shadow-sm">
-            <button
-              onClick={() => setBillingPeriod('monthly')}
-              className={`relative px-6 py-2.5 rounded-full text-sm font-medium transition-all ${
-                billingPeriod === 'monthly'
-                  ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              月繳
-            </button>
-            <button
-              onClick={() => setBillingPeriod('yearly')}
-              className={`relative px-6 py-2.5 rounded-full text-sm font-medium transition-all ${
-                billingPeriod === 'yearly'
-                  ? 'bg-primary text-primary-foreground shadow-lg shadow-primary/25'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <span>年繳 (省 20%)</span>
-              <Badge className="absolute -top-2 -right-2 bg-emerald-500 hover:bg-emerald-600 text-white border-0 text-xs px-1.5 py-0">
-                最划算
-              </Badge>
-            </button>
-            <button
-              onClick={() => setBillingPeriod('lifetime')}
-              className={`relative px-6 py-2.5 rounded-full text-sm font-medium transition-all ${
-                billingPeriod === 'lifetime'
-                  ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-lg shadow-purple-500/25'
-                  : 'text-muted-foreground hover:text-foreground'
-              }`}
-            >
-              <span>終身方案</span>
-              <Badge className="absolute -top-2 -right-2 bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white border-0 text-xs px-1.5 py-0">
-                <Crown className="w-3 h-3" />
-              </Badge>
-            </button>
-          </div>
-        </div>
-
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16 max-w-7xl mx-auto">
           {plans.map((plan, index) => {
-            const price = getPlanPrice(plan)
-            const savings = getYearlySavings(plan)
-            const features = plan.features as Record<string, unknown>
-            const isPopular = index === 1
+            const features = plan.features as PlanFeatures
+            const isRecommended = plan.slug === 'professional'
+            const isCurrentPlan = currentTier === plan.slug
 
             return (
               <div
                 key={plan.id}
                 className={`group relative rounded-3xl transition-all duration-500 ${
-                  isPopular
-                    ? 'lg:scale-105'
-                    : 'lg:hover:scale-105'
+                  isRecommended ? 'lg:scale-105' : 'lg:hover:scale-105'
                 }`}
               >
-                {isPopular && (
+                {isRecommended && (
                   <div className="absolute -top-5 left-1/2 -translate-x-1/2 z-10">
-                    <Badge className="bg-gradient-to-r from-primary via-primary to-secondary text-white border-0 px-5 py-1.5 shadow-lg shadow-primary/40 text-sm font-semibold animate-pulse-glow">
+                    <Badge className="bg-gradient-to-r from-primary via-primary to-secondary text-white border-0 px-5 py-1.5 shadow-lg shadow-primary/40 text-sm font-semibold">
                       <Zap className="w-4 h-4 mr-1.5" />
-                      最受歡迎
+                      推薦方案
                     </Badge>
                   </div>
                 )}
 
                 <div
-                  className={`relative h-full flex flex-col rounded-3xl border glass-effect p-8 transition-all duration-500 ${
-                    billingPeriod === 'lifetime'
-                      ? 'border-purple-300 dark:border-purple-700 bg-gradient-to-br from-purple-50/50 via-pink-50/50 to-purple-50/50 dark:from-purple-900/10 dark:via-pink-900/10 dark:to-purple-900/10 shadow-2xl shadow-purple-500/20 hover:shadow-purple-500/30'
-                      : isPopular
-                        ? 'border-primary/50 shadow-2xl shadow-primary/30 hover:shadow-primary/40'
-                        : 'border-border/50 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/20'
+                  className={`relative h-full flex flex-col rounded-3xl border p-8 transition-all duration-500 ${
+                    isRecommended
+                      ? 'border-primary/50 shadow-2xl shadow-primary/30 hover:shadow-primary/40 bg-gradient-to-br from-primary/5 via-transparent to-primary/5'
+                      : 'border-border/50 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/20 bg-card'
                   }`}
                 >
                   <div className="mb-8">
@@ -707,25 +502,15 @@ export default function PricingPage() {
                     <div className="mb-1">
                       <div className="text-lg text-muted-foreground mb-1">NT$</div>
                       <div className="flex items-baseline gap-2">
-                        <span className={`text-4xl font-bold ${billingPeriod === 'lifetime' ? 'bg-gradient-to-r from-purple-600 to-pink-600 bg-clip-text text-transparent' : ''}`}>
-                          {price.toLocaleString()}
-                        </span>
-                        <span className="text-muted-foreground">
-                          {billingPeriod === 'lifetime' ? '' : billingPeriod === 'yearly' ? '/ 年' : '/ 月'}
+                        <span className="text-4xl font-bold">
+                          {plan.lifetime_price?.toLocaleString() || 0}
                         </span>
                       </div>
                     </div>
 
-                    {billingPeriod === 'yearly' && (
-                      <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">
-                        相當於月繳 10 個月費用
-                      </p>
-                    )}
-                    {billingPeriod === 'lifetime' && (
-                      <p className="text-sm text-purple-600 dark:text-purple-400 font-medium">
-                        一次付清，終身享有
-                      </p>
-                    )}
+                    <p className="text-sm text-purple-600 dark:text-purple-400 font-medium">
+                      一次付清，終身享有
+                    </p>
                   </div>
 
                   <div className="mb-8 p-4 rounded-xl bg-primary/5 border border-primary/10">
@@ -746,12 +531,9 @@ export default function PricingPage() {
 
                   <Button
                     onClick={() => handlePlanPurchase(plan)}
-                    disabled={
-                      processingPlanId === plan.id ||
-                      !canUpgradeWrapper(currentTier, currentBillingPeriod, plan, billingPeriod)
-                    }
+                    disabled={processingPlanId === plan.id || isCurrentPlan}
                     className={`w-full group/button mt-auto ${
-                      isPopular
+                      isRecommended
                         ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30'
                         : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
                     }`}
@@ -759,19 +541,17 @@ export default function PricingPage() {
                     <span>
                       {processingPlanId === plan.id
                         ? '處理中...'
-                        : !canUpgradeWrapper(currentTier, currentBillingPeriod, plan, billingPeriod)
-                          ? isCurrentPlan(currentTier, currentBillingPeriod, plan, billingPeriod)
-                            ? '目前方案'
-                            : '無法升級'
+                        : isCurrentPlan
+                          ? '目前方案'
                           : '開始使用'}
                     </span>
-                    {processingPlanId !== plan.id && canUpgradeWrapper(currentTier, currentBillingPeriod, plan, billingPeriod) && (
+                    {processingPlanId !== plan.id && !isCurrentPlan && (
                       <ArrowRight className="w-4 h-4 ml-2 group-hover/button:translate-x-1 transition-transform" />
                     )}
                   </Button>
                 </div>
 
-                {isPopular && (
+                {isRecommended && (
                   <div className="absolute inset-0 -z-10 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 blur-2xl opacity-50 group-hover:opacity-75 transition-opacity" />
                 )}
               </div>
@@ -779,111 +559,45 @@ export default function PricingPage() {
           })}
         </div>
 
-        {/* 功能比較表 */}
         <section className="mb-24">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold mb-4">功能完整比較</h2>
+            <h2 className="text-4xl font-bold mb-4">客服支援層級</h2>
             <p className="text-lg text-muted-foreground">
-              選擇最適合您需求的方案
+              不同方案享有不同等級的客戶支援服務
             </p>
           </div>
 
-          <div className="max-w-6xl mx-auto overflow-x-auto">
+          <div className="max-w-5xl mx-auto">
             <div className="bg-card rounded-2xl shadow-xl border border-border overflow-hidden">
               <table className="w-full">
                 <thead className="bg-muted/50">
                   <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold">功能</th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold">STARTER</th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold bg-primary/5">
-                      PROFESSIONAL
-                      <div className="text-xs font-normal text-primary mt-1">最受歡迎</div>
-                    </th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold">BUSINESS</th>
-                    <th className="px-6 py-4 text-center text-sm font-semibold">AGENCY</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold">支援等級</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold">響應時間</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold">支援渠道</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold">服務時間</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  <tr className="hover:bg-muted/30">
-                    <td className="px-6 py-4 font-medium">每月 Credits</td>
-                    <td className="px-6 py-4 text-center">25K</td>
-                    <td className="px-6 py-4 text-center bg-primary/5 font-semibold text-primary">100K</td>
-                    <td className="px-6 py-4 text-center">300K</td>
-                    <td className="px-6 py-4 text-center">750K</td>
-                  </tr>
-                  <tr className="hover:bg-muted/30">
-                    <td className="px-6 py-4 font-medium">使用者席位</td>
-                    <td className="px-6 py-4 text-center">1</td>
-                    <td className="px-6 py-4 text-center bg-primary/5">3</td>
-                    <td className="px-6 py-4 text-center">10</td>
-                    <td className="px-6 py-4 text-center">無限制</td>
-                  </tr>
-                  <tr className="hover:bg-muted/30">
-                    <td className="px-6 py-4 font-medium">WordPress 網站</td>
-                    <td className="px-6 py-4 text-center">1</td>
-                    <td className="px-6 py-4 text-center bg-primary/5">5</td>
-                    <td className="px-6 py-4 text-center">無限制</td>
-                    <td className="px-6 py-4 text-center">無限制</td>
-                  </tr>
-                  <tr className="hover:bg-muted/30">
-                    <td className="px-6 py-4 font-medium">圖片 & 文章生成</td>
-                    <td className="px-6 py-4 text-center">無限制</td>
-                    <td className="px-6 py-4 text-center bg-primary/5">無限制</td>
-                    <td className="px-6 py-4 text-center">無限制</td>
-                    <td className="px-6 py-4 text-center">無限制</td>
-                  </tr>
-                  <tr className="hover:bg-muted/30">
-                    <td className="px-6 py-4 font-medium">API 存取</td>
-                    <td className="px-6 py-4 text-center text-muted-foreground">—</td>
-                    <td className="px-6 py-4 text-center bg-primary/5">
-                      <Check className="w-5 h-5 text-primary mx-auto" />
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <Check className="w-5 h-5 text-primary mx-auto" />
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <Check className="w-5 h-5 text-primary mx-auto" />
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-muted/30">
-                    <td className="px-6 py-4 font-medium">團隊協作功能</td>
-                    <td className="px-6 py-4 text-center text-muted-foreground">—</td>
-                    <td className="px-6 py-4 text-center bg-primary/5 text-muted-foreground">—</td>
-                    <td className="px-6 py-4 text-center">
-                      <Check className="w-5 h-5 text-primary mx-auto" />
-                    </td>
-                    <td className="px-6 py-4 text-center">
-                      <Check className="w-5 h-5 text-primary mx-auto" />
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-muted/30">
-                    <td className="px-6 py-4 font-medium">白標 (White-Label)</td>
-                    <td className="px-6 py-4 text-center text-muted-foreground">—</td>
-                    <td className="px-6 py-4 text-center bg-primary/5 text-muted-foreground">—</td>
-                    <td className="px-6 py-4 text-center text-muted-foreground">—</td>
-                    <td className="px-6 py-4 text-center">
-                      <Check className="w-5 h-5 text-primary mx-auto" />
-                    </td>
-                  </tr>
-                  <tr className="hover:bg-muted/30">
-                    <td className="px-6 py-4 font-medium">客服支援</td>
-                    <td className="px-6 py-4 text-center">標準支援</td>
-                    <td className="px-6 py-4 text-center bg-primary/5">優先支援</td>
-                    <td className="px-6 py-4 text-center">專屬客戶經理</td>
-                    <td className="px-6 py-4 text-center">專屬客戶經理</td>
-                  </tr>
+                  {Object.entries(SUPPORT_TIERS).map(([key, tier]) => (
+                    <tr key={key} className="hover:bg-muted/30">
+                      <td className="px-6 py-4 font-medium">{tier.label}</td>
+                      <td className="px-6 py-4 text-muted-foreground">{tier.response_time}</td>
+                      <td className="px-6 py-4 text-muted-foreground">{tier.channels.join(', ')}</td>
+                      <td className="px-6 py-4 text-muted-foreground">{tier.availability}</td>
+                    </tr>
+                  ))}
                 </tbody>
               </table>
             </div>
           </div>
         </section>
 
-        {/* Credit 購買包作為誘餌方案 */}
         <section className="mb-16">
           <div className="text-center mb-12 space-y-4">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 backdrop-blur-sm">
               <CreditCard className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-              <span className="text-sm font-medium text-amber-700 dark:text-amber-300">彈性加值包（用完再買）</span>
+              <span className="text-sm font-medium text-amber-700 dark:text-amber-300">彈性加值包（永不過期）</span>
             </div>
             <h2 className="text-4xl font-bold">彈性加值，永不過期</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -923,73 +637,6 @@ export default function PricingPage() {
                   </div>
                 )
               })}
-            </div>
-          </div>
-
-          <div className="text-center space-y-4">
-            <p className="text-sm text-muted-foreground">
-              💡 <span className="font-medium">提示：</span>訂閱 <span className="text-primary font-semibold">STARTER 方案</span> (NT$ 699)，每月即享 <span className="text-primary font-semibold">25K Credits</span>，更划算！
-            </p>
-            <div className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-purple-50 dark:bg-purple-900/20 border border-purple-200 dark:border-purple-800">
-              <Crown className="w-5 h-5 text-purple-600 dark:text-purple-400" />
-              <p className="text-sm font-medium text-purple-700 dark:text-purple-300">
-                所有<span className="font-bold">終身會員</span>，皆享 Credit 購買包 <span className="font-bold text-lg">8 折優惠</span>
-              </p>
-            </div>
-          </div>
-        </section>
-
-        <section className="mt-24">
-          <div className="flex items-center gap-3 mb-6">
-            <div className="p-2 bg-gradient-to-br from-orange-500 to-red-500 rounded-lg">
-              <Cpu className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h2 className="text-2xl font-bold">AI 模型定價</h2>
-              <p className="text-sm text-muted-foreground">動態計費，透明價格</p>
-            </div>
-          </div>
-          <div className="bg-card rounded-2xl shadow-lg overflow-hidden border border-border">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="bg-muted/50">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      模型
-                    </th>
-                    <th className="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      供應商
-                    </th>
-                    <th className="px-6 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Input / 1M Token
-                    </th>
-                    <th className="px-6 py-4 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                      Output / 1M Token
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {aiModels.map((model) => (
-                    <tr
-                      key={model.id}
-                      className="hover:bg-muted/50 transition-colors"
-                    >
-                      <td className="px-6 py-4 text-sm font-medium">
-                        {model.model_name}
-                      </td>
-                      <td className="px-6 py-4 text-sm text-muted-foreground capitalize">
-                        {model.provider}
-                      </td>
-                      <td className="px-6 py-4 text-right text-sm text-muted-foreground font-mono">
-                        ${model.input_price_per_1m.toFixed(3)}
-                      </td>
-                      <td className="px-6 py-4 text-right text-sm text-muted-foreground font-mono">
-                        ${model.output_price_per_1m.toFixed(3)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             </div>
           </div>
         </section>

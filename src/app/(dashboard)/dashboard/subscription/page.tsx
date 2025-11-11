@@ -38,7 +38,7 @@ export default async function SubscriptionPage() {
   // 從 company_subscriptions 表讀取訂閱資訊（包含 plan 資訊）
   const { data: companySubscription } = await supabase
     .from('company_subscriptions')
-    .select('monthly_quota_balance, purchased_token_balance, monthly_token_quota, current_period_end, subscription_plans(name, slug)')
+    .select('monthly_quota_balance, purchased_token_balance, monthly_token_quota, current_period_end, is_lifetime, subscription_plans(name, slug, billing_period)')
     .eq('company_id', member.company_id)
     .eq('status', 'active')
     .single()
@@ -50,8 +50,9 @@ export default async function SubscriptionPage() {
     .from('subscription_plans')
     .select<'*', Database['public']['Tables']['subscription_plans']['Row']>('*')
     .eq('is_active', true)
-    .eq('is_recurring', true)
-    .order('monthly_price', { ascending: true })
+    .eq('is_lifetime', true)
+    .neq('slug', 'free')
+    .order('lifetime_price', { ascending: true })
 
   const { data: tokenPackages } = await supabase
     .from('token_packages')
@@ -78,7 +79,7 @@ export default async function SubscriptionPage() {
               升級方案
             </a>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
             <div>
               <p className="text-sm text-muted-foreground mb-1">方案類型</p>
               <p className="text-lg font-semibold">
@@ -91,7 +92,12 @@ export default async function SubscriptionPage() {
               <>
                 {/* 免費方案：顯示一次性 Token 餘額 */}
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Token 餘額</p>
+                  <p className="text-sm text-muted-foreground mb-1">繳費類型</p>
+                  <p className="text-lg font-semibold">-</p>
+                  <p className="text-xs text-muted-foreground mt-1">免費方案</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Credit 餘額</p>
                   <p className="text-lg font-semibold">
                     {companySubscription?.purchased_token_balance?.toLocaleString() || 0}
                   </p>
@@ -113,6 +119,11 @@ export default async function SubscriptionPage() {
               <>
                 {/* 付費方案：顯示月配額和購買 Token */}
                 <div>
+                  <p className="text-sm text-muted-foreground mb-1">繳費類型</p>
+                  <p className="text-lg font-semibold">終身</p>
+                  <p className="text-xs text-purple-600 mt-1">一次付清，永久使用</p>
+                </div>
+                <div>
                   <p className="text-sm text-muted-foreground mb-1">月配額</p>
                   <p className="text-lg font-semibold">
                     {companySubscription?.monthly_quota_balance?.toLocaleString() || 0} / {companySubscription?.monthly_token_quota?.toLocaleString() || 0}
@@ -120,7 +131,7 @@ export default async function SubscriptionPage() {
                   <p className="text-xs text-muted-foreground mt-1">剩餘 / 總額</p>
                 </div>
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">購買 Tokens</p>
+                  <p className="text-sm text-muted-foreground mb-1">購買 Credit</p>
                   <p className="text-lg font-semibold">
                     {companySubscription?.purchased_token_balance?.toLocaleString() || 0}
                   </p>
@@ -131,8 +142,9 @@ export default async function SubscriptionPage() {
                   <p className="text-lg font-semibold">
                     {companySubscription?.current_period_end
                       ? new Date(companySubscription.current_period_end).toLocaleDateString('zh-TW', { year: 'numeric', month: 'short', day: 'numeric' })
-                      : '無'}
+                      : '永久'}
                   </p>
+                  <p className="text-xs text-muted-foreground mt-1">月配額每月重置</p>
                 </div>
               </>
             )}
@@ -150,7 +162,7 @@ export default async function SubscriptionPage() {
       </div>
 
       <div className="mb-12">
-        <h2 className="text-2xl font-bold mb-6">Token 包購買</h2>
+        <h2 className="text-2xl font-bold mb-6">Credit 包購買</h2>
         <TokenPackages packages={tokenPackages || []} companyId={member.company_id} userEmail={user.email || ''} />
       </div>
 

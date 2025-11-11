@@ -24,19 +24,16 @@ export function SubscriptionPlans({ plans, companyId, userEmail, currentTier }: 
     try {
       setLoading(plan.id)
 
-      // 使用今天的日期作為每月扣款日
-      const today = new Date()
-      const dayOfMonth = today.getDate().toString().padStart(2, '0')
-
-      const response = await fetch('/api/payment/recurring/create', {
+      const response = await fetch('/api/payment/onetime/create', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          planId: plan.id,
-          periodType: 'M',
-          periodPoint: dayOfMonth,
-          periodStartType: 2,
-          periodTimes: 12,
+          companyId,
+          paymentType: 'lifetime',
+          relatedId: plan.id,
+          amount: plan.lifetime_price || 0,
+          description: `${plan.name} 終身方案`,
+          email: userEmail,
         }),
       })
 
@@ -53,12 +50,14 @@ export function SubscriptionPlans({ plans, companyId, userEmail, currentTier }: 
       if (data.paymentForm) {
         const formData = {
           apiUrl: data.paymentForm.apiUrl,
-          postData: data.paymentForm.postData,
+          tradeInfo: data.paymentForm.tradeInfo,
+          tradeSha: data.paymentForm.tradeSha,
+          version: data.paymentForm.version,
           merchantId: data.paymentForm.merchantId
         }
 
         const encodedForm = encodeURIComponent(JSON.stringify(formData))
-        router.push(`/dashboard/billing/authorizing?paymentForm=${encodedForm}`)
+        router.push(`/dashboard/billing/checkout?paymentForm=${encodedForm}`)
       } else {
         throw new Error('缺少付款表單資料')
       }
@@ -109,11 +108,17 @@ export function SubscriptionPlans({ plans, companyId, userEmail, currentTier }: 
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <div className="flex items-baseline gap-2">
-                  <span className="text-4xl font-bold">
-                    ${plan.monthly_price?.toLocaleString()}
+                  <span className="text-xl text-muted-foreground line-through">
+                    NT$ {((plan.lifetime_price || 0) * 1.5).toLocaleString()}
                   </span>
-                  <span className="text-muted-foreground">/月</span>
                 </div>
+                <div className="flex items-baseline gap-2">
+                  <span className="text-4xl font-bold text-purple-600">
+                    NT$ {plan.lifetime_price?.toLocaleString()}
+                  </span>
+                  <span className="text-muted-foreground">一次性</span>
+                </div>
+                <p className="text-xs text-purple-600">終身使用，月配額每月自動重置</p>
               </div>
 
               <div className="space-y-2">

@@ -20,7 +20,6 @@ export default async function DashboardPage() {
   const companies = await getUserCompanies(user.id)
   const subscriptionTier = await getUserSubscriptionTier()
 
-  // 從 company_subscriptions 表讀取 token 餘額
   const supabase = await createClient()
   const { data: membership } = await supabase
     .from('company_members')
@@ -30,6 +29,9 @@ export default async function DashboardPage() {
     .single()
 
   let tokenBalance = 0
+  let articlesCount = 0
+  let websitesCount = 0
+
   if (membership) {
     const { data: subscription } = await supabase
       .from('company_subscriptions')
@@ -39,12 +41,26 @@ export default async function DashboardPage() {
       .single()
 
     if (subscription) {
-      // 免費方案（monthly_token_quota = 0）只計算購買的 Token
       const isFree = subscription.monthly_token_quota === 0
       tokenBalance = isFree
         ? subscription.purchased_token_balance
         : (subscription.monthly_quota_balance + subscription.purchased_token_balance)
     }
+
+    const { count: articlesTotal } = await supabase
+      .from('generated_articles')
+      .select('*', { count: 'exact', head: true })
+      .eq('company_id', membership.company_id)
+
+    articlesCount = articlesTotal || 0
+
+    const { count: websitesTotal } = await supabase
+      .from('website_configs')
+      .select('*', { count: 'exact', head: true })
+      .eq('company_id', membership.company_id)
+      .eq('is_active', true)
+
+    websitesCount = websitesTotal || 0
   }
 
   return (
@@ -61,17 +77,15 @@ export default async function DashboardPage() {
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         <StatCard
           title="總文章數"
-          value="24"
+          value={articlesCount.toString()}
           icon={FileText}
-          trend={{ value: 12.5, isPositive: true }}
           iconBgColor="bg-primary/10"
           iconColor="text-primary"
         />
         <StatCard
           title="網站數量"
-          value="3"
+          value={websitesCount.toString()}
           icon={Globe}
-          trend={{ value: 8.2, isPositive: true }}
           iconBgColor="bg-success/10"
           iconColor="text-success"
         />

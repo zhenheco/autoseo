@@ -148,17 +148,32 @@ export class NewebPayService {
     postData: string
     apiUrl: string
   } {
-    // 注意：定期定額 API 必須使用 Version 1.5
-    // 加密資料內部也需要 MerchantID_（根據文件要求）
+    if (params.periodType !== 'M') {
+      throw new Error('只支援月繳訂閱 (PeriodType: M)')
+    }
+
+    if (!params.periodPoint) {
+      throw new Error('月繳訂閱必須提供 periodPoint（扣款日期）')
+    }
+
+    const day = parseInt(params.periodPoint)
+    if (isNaN(day) || day < 1 || day > 31) {
+      throw new Error('periodPoint 必須是 1-31 之間的數字')
+    }
+
+    const formattedDay = day.toString().padStart(2, '0')
+    console.log('[NewebPay] 月繳訂閱 - PeriodPoint: ', params.periodPoint, ' -> ', formattedDay)
+
     const periodData: Record<string, string> = {
-      MerchantID_: this.config.merchantId,  // 注意：加密內也需要 MerchantID_
+      MerchantID_: this.config.merchantId,
       RespondType: 'JSON',
       TimeStamp: Math.floor(Date.now() / 1000).toString(),
-      Version: '1.5',  // 必須是 1.5，不能是 1.0
+      Version: '1.5',
       MerOrderNo: params.orderNo,
       ProdDesc: params.description,
       PeriodAmt: params.amount.toString(),
-      PeriodType: params.periodType,
+      PeriodType: 'M',
+      PeriodPoint: formattedDay,
       PeriodStartType: params.periodStartType.toString(),
       ReturnURL: params.returnUrl,
       NotifyURL: params.notifyUrl,
@@ -168,19 +183,6 @@ export class NewebPayService {
       CREDIT: '1',
     }
 
-    if (params.periodPoint) {
-      // 確保月繳的日期是兩位數格式 (01-31)
-      if (params.periodType === 'M') {
-        const day = parseInt(params.periodPoint)
-        const formattedDay = day.toString().padStart(2, '0')
-        console.log('[NewebPay] 格式化 PeriodPoint: ', params.periodPoint, ' -> ', formattedDay)
-        periodData.PeriodPoint = formattedDay
-      } else {
-        periodData.PeriodPoint = params.periodPoint
-      }
-    }
-
-    // NewebPay 定期定額要求必須提供 PeriodTimes，無限期訂閱使用 99
     console.log('[NewebPay] PeriodTimes 原始值: ', params.periodTimes)
     if (params.periodTimes === 0 || params.periodTimes === undefined || params.periodTimes === null) {
       console.log('[NewebPay] 設定 PeriodTimes 為 99 (無限期)')

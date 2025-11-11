@@ -60,7 +60,7 @@ export function UpgradePromptCard({ currentTier, tokenBalance }: UpgradePromptCa
     }
   ]
 
-  const handleUpgrade = async (planSlug: string, yearlyPrice: number, planName: string) => {
+  const handleUpgrade = async (planSlug: string, _yearlyPrice: number, _planName: string) => {
     try {
       setProcessingSlug(planSlug)
 
@@ -72,19 +72,6 @@ export function UpgradePromptCard({ currentTier, tokenBalance }: UpgradePromptCa
         return
       }
 
-      // 獲取公司 ID
-      const { data: membership } = await supabase
-        .from('company_members')
-        .select('company_id')
-        .eq('user_id', user.id)
-        .single()
-
-      if (!membership) {
-        alert('找不到公司資訊')
-        return
-      }
-
-      // 獲取方案 ID
       const { data: plan } = await supabase
         .from('subscription_plans')
         .select('id')
@@ -96,22 +83,13 @@ export function UpgradePromptCard({ currentTier, tokenBalance }: UpgradePromptCa
         return
       }
 
-      // 創建年繳訂閱
       const response = await fetch('/api/payment/recurring/create', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          companyId: membership.company_id,
           planId: plan.id,
-          amount: yearlyPrice,
-          description: `${planName} 年繳方案`,
-          email: user.email || '',
-          periodType: 'Y',
-          periodPoint: '1',
-          periodStartType: 2,
-          periodTimes: 0,
         }),
       })
 
@@ -122,7 +100,6 @@ export function UpgradePromptCard({ currentTier, tokenBalance }: UpgradePromptCa
       }
 
       if (data.paymentForm) {
-        // 提交付款表單
         const formData = {
           apiUrl: data.paymentForm.apiUrl,
           postData: data.paymentForm.postData,

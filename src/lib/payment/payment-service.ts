@@ -17,10 +17,10 @@ export interface CreateRecurringOrderParams {
   amount: number
   description: string
   email: string
-  periodType: 'D' | 'W' | 'M' | 'Y'
+  periodType: 'M'
   periodPoint?: string
-  periodStartType: 1 | 2 | 3
-  periodTimes?: number
+  periodStartType: 2
+  periodTimes: 12
 }
 
 export class PaymentService {
@@ -134,22 +134,33 @@ export class PaymentService {
     paymentForm?: {
       merchantId: string
       postData: string
-      postDataSha?: string  // 定期定額不需要 postDataSha
+      postDataSha?: string
       apiUrl: string
     }
     error?: string
   }> {
-    console.log('[PaymentService] 建立定期定額委託 - 收到參數:', {
+    if (params.periodType !== 'M') {
+      return { success: false, error: '只支援月繳訂閱' }
+    }
+
+    if (params.periodTimes !== 12) {
+      return { success: false, error: '月繳訂閱必須為 12 期' }
+    }
+
+    if (params.periodStartType !== 2) {
+      return { success: false, error: '月繳訂閱必須使用授權完成後開始扣款' }
+    }
+
+    const periodPoint = params.periodPoint || String(new Date().getDate())
+
+    console.log('[PaymentService] 建立月繳 12 期委託:', {
       companyId: params.companyId,
       planId: params.planId,
       amount: params.amount,
-      periodType: params.periodType,
-      periodPoint: params.periodPoint,
-      periodStartType: params.periodStartType
+      periodPoint
     })
 
     const mandateNo = this.generateMandateNo()
-    console.log('[PaymentService] 生成委託編號:', mandateNo)
 
     const { data: mandateData, error: mandateError } = await this.supabase
       .from('recurring_mandates')
@@ -157,30 +168,20 @@ export class PaymentService {
         company_id: params.companyId,
         plan_id: params.planId,
         mandate_no: mandateNo,
-        period_type: params.periodType,
-        period_point: params.periodPoint,
-        period_times: params.periodTimes,
+        period_type: 'M',
+        period_point: periodPoint,
+        period_times: 12,
         period_amount: params.amount,
-        total_amount: params.periodTimes ? params.amount * params.periodTimes : null,
+        total_amount: params.amount * 12,
         status: 'pending',
       })
       .select<'*', Database['public']['Tables']['recurring_mandates']['Row']>()
       .single()
 
     if (mandateError || !mandateData) {
-      console.error('[PaymentService] 建立定期定額委託失敗:', {
-        mandateNo,
-        error: mandateError,
-        errorMessage: mandateError?.message,
-        errorDetails: mandateError?.details
-      })
+      console.error('[PaymentService] 建立委託失敗:', mandateError)
       return { success: false, error: '建立定期定額委託失敗' }
     }
-
-    console.log('[PaymentService] 委託寫入資料庫成功:', {
-      mandateId: mandateData.id,
-      mandateNo: mandateData.mandate_no
-    })
 
     const orderNo = this.generateOrderNo()
 
@@ -216,24 +217,16 @@ export class PaymentService {
       amount: params.amount,
       description: params.description,
       email: params.email,
-      periodType: params.periodType,
-      periodPoint: params.periodPoint,
-      periodStartType: params.periodStartType,
-      periodTimes: params.periodTimes,
+      periodType: 'M',
+      periodPoint,
+      periodStartType: 2,
+      periodTimes: 12,
       returnUrl: `${baseUrl}/api/payment/recurring/callback`,
       notifyUrl: `${baseUrl}/api/payment/recurring/notify`,
       clientBackUrl: `${baseUrl}/dashboard/subscription`,
     }
 
     const paymentForm = this.newebpay.createRecurringPayment(paymentParams)
-
-    console.log('[PaymentService] 定期定額委託建立完成:', {
-      success: true,
-      mandateId: mandateData.id,
-      mandateNo: mandateData.mandate_no,
-      orderNo: orderData.order_no,
-      orderId: orderData.id
-    })
 
     return {
       success: true,
@@ -440,6 +433,32 @@ export class PaymentService {
           if (updateError) {
             console.error('[PaymentService] 更新 Token 餘額失敗:', updateError)
             return { success: false, error: '更新 Token 餘額失敗' }
+          }
+
+          // 同時更新 company_subscriptions 的 purchased_token_balance
+          const { data: subscription } = await this.supabase
+            .from('company_subscriptions')
+            .select('purchased_token_balance')
+            .eq('company_id', orderData.company_id)
+            .eq('status', 'active')
+            .maybeSingle()
+
+          if (subscription) {
+            const newPurchasedBalance = (subscription.purchased_token_balance || 0) + packageData.tokens
+            const { error: subscriptionUpdateError } = await this.supabase
+              .from('company_subscriptions')
+              .update({ purchased_token_balance: newPurchasedBalance })
+              .eq('company_id', orderData.company_id)
+              .eq('status', 'active')
+
+            if (subscriptionUpdateError) {
+              console.error('[PaymentService] 更新訂閱購買餘額失敗:', subscriptionUpdateError)
+            } else {
+              console.log('[PaymentService] 訂閱購買餘額已更新:', {
+                balanceBefore: subscription.purchased_token_balance || 0,
+                balanceAfter: newPurchasedBalance
+              })
+            }
           }
 
           console.log('[PaymentService] Token 包處理成功:', {
@@ -798,12 +817,20 @@ export class PaymentService {
   ): string {
     const now = new Date()
 
-    switch (periodType) {
-      case 'M':
-        const day = periodPoint ? parseInt(periodPoint) : now.getDate()
-        const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, day, 0, 0, 0, 0)
-        return nextMonth.toISOString()
+    if (periodType === 'M') {
+      const targetDay = periodPoint ? parseInt(periodPoint) : now.getDate()
+      const nextMonth = now.getMonth() + 1
+      const nextYear = nextMonth > 11 ? now.getFullYear() + 1 : now.getFullYear()
+      const actualMonth = nextMonth > 11 ? 0 : nextMonth
 
+      const lastDayOfNextMonth = new Date(nextYear, actualMonth + 1, 0).getDate()
+      const actualDay = Math.min(targetDay, lastDayOfNextMonth)
+
+      const nextDate = new Date(nextYear, actualMonth, actualDay, 0, 0, 0, 0)
+      return nextDate.toISOString()
+    }
+
+    switch (periodType) {
       case 'Y':
         const [month, dayOfMonth] = periodPoint ? periodPoint.split(',').map(Number) : [now.getMonth() + 1, now.getDate()]
         const nextYear = new Date(now.getFullYear() + 1, month - 1, dayOfMonth)
