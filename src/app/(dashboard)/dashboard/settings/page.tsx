@@ -1,4 +1,4 @@
-import { getUser, getUserPrimaryCompany, getCompanyMembers } from '@/lib/auth'
+import { getUser, getUserPrimaryCompany } from '@/lib/auth'
 import { redirect } from 'next/navigation'
 import { SettingsClient } from './settings-client'
 import { createClient } from '@/lib/supabase/server'
@@ -40,14 +40,9 @@ export default async function SettingsPage({
     redirect('/dashboard')
   }
 
-  const members = await getCompanyMembers(company.id)
-
   return (
     <SettingsClient
       company={company}
-      members={members}
-      currentUserId={user.id}
-      currentUserRole={currentMember.role}
       searchParams={params}
     />
   )
