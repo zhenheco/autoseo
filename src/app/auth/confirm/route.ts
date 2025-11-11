@@ -6,7 +6,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const token_hash = searchParams.get('token_hash')
   const type = searchParams.get('type') as EmailOtpType | null
-  const next = searchParams.get('next') ?? '/zh/dashboard'
+  const next = searchParams.get('next') ?? '/dashboard'
 
   const redirectTo = request.nextUrl.clone()
   redirectTo.pathname = next
@@ -28,13 +28,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(redirectTo)
     }
 
-    redirectTo.pathname = '/zh/login'
+    redirectTo.pathname = '/login'
     redirectTo.searchParams.set('error', 'verification_failed')
     redirectTo.searchParams.set('error_description', error.message)
     return NextResponse.redirect(redirectTo)
   }
 
-  redirectTo.pathname = '/zh/login'
+  redirectTo.pathname = '/login'
   redirectTo.searchParams.set('error', 'invalid_request')
   redirectTo.searchParams.set('error_description', 'Missing token_hash or type parameter')
   return NextResponse.redirect(redirectTo)
