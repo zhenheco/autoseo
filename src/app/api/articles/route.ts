@@ -39,12 +39,11 @@ export async function GET() {
         reading_time,
         wordpress_post_url,
         created_at,
-        published_at,
-        html_content
+        published_at
       `)
       .eq('company_id', membership.company_id)
       .order('created_at', { ascending: false })
-      .limit(100);
+      .limit(30);
 
     if (error) {
       console.error('Failed to fetch articles:', error);

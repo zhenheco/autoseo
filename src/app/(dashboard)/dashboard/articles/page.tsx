@@ -37,12 +37,27 @@ export default function ArticlesPage() {
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const fetchData = async () => {
+  const fetchData = async (retryCount = 0) => {
+    const MAX_RETRIES = 3
+    const RETRY_DELAY = 10000
+
     try {
       const [articlesRes, jobsRes] = await Promise.all([
         fetch('/api/articles'),
         fetch('/api/articles/jobs'),
       ])
+
+      if (articlesRes.status === 500 && retryCount < MAX_RETRIES) {
+        console.warn(`[ArticlesPage] 500 error fetching articles, retrying in ${RETRY_DELAY}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`)
+        setTimeout(() => fetchData(retryCount + 1), RETRY_DELAY)
+        return
+      }
+
+      if (jobsRes.status === 500 && retryCount < MAX_RETRIES) {
+        console.warn(`[ArticlesPage] 500 error fetching jobs, retrying in ${RETRY_DELAY}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`)
+        setTimeout(() => fetchData(retryCount + 1), RETRY_DELAY)
+        return
+      }
 
       if (articlesRes.ok) {
         const data = await articlesRes.json()
@@ -56,17 +71,28 @@ export default function ArticlesPage() {
           })
         }
         setArticles(data.articles || [])
+      } else if (articlesRes.status !== 500) {
+        console.error('[ArticlesPage] Failed to fetch articles:', articlesRes.status)
       }
 
       if (jobsRes.ok) {
         const data = await jobsRes.json()
         console.log('[ArticlesPage] Fetched jobs:', data.jobs?.length || 0, 'jobs')
         setJobs(data.jobs || [])
+      } else if (jobsRes.status !== 500) {
+        console.error('[ArticlesPage] Failed to fetch jobs:', jobsRes.status)
       }
     } catch (error) {
-      console.error('Failed to fetch data:', error)
+      if (retryCount < MAX_RETRIES) {
+        console.warn(`[ArticlesPage] Network error, retrying in ${RETRY_DELAY}ms (attempt ${retryCount + 1}/${MAX_RETRIES})`, error)
+        setTimeout(() => fetchData(retryCount + 1), RETRY_DELAY)
+        return
+      }
+      console.error('[ArticlesPage] Failed to fetch data after retries:', error)
     } finally {
-      setLoading(false)
+      if (retryCount === 0) {
+        setLoading(false)
+      }
     }
   }
 
