@@ -47,9 +47,18 @@ ${fullHtml}
 
     const linkCount = await this.countLinks(fullHtml);
 
-    const { parseHTML } = await import('linkedom');
-    const { document } = parseHTML(fullHtml);
-    const finalHtml = document.body?.innerHTML || fullHtml;
+    let finalHtml = fullHtml;
+    try {
+      const { parseHTML } = await import('linkedom');
+      const { document } = parseHTML(fullHtml);
+      if (document.body) {
+        finalHtml = document.body.innerHTML;
+      } else {
+        console.warn('[HTMLAgent] ⚠️ No body element found after parseHTML, using full HTML');
+      }
+    } catch (error) {
+      console.warn('[HTMLAgent] ⚠️ Failed to extract body innerHTML, using full HTML', error);
+    }
 
     return {
       html: finalHtml,
