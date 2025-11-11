@@ -106,9 +106,7 @@ export default function ArticlesPage() {
       id: job.id,
       keyword: job.keywords[0] || '',
       title: job.metadata?.title || job.keywords.join(', '),
-      displayTitle: job.metadata?.title
-        ? `${job.keywords[0] || ''} - ${job.metadata.title}`
-        : job.keywords.join(', '),
+      displayTitle: job.metadata?.title || job.keywords.join(', '),
       status: job.status,
       created_at: job.created_at,
     })),

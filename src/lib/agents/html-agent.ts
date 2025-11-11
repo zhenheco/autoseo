@@ -9,18 +9,52 @@ export class HTMLAgent extends BaseAgent<HTMLInput, HTMLOutput> {
   protected async process(input: HTMLInput): Promise<HTMLOutput> {
     let html = input.html;
 
-    html = await this.insertInternalLinks(html, input.internalLinks);
+    let fullHtml = html;
+    if (!fullHtml.includes('<html>') && !fullHtml.includes('<!DOCTYPE')) {
+      fullHtml = `<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+${fullHtml}
+</body>
+</html>`;
+    }
 
-    html = await this.insertExternalReferences(html, input.externalReferences);
+    try {
+      fullHtml = await this.insertInternalLinks(fullHtml, input.internalLinks);
+    } catch (error) {
+      this.logger.warn('⚠️ Failed to insert internal links, continuing...', { error });
+    }
 
-    html = await this.insertFAQSchema(html);
+    try {
+      fullHtml = await this.insertExternalReferences(fullHtml, input.externalReferences);
+    } catch (error) {
+      this.logger.warn('⚠️ Failed to insert external references, continuing...', { error });
+    }
 
-    html = await this.optimizeForWordPress(html);
+    try {
+      fullHtml = await this.insertFAQSchema(fullHtml);
+    } catch (error) {
+      this.logger.warn('⚠️ Failed to insert FAQ schema, continuing...', { error });
+    }
 
-    const linkCount = await this.countLinks(html);
+    try {
+      fullHtml = await this.optimizeForWordPress(fullHtml);
+    } catch (error) {
+      this.logger.warn('⚠️ Failed to optimize for WordPress, continuing...', { error });
+    }
+
+    const linkCount = await this.countLinks(fullHtml);
+
+    const { parseHTML } = await import('linkedom');
+    const { document } = parseHTML(fullHtml);
+    const finalHtml = document.body?.innerHTML || fullHtml;
 
     return {
-      html,
+      html: finalHtml,
       linkCount,
       executionInfo: this.getExecutionInfo('html-processor'),
     };
@@ -295,9 +329,26 @@ export class HTMLAgent extends BaseAgent<HTMLInput, HTMLOutput> {
     const { document } = parseHTML(html);
     const body = document.body;
 
-    const faqHeadings = Array.from(body.querySelectorAll('h2, h3')).filter((h) =>
-      (h.textContent || '').toLowerCase().includes('常見問題')
-    );
+    if (!body) {
+      this.logger.warn('⚠️ No body element found in HTML');
+      return html;
+    }
+
+    const faqPatterns = [
+      '常見問題',
+      'faq',
+      'q&a',
+      'q & a',
+      'qa',
+      '問與答',
+      '問答',
+      'frequently asked questions',
+    ];
+
+    const faqHeadings = Array.from(body.querySelectorAll('h2, h3')).filter((h) => {
+      const text = (h.textContent || '').toLowerCase();
+      return faqPatterns.some((pattern) => text.includes(pattern));
+    });
 
     if (faqHeadings.length === 0) {
       return html;
@@ -308,12 +359,12 @@ export class HTMLAgent extends BaseAgent<HTMLInput, HTMLOutput> {
 
     let currentElement = faqSection.nextElementSibling;
     while (currentElement && !['H1', 'H2'].includes(currentElement.tagName)) {
-      if (currentElement.tagName === 'H3') {
+      if (currentElement.tagName === 'H3' || currentElement.tagName === 'H4') {
         const questionText = (currentElement.textContent || '').replace(/^Q:\s*/i, '').trim();
         let answerText = '';
 
         let nextEl = currentElement.nextElementSibling;
-        while (nextEl && !['H1', 'H2', 'H3'].includes(nextEl.tagName)) {
+        while (nextEl && !['H1', 'H2', 'H3', 'H4'].includes(nextEl.tagName)) {
           const text = (nextEl.textContent || '').replace(/^A:\s*/i, '').trim();
           if (text) {
             answerText += text + ' ';
@@ -353,6 +404,8 @@ export class HTMLAgent extends BaseAgent<HTMLInput, HTMLOutput> {
     scriptTag.textContent = JSON.stringify(schema, null, 2);
 
     body.appendChild(scriptTag);
+
+    this.logger.info('✅ FAQ Schema inserted', { faqCount: faqItems.length });
 
     return body.innerHTML;
   }

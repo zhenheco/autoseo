@@ -74,6 +74,14 @@ export class ParallelOrchestrator {
         articleJobId: input.articleJobId,
       };
 
+      console.log('[Orchestrator] 📋 Agent Models Configuration', {
+        research_model: agentConfig.research_model,
+        strategy_model: agentConfig.strategy_model,
+        writing_model: agentConfig.writing_model,
+        meta_model: agentConfig.meta_model || agentConfig.simple_processing_model || 'deepseek-chat',
+        image_model: workflowSettings.image_model || 'gpt-image-1-mini',
+      });
+
       const phase1Start = Date.now();
       const researchAgent = new ResearchAgent(aiConfig, context);
       const researchOutput = await researchAgent.execute({

@@ -43,6 +43,18 @@ export class R2Client {
     fileName: string,
     contentType: string = 'image/png'
   ): Promise<UploadResult> {
+    console.log('[R2 Upload Diagnostics]', {
+      filename: fileName,
+      contentType,
+      base64Length: base64Data.length,
+      bucketName: this.bucketName,
+    });
+
+    const nonAsciiMatch = fileName.match(/[^\x00-\x7F]/g);
+    if (nonAsciiMatch) {
+      console.warn('[R2] ⚠️ Non-ASCII characters detected in filename:', nonAsciiMatch);
+    }
+
     const buffer = Buffer.from(base64Data, 'base64');
     const fileKey = `images/${Date.now()}-${fileName}`;
 
@@ -54,7 +66,18 @@ export class R2Client {
       CacheControl: 'public, max-age=31536000',
     });
 
-    await this.client.send(command);
+    try {
+      await this.client.send(command);
+      console.log('[R2] ✅ Upload successful:', fileKey);
+    } catch (error) {
+      const err = error as Error;
+      console.error('[R2] ❌ Upload failed:', {
+        error: err.message,
+        stack: err.stack,
+        fileKey,
+      });
+      throw error;
+    }
 
     const url = `${this.publicUrl}/${fileKey}`;
 
@@ -81,14 +104,26 @@ export function getR2Config(): R2Config | null {
   const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
   const bucketName = process.env.R2_BUCKET_NAME;
 
+  console.log('[R2 Config Check]', {
+    R2_ACCOUNT_ID: accountId ? 'SET' : 'MISSING',
+    R2_ACCESS_KEY_ID: accessKeyId ? 'SET' : 'MISSING',
+    R2_SECRET_ACCESS_KEY: secretAccessKey ? 'SET' : 'MISSING',
+    R2_BUCKET_NAME: bucketName ? 'SET' : 'MISSING',
+  });
+
   if (!accountId || !accessKeyId || !secretAccessKey || !bucketName) {
+    console.warn('[R2] ⚠️ R2 configuration incomplete, R2 upload disabled');
     return null;
   }
 
+  if (secretAccessKey.match(/[^\x00-\x7F]/)) {
+    console.warn('[R2] ⚠️ Non-ASCII characters detected in R2_SECRET_ACCESS_KEY');
+  }
+
   return {
-    accountId,
-    accessKeyId,
-    secretAccessKey,
-    bucketName,
+    accountId: accountId.trim(),
+    accessKeyId: accessKeyId.trim(),
+    secretAccessKey: secretAccessKey.trim(),
+    bucketName: bucketName.trim(),
   };
 }
