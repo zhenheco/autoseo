@@ -409,23 +409,44 @@ ${fullHtml}
   }
 
   private async countLinks(html: string): Promise<{ internal: number; external: number }> {
-    const { parseHTML } = await import('linkedom');
-    const { document } = parseHTML(html);
-    const body = document.body;
-
-    const allLinks = body.querySelectorAll('a');
-    let internal = 0;
-    let external = 0;
-
-    allLinks.forEach((link) => {
-      const rel = link.getAttribute('rel') || '';
-      if (rel.includes('internal')) {
-        internal++;
-      } else if (rel.includes('external')) {
-        external++;
+    try {
+      let fullHtml = html;
+      if (!fullHtml.includes('<html>') && !fullHtml.includes('<!DOCTYPE')) {
+        fullHtml = `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"></head>
+<body>
+${fullHtml}
+</body>
+</html>`;
       }
-    });
 
-    return { internal, external };
+      const { parseHTML } = await import('linkedom');
+      const { document } = parseHTML(fullHtml);
+      const body = document.body;
+
+      if (!body) {
+        console.warn('[HTMLAgent] No body element in countLinks, returning zero counts');
+        return { internal: 0, external: 0 };
+      }
+
+      const allLinks = body.querySelectorAll('a');
+      let internal = 0;
+      let external = 0;
+
+      allLinks.forEach((link) => {
+        const rel = link.getAttribute('rel') || '';
+        if (rel.includes('internal')) {
+          internal++;
+        } else if (rel.includes('external')) {
+          external++;
+        }
+      });
+
+      return { internal, external };
+    } catch (error) {
+      console.warn('[HTMLAgent] Error counting links:', error);
+      return { internal: 0, external: 0 };
+    }
   }
 }

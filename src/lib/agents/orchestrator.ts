@@ -147,11 +147,18 @@ export class ParallelOrchestrator {
 
       const phase4Start = Date.now();
       const metaAgent = new MetaAgent(aiConfig, context);
+
+      let metaModel = agentConfig.meta_model || agentConfig.simple_processing_model || 'deepseek-chat';
+      if (metaModel === 'gpt-3.5-turbo') {
+        console.warn('[Orchestrator] ⚠️ Replacing gpt-3.5-turbo with deepseek-chat for MetaAgent');
+        metaModel = 'deepseek-chat';
+      }
+
       const metaOutput = await metaAgent.execute({
         content: writingOutput,
         keyword: input.title,
         titleOptions: strategyOutput.titleOptions,
-        model: agentConfig.meta_model,
+        model: metaModel,
         temperature: agentConfig.meta_temperature,
         maxTokens: agentConfig.meta_max_tokens,
       });
