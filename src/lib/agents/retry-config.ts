@@ -3,7 +3,7 @@ export interface RetryConfig {
   initialDelayMs: number;
   maxDelayMs: number;
   backoffMultiplier: number;
-  retryableErrors: string[];
+  retryableErrors: readonly string[];
   shouldAdjustParams: boolean;
   timeoutMs?: number;
 }
