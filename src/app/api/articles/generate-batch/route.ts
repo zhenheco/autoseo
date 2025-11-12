@@ -117,8 +117,8 @@ export async function POST(request: NextRequest) {
 
     const jobIds: string[] = [];
     const failedItems: string[] = [];
-    const orchestrator = new ParallelOrchestrator();
 
+    // 批次生成模式：直接執行，不要 fire-and-forget
     for (const item of generationItems) {
       const articleJobId = uuidv4();
       const keyword = item.keyword || item.title;
@@ -153,17 +153,22 @@ export async function POST(request: NextRequest) {
 
       jobIds.push(articleJobId);
 
-      orchestrator.execute({
-        articleJobId,
-        companyId: membership.company_id,
-        websiteId,
-        title: title,
-        targetLanguage: options?.targetLanguage,
-        wordCount: parseInt(options?.wordCount || '1500'),
-        imageCount: parseInt(options?.imageCount || '3'),
-      }).catch((error) => {
-        console.error(`Article generation error for ${title}:`, error);
-      });
+      // 直接執行任務（會阻塞直到完成或超時）
+      const orchestrator = new ParallelOrchestrator();
+      try {
+        await orchestrator.execute({
+          articleJobId,
+          companyId: membership.company_id,
+          websiteId,
+          title: title,
+          targetLanguage: options?.targetLanguage,
+          wordCount: parseInt(options?.wordCount || '1500'),
+          imageCount: parseInt(options?.imageCount || '3'),
+        });
+        console.log(`[Batch] ✅ Article generated: ${title}`);
+      } catch (error) {
+        console.error(`[Batch] ❌ Article generation error for ${title}:`, error);
+      }
     }
 
     return NextResponse.json({

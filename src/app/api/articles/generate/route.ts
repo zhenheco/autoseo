@@ -144,20 +144,29 @@ export async function POST(request: NextRequest) {
 
     const orchestrator = new ParallelOrchestrator();
 
-    orchestrator.execute({
-      articleJobId,
-      companyId: membership.company_id,
-      websiteId,
-      title: articleTitle,
-    }).catch((error) => {
-      console.error('Article generation error:', error);
-    });
+    // 直接執行任務（會阻塞直到完成或超時）
+    try {
+      await orchestrator.execute({
+        articleJobId,
+        companyId: membership.company_id,
+        websiteId,
+        title: articleTitle,
+      });
 
-    return NextResponse.json({
-      success: true,
-      articleJobId,
-      message: 'Article generation started',
-    });
+      return NextResponse.json({
+        success: true,
+        articleJobId,
+        message: 'Article generated successfully',
+      });
+    } catch (error) {
+      console.error('Article generation error:', error);
+      return NextResponse.json({
+        success: false,
+        articleJobId,
+        error: 'Article generation failed',
+        message: (error as Error).message,
+      }, { status: 500 });
+    }
   } catch (error) {
     console.error('Generate article error:', error);
     return NextResponse.json(
