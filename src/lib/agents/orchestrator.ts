@@ -615,16 +615,59 @@ export class ParallelOrchestrator {
       qa,
     });
 
+    // 計算統計資料
+    const plainText = assembled.html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    const sentences = plainText.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    const paragraphs = assembled.html.split(/<\/p>/gi).filter(p => p.trim().length > 0);
+
+    const statistics = {
+      wordCount: assembled.statistics.totalWords,
+      paragraphCount: paragraphs.length,
+      sentenceCount: sentences.length,
+      readingTime: Math.ceil(assembled.statistics.totalWords / 200), // 假設每分鐘 200 字
+      averageSentenceLength: sentences.length > 0 ? assembled.statistics.totalWords / sentences.length : 0,
+    };
+
+    // 執行資訊（合併所有 agent 的 token 使用量）
+    const totalTokenUsage = {
+      input:
+        (introduction.executionInfo.tokenUsage?.input || 0) +
+        (conclusion.executionInfo.tokenUsage?.input || 0) +
+        (qa.executionInfo.tokenUsage?.input || 0) +
+        sections.reduce((sum, s) => sum + (s.executionInfo.tokenUsage?.input || 0), 0),
+      output:
+        (introduction.executionInfo.tokenUsage?.output || 0) +
+        (conclusion.executionInfo.tokenUsage?.output || 0) +
+        (qa.executionInfo.tokenUsage?.output || 0) +
+        sections.reduce((sum, s) => sum + (s.executionInfo.tokenUsage?.output || 0), 0),
+    };
+
+    const totalExecutionTime =
+      (introduction.executionInfo.executionTime || 0) +
+      (conclusion.executionInfo.executionTime || 0) +
+      (qa.executionInfo.executionTime || 0) +
+      sections.reduce((sum, s) => sum + (s.executionInfo.executionTime || 0), 0) +
+      assembled.executionInfo.executionTime;
+
     return {
       markdown: assembled.markdown,
       html: assembled.html,
-      wordCount: assembled.statistics.totalWordCount,
+      statistics,
+      internalLinks: [], // 內部連結會在 HTMLAgent 中處理
+      keywordUsage: {
+        count: 0,
+        density: 0,
+        distribution: [],
+      }, // 關鍵字使用量可以在後續處理
+      readability: {
+        fleschKincaidGrade: 0,
+        fleschReadingEase: 0,
+        gunningFogIndex: 0,
+      }, // 可讀性分數可以在後續處理
       executionInfo: {
-        introduction: introduction.executionInfo,
-        sections: sections.map(s => s.executionInfo),
-        conclusion: conclusion.executionInfo,
-        qa: qa.executionInfo,
-        assembly: assembled.executionInfo,
+        model: agentConfig.writing_model,
+        executionTime: totalExecutionTime,
+        tokenUsage: totalTokenUsage,
       },
     };
   }
