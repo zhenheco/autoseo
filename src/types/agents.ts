@@ -526,7 +526,7 @@ export interface IntroductionOutput {
   markdown: string;
   wordCount: number;
   executionInfo: {
-    model: string;
+    model?: string;
     executionTime: number;
     tokenUsage: { input: number; output: number };
   };
@@ -548,7 +548,7 @@ export interface SectionOutput {
   summary: string;
   wordCount: number;
   executionInfo: {
-    model: string;
+    model?: string;
     executionTime: number;
     tokenUsage: { input: number; output: number };
   };
@@ -566,7 +566,7 @@ export interface ConclusionOutput {
   markdown: string;
   wordCount: number;
   executionInfo: {
-    model: string;
+    model?: string;
     executionTime: number;
     tokenUsage: { input: number; output: number };
   };
@@ -589,7 +589,7 @@ export interface QAOutput {
   }>;
   markdown: string;
   executionInfo: {
-    model: string;
+    model?: string;
     executionTime: number;
     tokenUsage: { input: number; output: number };
   };
