@@ -1173,7 +1173,7 @@ export class ParallelOrchestrator {
     throw lastError || new Error(`${config.agentName} failed after ${config.maxAttempts} attempts`);
   }
 
-  private isRetryableError(error: unknown, retryableErrors: string[]): boolean {
+  private isRetryableError(error: unknown, retryableErrors: readonly string[]): boolean {
     const err = error as Error & { code?: string; type?: string };
 
     if (err.code && retryableErrors.includes(err.code)) {
