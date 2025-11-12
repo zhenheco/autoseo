@@ -27,27 +27,45 @@ export class AIClient {
       throw new Error('DEEPSEEK_API_KEY is not set');
     }
 
-    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: params.model,
-        messages: params.messages,
-        temperature: params.temperature ?? 0.7,
-        max_tokens: params.max_tokens,
-        response_format: params.response_format,
-      }),
-    });
+    // 為 deepseek-reasoner 設定較長的超時時間（120 秒）
+    // 為 deepseek-chat 設定標準超時時間（60 秒）
+    const timeoutMs = params.model === 'deepseek-reasoner' ? 120000 : 60000;
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(`DeepSeek API error: ${JSON.stringify(error)}`);
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    try {
+      const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          model: params.model,
+          messages: params.messages,
+          temperature: params.temperature ?? 0.7,
+          max_tokens: params.max_tokens,
+          response_format: params.response_format,
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(`DeepSeek API error: ${JSON.stringify(error)}`);
+      }
+
+      return await response.json();
+    } catch (error: any) {
+      clearTimeout(timeoutId);
+      if (error.name === 'AbortError') {
+        throw new Error(`DeepSeek API timeout after ${timeoutMs / 1000}s`);
+      }
+      throw error;
     }
-
-    return await response.json();
   }
 
   async complete(
@@ -146,6 +164,17 @@ export class AIClient {
         const isRateLimit = error.message?.includes('rate-limited') ||
                           error.message?.includes('429') ||
                           error.message?.includes('Rate limit');
+
+        const isTimeout = error.message?.includes('timeout') ||
+                         error.message?.includes('terminated') ||
+                         error.name === 'AbortError';
+
+        // 如果 deepseek-reasoner 超時，自動切換到 deepseek-chat
+        if (isTimeout && currentModel.includes('reasoner') && attempt === 1) {
+          console.log(`[AIClient] ⚠️ ${currentModel} timeout, switching to deepseek-chat`);
+          currentModel = 'deepseek-chat';
+          continue;
+        }
 
         if (isRateLimit) {
           const fallbackModel = this.getFallbackModel(currentModel);
