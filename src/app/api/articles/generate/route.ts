@@ -3,8 +3,8 @@ import { createClient } from '@/lib/supabase/server';
 import { ParallelOrchestrator } from '@/lib/agents/orchestrator';
 import { v4 as uuidv4 } from 'uuid';
 
-// Vercel 無伺服器函數最大執行時間：10 分鐘
-export const maxDuration = 600;
+// Vercel 無伺服器函數最大執行時間：5 分鐘（Hobby 計劃上限）
+export const maxDuration = 300;
 
 export async function POST(request: NextRequest) {
   try {
