@@ -46,16 +46,13 @@ async function main() {
   for (const job of jobs) {
     console.log(`[Process Jobs] 🔒 嘗試鎖定任務 ${job.id}`);
 
-    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
-
-    const { data: locked, error: lockError, count } = await supabase
+    const { data: locked, error: lockError } = await supabase
       .from('article_jobs')
       .update({
         status: 'processing',
         started_at: new Date().toISOString()
       })
       .eq('id', job.id)
-      .or(`status.eq.pending,and(status.eq.processing,or(started_at.is.null,started_at.lt.${tenMinutesAgo}))`)
       .select();
 
     if (lockError) {
