@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { ParallelOrchestrator } from '@/lib/agents/orchestrator';
 import { v4 as uuidv4 } from 'uuid';
 
 // Vercel 無伺服器函數最大執行時間：5 分鐘（Hobby 計劃上限）
@@ -177,31 +176,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const orchestrator = new ParallelOrchestrator();
-
-    // 執行 Phase 1-2（Research & Strategy），然後由 Cron Job 接續處理
-    try {
-      await orchestrator.execute({
-        articleJobId,
-        companyId: membership.company_id,
-        websiteId,
-        title: articleTitle,
-      });
-
-      return NextResponse.json({
-        success: true,
-        articleJobId,
-        message: 'Article generation started (Phase 1-2 completed)',
-      });
-    } catch (error) {
-      console.error('Article generation error:', error);
-      return NextResponse.json({
-        success: false,
-        articleJobId,
-        error: 'Article generation Phase 1-2 failed',
-        message: (error as Error).message,
-      }, { status: 500 });
-    }
+    // API 立即回傳，由 GitHub Actions cron job 處理所有 phase
+    // 避免 Vercel 函數逾時（DeepSeek reasoner 需要 4+ 分鐘）
+    return NextResponse.json({
+      success: true,
+      articleJobId,
+      message: 'Article generation job created, processing will be handled by cron job',
+    });
   } catch (error) {
     console.error('Generate article error:', error);
     return NextResponse.json(
