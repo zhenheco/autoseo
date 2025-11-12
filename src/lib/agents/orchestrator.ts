@@ -81,7 +81,7 @@ export class ParallelOrchestrator {
         .eq('id', input.articleJobId)
         .single();
 
-      const currentPhase = jobData?.metadata?.current_phase;
+      let currentPhase = jobData?.metadata?.current_phase;
       const savedState = jobData?.metadata;
 
       console.log('[Orchestrator] 🔄 Checking resume state', {
@@ -160,6 +160,8 @@ export class ParallelOrchestrator {
           current_phase: 'strategy_completed',
         });
 
+        // 更新 currentPhase 變數以繼續執行 Phase 3
+        currentPhase = 'strategy_completed';
         console.log('[Orchestrator] ✅ Phase 1-2 completed, continuing to Phase 3');
       } else {
         // 載入已保存的 research 和 strategy
@@ -261,6 +263,8 @@ export class ParallelOrchestrator {
           current_phase: 'content_completed',
         });
 
+        // 更新 currentPhase 變數以繼續執行 Phase 4-6
+        currentPhase = 'content_completed';
         console.log('[Orchestrator] ✅ Phase 3 completed, continuing to Phase 4-6');
       } else {
         // 載入已保存的 writing 和 image
