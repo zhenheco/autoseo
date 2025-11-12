@@ -125,6 +125,14 @@ export interface StrategyInput {
   maxTokens: number;
 }
 
+export interface MainSection {
+  heading: string;
+  subheadings: string[];
+  keyPoints: string[];
+  targetWordCount: number;
+  keywords: string[];
+}
+
 export interface Outline {
   introduction: {
     hook: string;
@@ -132,13 +140,7 @@ export interface Outline {
     thesis: string;
     wordCount: number;
   };
-  mainSections: {
-    heading: string;
-    subheadings: string[];
-    keyPoints: string[];
-    targetWordCount: number;
-    keywords: string[];
-  }[];
+  mainSections: MainSection[];
   conclusion: {
     summary: string;
     callToAction: string;
