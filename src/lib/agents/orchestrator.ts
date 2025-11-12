@@ -8,9 +8,16 @@ import { ImageAgent } from './image-agent';
 import { MetaAgent } from './meta-agent';
 import { HTMLAgent } from './html-agent';
 import { CategoryAgent } from './category-agent';
+import { IntroductionAgent } from './introduction-agent';
+import { SectionAgent } from './section-agent';
+import { ConclusionAgent } from './conclusion-agent';
+import { QAAgent } from './qa-agent';
+import { ContentAssemblerAgent } from './content-assembler-agent';
 import { WordPressClient } from '@/lib/wordpress/client';
 import { PerplexityClient } from '@/lib/perplexity/client';
 import { getAPIRouter } from '@/lib/ai/api-router';
+import { ErrorTracker } from './error-tracker';
+import { RetryConfigs, type AgentRetryConfig } from './retry-config';
 import type {
   ArticleGenerationInput,
   ArticleGenerationResult,
@@ -26,9 +33,16 @@ import { AgentExecutionContext } from './base-agent';
 
 export class ParallelOrchestrator {
   private supabaseClient?: SupabaseClient;
+  private errorTracker: ErrorTracker;
 
   constructor(supabaseClient?: SupabaseClient) {
     this.supabaseClient = supabaseClient;
+    this.errorTracker = new ErrorTracker({
+      enableLogging: true,
+      enableMetrics: true,
+      enableExternalTracking: process.env.ERROR_TRACKING_ENABLED === 'true',
+      maxErrorsInMemory: 100,
+    });
   }
 
   private async getSupabase(): Promise<SupabaseClient> {
@@ -118,23 +132,81 @@ export class ParallelOrchestrator {
         current_phase: 'strategy_completed',
       });
 
+      const useMultiAgent = this.shouldUseMultiAgent(input);
+      console.log(`[Orchestrator] Using ${useMultiAgent ? 'Multi-Agent' : 'Legacy'} architecture`);
+
+      let writingOutput: ArticleGenerationResult['writing'];
+      let imageOutput: ArticleGenerationResult['image'];
+
       const phase3Start = Date.now();
-      const [writingOutput, imageOutput] = await Promise.all([
-        this.executeWritingAgent(
-          strategyOutput,
-          brandVoice,
-          previousArticles,
-          agentConfig,
-          aiConfig,
-          context
-        ),
-        this.executeImageAgent(
-          strategyOutput,
-          agentConfig,
-          aiConfig,
-          context
-        ),
-      ]);
+
+      if (useMultiAgent) {
+        try {
+          imageOutput = await this.executeImageAgent(
+            strategyOutput,
+            agentConfig,
+            aiConfig,
+            context
+          );
+
+          await this.updateJobStatus(input.articleJobId, 'processing', {
+            current_phase: 'images_completed',
+            image: imageOutput,
+          });
+
+          writingOutput = await this.executeContentGeneration(
+            strategyOutput,
+            imageOutput,
+            brandVoice,
+            agentConfig,
+            aiConfig,
+            context
+          );
+
+          console.log('[Orchestrator] ✅ Multi-agent content generation succeeded');
+        } catch (multiAgentError) {
+          console.error('[Orchestrator] ❌ Multi-agent flow failed, falling back to legacy:', multiAgentError);
+          this.errorTracker.trackFallback('multi-agent-to-legacy', multiAgentError);
+
+          const [legacyWriting, legacyImage] = await Promise.all([
+            this.executeWritingAgent(
+              strategyOutput,
+              brandVoice,
+              previousArticles,
+              agentConfig,
+              aiConfig,
+              context
+            ),
+            imageOutput || this.executeImageAgent(
+              strategyOutput,
+              agentConfig,
+              aiConfig,
+              context
+            ),
+          ]);
+
+          writingOutput = legacyWriting;
+          imageOutput = legacyImage;
+        }
+      } else {
+        [writingOutput, imageOutput] = await Promise.all([
+          this.executeWritingAgent(
+            strategyOutput,
+            brandVoice,
+            previousArticles,
+            agentConfig,
+            aiConfig,
+            context
+          ),
+          this.executeImageAgent(
+            strategyOutput,
+            agentConfig,
+            aiConfig,
+            context
+          ),
+        ]);
+      }
+
       phaseTimings.contentGeneration = Date.now() - phase3Start;
       result.writing = writingOutput;
       result.image = imageOutput;
@@ -188,8 +260,7 @@ export class ParallelOrchestrator {
 
       writingOutput.html = htmlOutput.html;
 
-      // 插入圖片到 HTML 中
-      if (imageOutput) {
+      if (!useMultiAgent && imageOutput) {
         writingOutput.html = this.insertImagesToHtml(
           writingOutput.html,
           imageOutput.featuredImage,
@@ -450,6 +521,112 @@ export class ParallelOrchestrator {
       quality: 'standard' as const,
       size: agentConfig.image_size,
     });
+  }
+
+  private async executeContentGeneration(
+    strategyOutput: ArticleGenerationResult['strategy'],
+    imageOutput: ArticleGenerationResult['image'],
+    brandVoice: BrandVoice,
+    agentConfig: AgentConfig,
+    aiConfig: AIClientConfig,
+    context: AgentExecutionContext
+  ) {
+    if (!strategyOutput) throw new Error('Strategy output is required');
+
+    const { outline, selectedTitle } = strategyOutput;
+
+    const [introduction, conclusion, qa] = await Promise.all([
+      this.executeWithRetry(
+        async () => {
+          const agent = new IntroductionAgent(aiConfig, context);
+          return agent.execute({
+            outline,
+            featuredImage: imageOutput?.featuredImage || null,
+            brandVoice,
+            model: agentConfig.writing_model,
+            temperature: agentConfig.writing_temperature,
+            maxTokens: 500,
+          });
+        },
+        RetryConfigs.INTRODUCTION_AGENT
+      ),
+      this.executeWithRetry(
+        async () => {
+          const agent = new ConclusionAgent(aiConfig, context);
+          return agent.execute({
+            outline,
+            brandVoice,
+            model: agentConfig.writing_model,
+            temperature: agentConfig.writing_temperature,
+            maxTokens: 400,
+          });
+        },
+        RetryConfigs.CONCLUSION_AGENT
+      ),
+      this.executeWithRetry(
+        async () => {
+          const agent = new QAAgent(aiConfig, context);
+          return agent.execute({
+            title: selectedTitle,
+            outline,
+            brandVoice,
+            count: 3,
+            model: agentConfig.writing_model,
+            temperature: agentConfig.writing_temperature,
+            maxTokens: 1000,
+          });
+        },
+        RetryConfigs.QA_AGENT
+      ),
+    ]);
+
+    const sections = [];
+    for (let i = 0; i < outline.mainSections.length; i++) {
+      const section = outline.mainSections[i];
+      const previousSummary = i > 0 ? sections[i - 1].summary : undefined;
+      const sectionImage = imageOutput?.contentImages?.[i] || null;
+
+      const sectionOutput = await this.executeWithRetry(
+        async () => {
+          const agent = new SectionAgent(aiConfig, context);
+          return agent.execute({
+            section,
+            previousSummary,
+            sectionImage,
+            brandVoice,
+            index: i,
+            model: agentConfig.writing_model,
+            temperature: agentConfig.writing_temperature,
+            maxTokens: Math.floor(section.targetWordCount * 2),
+          });
+        },
+        RetryConfigs.SECTION_AGENT
+      );
+
+      sections.push(sectionOutput);
+    }
+
+    const assembler = new ContentAssemblerAgent();
+    const assembled = await assembler.execute({
+      title: selectedTitle,
+      introduction,
+      sections,
+      conclusion,
+      qa,
+    });
+
+    return {
+      markdown: assembled.markdown,
+      html: assembled.html,
+      wordCount: assembled.statistics.totalWordCount,
+      executionInfo: {
+        introduction: introduction.executionInfo,
+        sections: sections.map(s => s.executionInfo),
+        conclusion: conclusion.executionInfo,
+        qa: qa.executionInfo,
+        assembly: assembled.executionInfo,
+      },
+    };
   }
 
   private async getBrandVoice(websiteId: string): Promise<BrandVoice> {
@@ -897,5 +1074,107 @@ export class ParallelOrchestrator {
     }
 
     return modifiedHtml;
+  }
+
+  private async executeWithRetry<T>(
+    fn: () => Promise<T>,
+    config: AgentRetryConfig
+  ): Promise<T> {
+    let lastError: Error | null = null;
+    let delay = config.initialDelayMs;
+
+    for (let attempt = 1; attempt <= config.maxAttempts; attempt++) {
+      try {
+        const timeoutPromise = config.timeoutMs
+          ? new Promise<never>((_, reject) =>
+              setTimeout(() => reject(new Error('Agent execution timeout')), config.timeoutMs)
+            )
+          : null;
+
+        const executionPromise = fn();
+
+        const result = timeoutPromise
+          ? await Promise.race([executionPromise, timeoutPromise])
+          : await executionPromise;
+
+        this.errorTracker.trackSuccess(config.agentName, attempt);
+        return result;
+      } catch (error) {
+        lastError = error as Error;
+
+        this.errorTracker.trackError(config.agentName, error, attempt, config.maxAttempts);
+
+        const isRetryable = this.isRetryableError(error, config.retryableErrors);
+        const hasMoreAttempts = attempt < config.maxAttempts;
+
+        if (!isRetryable || !hasMoreAttempts) {
+          console.error(
+            `[Orchestrator] ${config.agentName} failed after ${attempt} attempts`,
+            { error: lastError.message }
+          );
+          throw lastError;
+        }
+
+        const currentDelay = Math.min(delay, config.maxDelayMs);
+        console.warn(
+          `[Orchestrator] ${config.agentName} attempt ${attempt} failed, retrying in ${currentDelay}ms`,
+          { error: lastError.message }
+        );
+
+        await this.sleep(currentDelay);
+        delay *= config.backoffMultiplier;
+      }
+    }
+
+    throw lastError || new Error(`${config.agentName} failed after ${config.maxAttempts} attempts`);
+  }
+
+  private isRetryableError(error: unknown, retryableErrors: string[]): boolean {
+    const err = error as Error & { code?: string; type?: string };
+
+    if (err.code && retryableErrors.includes(err.code)) {
+      return true;
+    }
+
+    const message = err.message.toLowerCase();
+    for (const retryableType of retryableErrors) {
+      if (message.includes(retryableType.toLowerCase())) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  private shouldUseMultiAgent(input: ArticleGenerationInput): boolean {
+    const enabled = process.env.USE_MULTI_AGENT_ARCHITECTURE === 'true';
+    if (!enabled) {
+      return false;
+    }
+
+    const rolloutPercentage = parseInt(process.env.MULTI_AGENT_ROLLOUT_PERCENTAGE || '100', 10);
+
+    if (rolloutPercentage >= 100) {
+      return true;
+    }
+
+    const hash = this.hashString(input.articleJobId);
+    const bucket = hash % 100;
+
+    return bucket < rolloutPercentage;
+  }
+
+  private hashString(str: string): number {
+    let hash = 0;
+    for (let i = 0; i < str.length; i++) {
+      const char = str.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    return Math.abs(hash);
   }
 }

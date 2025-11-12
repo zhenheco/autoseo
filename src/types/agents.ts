@@ -512,3 +512,107 @@ export interface AIClientConfig {
   timeout?: number;
   enableFallback?: boolean;
 }
+
+export interface IntroductionInput {
+  outline: Outline;
+  featuredImage: GeneratedImage | null;
+  brandVoice: BrandVoice;
+  model: string;
+  temperature?: number;
+  maxTokens?: number;
+}
+
+export interface IntroductionOutput {
+  markdown: string;
+  wordCount: number;
+  executionInfo: {
+    model: string;
+    executionTime: number;
+    tokenUsage: { input: number; output: number };
+  };
+}
+
+export interface SectionInput {
+  section: MainSection;
+  previousSummary?: string;
+  sectionImage: GeneratedImage | null;
+  brandVoice: BrandVoice;
+  index: number;
+  model: string;
+  temperature?: number;
+  maxTokens?: number;
+}
+
+export interface SectionOutput {
+  markdown: string;
+  summary: string;
+  wordCount: number;
+  executionInfo: {
+    model: string;
+    executionTime: number;
+    tokenUsage: { input: number; output: number };
+  };
+}
+
+export interface ConclusionInput {
+  outline: Outline;
+  brandVoice: BrandVoice;
+  model: string;
+  temperature?: number;
+  maxTokens?: number;
+}
+
+export interface ConclusionOutput {
+  markdown: string;
+  wordCount: number;
+  executionInfo: {
+    model: string;
+    executionTime: number;
+    tokenUsage: { input: number; output: number };
+  };
+}
+
+export interface QAInput {
+  title: string;
+  outline: Outline;
+  brandVoice: BrandVoice;
+  count?: number;
+  model: string;
+  temperature?: number;
+  maxTokens?: number;
+}
+
+export interface QAOutput {
+  faqs: Array<{
+    question: string;
+    answer: string;
+  }>;
+  markdown: string;
+  executionInfo: {
+    model: string;
+    executionTime: number;
+    tokenUsage: { input: number; output: number };
+  };
+}
+
+export interface ContentAssemblerInput {
+  title: string;
+  introduction: IntroductionOutput;
+  sections: SectionOutput[];
+  conclusion: ConclusionOutput;
+  qa: QAOutput;
+}
+
+export interface ContentAssemblerOutput {
+  markdown: string;
+  html: string;
+  statistics: {
+    totalWords: number;
+    totalParagraphs: number;
+    totalSections: number;
+    totalFAQs: number;
+  };
+  executionInfo: {
+    executionTime: number;
+  };
+}

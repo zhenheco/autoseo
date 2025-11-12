@@ -164,32 +164,39 @@ ${topGaps.join('\n')}
 3. faq 最多 2 個
 4. 字數分配要合理，總和應接近目標字數
 
-## 輸出格式
-請用結構化的方式回答，按以下格式組織：
+## 輸出格式（必須是 JSON）
+請嚴格按照以下 JSON schema 輸出，不要包含任何額外文字：
 
-### 前言 (Introduction)
-- 開場鉤子：[吸引讀者的開場方式]
-- 背景說明：[提供相關背景資訊]
-- 核心論點：[文章主要觀點]
-- 字數：約 200 字
+{
+  "introduction": {
+    "hook": "吸引讀者的開場方式",
+    "context": "提供相關背景資訊",
+    "thesis": "文章主要觀點",
+    "wordCount": 200
+  },
+  "mainSections": [
+    {
+      "heading": "段落標題",
+      "subheadings": ["子標題1", "子標題2"],
+      "keyPoints": ["重點1", "重點2", "重點3"],
+      "targetWordCount": 500,
+      "keywords": ["關鍵字1", "關鍵字2"]
+    }
+  ],
+  "conclusion": {
+    "summary": "重點總結",
+    "callToAction": "行動呼籲",
+    "wordCount": 150
+  },
+  "faq": [
+    {
+      "question": "問題1？",
+      "answerOutline": "答案大綱"
+    }
+  ]
+}
 
-### 主要段落 (Main Sections)
-針對每個主要段落（最多4個），請說明：
-- 段落標題：[段落主題]
-- 子標題：[列出子標題]
-- 關鍵重點：[列出3個重點]
-- 目標字數：[建議字數]
-- 相關關鍵字：[列出相關關鍵字]
-
-### 結論 (Conclusion)
-- 重點總結：[回顧核心要點]
-- 行動呼籲：[鼓勵讀者採取行動]
-- 字數：約 150 字
-
-### 常見問題 (FAQ)
-列出 1-2 個相關問題和答案大綱。
-
-請以清晰分段的方式回答，每個項目用明確的標記區分。`;
+請確保輸出是有效的 JSON 格式。`;
 
     let apiResponse;
     try {
@@ -197,6 +204,7 @@ ${topGaps.join('\n')}
         model: input.model,
         temperature: input.temperature || 0.5,
         maxTokens: Math.floor((input.maxTokens || 64000) * 0.9),
+        format: 'json',
       });
 
       if (!apiResponse.content || apiResponse.content.trim() === '') {
@@ -206,24 +214,15 @@ ${topGaps.join('\n')}
 
       const content = apiResponse.content.trim();
 
-      const jsonMatch = content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        try {
-          const parsed = JSON.parse(jsonMatch[0]);
-          if (parsed.outline?.mainSections) {
-            console.log('[StrategyAgent] Successfully parsed outline from JSON');
-            return parsed.outline;
-          }
-          if (parsed.mainSections) {
-            console.log('[StrategyAgent] Successfully parsed outline from direct JSON');
-            return parsed;
-          }
-        } catch (e) {
-          console.warn('[StrategyAgent] JSON parsing failed, parsing structured text:', e);
-        }
-      }
+      console.log('[StrategyAgent] Raw outline response:', {
+        contentLength: content.length,
+        firstChars: content.substring(0, 200),
+        hasJsonMarkers: content.includes('{') && content.includes('}'),
+        hasMarkdownHeaders: content.includes('###'),
+      });
 
-      return this.parseOutlineText(content, selectedTitle, input.targetWordCount);
+      const parsed = this.parseOutlineWithFallbacks(content, selectedTitle, input.targetWordCount);
+      return parsed;
 
     } catch (error) {
       console.error('[StrategyAgent] Outline generation failed:', error);
@@ -232,11 +231,106 @@ ${topGaps.join('\n')}
     }
   }
 
+  private parseOutlineWithFallbacks(content: string, title: string, targetWordCount: number): StrategyOutput['outline'] {
+    const parsers: Array<{
+      name: string;
+      parse: () => StrategyOutput['outline'] | null;
+    }> = [
+      {
+        name: 'DirectJSONParser',
+        parse: () => this.tryDirectJSONParse(content)
+      },
+      {
+        name: 'NestedJSONParser',
+        parse: () => this.tryNestedJSONParse(content)
+      },
+      {
+        name: 'MarkdownStructuredParser',
+        parse: () => this.parseOutlineText(content, title, targetWordCount)
+      },
+      {
+        name: 'FallbackOutline',
+        parse: () => this.getFallbackOutline(title, targetWordCount)
+      }
+    ];
+
+    for (const parser of parsers) {
+      try {
+        console.log(`[StrategyAgent] Attempting parser: ${parser.name}`);
+        const result = parser.parse();
+
+        if (result && result.mainSections && result.mainSections.length > 0) {
+          console.log(`[StrategyAgent] ✅ ${parser.name} succeeded:`, {
+            sectionsCount: result.mainSections.length
+          });
+          return result;
+        }
+
+        console.warn(`[StrategyAgent] ⚠️ ${parser.name} returned empty or invalid result`);
+      } catch (error) {
+        console.warn(`[StrategyAgent] ❌ ${parser.name} failed:`, error);
+      }
+    }
+
+    console.error('[StrategyAgent] All parsers failed, using fallback outline');
+    return this.getFallbackOutline(title, targetWordCount);
+  }
+
+  private tryDirectJSONParse(content: string): StrategyOutput['outline'] | null {
+    try {
+      const parsed = JSON.parse(content);
+      if (parsed.mainSections) {
+        return parsed;
+      }
+    } catch {
+      return null;
+    }
+    return null;
+  }
+
+  private tryNestedJSONParse(content: string): StrategyOutput['outline'] | null {
+    const jsonMatch = content.match(/\{[\s\S]*\}/);
+    if (!jsonMatch) {
+      return null;
+    }
+
+    try {
+      const parsed = JSON.parse(jsonMatch[0]);
+
+      if (parsed.outline?.mainSections) {
+        return parsed.outline;
+      }
+
+      if (parsed.mainSections) {
+        return parsed;
+      }
+    } catch {
+      return null;
+    }
+
+    return null;
+  }
+
   private parseOutlineText(content: string, title: string, targetWordCount: number): StrategyOutput['outline'] {
+    console.log('[StrategyAgent] parseOutlineText called', {
+      contentLength: content.length,
+      hasFrontmatter: content.includes('### 前言') || content.includes('Introduction'),
+      hasMainSections: content.includes('### 主要段落') || content.includes('Main Sections'),
+      hasConclusion: content.includes('### 結論') || content.includes('Conclusion'),
+    });
+
     const introMatch = content.match(/### 前言[\s\S]*?(?=###|$)/);
     const mainMatch = content.match(/### 主要段落[\s\S]*?(?=### 結論|$)/);
     const conclusionMatch = content.match(/### 結論[\s\S]*?(?=### 常見問題|$)/);
     const faqMatch = content.match(/### 常見問題[\s\S]*$/);
+
+    console.log('[StrategyAgent] Section matches:', {
+      introFound: !!introMatch,
+      mainFound: !!mainMatch,
+      conclusionFound: !!conclusionMatch,
+      faqFound: !!faqMatch,
+      mainMatchLength: mainMatch?.[0]?.length || 0,
+    });
 
     const extractListItems = (text: string): string[] => {
       const items: string[] = [];
@@ -274,6 +368,11 @@ ${topGaps.join('\n')}
       const sectionBlocks = mainMatch[0].split(/- 段落標題/).slice(1);
       const sectionWordCount = Math.floor((targetWordCount - 350) / Math.min(sectionBlocks.length, 4));
 
+      console.log('[StrategyAgent] Parsing main sections:', {
+        sectionBlocksCount: sectionBlocks.length,
+        firstBlockPreview: sectionBlocks[0]?.substring(0, 100),
+      });
+
       for (let i = 0; i < Math.min(sectionBlocks.length, 4); i++) {
         const block = sectionBlocks[i];
         const headingMatch = block.match(/[：:]\s*(.+?)(?:\n|$)/);
@@ -281,18 +380,28 @@ ${topGaps.join('\n')}
         const keyPointsMatch = block.match(/- 關鍵重點[：:]\s*(.+?)(?:\n|$)/);
         const keywordsMatch = block.match(/- 相關關鍵字[：:]\s*(.+?)(?:\n|$)/);
 
-        mainSections.push({
+        const section = {
           heading: headingMatch ? headingMatch[1].trim().replace(/\[|\]/g, '') : `${title}重點${i + 1}`,
           subheadings: subheadingsMatch ? subheadingsMatch[1].split(/[、,，]/).map(s => s.trim().replace(/\[|\]/g, '')).slice(0, 2) : [],
           keyPoints: keyPointsMatch ? keyPointsMatch[1].split(/[、,，]/).map(s => s.trim().replace(/\[|\]/g, '')).slice(0, 3) : [],
           targetWordCount: sectionWordCount,
           keywords: keywordsMatch ? keywordsMatch[1].split(/[、,，]/).map(s => s.trim().replace(/\[|\]/g, '')).slice(0, 3) : [title],
+        };
+
+        console.log(`[StrategyAgent] Parsed section ${i + 1}:`, {
+          heading: section.heading,
+          keyPointsCount: section.keyPoints.length,
         });
+
+        mainSections.push(section);
       }
     }
 
+    console.log('[StrategyAgent] Final main sections count:', mainSections.length);
+
     if (mainSections.length === 0) {
       console.warn('[StrategyAgent] No main sections parsed, using fallback');
+      console.warn('[StrategyAgent] Main match content (first 500):', mainMatch?.[0]?.substring(0, 500));
       return this.getFallbackOutline(title, targetWordCount);
     }
 
