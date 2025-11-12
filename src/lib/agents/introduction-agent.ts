@@ -28,7 +28,7 @@ export class IntroductionAgent extends BaseAgent<IntroductionInput, Introduction
 3. 清楚說明文章主題和讀者能獲得的價值
 4. 語調符合品牌風格
 5. 使用 Markdown 格式
-${featuredImage ? `6. 在前言開頭插入主圖：![${featuredImage.alt || '文章主圖'}](${featuredImage.url})` : ''}
+${featuredImage ? `6. 在前言開頭插入主圖：![${featuredImage.altText || '文章主圖'}](${featuredImage.url})` : ''}
 
 ## 輸出格式
 直接輸出前言內容的 Markdown，不要包含標題。`;
@@ -42,7 +42,7 @@ ${featuredImage ? `6. 在前言開頭插入主圖：![${featuredImage.alt || '�
     let markdown = response.content.trim();
 
     if (featuredImage && !markdown.includes('![')) {
-      markdown = `![${featuredImage.alt || '文章主圖'}](${featuredImage.url})\n\n${markdown}`;
+      markdown = `![${featuredImage.altText || '文章主圖'}](${featuredImage.url})\n\n${markdown}`;
     }
 
     const wordCount = this.countWords(markdown);

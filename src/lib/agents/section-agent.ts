@@ -32,7 +32,7 @@ ${previousSummary ? `## 前一段落摘要\n${previousSummary}\n\n請確保與�
 4. 如果有子標題，使用 ### 三級標題
 5. 必須涵蓋所有關鍵重點
 6. 自然融入相關關鍵字
-${sectionImage ? `7. 在適當位置插入圖片：![${sectionImage.alt || section.heading}](${sectionImage.url})` : ''}
+${sectionImage ? `7. 在適當位置插入圖片：![${sectionImage.altText || section.heading}](${sectionImage.url})` : ''}
 8. 段落結尾提供一個簡短摘要（用於連接下一段落）
 
 ## 輸出格式（JSON）
@@ -75,7 +75,7 @@ ${sectionImage ? `7. 在適當位置插入圖片：![${sectionImage.alt || secti
     if (sectionImage && !markdown.includes('![')) {
       const lines = markdown.split('\n');
       const insertIndex = Math.floor(lines.length / 2);
-      lines.splice(insertIndex, 0, '', `![${sectionImage.alt || section.heading}](${sectionImage.url})`, '');
+      lines.splice(insertIndex, 0, '', `![${sectionImage.altText || section.heading}](${sectionImage.url})`, '');
       markdown = lines.join('\n');
     }
 
