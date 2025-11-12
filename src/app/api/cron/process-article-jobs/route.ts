@@ -19,9 +19,9 @@ export async function GET(request: NextRequest) {
     const { data: jobs, error: queryError } = await supabase
       .from('article_jobs')
       .select('*')
-      .eq('status', 'processing')
-      .not('metadata->current_phase', 'is', null)
+      .in('status', ['pending', 'processing'])
       .or('started_at.is.null,started_at.lt.' + new Date(Date.now() - 10 * 60 * 1000).toISOString())
+      .order('created_at', { ascending: true })
       .limit(5);
 
     if (queryError) {
@@ -43,11 +43,19 @@ export async function GET(request: NextRequest) {
 
     for (const job of jobs) {
       try {
+        const updateData: Record<string, unknown> = {
+          started_at: new Date().toISOString(),
+        };
+
+        if (job.status === 'pending') {
+          updateData.status = 'processing';
+        }
+
         const lockUpdate = await supabase
           .from('article_jobs')
-          .update({ started_at: new Date().toISOString() })
+          .update(updateData)
           .eq('id', job.id)
-          .eq('status', 'processing')
+          .in('status', ['pending', 'processing'])
           .or('started_at.is.null,started_at.lt.' + new Date(Date.now() - 10 * 60 * 1000).toISOString())
           .select();
 
@@ -56,7 +64,7 @@ export async function GET(request: NextRequest) {
           continue;
         }
 
-        console.log(`[Cron] 🔒 Locked job ${job.id}`);
+        console.log(`[Cron] 🔒 Locked job ${job.id}, status: ${job.status} → ${job.status === 'pending' ? 'processing' : 'processing'}`);
 
         const orchestrator = new ParallelOrchestrator();
 
