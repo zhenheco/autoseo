@@ -27,6 +27,7 @@ import type {
   PreviousArticle,
   AIClientConfig,
   GeneratedImage,
+  SectionOutput,
 } from '@/types/agents';
 import type { AIModel } from '@/types/ai-models';
 import { AgentExecutionContext } from './base-agent';
@@ -580,10 +581,10 @@ export class ParallelOrchestrator {
       ),
     ]);
 
-    const sections = [];
+    const sections: SectionOutput[] = [];
     for (let i = 0; i < outline.mainSections.length; i++) {
       const section = outline.mainSections[i];
-      const previousSummary = i > 0 ? sections[i - 1].summary : undefined;
+      const previousSummary: string | undefined = i > 0 ? sections[i - 1].summary : undefined;
       const sectionImage = imageOutput?.contentImages?.[i] || null;
 
       const sectionOutput = await this.executeWithRetry(
