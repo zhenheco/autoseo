@@ -1,5 +1,7 @@
 import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import { NodeHttpHandler } from '@smithy/node-http-handler';
+import https from 'https';
 
 interface R2Config {
   accountId: string;
@@ -23,6 +25,14 @@ export class R2Client {
     this.bucketName = config.bucketName;
     this.publicUrl = `https://pub-${config.accountId}.r2.dev`;
 
+    // 建立自訂 HTTPS agent 來處理 SSL/TLS
+    const httpsAgent = new https.Agent({
+      keepAlive: true,
+      maxSockets: 50,
+      rejectUnauthorized: true, // 保持 SSL 驗證
+      minVersion: 'TLSv1.2', // 最低 TLS 版本
+    });
+
     this.client = new S3Client({
       region: 'auto',
       endpoint: `https://${config.accountId}.r2.cloudflarestorage.com`,
@@ -30,8 +40,15 @@ export class R2Client {
         accessKeyId: config.accessKeyId,
         secretAccessKey: config.secretAccessKey,
       },
-      forcePathStyle: false,
+      // R2 需要使用 path-style URLs
+      forcePathStyle: true,
       maxAttempts: 3,
+      // 使用自訂 HTTP handler 處理 SSL/TLS
+      requestHandler: new NodeHttpHandler({
+        httpsAgent,
+        connectionTimeout: 30000,
+        requestTimeout: 60000,
+      }),
     });
   }
 
