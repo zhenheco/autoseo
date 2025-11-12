@@ -44,23 +44,31 @@ async function main() {
   console.log(`[Process Jobs] 🔄 發現 ${jobs.length} 個任務`);
 
   for (const job of jobs) {
-    console.log(`[Process Jobs] 🔒 鎖定任務 ${job.id}`);
+    console.log(`[Process Jobs] 🔒 嘗試鎖定任務 ${job.id}`);
 
-    const { data: locked } = await supabase
+    const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
+
+    const { data: locked, error: lockError, count } = await supabase
       .from('article_jobs')
       .update({
         status: 'processing',
         started_at: new Date().toISOString()
       })
       .eq('id', job.id)
-      .in('status', ['pending', 'processing'])
-      .or(`started_at.is.null,started_at.lt.${new Date(Date.now() - 10 * 60 * 1000).toISOString()}`)
+      .or(`status.eq.pending,and(status.eq.processing,or(started_at.is.null,started_at.lt.${tenMinutesAgo}))`)
       .select();
 
-    if (!locked || locked.length === 0) {
-      console.log(`[Process Jobs] ⏭️  任務 ${job.id} 已被鎖定，跳過`);
+    if (lockError) {
+      console.log(`[Process Jobs] ❌ 鎖定任務失敗: ${lockError.message}`);
       continue;
     }
+
+    if (!locked || locked.length === 0) {
+      console.log(`[Process Jobs] ⏭️  任務 ${job.id} 無法鎖定（可能已被其他程序處理）`);
+      continue;
+    }
+
+    console.log(`[Process Jobs] ✅ 成功鎖定任務 ${job.id}`);
 
     try {
       const orchestrator = new ParallelOrchestrator(supabase);
