@@ -1,6 +1,7 @@
 import { BaseAgent } from './base-agent';
 import type { ImageInput, ImageOutput, GeneratedImage } from '@/types/agents';
 import { R2Client, getR2Config } from '@/lib/storage/r2-client';
+import { SupabaseStorageClient, getSupabaseStorageConfig } from '@/lib/storage/supabase-storage-client';
 import { processBase64Image, formatFileSize, calculateCompressionRatio } from '@/lib/image-processor';
 
 const IMAGE_MODELS = {
@@ -173,44 +174,68 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
     });
 
     let finalUrl = result.url;
+    let uploadSuccess = false;
+
+    console.log('[ImageAgent] 📦 Processing and compressing featured image...');
+
+    const processed = await processBase64Image(result.url, {
+      format: 'jpeg',
+      quality: 85,
+      maxWidth: 1920,
+      maxHeight: 1920,
+    });
+
+    const originalSize = Buffer.from(result.url.split(',')[1], 'base64').length;
+    const compressionRatio = calculateCompressionRatio(originalSize, processed.size);
+
+    console.log(`[ImageAgent] ✅ Compressed: ${formatFileSize(originalSize)} → ${formatFileSize(processed.size)} (${compressionRatio}% reduction)`);
+
+    const timestamp = Date.now();
+    const filename = `article-hero-${timestamp}.jpg`;
+    const base64Data = processed.buffer.toString('base64');
 
     const r2Config = getR2Config();
     if (r2Config) {
       try {
-        console.log('[ImageAgent] 📦 Processing and compressing featured image...');
-
-        const processed = await processBase64Image(result.url, {
-          format: 'jpeg',
-          quality: 85,
-          maxWidth: 1920,
-          maxHeight: 1920,
-        });
-
-        const originalSize = Buffer.from(result.url.split(',')[1], 'base64').length;
-        const compressionRatio = calculateCompressionRatio(originalSize, processed.size);
-
-        console.log(`[ImageAgent] ✅ Compressed: ${formatFileSize(originalSize)} → ${formatFileSize(processed.size)} (${compressionRatio}% reduction)`);
-
+        console.log('[ImageAgent] 嘗試上傳到 R2...');
         const r2Client = new R2Client(r2Config);
-        const timestamp = Date.now();
-        const filename = `article-hero-${timestamp}.jpg`;
-
-        const base64Data = processed.buffer.toString('base64');
-
         const uploaded = await r2Client.uploadImage(
           base64Data,
           filename,
           'image/jpeg'
         );
         finalUrl = uploaded.url;
-
-        console.log(`[ImageAgent] ☁️ Uploaded featured image to R2: ${uploaded.fileKey}`);
+        uploadSuccess = true;
+        console.log(`[ImageAgent] ☁️ R2 上傳成功: ${uploaded.fileKey}`);
       } catch (error) {
         const err = error as Error;
-        console.warn('[ImageAgent] Failed to upload to R2, using original URL:', err.message);
+        console.warn('[ImageAgent] ⚠️ R2 上傳失敗:', err.message);
       }
-    } else {
-      console.log('[R2] Not configured, using OpenAI URL');
+    }
+
+    if (!uploadSuccess) {
+      const supabaseConfig = getSupabaseStorageConfig();
+      if (supabaseConfig) {
+        try {
+          console.log('[ImageAgent] 🔄 Fallback: 嘗試上傳到 Supabase Storage...');
+          const supabaseClient = new SupabaseStorageClient(supabaseConfig);
+          const uploaded = await supabaseClient.uploadImage(
+            base64Data,
+            filename,
+            'image/jpeg'
+          );
+          finalUrl = uploaded.url;
+          uploadSuccess = true;
+          console.log(`[ImageAgent] ☁️ Supabase Storage 上傳成功: ${uploaded.path}`);
+        } catch (error) {
+          const err = error as Error;
+          console.warn('[ImageAgent] ⚠️ Supabase Storage 上傳失敗:', err.message);
+        }
+      }
+    }
+
+    if (!uploadSuccess) {
+      console.log('[ImageAgent] ℹ️ 所有永久儲存失敗，使用 OpenAI 臨時 URL（1 小時有效）');
     }
 
     const [width, height] = input.size.split('x').map(Number);
@@ -239,42 +264,68 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
     });
 
     let finalUrl = result.url;
+    let uploadSuccess = false;
+
+    console.log(`[ImageAgent] 📦 Processing and compressing content image ${index + 1}...`);
+
+    const processed = await processBase64Image(result.url, {
+      format: 'jpeg',
+      quality: 85,
+      maxWidth: 1920,
+      maxHeight: 1920,
+    });
+
+    const originalSize = Buffer.from(result.url.split(',')[1], 'base64').length;
+    const compressionRatio = calculateCompressionRatio(originalSize, processed.size);
+
+    console.log(`[ImageAgent] ✅ Compressed: ${formatFileSize(originalSize)} → ${formatFileSize(processed.size)} (${compressionRatio}% reduction)`);
+
+    const timestamp = Date.now();
+    const filename = `article-content-${index + 1}-${timestamp}.jpg`;
+    const base64Data = processed.buffer.toString('base64');
 
     const r2Config = getR2Config();
     if (r2Config) {
       try {
-        console.log(`[ImageAgent] 📦 Processing and compressing content image ${index + 1}...`);
-
-        const processed = await processBase64Image(result.url, {
-          format: 'jpeg',
-          quality: 85,
-          maxWidth: 1920,
-          maxHeight: 1920,
-        });
-
-        const originalSize = Buffer.from(result.url.split(',')[1], 'base64').length;
-        const compressionRatio = calculateCompressionRatio(originalSize, processed.size);
-
-        console.log(`[ImageAgent] ✅ Compressed: ${formatFileSize(originalSize)} → ${formatFileSize(processed.size)} (${compressionRatio}% reduction)`);
-
+        console.log(`[ImageAgent] 嘗試上傳 content image ${index + 1} 到 R2...`);
         const r2Client = new R2Client(r2Config);
-        const timestamp = Date.now();
-        const filename = `article-content-${index + 1}-${timestamp}.jpg`;
-
-        const base64Data = processed.buffer.toString('base64');
-
         const uploaded = await r2Client.uploadImage(
           base64Data,
           filename,
           'image/jpeg'
         );
         finalUrl = uploaded.url;
-
-        console.log(`[ImageAgent] ☁️ Uploaded content image ${index + 1} to R2: ${uploaded.fileKey}`);
+        uploadSuccess = true;
+        console.log(`[ImageAgent] ☁️ R2 上傳成功 (image ${index + 1}): ${uploaded.fileKey}`);
       } catch (error) {
         const err = error as Error;
-        console.warn('[ImageAgent] Failed to upload to R2, using original URL:', err.message);
+        console.warn(`[ImageAgent] ⚠️ R2 上傳失敗 (image ${index + 1}):`, err.message);
       }
+    }
+
+    if (!uploadSuccess) {
+      const supabaseConfig = getSupabaseStorageConfig();
+      if (supabaseConfig) {
+        try {
+          console.log(`[ImageAgent] 🔄 Fallback: 嘗試上傳 content image ${index + 1} 到 Supabase Storage...`);
+          const supabaseClient = new SupabaseStorageClient(supabaseConfig);
+          const uploaded = await supabaseClient.uploadImage(
+            base64Data,
+            filename,
+            'image/jpeg'
+          );
+          finalUrl = uploaded.url;
+          uploadSuccess = true;
+          console.log(`[ImageAgent] ☁️ Supabase Storage 上傳成功 (image ${index + 1}): ${uploaded.path}`);
+        } catch (error) {
+          const err = error as Error;
+          console.warn(`[ImageAgent] ⚠️ Supabase Storage 上傳失敗 (image ${index + 1}):`, err.message);
+        }
+      }
+    }
+
+    if (!uploadSuccess) {
+      console.log(`[ImageAgent] ℹ️ Content image ${index + 1}: 所有永久儲存失敗，使用 OpenAI 臨時 URL（1 小時有效）`);
     }
 
     const [width, height] = input.size.split('x').map(Number);
