@@ -19,8 +19,43 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    // 支持兩種認證方式：
+    // 1. Authorization header（用於 API/curl 請求）
+    // 2. Cookies（用於瀏覽器請求）
+    const authHeader = request.headers.get('authorization');
+    let user = null;
+
+    if (authHeader && authHeader.startsWith('Bearer ')) {
+      const token = authHeader.substring(7);
+      const { createClient: createSupabaseClient } = await import('@supabase/supabase-js');
+      const authClient = createSupabaseClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL!,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+      );
+
+      // 使用 JWT token 獲取用戶信息
+      const { data: userData, error: userError } = await authClient.auth.getUser(token);
+
+      if (userError || !userData.user) {
+        return NextResponse.json(
+          { error: 'Invalid token', details: userError?.message },
+          { status: 401 }
+        );
+      }
+
+      user = userData.user;
+    } else {
+      const cookieClient = await createClient();
+      const { data: { user: cookieUser } } = await cookieClient.auth.getUser();
+      user = cookieUser;
+    }
+
+    // 使用 service role client 進行資料庫查詢（避免 RLS 問題）
+    const { createClient: createSupabaseClient } = await import('@supabase/supabase-js');
+    const supabase = createSupabaseClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!
+    );
 
     if (!user) {
       return NextResponse.json(
