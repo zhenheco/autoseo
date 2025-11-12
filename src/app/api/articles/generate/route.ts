@@ -144,7 +144,7 @@ export async function POST(request: NextRequest) {
 
     const orchestrator = new ParallelOrchestrator();
 
-    // 直接執行任務（會阻塞直到完成或超時）
+    // 執行 Phase 1-2（Research & Strategy），然後由 Cron Job 接續處理
     try {
       await orchestrator.execute({
         articleJobId,
@@ -156,14 +156,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({
         success: true,
         articleJobId,
-        message: 'Article generated successfully',
+        message: 'Article generation started (Phase 1-2 completed)',
       });
     } catch (error) {
       console.error('Article generation error:', error);
       return NextResponse.json({
         success: false,
         articleJobId,
-        error: 'Article generation failed',
+        error: 'Article generation Phase 1-2 failed',
         message: (error as Error).message,
       }, { status: 500 });
     }

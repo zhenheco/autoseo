@@ -153,7 +153,7 @@ export async function POST(request: NextRequest) {
 
       jobIds.push(articleJobId);
 
-      // 直接執行任務（會阻塞直到完成或超時）
+      // 執行 Phase 1-2（Research & Strategy），然後由 Cron Job 接續處理
       const orchestrator = new ParallelOrchestrator();
       try {
         await orchestrator.execute({
@@ -165,9 +165,9 @@ export async function POST(request: NextRequest) {
           wordCount: parseInt(options?.wordCount || '1500'),
           imageCount: parseInt(options?.imageCount || '3'),
         });
-        console.log(`[Batch] ✅ Article generated: ${title}`);
+        console.log(`[Batch] ✅ Article Phase 1-2 started: ${title}`);
       } catch (error) {
-        console.error(`[Batch] ❌ Article generation error for ${title}:`, error);
+        console.error(`[Batch] ❌ Article Phase 1-2 error for ${title}:`, error);
       }
     }
 

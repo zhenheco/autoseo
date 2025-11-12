@@ -74,6 +74,21 @@ export class ParallelOrchestrator {
     };
 
     try {
+      // 檢查是否有保存的狀態可以恢復
+      const { data: jobData } = await supabase
+        .from('article_jobs')
+        .select('metadata, status')
+        .eq('id', input.articleJobId)
+        .single();
+
+      const currentPhase = jobData?.metadata?.current_phase;
+      const savedState = jobData?.metadata;
+
+      console.log('[Orchestrator] 🔄 Checking resume state', {
+        currentPhase,
+        canResume: !!currentPhase,
+      });
+
       const [brandVoice, workflowSettings, agentConfig, previousArticles] =
         await Promise.all([
           this.getBrandVoice(input.websiteId),
@@ -97,79 +112,131 @@ export class ParallelOrchestrator {
         image_model: agentConfig.image_model || 'gpt-image-1-mini',
       });
 
-      const phase1Start = Date.now();
-      const researchAgent = new ResearchAgent(aiConfig, context);
-      const researchOutput = await researchAgent.execute({
-        title: input.title,
-        region: input.region,
-        competitorCount: workflowSettings.competitor_count,
-        model: agentConfig.research_model,
-        temperature: agentConfig.research_temperature,
-        maxTokens: agentConfig.research_max_tokens,
-      });
-      phaseTimings.research = Date.now() - phase1Start;
+      // === 階段 1: Research & Strategy (初始階段) ===
+      // 如果沒有 currentPhase，執行 Phase 1-2 然後返回
+      let researchOutput;
+      let strategyOutput;
+
+      if (!currentPhase) {
+        console.log('[Orchestrator] 🚀 Starting Phase 1-2: Research & Strategy');
+
+        // Phase 1: Research
+        const phase1Start = Date.now();
+        const researchAgent = new ResearchAgent(aiConfig, context);
+        researchOutput = await researchAgent.execute({
+          title: input.title,
+          region: input.region,
+          competitorCount: workflowSettings.competitor_count,
+          model: agentConfig.research_model,
+          temperature: agentConfig.research_temperature,
+          maxTokens: agentConfig.research_max_tokens,
+        });
+        phaseTimings.research = Date.now() - phase1Start;
+        result.research = researchOutput;
+
+        await this.updateJobStatus(input.articleJobId, 'processing', {
+          research: researchOutput,
+          current_phase: 'research_completed',
+        });
+
+        // Phase 2: Strategy
+        const phase2Start = Date.now();
+        const strategyAgent = new StrategyAgent(aiConfig, context);
+        strategyOutput = await strategyAgent.execute({
+          researchData: researchOutput,
+          brandVoice,
+          targetWordCount: workflowSettings.content_length_min,
+          model: agentConfig.strategy_model,
+          temperature: agentConfig.strategy_temperature,
+          maxTokens: agentConfig.strategy_max_tokens,
+        });
+        phaseTimings.strategy = Date.now() - phase2Start;
+        result.strategy = strategyOutput;
+
+        await this.updateJobStatus(input.articleJobId, 'processing', {
+          ...savedState,
+          research: researchOutput,
+          strategy: strategyOutput,
+          current_phase: 'strategy_completed',
+        });
+
+        // 完成 Phase 1-2，返回讓 cron job 繼續
+        console.log('[Orchestrator] ✅ Phase 1-2 completed, waiting for next execution');
+        result.success = true;
+        result.executionStats.totalTime = Date.now() - startTime;
+        return result;
+      }
+
+      // 載入已保存的 research 和 strategy
+      researchOutput = savedState?.research;
+      strategyOutput = savedState?.strategy;
       result.research = researchOutput;
-
-      await this.updateJobStatus(input.articleJobId, 'processing', {
-        research: researchOutput,
-        current_phase: 'research_completed',
-      });
-
-      const phase2Start = Date.now();
-      const strategyAgent = new StrategyAgent(aiConfig, context);
-      const strategyOutput = await strategyAgent.execute({
-        researchData: researchOutput,
-        brandVoice,
-        targetWordCount: workflowSettings.content_length_min,
-        model: agentConfig.strategy_model,
-        temperature: agentConfig.strategy_temperature,
-        maxTokens: agentConfig.strategy_max_tokens,
-      });
-      phaseTimings.strategy = Date.now() - phase2Start;
       result.strategy = strategyOutput;
 
-      await this.updateJobStatus(input.articleJobId, 'processing', {
-        strategy: strategyOutput,
-        current_phase: 'strategy_completed',
-      });
-
-      const useMultiAgent = this.shouldUseMultiAgent(input);
-      console.log(`[Orchestrator] Using ${useMultiAgent ? 'Multi-Agent' : 'Legacy'} architecture`);
-
+      // === 階段 2: Content Generation (寫作+圖片) ===
+      // 如果 currentPhase === 'strategy_completed'，執行 Phase 3 然後返回
       let writingOutput: ArticleGenerationResult['writing'];
       let imageOutput: ArticleGenerationResult['image'];
 
-      const phase3Start = Date.now();
+      if (currentPhase === 'strategy_completed') {
+        console.log('[Orchestrator] 🚀 Starting Phase 3: Content & Image Generation');
 
-      if (useMultiAgent) {
-        try {
-          imageOutput = await this.executeImageAgent(
-            strategyOutput,
-            agentConfig,
-            aiConfig,
-            context
-          );
+        const useMultiAgent = this.shouldUseMultiAgent(input);
+        console.log(`[Orchestrator] Using ${useMultiAgent ? 'Multi-Agent' : 'Legacy'} architecture`);
 
-          await this.updateJobStatus(input.articleJobId, 'processing', {
-            current_phase: 'images_completed',
-            image: imageOutput,
-          });
+        const phase3Start = Date.now();
 
-          writingOutput = await this.executeContentGeneration(
-            strategyOutput,
-            imageOutput,
-            brandVoice,
-            agentConfig,
-            aiConfig,
-            context
-          );
+        if (useMultiAgent) {
+          try {
+            imageOutput = await this.executeImageAgent(
+              strategyOutput,
+              agentConfig,
+              aiConfig,
+              context
+            );
 
-          console.log('[Orchestrator] ✅ Multi-agent content generation succeeded');
-        } catch (multiAgentError) {
-          console.error('[Orchestrator] ❌ Multi-agent flow failed, falling back to legacy:', multiAgentError);
-          this.errorTracker.trackFallback('multi-agent-to-legacy', multiAgentError);
+            await this.updateJobStatus(input.articleJobId, 'processing', {
+              ...savedState,
+              current_phase: 'images_completed',
+              image: imageOutput,
+            });
 
-          const [legacyWriting, legacyImage] = await Promise.all([
+            writingOutput = await this.executeContentGeneration(
+              strategyOutput,
+              imageOutput,
+              brandVoice,
+              agentConfig,
+              aiConfig,
+              context
+            );
+
+            console.log('[Orchestrator] ✅ Multi-agent content generation succeeded');
+          } catch (multiAgentError) {
+            console.error('[Orchestrator] ❌ Multi-agent flow failed, falling back to legacy:', multiAgentError);
+            this.errorTracker.trackFallback('multi-agent-to-legacy', multiAgentError);
+
+            const [legacyWriting, legacyImage] = await Promise.all([
+              this.executeWritingAgent(
+                strategyOutput,
+                brandVoice,
+                previousArticles,
+                agentConfig,
+                aiConfig,
+                context
+              ),
+              imageOutput || this.executeImageAgent(
+                strategyOutput,
+                agentConfig,
+                aiConfig,
+                context
+              ),
+            ]);
+
+            writingOutput = legacyWriting;
+            imageOutput = legacyImage;
+          }
+        } else {
+          [writingOutput, imageOutput] = await Promise.all([
             this.executeWritingAgent(
               strategyOutput,
               brandVoice,
@@ -178,45 +245,49 @@ export class ParallelOrchestrator {
               aiConfig,
               context
             ),
-            imageOutput || this.executeImageAgent(
+            this.executeImageAgent(
               strategyOutput,
               agentConfig,
               aiConfig,
               context
             ),
           ]);
-
-          writingOutput = legacyWriting;
-          imageOutput = legacyImage;
         }
-      } else {
-        [writingOutput, imageOutput] = await Promise.all([
-          this.executeWritingAgent(
-            strategyOutput,
-            brandVoice,
-            previousArticles,
-            agentConfig,
-            aiConfig,
-            context
-          ),
-          this.executeImageAgent(
-            strategyOutput,
-            agentConfig,
-            aiConfig,
-            context
-          ),
-        ]);
+
+        phaseTimings.contentGeneration = Date.now() - phase3Start;
+        result.writing = writingOutput;
+        result.image = imageOutput;
+
+        await this.updateJobStatus(input.articleJobId, 'processing', {
+          ...savedState,
+          writing: writingOutput,
+          image: imageOutput,
+          current_phase: 'content_completed',
+        });
+
+        // 完成 Phase 3，返回讓 cron job 繼續
+        console.log('[Orchestrator] ✅ Phase 3 completed, waiting for next execution');
+        result.success = true;
+        result.executionStats.totalTime = Date.now() - startTime;
+        return result;
       }
 
-      phaseTimings.contentGeneration = Date.now() - phase3Start;
+      // 載入已保存的 writing 和 image
+      writingOutput = savedState?.writing;
+      imageOutput = savedState?.image;
+
+      if (!writingOutput || !imageOutput) {
+        throw new Error('Cannot resume from content_completed phase: missing writing or image data');
+      }
+
       result.writing = writingOutput;
       result.image = imageOutput;
 
-      await this.updateJobStatus(input.articleJobId, 'processing', {
-        current_phase: 'content_completed',
-        writing: writingOutput,
-        image: imageOutput,
-      });
+      // === 階段 3: Meta, Quality & Publish (最終階段) ===
+      console.log('[Orchestrator] 🚀 Starting Phase 4-6: Meta, Quality & Publish');
+
+      // 重新計算 useMultiAgent 以判斷是否需要插入圖片
+      const useMultiAgent = this.shouldUseMultiAgent(input);
 
       const phase4Start = Date.now();
       const metaAgent = new MetaAgent(aiConfig, context);
