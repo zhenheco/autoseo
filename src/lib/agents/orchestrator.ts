@@ -160,18 +160,14 @@ export class ParallelOrchestrator {
           current_phase: 'strategy_completed',
         });
 
-        // 完成 Phase 1-2，返回讓 cron job 繼續
-        console.log('[Orchestrator] ✅ Phase 1-2 completed, waiting for next execution');
-        result.success = true;
-        result.executionStats.totalTime = Date.now() - startTime;
-        return result;
+        console.log('[Orchestrator] ✅ Phase 1-2 completed, continuing to Phase 3');
+      } else {
+        // 載入已保存的 research 和 strategy
+        researchOutput = savedState?.research;
+        strategyOutput = savedState?.strategy;
+        result.research = researchOutput;
+        result.strategy = strategyOutput;
       }
-
-      // 載入已保存的 research 和 strategy
-      researchOutput = savedState?.research;
-      strategyOutput = savedState?.strategy;
-      result.research = researchOutput;
-      result.strategy = strategyOutput;
 
       // === 階段 2: Content Generation (寫作+圖片) ===
       // 如果 currentPhase === 'strategy_completed'，執行 Phase 3 然後返回
@@ -265,23 +261,19 @@ export class ParallelOrchestrator {
           current_phase: 'content_completed',
         });
 
-        // 完成 Phase 3，返回讓 cron job 繼續
-        console.log('[Orchestrator] ✅ Phase 3 completed, waiting for next execution');
-        result.success = true;
-        result.executionStats.totalTime = Date.now() - startTime;
-        return result;
+        console.log('[Orchestrator] ✅ Phase 3 completed, continuing to Phase 4-6');
+      } else {
+        // 載入已保存的 writing 和 image
+        writingOutput = savedState?.writing;
+        imageOutput = savedState?.image;
+
+        if (!writingOutput || !imageOutput) {
+          throw new Error('Cannot resume from content_completed phase: missing writing or image data');
+        }
+
+        result.writing = writingOutput;
+        result.image = imageOutput;
       }
-
-      // 載入已保存的 writing 和 image
-      writingOutput = savedState?.writing;
-      imageOutput = savedState?.image;
-
-      if (!writingOutput || !imageOutput) {
-        throw new Error('Cannot resume from content_completed phase: missing writing or image data');
-      }
-
-      result.writing = writingOutput;
-      result.image = imageOutput;
 
       // === 階段 3: Meta, Quality & Publish (最終階段) ===
       console.log('[Orchestrator] 🚀 Starting Phase 4-6: Meta, Quality & Publish');
