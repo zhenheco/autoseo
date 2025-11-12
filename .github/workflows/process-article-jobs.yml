@@ -1,0 +1,34 @@
+name: Process Article Jobs
+
+on:
+  schedule:
+    # 每 5 分鐘執行一次
+    - cron: '*/5 * * * *'
+
+  # 支援手動觸發
+  workflow_dispatch:
+
+jobs:
+  process-jobs:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Process pending article jobs
+        run: |
+          response=$(curl -s -w "\n%{http_code}" \
+            -X GET \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
+            https://autopilot-qcfi0w9oj-acejou27s-projects.vercel.app/api/cron/process-article-jobs)
+
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+
+          echo "HTTP Status: $http_code"
+          echo "Response: $body"
+
+          if [ "$http_code" != "200" ]; then
+            echo "Error: Failed to process article jobs"
+            exit 1
+          fi
+
+          echo "Successfully processed article jobs"
