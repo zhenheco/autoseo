@@ -1,4 +1,4 @@
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/server';
 import { SupabaseClient } from '@supabase/supabase-js';
 import { ArticleStorageService } from '@/lib/services/article-storage';
 import { ResearchAgent } from './research-agent';
@@ -50,7 +50,7 @@ export class ParallelOrchestrator {
     if (this.supabaseClient) {
       return this.supabaseClient;
     }
-    return await createClient();
+    return createAdminClient();
   }
 
   async execute(input: ArticleGenerationInput): Promise<ArticleGenerationResult> {
