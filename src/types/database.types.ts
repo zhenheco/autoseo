@@ -859,6 +859,102 @@ export type Database = {
           }
         ]
       }
+      article_jobs: {
+        Row: {
+          id: string
+          job_id: string
+          company_id: string | null
+          website_id: string | null
+          user_id: string | null
+          keywords: string[]
+          region: string
+          article_type: string
+          status: 'pending' | 'processing' | 'completed' | 'failed'
+          progress: number
+          current_step: string | null
+          result_url: string | null
+          wordpress_post_id: string | null
+          error_message: string | null
+          scheduled_publish_at: string | null
+          auto_publish: boolean
+          published_at: string | null
+          featured_image_url: string | null
+          image_generation_prompt: string | null
+          image_alt_text: string | null
+          metadata: Json | null
+          created_at: string
+          started_at: string | null
+          completed_at: string | null
+        }
+        Insert: {
+          id?: string
+          job_id?: string
+          company_id?: string | null
+          website_id?: string | null
+          user_id?: string | null
+          keywords: string[]
+          region?: string
+          article_type?: string
+          status?: 'pending' | 'processing' | 'completed' | 'failed'
+          progress?: number
+          current_step?: string | null
+          result_url?: string | null
+          wordpress_post_id?: string | null
+          error_message?: string | null
+          scheduled_publish_at?: string | null
+          auto_publish?: boolean
+          published_at?: string | null
+          featured_image_url?: string | null
+          image_generation_prompt?: string | null
+          image_alt_text?: string | null
+          metadata?: Json | null
+          created_at?: string
+          started_at?: string | null
+          completed_at?: string | null
+        }
+        Update: {
+          id?: string
+          job_id?: string
+          company_id?: string | null
+          website_id?: string | null
+          user_id?: string | null
+          keywords?: string[]
+          region?: string
+          article_type?: string
+          status?: 'pending' | 'processing' | 'completed' | 'failed'
+          progress?: number
+          current_step?: string | null
+          result_url?: string | null
+          wordpress_post_id?: string | null
+          error_message?: string | null
+          scheduled_publish_at?: string | null
+          auto_publish?: boolean
+          published_at?: string | null
+          featured_image_url?: string | null
+          image_generation_prompt?: string | null
+          image_alt_text?: string | null
+          metadata?: Json | null
+          created_at?: string
+          started_at?: string | null
+          completed_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "article_jobs_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "article_jobs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
       commissions: {
         Row: {
           id: string
