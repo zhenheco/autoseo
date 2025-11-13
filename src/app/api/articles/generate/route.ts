@@ -176,7 +176,53 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // API 立即回傳，由 GitHub Actions cron job 處理所有 phase
+    // 觸發 GitHub Actions 處理（避免 Vercel 5 分鐘超時）
+    if (process.env.USE_GITHUB_ACTIONS === 'true') {
+      try {
+        const owner = 'acejou27';
+        const repo = 'Auto-pilot-SEO';
+        const token = process.env.GITHUB_PERSONAL_ACCESS_TOKEN;
+
+        if (token) {
+          // 觸發 GitHub Actions workflow
+          const githubResponse = await fetch(
+            `https://api.github.com/repos/${owner}/${repo}/dispatches`,
+            {
+              method: 'POST',
+              headers: {
+                'Accept': 'application/vnd.github+json',
+                'Authorization': `Bearer ${token}`,
+                'X-GitHub-Api-Version': '2022-11-28',
+              },
+              body: JSON.stringify({
+                event_type: 'generate-article',
+                client_payload: {
+                  jobId: articleJobId,
+                  title: articleTitle,
+                  timestamp: new Date().toISOString(),
+                }
+              })
+            }
+          );
+
+          if (githubResponse.status === 204) {
+            console.log(`✅ GitHub Actions triggered for job: ${articleJobId}`);
+            return NextResponse.json({
+              success: true,
+              articleJobId,
+              message: 'Article generation triggered via GitHub Actions (no timeout limit)',
+              processor: 'github-actions',
+            });
+          } else {
+            console.error('Failed to trigger GitHub Actions:', githubResponse.status);
+          }
+        }
+      } catch (githubError) {
+        console.error('GitHub Actions trigger error:', githubError);
+      }
+    }
+
+    // 預設：API 立即回傳，由 GitHub Actions cron job 處理
     // 避免 Vercel 函數逾時（DeepSeek reasoner 需要 4+ 分鐘）
     return NextResponse.json({
       success: true,
