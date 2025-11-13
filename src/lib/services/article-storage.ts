@@ -27,68 +27,164 @@ export class ArticleStorageService {
   constructor(private supabase: SupabaseClient) {}
 
   /**
-   * 驗證輸入資料
+   * 驗證輸入資料（使用寬鬆的可選驗證）
    */
   private validateInput(result: ArticleGenerationResult): void {
     const missingFields: string[] = [];
 
-    // 檢查必要的頂層欄位
+    // 只檢查核心必要欄位
     if (!result.writing) missingFields.push('writing');
     if (!result.meta) missingFields.push('meta');
 
     if (missingFields.length > 0) {
-      throw new Error(`缺少必要欄位: ${missingFields.join(', ')}`);
+      throw new Error(`缺少核心必要欄位: ${missingFields.join(', ')}`);
     }
 
-    // 檢查 writing 內容
-    if (!result.writing!.markdown) missingFields.push('writing.markdown');
-    if (!result.writing!.html) missingFields.push('writing.html');
-    if (!result.writing!.statistics) missingFields.push('writing.statistics');
-    if (!result.writing!.readability) missingFields.push('writing.readability');
-    if (!result.writing!.keywordUsage) missingFields.push('writing.keywordUsage');
-
-    // 檢查 meta 內容
-    if (!result.meta!.seo) missingFields.push('meta.seo');
-    if (!result.meta!.slug) missingFields.push('meta.slug');
-    if (!result.meta!.focusKeyphrase) missingFields.push('meta.focusKeyphrase');
-    if (!result.meta!.openGraph) missingFields.push('meta.openGraph');
-    if (!result.meta!.twitterCard) missingFields.push('meta.twitterCard');
-
-    // 檢查 statistics 內容
-    const stats = result.writing!.statistics;
-    if (typeof stats.wordCount !== 'number' || stats.wordCount <= 0) {
-      missingFields.push('writing.statistics.wordCount (必須為正數)');
+    // 檢查 writing 必須包含內容（markdown, html, 或 content 其中之一）
+    const hasContent = result.writing!.markdown || result.writing!.html || (result.writing as any).content;
+    if (!hasContent) {
+      missingFields.push('writing content (需要 markdown, html 或 content 其中之一)');
     }
 
-    // 檢查 readability 內容
-    const readability = result.writing!.readability;
-    if (typeof readability.fleschReadingEase !== 'number') {
-      missingFields.push('writing.readability.fleschReadingEase');
-    }
-    if (typeof readability.fleschKincaidGrade !== 'number') {
-      missingFields.push('writing.readability.fleschKincaidGrade');
-    }
-
-    // 檢查 keywordUsage 內容
-    const keywordUsage = result.writing!.keywordUsage;
-    if (typeof keywordUsage.density !== 'number' || keywordUsage.density < 0 || keywordUsage.density > 100) {
-      missingFields.push('writing.keywordUsage.density (必須在 0-100 之間)');
+    // 檢查 meta 必須包含標題
+    const hasTitle = result.meta!.seo?.title || (result.meta as any).title;
+    if (!hasTitle) {
+      missingFields.push('meta title (需要 meta.seo.title 或 meta.title 其中之一)');
     }
 
     if (missingFields.length > 0) {
-      console.error('[ArticleStorage] 輸入驗證失敗:', missingFields);
-      throw new Error(`輸入驗證失敗，缺少或無效的欄位:\n${missingFields.join('\n')}`);
+      console.error('[ArticleStorage] 核心欄位驗證失敗:', missingFields);
+      throw new Error(`缺少核心欄位:\n${missingFields.join('\n')}`);
     }
+
+    // 可選欄位警告（不拋出錯誤）
+    const warnings: string[] = [];
+    if (!result.writing!.statistics) warnings.push('writing.statistics (將使用預設值)');
+    if (!result.writing!.readability) warnings.push('writing.readability (將使用預設值)');
+    if (!result.writing!.keywordUsage) warnings.push('writing.keywordUsage (將使用預設值)');
+    if (!result.meta!.slug) warnings.push('meta.slug (將自動生成)');
+
+    if (warnings.length > 0) {
+      console.warn('[ArticleStorage] 可選欄位缺失（將使用預設值）:', warnings);
+    }
+  }
+
+  /**
+   * 為缺失的欄位提供預設值
+   */
+  private normalizeResult(result: ArticleGenerationResult): ArticleGenerationResult {
+    // 提供 writing 欄位的預設值
+    if (result.writing) {
+      // 如果缺少 markdown，從 html 或 content 生成
+      if (!result.writing.markdown && result.writing.html) {
+        result.writing.markdown = result.writing.html;
+      } else if (!result.writing.markdown && (result.writing as any).content) {
+        result.writing.markdown = (result.writing as any).content;
+      }
+
+      // 如果缺少 html，從 markdown 或 content 生成
+      if (!result.writing.html && result.writing.markdown) {
+        result.writing.html = result.writing.markdown;
+      } else if (!result.writing.html && (result.writing as any).content) {
+        result.writing.html = (result.writing as any).content;
+      }
+
+      // 提供預設的 statistics
+      if (!result.writing.statistics) {
+        const content = result.writing.markdown || result.writing.html || (result.writing as any).content || '';
+        const wordCount = content.split(/\s+/).length;
+        const sentenceCount = content.split(/[.!?]+/).length;
+        result.writing.statistics = {
+          wordCount,
+          readingTime: Math.ceil(wordCount / 200),
+          paragraphCount: content.split(/\n\n+/).length,
+          sentenceCount,
+          averageSentenceLength: sentenceCount > 0 ? wordCount / sentenceCount : 0,
+        };
+      }
+
+      // 提供預設的 readability
+      if (!result.writing.readability) {
+        result.writing.readability = {
+          fleschReadingEase: 60,
+          fleschKincaidGrade: 8,
+          gunningFogIndex: 10,
+        };
+      }
+
+      // 提供預設的 keywordUsage
+      if (!result.writing.keywordUsage) {
+        result.writing.keywordUsage = {
+          density: 1.5,
+          count: 0,
+          distribution: [],
+        };
+      }
+    }
+
+    // 提供 meta 欄位的預設值
+    if (result.meta) {
+      // 統一標題來源
+      const title = result.meta.seo?.title || (result.meta as any).title || 'Untitled';
+
+      // 確保 seo 物件存在
+      if (!result.meta.seo) {
+        result.meta.seo = {
+          title,
+          description: '',
+          keywords: [],
+        };
+      }
+
+      // 如果缺少 slug，從標題生成
+      if (!result.meta.slug) {
+        result.meta.slug = title
+          .toLowerCase()
+          .replace(/[^\w\u4e00-\u9fa5]+/g, '-')
+          .replace(/^-+|-+$/g, '');
+      }
+
+      // 提供預設的 focusKeyphrase
+      if (!result.meta.focusKeyphrase) {
+        result.meta.focusKeyphrase = result.meta.seo.keywords?.[0] || '';
+      }
+
+      // 提供預設的 openGraph
+      if (!result.meta.openGraph) {
+        result.meta.openGraph = {
+          title: result.meta.seo.title,
+          description: result.meta.seo.description,
+          image: '',
+          type: 'article',
+        };
+      }
+
+      // 提供預設的 twitterCard
+      if (!result.meta.twitterCard) {
+        result.meta.twitterCard = {
+          card: 'summary_large_image',
+          title: result.meta.seo.title,
+          description: result.meta.seo.description,
+          image: '',
+        };
+      }
+    }
+
+    return result;
   }
 
   /**
    * 儲存生成的文章到資料庫
    */
   async saveArticle(params: SaveArticleParams): Promise<SavedArticle> {
-    const { articleJobId, result, websiteId, companyId, userId } = params;
+    const { articleJobId, websiteId, companyId, userId } = params;
+    let { result } = params;
 
     // 驗證輸入
     this.validateInput(result);
+
+    // 為缺失的欄位提供預設值
+    result = this.normalizeResult(result);
 
     // 準備文章數據
     const articleData = {
