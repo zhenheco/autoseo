@@ -2,8 +2,8 @@ import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { v4 as uuidv4 } from 'uuid';
 
-// Vercel 無伺服器函數最大執行時間：5 分鐘（Hobby 計劃上限，批次生成）
-export const maxDuration = 300;
+// Vercel 無伺服器函數最大執行時間（異步模式：立即返回，無需長時間執行）
+export const maxDuration = 10; // 10 秒足夠（實際 < 1 秒）
 
 export async function POST(request: NextRequest) {
   try {

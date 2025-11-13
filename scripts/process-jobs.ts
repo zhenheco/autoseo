@@ -23,11 +23,14 @@ async function main() {
 
   console.log('[Process Jobs] 🔍 查詢待處理任務...');
 
+  // 查詢待處理任務：
+  // 1. status 為 pending 或 processing
+  // 2. started_at 為 null（未開始）或超過 3 分鐘（卡住的任務）
   const { data: jobs, error } = await supabase
     .from('article_jobs')
     .select('*')
     .in('status', ['pending', 'processing'])
-    .or(`started_at.is.null,started_at.lt.${new Date(Date.now() - 10 * 60 * 1000).toISOString()}`)
+    .or(`started_at.is.null,started_at.lt.${new Date(Date.now() - 3 * 60 * 1000).toISOString()}`)
     .order('created_at', { ascending: true })
     .limit(5);
 
