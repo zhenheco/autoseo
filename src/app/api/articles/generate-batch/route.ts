@@ -154,6 +154,44 @@ export async function POST(request: NextRequest) {
       console.log(`[Batch] ✅ Article job queued: ${title}`);
     }
 
+    // 觸發 GitHub Actions workflow 立即處理任務
+    if (jobIds.length > 0) {
+      try {
+        const githubToken = process.env.GITHUB_TOKEN;
+        if (githubToken) {
+          const response = await fetch(
+            'https://api.github.com/repos/acejou27/Auto-pilot-SEO/dispatches',
+            {
+              method: 'POST',
+              headers: {
+                'Authorization': `Bearer ${githubToken}`,
+                'Accept': 'application/vnd.github.v3+json',
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                event_type: 'article-jobs-created',
+                client_payload: {
+                  jobCount: jobIds.length,
+                  jobIds: jobIds,
+                  timestamp: new Date().toISOString(),
+                },
+              }),
+            }
+          );
+
+          if (response.ok) {
+            console.log(`[Batch] ✅ Triggered GitHub Actions workflow for ${jobIds.length} jobs`);
+          } else {
+            console.error('[Batch] ⚠️  Failed to trigger workflow:', response.status, await response.text());
+          }
+        } else {
+          console.log('[Batch] ⚠️  GITHUB_TOKEN not configured, workflow will run on schedule');
+        }
+      } catch (dispatchError) {
+        console.error('[Batch] ⚠️  Error triggering workflow:', dispatchError);
+      }
+    }
+
     return NextResponse.json({
       success: true,
       jobIds,

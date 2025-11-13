@@ -2,11 +2,15 @@ name: Process Article Jobs
 
 on:
   schedule:
-    # 每分鐘執行一次（最即時）
+    # 每分鐘執行一次（備援機制）
     - cron: '* * * * *'
 
   # 支援手動觸發
   workflow_dispatch:
+
+  # 支援 API 觸發（當前端創建任務時立即執行）
+  repository_dispatch:
+    types: [article-jobs-created]
 
 jobs:
   process-jobs:

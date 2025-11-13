@@ -9,14 +9,7 @@ async function clearAllData() {
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-  if (!supabaseUrl || !supabaseKey) {
-    console.error('[Clear All] ❌ 缺少必要的環境變數');
-    console.error('SUPABASE_URL:', !!supabaseUrl);
-    console.error('SUPABASE_SERVICE_ROLE_KEY:', !!supabaseKey);
-    process.exit(1);
-  }
-
-  const supabase = createClient<Database>(supabaseUrl, supabaseKey);
+  const supabase = createClient<Database>(supabaseUrl!, supabaseKey!);
   console.log('[Clear All] 🗑️  開始清空所有數據...\n');
 
   // 1. 清空文章任務
