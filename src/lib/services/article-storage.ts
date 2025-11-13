@@ -9,7 +9,7 @@ import type { ArticleGenerationResult } from '@/types/agents';
 export interface SaveArticleParams {
   articleJobId: string;
   result: ArticleGenerationResult;
-  websiteId: string;
+  websiteId?: string | null; // 可選：文章寫好後才決定發佈到哪個網站
   companyId: string;
   userId: string;
 }
@@ -193,7 +193,7 @@ export class ArticleStorageService {
     const articleData = {
       article_job_id: articleJobId || null, // 允許 null，如果 job 不存在
       company_id: companyId,
-      website_id: websiteId,
+      website_id: websiteId || null, // 允許 null，文章寫好後才決定發佈到哪個網站
       user_id: userId,
 
       // 文章內容

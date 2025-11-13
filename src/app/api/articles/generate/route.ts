@@ -87,68 +87,15 @@ export async function POST(request: NextRequest) {
     let websites = websiteQuery.data;
     const websiteError = websiteQuery.error;
 
-    if ((!websites || websites.length === 0) && !websiteError) {
-      console.log('Creating default website config for company:', membership.company_id);
-      const { data: newWebsite, error: createError } = await supabase
-        .from('website_configs')
-        .insert({
-          company_id: membership.company_id,
-          website_name: '',
-          wordpress_url: '',
-        })
-        .select('id')
-        .single();
+    // website_id 是可選的：文章可以先寫好，之後再決定發佈到哪個網站
+    let websiteId: string | null = null;
 
-      if (createError || !newWebsite) {
-        console.error('Failed to create website config:', createError);
-        return NextResponse.json(
-          { error: 'Failed to create website configuration' },
-          { status: 500 }
-        );
-      }
-
-      const { error: agentConfigError } = await supabase
-        .from('agent_configs')
-        .insert({
-          website_id: newWebsite.id,
-          research_model: 'deepseek-reasoner',
-          complex_processing_model: 'deepseek-reasoner',
-          simple_processing_model: 'deepseek-chat',
-          image_model: 'gpt-image-1-mini',
-          research_temperature: 0.7,
-          research_max_tokens: 64000,
-          strategy_temperature: 0.7,
-          strategy_max_tokens: 64000,
-          writing_temperature: 0.7,
-          writing_max_tokens: 64000,
-          image_size: '1024x1024',
-          image_count: 3,
-          meta_enabled: true,
-          meta_model: 'deepseek-chat',
-          meta_temperature: 0.7,
-          meta_max_tokens: 64000,
-        });
-
-      if (agentConfigError) {
-        console.error('Failed to create agent config:', agentConfigError);
-        return NextResponse.json(
-          { error: 'Failed to create agent configuration', details: agentConfigError.message },
-          { status: 500 }
-        );
-      }
-
-      websites = [newWebsite];
+    if (websites && websites.length > 0) {
+      websiteId = websites[0].id;
+      console.log('使用現有網站配置:', websiteId);
+    } else {
+      console.log('無網站配置 - 文章將稍後決定發佈目標');
     }
-
-    if (!websites || websites.length === 0) {
-      console.error('Website error:', websiteError);
-      return NextResponse.json(
-        { error: 'No website configured' },
-        { status: 404 }
-      );
-    }
-
-    const websiteId = websites[0].id;
 
     const articleJobId = uuidv4();
 

@@ -29,6 +29,7 @@ async function createTestJob() {
       throw new Error('找不到有效的公司成員資料，請先在系統中建立公司和成員');
     }
 
+    // website_id 是可選的，因為文章可以先寫好，之後再決定發佈到哪個網站
     const { data: website } = await supabase
       .from('website_configs')
       .select('id')
@@ -36,13 +37,9 @@ async function createTestJob() {
       .limit(1)
       .single();
 
-    if (!website) {
-      throw new Error('找不到有效的網站配置，請先建立網站配置');
-    }
-
     console.log('✅ 找到有效的配置');
     console.log('   Company ID:', membership.company_id);
-    console.log('   Website ID:', website.id);
+    console.log('   Website ID:', website?.id || '(未指定 - 稍後選擇)');
     console.log('   User ID:', membership.user_id);
 
     // 創建測試任務
@@ -51,7 +48,7 @@ async function createTestJob() {
       .insert({
         job_id: `test-job-${Date.now()}`,
         company_id: membership.company_id,
-        website_id: website.id,
+        website_id: website?.id || null, // 可選，稍後決定發佈到哪個網站
         user_id: membership.user_id,
         keywords: ['AI行銷', '數位轉型', 'SEO優化'],
         region: 'TW',
