@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
-import { ParallelOrchestrator } from '@/lib/agents/orchestrator';
 import { v4 as uuidv4 } from 'uuid';
 
 // Vercel 無伺服器函數最大執行時間：5 分鐘（Hobby 計劃上限，批次生成）
@@ -152,23 +151,7 @@ export async function POST(request: NextRequest) {
       }
 
       jobIds.push(articleJobId);
-
-      // 執行 Phase 1-2（Research & Strategy），然後由 Cron Job 接續處理
-      const orchestrator = new ParallelOrchestrator();
-      try {
-        await orchestrator.execute({
-          articleJobId,
-          companyId: membership.company_id,
-          websiteId,
-          title: title,
-          targetLanguage: options?.targetLanguage,
-          wordCount: parseInt(options?.wordCount || '1500'),
-          imageCount: parseInt(options?.imageCount || '3'),
-        });
-        console.log(`[Batch] ✅ Article Phase 1-2 started: ${title}`);
-      } catch (error) {
-        console.error(`[Batch] ❌ Article Phase 1-2 error for ${title}:`, error);
-      }
+      console.log(`[Batch] ✅ Article job queued: ${title}`);
     }
 
     return NextResponse.json({
@@ -177,7 +160,11 @@ export async function POST(request: NextRequest) {
       totalJobs: jobIds.length,
       failedJobs: failedItems.length,
       failedItems,
-      message: 'Batch article generation started',
+      message: 'Article generation jobs queued. Use /api/articles/status/[jobId] to check progress.',
+      polling: {
+        statusUrl: '/api/articles/status/[jobId]',
+        recommendedInterval: 60000, // 60 秒
+      },
     });
   } catch (error) {
     console.error('Batch generate error:', error);
