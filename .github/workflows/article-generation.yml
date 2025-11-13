@@ -55,6 +55,9 @@ jobs:
       - name: 安裝依賴
         run: pnpm install --frozen-lockfile
 
+      - name: 編譯 TypeScript
+        run: pnpm run build
+
       - name: 處理單個文章（repository_dispatch）
         if: github.event_name == 'repository_dispatch'
         env:
