@@ -2,8 +2,8 @@ name: Process Article Jobs
 
 on:
   schedule:
-    # Public repo 無限制，改為每 5 分鐘執行一次（更即時）
-    - cron: '*/5 * * * *'
+    # 每分鐘執行一次（最即時）
+    - cron: '* * * * *'
 
   # 支援手動觸發
   workflow_dispatch:
