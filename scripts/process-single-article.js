@@ -5,6 +5,9 @@
  * 直接調用 Orchestrator 處理單個文章，無 5 分鐘限制
  */
 
+// 載入環境變數
+require('dotenv').config({ path: '.env.local' });
+
 // 註冊路徑別名解析
 const path = require('path');
 const Module = require('module');
@@ -100,7 +103,7 @@ async function processArticle() {
       companyId: job.company_id,
       websiteId: job.website_id,
       userId: job.user_id,
-      title: title || job.title || job.metadata?.title,
+      title: title || job.metadata?.title,
       targetLanguage: job.metadata?.targetLanguage || 'zh-TW',
       wordCount: job.metadata?.wordCount || 2000,
       imageCount: job.metadata?.imageCount || 3,

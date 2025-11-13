@@ -5,6 +5,9 @@
  * 處理所有待處理的文章任務
  */
 
+// 載入環境變數
+require('dotenv').config({ path: '.env.local' });
+
 // 註冊路徑別名解析
 const path = require('path');
 const Module = require('module');
@@ -28,7 +31,7 @@ const supabase = createClient(
 async function processSingleJob(job) {
   const startTime = Date.now();
   console.log(`\n📝 處理 Job: ${job.id}`);
-  console.log(`   標題: ${job.title || job.metadata?.title || 'Untitled'}`);
+  console.log(`   標題: ${job.metadata?.title || 'Untitled'}`);
 
   try {
     // 更新狀態為 processing
@@ -54,7 +57,7 @@ async function processSingleJob(job) {
       companyId: job.company_id,
       websiteId: job.website_id,
       userId: job.user_id,
-      title: job.title || job.metadata?.title,
+      title: job.metadata?.title,
       targetLanguage: job.metadata?.targetLanguage || 'zh-TW',
       wordCount: job.metadata?.wordCount || 2000,
       imageCount: job.metadata?.imageCount || 3,
