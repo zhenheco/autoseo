@@ -789,7 +789,19 @@ export class ParallelOrchestrator {
     };
   }
 
-  private async getBrandVoice(websiteId: string): Promise<BrandVoice> {
+  private async getBrandVoice(websiteId: string | null): Promise<BrandVoice> {
+    // 如果 websiteId 為 null，直接返回預設值
+    if (!websiteId || websiteId === 'null') {
+      console.warn('[Orchestrator] website_id 為 null，使用預設 brand_voices');
+      return {
+        id: '',
+        website_id: websiteId || '',
+        tone_of_voice: '專業、友善、易懂',
+        target_audience: '一般網路使用者',
+        keywords: [],
+      };
+    }
+
     const supabase = await this.getSupabase();
     const { data: brandVoices, error } = await supabase
       .from('brand_voices')
@@ -823,7 +835,27 @@ export class ParallelOrchestrator {
     return brandVoice;
   }
 
-  private async getWorkflowSettings(websiteId: string): Promise<WorkflowSettings> {
+  private async getWorkflowSettings(websiteId: string | null): Promise<WorkflowSettings> {
+    // 如果 websiteId 為 null，直接返回預設值
+    if (!websiteId || websiteId === 'null') {
+      console.warn('[Orchestrator] website_id 為 null，使用預設 workflow_settings');
+      return {
+        id: '',
+        website_id: websiteId || '',
+        serp_analysis_enabled: true,
+        competitor_count: 10,
+        content_length_min: 1000,
+        content_length_max: 3000,
+        keyword_density_min: 1,
+        keyword_density_max: 3,
+        quality_threshold: 80,
+        auto_publish: false,
+        serp_model: 'perplexity-research',
+        content_model: 'deepseek-chat',
+        meta_model: 'deepseek-chat',
+      };
+    }
+
     const supabase = await this.getSupabase();
     const { data: workflowSettings, error } = await supabase
       .from('workflow_settings')
@@ -873,12 +905,18 @@ export class ParallelOrchestrator {
     return workflowSetting;
   }
 
-  private async getAgentConfig(websiteId: string): Promise<AgentConfig & {
+  private async getAgentConfig(websiteId: string | null): Promise<AgentConfig & {
     complexModel?: AIModel;
     simpleModel?: AIModel;
     imageModelInfo?: AIModel;
     researchModelInfo?: AIModel;
   }> {
+    // 如果 websiteId 為 null，直接返回預設配置
+    if (!websiteId || websiteId === 'null') {
+      console.warn('[Orchestrator] website_id 為 null，使用預設 agent_configs');
+      return this.getDefaultAgentConfig();
+    }
+
     const supabase = await this.getSupabase();
 
     const { data: agentConfigs, error: configError } = await supabase
@@ -890,32 +928,13 @@ export class ParallelOrchestrator {
 
     if (configError) {
       console.error('[Orchestrator] 查詢 agent_configs 失敗:', configError);
-      console.warn('[Orchestrator] 回滾到預設配置，並嘗試自動創建');
-
-      try {
-        await this.ensureAgentConfigExists(websiteId);
-      } catch (autoCreateError) {
-        console.error('[Orchestrator] 自動創建 agent_configs 失敗:', autoCreateError);
-      }
-
+      console.warn('[Orchestrator] 回滾到預設配置');
       return this.getDefaultAgentConfig();
     }
 
     if (!agentConfig) {
-      console.warn('[Orchestrator] website_id 沒有對應的 agent_configs，開始自動創建');
-
-      try {
-        const created = await this.ensureAgentConfigExists(websiteId);
-        if (created) {
-          agentConfig = created;
-        } else {
-          console.warn('[Orchestrator] 自動創建失敗，使用預設配置');
-          return this.getDefaultAgentConfig();
-        }
-      } catch (autoCreateError) {
-        console.error('[Orchestrator] 自動創建過程出錯:', autoCreateError);
-        return this.getDefaultAgentConfig();
-      }
+      console.warn('[Orchestrator] website_id 沒有對應的 agent_configs，使用預設配置');
+      return this.getDefaultAgentConfig();
     }
 
     const modelIds = [
