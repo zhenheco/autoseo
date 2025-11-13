@@ -5,6 +5,17 @@
  * 處理所有待處理的文章任務
  */
 
+// 註冊路徑別名解析
+const path = require('path');
+const Module = require('module');
+const originalResolveFilename = Module._resolveFilename;
+Module._resolveFilename = function (request, parent, isMain) {
+  if (request.startsWith('@/')) {
+    request = path.join(__dirname, '..', 'dist', request.substring(2));
+  }
+  return originalResolveFilename.call(this, request, parent, isMain);
+};
+
 const { createClient } = require('@supabase/supabase-js');
 const { ParallelOrchestrator } = require('../dist/lib/agents/orchestrator.js');
 
