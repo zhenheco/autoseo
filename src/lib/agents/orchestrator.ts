@@ -716,9 +716,9 @@ export class ParallelOrchestrator {
         selectedTitle,
         outline,
         keywords: strategyOutput.keywords,
-        targetSections: strategyOutput.targetSections,
-        competitorAnalysis: strategyOutput.competitorAnalysis,
-        contentGaps: strategyOutput.contentGaps,
+        targetSections: strategyOutput.internalLinkingStrategy?.targetSections || [],
+        competitorAnalysis: [],
+        contentGaps: [],
       },
       focusKeyword: selectedTitle, // 使用標題作為主要關鍵字
     });
@@ -757,9 +757,30 @@ export class ParallelOrchestrator {
       averageSentenceLength: sentences.length > 0 ? assembled.statistics.totalWords / sentences.length : 0,
     };
 
+    // 將 InternalLink[] 轉換為 WritingOutput 格式
+    const internalLinks = writingOutput.internalLinks.map(link => ({
+      anchor: link.anchor || link.title,
+      url: link.url,
+      section: '',
+      articleId: '',
+    }));
+
+    // 構建符合 WritingOutput 類型的回傳
     return {
-      ...writingOutput,
-      statistics, // 使用更完整的統計資料
+      markdown: writingOutput.markdown,
+      html: writingOutput.html,
+      statistics,
+      internalLinks,
+      keywordUsage: {
+        count: writingOutput.keywordUsage.count,
+        density: writingOutput.keywordUsage.density,
+        distribution: [], // Multi-Agent 暫不支援分佈統計
+      },
+      readability: {
+        fleschKincaidGrade: writingOutput.readability.fleschKincaidGrade,
+        fleschReadingEase: writingOutput.readability.fleschReadingEase,
+        gunningFogIndex: writingOutput.readability.gunningFog,
+      },
       executionInfo: {
         model: agentConfig.writing_model,
         executionTime: totalExecutionTime,

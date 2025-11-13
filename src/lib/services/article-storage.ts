@@ -98,49 +98,49 @@ export class ArticleStorageService {
       user_id: userId,
 
       // 文章內容
-      title: result.meta.seo.title,
-      slug: result.meta.slug,
-      markdown_content: result.writing.markdown,
-      html_content: result.writing.html,
-      excerpt: result.meta.seo.description.substring(0, 200),
+      title: result.meta!.seo.title,
+      slug: result.meta!.slug,
+      markdown_content: result.writing!.markdown,
+      html_content: result.writing!.html,
+      excerpt: result.meta!.seo.description.substring(0, 200),
 
       // SEO Metadata
-      seo_title: result.meta.seo.title,
-      seo_description: result.meta.seo.description,
-      focus_keyword: result.meta.focusKeyphrase,
-      keywords: result.meta.seo.keywords || [],
+      seo_title: result.meta!.seo.title,
+      seo_description: result.meta!.seo.description,
+      focus_keyword: result.meta!.focusKeyphrase,
+      keywords: result.meta!.seo.keywords || [],
 
       // Open Graph & Twitter Card
-      og_title: result.meta.openGraph.title,
-      og_description: result.meta.openGraph.description,
-      og_image: result.meta.openGraph.image,
-      twitter_card_type: result.meta.twitterCard.card,
-      twitter_title: result.meta.twitterCard.title,
-      twitter_description: result.meta.twitterCard.description,
-      twitter_image: result.meta.twitterCard.image,
+      og_title: result.meta!.openGraph.title,
+      og_description: result.meta!.openGraph.description,
+      og_image: result.meta!.openGraph.image,
+      twitter_card_type: result.meta!.twitterCard.card,
+      twitter_title: result.meta!.twitterCard.title,
+      twitter_description: result.meta!.twitterCard.description,
+      twitter_image: result.meta!.twitterCard.image,
 
       // 分類與標籤
       categories: result.category?.categories.map(c => c.name) || [],
       tags: result.category?.tags.map(t => t.name) || [],
 
       // 文章統計
-      word_count: result.writing.statistics.wordCount,
-      reading_time: result.writing.statistics.readingTime,
-      paragraph_count: result.writing.statistics.paragraphCount,
-      sentence_count: result.writing.statistics.sentenceCount,
+      word_count: result.writing!.statistics.wordCount,
+      reading_time: result.writing!.statistics.readingTime,
+      paragraph_count: result.writing!.statistics.paragraphCount,
+      sentence_count: result.writing!.statistics.sentenceCount,
 
       // 可讀性指標
-      flesch_reading_ease: result.writing.readability.fleschReadingEase,
-      flesch_kincaid_grade: result.writing.readability.fleschKincaidGrade,
-      gunning_fog_index: result.writing.readability.gunningFogIndex,
+      flesch_reading_ease: result.writing!.readability.fleschReadingEase,
+      flesch_kincaid_grade: result.writing!.readability.fleschKincaidGrade,
+      gunning_fog_index: result.writing!.readability.gunningFogIndex,
 
       // 關鍵字分析
-      keyword_density: result.writing.keywordUsage.density,
-      keyword_usage_count: result.writing.keywordUsage.count,
+      keyword_density: result.writing!.keywordUsage.density,
+      keyword_usage_count: result.writing!.keywordUsage.count,
 
       // 內部連結
-      internal_links: result.writing.internalLinks || [],
-      internal_links_count: result.writing.internalLinks?.length || 0,
+      internal_links: result.writing!.internalLinks || [],
+      internal_links_count: result.writing!.internalLinks?.length || 0,
 
       // 外部引用
       external_references: result.strategy?.externalReferences || [],
@@ -175,16 +175,16 @@ export class ArticleStorageService {
       // AI 模型資訊
       research_model: result.research?.executionInfo.model,
       strategy_model: result.strategy?.executionInfo.model,
-      writing_model: result.writing.executionInfo.model,
-      meta_model: result.meta.executionInfo.model,
+      writing_model: result.writing!.executionInfo.model,
+      meta_model: result.meta!.executionInfo.model,
 
       // 執行統計
       generation_time: result.executionStats.totalTime,
       token_usage: {
         research: result.research?.executionInfo.tokenUsage,
         strategy: result.strategy?.executionInfo.tokenUsage,
-        writing: result.writing.executionInfo.tokenUsage,
-        meta: result.meta.executionInfo.tokenUsage,
+        writing: result.writing!.executionInfo.tokenUsage,
+        meta: result.meta!.executionInfo.tokenUsage,
       },
       cost_breakdown: result.costBreakdown,
 

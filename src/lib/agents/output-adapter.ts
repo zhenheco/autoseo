@@ -1,12 +1,22 @@
 import type {
   WritingAgentOutput,
   ContentAssemblerOutput,
-  StrategyAgentOutput,
+  StrategyOutput,
   ArticleStatistics,
   ReadabilityMetrics,
   KeywordUsage,
-  InternalLink
+  InternalLink,
+  Outline
 } from '@/types/agents';
+
+interface AdapterStrategyInput {
+  selectedTitle: string;
+  outline: Outline;
+  keywords?: string[];
+  targetSections?: string[];
+  competitorAnalysis?: unknown[];
+  contentGaps?: string[];
+}
 
 /**
  * Multi-Agent Output Adapter
@@ -18,7 +28,7 @@ export class MultiAgentOutputAdapter {
    */
   adapt(input: {
     assemblerOutput: ContentAssemblerOutput;
-    strategyOutput: StrategyAgentOutput;
+    strategyOutput: AdapterStrategyInput;
     focusKeyword: string;
   }): WritingAgentOutput {
     const { assemblerOutput, strategyOutput, focusKeyword } = input;
