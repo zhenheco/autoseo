@@ -76,11 +76,13 @@ async function processSingleJob(job) {
       .update({
         status: 'completed',
         completed_at: new Date().toISOString(),
-        result: result,
+        generated_content: result.writing?.html || result.writing?.content || null,
+        article_title: result.writing?.title || result.meta?.title || input.title,
         metadata: {
           ...job.metadata,
           execution_time_seconds: elapsedTime,
           processor: 'github-actions-batch',
+          result: result,  // 將完整結果存到 metadata
         }
       })
       .eq('id', job.id);
