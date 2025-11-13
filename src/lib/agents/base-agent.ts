@@ -86,7 +86,7 @@ export abstract class BaseAgent<TInput, TOutput> {
     prompt: string,
     options: {
       model: string;
-      quality?: 'standard' | 'hd';
+      quality?: 'low' | 'medium' | 'high' | 'auto';
       size?: string;
     }
   ): Promise<{ url: string; revisedPrompt?: string }> {

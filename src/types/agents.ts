@@ -247,7 +247,7 @@ export interface ImageInput {
     mood?: string;
   };
   model: string;
-  quality: 'standard' | 'hd';
+  quality: 'low' | 'medium' | 'high' | 'auto';
   size: string;
 }
 

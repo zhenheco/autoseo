@@ -81,7 +81,7 @@ export const RetryConfigs = {
     retryableErrors: ['ECONNRESET', 'ETIMEDOUT', 'rate_limit_exceeded', 'content_policy_violation'],
     shouldAdjustParams: true,
     paramAdjustment: (attempt: number) => ({
-      quality: attempt > 1 ? 'standard' : 'hd'
+      quality: attempt > 1 ? 'medium' : 'high'
     }),
     timeoutMs: 180000
   },

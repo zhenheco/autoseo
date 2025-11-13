@@ -38,12 +38,20 @@ jobs:
       - name: Install tsx
         run: pnpm add -g tsx
 
+      - name: Clean environment variables
+        run: |
+          # 清理所有環境變數的換行符和回車符
+          echo "SUPABASE_URL=$(echo -n '${{ secrets.SUPABASE_URL }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "SUPABASE_SERVICE_ROLE_KEY=$(echo -n '${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_SUPABASE_URL=$(echo -n '${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$(echo -n '${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "DEEPSEEK_API_KEY=$(echo -n '${{ secrets.DEEPSEEK_API_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "OPENAI_API_KEY=$(echo -n '${{ secrets.OPENAI_API_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "R2_ACCESS_KEY_ID=$(echo -n '${{ secrets.R2_ACCESS_KEY_ID }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "R2_SECRET_ACCESS_KEY=$(echo -n '${{ secrets.R2_SECRET_ACCESS_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "R2_ACCOUNT_ID=$(echo -n '${{ secrets.R2_ACCOUNT_ID }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "R2_BUCKET_NAME=$(echo -n '${{ secrets.R2_BUCKET_NAME }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "USE_MULTI_AGENT_ARCHITECTURE=$(echo -n '${{ secrets.USE_MULTI_AGENT_ARCHITECTURE }}' | tr -d '\n\r')" >> $GITHUB_ENV
+
       - name: Process pending article jobs
-        env:
-          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
-          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
-          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
-          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
         run: tsx scripts/process-jobs.ts

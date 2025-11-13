@@ -607,7 +607,7 @@ export class ParallelOrchestrator {
       outline: strategyOutput.outline,
       count: agentConfig.image_count,
       model: agentConfig.image_model,
-      quality: 'standard' as const,
+      quality: 'medium' as const,
       size: agentConfig.image_size,
     });
   }

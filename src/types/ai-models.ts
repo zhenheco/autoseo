@@ -68,7 +68,7 @@ export interface AgentConfigExtended {
 
   // 圖片生成
   image_model: string;
-  image_quality: 'standard' | 'hd';
+  image_quality: 'low' | 'medium' | 'high' | 'auto';
   image_size: string;
   image_count: number;
 
@@ -192,7 +192,7 @@ export interface OpenAIImageAPIOptions {
   model: string;
   prompt: string;
   size?: string;
-  quality?: 'standard' | 'hd';
+  quality?: 'low' | 'medium' | 'high' | 'auto';
   n?: number;
 }
 

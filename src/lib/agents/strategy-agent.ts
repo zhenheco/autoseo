@@ -164,9 +164,16 @@ ${topGaps.join('\n')}
 3. faq 最多 2 個
 4. 字數分配要合理，總和應接近目標字數
 
-## 輸出格式（必須是 JSON）
-請嚴格按照以下 JSON schema 輸出，不要包含任何額外文字：
+## ⚠️ 重要：輸出格式要求
 
+**必須直接輸出純 JSON，不要包含任何額外內容：**
+- ❌ 不要使用 Markdown 代碼塊（不要用 \`\`\`json 或 \`\`\`）
+- ❌ 不要在 JSON 前後加上任何說明文字
+- ❌ 不要使用「以下是」、「這是」等開場白
+- ✅ 直接以 { 開頭，以 } 結尾
+- ✅ 確保是有效的 JSON 格式
+
+**正確範例（直接輸出 JSON）：**
 {
   "introduction": {
     "hook": "吸引讀者的開場方式",
@@ -196,7 +203,13 @@ ${topGaps.join('\n')}
   ]
 }
 
-請確保輸出是有效的 JSON 格式。`;
+**錯誤範例（不要這樣做）：**
+以下是文章大綱的 JSON 格式：
+\`\`\`json
+{...}
+\`\`\`
+
+請立即開始輸出 JSON：`;
 
     let apiResponse;
     try {
@@ -232,6 +245,16 @@ ${topGaps.join('\n')}
   }
 
   private parseOutlineWithFallbacks(content: string, title: string, targetWordCount: number): StrategyOutput['outline'] {
+    // Log AI response details for debugging
+    console.log('[StrategyAgent] AI Response Analysis:', {
+      totalLength: content.length,
+      firstChars: content.substring(0, 200),
+      lastChars: content.substring(Math.max(0, content.length - 200)),
+      hasMarkdownCodeBlock: content.includes('```json') || content.includes('```'),
+      hasJsonBraces: content.includes('{') && content.includes('}'),
+      startsWithBrace: content.trim().startsWith('{'),
+    });
+
     const parsers: Array<{
       name: string;
       parse: () => StrategyOutput['outline'] | null;
@@ -239,6 +262,10 @@ ${topGaps.join('\n')}
       {
         name: 'DirectJSONParser',
         parse: () => this.tryDirectJSONParse(content)
+      },
+      {
+        name: 'MarkdownCodeBlockParser',
+        parse: () => this.tryMarkdownCodeBlockParse(content)
       },
       {
         name: 'NestedJSONParser',
@@ -261,14 +288,19 @@ ${topGaps.join('\n')}
 
         if (result && result.mainSections && result.mainSections.length > 0) {
           console.log(`[StrategyAgent] ✅ ${parser.name} succeeded:`, {
-            sectionsCount: result.mainSections.length
+            sectionsCount: result.mainSections.length,
+            sectionTitles: result.mainSections.map(s => s.heading).slice(0, 3)
           });
           return result;
         }
 
         console.warn(`[StrategyAgent] ⚠️ ${parser.name} returned empty or invalid result`);
       } catch (error) {
-        console.warn(`[StrategyAgent] ❌ ${parser.name} failed:`, error);
+        const err = error as Error;
+        console.warn(`[StrategyAgent] ❌ ${parser.name} failed:`, {
+          errorMessage: err.message,
+          errorName: err.name
+        });
       }
     }
 
@@ -288,6 +320,37 @@ ${topGaps.join('\n')}
     return null;
   }
 
+  private tryMarkdownCodeBlockParse(content: string): StrategyOutput['outline'] | null {
+    // Try to extract JSON from Markdown code blocks like ```json...``` or ```{...}```
+    const codeBlockPatterns = [
+      /```json\s*\n?([\s\S]*?)\n?```/,  // ```json ... ```
+      /```\s*\n?(\{[\s\S]*?\})\n?```/,   // ``` {...} ```
+    ];
+
+    for (const pattern of codeBlockPatterns) {
+      const match = content.match(pattern);
+      if (match && match[1]) {
+        try {
+          const parsed = JSON.parse(match[1].trim());
+
+          if (parsed.outline?.mainSections) {
+            console.log('[StrategyAgent] Extracted JSON from Markdown code block (nested)');
+            return parsed.outline;
+          }
+
+          if (parsed.mainSections) {
+            console.log('[StrategyAgent] Extracted JSON from Markdown code block (direct)');
+            return parsed;
+          }
+        } catch (error) {
+          console.warn('[StrategyAgent] Failed to parse Markdown code block content:', error);
+        }
+      }
+    }
+
+    return null;
+  }
+
   private tryNestedJSONParse(content: string): StrategyOutput['outline'] | null {
     const jsonMatch = content.match(/\{[\s\S]*\}/);
     if (!jsonMatch) {
@@ -298,13 +361,16 @@ ${topGaps.join('\n')}
       const parsed = JSON.parse(jsonMatch[0]);
 
       if (parsed.outline?.mainSections) {
+        console.log('[StrategyAgent] Successfully parsed nested outline structure');
         return parsed.outline;
       }
 
       if (parsed.mainSections) {
+        console.log('[StrategyAgent] Successfully parsed direct outline structure');
         return parsed;
       }
-    } catch {
+    } catch (error) {
+      console.warn('[StrategyAgent] Failed to parse nested JSON:', error);
       return null;
     }
 
