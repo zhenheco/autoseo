@@ -55,13 +55,17 @@ async function processArticle() {
   console.log('📝 Job ID:', jobId);
   console.log('📌 標題:', title || '從資料庫載入');
 
+  let job = null;  // 提升到函數作用域
+
   try {
     // 1. 獲取 Job 詳細資訊
-    const { data: job, error: jobError } = await supabase
+    const { data: jobData, error: jobError } = await supabase
       .from('article_jobs')
       .select('*')
       .eq('id', jobId)
       .single();
+
+    job = jobData;
 
     if (jobError || !job) {
       throw new Error(`找不到 Job: ${jobId}`);

@@ -17,11 +17,42 @@ async function createTestJob() {
   console.log('📝 創建測試文章生成任務...');
 
   try {
+    // 首先取得一個有效的 company 和 website
+    const { data: membership } = await supabase
+      .from('company_members')
+      .select('company_id, user_id')
+      .eq('status', 'active')
+      .limit(1)
+      .single();
+
+    if (!membership) {
+      throw new Error('找不到有效的公司成員資料，請先在系統中建立公司和成員');
+    }
+
+    const { data: website } = await supabase
+      .from('website_configs')
+      .select('id')
+      .eq('company_id', membership.company_id)
+      .limit(1)
+      .single();
+
+    if (!website) {
+      throw new Error('找不到有效的網站配置，請先建立網站配置');
+    }
+
+    console.log('✅ 找到有效的配置');
+    console.log('   Company ID:', membership.company_id);
+    console.log('   Website ID:', website.id);
+    console.log('   User ID:', membership.user_id);
+
     // 創建測試任務
     const { data: job, error } = await supabase
       .from('article_jobs')
       .insert({
         job_id: `test-job-${Date.now()}`,
+        company_id: membership.company_id,
+        website_id: website.id,
+        user_id: membership.user_id,
         keywords: ['AI行銷', '數位轉型', 'SEO優化'],
         region: 'TW',
         article_type: 'blog_post',
