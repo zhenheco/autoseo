@@ -32,7 +32,7 @@ async function main() {
     .in('status', ['pending', 'processing'])
     .or(`started_at.is.null,started_at.lt.${new Date(Date.now() - 3 * 60 * 1000).toISOString()}`)
     .order('created_at', { ascending: true })
-    .limit(5);
+    .limit(10); // 最多同時處理 10 個任務
 
   if (error) {
     console.error('[Process Jobs] ❌ 查詢失敗:', error);
@@ -45,8 +45,10 @@ async function main() {
   }
 
   console.log(`[Process Jobs] 🔄 發現 ${jobs.length} 個任務`);
+  console.log(`[Process Jobs] ⚡ 使用並行處理模式`);
 
-  for (const job of jobs) {
+  // 並行處理所有任務
+  const processPromises = jobs.map(async (job) => {
     console.log(`[Process Jobs] 🔒 嘗試鎖定任務 ${job.id}`);
 
     const { data: locked, error: lockError } = await supabase
@@ -59,13 +61,13 @@ async function main() {
       .select();
 
     if (lockError) {
-      console.log(`[Process Jobs] ❌ 鎖定任務失敗: ${lockError.message}`);
-      continue;
+      console.log(`[Process Jobs] ❌ 鎖定任務失敗 ${job.id}: ${lockError.message}`);
+      return { success: false, jobId: job.id };
     }
 
     if (!locked || locked.length === 0) {
       console.log(`[Process Jobs] ⏭️  任務 ${job.id} 無法鎖定（可能已被其他程序處理）`);
-      continue;
+      return { success: false, jobId: job.id };
     }
 
     console.log(`[Process Jobs] ✅ 成功鎖定任務 ${job.id}`);
@@ -75,7 +77,7 @@ async function main() {
       const metadata = job.metadata as Record<string, unknown> | null;
       const title = (metadata?.title as string) || job.keywords?.[0] || 'Untitled';
 
-      console.log(`[Process Jobs] 🚀 開始處理任務 ${job.id}`);
+      console.log(`[Process Jobs] 🚀 開始處理任務 ${job.id} - ${title}`);
 
       await orchestrator.execute({
         articleJobId: job.id,
@@ -92,6 +94,7 @@ async function main() {
       });
 
       console.log(`[Process Jobs] ✅ 任務 ${job.id} 處理成功`);
+      return { success: true, jobId: job.id };
     } catch (err) {
       console.error(`[Process Jobs] ❌ 任務 ${job.id} 失敗:`, err);
 
@@ -106,8 +109,20 @@ async function main() {
           },
         })
         .eq('id', job.id);
+
+      return { success: false, jobId: job.id };
     }
-  }
+  });
+
+  // 等待所有任務完成
+  const results = await Promise.all(processPromises);
+  const successCount = results.filter(r => r.success).length;
+  const failedCount = results.filter(r => !r.success).length;
+
+  console.log(`[Process Jobs] 📊 處理結果：${successCount} 成功，${failedCount} 失敗`);
+  results.forEach(result => {
+    console.log(`  - ${result.jobId}: ${result.success ? '✅' : '❌'}`);
+  });
 
   console.log('[Process Jobs] 🎉 所有任務處理完成');
 }
