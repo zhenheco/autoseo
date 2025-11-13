@@ -13,6 +13,7 @@
     "test:ui": "vitest --ui",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
+    "build:scripts": "tsc --project tsconfig.scripts.json",
     "db:migrate": "node scripts/run-migrations.js",
     "db:generate-types": "supabase gen types typescript --project-id YOUR_PROJECT_REF > src/types/database.types.ts",
     "google-drive:authorize": "tsx scripts/google-drive-authorize.ts",
@@ -60,6 +61,7 @@
     "zod": "^4.1.12"
   },
   "devDependencies": {
+    "@octokit/rest": "^22.0.1",
     "@opennextjs/cloudflare": "^1.11.0",
     "@playwright/test": "^1.56.1",
     "@tailwindcss/postcss": "^4.1.16",

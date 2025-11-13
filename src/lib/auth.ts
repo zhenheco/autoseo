@@ -274,7 +274,7 @@ export async function getCompanyMembers(companyId: string) {
   }
 
   const membersWithUsers = members.map(member => {
-    const user = users?.find(u => u.id === member.user_id)
+    const user = users?.find((u: any) => u.id === member.user_id)
     return {
       ...member,
       users: user ? {
