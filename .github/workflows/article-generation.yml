@@ -72,7 +72,8 @@ jobs:
               return 1
             fi
 
-            if echo "$var_value" | grep -q $'\n'; then
+            # 使用 printf 而不是 echo 來避免自動添加換行符
+            if printf '%s' "$var_value" | grep -q $'\n'; then
               echo "❌ 錯誤: $var_name 包含換行符"
               return 1
             fi
