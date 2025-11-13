@@ -53,12 +53,18 @@ node scripts/process-single-article.js --jobId YOUR_JOB_ID
 #### 方法 A：使用 API 觸發（推薦）
 
 ```bash
-# 替換 YOUR_JOB_ID 和 YOUR_TITLE
+# 替換 YOUR_GITHUB_TOKEN, YOUR_JOB_ID 和 YOUR_TITLE
+# 從環境變數讀取 token（更安全）
 curl -X POST https://api.github.com/repos/acejou27/Auto-pilot-SEO/dispatches \
-  -H "Authorization: token ***REMOVED***" \
+  -H "Authorization: token ${GITHUB_PERSONAL_ACCESS_TOKEN}" \
   -H "Accept: application/vnd.github.v3+json" \
   -H "Content-Type: application/json" \
   -d '{"event_type": "generate-article", "client_payload": {"jobId": "YOUR_JOB_ID", "title": "YOUR_TITLE"}}'
+```
+
+**⚠️ 安全提醒**：不要在命令中直接使用 token，應該設定環境變數：
+```bash
+export GITHUB_PERSONAL_ACCESS_TOKEN="your_token_here"
 ```
 
 #### 方法 B：從 GitHub 網頁手動觸發
@@ -74,8 +80,9 @@ curl -X POST https://api.github.com/repos/acejou27/Auto-pilot-SEO/dispatches \
 批次處理會自動每 5 分鐘執行一次，或手動觸發：
 
 ```bash
+# 使用環境變數中的 token
 curl -X POST https://api.github.com/repos/acejou27/Auto-pilot-SEO/dispatches \
-  -H "Authorization: token ***REMOVED***" \
+  -H "Authorization: token ${GITHUB_PERSONAL_ACCESS_TOKEN}" \
   -H "Accept: application/vnd.github.v3+json" \
   -H "Content-Type: application/json" \
   -d '{"event_type": "batch-process", "client_payload": {"debug": true}}'
@@ -86,7 +93,11 @@ curl -X POST https://api.github.com/repos/acejou27/Auto-pilot-SEO/dispatches \
 ### 查看最近的 Workflow 執行
 
 ```bash
-curl -s -H "Authorization: token ***REMOVED***" \
+# 使用 gh CLI（推薦）或環境變數中的 token
+gh run list --limit 5
+
+# 或使用 curl（需要環境變數）
+curl -s -H "Authorization: token ${GITHUB_PERSONAL_ACCESS_TOKEN}" \
   -H "Accept: application/vnd.github.v3+json" \
   "https://api.github.com/repos/acejou27/Auto-pilot-SEO/actions/runs?per_page=5" \
   | jq '.workflow_runs[] | {id: .id, name: .name, status: .status, conclusion: .conclusion, created_at: .created_at}'
@@ -96,7 +107,11 @@ curl -s -H "Authorization: token ***REMOVED***" \
 
 ```bash
 # 替換 WORKFLOW_RUN_ID
-curl -s -H "Authorization: token ***REMOVED***" \
+# 使用 gh CLI（推薦）
+gh run view WORKFLOW_RUN_ID
+
+# 或使用 curl（需要環境變數）
+curl -s -H "Authorization: token ${GITHUB_PERSONAL_ACCESS_TOKEN}" \
   -H "Accept: application/vnd.github.v3+json" \
   "https://api.github.com/repos/acejou27/Auto-pilot-SEO/actions/runs/WORKFLOW_RUN_ID" \
   | jq '{status: .status, conclusion: .conclusion}'
