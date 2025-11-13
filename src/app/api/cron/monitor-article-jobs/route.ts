@@ -190,7 +190,6 @@ async function retryJob(job: any, supabase: any): Promise<void> {
       companyId: job.company_id,
       userId: job.user_id,
       title: job.title,
-      keyword_id: job.keyword_id,
     });
   } catch (error) {
     console.error(`[Monitor] 重試任務 ${job.id} 失敗:`, error);

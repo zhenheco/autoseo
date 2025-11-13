@@ -231,17 +231,21 @@ export class ErrorTracker {
     });
 
     if (this.options.enableExternalTracking) {
+      const timestamp = new Date().toISOString();
       this.sendToExternalTracker({
         id: this.generateErrorId(),
+        agent: 'Orchestrator',
+        phase: 'fallback',
         category: ErrorCategory.LOGIC,
         severity: ErrorSeverity.CRITICAL,
         message: `Fallback triggered: ${reason}`,
         stack: err.stack,
+        timestamp,
         context: {
           agentName: 'Orchestrator',
           attemptNumber: 1,
           maxAttempts: 1,
-          timestamp: new Date().toISOString()
+          timestamp
         }
       });
     }

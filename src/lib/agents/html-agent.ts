@@ -114,6 +114,7 @@ ${fullHtml}
 
     for (const link of internalLinks) {
       if (linkedKeywords.size >= internalLinks.length) break;
+      if (!link.keywords) continue;
 
       for (const keyword of link.keywords) {
         if (linkedKeywords.has(keyword)) continue;
