@@ -55,7 +55,7 @@ async function processArticle() {
   try {
     // 1. 獲取 Job 詳細資訊
     const { data: job, error: jobError } = await supabase
-      .from('article_generation_jobs')
+      .from('article_jobs')
       .select('*')
       .eq('id', jobId)
       .single();
@@ -73,7 +73,7 @@ async function processArticle() {
     }
 
     const { error: updateError } = await supabase
-      .from('article_generation_jobs')
+      .from('article_jobs')
       .update({
         status: 'processing',
         started_at: new Date().toISOString(),
@@ -125,7 +125,7 @@ async function processArticle() {
 
     // 6. 更新 Job 狀態為完成
     const { error: completeError } = await supabase
-      .from('article_generation_jobs')
+      .from('article_jobs')
       .update({
         status: 'completed',
         completed_at: new Date().toISOString(),
@@ -151,7 +151,7 @@ async function processArticle() {
 
     // 更新失敗狀態
     await supabase
-      .from('article_generation_jobs')
+      .from('article_jobs')
       .update({
         status: 'failed',
         error_message: error.message,

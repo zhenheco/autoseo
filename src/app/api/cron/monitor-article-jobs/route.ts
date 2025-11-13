@@ -32,7 +32,7 @@ export async function POST(request: NextRequest) {
 
     // 查詢所有處理中的任務
     const { data: processingJobs, error: jobsError } = await supabase
-      .from('article_generation_jobs')
+      .from('article_jobs')
       .select('*')
       .eq('status', 'processing');
 
@@ -100,7 +100,7 @@ export async function POST(request: NextRequest) {
 
     // 檢查已完成但未儲存到 generated_articles 的任務
     const { data: completedJobs, error: completedError } = await supabase
-      .from('article_generation_jobs')
+      .from('article_jobs')
       .select('*')
       .eq('status', 'completed')
       .gte('updated_at', thirtyMinutesAgo.toISOString());
@@ -166,7 +166,7 @@ async function retryJob(job: any, supabase: any): Promise<void> {
 
   // 更新重試次數
   await supabase
-    .from('article_generation_jobs')
+    .from('article_jobs')
     .update({
       status: 'pending',
       metadata: {
@@ -201,7 +201,7 @@ async function retryJob(job: any, supabase: any): Promise<void> {
  */
 async function markJobAsFailed(job: any, reason: string, supabase: any): Promise<void> {
   await supabase
-    .from('article_generation_jobs')
+    .from('article_jobs')
     .update({
       status: 'failed',
       error_message: reason,

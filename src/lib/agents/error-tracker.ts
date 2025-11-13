@@ -133,7 +133,7 @@ export class ErrorTracker {
 
       // 讀取現有的 metadata
       const { data: job } = await supabase
-        .from('article_generation_jobs')
+        .from('article_jobs')
         .select('metadata')
         .eq('id', this.options.jobId)
         .single();
@@ -145,7 +145,7 @@ export class ErrorTracker {
 
       // 更新 metadata
       await supabase
-        .from('article_generation_jobs')
+        .from('article_jobs')
         .update({
           metadata: {
             ...job?.metadata,

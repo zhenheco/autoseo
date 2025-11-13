@@ -33,7 +33,7 @@ async function processSingleJob(job) {
   try {
     // 更新狀態為 processing
     await supabase
-      .from('article_generation_jobs')
+      .from('article_jobs')
       .update({
         status: 'processing',
         started_at: new Date().toISOString(),
@@ -69,7 +69,7 @@ async function processSingleJob(job) {
 
     // 更新完成狀態
     await supabase
-      .from('article_generation_jobs')
+      .from('article_jobs')
       .update({
         status: 'completed',
         completed_at: new Date().toISOString(),
@@ -89,7 +89,7 @@ async function processSingleJob(job) {
 
     // 更新失敗狀態
     await supabase
-      .from('article_generation_jobs')
+      .from('article_jobs')
       .update({
         status: 'failed',
         error_message: error.message,
@@ -115,7 +115,7 @@ async function processBatch() {
     const tenMinutesAgo = new Date(Date.now() - 10 * 60 * 1000).toISOString();
 
     const { data: jobs, error: queryError } = await supabase
-      .from('article_generation_jobs')
+      .from('article_jobs')
       .select('*')
       .in('status', ['pending', 'processing'])
       .or(`started_at.is.null,started_at.lt.${tenMinutesAgo}`)
@@ -138,7 +138,7 @@ async function processBatch() {
     for (const job of jobs) {
       // 先檢查是否已被其他進程鎖定
       const { data: lockCheck } = await supabase
-        .from('article_generation_jobs')
+        .from('article_jobs')
         .select('status, started_at')
         .eq('id', job.id)
         .single();
