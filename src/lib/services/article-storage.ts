@@ -137,11 +137,14 @@ export class ArticleStorageService {
       }
 
       // 如果缺少 slug，從標題生成
-      if (!result.meta.slug) {
+      if (!result.meta.slug && title) {
         result.meta.slug = title
           .toLowerCase()
           .replace(/[^\w\u4e00-\u9fa5]+/g, '-')
           .replace(/^-+|-+$/g, '');
+      } else if (!result.meta.slug) {
+        // 如果 title 也不存在，使用預設 slug
+        result.meta.slug = 'untitled-article';
       }
 
       // 提供預設的 focusKeyphrase
