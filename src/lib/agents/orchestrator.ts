@@ -924,7 +924,7 @@ export class ParallelOrchestrator {
       .select('*')
       .eq('website_id', websiteId);
 
-    let agentConfig = agentConfigs?.[0];
+    const agentConfig = agentConfigs?.[0];
 
     if (configError) {
       console.error('[Orchestrator] 查詢 agent_configs 失敗:', configError);
