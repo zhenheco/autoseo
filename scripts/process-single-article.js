@@ -97,15 +97,41 @@ async function processArticle() {
       console.error('⚠️ 更新狀態失敗:', updateError);
     }
 
-    // 3. 初始化 Orchestrator
+    // 3. 處理 website_id（如果為 null，嘗試查詢）
+    let websiteId = job.website_id;
+
+    if (!websiteId || websiteId === 'null') {
+      console.log('⚠️ Job 沒有 website_id，嘗試查詢公司的網站配置...');
+      const { data: websites } = await supabase
+        .from('website_configs')
+        .select('id')
+        .eq('company_id', job.company_id)
+        .limit(1);
+
+      if (websites && websites.length > 0) {
+        websiteId = websites[0].id;
+        console.log('✅ 找到網站配置:', websiteId);
+
+        // 更新 job 的 website_id
+        await supabase
+          .from('article_jobs')
+          .update({ website_id: websiteId })
+          .eq('id', jobId);
+      } else {
+        console.log('⚠️ 沒有找到網站配置，文章將在沒有網站 ID 的情況下生成');
+        websiteId = null;
+      }
+    }
+
+    // 4. 初始化 Orchestrator
     console.log('\n🤖 初始化 Orchestrator...');
     const orchestrator = new ParallelOrchestrator();
 
-    // 4. 準備輸入參數
+    // 5. 準備輸入參數
     const input = {
       articleJobId: job.id,
       companyId: job.company_id,
-      websiteId: job.website_id,
+      websiteId: websiteId,
       userId: job.user_id,
       title: title || job.metadata?.title,
       targetLanguage: job.metadata?.targetLanguage || 'zh-TW',
@@ -115,7 +141,7 @@ async function processArticle() {
 
     console.log('\n📊 執行參數:');
     console.log('  - 公司 ID:', input.companyId);
-    console.log('  - 網站 ID:', input.websiteId);
+    console.log('  - 網站 ID:', input.websiteId || '（無）');
     console.log('  - 標題:', input.title);
     console.log('  - 目標語言:', input.targetLanguage);
     console.log('  - 字數:', input.wordCount);
