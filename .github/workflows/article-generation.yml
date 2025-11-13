@@ -32,10 +32,28 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+
+      - name: 安裝 pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: 獲取 pnpm store 目錄
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: 設置 pnpm 緩存
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
 
       - name: 安裝依賴
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       - name: 處理單個文章（repository_dispatch）
         if: github.event_name == 'repository_dispatch'
