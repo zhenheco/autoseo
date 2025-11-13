@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
       .eq('company_id', membership.company_id)
       .limit(1);
 
-    let websites = websiteQuery.data;
+    const websites = websiteQuery.data;
     const websiteError = websiteQuery.error;
 
     // website_id 是可選的：文章可以先寫好，之後再決定發佈到哪個網站
