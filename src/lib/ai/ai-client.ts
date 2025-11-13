@@ -240,20 +240,25 @@ export class AIClient {
     size?: string;
   }): Promise<{ url: string; revisedPrompt?: string }> {
     try {
-      // 使用 OpenAI 官方 API 處理 gpt-image-1 系列模型
-      if (options.model.includes('gpt-image-1')) {
+      // 使用 OpenAI 官方 API 處理 gpt-image-1 和 chatgpt-image 系列模型
+      if (options.model.includes('gpt-image-1') || options.model.includes('chatgpt-image')) {
         const apiKey = process.env.OPENAI_API_KEY;
         if (!apiKey) {
           throw new Error('OPENAI_API_KEY is not set');
         }
 
-        // OpenAI 圖片 API 的 quality 參數：low, medium, high, auto
-        // 'standard' → 'medium', 'hd' → 'high'
-        const qualityMap: Record<string, string> = {
-          'standard': 'medium',
-          'hd': 'high',
+        // 直接使用指定的模型（支援 gpt-image-1-mini, gpt-image-1 等）
+        const requestBody: Record<string, unknown> = {
+          model: options.model,
+          prompt: prompt,
+          n: 1,
+          size: options.size || '1024x1024',
         };
-        const quality = qualityMap[options.quality || 'standard'] || 'medium';
+
+        // 加入 quality 參數（支援 standard, hd, medium 等）
+        if (options.quality) {
+          requestBody.quality = options.quality;
+        }
 
         const response = await fetch('https://api.openai.com/v1/images/generations', {
           method: 'POST',
@@ -261,13 +266,7 @@ export class AIClient {
             'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
           },
-          body: JSON.stringify({
-            model: options.model,
-            prompt: prompt,
-            n: 1,
-            size: options.size || '1024x1024',
-            quality: quality,
-          }),
+          body: JSON.stringify(requestBody),
         });
 
         if (!response.ok) {
