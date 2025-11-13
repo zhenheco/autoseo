@@ -5,10 +5,10 @@ config({ path: '.env.local' });
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from '../src/types/database.types';
 
-const supabase = createClient<Database>(
-  process.env.SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+const supabase = createClient<Database>(supabaseUrl!, supabaseKey!);
 
 async function checkArticleStatus() {
   console.log('[Check Status] 查詢文章狀態...\n');
