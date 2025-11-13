@@ -5,14 +5,9 @@ import { ParallelOrchestrator } from '../src/lib/agents/orchestrator';
 import type { Database } from '../src/types/database.types';
 
 async function main() {
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
-    console.error('[Process Jobs] ❌ Missing required environment variables');
-    process.exit(1);
-  }
-
   const supabase = createClient<Database>(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
     {
       auth: {
         autoRefreshToken: false,
