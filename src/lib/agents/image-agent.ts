@@ -32,6 +32,19 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
     return 'ImageAgent';
   }
 
+  /**
+   * 根據文章結構自動計算圖片數量
+   * @param outline 文章大綱
+   * @returns 總圖片數 = 1（特色圖片）+ H2 數量
+   */
+  static calculateImageCount(outline: any): number {
+    if (!outline || !outline.mainSections) {
+      return 1; // 至少一個特色圖片
+    }
+    // 1 個特色圖片 + 每個 H2 一張圖片
+    return 1 + outline.mainSections.length;
+  }
+
   protected async process(input: ImageInput): Promise<ImageOutput> {
     if (input.model === 'none') {
       console.warn('[ImageAgent] Image generation skipped (model is "none")');
@@ -62,10 +75,14 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
     }
 
     const contentImages: GeneratedImage[] = [];
+    // 自動計算圖片數量：每個 H2 一張圖片
+    const calculatedCount = ImageAgent.calculateImageCount(input.outline);
     const sectionsNeedingImages = Math.min(
-      input.count - 1,
+      calculatedCount - 1, // 扣除特色圖片
       input.outline.mainSections.length
     );
+
+    console.log(`[ImageAgent] 自動計算圖片數量: ${calculatedCount} (1 特色圖片 + ${sectionsNeedingImages} H2 圖片)`);
 
     for (let i = 0; i < sectionsNeedingImages; i++) {
       const section = input.outline.mainSections[i];

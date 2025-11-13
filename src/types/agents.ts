@@ -327,7 +327,9 @@ export interface ExternalReference {
 export interface InternalLink {
   url: string;
   title: string;
-  keywords: string[];
+  keywords?: string[];
+  anchor?: string;
+  isInternal?: boolean;
 }
 
 export interface HTMLInput {
@@ -608,13 +610,44 @@ export interface ContentAssemblerInput {
 export interface ContentAssemblerOutput {
   markdown: string;
   html: string;
-  statistics: {
-    totalWords: number;
-    totalParagraphs: number;
-    totalSections: number;
-    totalFAQs: number;
-  };
+  statistics: ArticleStatistics;
   executionInfo: {
     executionTime: number;
   };
+}
+
+// WritingAgent Output Types
+export interface WritingAgentOutput {
+  markdown: string;
+  html: string;
+  statistics: ArticleStatistics;
+  readability: ReadabilityMetrics;
+  keywordUsage: KeywordUsage;
+  internalLinks: InternalLink[];
+}
+
+export interface ArticleStatistics {
+  totalWords: number;
+  totalParagraphs: number;
+  totalSections: number;
+  totalFAQs?: number;
+}
+
+export interface ReadabilityMetrics {
+  fleschReadingEase: number;
+  fleschKincaidGrade: number;
+  gunningFog: number;
+  averageSentenceLength: number;
+  averageWordLength: number;
+}
+
+export interface KeywordUsage {
+  keyword: string;
+  count: number;
+  density: number;
+  positions: string[];
+  inTitle: boolean;
+  inHeadings: boolean;
+  inFirstParagraph: boolean;
+  inLastParagraph: boolean;
 }

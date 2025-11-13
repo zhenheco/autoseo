@@ -13,6 +13,7 @@ import { SectionAgent } from './section-agent';
 import { ConclusionAgent } from './conclusion-agent';
 import { QAAgent } from './qa-agent';
 import { ContentAssemblerAgent } from './content-assembler-agent';
+import { MultiAgentOutputAdapter } from './output-adapter';
 import { WordPressClient } from '@/lib/wordpress/client';
 import { PerplexityClient } from '@/lib/perplexity/client';
 import { getAPIRouter } from '@/lib/ai/api-router';
@@ -35,6 +36,7 @@ import { AgentExecutionContext } from './base-agent';
 export class ParallelOrchestrator {
   private supabaseClient?: SupabaseClient;
   private errorTracker: ErrorTracker;
+  private currentJobId?: string;
 
   constructor(supabaseClient?: SupabaseClient) {
     this.supabaseClient = supabaseClient;
@@ -43,6 +45,19 @@ export class ParallelOrchestrator {
       enableMetrics: true,
       enableExternalTracking: process.env.ERROR_TRACKING_ENABLED === 'true',
       maxErrorsInMemory: 100,
+      enableDatabaseTracking: true,
+      getSupabase: () => this.getSupabase(),
+    });
+  }
+
+  private setJobId(jobId: string): void {
+    this.currentJobId = jobId;
+    // Update error tracker with job ID
+    this.errorTracker = new ErrorTracker({
+      ...this.errorTracker['options'],
+      jobId,
+      enableDatabaseTracking: true,
+      getSupabase: () => this.getSupabase(),
     });
   }
 
@@ -56,6 +71,12 @@ export class ParallelOrchestrator {
   async execute(input: ArticleGenerationInput): Promise<ArticleGenerationResult> {
     const supabase = await this.getSupabase();
     const startTime = Date.now();
+
+    // Set job ID for error tracking
+    if (input.articleJobId) {
+      this.setJobId(input.articleJobId);
+    }
+
     const phaseTimings = {
       research: 0,
       strategy: 0,
@@ -616,7 +637,8 @@ export class ParallelOrchestrator {
             maxTokens: 500,
           });
         },
-        RetryConfigs.INTRODUCTION_AGENT
+        RetryConfigs.INTRODUCTION_AGENT,
+        'content_generation'
       ),
       this.executeWithRetry(
         async () => {
@@ -629,7 +651,8 @@ export class ParallelOrchestrator {
             maxTokens: 400,
           });
         },
-        RetryConfigs.CONCLUSION_AGENT
+        RetryConfigs.CONCLUSION_AGENT,
+        'content_generation'
       ),
       this.executeWithRetry(
         async () => {
@@ -644,7 +667,8 @@ export class ParallelOrchestrator {
             maxTokens: 1000,
           });
         },
-        RetryConfigs.QA_AGENT
+        RetryConfigs.QA_AGENT,
+        'content_generation'
       ),
     ]);
 
@@ -668,7 +692,8 @@ export class ParallelOrchestrator {
             maxTokens: Math.floor(section.targetWordCount * 2),
           });
         },
-        RetryConfigs.SECTION_AGENT
+        RetryConfigs.SECTION_AGENT,
+        'content_generation'
       );
 
       sections.push(sectionOutput);
@@ -683,18 +708,20 @@ export class ParallelOrchestrator {
       qa,
     });
 
-    // 計算統計資料
-    const plainText = assembled.html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-    const sentences = plainText.split(/[.!?]+/).filter(s => s.trim().length > 0);
-    const paragraphs = assembled.html.split(/<\/p>/gi).filter(p => p.trim().length > 0);
-
-    const statistics = {
-      wordCount: assembled.statistics.totalWords,
-      paragraphCount: paragraphs.length,
-      sentenceCount: sentences.length,
-      readingTime: Math.ceil(assembled.statistics.totalWords / 200), // 假設每分鐘 200 字
-      averageSentenceLength: sentences.length > 0 ? assembled.statistics.totalWords / sentences.length : 0,
-    };
+    // 使用 OutputAdapter 轉換為 WritingAgent 格式
+    const adapter = new MultiAgentOutputAdapter();
+    const writingOutput = adapter.adapt({
+      assemblerOutput: assembled,
+      strategyOutput: {
+        selectedTitle,
+        outline,
+        keywords: strategyOutput.keywords,
+        targetSections: strategyOutput.targetSections,
+        competitorAnalysis: strategyOutput.competitorAnalysis,
+        contentGaps: strategyOutput.contentGaps,
+      },
+      focusKeyword: selectedTitle, // 使用標題作為主要關鍵字
+    });
 
     // 執行資訊（合併所有 agent 的 token 使用量）
     const totalTokenUsage = {
@@ -717,21 +744,22 @@ export class ParallelOrchestrator {
       sections.reduce((sum, s) => sum + (s.executionInfo.executionTime || 0), 0) +
       assembled.executionInfo.executionTime;
 
+    // 計算統計資料
+    const plainText = assembled.html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
+    const sentences = plainText.split(/[.!?]+/).filter(s => s.trim().length > 0);
+    const paragraphs = assembled.html.split(/<\/p>/gi).filter(p => p.trim().length > 0);
+
+    const statistics = {
+      wordCount: assembled.statistics.totalWords,
+      paragraphCount: paragraphs.length,
+      sentenceCount: sentences.length,
+      readingTime: Math.ceil(assembled.statistics.totalWords / 200), // 假設每分鐘 200 字
+      averageSentenceLength: sentences.length > 0 ? assembled.statistics.totalWords / sentences.length : 0,
+    };
+
     return {
-      markdown: assembled.markdown,
-      html: assembled.html,
-      statistics,
-      internalLinks: [], // 內部連結會在 HTMLAgent 中處理
-      keywordUsage: {
-        count: 0,
-        density: 0,
-        distribution: [],
-      }, // 關鍵字使用量可以在後續處理
-      readability: {
-        fleschKincaidGrade: 0,
-        fleschReadingEase: 0,
-        gunningFogIndex: 0,
-      }, // 可讀性分數可以在後續處理
+      ...writingOutput,
+      statistics, // 使用更完整的統計資料
       executionInfo: {
         model: agentConfig.writing_model,
         executionTime: totalExecutionTime,
@@ -1076,10 +1104,13 @@ export class ParallelOrchestrator {
 
     const supabase = await this.getSupabase();
 
+    // 驗證並格式化資料
+    const validatedData = this.validateAndFormatStateData(data);
+
     // 使用 update 只更新狀態和 metadata，不影響其他欄位
     const updateData: any = {
       status,
-      metadata: data,
+      metadata: validatedData,
     };
 
     // 如果 data 包含 keywords，則更新 keywords
@@ -1189,7 +1220,8 @@ export class ParallelOrchestrator {
 
   private async executeWithRetry<T>(
     fn: () => Promise<T>,
-    config: AgentRetryConfig
+    config: AgentRetryConfig,
+    phase: string = 'unknown'
   ): Promise<T> {
     let lastError: Error | null = null;
     let delay = config.initialDelayMs;
@@ -1213,7 +1245,7 @@ export class ParallelOrchestrator {
       } catch (error) {
         lastError = error as Error;
 
-        this.errorTracker.trackError(config.agentName, error, attempt, config.maxAttempts);
+        await this.errorTracker.trackError(config.agentName, phase, error, attempt, config.maxAttempts);
 
         const isRetryable = this.isRetryableError(error, config.retryableErrors);
         const hasMoreAttempts = attempt < config.maxAttempts;
@@ -1287,5 +1319,56 @@ export class ParallelOrchestrator {
       hash = hash & hash;
     }
     return Math.abs(hash);
+  }
+
+  /**
+   * 驗證並格式化狀態資料
+   */
+  private validateAndFormatStateData(data: any): any {
+    if (!data) return {};
+
+    const validated = { ...data };
+
+    // 確保 multiAgentState 結構正確
+    if (validated.multiAgentState) {
+      const multiState = validated.multiAgentState;
+
+      // 驗證 introduction
+      if (multiState.introduction && !multiState.introduction.markdown) {
+        console.warn('[Orchestrator] Invalid introduction state, removing');
+        delete multiState.introduction;
+      }
+
+      // 驗證 sections
+      if (multiState.sections) {
+        multiState.sections = multiState.sections.filter((s: any) =>
+          s && s.markdown && s.wordCount !== undefined
+        );
+      }
+
+      // 驗證 conclusion
+      if (multiState.conclusion && !multiState.conclusion.markdown) {
+        console.warn('[Orchestrator] Invalid conclusion state, removing');
+        delete multiState.conclusion;
+      }
+
+      // 驗證 qa
+      if (multiState.qa && !multiState.qa.markdown) {
+        console.warn('[Orchestrator] Invalid QA state, removing');
+        delete multiState.qa;
+      }
+    }
+
+    // 限制 metadata 大小（< 100KB）
+    const jsonString = JSON.stringify(validated);
+    if (jsonString.length > 102400) { // 100KB
+      console.warn('[Orchestrator] Metadata too large, truncating errors');
+      // 移除舊的錯誤以減少大小
+      if (validated.errors && validated.errors.length > 5) {
+        validated.errors = validated.errors.slice(-5);
+      }
+    }
+
+    return validated;
   }
 }

@@ -1,0 +1,41 @@
+name: Monitor Article Jobs
+
+on:
+  schedule:
+    # 每 5 分鐘執行一次
+    - cron: '*/5 * * * *'
+  workflow_dispatch: # 允許手動觸發
+
+jobs:
+  monitor:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Call Monitoring API
+        run: |
+          response=$(curl -s -w "\n%{http_code}" -X POST \
+            -H "Authorization: Bearer ${{ secrets.CRON_API_SECRET }}" \
+            -H "Content-Type: application/json" \
+            "${{ secrets.APP_URL }}/api/cron/monitor-article-jobs")
+
+          # 分離響應內容和 HTTP 狀態碼
+          body=$(echo "$response" | head -n -1)
+          status_code=$(echo "$response" | tail -n 1)
+
+          # 輸出響應內容
+          echo "Response: $body"
+          echo "Status Code: $status_code"
+
+          # 檢查狀態碼
+          if [ "$status_code" != "200" ]; then
+            echo "❌ Monitoring failed with status code: $status_code"
+            exit 1
+          fi
+
+          echo "✅ Monitoring completed successfully"
+
+      - name: Log Results
+        if: always()
+        run: |
+          echo "Monitoring job executed at: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          echo "Next execution in 5 minutes"

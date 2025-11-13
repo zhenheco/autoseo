@@ -27,14 +27,68 @@ export class ArticleStorageService {
   constructor(private supabase: SupabaseClient) {}
 
   /**
+   * 驗證輸入資料
+   */
+  private validateInput(result: ArticleGenerationResult): void {
+    const missingFields: string[] = [];
+
+    // 檢查必要的頂層欄位
+    if (!result.writing) missingFields.push('writing');
+    if (!result.meta) missingFields.push('meta');
+
+    if (missingFields.length > 0) {
+      throw new Error(`缺少必要欄位: ${missingFields.join(', ')}`);
+    }
+
+    // 檢查 writing 內容
+    if (!result.writing!.markdown) missingFields.push('writing.markdown');
+    if (!result.writing!.html) missingFields.push('writing.html');
+    if (!result.writing!.statistics) missingFields.push('writing.statistics');
+    if (!result.writing!.readability) missingFields.push('writing.readability');
+    if (!result.writing!.keywordUsage) missingFields.push('writing.keywordUsage');
+
+    // 檢查 meta 內容
+    if (!result.meta!.seo) missingFields.push('meta.seo');
+    if (!result.meta!.slug) missingFields.push('meta.slug');
+    if (!result.meta!.focusKeyphrase) missingFields.push('meta.focusKeyphrase');
+    if (!result.meta!.openGraph) missingFields.push('meta.openGraph');
+    if (!result.meta!.twitterCard) missingFields.push('meta.twitterCard');
+
+    // 檢查 statistics 內容
+    const stats = result.writing!.statistics;
+    if (typeof stats.wordCount !== 'number' || stats.wordCount <= 0) {
+      missingFields.push('writing.statistics.wordCount (必須為正數)');
+    }
+
+    // 檢查 readability 內容
+    const readability = result.writing!.readability;
+    if (typeof readability.fleschReadingEase !== 'number') {
+      missingFields.push('writing.readability.fleschReadingEase');
+    }
+    if (typeof readability.fleschKincaidGrade !== 'number') {
+      missingFields.push('writing.readability.fleschKincaidGrade');
+    }
+
+    // 檢查 keywordUsage 內容
+    const keywordUsage = result.writing!.keywordUsage;
+    if (typeof keywordUsage.density !== 'number' || keywordUsage.density < 0 || keywordUsage.density > 100) {
+      missingFields.push('writing.keywordUsage.density (必須在 0-100 之間)');
+    }
+
+    if (missingFields.length > 0) {
+      console.error('[ArticleStorage] 輸入驗證失敗:', missingFields);
+      throw new Error(`輸入驗證失敗，缺少或無效的欄位:\n${missingFields.join('\n')}`);
+    }
+  }
+
+  /**
    * 儲存生成的文章到資料庫
    */
   async saveArticle(params: SaveArticleParams): Promise<SavedArticle> {
     const { articleJobId, result, websiteId, companyId, userId } = params;
 
-    if (!result.writing || !result.meta) {
-      throw new Error('文章內容或 Metadata 不完整');
-    }
+    // 驗證輸入
+    this.validateInput(result);
 
     // 準備文章數據
     const articleData = {

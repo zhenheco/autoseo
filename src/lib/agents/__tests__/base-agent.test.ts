@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { BaseAgent, AgentExecutionContext } from '../base-agent';
 import { AIClient } from '@/lib/ai/ai-client';
 
@@ -35,7 +36,18 @@ describe('BaseAgent', () => {
   });
 
   it('應該追蹤執行時間', async () => {
-    const agent = new TestAgent(aiConfig, context);
+    class DelayedAgent extends BaseAgent<{ input: string }, { output: string }> {
+      get agentName(): string {
+        return 'DelayedAgent';
+      }
+
+      protected async process(input: { input: string }): Promise<{ output: string }> {
+        await new Promise(resolve => setTimeout(resolve, 10));
+        return { output: input.input };
+      }
+    }
+
+    const agent = new DelayedAgent(aiConfig, context);
     await agent.execute({ input: 'test' });
 
     const executionInfo = agent.getExecutionInfo('test-model');

@@ -30,12 +30,15 @@ export interface ErrorContext {
 
 export interface TrackedError {
   id: string;
+  agent: string;
+  phase: string;
   category: ErrorCategory;
   severity: ErrorSeverity;
   message: string;
   stack?: string;
   context: ErrorContext;
   metadata?: Record<string, unknown>;
+  timestamp: string;
 }
 
 interface ErrorStats {
@@ -51,6 +54,9 @@ export interface ErrorTrackerOptions {
   enableMetrics: boolean;
   enableExternalTracking: boolean;
   maxErrorsInMemory: number;
+  enableDatabaseTracking?: boolean;
+  jobId?: string;
+  getSupabase?: () => Promise<any>;
 }
 
 export class ErrorTracker {
@@ -59,29 +65,34 @@ export class ErrorTracker {
 
   constructor(private options: ErrorTrackerOptions) {}
 
-  trackError(
+  async trackError(
     agentName: string,
+    phase: string,
     error: unknown,
     attemptNumber: number,
     maxAttempts: number,
     additionalContext?: Record<string, unknown>
-  ): void {
+  ): Promise<void> {
     const err = error as Error & { code?: string };
 
     const category = this.categorizeError(err);
     const severity = this.determineSeverity(category, attemptNumber, maxAttempts);
+    const timestamp = new Date().toISOString();
 
     const trackedError: TrackedError = {
       id: this.generateErrorId(),
+      agent: agentName,
+      phase,
       category,
       severity,
       message: err.message,
       stack: err.stack,
+      timestamp,
       context: {
         agentName,
         attemptNumber,
         maxAttempts,
-        timestamp: new Date().toISOString(),
+        timestamp,
         ...additionalContext
       },
       metadata: {
@@ -100,9 +111,104 @@ export class ErrorTracker {
       this.updateMetrics(trackedError);
     }
 
+    if (this.options.enableDatabaseTracking && this.options.jobId && this.options.getSupabase) {
+      await this.saveToDatabase(trackedError);
+    }
+
     if (this.options.enableExternalTracking) {
       this.sendToExternalTracker(trackedError);
     }
+  }
+
+  /**
+   * 儲存錯誤到資料庫
+   */
+  private async saveToDatabase(error: TrackedError): Promise<void> {
+    if (!this.options.getSupabase || !this.options.jobId) {
+      return;
+    }
+
+    try {
+      const supabase = await this.options.getSupabase();
+
+      // 讀取現有的 metadata
+      const { data: job } = await supabase
+        .from('article_generation_jobs')
+        .select('metadata')
+        .eq('id', this.options.jobId)
+        .single();
+
+      const existingErrors = job?.metadata?.errors || [];
+
+      // 只保留最新的 10 個錯誤（避免 metadata 過大）
+      const errors = [...existingErrors, error].slice(-10);
+
+      // 更新 metadata
+      await supabase
+        .from('article_generation_jobs')
+        .update({
+          metadata: {
+            ...job?.metadata,
+            errors,
+            lastError: error, // 最新錯誤
+            errorsByAgent: this.getErrorsByAgent(),
+            errorsByPhase: this.getErrorsByPhase(),
+          },
+        })
+        .eq('id', this.options.jobId);
+
+      console.log('[ErrorTracker] 錯誤已儲存到資料庫:', error.id);
+    } catch (dbError) {
+      console.error('[ErrorTracker] 無法儲存錯誤到資料庫:', dbError);
+    }
+  }
+
+  /**
+   * 產生錯誤摘要（用於最終的 error_message）
+   */
+  generateSummary(): { message: string; details: ErrorStats } {
+    const stats = this.getStats();
+    const criticalErrors = this.errors.filter(e => e.severity === ErrorSeverity.ERROR || e.severity === ErrorSeverity.CRITICAL);
+
+    let message = '';
+    if (criticalErrors.length > 0) {
+      const lastCritical = criticalErrors[criticalErrors.length - 1];
+      message = `最終失敗: ${lastCritical.agent} - ${lastCritical.message}`;
+
+      if (criticalErrors.length > 1) {
+        message += `\n共 ${criticalErrors.length} 個嚴重錯誤`;
+      }
+
+      // 加入失敗階段資訊
+      const failedPhases = new Set(criticalErrors.map(e => e.phase));
+      message += `\n失敗階段: ${Array.from(failedPhases).join(', ')}`;
+    } else if (this.errors.length > 0) {
+      const lastError = this.errors[this.errors.length - 1];
+      message = `處理失敗: ${lastError.message}`;
+    } else {
+      message = '未知錯誤';
+    }
+
+    return {
+      message,
+      details: stats
+    };
+  }
+
+  private getErrorsByAgent(): Record<string, number> {
+    const byAgent: Record<string, number> = {};
+    this.errors.forEach(err => {
+      byAgent[err.agent] = (byAgent[err.agent] || 0) + 1;
+    });
+    return byAgent;
+  }
+
+  private getErrorsByPhase(): Record<string, number> {
+    const byPhase: Record<string, number> = {};
+    this.errors.forEach(err => {
+      byPhase[err.phase] = (byPhase[err.phase] || 0) + 1;
+    });
+    return byPhase;
   }
 
   trackSuccess(agentName: string, attemptNumber: number): void {
