@@ -1045,7 +1045,13 @@ export class ParallelOrchestrator {
     }
   }
 
-  private async getPreviousArticles(websiteId: string): Promise<PreviousArticle[]> {
+  private async getPreviousArticles(websiteId: string | null): Promise<PreviousArticle[]> {
+    // 如果 websiteId 為 null，返回空陣列（沒有網站就沒有歷史文章）
+    if (!websiteId || websiteId === 'null') {
+      console.warn('[Orchestrator] website_id 為 null，返回空的歷史文章列表');
+      return [];
+    }
+
     const supabase = await this.getSupabase();
     const { data, error } = await supabase
       .from('article_jobs')
