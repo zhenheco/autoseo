@@ -39,7 +39,8 @@ export async function GET() {
         reading_time,
         wordpress_post_url,
         created_at,
-        published_at
+        published_at,
+        html_content
       `)
       .eq('company_id', membership.company_id)
       .order('created_at', { ascending: false })
