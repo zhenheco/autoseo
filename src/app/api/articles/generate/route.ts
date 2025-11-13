@@ -85,7 +85,6 @@ export async function POST(request: NextRequest) {
       .limit(1);
 
     const websites = websiteQuery.data;
-    const websiteError = websiteQuery.error;
 
     // website_id 是可選的：文章可以先寫好，之後再決定發佈到哪個網站
     let websiteId: string | null = null;
