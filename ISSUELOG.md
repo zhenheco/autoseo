@@ -1,5 +1,69 @@
 # 問題解決記錄
 
+## 2025-11-13: GitHub Secrets 換行符問題（CLI 工具缺陷）
+
+### 問題現象
+- **症狀**: GitHub Actions workflow 環境變數驗證失敗，所有 10 個變數都檢測到包含換行符
+- **錯誤**: `❌ 錯誤: [VAR_NAME] 包含換行符`
+- **影響範圍**: 文章生成 workflow 無法執行，因為環境變數驗證步驟失敗
+
+### 根本原因
+**`gh secret set` CLI 工具會自動添加換行符** ✅
+
+1. **檢測邏輯缺陷（已修正）**:
+   - 原始檢測代碼: `if echo "$var_value" | grep -q $'\n'; then`
+   - 問題: `echo` 會自動添加換行符，導致所有變數都被誤判
+   - 修正: 使用 `printf '%s'` 代替 `echo`
+
+2. **CLI 工具缺陷（無法修正）**:
+   - `gh secret set --body "value"` 會在設定 secrets 時自動添加換行符
+   - `echo -n "value" | gh secret set SECRET_NAME` 同樣會添加換行符
+   - 即使使用 `printf '%s' "value" | gh secret set` 也無效
+
+### 調查過程
+1. **初始嘗試**: 使用 `sync-secrets.sh` 從 Vercel 同步環境變數到 GitHub，但發現換行符問題
+2. **診斷檢測邏輯**: 發現 workflow 的 `echo "$var_value" | grep -q $'\n'` 會誤判
+3. **修正檢測邏輯**: 更新為 `printf '%s' "$var_value" | grep -q $'\n'`
+4. **發現 CLI 缺陷**: 即使使用正確的方法，`gh secret set` 仍然會添加換行符
+5. **Hexdump 驗證**: 使用 hexdump 確認提取的值沒有換行符，但設定後仍檢測到換行符
+6. **結論**: `gh` CLI 工具本身在設定 secrets 時會自動添加換行符，無法通過命令行參數避免
+
+### 解決方案
+
+#### 唯一可行方案：在 GitHub 網頁介面手動更新
+```
+URL: https://github.com/acejou27/Auto-pilot-SEO/settings/secrets/actions
+
+需要更新的 10 個 Secrets：
+1. NEXT_PUBLIC_SUPABASE_URL
+2. NEXT_PUBLIC_SUPABASE_ANON_KEY
+3. SUPABASE_SERVICE_ROLE_KEY
+4. OPENAI_API_KEY
+5. DEEPSEEK_API_KEY
+6. R2_ACCESS_KEY_ID
+7. R2_SECRET_ACCESS_KEY
+8. R2_ACCOUNT_ID
+9. R2_BUCKET_NAME
+10. USE_MULTI_AGENT_ARCHITECTURE
+
+注意事項：
+- 從 /tmp/manual-secrets-guide.md 複製正確的值
+- 複製時不要包含前後空格或換行符
+- 貼上後檢查沒有多餘的空白字符
+- 直接在文本框中貼上，不要使用任何編輯器
+```
+
+### 教訓
+1. **不要依賴 `gh secret set` CLI 工具**: 該工具會自動添加換行符，無法用於設定需要精確格式的 secrets
+2. **使用網頁介面**: GitHub 網頁介面是唯一可靠的設定 secrets 的方法
+3. **檢測邏輯要精確**: 使用 `printf '%s'` 而不是 `echo` 來避免自動添加換行符
+4. **驗證工具行為**: 在使用任何 CLI 工具前，先用簡單測試驗證其行為
+
+### 相關 Commits
+- `4bbb22a`: 修正 workflow 環境變數檢測邏輯（使用 printf 而不是 echo）
+
+---
+
 ## 2025-11-08: 修正定期定額訂閱解密失敗（環境變數換行符問題）
 
 ### 問題現象
