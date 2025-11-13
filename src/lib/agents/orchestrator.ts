@@ -1157,7 +1157,13 @@ export class ParallelOrchestrator {
     const updateData: any = {
       status,
       metadata: validatedData,
+      updated_at: new Date().toISOString(),
     };
+
+    // 如果是 completed 或 failed，設定 completed_at
+    if (status === 'completed' || status === 'failed') {
+      updateData.completed_at = new Date().toISOString();
+    }
 
     // 如果 data 包含 keywords，則更新 keywords
     if (data && typeof data === 'object' && 'keywords' in data) {
