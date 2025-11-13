@@ -27,7 +27,7 @@ async function main() {
     .in('status', ['pending', 'processing'])
     .or(`started_at.is.null,started_at.lt.${new Date(Date.now() - 3 * 60 * 1000).toISOString()}`)
     .order('created_at', { ascending: true })
-    .limit(10); // 最多同時處理 10 個任務
+    .limit(20); // 最多同時處理 20 個任務
 
   if (error) {
     console.error('[Process Jobs] ❌ 查詢失敗:', error);
