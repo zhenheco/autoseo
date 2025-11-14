@@ -191,6 +191,10 @@ export default function ArticlesPage() {
               共 {articles.length} 篇文章，{jobs.length} 個任務進行中
             </p>
           </div>
+          {/* Token 餘額顯示 - 水平居中 */}
+          <div className="flex-1 flex justify-center px-4">
+            <TokenBalanceDisplay />
+          </div>
           <div className="flex gap-2">
             <ArticleGenerationButtonsWrapper />
           </div>
@@ -199,10 +203,6 @@ export default function ArticlesPage() {
 
       <div className="flex-1 flex overflow-hidden">
         <div className="w-1/2 border-r overflow-y-auto">
-          {/* Token 餘額顯示 */}
-          <div className="p-4 border-b">
-            <TokenBalanceDisplay />
-          </div>
 
           <Card className="rounded-none border-0 shadow-none">
             <CardHeader>

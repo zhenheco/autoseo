@@ -3,8 +3,10 @@
 ## Phase 1: Article Preview Rendering Fix (最優先)
 
 ### 準備工作
-- [ ] 安裝 DOMPurify 套件用於 HTML 淨化
+- [ ] 安裝 isomorphic-dompurify 套件（支援 SSR）
 - [ ] 安裝 marked 或 remark 用於 Markdown 轉 HTML（如尚未安裝）
+- [ ] 安裝 react-window 用於虛擬捲動（長文章優化）
+- [ ] 設定 Content Security Policy 標頭
 - [ ] 檢查現有文章的 html_content 欄位是否有資料
 
 ### Markdown 到 HTML 轉換
@@ -37,12 +39,22 @@
 - [ ] 添加餘額不足的視覺警告（紅色文字、警告圖示）
 - [ ] 實作餘額數字變化的過渡動畫
 
-### 即時更新機制
-- [ ] 在 generate-batch API 返回後觸發餘額更新
-- [ ] 使用 SWR 的 mutate 功能強制重新獲取
-- [ ] 實作全域事件系統協調餘額更新
-- [ ] 添加樂觀更新（立即顯示預估扣除）
-- [ ] 處理更新失敗的錯誤情況
+### 即時更新機制（三層架構）
+- [ ] **Layer 1: 樂觀更新**
+  - [ ] 實作立即 UI 更新（0ms 延遲）
+  - [ ] 計算預估 Token 消耗
+  - [ ] 使用 SWR mutate 更新本地快取
+  - [ ] 添加處理中狀態指示器
+- [ ] **Layer 2: WebSocket 推送（可選）**
+  - [ ] 建立 WebSocket 連線管理
+  - [ ] 實作自動重連機制（exponential backoff）
+  - [ ] 處理多標籤同步
+  - [ ] 實作心跳檢測（heartbeat）
+- [ ] **Layer 3: HTTP 輪詢備援**
+  - [ ] 調整 SWR refreshInterval 至 10 秒
+  - [ ] 實作請求去重（deduping）
+  - [ ] 添加請求合併（batching）
+  - [ ] 處理降級邏輯
 
 ### API 優化
 - [ ] 確保 /api/billing/balance 返回正確格式
@@ -50,13 +62,30 @@
 - [ ] 實作餘額快取機制
 - [ ] 添加餘額變更的 WebSocket 通知（可選）
 
-## Phase 3: Keyword Title Workflow Optimization
+## Phase 3: Keyword Title Workflow Optimization (2024 UX Standards)
 
-### UI 文字和標籤調整
-- [ ] 將「關鍵字」標籤改為「文章主題/關鍵字」
-- [ ] 更新輸入欄位的 placeholder 文字
-- [ ] 添加幫助提示說明主題和標題的區別
-- [ ] 更新對話框標題為「批次文章生成 - 主題設定」
+### 三階段工作流程實作
+- [ ] **階段 1: 主題探索**
+  - [ ] 設計主題輸入介面
+  - [ ] 支援關鍵字群組（逗號分隔）
+  - [ ] 添加關鍵字建議功能
+  - [ ] 實作搜尋意圖識別
+- [ ] **階段 2: 標題優化**
+  - [ ] 生成 5-10 個標題變體
+  - [ ] 實作標題評分系統
+  - [ ] 顯示 SEO 分數和預估 CTR
+  - [ ] 標記 AI 推薦選項
+- [ ] **階段 3: 批次確認**
+  - [ ] 顯示待生成列表
+  - [ ] 計算預估 Token 消耗
+  - [ ] 支援優先級設定
+  - [ ] A/B 測試選項
+
+### 視覺化進度指示器
+- [ ] 實作步驟導航（1/3、2/3、3/3）
+- [ ] 添加麵包屑導航
+- [ ] 實作返回上一步功能
+- [ ] 添加步驟完成動畫
 
 ### 標題生成邏輯優化
 - [ ] 修改 /api/articles/generate-titles 確保不直接使用關鍵字作為標題
@@ -76,7 +105,34 @@
 - [ ] 添加標題字數限制提示
 - [ ] 實作標題預覽功能
 
-## Phase 4: Testing & Validation
+## Phase 4: Performance Monitoring & Core Web Vitals
+
+### Next.js 效能監控設定
+- [ ] 實作 reportWebVitals 函數
+- [ ] 配置 Core Web Vitals 收集
+  - [ ] LCP (Largest Contentful Paint) < 2.5s
+  - [ ] INP (Interaction to Next Paint) < 200ms
+  - [ ] CLS (Cumulative Layout Shift) < 0.1
+  - [ ] FCP (First Contentful Paint) < 1.8s
+- [ ] 整合監控服務
+  - [ ] Vercel Speed Insights（如使用 Vercel）
+  - [ ] 或設定自訂分析端點
+  - [ ] 配置錯誤追蹤
+
+### 效能優化實作
+- [ ] 使用 @next/bundle-analyzer 分析打包大小
+- [ ] 實施效能預算（JS < 200KB, CSS < 50KB）
+- [ ] 配置圖片優化（WebP, AVIF 格式）
+- [ ] 實作程式碼分割（Code Splitting）
+- [ ] 使用 React 18 startTransition API
+
+### 真實用戶監控（RUM）
+- [ ] 設定真實用戶指標收集
+- [ ] 追蹤 P95 和 P99 延遲
+- [ ] 設定效能警報閾值
+- [ ] 建立效能儀表板
+
+## Phase 5: Testing & Validation
 
 ### 單元測試
 - [ ] 測試 Markdown 到 HTML 轉換函數

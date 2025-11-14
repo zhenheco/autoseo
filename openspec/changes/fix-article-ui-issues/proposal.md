@@ -92,3 +92,39 @@
 - 需要確認現有文章資料格式
 - 需要測試 Markdown 到 HTML 轉換邏輯
 - 需要確認 Token 計費 API 的即時性
+
+## 2024 Research-Based Enhancements
+
+本提案基於 2024 年最新的業界標準和最佳實踐：
+
+### 安全性增強（基於 2024 安全研究）
+- 採用 `isomorphic-dompurify` 支援 SSR 環境
+- 實施雙層淨化（伺服器端 + 客戶端）
+- 配置 Content Security Policy (CSP) 標頭
+- 禁止危險標籤和屬性的白名單模式
+
+### 即時更新架構（基於 SWR 2.0 和 WebSocket 研究）
+- **三層更新策略**：
+  1. 樂觀更新（0ms 延遲）
+  2. WebSocket 推送（< 100ms）
+  3. HTTP 輪詢備援（10 秒間隔）
+- 結合 SWR 的可擴展性和 WebSocket 的即時性
+- 實施請求去重和批次處理
+
+### UX 工作流程優化（基於 AI 內容平台研究）
+- 採用業界標準三階段流程（主題→標題→內容）
+- 實施標題評分系統（SEO 分數 + CTR 預測）
+- 支援關鍵字群組和搜尋意圖識別
+- 提供 A/B 測試功能
+
+### 效能監控（基於 2024 Core Web Vitals）
+- 監控新的 INP 指標（取代 FID）
+- 實施真實用戶監控（RUM）
+- 設定效能預算和警報
+- 整合 Vercel Speed Insights 或自訂監控
+
+### 技術棧更新
+- Next.js 14+ 最佳實踐
+- React 18 並發特性（startTransition）
+- 現代圖片格式（WebP, AVIF）
+- 虛擬捲動優化長內容

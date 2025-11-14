@@ -77,3 +77,37 @@ When 文章內容正在載入
 Then 顯示載入動畫
 And 顯示「載入中...」文字
 And 載入完成後平滑過渡到內容
+
+## ADDED Requirements (2024 Standards)
+
+### Requirement: Content Security Policy 實施
+The system SHALL implement Content Security Policy headers to provide defense-in-depth against XSS attacks.
+
+#### Scenario: CSP 標頭配置
+Given 系統渲染用戶生成內容
+When 設定 HTTP 安全標頭
+Then CSP 標頭包含 `default-src 'self'`
+And 禁止內聯腳本執行
+And 限制外部資源載入域名
+And 報告違規到監控端點
+
+### Requirement: 伺服器端內容淨化
+The system MUST sanitize content on the server side before storage to ensure double-layer protection.
+
+#### Scenario: 儲存前淨化
+Given WritingAgent 生成 HTML 內容
+When 準備儲存到資料庫
+Then 在伺服器端使用 isomorphic-dompurify 淨化
+And 移除所有潛在危險標籤和屬性
+And 記錄淨化操作日誌
+And 儲存淨化後的版本
+
+### Requirement: 效能指標監控
+The system SHALL monitor Core Web Vitals for article preview rendering performance.
+
+#### Scenario: INP (Interaction to Next Paint) 優化
+Given 用戶與預覽介面互動
+When 點擊切換不同文章
+Then INP 指標 < 200ms
+And 使用 startTransition 處理低優先級更新
+And 實施防抖機制避免頻繁渲染

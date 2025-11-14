@@ -9,41 +9,153 @@
 
 ## Design Decisions
 
-### 1. 關鍵字與標題分離設計
+### 1. 關鍵字與標題分離設計（基於 2024 AI 內容生成 UX 最佳實踐）
 
 #### 現有問題分析
 目前系統將關鍵字直接當作標題處理，導致概念混淆。根據截圖分析，用戶輸入「5個跡象顯示AI程式設計師即將取代人類」作為關鍵字，但系統又基於此生成新標題，造成重複。
 
-#### 解決方案架構
+#### 業界標準工作流程（2024）
+
+根據領先 AI 寫作平台（Jasper、Copy.ai、Clearscope）的 UX 模式：
+
 ```
-輸入流程重新設計：
-[主題輸入] → [標題生成] → [標題確認] → [加入佇列] → [批次生成]
-     ↓            ↓            ↓            ↓            ↓
-  關鍵字/方向   AI 建議標題   用戶選擇    進行中列表   文章生成
+三階段內容生成流程：
+[主題探索] → [標題優化] → [內容生成]
+     ↓            ↓            ↓
+Topic/Keywords  Title Variants  Full Article
+  (概念輸入)    (多選項建議)    (最終輸出)
 ```
+
+#### 增強型解決方案架構
+
+```typescript
+interface ContentGenerationFlow {
+  // 第一階段：主題定義
+  topic: {
+    keywords: string[];      // SEO 關鍵字群組
+    intent: string;          // 搜尋意圖（資訊型/商業型/導航型）
+    angle: string;          // 內容角度/獨特觀點
+  };
+
+  // 第二階段：標題生成
+  titleGeneration: {
+    aiSuggestions: Title[]; // AI 生成的 5-10 個標題
+    customInput: boolean;   // 允許自訂標題
+    scoring: {             // 標題評分（可選）
+      seo: number;         // SEO 優化分數
+      engagement: number;  // 預估點擊率
+    };
+  };
+
+  // 第三階段：批次處理
+  batchQueue: {
+    items: QueueItem[];
+    estimatedTokens: number;
+    priority: 'immediate' | 'scheduled';
+  };
+}
+```
+
+#### UX 優化策略（基於 2024 研究）
+
+1. **明確的階段指示器**
+   - 視覺化步驟進度（1/3、2/3、3/3）
+   - 麵包屑導航顯示當前位置
+   - 允許返回修改前一步
+
+2. **智能提示系統**
+   ```typescript
+   const topicHints = {
+     placeholder: "輸入主題方向或 SEO 關鍵字群組",
+     examples: ["AI 技術趨勢", "程式設計未來", "職場自動化"],
+     tooltip: "系統將基於您的主題生成多個標題選項"
+   };
+   ```
+
+3. **標題變體生成**
+   - 提供 5-10 個不同角度的標題
+   - 顯示每個標題的預估效果（點擊率、SEO 分數）
+   - 支援 A/B 測試（生成多個版本）
 
 #### 實作策略
-- 修改 `ArticleGenerationButtons` 組件的標籤和提示文字
-- 在 metadata 中明確區分 `topic` (主題) 和 `title` (標題)
-- 調整 API payload 結構，將關鍵字作為 context 而非 title
+- 重新設計 UI 流程為明確的三步驟精靈
+- 在 metadata 中保存完整的生成歷程
+- 實施標題去重演算法（相似度 < 0.7）
+- 加入 AI 解釋功能（為何推薦此標題）
 
-### 2. Token 餘額即時更新機制
+### 2. Token 餘額即時更新機制（2024 架構）
 
 #### 現有問題分析
 - 餘額組件使用 SWR 輪詢（5秒間隔）
 - 文章生成完成後沒有觸發餘額更新
 - 位置不當，影響使用流程
 
-#### 解決方案架構
+#### 混合式即時更新架構（推薦方案）
+
+根據 2024 年的研究，結合 SWR 的可擴展性和 WebSocket 的即時性：
+
 ```
-事件驅動更新模式：
-[文章生成] → [扣除 Token] → [發送更新事件] → [SWR mutate] → [UI 更新]
+混合更新模式：
+[文章生成] → [樂觀更新] → [WebSocket 推送] → [SWR 驗證] → [UI 同步]
+     ↓            ↓              ↓                ↓            ↓
+立即扣除預估  UI 立即反映    伺服器確認      背景驗證    最終一致
 ```
 
-#### 實作策略
-- 在文章生成 API 返回時觸發 `mutate('/api/billing/balance')`
-- 保留輪詢作為備援機制
-- 使用 React Context 或事件總線協調更新
+#### 實作策略（三層架構）
+
+```typescript
+// 1. 樂觀更新層（立即回饋）
+const handleGenerateArticle = async () => {
+  const estimatedCost = 1500;
+
+  // 立即更新 UI（樂觀更新）
+  mutate('/api/billing/balance',
+    (current) => ({
+      ...current,
+      total: current.total - estimatedCost
+    }),
+    false // 不重新驗證
+  );
+
+  // 實際 API 呼叫
+  const result = await generateArticle();
+
+  // 觸發背景重新驗證
+  mutate('/api/billing/balance');
+};
+
+// 2. WebSocket 即時推送層（可選但推薦）
+useEffect(() => {
+  const ws = new WebSocket(process.env.NEXT_PUBLIC_WS_URL);
+
+  ws.onmessage = (event) => {
+    const { type, balance } = JSON.parse(event.data);
+    if (type === 'balance_update') {
+      // 更新 SWR 快取
+      mutate('/api/billing/balance', balance, false);
+    }
+  };
+
+  return () => ws.close();
+}, []);
+
+// 3. HTTP 輪詢備援層（降級方案）
+const { data, error } = useSWR(
+  '/api/billing/balance',
+  fetcher,
+  {
+    refreshInterval: 10000, // 降至 10 秒（WebSocket 為主）
+    revalidateOnFocus: true,
+    revalidateOnReconnect: true,
+    dedupingInterval: 2000, // 防抖
+  }
+);
+```
+
+#### 效能考量（基於 2024 研究）
+- **SWR 優勢**：HTTP 基礎更可擴展，不綁定特定伺服器
+- **WebSocket 優勢**：真正即時，延遲 < 100ms
+- **混合方案**：兼具兩者優點，WebSocket 斷線時自動降級到輪詢
 
 #### 位置調整方案
 ```tsx
@@ -129,17 +241,95 @@ export function useSecureHTML(content: string) {
    - `/src/lib/billing/token-billing-service.ts`
    - `/src/lib/agents/writing-agent.ts`
 
-## Performance Considerations
+## Performance Considerations（2024 Core Web Vitals 標準）
 
-### Token 餘額更新優化
-- 使用 debounce 避免頻繁更新
-- 實作樂觀更新（Optimistic UI）
-- 批次操作時只在最後更新一次
+### 核心效能指標監控
 
-### 預覽渲染優化
-- 實作虛擬捲動以處理長文章
-- 懶加載圖片
-- 快取已渲染的 HTML
+根據 2024 Google Core Web Vitals 要求，必須監控以下指標：
+
+```typescript
+// Next.js 內建監控實作
+export function reportWebVitals(metric: NextWebVitalsMetric) {
+  const vitals = {
+    LCP: metric.value,      // Largest Contentful Paint < 2.5s
+    INP: metric.value,      // Interaction to Next Paint < 200ms (2024新指標)
+    CLS: metric.value,      // Cumulative Layout Shift < 0.1
+    FCP: metric.value,      // First Contentful Paint < 1.8s
+    TTFB: metric.value      // Time to First Byte < 800ms
+  };
+
+  // 發送到分析服務
+  if (metric.label === 'web-vital') {
+    analytics.track('Web Vitals', vitals);
+  }
+}
+```
+
+### Token 餘額更新優化（效能基準）
+
+```typescript
+const performanceTargets = {
+  balanceUpdateLatency: 100,    // 餘額更新延遲 < 100ms
+  optimisticUIDelay: 0,         // 樂觀更新無延遲
+  revalidationInterval: 10000,  // 背景重新驗證間隔
+  wsReconnectDelay: 1000,       // WebSocket 重連延遲
+  maxRetries: 3                 // 最大重試次數
+};
+```
+
+**優化策略**：
+- 使用 `requestIdleCallback` 處理非關鍵更新
+- 實作請求合併（request batching）
+- 使用 React 18 的 `startTransition` 處理低優先級更新
+
+### 預覽渲染優化（INP 優化重點）
+
+```typescript
+// 虛擬捲動實作（長文章）
+import { FixedSizeList } from 'react-window';
+
+// 圖片懶加載配置
+const imageOptimization = {
+  lazy: true,
+  priority: false,
+  quality: 75,
+  formats: ['webp', 'avif'],
+  deviceSizes: [640, 750, 828, 1080, 1200]
+};
+
+// HTML 快取策略
+const cacheStrategy = {
+  staleWhileRevalidate: 60 * 60,      // 1 小時
+  maxAge: 24 * 60 * 60,               // 24 小時
+  swr: true                           // 啟用 SWR 快取
+};
+```
+
+### 效能監控工具整合
+
+1. **Vercel Speed Insights**（推薦用於 Vercel 部署）
+   - 自動收集 Core Web Vitals
+   - 真實用戶監控（RUM）
+   - 每月 10,000 事件免費額度
+
+2. **第三方監控**
+   - Sentry Performance Monitoring
+   - New Relic Browser
+   - 自建 OpenTelemetry
+
+### 效能預算（Performance Budget）
+
+```javascript
+module.exports = {
+  performanceBudget: {
+    javascript: 200,      // JS bundle < 200KB
+    css: 50,             // CSS < 50KB
+    images: 1000,        // 圖片總計 < 1MB
+    fonts: 100,          // 字體 < 100KB
+    total: 1500          // 總計 < 1.5MB
+  }
+};
+```
 
 ## Security Considerations
 

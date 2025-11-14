@@ -115,7 +115,7 @@ export class ParallelOrchestrator {
           this.getBrandVoice(input.websiteId),
           this.getWorkflowSettings(input.websiteId),
           this.getAgentConfig(input.websiteId),
-          this.getPreviousArticles(input.websiteId),
+          this.getPreviousArticles(input.websiteId, input.title),
         ]);
 
       const aiConfig = this.getAIConfig();
@@ -1045,7 +1045,10 @@ export class ParallelOrchestrator {
     }
   }
 
-  private async getPreviousArticles(websiteId: string | null): Promise<PreviousArticle[]> {
+  private async getPreviousArticles(
+    websiteId: string | null,
+    currentArticleTitle: string
+  ): Promise<PreviousArticle[]> {
     // 如果 websiteId 為 null，返回空陣列（沒有網站就沒有歷史文章）
     if (!websiteId || websiteId === 'null') {
       console.warn('[Orchestrator] website_id 為 null，返回空的歷史文章列表');
@@ -1053,23 +1056,53 @@ export class ParallelOrchestrator {
     }
 
     const supabase = await this.getSupabase();
+
+    // 1. 取得網站基礎 URL
+    const { data: websiteConfig } = await supabase
+      .from('website_configs')
+      .select('wordpress_url')
+      .eq('id', websiteId)
+      .single();
+
+    const baseUrl = websiteConfig?.wordpress_url || '';
+
+    // 2. 使用全文搜尋查詢相關文章
     const { data, error } = await supabase
-      .from('article_jobs')
-      .select('id, keywords, generated_content')
+      .from('generated_articles')
+      .select('id, title, slug, keywords, excerpt, wordpress_post_url, status')
       .eq('website_id', websiteId)
-      .eq('status', 'completed')
-      .order('created_at', { ascending: false })
-      .limit(10);
+      .or('status.eq.published,status.eq.reviewed')
+      .textSearch('title', currentArticleTitle, {
+        type: 'websearch',
+        config: 'simple'
+      })
+      .limit(20);
 
-    if (error) throw error;
+    if (error) {
+      console.error('[Orchestrator] 查詢相關文章失敗:', error);
+      return [];
+    }
 
-    return (data || []).map((article: any) => ({
-      id: article.id,
-      title: article.keywords?.[0] || 'Untitled',
-      url: `/articles/${article.id}`,
-      keywords: article.keywords || [],
-      excerpt: (article.generated_content || '').substring(0, 200),
-    }));
+    console.log(`[Orchestrator] 找到 ${data?.length || 0} 篇相關文章`, {
+      websiteId,
+      searchTitle: currentArticleTitle,
+      baseUrl,
+    });
+
+    // 3. 構建 URL（已發佈用網站網址，未發佈用預覽 URL）
+    return (data || []).map((article) => {
+      const url = article.status === 'published' && baseUrl
+        ? `${baseUrl}/${article.slug}`
+        : `/dashboard/articles/${article.id}/preview`;
+
+      return {
+        id: article.id,
+        title: article.title,
+        url,
+        keywords: article.keywords || [],
+        excerpt: article.excerpt || '',
+      };
+    });
   }
 
   private getDefaultAgentConfig(): AgentConfig & {
