@@ -95,8 +95,17 @@ export class ContentAssemblerAgent {
     sections: ContentAssemblerInput['sections'],
     qa: ContentAssemblerInput['qa']
   ): ContentAssemblerOutput['statistics'] {
-    const plainText = markdown.replace(/!\[.*?\]\(.*?\)/g, '').replace(/[#*`]/g, '');
-    const totalWords = plainText.trim().split(/\s+/).length;
+    const plainText = markdown.replace(/!\[.*?\]\(.*?\)/g, '').replace(/[#*`]/g, '').trim();
+
+    // 計算中文字符數
+    const chineseChars = (plainText.match(/[\u4e00-\u9fa5]/g) || []).length;
+
+    // 計算英文單詞數（排除中文後按空格分詞）
+    const nonChineseText = plainText.replace(/[\u4e00-\u9fa5]/g, '');
+    const englishWords = nonChineseText.trim() ? nonChineseText.trim().split(/\s+/).length : 0;
+
+    // 如果中文字符多，使用中文字符數；否則使用英文單詞數
+    const totalWords = chineseChars > englishWords ? chineseChars : Math.max(chineseChars + englishWords, 1);
 
     const paragraphs = markdown.split(/\n\n+/).filter((p) => p.trim() && !p.startsWith('#'));
     const totalParagraphs = paragraphs.length;

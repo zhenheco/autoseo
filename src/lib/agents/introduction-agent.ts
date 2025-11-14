@@ -55,7 +55,16 @@ ${featuredImage ? `6. 在前言開頭插入主圖：![${featuredImage.altText ||
   }
 
   private countWords(text: string): number {
-    const plainText = text.replace(/!\[.*?\]\(.*?\)/g, '').replace(/[#*`]/g, '');
-    return plainText.trim().split(/\s+/).length;
+    const plainText = text.replace(/!\[.*?\]\(.*?\)/g, '').replace(/[#*`]/g, '').trim();
+
+    // 計算中文字符數
+    const chineseChars = (plainText.match(/[\u4e00-\u9fa5]/g) || []).length;
+
+    // 計算英文單詞數（排除中文後按空格分詞）
+    const nonChineseText = plainText.replace(/[\u4e00-\u9fa5]/g, '');
+    const englishWords = nonChineseText.trim() ? nonChineseText.trim().split(/\s+/).length : 0;
+
+    // 如果中文字符多，使用中文字符數；否則使用英文單詞數
+    return chineseChars > englishWords ? chineseChars : Math.max(chineseChars + englishWords, 1);
   }
 }

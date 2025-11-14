@@ -144,25 +144,54 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
 ## 背景資訊
 - 標題：${selectedTitle}
 - 目標字數：${input.targetWordCount}
+- 搜尋意圖：${input.researchData.searchIntent}
+- 讀者需求：${input.researchData.recommendedStrategy}
 
-## 競爭對手優勢
-${topCompetitors.map(c => `- ${c.strengths.slice(0, 2).join('、')}`).join('\n')}
+## 競爭對手優勢分析
+${topCompetitors.map((c, i) => `${i + 1}. ${c.title}
+   - 優勢：${c.strengths.join('、')}
+   - 弱點：${c.weaknesses.join('、')}
+   - 獨特角度：${c.uniqueAngles.join('、')}`).join('\n')}
 
-## 內容缺口（需要補足）
-${topGaps.join('\n')}
+## 內容缺口（競爭對手未覆蓋的重點）
+${topGaps.map((gap, i) => `${i + 1}. ${gap}`).join('\n')}
 
 ## 推理步驟
-1. 分析目標關鍵字和讀者需求
-2. 評估競爭對手的優勢，思考如何超越
-3. 識別內容缺口，規劃獨特價值
-4. 設計結構化大綱，確保邏輯流暢
-5. 分配字數比例，平衡深度與廣度
+1. 分析讀者搜尋此主題的真實需求和痛點
+2. 評估競爭對手的優勢與弱點，找出超越機會
+3. **重點**：將內容缺口轉化為獨特的 section 角度
+4. 設計邏輯流暢且互補的大綱結構
+5. 確保每個 section 回答不同的問題或解決不同的痛點
+
+## ⚠️ Section 多樣化要求（極為重要）
+
+**每個 mainSection 必須有獨特的角度和價值：**
+
+1. **基於內容缺口設計**：優先使用上述「內容缺口」來設計 sections
+2. **回答不同的問題**：每個 section 應該解決讀者的不同疑問或需求
+3. **避免重複**：不要在每個 section 標題中硬置入相同的關鍵字
+4. **多樣化視角**：混合使用「理論說明」「實作步驟」「案例分析」「常見錯誤」「進階技巧」等不同類型
+5. **自然流暢**：sections 之間應該有邏輯遞進關係（例如：基礎 → 應用 → 進階）
+
+**錯誤示範（sections 太相似）：**
+- 如何選擇 Python 學習資源
+- 如何學習 Python 基礎語法
+- 如何練習 Python 程式設計
+- 如何提升 Python 編程技能
+
+**正確示範（多樣化且互補）：**
+- Python 開發環境建置與工具選擇
+- 掌握資料結構：從 list 到 dictionary 的實戰應用
+- 常見錯誤與除錯技巧：新手必知的 10 個陷阱
+- 進階學習路徑：從腳本到專案的升級之路
 
 ## 重要規則
 1. mainSections 最多 4 個
-2. 每個 section 的 keyPoints 最多 3 個，每個最多 20 字
-3. faq 最多 2 個
-4. 字數分配要合理，總和應接近目標字數
+2. 每個 section 的 heading 必須獨特且有價值，不要重複相似的句式
+3. 每個 section 的 keyPoints 最多 3 個，每個最多 20 字
+4. keyPoints 應該反映該 section 的核心內容，而非關鍵字堆砌
+5. faq 最多 2 個，問題要具體且實用
+6. 字數分配要合理，總和應接近目標字數
 
 ## ⚠️ 重要：輸出格式要求
 
@@ -352,28 +381,85 @@ ${topGaps.join('\n')}
   }
 
   private tryNestedJSONParse(content: string): StrategyOutput['outline'] | null {
-    const jsonMatch = content.match(/\{[\s\S]*\}/);
-    if (!jsonMatch) {
-      return null;
+    // 嘗試多種 JSON 提取策略
+    const extractionStrategies = [
+      // 策略 1: 找到最後一個完整的 JSON 物件（最可能是輸出結果）
+      () => {
+        const matches = content.matchAll(/\{[\s\S]*?\}/g);
+        const allMatches = Array.from(matches);
+        if (allMatches.length === 0) return null;
+
+        // 從最後一個 match 開始往前試
+        for (let i = allMatches.length - 1; i >= 0; i--) {
+          try {
+            const parsed = JSON.parse(allMatches[i][0]);
+            if (parsed.mainSections || parsed.outline?.mainSections) {
+              console.log(`[StrategyAgent] Found valid JSON at match ${i + 1}/${allMatches.length}`);
+              return parsed;
+            }
+          } catch {
+            continue;
+          }
+        }
+        return null;
+      },
+
+      // 策略 2: 找到最大的 JSON 物件（最可能包含完整資訊）
+      () => {
+        const matches = content.matchAll(/\{[\s\S]*?\}/g);
+        const allMatches = Array.from(matches);
+        if (allMatches.length === 0) return null;
+
+        // 按長度排序，從最長的開始試
+        const sortedByLength = allMatches.sort((a, b) => b[0].length - a[0].length);
+        for (const match of sortedByLength) {
+          try {
+            const parsed = JSON.parse(match[0]);
+            if (parsed.mainSections || parsed.outline?.mainSections) {
+              console.log(`[StrategyAgent] Found valid JSON with length ${match[0].length}`);
+              return parsed;
+            }
+          } catch {
+            continue;
+          }
+        }
+        return null;
+      },
+
+      // 策略 3: 使用貪婪匹配，嘗試找到最外層的 JSON（原本的邏輯）
+      () => {
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (!jsonMatch) return null;
+
+        try {
+          return JSON.parse(jsonMatch[0]);
+        } catch {
+          return null;
+        }
+      }
+    ];
+
+    for (let i = 0; i < extractionStrategies.length; i++) {
+      try {
+        const parsed = extractionStrategies[i]();
+        if (!parsed) continue;
+
+        if (parsed.outline?.mainSections) {
+          console.log(`[StrategyAgent] ✅ Extraction strategy ${i + 1} succeeded (nested structure)`);
+          return parsed.outline;
+        }
+
+        if (parsed.mainSections) {
+          console.log(`[StrategyAgent] ✅ Extraction strategy ${i + 1} succeeded (direct structure)`);
+          return parsed;
+        }
+      } catch (error) {
+        console.warn(`[StrategyAgent] Extraction strategy ${i + 1} failed:`, error);
+        continue;
+      }
     }
 
-    try {
-      const parsed = JSON.parse(jsonMatch[0]);
-
-      if (parsed.outline?.mainSections) {
-        console.log('[StrategyAgent] Successfully parsed nested outline structure');
-        return parsed.outline;
-      }
-
-      if (parsed.mainSections) {
-        console.log('[StrategyAgent] Successfully parsed direct outline structure');
-        return parsed;
-      }
-    } catch (error) {
-      console.warn('[StrategyAgent] Failed to parse nested JSON:', error);
-      return null;
-    }
-
+    console.warn('[StrategyAgent] All JSON extraction strategies failed');
     return null;
   }
 

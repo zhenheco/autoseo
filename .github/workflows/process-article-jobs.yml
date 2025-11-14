@@ -47,6 +47,7 @@ jobs:
           echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$(echo -n '${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
           echo "DEEPSEEK_API_KEY=$(echo -n '${{ secrets.DEEPSEEK_API_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
           echo "OPENAI_API_KEY=$(echo -n '${{ secrets.OPENAI_API_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "PERPLEXITY_API_KEY=$(echo -n '${{ secrets.PERPLEXITY_API_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
           echo "R2_ACCESS_KEY_ID=$(echo -n '${{ secrets.R2_ACCESS_KEY_ID }}' | tr -d '\n\r')" >> $GITHUB_ENV
           echo "R2_SECRET_ACCESS_KEY=$(echo -n '${{ secrets.R2_SECRET_ACCESS_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
           echo "R2_ACCOUNT_ID=$(echo -n '${{ secrets.R2_ACCOUNT_ID }}' | tr -d '\n\r')" >> $GITHUB_ENV
