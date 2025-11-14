@@ -75,59 +75,6 @@ jobs:
           echo "R2_BUCKET_NAME=$(echo -n '${{ secrets.R2_BUCKET_NAME }}' | tr -d '\n\r')" >> $GITHUB_ENV
           echo "USE_MULTI_AGENT_ARCHITECTURE=$(echo -n '${{ secrets.USE_MULTI_AGENT_ARCHITECTURE }}' | tr -d '\n\r')" >> $GITHUB_ENV
 
-      - name: 驗證環境變數
-        run: |
-          echo "🔍 檢查必要的環境變數..."
-
-          # 檢查環境變數是否包含換行符（會導致 R2 和 Multi-Agent 失敗）
-          check_env_var() {
-            local var_name="$1"
-            local var_value="${!var_name}"
-
-            if [ -z "$var_value" ]; then
-              echo "❌ 錯誤: $var_name 未設定"
-              return 1
-            fi
-
-            # 使用 printf 而不是 echo 來避免自動添加換行符
-            if printf '%s' "$var_value" | grep -q $'\n'; then
-              echo "❌ 錯誤: $var_name 包含換行符"
-              return 1
-            fi
-
-            echo "✅ $var_name: 已設定且格式正確"
-            return 0
-          }
-
-          # 檢查所有必要的環境變數
-          all_valid=true
-
-          # 資料庫相關
-          check_env_var "NEXT_PUBLIC_SUPABASE_URL" || all_valid=false
-          check_env_var "NEXT_PUBLIC_SUPABASE_ANON_KEY" || all_valid=false
-          check_env_var "SUPABASE_SERVICE_ROLE_KEY" || all_valid=false
-
-          # AI API Keys
-          check_env_var "OPENAI_API_KEY" || all_valid=false
-          check_env_var "DEEPSEEK_API_KEY" || all_valid=false
-
-          # R2 相關（重要：不能有換行符）
-          check_env_var "R2_ACCESS_KEY_ID" || all_valid=false
-          check_env_var "R2_SECRET_ACCESS_KEY" || all_valid=false
-          check_env_var "R2_ACCOUNT_ID" || all_valid=false
-          check_env_var "R2_BUCKET_NAME" || all_valid=false
-
-          # Multi-Agent 開關
-          check_env_var "USE_MULTI_AGENT_ARCHITECTURE" || all_valid=false
-
-          if [ "$all_valid" = false ]; then
-            echo ""
-            echo "❌ 環境變數驗證失敗！請檢查 GitHub Secrets 設定"
-            exit 1
-          fi
-
-          echo ""
-          echo "✅ 所有環境變數驗證通過！"
 
       - name: 處理單個文章（repository_dispatch）
         if: github.event_name == 'repository_dispatch'

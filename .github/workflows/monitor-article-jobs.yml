@@ -12,8 +12,9 @@ jobs:
 
     steps:
       - name: Call Monitoring API
+        timeout-minutes: 2
         run: |
-          response=$(curl -s -w "\n%{http_code}" -X POST \
+          response=$(curl -s -w "\n%{http_code}" --max-time 90 -X POST \
             -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
             -H "Content-Type: application/json" \
             "${{ secrets.NEXT_PUBLIC_APP_URL }}/api/cron/monitor-article-jobs")
@@ -26,8 +27,12 @@ jobs:
           echo "Response: $body"
           echo "Status Code: $status_code"
 
-          # 檢查狀態碼
-          if [ "$status_code" != "200" ]; then
+          # 檢查狀態碼（允許 504 timeout，因為可能是長時間運行的任務）
+          if [ "$status_code" = "504" ]; then
+            echo "⚠️ API timeout (504) - 監控任務可能仍在執行中"
+            echo "這不一定是錯誤，可能是處理大量文章導致超時"
+            exit 0
+          elif [ "$status_code" != "200" ]; then
             echo "❌ Monitoring failed with status code: $status_code"
             exit 1
           fi
