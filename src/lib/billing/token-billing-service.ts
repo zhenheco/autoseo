@@ -349,7 +349,7 @@ export class TokenBillingService {
     companyId: string
   ): Promise<{
     total: number
-    monthlyQuota: number
+    monthly: number
     purchased: number
   }> {
     // 先檢查並重置配額（如果需要）
@@ -363,12 +363,12 @@ export class TokenBillingService {
       .single()
 
     if (!data) {
-      return { total: 0, monthlyQuota: 0, purchased: 0 }
+      return { total: 0, monthly: 0, purchased: 0 }
     }
 
     return {
       total: data.monthly_quota_balance + data.purchased_token_balance,
-      monthlyQuota: data.monthly_quota_balance,
+      monthly: data.monthly_quota_balance,
       purchased: data.purchased_token_balance,
     }
   }

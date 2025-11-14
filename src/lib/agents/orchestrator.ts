@@ -1150,13 +1150,28 @@ export class ParallelOrchestrator {
 
     const supabase = await this.getSupabase();
 
+    // 先讀取現有的 metadata
+    const { data: existingJob } = await supabase
+      .from('article_jobs')
+      .select('metadata')
+      .eq('id', articleJobId)
+      .single();
+
+    const existingMetadata = (existingJob?.metadata as Record<string, unknown>) || {};
+
     // 驗證並格式化資料
     const validatedData = this.validateAndFormatStateData(data);
+
+    // 合併 metadata，保留原有的 title、mode 等重要欄位
+    const mergedMetadata = {
+      ...existingMetadata,
+      ...validatedData,
+    };
 
     // 使用 update 只更新狀態和 metadata，不影響其他欄位
     const updateData: any = {
       status,
-      metadata: validatedData,
+      metadata: mergedMetadata,
     };
 
     // 如果是 completed 或 failed，設定 completed_at
