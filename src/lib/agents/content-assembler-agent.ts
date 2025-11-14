@@ -82,11 +82,25 @@ export class ContentAssemblerAgent {
 
   private async convertToHTML(markdown: string): Promise<string> {
     try {
-      const html = await marked(markdown);
+      // marked v16+ 使用 parse() 方法而非直接呼叫
+      const html = await marked.parse(markdown, {
+        async: true,
+        gfm: true, // GitHub Flavored Markdown
+        breaks: false,
+      });
       return html;
     } catch (error) {
       console.error('[ContentAssembler] Markdown to HTML conversion failed:', error);
-      return markdown.replace(/\n/g, '<br>');
+      console.error('[ContentAssembler] Error details:', (error as Error).message);
+      // 錯誤時也嘗試轉換，但加上更多日誌
+      try {
+        const fallbackHtml = await marked.parse(markdown);
+        return fallbackHtml;
+      } catch (fallbackError) {
+        console.error('[ContentAssembler] Fallback conversion also failed:', fallbackError);
+        // 最後才返回帶 <br> 的 markdown
+        return markdown.replace(/\n/g, '<br>');
+      }
     }
   }
 

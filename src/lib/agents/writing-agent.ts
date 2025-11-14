@@ -20,7 +20,12 @@ export class WritingAgent extends BaseAgent<WritingInput, WritingOutput> {
       cleanedMarkdown = cleanedMarkdown.replace(titleRegex, '');
     }
 
-    const html = await marked(cleanedMarkdown);
+    // marked v16+ 使用 parse() 方法而非直接呼叫
+    const html = await marked.parse(cleanedMarkdown, {
+      async: true,
+      gfm: true, // GitHub Flavored Markdown
+      breaks: false,
+    });
 
     // 為表格添加樣式類別
     const styledHtml = this.addTableStyles(html);
