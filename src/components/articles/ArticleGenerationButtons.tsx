@@ -158,9 +158,39 @@ export function ArticleGenerationButtons({
           <DialogHeader>
             <DialogTitle>批次文章生成</DialogTitle>
             <DialogDescription>
-              輸入關鍵字生成標題，選擇後批次生成文章
+              三步驟流程：主題探索 → 標題選擇 → 批次生成
             </DialogDescription>
           </DialogHeader>
+
+          {/* 步驟指示器 */}
+          <div className="flex items-center justify-center gap-2 py-2">
+            <div className="flex items-center gap-2">
+              <div className={`rounded-full w-8 h-8 flex items-center justify-center text-xs font-medium ${
+                keyword ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+              }`}>
+                1
+              </div>
+              <span className="text-sm">主題輸入</span>
+            </div>
+            <div className="w-8 h-px bg-muted" />
+            <div className="flex items-center gap-2">
+              <div className={`rounded-full w-8 h-8 flex items-center justify-center text-xs font-medium ${
+                generatedTitles.length > 0 || titleQueue.length > 0 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+              }`}>
+                2
+              </div>
+              <span className="text-sm">標題選擇</span>
+            </div>
+            <div className="w-8 h-px bg-muted" />
+            <div className="flex items-center gap-2">
+              <div className={`rounded-full w-8 h-8 flex items-center justify-center text-xs font-medium ${
+                titleQueue.length > 0 ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'
+              }`}>
+                3
+              </div>
+              <span className="text-sm">確認生成</span>
+            </div>
+          </div>
 
           <div className="grid grid-cols-[1fr_300px] gap-6 py-4">
             {/* 左側：標題生成區 */}
@@ -169,13 +199,16 @@ export function ArticleGenerationButtons({
               <div className="space-y-3">
                 <div className="flex gap-2">
                   <div className="flex-1">
-                    <Label htmlFor="keyword">關鍵字</Label>
+                    <Label htmlFor="keyword">文章主題/關鍵字</Label>
                     <Input
                       id="keyword"
-                      placeholder="例如：SEO 優化技巧"
+                      placeholder="輸入文章主題方向，系統將基於此生成標題建議"
                       value={keyword}
                       onChange={(e) => setKeyword(e.target.value)}
                     />
+                    <p className="text-xs text-muted-foreground mt-1">
+                      輸入主題概念或 SEO 關鍵字，系統將生成多個標題選項供您選擇
+                    </p>
                   </div>
                   <div className="flex items-end">
                     <Button
@@ -264,12 +297,13 @@ export function ArticleGenerationButtons({
                       >
                         <div className="flex-1 space-y-1">
                           <div className="text-xs text-muted-foreground">
-                            關鍵字: {item.keyword}
+                            主題: {item.keyword}
                           </div>
                           <Input
                             value={item.title}
                             onChange={(e) => handleTitleEdit(item.id, e.target.value)}
                             className="text-sm"
+                            placeholder="點擊編輯標題"
                           />
                         </div>
                         <Button

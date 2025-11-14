@@ -4,18 +4,18 @@
 
 ### 準備工作
 - [ ] 安裝 isomorphic-dompurify 套件（支援 SSR）
-- [ ] 安裝 marked 或 remark 用於 Markdown 轉 HTML（如尚未安裝）
+- [x] 安裝 marked 或 remark 用於 Markdown 轉 HTML（如尚未安裝）
 - [ ] 安裝 react-window 用於虛擬捲動（長文章優化）
 - [ ] 設定 Content Security Policy 標頭
-- [ ] 檢查現有文章的 html_content 欄位是否有資料
+- [x] 檢查現有文章的 html_content 欄位是否有資料
 
 ### Markdown 到 HTML 轉換
-- [ ] 在 WritingAgent 中實作 Markdown 到 HTML 轉換
-- [ ] 更新 article-storage.ts 確保同時儲存 markdown 和 html
+- [x] 在 WritingAgent 中實作 Markdown 到 HTML 轉換
+- [x] 更新 article-storage.ts 確保同時儲存 markdown 和 html
 - [ ] 為現有文章執行資料遷移腳本（轉換 markdown 為 html）
 
 ### 預覽渲染修復
-- [ ] 修改 articles/page.tsx 確保使用 html_content 欄位
+- [x] 修改 articles/page.tsx 確保使用 html_content 欄位
 - [ ] 添加 DOMPurify 淨化步驟在渲染前
 - [ ] 更新預覽區的 CSS 類別（添加 prose 樣式）
 - [ ] 測試圖片顯示是否正常
@@ -29,30 +29,30 @@
 ## Phase 2: Token Balance Display Adjustment
 
 ### 位置調整
-- [ ] 從文章列表區域移除 TokenBalanceDisplay 組件
-- [ ] 在頁面頂部標題區域添加 TokenBalanceDisplay
-- [ ] 調整樣式確保水平居中對齊
-- [ ] 優化在不同螢幕尺寸的顯示效果
+- [x] 從文章列表區域移除 TokenBalanceDisplay 組件
+- [x] 在頁面頂部標題區域添加 TokenBalanceDisplay
+- [x] 調整樣式確保水平居中對齊
+- [x] 優化在不同螢幕尺寸的顯示效果
 
 ### 餘額顯示優化
-- [ ] 簡化餘額顯示格式（月配額 + 購買餘額）
-- [ ] 添加餘額不足的視覺警告（紅色文字、警告圖示）
+- [x] 簡化餘額顯示格式（月配額 + 購買餘額）
+- [x] 添加餘額不足的視覺警告（紅色文字、警告圖示）
 - [ ] 實作餘額數字變化的過渡動畫
 
 ### 即時更新機制（三層架構）
-- [ ] **Layer 1: 樂觀更新**
-  - [ ] 實作立即 UI 更新（0ms 延遲）
+- [x] **Layer 1: 樂觀更新**
+  - [x] 實作立即 UI 更新（0ms 延遲）
   - [ ] 計算預估 Token 消耗
-  - [ ] 使用 SWR mutate 更新本地快取
+  - [x] 使用 SWR mutate 更新本地快取
   - [ ] 添加處理中狀態指示器
 - [ ] **Layer 2: WebSocket 推送（可選）**
   - [ ] 建立 WebSocket 連線管理
   - [ ] 實作自動重連機制（exponential backoff）
   - [ ] 處理多標籤同步
   - [ ] 實作心跳檢測（heartbeat）
-- [ ] **Layer 3: HTTP 輪詢備援**
-  - [ ] 調整 SWR refreshInterval 至 10 秒
-  - [ ] 實作請求去重（deduping）
+- [x] **Layer 3: HTTP 輪詢備援**
+  - [x] 調整 SWR refreshInterval 至 10 秒
+  - [x] 實作請求去重（deduping）
   - [ ] 添加請求合併（batching）
   - [ ] 處理降級邏輯
 
@@ -65,30 +65,30 @@
 ## Phase 3: Keyword Title Workflow Optimization (2024 UX Standards)
 
 ### 三階段工作流程實作
-- [ ] **階段 1: 主題探索**
-  - [ ] 設計主題輸入介面
+- [x] **階段 1: 主題探索**
+  - [x] 設計主題輸入介面
   - [ ] 支援關鍵字群組（逗號分隔）
   - [ ] 添加關鍵字建議功能
   - [ ] 實作搜尋意圖識別
-- [ ] **階段 2: 標題優化**
-  - [ ] 生成 5-10 個標題變體
+- [x] **階段 2: 標題優化**
+  - [x] 生成 5-10 個標題變體
   - [ ] 實作標題評分系統
   - [ ] 顯示 SEO 分數和預估 CTR
   - [ ] 標記 AI 推薦選項
-- [ ] **階段 3: 批次確認**
-  - [ ] 顯示待生成列表
+- [x] **階段 3: 批次確認**
+  - [x] 顯示待生成列表
   - [ ] 計算預估 Token 消耗
   - [ ] 支援優先級設定
   - [ ] A/B 測試選項
 
 ### 視覺化進度指示器
-- [ ] 實作步驟導航（1/3、2/3、3/3）
+- [x] 實作步驟導航（1/3、2/3、3/3）
 - [ ] 添加麵包屑導航
 - [ ] 實作返回上一步功能
 - [ ] 添加步驟完成動畫
 
 ### 標題生成邏輯優化
-- [ ] 修改 /api/articles/generate-titles 確保不直接使用關鍵字作為標題
+- [x] 修改 /api/articles/generate-titles 確保不直接使用關鍵字作為標題
 - [ ] 改進 prompt 讓 AI 生成更多樣化的標題
 - [ ] 確保生成的標題都是完整、可發布的格式
 - [ ] 添加標題重複檢測機制
@@ -96,12 +96,12 @@
 ### 進行中列表管理
 - [ ] 實作標題去重邏輯
 - [ ] 確保每個標題只出現一次在列表中
-- [ ] 正確顯示關鍵字和標題的配對關係
-- [ ] 添加標題編輯功能（點擊可修改）
+- [x] 正確顯示關鍵字和標題的配對關係
+- [x] 添加標題編輯功能（點擊可修改）
 
 ### 自訂標題功能增強
-- [ ] 優化自訂標題輸入體驗
-- [ ] 確保自訂標題保留原始關鍵字 metadata
+- [x] 優化自訂標題輸入體驗
+- [x] 確保自訂標題保留原始關鍵字 metadata
 - [ ] 添加標題字數限制提示
 - [ ] 實作標題預覽功能
 
