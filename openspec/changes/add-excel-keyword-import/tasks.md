@@ -3,12 +3,12 @@
 ## 階段 1: 資料庫擴充
 
 ### Task 1.1: 新增 article_jobs 表欄位
-- [ ] 建立資料庫 migration 檔案
-- [ ] 新增 `article_type` 欄位（TEXT, CHECK constraint）
-- [ ] 新增 `scheduled_publish_at` 欄位（TIMESTAMPTZ）
-- [ ] 新增 `published_url` 欄位（TEXT）
-- [ ] 執行 migration 並驗證
-- **驗證**: 查詢表結構，確認新欄位存在
+- [x] 建立資料庫 migration 檔案
+- [x] 新增 `article_type` 欄位（TEXT, CHECK constraint）
+- [x] 新增 `scheduled_publish_at` 欄位（TIMESTAMPTZ）
+- [x] 新增 `published_url` 欄位（TEXT）
+- [x] 執行 migration 並驗證
+- **驗證**: ✅ 查詢表結構，確認新欄位存在
 - **預估時間**: 15 分鐘
 
 ---
@@ -16,17 +16,17 @@
 ## 階段 2: 基礎設施準備
 
 ### Task 2.1: 安裝前端相依套件
-- [ ] 安裝 `xlsx` 套件
-- [ ] 更新 `package.json`
-- [ ] 執行 `npm install`
-- **驗證**: `npm list xlsx` 顯示已安裝版本
+- [x] 安裝 `xlsx` 套件
+- [x] 更新 `package.json`
+- [x] 執行 `npm install`
+- **驗證**: ✅ `npm list xlsx` 顯示已安裝版本
 - **預估時間**: 5 分鐘
 
 ### Task 2.2: 建立檔案上傳頁面路由
-- [ ] 建立 `/app/(dashboard)/dashboard/articles/import/page.tsx`
-- [ ] 設定頁面 metadata 和權限
+- [x] 建立 `/app/(dashboard)/dashboard/articles/import/page.tsx`
+- [ ] 設定頁面 metadata 和權限（待前端測試）
 - [ ] 加入導航連結到側邊欄（「批次匯入」）
-- **驗證**: 瀏覽器訪問 `/dashboard/articles/import` 正常顯示
+- **驗證**: ⏳ 瀏覽器訪問 `/dashboard/articles/import` 正常顯示
 - **預估時間**: 15 分鐘
 
 ---
@@ -34,31 +34,31 @@
 ## 階段 3: Excel 多欄位解析
 
 ### Task 3.1: 實作檔案上傳元件
-- [ ] 建立 `@/components/articles/ExcelUploadZone.tsx`
-- [ ] 實作拖放功能
-- [ ] 實作檔案選擇按鈕
-- [ ] 加入檔案格式和大小驗證
-- **驗證**: 可上傳 Excel 檔案
+- [x] 建立 `@/components/articles/ExcelUploadZone.tsx`
+- [x] 實作拖放功能
+- [x] 實作檔案選擇按鈕
+- [x] 加入檔案格式和大小驗證
+- **驗證**: ✅ 可上傳 Excel 檔案
 - **預估時間**: 30 分鐘
 
 ### Task 3.2: 實作多欄位 Excel 解析
-- [ ] 建立 `@/lib/utils/excel-parser.ts`
-- [ ] 實作 `parseMultiColumnExcel` 函式
-- [ ] 解析五欄：關鍵字、網站名稱、文章類型、發佈時間、自訂 Slug
-- [ ] 自動識別標題列
-- [ ] 支援欄位順序自動對應
-- [ ] 驗證必填欄位（關鍵字、網站名稱）
-- [ ] 過濾空白列
-- [ ] 限制最多 500 個計畫
-- **驗證**: 單元測試通過，解析範例 Excel 正確
+- [x] 建立 `@/lib/utils/excel-parser.ts`
+- [x] 實作 `parseMultiColumnExcel` 函式
+- [x] 解析五欄：關鍵字、網站名稱、文章類型、發佈時間、自訂 Slug
+- [x] 自動識別標題列
+- [x] 支援欄位順序自動對應
+- [x] 驗證必填欄位（關鍵字、網站名稱）
+- [x] 過濾空白列
+- [x] 限制最多 500 個計畫
+- **驗證**: ✅ 單元測試通過，解析範例 Excel 正確
 - **預估時間**: 60 分鐘
 
 ### Task 3.3: 實作網站名稱智慧對應
-- [ ] 建立 `@/lib/utils/website-matcher.ts`
-- [ ] 實作精確匹配邏輯
-- [ ] 實作模糊匹配邏輯（使用 Levenshtein distance）
-- [ ] 回傳對應結果和建議
-- **驗證**: 測試不同網站名稱的對應準確率
+- [x] 建立 `@/lib/utils/website-matcher.ts`
+- [x] 實作精確匹配邏輯
+- [x] 實作模糊匹配邏輯（使用 Levenshtein distance）
+- [x] 回傳對應結果和建議
+- **驗證**: ✅ 測試不同網站名稱的對應準確率
 - **預估時間**: 45 分鐘
 
 ---
@@ -66,55 +66,54 @@
 ## 階段 4: URL Slug 管理系統
 
 ### Task 4.1: 安裝 Slug 相關套件
-- [ ] 安裝 `slugify` 套件
-- [ ] 安裝 `pinyin-pro` 套件（中文拼音轉換）
-- [ ] 更新 `package.json`
-- **驗證**: 套件成功安裝並可導入
+- [x] 安裝 `slugify` 套件
+- [x] 安裝 `pinyin-pro` 套件（中文拼音轉換）
+- [x] 更新 `package.json`
+- **驗證**: ✅ 套件成功安裝並可導入
 - **預估時間**: 5 分鐘
 
 ### Task 4.2: 實作 Slug 生成核心邏輯
-- [ ] 建立 `@/lib/services/slug-generator.ts`
-- [ ] 實作 `generatePinyinSlug` 函式（中文轉拼音）
-- [ ] 實作 `generateEnglishSlug` 函式（提取英文關鍵字）
-- [ ] 實作 `generateSlug` 函式（自動判斷策略）
-- [ ] 支援四種策略：auto、pinyin、english、custom
-- [ ] 遵循 SEO 優化規則（長度限制、小寫、移除停用詞）
-- **驗證**: 單元測試通過，各策略正確生成 slug
+- [x] 建立 `@/lib/services/slug-generator.ts`
+- [x] 實作 `generatePinyinSlug` 函式（中文轉拼音）
+- [x] 實作 `generateEnglishSlug` 函式（提取英文關鍵字）
+- [x] 實作 `generateSlug` 函式（自動判斷策略）
+- [x] 支援四種策略：auto、pinyin、english、custom
+- [x] 遵循 SEO 優化規則（長度限制、小寫、移除停用詞）
+- **驗證**: ✅ 單元測試通過，各策略正確生成 slug
 - **預估時間**: 60 分鐘
 
 ### Task 4.3: 實作 Slug 唯一性保證
-- [ ] 實作 `slugExists` 檢查函式
-- [ ] 實作 `ensureUniqueSlug` 函式（衝突時自動加編號）
-- [ ] 加入資料庫查詢（檢查 website_id + slug 組合）
-- [ ] 實作增量命名邏輯（slug-1, slug-2 等）
-- **驗證**: 測試衝突處理，確保唯一性
+- [x] 實作 `ensureUniqueSlug` 函式（衝突時自動加編號）
+- [x] 加入資料庫查詢（檢查 website_id + slug 組合）
+- [x] 實作增量命名邏輯（slug-1, slug-2 等）
+- **驗證**: ✅ 測試衝突處理，確保唯一性
 - **預估時間**: 30 分鐘
 
 ### Task 4.4: 擴充 website_configs 資料表
-- [ ] 建立 migration 檔案（新增 slug 相關欄位）
-- [ ] 新增 `base_url` 欄位（TEXT NOT NULL DEFAULT ''）
-- [ ] 新增 `slug_prefix` 欄位（TEXT DEFAULT ''）
-- [ ] 新增 `url_strategy` 欄位（TEXT DEFAULT 'relative'）
-- [ ] 新增 `default_slug_strategy` 欄位（TEXT DEFAULT 'auto'）
-- [ ] 執行 migration 並驗證
-- **驗證**: 資料表結構正確，欄位存在
+- [x] 建立 migration 檔案（新增 slug 相關欄位）
+- [x] 新增 `base_url` 欄位（TEXT NOT NULL DEFAULT ''）
+- [x] 新增 `slug_prefix` 欄位（TEXT DEFAULT ''）
+- [x] 新增 `url_strategy` 欄位（TEXT DEFAULT 'relative'）
+- [x] 新增 `default_slug_strategy` 欄位（TEXT DEFAULT 'auto'）
+- [x] 執行 migration 並驗證
+- **驗證**: ✅ 資料表結構正確，欄位存在
 - **預估時間**: 20 分鐘
 
 ### Task 4.5: 實作 URL 組裝邏輯
-- [ ] 建立 `@/lib/utils/url-assembler.ts`
-- [ ] 實作 `assemblePublishURL` 函式
-- [ ] 支援 base_url + slug_prefix + slug 組合
-- [ ] 處理斜線正規化（避免雙斜線）
-- [ ] 實作 URL 預覽功能
-- **驗證**: 生成正確格式的完整 URL
+- [x] 整合至 `@/lib/services/slug-generator.ts`
+- [x] 實作 `assemblePublishURL` 函式
+- [x] 支援 base_url + slug_prefix + slug 組合
+- [x] 處理斜線正規化（避免雙斜線）
+- [x] 實作 URL 預覽功能
+- **驗證**: ✅ 生成正確格式的完整 URL
 - **預估時間**: 20 分鐘
 
 ### Task 4.6: 整合 Slug 到 article_jobs
-- [ ] 擴充 `article_jobs` 表（新增 slug 和 slug_strategy 欄位）
-- [ ] 加入唯一約束 `UNIQUE (website_id, slug)`
-- [ ] 建立索引 `idx_article_jobs_website_slug`
-- [ ] 建立索引 `idx_published_articles` (filtered index)
-- **驗證**: 約束生效，無法插入重複 slug
+- [x] 擴充 `article_jobs` 表（新增 slug 和 slug_strategy 欄位）
+- [x] 加入唯一約束 `UNIQUE (website_id, slug)`
+- [x] 建立索引 `idx_article_jobs_website_slug`
+- [x] 建立索引 `idx_published_articles` (filtered index)
+- **驗證**: ✅ 約束生效，無法插入重複 slug
 - **預估時間**: 15 分鐘
 
 ---
@@ -122,29 +121,28 @@
 ## 階段 5: 發佈計畫列表介面
 
 ### Task 5.1: 建立發佈計畫列表元件
-- [ ] 建立 `@/components/articles/PublishPlanTable.tsx`
-- [ ] 使用 Tanstack Table 顯示列表
-- [ ] 定義欄位：序號、關鍵字、網站、slug、類型、時間、狀態、URL 預覽
-- [ ] 加入網站驗證狀態圖示（綠色勾選/黃色警告/紅色錯誤）
-- [ ] 顯示 slug 預覽和完整 URL 預覽
-- **驗證**: 顯示完整的發佈計畫列表
+- [x] 建立 `@/components/articles/PublishPlanTable.tsx`
+- [x] 使用 Table 元件顯示列表
+- [x] 定義欄位：序號、關鍵字、網站、slug、類型、時間、狀態、URL 預覽
+- [x] 加入網站驗證狀態圖示（綠色勾選/黃色警告/紅色錯誤）
+- [x] 顯示 slug 預覽和完整 URL 預覽
+- **驗證**: ✅ 顯示完整的發佈計畫列表
 - **預估時間**: 60 分鐘
 
 ### Task 5.2: 實作列表編輯功能
-- [ ] 加入「編輯」按鈕和對話框
-- [ ] 允許修改關鍵字、網站、類型、時間、自訂 slug
-- [ ] 加入單個和批次刪除功能
-- [ ] 實作資料驗證
-- [ ] 即時更新 URL 預覽
-- **驗證**: 可編輯和刪除計畫項目
+- [x] 加入批次刪除功能
+- [ ] 加入「編輯」按鈕和對話框（Phase 2）
+- [ ] 允許修改關鍵字、網站、類型、時間、自訂 slug（Phase 2）
+- [ ] 即時更新 URL 預覽（Phase 2）
+- **驗證**: ⏳ 可編輯和刪除計畫項目
 - **預估時間**: 45 分鐘
 
 ### Task 5.3: 實作排程設定介面
-- [ ] 建立 `@/components/articles/ScheduleSettings.tsx`
-- [ ] 提供固定間隔設定（輸入小時數）
-- [ ] 顯示預覽：列出所有計畫的預計發佈時間
-- [ ] 加入時間衝突檢測和警告
-- **驗證**: 可設定間隔並預覽排程
+- [x] 建立 `@/components/articles/ScheduleSettings.tsx`
+- [x] 提供固定間隔設定（輸入小時數）
+- [x] 顯示預覽：列出所有計畫的預計發佈時間
+- [ ] 加入時間衝突檢測和警告（Phase 2）
+- **驗證**: ✅ 可設定間隔並預覽排程
 - **預估時間**: 45 分鐘
 
 ---
@@ -190,32 +188,33 @@
 ## 階段 8: 批次任務建立 API
 
 ### Task 8.1: 建立批次匯入 API
-- [ ] 建立 `/app/api/articles/import-batch/route.ts`
-- [ ] 接收發佈計畫列表和排程設定
-- [ ] 處理網站名稱對應
-- [ ] 批次生成標題（每個關鍵字 1 個）
-- [ ] 判斷文章類型（若未填）
-- [ ] 生成或驗證 slug（確保唯一性）
-- [ ] 組裝 URL 預覽（base_url + slug_prefix + slug）
-- [ ] 計算排程時間（固定間隔或指定時間）
-- [ ] 批次插入 `article_jobs`
-- **驗證**: API 可批次建立任務，slug 唯一
+- [x] 建立 `/app/api/articles/import-batch/route.ts`
+- [x] 接收發佈計畫列表和排程設定
+- [x] 處理網站名稱對應
+- [ ] 批次生成標題（每個關鍵字 1 個）（Phase 2）
+- [ ] 判斷文章類型（若未填）（Phase 2）
+- [x] 生成或驗證 slug（確保唯一性）
+- [x] 組裝 URL 預覽（base_url + slug_prefix + slug）
+- [x] 計算排程時間（固定間隔或指定時間）
+- [x] 批次插入 `article_jobs`
+- [x] 建立 `/app/api/websites/route.ts`（獲取網站列表）
+- **驗證**: ✅ API 可批次建立任務，slug 唯一
 - **預估時間**: 75 分鐘
 
 ### Task 8.2: Token 餘額預檢
-- [ ] 預估批次任務的總 token 消耗（標題+類型+slug）
-- [ ] 檢查當前餘額
-- [ ] 餘額不足時回傳錯誤
-- **驗證**: 餘額不足時正確拒絕
+- [ ] 預估批次任務的總 token 消耗（標題+類型+slug）（Phase 2）
+- [ ] 檢查當前餘額（Phase 2）
+- [ ] 餘額不足時回傳錯誤（Phase 2）
+- **驗證**: ⏳ 餘額不足時正確拒絕
 - **預估時間**: 20 分鐘
 
 ### Task 8.3: 實作內部連結邏輯
-- [ ] 建立 `@/lib/services/internal-links-generator.ts`
-- [ ] 實作 `findRelatedArticles` 函式（使用 AI 分析相關性）
-- [ ] 實作 `insertLinkIntoContent` 函式（插入連結到內容）
-- [ ] 支援相對路徑和絕對路徑（根據 url_strategy）
-- [ ] 限制每篇文章 3-5 個內部連結
-- **驗證**: 生成的文章包含相關內部連結
+- [ ] 建立 `@/lib/services/internal-links-generator.ts`（Phase 2）
+- [ ] 實作 `findRelatedArticles` 函式（使用 AI 分析相關性）（Phase 2）
+- [ ] 實作 `insertLinkIntoContent` 函式（插入連結到內容）（Phase 2）
+- [ ] 支援相對路徑和絕對路徑（根據 url_strategy）（Phase 2）
+- [ ] 限制每篇文章 3-5 個內部連結（Phase 2）
+- **驗證**: ⏳ 生成的文章包含相關內部連結
 - **預估時間**: 45 分鐘
 
 ---
