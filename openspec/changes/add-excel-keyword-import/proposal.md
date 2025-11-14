@@ -12,18 +12,34 @@
 
 ## 目標
 
-1. 提供 Excel 檔案上傳介面（支援多欄位格式）
-2. 解析 Excel 檔案中的完整發佈計畫（關鍵字、網站、類型、時間）
-3. 自動生成文章標題（無需使用者選擇）
-4. 智慧判斷文章類型（教學、排行榜、比較、資訊型等）
-5. 支援排程發佈（固定間隔或指定時間）
-6. 整合現有的 multi-agent 文章生成工作流程
+1. 提供 Excel 檔案上傳介面（支援多欄位格式，含自訂 slug）
+2. 解析 Excel 檔案中的完整發佈計畫（關鍵字、網站、類型、時間、slug）
+3. **智慧 URL Slug 管理**：自動生成 SEO 友善的 slug，支援中文拼音轉換
+4. **平台無關架構**：使用「網域 + slug」模式，不依賴特定 CMS
+5. 自動生成文章標題（無需使用者選擇）
+6. 智慧判斷文章類型（教學、排行榜、比較、資訊型等）
+7. 支援排程發佈（固定間隔或指定時間）
+8. **內部連結自動化**：文章生成時預先插入相關文章連結
+9. 整合現有的 multi-agent 文章生成工作流程
 
 ## 範圍
 
 ### 納入範圍
 
-- Excel 檔案上傳與多欄位解析（關鍵字、網站、類型、時間）
+- Excel 檔案上傳與多欄位解析（關鍵字、網站、類型、時間、slug）
+- **URL Slug 智慧管理**：
+  - 自動生成（支援拼音轉換、英文提取、混合模式）
+  - 唯一性保證（資料庫約束 + 應用層檢查）
+  - SEO 優化（遵循 2025 最佳實踐）
+  - 支援自訂 slug（Excel 或手動輸入）
+- **平台無關發佈架構**：
+  - 抽象化發佈介面（支援 WordPress、Ghost、自訂平台）
+  - 使用「base_url + slug」組裝 URL
+  - 發佈前可預覽完整 URL
+- **內部連結系統**：
+  - 自動分析相關文章
+  - 使用 slug 建立連結（相對或絕對路徑）
+  - 支援批次插入內部連結
 - 自動標題生成（AI 生成最佳標題）
 - 文章類型智慧判斷（混合模式：Excel 優先，未填則 AI 判斷）
 - 排程發佈系統（固定間隔或指定時間）
@@ -36,6 +52,9 @@
 - 歷史匯入記錄查詢（第二階段）
 - 進階關鍵字分析和 SEO 建議（第二階段）
 - 取消已排程文章（第二階段）
+- Slug 變更歷史追蹤（第二階段）
+- 301 重定向管理（第二階段）
+- 內部連結失效自動修復（第二階段）
 
 ## 技術架構
 
@@ -47,6 +66,7 @@
 | 網站名稱 | ✓ | 發佈目標網站 | `技術部落格` |
 | 文章類型 | ✗ | 教學/排行榜/比較/資訊型 | `教學` |
 | 發佈時間 | ✗ | ISO 8601 格式 | `2025-11-15 10:00` |
+| 自訂 Slug | ✗ | URL 路徑（SEO 友善） | `nextjs-tutorial-guide` |
 
 ### 前端
 - 新增 `/dashboard/articles/import` 頁面
@@ -61,12 +81,33 @@
 - 實作排程邏輯（Cron Job 或 Scheduled Jobs）
 
 ### 資料庫
-- 複用 `article_jobs` 表
-- 新增欄位：
-  - `article_type`: 文章類型（教學、排行榜等）
-  - `scheduled_publish_at`: 預定發佈時間
-  - `published_url`: WordPress 發佈網址
-- 使用 `metadata` 欄位儲存匯入來源和排程資訊
+
+**article_jobs 表擴充**:
+```sql
+ALTER TABLE article_jobs ADD COLUMN:
+  - slug TEXT NOT NULL                          -- URL slug（SEO 友善）
+  - article_type TEXT CHECK (...)               -- 文章類型
+  - scheduled_publish_at TIMESTAMPTZ            -- 預定發佈時間
+  - published_url TEXT                          -- 完整發佈 URL
+  - slug_strategy TEXT DEFAULT 'auto'           -- slug 生成策略
+  - CONSTRAINT unique_website_slug UNIQUE (website_id, slug)
+```
+
+**website_configs 表擴充**:
+```sql
+ALTER TABLE website_configs ADD COLUMN:
+  - base_url TEXT NOT NULL DEFAULT ''           -- 網站基礎網域
+  - slug_prefix TEXT DEFAULT ''                 -- Slug 前綴（如 /blog/）
+  - url_strategy TEXT DEFAULT 'relative'        -- 內部連結策略
+  - default_slug_strategy TEXT DEFAULT 'auto'   -- 預設 slug 策略
+```
+
+**索引優化**:
+```sql
+CREATE INDEX idx_article_jobs_website_slug ON article_jobs(website_id, slug);
+CREATE INDEX idx_published_articles ON article_jobs(website_id, slug)
+  WHERE status = 'published';
+```
 
 ## 相依性
 
@@ -89,11 +130,23 @@
 
 ## 成功指標
 
-- 使用者可以成功上傳多欄位 Excel 檔案
-- 系統能正確解析至少 95% 的有效行（關鍵字+網站）
+- 使用者可以成功上傳多欄位 Excel 檔案（含 slug 欄位）
+- 系統能正確解析至少 95% 的有效行（關鍵字+網站+slug）
 - 網站名稱能正確對應到 website_id（90% 準確率）
+- **Slug 生成品質**：
+  - 自動生成的 slug 符合 SEO 最佳實踐（100%）
+  - 中文拼音轉換準確率（90%）
+  - Slug 唯一性保證（100%，無衝突）
+  - Slug 長度控制在 60 字元內（95%）
+- **URL 組裝準確性**：
+  - 發佈前預覽 URL 與實際發佈 URL 一致（98%）
+  - 跨平台 URL 格式正確（100%）
+- **內部連結效果**：
+  - 每篇文章自動插入 3-5 個相關連結（80%）
+  - 內部連結相關性準確（85%）
+  - 連結可點擊且無 404 錯誤（100%）
 - 每個關鍵字能自動生成 1 個高品質標題
 - AI 能正確判斷文章類型（80% 準確率）
 - 排程系統能按時發佈文章（95% 準確率）
-- 發佈成功後能正確顯示 WordPress 網址
+- 發佈成功後能正確顯示完整 URL
 - 整合現有工作流程無縫運作
