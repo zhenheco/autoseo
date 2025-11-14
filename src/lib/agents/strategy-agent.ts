@@ -139,138 +139,123 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
     const topCompetitors = input.researchData.competitorAnalysis.slice(0, 3);
     const topGaps = input.researchData.contentGaps.slice(0, 3);
 
-    const prompt = `為「${selectedTitle}」生成文章大綱。
+    const maxRetries = 2;
+    for (let attempt = 0; attempt < maxRetries; attempt++) {
+      try {
+        if (attempt > 0) {
+          console.log(`[StrategyAgent] Retry attempt ${attempt + 1}/${maxRetries}`);
+        }
 
-## 背景資訊
-- 標題：${selectedTitle}
-- 目標字數：${input.targetWordCount}
-- 搜尋意圖：${input.researchData.searchIntent}
-- 讀者需求：${input.researchData.recommendedStrategy}
+        // 使用簡化且更明確的 prompt
+        const prompt = this.buildOutlinePrompt(selectedTitle, input, topCompetitors, topGaps, attempt);
 
-## 競爭對手優勢分析
-${topCompetitors.map((c, i) => `${i + 1}. ${c.title}
-   - 優勢：${c.strengths.join('、')}
-   - 弱點：${c.weaknesses.join('、')}
-   - 獨特角度：${c.uniqueAngles.join('、')}`).join('\n')}
+        const apiResponse = await this.complete(prompt, {
+          model: input.model,
+          temperature: attempt === 0 ? (input.temperature || 0.3) : 0.1, // 重試時降低溫度
+          maxTokens: Math.floor((input.maxTokens || 64000) * 0.9),
+          format: 'json',
+        });
 
-## 內容缺口（競爭對手未覆蓋的重點）
-${topGaps.map((gap, i) => `${i + 1}. ${gap}`).join('\n')}
+        if (!apiResponse.content || apiResponse.content.trim() === '') {
+          console.warn(`[StrategyAgent] Empty response on attempt ${attempt + 1}`);
+          continue; // 重試
+        }
 
-## 推理步驟
-1. 分析讀者搜尋此主題的真實需求和痛點
-2. 評估競爭對手的優勢與弱點，找出超越機會
-3. **重點**：將內容缺口轉化為獨特的 section 角度
-4. 設計邏輯流暢且互補的大綱結構
-5. 確保每個 section 回答不同的問題或解決不同的痛點
+        const content = apiResponse.content.trim();
+        console.log('[StrategyAgent] Raw outline response:', {
+          attempt: attempt + 1,
+          contentLength: content.length,
+          startsWithBrace: content.startsWith('{'),
+          endsWithBrace: content.endsWith('}'),
+        });
 
-## ⚠️ Section 多樣化要求（極為重要）
+        const parsed = this.parseOutlineWithFallbacks(content, selectedTitle, input.targetWordCount);
 
-**每個 mainSection 必須有獨特的角度和價值：**
+        // 驗證結果
+        if (parsed && parsed.mainSections && parsed.mainSections.length > 0) {
+          console.log(`[StrategyAgent] ✅ Successfully generated outline on attempt ${attempt + 1}`);
+          return parsed;
+        }
 
-1. **基於內容缺口設計**：優先使用上述「內容缺口」來設計 sections
-2. **回答不同的問題**：每個 section 應該解決讀者的不同疑問或需求
-3. **避免重複**：不要在每個 section 標題中硬置入相同的關鍵字
-4. **多樣化視角**：混合使用「理論說明」「實作步驟」「案例分析」「常見錯誤」「進階技巧」等不同類型
-5. **自然流暢**：sections 之間應該有邏輯遞進關係（例如：基礎 → 應用 → 進階）
+        console.warn(`[StrategyAgent] Invalid outline on attempt ${attempt + 1}, retrying...`);
+      } catch (error) {
+        console.error(`[StrategyAgent] Error on attempt ${attempt + 1}:`, error);
+        if (attempt === maxRetries - 1) {
+          console.error('[StrategyAgent] All attempts failed, using fallback');
+          return this.getFallbackOutline(selectedTitle, input.targetWordCount);
+        }
+      }
+    }
 
-**錯誤示範（sections 太相似）：**
-- 如何選擇 Python 學習資源
-- 如何學習 Python 基礎語法
-- 如何練習 Python 程式設計
-- 如何提升 Python 編程技能
+    return this.getFallbackOutline(selectedTitle, input.targetWordCount);
+  }
 
-**正確示範（多樣化且互補）：**
-- Python 開發環境建置與工具選擇
-- 掌握資料結構：從 list 到 dictionary 的實戰應用
-- 常見錯誤與除錯技巧：新手必知的 10 個陷阱
-- 進階學習路徑：從腳本到專案的升級之路
+  /**
+   * 建構大綱生成 Prompt（簡化版，更容易生成有效 JSON）
+   */
+  private buildOutlinePrompt(
+    title: string,
+    input: StrategyInput,
+    competitors: any[],
+    gaps: string[],
+    retryAttempt: number = 0
+  ): string {
+    // 第一次嘗試使用完整說明，重試時使用更簡潔的版本
+    const isRetry = retryAttempt > 0;
 
-## 重要規則
-1. mainSections 最多 4 個
-2. 每個 section 的 heading 必須獨特且有價值，不要重複相似的句式
-3. 每個 section 的 keyPoints 最多 3 個，每個最多 20 字
-4. keyPoints 應該反映該 section 的核心內容，而非關鍵字堆砌
-5. faq 最多 2 個，問題要具體且實用
-6. 字數分配要合理，總和應接近目標字數
+    return `為文章「${title}」生成大綱。${isRetry ? '\n\n⚠️ 請務必輸出有效的 JSON 格式，直接以 { 開頭，} 結尾。' : ''}
 
-## ⚠️ 重要：輸出格式要求
+目標字數：${input.targetWordCount}
+搜尋意圖：${input.researchData.searchIntent}
 
-**必須直接輸出純 JSON，不要包含任何額外內容：**
-- ❌ 不要使用 Markdown 代碼塊（不要用 \`\`\`json 或 \`\`\`）
-- ❌ 不要在 JSON 前後加上任何說明文字
-- ❌ 不要使用「以下是」、「這是」等開場白
-- ✅ 直接以 { 開頭，以 } 結尾
-- ✅ 確保是有效的 JSON 格式
+${!isRetry ? `內容缺口：
+${gaps.slice(0, 2).map((g, i) => `${i + 1}. ${g}`).join('\n')}
 
-**正確範例（直接輸出 JSON）：**
+` : ''}**JSON 輸出格式（必須完全遵守）：**
+
 {
   "introduction": {
-    "hook": "吸引讀者的開場方式",
-    "context": "提供相關背景資訊",
-    "thesis": "文章主要觀點",
+    "hook": "開場吸引讀者的方式",
+    "context": "背景說明",
+    "thesis": "主要觀點",
     "wordCount": 200
   },
   "mainSections": [
     {
-      "heading": "段落標題",
+      "heading": "第一個主要段落標題",
       "subheadings": ["子標題1", "子標題2"],
-      "keyPoints": ["重點1", "重點2", "重點3"],
+      "keyPoints": ["重點1", "重點2"],
       "targetWordCount": 500,
       "keywords": ["關鍵字1", "關鍵字2"]
+    },
+    {
+      "heading": "第二個主要段落標題",
+      "subheadings": ["子標題1", "子標題2"],
+      "keyPoints": ["重點1", "重點2"],
+      "targetWordCount": 500,
+      "keywords": ["關鍵字1"]
     }
   ],
   "conclusion": {
-    "summary": "重點總結",
+    "summary": "總結重點",
     "callToAction": "行動呼籲",
     "wordCount": 150
   },
   "faq": [
     {
-      "question": "問題1？",
+      "question": "常見問題1？",
       "answerOutline": "答案大綱"
     }
   ]
 }
 
-**錯誤範例（不要這樣做）：**
-以下是文章大綱的 JSON 格式：
-\`\`\`json
-{...}
-\`\`\`
+**規則：**
+1. mainSections 2-4 個
+2. 每個 section 標題要獨特，避免重複
+3. 直接輸出 JSON，不要用 \`\`\`json 包裹
+4. 確保 JSON 格式正確
 
-請立即開始輸出 JSON：`;
-
-    let apiResponse;
-    try {
-      apiResponse = await this.complete(prompt, {
-        model: input.model,
-        temperature: input.temperature || 0.5,
-        maxTokens: Math.floor((input.maxTokens || 64000) * 0.9),
-        format: 'json',
-      });
-
-      if (!apiResponse.content || apiResponse.content.trim() === '') {
-        console.warn('[StrategyAgent] Empty outline response, using fallback');
-        return this.getFallbackOutline(selectedTitle, input.targetWordCount);
-      }
-
-      const content = apiResponse.content.trim();
-
-      console.log('[StrategyAgent] Raw outline response:', {
-        contentLength: content.length,
-        firstChars: content.substring(0, 200),
-        hasJsonMarkers: content.includes('{') && content.includes('}'),
-        hasMarkdownHeaders: content.includes('###'),
-      });
-
-      const parsed = this.parseOutlineWithFallbacks(content, selectedTitle, input.targetWordCount);
-      return parsed;
-
-    } catch (error) {
-      console.error('[StrategyAgent] Outline generation failed:', error);
-      console.error('[StrategyAgent] Response (first 500):', apiResponse?.content?.substring(0, 500));
-      return this.getFallbackOutline(selectedTitle, input.targetWordCount);
-    }
+現在請直接輸出 JSON：`;
   }
 
   private parseOutlineWithFallbacks(content: string, title: string, targetWordCount: number): StrategyOutput['outline'] {
