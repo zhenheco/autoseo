@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import Image from 'next/image'
+import { ArticleHtmlPreview } from '@/components/article/ArticleHtmlPreview'
 
 async function getArticle(articleId: string) {
   const supabase = createAdminClient()
@@ -126,13 +127,10 @@ export default async function ArticlePreviewPage({
         <Card>
           <CardHeader>
             <CardTitle>文章內容</CardTitle>
-            <CardDescription>HTML 預覽</CardDescription>
+            <CardDescription>HTML 預覽（已啟用安全性淨化）</CardDescription>
           </CardHeader>
           <CardContent>
-            <div
-              className="prose prose-sm max-w-none"
-              dangerouslySetInnerHTML={{ __html: article.html_content }}
-            />
+            <ArticleHtmlPreview htmlContent={article.html_content} />
           </CardContent>
         </Card>
 

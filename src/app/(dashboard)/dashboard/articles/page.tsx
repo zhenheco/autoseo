@@ -148,57 +148,6 @@ export default function ArticlesPage() {
     })),
   ].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime())
 
-  const handleClearJobs = async () => {
-    const jobsToDelete = jobs.filter(j => j.status !== 'completed')
-
-    if (jobsToDelete.length === 0) {
-      alert('沒有進行中的任務需要清除')
-      return
-    }
-
-    if (!confirm(`確定要清除 ${jobsToDelete.length} 個進行中的任務嗎？`)) {
-      return
-    }
-
-    try {
-      console.log('[ArticlesPage] Clearing jobs, current count:', jobsToDelete.length)
-      console.log('[ArticlesPage] Jobs to delete:', jobsToDelete.map(j => ({
-        id: j.id.substring(0, 8),
-        status: j.status
-      })))
-
-      const response = await fetch('/api/articles/jobs/clear', {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-      })
-
-      console.log('[ArticlesPage] Clear response status:', response.status)
-
-      if (response.ok) {
-        const data = await response.json()
-        console.log('[ArticlesPage] Clear response:', data)
-
-        if (data.deletedCount === 0) {
-          alert(data.message || '沒有找到需要清除的任務')
-        } else {
-          alert(`已清除 ${data.deletedCount} 個任務`)
-        }
-
-        await fetchData()
-
-        console.log('[ArticlesPage] After refresh, new jobs count:', jobs.length)
-      } else {
-        const errorData = await response.json().catch(() => ({ error: 'Unknown error' }))
-        console.error('[ArticlesPage] Clear failed:', errorData)
-        alert(`清除失敗: ${errorData.error || response.statusText}`)
-      }
-    } catch (error) {
-      console.error('[ArticlesPage] Clear jobs error:', error)
-      alert(`清除失敗: ${(error as Error).message}`)
-    }
-  }
 
   const handleDeleteItem = async (item: typeof combinedItems[0], e: React.MouseEvent) => {
     e.stopPropagation()
@@ -243,11 +192,6 @@ export default function ArticlesPage() {
             </p>
           </div>
           <div className="flex gap-2">
-            {jobs.length > 0 && (
-              <Button variant="outline" onClick={handleClearJobs}>
-                清除進行中任務 ({jobs.length})
-              </Button>
-            )}
             <ArticleGenerationButtonsWrapper />
           </div>
         </div>

@@ -45,7 +45,7 @@
     "@types/uuid": "^10.0.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
-    "isomorphic-dompurify": "^2.31.0",
+    "isomorphic-dompurify": "^2.32.0",
     "linkedom": "^0.18.12",
     "lucide-react": "^0.546.0",
     "marked": "^16.4.1",
