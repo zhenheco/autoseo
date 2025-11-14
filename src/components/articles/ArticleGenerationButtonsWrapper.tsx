@@ -36,11 +36,24 @@ export function ArticleGenerationButtonsWrapper() {
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('批次生成失敗');
+      const data = await response.json();
+
+      if (response.status === 402) {
+        toast.error('Token 餘額不足', {
+          description: data.message || '無法生成文章',
+          action: {
+            label: '立即升級',
+            onClick: () => router.push('/dashboard/billing/upgrade'),
+          },
+          duration: 10000,
+        });
+        setIsGenerating(false);
+        return;
       }
 
-      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || '批次生成失敗');
+      }
 
       toast.success(`已提交 ${items.length} 篇文章生成任務`, {
         description: '文章正在生成中，請稍後查看列表',

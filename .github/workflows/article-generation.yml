@@ -78,6 +78,7 @@ jobs:
 
       - name: 處理單個文章（repository_dispatch）
         if: github.event_name == 'repository_dispatch'
+        id: generate_single
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
@@ -101,8 +102,21 @@ jobs:
             --jobId "${{ github.event.client_payload.jobId }}" \
             --title "${{ github.event.client_payload.title }}"
 
+      - name: 扣除 Token（repository_dispatch）
+        if: github.event_name == 'repository_dispatch' && success()
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          JOB_ID: ${{ github.event.client_payload.jobId }}
+          TOKEN_AMOUNT: '15000'
+        run: |
+          echo "扣除 Token for Job ID: ${{ github.event.client_payload.jobId }}"
+          node dist/scripts/deduct-tokens.js
+
       - name: 批次處理待處理文章（schedule）
         if: github.event_name == 'schedule'
+        id: generate_batch
         env:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}

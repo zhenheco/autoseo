@@ -3,6 +3,11 @@ import type { Database } from '@/types/database.types'
 import { TokenCalculator } from './token-calculator'
 import type { AIClient } from '@/lib/ai/ai-client'
 import type { AICompletionOptions, AICompletionResponse } from '@/types/agents'
+import {
+  InsufficientBalanceError,
+  DeductionInProgressError,
+  DatabaseError,
+} from './errors'
 
 export interface BilledCompletionResult {
   response: AICompletionResponse
@@ -21,6 +26,28 @@ export interface TokenCheckResult {
   currentBalance: number
   requiredTokens: number
   deficit?: number
+}
+
+export interface DeductTokensIdempotentParams {
+  idempotencyKey: string
+  companyId: string
+  articleId?: string
+  amount: number
+  metadata?: {
+    modelName?: string
+    articleTitle?: string
+    [key: string]: unknown
+  }
+}
+
+export interface DeductTokensResult {
+  success: boolean
+  idempotent: boolean
+  recordId: string
+  balanceBefore: number
+  balanceAfter: number
+  deductedFromMonthly: number
+  deductedFromPurchased: number
 }
 
 export class TokenBillingService {
@@ -402,5 +429,89 @@ export class TokenBillingService {
       .single()
 
     return data
+  }
+
+  async deductTokensIdempotent(
+    params: DeductTokensIdempotentParams
+  ): Promise<DeductTokensResult> {
+    const { idempotencyKey, companyId, articleId, amount, metadata } = params
+
+    const { data, error } = (await this.supabase.rpc('deduct_tokens_atomic', {
+      p_idempotency_key: idempotencyKey,
+      p_company_id: companyId,
+      p_article_id: articleId || null,
+      p_amount: amount,
+    } as never)) as {
+      data: {
+        success: boolean
+        idempotent: boolean
+        record_id: string
+        balance_before: number
+        balance_after: number
+        deducted_from_monthly: number
+        deducted_from_purchased: number
+      } | null
+      error: { message: string } | null
+    }
+
+    if (error || !data) {
+      const errorMessage = error?.message || 'Unknown error'
+      if (errorMessage.includes('Insufficient balance')) {
+        throw new InsufficientBalanceError(
+          `餘額不足：需要 ${amount} tokens，請升級方案或購買 Token`
+        )
+      }
+      if (errorMessage.includes('already in progress')) {
+        throw new DeductionInProgressError(
+          `扣款正在處理中，請稍後再試（idempotency_key: ${idempotencyKey}）`
+        )
+      }
+      throw new DatabaseError(errorMessage)
+    }
+
+    if (!data.idempotent) {
+      await this.logTokenUsage({
+        companyId,
+        articleId,
+        amount,
+        recordId: data.record_id,
+        metadata,
+      })
+    }
+
+    return {
+      success: data.success,
+      idempotent: data.idempotent,
+      recordId: data.record_id,
+      balanceBefore: data.balance_before,
+      balanceAfter: data.balance_after,
+      deductedFromMonthly: data.deducted_from_monthly,
+      deductedFromPurchased: data.deducted_from_purchased,
+    }
+  }
+
+  private async logTokenUsage(params: {
+    companyId: string
+    articleId?: string
+    amount: number
+    recordId: string
+    metadata?: DeductTokensIdempotentParams['metadata']
+  }): Promise<void> {
+    await this.supabase.from('token_usage_logs').insert({
+      company_id: params.companyId,
+      article_id: params.articleId || null,
+      user_id: null,
+      model_name: params.metadata?.modelName || 'unknown',
+      model_tier: 'advanced',
+      model_multiplier: 2.0,
+      input_tokens: 0,
+      output_tokens: 0,
+      total_official_tokens: 0,
+      charged_tokens: params.amount,
+      official_cost_usd: 0,
+      charged_cost_usd: 0,
+      usage_type: 'article_generation',
+      metadata: params.metadata as unknown as Database['public']['Tables']['token_usage_logs']['Insert']['metadata'],
+    })
   }
 }

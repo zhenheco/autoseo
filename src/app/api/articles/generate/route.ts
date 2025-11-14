@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
 import { v4 as uuidv4 } from 'uuid';
+import { TokenBillingService } from '@/lib/billing/token-billing-service';
 
 // Vercel 無伺服器函數最大執行時間：5 分鐘（Hobby 計劃上限）
 export const maxDuration = 300;
+
+const ESTIMATED_TOKENS_PER_ARTICLE = 15000;
 
 export async function POST(request: NextRequest) {
   try {
@@ -75,6 +78,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { error: 'No active company membership' },
         { status: 403 }
+      );
+    }
+
+    const billingService = new TokenBillingService(supabase);
+    const balance = await billingService.getCurrentBalance(membership.company_id);
+
+    if (balance.total < ESTIMATED_TOKENS_PER_ARTICLE) {
+      console.warn(
+        `餘額不足: 當前 ${balance.total} tokens，需要約 ${ESTIMATED_TOKENS_PER_ARTICLE} tokens`
+      );
+      return NextResponse.json(
+        {
+          error: 'Insufficient balance',
+          message: `餘額不足：當前 ${balance.total.toLocaleString()} tokens，預估需要 ${ESTIMATED_TOKENS_PER_ARTICLE.toLocaleString()} tokens`,
+          currentBalance: balance.total,
+          estimatedCost: ESTIMATED_TOKENS_PER_ARTICLE,
+          upgradeUrl: '/dashboard/billing/upgrade',
+        },
+        { status: 402 }
       );
     }
 
