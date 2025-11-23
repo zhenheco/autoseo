@@ -1,0 +1,1347 @@
+✅ Environment variables loaded from .env.local
+=== 生成文章並發布到 WordPress ===
+
+關鍵字: 老虎機技巧教學
+網站 ID: acdfecee-e9a9-4996-9c03-8649ff9e2364
+
+開始生成文章...
+
+[ResearchAgent] ResearchAgent started {
+  input: {
+    keyword: '老虎機技巧教學',
+    region: 'zh-TW',
+    competitorCount: 10,
+    model: 'deepseek/deepseek-reasoner',
+    temperature: 0.3,
+    maxTokens: 4000
+  }
+}
+[ResearchAgent] AI completion successful {
+  model: 'deepseek-reasoner',
+  tokens: { promptTokens: 367, completionTokens: 1969, totalTokens: 2336 }
+}
+[ResearchAgent] 開始 Perplexity 搜尋: 老虎機技巧教學
+[Perplexity] Raw API response: {
+  "id": "09805de5-f2e7-4016-a7d8-6bf0510ad022",
+  "model": "sonar",
+  "created": 1761736504,
+  "usage": {
+    "prompt_tokens": 181,
+    "completion_tokens": 466,
+    "total_tokens": 647,
+    "search_context_size": "low",
+    "cost": {
+      "input_tokens_cost": 0,
+      "output_tokens_cost": 0,
+      "request_cost": 0.005,
+      "total_cost": 0.006
+    }
+  },
+  "citations": [
+    "https://blog.udn.com/jerrysinson/181652609",
+    "https://img01.71360.com/file/read/www/M00/28/27/wKj0iWHxQ7eAARIRAEKx40j5Qp0846.pdf",
+    "https://www.stockfeel.com.tw/%E8%80%81%E8%99%8E%E6%A9%9F-%E7%B7%9A%E4%B8%8A%E5%8D%9A%E5%BC%88-%E5%A8%9B%E6%A8%82%E5%9F%8E/",
+    "https://archive.org/stream/jingji/09.%20%E7%AE%A1%E7%90%86%E4%BF%A1%E6%81%AF%E7%B3%BB%E7%BB%9F%20.%E7%AC%AC11%E7%89%88.%E5%8A%B3%E9%A1%BF%20%E4%B8%AD%E6%96%87_djvu.txt",
+    "https://www.scribd.com/document/834165300/3%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E6%94%BB%E7%95%A5%E8%80%81%E8%99%8E%E6%9C%BA%E6%8A%80%E5%B7%A7%E5%AE%98%E7%BD%91-hn5626-com",
+    "https://www.cipsc.org.cn/uploadfiles/2023/02/20230207155412898.pdf",
+    "https://finance.ifeng.com/nhkc/tzwe/7214aAHJ.htm",
+    "https://www.scribd.com/document/811358429/%E7%AE%97%E6%B3%95%E4%B9%8B%E7%BE%8E-%E6%8C%87%E5%AF%BC%E5%B7%A5%E4%BD%9C%E4%B8%8E%E7%94%9F%E6%B4%BB%E7%9A%84%E7%AE%97%E6%B3%95-%E4%B8%AD%E4%BF%A1%E5%87%BA%E7%89%88%E7%A4%BE-2018-Z-Lib-io",
+    "https://product.pconline.com.cn/qpao/xqim/108349146.html",
+    "https://nashnw.myqnapcloud.com:8083/download/218/pdf/218.pdf",
+    "https://fashion.ifeng.com/dslj/1531/xqim8FK9.html",
+    "http://dl.icdst.org/pdfs/files3/1eeab0e1d8a036159c5660ac3c48237f.pdf",
+    "http://cdkhdp.com",
+    "https://zr9558.com/category/computer-science/",
+    "https://www.irs.gov/pub/irs-prior/p17zht--2022.pdf",
+    "https://bookdown.org/yufree/sciguide/sciguide.pdf",
+    "https://www.taito.co.jp/zh-TW/how-to/",
+    "https://snaphance66.rssing.com/chan-61701636/latest.php",
+    "https://huggingface.co/datasets/yxgao/sharegpt-cn-llama2/viewer"
+  ],
+  "search_results": [
+    {
+      "title": "老虎機遊戲9大技巧！免費的最貴，注意下注風險- 大智品味 - Udn部落格",
+      "url": "https://blog.udn.com/jerrysinson/181652609",
+      "date": "2025-01-12",
+      "last_updated": "2025-10-29",
+      "snippet": "限制老虎機遊戲預算、時間-下載線上老虎機app之後，先在免費老虎機遊戲，預先設定遊戲預算，模擬勝利手法，玩老虎機遊戲時，在每次開始遊戲之前設定一個明確的 ...",
+      "source": "web"
+    },
+    {
+      "title": "[PDF] 学会提问(原书第10版)",
+      "url": "https://img01.71360.com/file/read/www/M00/28/27/wKj0iWHxQ7eAARIRAEKx40j5Qp0846.pdf",
+      "date": null,
+      "last_updated": "2025-04-06",
+      "snippet": "这本《学会提问》是一本非常经典的批判性思维读物，很出色地完成. 了传授批判性提问的技能这一目标，既简洁又全面，实践指导性强，会对. 同学们提供很大的帮助。",
+      "source": "web"
+    },
+    {
+      "title": "老虎機怎麼玩？老虎機有什麼攻略？吃角子老虎機遊戲介紹！",
+      "url": "https://www.stockfeel.com.tw/%E8%80%81%E8%99%8E%E6%A9%9F-%E7%B7%9A%E4%B8%8A%E5%8D%9A%E5%BC%88-%E5%A8%9B%E6%A8%82%E5%9F%8E/",
+      "date": "2025-09-09",
+      "last_updated": "2025-10-20",
+      "snippet": "老虎機的周期觀察需要技巧與時間，建議新手玩家們在進入遊戲時，可以先觀察：. 此時有沒有其他玩家押注，沒有的話先不要押，容易成為被吃分的對象，所以選擇有 ...",
+      "source": "web"
+    },
+    {
+      "title": "Full text of \"经济金融管理\"",
+      "url": "https://archive.org/stream/jingji/09.%20%E7%AE%A1%E7%90%86%E4%BF%A1%E6%81%AF%E7%B3%BB%E7%BB%9F%20.%E7%AC%AC11%E7%89%88.%E5%8A%B3%E9%A1%BF%20%E4%B8%AD%E6%96%87_djvu.txt",
+      "date": "2016-10-23",
+      "last_updated": "2025-10-29",
+      "snippet": "所选择的桌面系统必须满足如下' 显示器! 17寸规格要求（见表5-1 和表5-2)。 再寻找30份微软最新Office 办公软件、 表5-2 打印机的最低配置要求Lotus SmartSuite 软件和 ...",
+      "source": "web"
+    },
+    {
+      "title": "3分钟学会攻略老虎机技巧官网| PDF - Scribd",
+      "url": "https://www.scribd.com/document/834165300/3%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E6%94%BB%E7%95%A5%E8%80%81%E8%99%8E%E6%9C%BA%E6%8A%80%E5%B7%A7%E5%AE%98%E7%BD%91-hn5626-com",
+      "date": "2025-10-29",
+      "last_updated": "2025-10-29",
+      "snippet": "第二，现在的赌博平台公司必须是线上和线下为一体，公平公正透明化操作不作假。第三，现场验牌，洗牌，过牌，透明牌靴，铅笔发牌，先发牌后下注。消费者能在网上体验到身在现场的 ...",
+      "source": "web"
+    },
+    {
+      "title": "[PDF] 知识图谱 - 中国中文信息学会",
+      "url": "https://www.cipsc.org.cn/uploadfiles/2023/02/20230207155412898.pdf",
+      "date": null,
+      "last_updated": "2025-03-04",
+      "snippet": "根据知识呈现的形态和方式，我们可以将知识分为不同的类型，包括本体知识、规则知. 识以及事件知识等。其中本体知识表达实体和关系的语义层次，用于建模领域 ...",
+      "source": "web"
+    },
+    {
+      "title": "mg电子老虎机技巧策略 - 凤凰网财经",
+      "url": "https://finance.ifeng.com/nhkc/tzwe/7214aAHJ.htm",
+      "date": null,
+      "last_updated": null,
+      "snippet": "第一步：访问《mg电子老虎机技巧策略》官网 首先,打开您的浏览器,输入《mg电子老虎机技巧策略》。您可以通过搜索引擎搜索或直接输入《2026jnh.cc》网址来 ...",
+      "source": "web"
+    },
+    {
+      "title": "算法之美- 指导工作与生活的算法-中信出版社(2018) (Z-Lib.io) | PDF",
+      "url": "https://www.scribd.com/document/811358429/%E7%AE%97%E6%B3%95%E4%B9%8B%E7%BE%8E-%E6%8C%87%E5%AF%BC%E5%B7%A5%E4%BD%9C%E4%B8%8E%E7%94%9F%E6%B4%BB%E7%9A%84%E7%AE%97%E6%B3%95-%E4%B8%AD%E4%BF%A1%E5%87%BA%E7%89%88%E7%A4%BE-2018-Z-Lib-io",
+      "date": "2025-04-24",
+      "last_updated": "2025-04-24",
+      "snippet": "算法之美. [美]布莱恩·克里斯汀汤姆· 格里菲思著. 万慧胡小锐译. 中信出版集团 目录. 序言. 01 最优停止理论如何选择停止观望的时机？ 秘书问题. 37%从何而来？",
+      "source": "web"
+    },
+    {
+      "title": "BBIN连线老虎机技巧(中国)官方系统 - 太平洋科技",
+      "url": "https://product.pconline.com.cn/qpao/xqim/108349146.html",
+      "date": null,
+      "last_updated": null,
+      "snippet": "以93年的索马里战争为背景，玩家扮演反战小队成员，于地方进行缠斗。 - 3模式学习吉他音乐：独奏模式，缩放模式和和弦模式。",
+      "source": "web"
+    },
+    {
+      "title": "[PDF] 平台革命：改变世界的商业模式（美）杰奥夫雷G. 帕克（美）马歇尔 ...",
+      "url": "https://nashnw.myqnapcloud.com:8083/download/218/pdf/218.pdf",
+      "date": null,
+      "last_updated": null,
+      "snippet": "ISBN：978-7-111-57906-9. 本书纸版由机械工业出版社于2017年出版，电子版由华章分社（北京华. 章图文信息有限公司，北京奥维博世图书发行有限公司）在中华人民共.",
+      "source": "web"
+    },
+    {
+      "title": "WWW.GUOWAILAOHUJIJIQIAO.CM - 国外老虎机技巧",
+      "url": "https://fashion.ifeng.com/dslj/1531/xqim8FK9.html",
+      "date": null,
+      "last_updated": null,
+      "snippet": "首页攻略资讯下载. 当前位置：手游首页> 专题>国外老虎机技巧. 官方未入驻官方未入驻，入驻请联系ali213youxia@163.com反馈. 国外老虎机技巧.",
+      "source": "web"
+    },
+    {
+      "title": "[PDF] 计算机网络- （第5 版）",
+      "url": "http://dl.icdst.org/pdfs/files3/1eeab0e1d8a036159c5660ac3c48237f.pdf",
+      "date": null,
+      "last_updated": "2024-08-21",
+      "snippet": "第5 版相比以前的版本改变甚多，其中最重要的一点是David J. Wetherall 教授成为了. 本书的合作者。David 教授具有丰富的网络背景，他在城域网的设计领域磨砺了20 多年，.",
+      "source": "web"
+    },
+    {
+      "title": "mg老虎机平台_mg老虎机技巧￥游戏网站$",
+      "url": "http://cdkhdp.com",
+      "date": null,
+      "last_updated": null,
+      "snippet": "mg老虎机平台摆脱技巧玩家互动可使用多种表情、快捷回复,满足你各种需求。【$$$】尽最大努力保障人民生活, mg老虎机技巧及业务部门系统转移大陆另外,同时要求大陆投资 ...",
+      "source": "web"
+    },
+    {
+      "title": "Computer Science | ZHANG RONG",
+      "url": "https://zr9558.com/category/computer-science/",
+      "date": "2025-04-15",
+      "last_updated": "2025-08-30",
+      "snippet": "这篇论文介绍了一个叫做ChatTS的模型，它是专为时间序列分析设计的新型多模态大语言模型（MLLMs）。为缓解训练数据稀缺问题，作者们提出基于属性的合成时间 ...",
+      "source": "web"
+    },
+    {
+      "title": "[PDF] 2022申報表 - IRS",
+      "url": "https://www.irs.gov/pub/irs-prior/p17zht--2022.pdf",
+      "date": null,
+      "last_updated": "2024-02-03",
+      "snippet": "本刊物涉及某些主題，可能會使法院做出相較於IRS. 的解釋更有利於納稅人的裁決。在透過上級法院的判決或. 其他方式闡述這些不同的解釋之前，本刊物將 ...",
+      "source": "web"
+    },
+    {
+      "title": "[PDF] 现代科研指北",
+      "url": "https://bookdown.org/yufree/sciguide/sciguide.pdf",
+      "date": null,
+      "last_updated": "2025-01-19",
+      "snippet": "这本书会通过协作方式不断在线更新，版本号从2.7 开始，会以自. 然底数为模版不断增长，没有尽头。在此特别感谢谢益辉博士开发的.",
+      "source": "web"
+    },
+    {
+      "title": "日本遊戲機中心玩樂指南 - タイトーステーション",
+      "url": "https://www.taito.co.jp/zh-TW/how-to/",
+      "date": "2025-10-24",
+      "last_updated": "2025-10-25",
+      "snippet": "老虎機、賓果或賽馬遊戲，基本上都可在遊戲機中心內找到。中大獎時，喜悅無比，而且不用花費太多就可以淺嘗賭場氛圍。不妨試試手氣！ 大頭貼/貼紙 ...",
+      "source": "web"
+    },
+    {
+      "title": "通过SQL定义用户浏览Session - IT瘾技术推荐",
+      "url": "https://snaphance66.rssing.com/chan-61701636/latest.php",
+      "date": "2024-12-10",
+      "last_updated": "2025-09-01",
+      "snippet": "React 按照深度优先遍历虚拟DOM 树的方式，在一个虚拟DOM 上完成Render和Diff的计算后，再计算下一个虚拟DOM。Diff 算法会记录虚拟DOM 的更新方式（如：Update、Mount、Unmount ...",
+      "source": "web"
+    },
+    {
+      "title": "yxgao/sharegpt-cn-llama2 · Datasets at Hugging Face",
+      "url": "https://huggingface.co/datasets/yxgao/sharegpt-cn-llama2/viewer",
+      "date": "2023-08-27",
+      "last_updated": "2025-10-15",
+      "snippet": "1. 去宠物商店备货2. 探索维京市3. 挑战维京市体育馆4. 在维京市周围的区域开始训练你的皮卡丘。 · 2. 宝可商店，你可以购买一些有用的物品和旅程用品。 · 3. 宝可梦道馆，不过 ...",
+      "source": "web"
+    }
+  ],
+  "object": "chat.completion",
+  "choices": [
+    {
+      "index": 0,
+      "finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "根據您的要求，以下是關於「老虎機技巧教學」的權威和最新的外部來源。由於老虎機技巧教學通常不在官方文檔或學術研究中被廣泛討論，因此以下列出的來源主要是知名部落格或產業網站。\n\n1. **Udn部落格 - 大智品味**  \n   URL: https://blog.udn.com/jerrysinson/181652609  \n   內容：提供老虎機遊戲的9大技巧，包括預算控制、免費試玩等。\n\n2. **StockFeel**  \n   URL: https://www.stockfeel.com.tw/%E8%80%81%E8%99%8E%E6%A9%9F-%E7%B7%9A%E4%B8%8A%E5%8D%9A%E5%BC%88-%E5%A8%9B%E6%A8%82%E5%9F%8E/  \n   內容：介紹老虎機的種類和基本攻略。\n\n3. **凤凰网财经**  \n   URL: https://finance.ifeng.com/nhkc/tzwe/7214aAHJ.htm  \n   內容：提供MG電子老虎機技巧策略的相關資訊。\n\n4. **太平洋科技**  \n   URL: https://product.pconline.com.cn/qpao/xqim/108349146.html  \n   內容：雖然不是直接關於老虎機技巧，但提到了BBIN連線老虎機的系統。\n\n5. **国外老虎机技巧**  \n   URL: https://fashion.ifeng.com/dslj/1531/xqim8FK9.html  \n   內容：提供國外老虎機技巧的相關資訊和攻略。\n\n請注意，這些來源可能不一定是最新的，但它們提供了一些有用的資訊和技巧。老虎機技巧教學通常在博客或產業網站上被廣泛討論。"
+      },
+      "delta": {
+        "role": "assistant",
+        "content": ""
+      }
+    }
+  ]
+}
+[Perplexity] Citations summary: {
+  apiCitations: 19,
+  extractedCitations: 0,
+  totalUnique: 19,
+  citations: [
+    'https://blog.udn.com/jerrysinson/181652609',
+    'https://img01.71360.com/file/read/www/M00/28/27/wKj0iWHxQ7eAARIRAEKx40j5Qp0846.pdf',
+    'https://www.stockfeel.com.tw/%E8%80%81%E8%99%8E%E6%A9%9F-%E7%B7%9A%E4%B8%8A%E5%8D%9A%E5%BC%88-%E5%A8%9B%E6%A8%82%E5%9F%8E/',
+    'https://archive.org/stream/jingji/09.%20%E7%AE%A1%E7%90%86%E4%BF%A1%E6%81%AF%E7%B3%BB%E7%BB%9F%20.%E7%AC%AC11%E7%89%88.%E5%8A%B3%E9%A1%BF%20%E4%B8%AD%E6%96%87_djvu.txt',
+    'https://www.scribd.com/document/834165300/3%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E6%94%BB%E7%95%A5%E8%80%81%E8%99%8E%E6%9C%BA%E6%8A%80%E5%B7%A7%E5%AE%98%E7%BD%91-hn5626-com',
+    'https://www.cipsc.org.cn/uploadfiles/2023/02/20230207155412898.pdf',
+    'https://finance.ifeng.com/nhkc/tzwe/7214aAHJ.htm',
+    'https://www.scribd.com/document/811358429/%E7%AE%97%E6%B3%95%E4%B9%8B%E7%BE%8E-%E6%8C%87%E5%AF%BC%E5%B7%A5%E4%BD%9C%E4%B8%8E%E7%94%9F%E6%B4%BB%E7%9A%84%E7%AE%97%E6%B3%95-%E4%B8%AD%E4%BF%A1%E5%87%BA%E7%89%88%E7%A4%BE-2018-Z-Lib-io',
+    'https://product.pconline.com.cn/qpao/xqim/108349146.html',
+    'https://nashnw.myqnapcloud.com:8083/download/218/pdf/218.pdf',
+    'https://fashion.ifeng.com/dslj/1531/xqim8FK9.html',
+    'http://dl.icdst.org/pdfs/files3/1eeab0e1d8a036159c5660ac3c48237f.pdf',
+    'http://cdkhdp.com',
+    'https://zr9558.com/category/computer-science/',
+    'https://www.irs.gov/pub/irs-prior/p17zht--2022.pdf',
+    'https://bookdown.org/yufree/sciguide/sciguide.pdf',
+    'https://www.taito.co.jp/zh-TW/how-to/',
+    'https://snaphance66.rssing.com/chan-61701636/latest.php',
+    'https://huggingface.co/datasets/yxgao/sharegpt-cn-llama2/viewer'
+  ]
+}
+[ResearchAgent] Perplexity 回應: {
+  contentLength: 755,
+  citationsCount: 19,
+  citations: [
+    'https://blog.udn.com/jerrysinson/181652609',
+    'https://img01.71360.com/file/read/www/M00/28/27/wKj0iWHxQ7eAARIRAEKx40j5Qp0846.pdf',
+    'https://www.stockfeel.com.tw/%E8%80%81%E8%99%8E%E6%A9%9F-%E7%B7%9A%E4%B8%8A%E5%8D%9A%E5%BC%88-%E5%A8%9B%E6%A8%82%E5%9F%8E/',
+    'https://archive.org/stream/jingji/09.%20%E7%AE%A1%E7%90%86%E4%BF%A1%E6%81%AF%E7%B3%BB%E7%BB%9F%20.%E7%AC%AC11%E7%89%88.%E5%8A%B3%E9%A1%BF%20%E4%B8%AD%E6%96%87_djvu.txt',
+    'https://www.scribd.com/document/834165300/3%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E6%94%BB%E7%95%A5%E8%80%81%E8%99%8E%E6%9C%BA%E6%8A%80%E5%B7%A7%E5%AE%98%E7%BD%91-hn5626-com',
+    'https://www.cipsc.org.cn/uploadfiles/2023/02/20230207155412898.pdf',
+    'https://finance.ifeng.com/nhkc/tzwe/7214aAHJ.htm',
+    'https://www.scribd.com/document/811358429/%E7%AE%97%E6%B3%95%E4%B9%8B%E7%BE%8E-%E6%8C%87%E5%AF%BC%E5%B7%A5%E4%BD%9C%E4%B8%8E%E7%94%9F%E6%B4%BB%E7%9A%84%E7%AE%97%E6%B3%95-%E4%B8%AD%E4%BF%A1%E5%87%BA%E7%89%88%E7%A4%BE-2018-Z-Lib-io',
+    'https://product.pconline.com.cn/qpao/xqim/108349146.html',
+    'https://nashnw.myqnapcloud.com:8083/download/218/pdf/218.pdf',
+    'https://fashion.ifeng.com/dslj/1531/xqim8FK9.html',
+    'http://dl.icdst.org/pdfs/files3/1eeab0e1d8a036159c5660ac3c48237f.pdf',
+    'http://cdkhdp.com',
+    'https://zr9558.com/category/computer-science/',
+    'https://www.irs.gov/pub/irs-prior/p17zht--2022.pdf',
+    'https://bookdown.org/yufree/sciguide/sciguide.pdf',
+    'https://www.taito.co.jp/zh-TW/how-to/',
+    'https://snaphance66.rssing.com/chan-61701636/latest.php',
+    'https://huggingface.co/datasets/yxgao/sharegpt-cn-llama2/viewer'
+  ]
+}
+[ResearchAgent] 處理 Perplexity citations: [
+  'https://blog.udn.com/jerrysinson/181652609',
+  'https://img01.71360.com/file/read/www/M00/28/27/wKj0iWHxQ7eAARIRAEKx40j5Qp0846.pdf',
+  'https://www.stockfeel.com.tw/%E8%80%81%E8%99%8E%E6%A9%9F-%E7%B7%9A%E4%B8%8A%E5%8D%9A%E5%BC%88-%E5%A8%9B%E6%A8%82%E5%9F%8E/',
+  'https://archive.org/stream/jingji/09.%20%E7%AE%A1%E7%90%86%E4%BF%A1%E6%81%AF%E7%B3%BB%E7%BB%9F%20.%E7%AC%AC11%E7%89%88.%E5%8A%B3%E9%A1%BF%20%E4%B8%AD%E6%96%87_djvu.txt',
+  'https://www.scribd.com/document/834165300/3%E5%88%86%E9%92%9F%E5%AD%A6%E4%BC%9A%E6%94%BB%E7%95%A5%E8%80%81%E8%99%8E%E6%9C%BA%E6%8A%80%E5%B7%A7%E5%AE%98%E7%BD%91-hn5626-com',
+  'https://www.cipsc.org.cn/uploadfiles/2023/02/20230207155412898.pdf',
+  'https://finance.ifeng.com/nhkc/tzwe/7214aAHJ.htm',
+  'https://www.scribd.com/document/811358429/%E7%AE%97%E6%B3%95%E4%B9%8B%E7%BE%8E-%E6%8C%87%E5%AF%BC%E5%B7%A5%E4%BD%9C%E4%B8%8E%E7%94%9F%E6%B4%BB%E7%9A%84%E7%AE%97%E6%B3%95-%E4%B8%AD%E4%BF%A1%E5%87%BA%E7%89%88%E7%A4%BE-2018-Z-Lib-io',
+  'https://product.pconline.com.cn/qpao/xqim/108349146.html',
+  'https://nashnw.myqnapcloud.com:8083/download/218/pdf/218.pdf',
+  'https://fashion.ifeng.com/dslj/1531/xqim8FK9.html',
+  'http://dl.icdst.org/pdfs/files3/1eeab0e1d8a036159c5660ac3c48237f.pdf',
+  'http://cdkhdp.com',
+  'https://zr9558.com/category/computer-science/',
+  'https://www.irs.gov/pub/irs-prior/p17zht--2022.pdf',
+  'https://bookdown.org/yufree/sciguide/sciguide.pdf',
+  'https://www.taito.co.jp/zh-TW/how-to/',
+  'https://snaphance66.rssing.com/chan-61701636/latest.php',
+  'https://huggingface.co/datasets/yxgao/sharegpt-cn-llama2/viewer'
+]
+[ResearchAgent] 成功獲取 5 個外部引用
+[ResearchAgent] ResearchAgent completed { executionTime: 87371, tokenUsage: { input: 367, output: 1969 } }
+[StrategyAgent] StrategyAgent started {
+  input: {
+    researchData: {
+      keyword: '老虎機技巧教學',
+      region: 'zh-TW',
+      searchIntent: 'informational',
+      intentConfidence: 0.85,
+      topRankingFeatures: [Object],
+      contentGaps: [Array],
+      competitorAnalysis: [Array],
+      recommendedStrategy: '建議創建深度本地化內容，結合台灣法規環境與文化背景，提供具體的數學計算與風險管理教學。內容應以負責任賭博為核心，加入實際案例分析和最新線上平台比較，同時採用多媒體格式（影片、圖表）增強教學效果。定期更新內容以反映遊戲變化與法規調整。',
+      relatedKeywords: [Array],
+      externalReferences: [Array],
+      executionInfo: [Object]
+    },
+    brandVoice: {
+      id: 'a10f9f32-a701-4eef-9ab7-f3718052472c',
+      website_id: 'acdfecee-e9a9-4996-9c03-8649ff9e2364',
+      tone_of_voice: 'Professional and friendly',
+      target_audience: 'Web developers and tech enthusiasts',
+      keywords: [Array],
+      sentence_style: 'Clear and concise',
+      interactivity: 'Engaging with practical examples',
+      created_at: '2025-10-27T09:54:17.154332+00:00',
+      updated_at: '2025-10-27T09:54:17.154332+00:00'
+    },
+    targetWordCount: 1500,
+    model: 'deepseek/deepseek-reasoner',
+    temperature: 0.7,
+    maxTokens: 4000
+  }
+}
+[StrategyAgent] AI completion successful {
+  model: 'deepseek-reasoner',
+  tokens: { promptTokens: 104, completionTokens: 300, totalTokens: 404 }
+}
+[StrategyAgent] Empty response, using fallback titles
+[StrategyAgent] AI completion successful {
+  model: 'deepseek-reasoner',
+  tokens: { promptTokens: 348, completionTokens: 2419, totalTokens: 2767 }
+}
+[StrategyAgent] StrategyAgent completed { executionTime: 105187, tokenUsage: { input: 452, output: 2719 } }
+[WritingAgent] WritingAgent started {
+  input: {
+    strategy: {
+      titleOptions: [Array],
+      selectedTitle: '老虎機技巧教學完整指南：從入門到精通',
+      outline: [Object],
+      targetWordCount: 1500,
+      sectionWordDistribution: [Object],
+      keywordDensityTarget: 1.5,
+      keywords: [Array],
+      relatedKeywords: [Array],
+      lsiKeywords: [Array],
+      internalLinkingStrategy: [Object],
+      differentiationStrategy: [Object],
+      externalReferences: [Array],
+      executionInfo: [Object]
+    },
+    brandVoice: {
+      id: 'a10f9f32-a701-4eef-9ab7-f3718052472c',
+      website_id: 'acdfecee-e9a9-4996-9c03-8649ff9e2364',
+      tone_of_voice: 'Professional and friendly',
+      target_audience: 'Web developers and tech enthusiasts',
+      keywords: [Array],
+      sentence_style: 'Clear and concise',
+      interactivity: 'Engaging with practical examples',
+      created_at: '2025-10-27T09:54:17.154332+00:00',
+      updated_at: '2025-10-27T09:54:17.154332+00:00'
+    },
+    previousArticles: [],
+    model: 'deepseek/deepseek-chat',
+    temperature: 0.7,
+    maxTokens: 8000
+  }
+}
+[ImageAgent] ImageAgent started {
+  input: {
+    title: '老虎機技巧教學完整指南：從入門到精通',
+    outline: {
+      introduction: [Object],
+      mainSections: [Array],
+      conclusion: [Object],
+      faq: [Array]
+    },
+    count: 3,
+    model: 'none',
+    quality: 'standard',
+    size: '1024x1024'
+  }
+}
+[ImageAgent] Image generation skipped (model is "none")
+[ImageAgent] ImageAgent completed { executionTime: 0, tokenUsage: { input: 0, output: 0 } }
+[WritingAgent] AI completion successful {
+  model: 'deepseek-chat',
+  tokens: { promptTokens: 715, completionTokens: 1846, totalTokens: 2561 }
+}
+[WritingAgent] WritingAgent completed { executionTime: 69446, tokenUsage: { input: 715, output: 1846 } }
+[MetaAgent] MetaAgent started {
+  input: {
+    content: {
+      markdown: '# 老虎機技巧教學完整指南：從入門到精通\n' +
+        '\n' +
+        '## 導言\n' +
+        '\n' +
+        '想成為老虎機高手嗎？從零開始學習技巧！老虎機是賭場中最常見的遊戲，但許多人盲目遊玩，錯失獲勝機會。本指南完整教學從基礎到精通，涵蓋策略、數學分析和台灣法規，幫助你聰明遊玩。無論你是剛接觸老虎機玩法的新手，還是想精進slot machine技巧的玩家，這篇完整的吃角子老虎機教學都將提供實用的知識。\n' +
+        '\n' +
+        '## 老虎機基礎入門\n' +
+        '\n' +
+        '### 老虎機工作原理\n' +
+        '\n' +
+        '老虎機的核心是隨機數生成器(RNG)系統，這個電腦程式確保每次旋轉結果完全隨機且獨立。現代老虎機已從傳統的機械結構進化為全電子系統：\n' +
+        '\n' +
+        '- **RNG系統**：每秒產生數千個隨機數字，決定旋轉結果\n' +
+        '- **支付線**：獲勝符號組合必須出現在激活的支付線上\n' +
+        '- **虛擬轉軸**：現代老虎機使用虛擬轉軸而非物理轉軸\n' +
+        '\n' +
+        '了解這些基本工作原理是掌握老虎機技巧的第一步，有助於破除常見的迷思，例如"機器即將支付"的錯誤觀念。\n' +
+        '\n' +
+        '### 專業術語解析\n' +
+        '\n' +
+        '掌握老虎機術語對制定有效策略至關重要：\n' +
+        '\n' +
+        '**基本術語：**\n' +
+        '- **支付線(Payline)**：獲勝符號必須連成的線路\n' +
+        '- **投注額(Bet)**：每次旋轉下注的金額\n' +
+        '- **累積獎金(Jackpot)**：遊戲最高獎金\n' +
+        '\n' +
+        '**符號類型：**\n' +
+        '- **標準符號**：基礎支付符號\n' +
+        '- **百搭符號(Wild)**：可替代大多數其他符號\n' +
+        '- **分散符號(Scatter)**：通常觸發獎金回合，不限位置\n' +
+        '\n' +
+        '**特殊功能：**\n' +
+        '- **免費旋轉(Free Spins)**：不扣費的旋轉機會\n' +
+        '- **獎金回合(Bonus Round)**：特殊遊戲模式，提供額外獲獎機會\n' +
+        '\n' +
+        '熟悉這些術語將幫助你更好地理解遊戲規則和老虎機策略，從而做出更明智的遊玩決策。\n' +
+        '\n' +
+        '## 核心技巧與策略\n' +
+        '\n' +
+        '### 熱門策略介紹\n' +
+        '\n' +
+        '雖然老虎機結果本質上隨機，但採用正確的策略可以最大化你的遊玩體驗和潛在回報：\n' +
+        '\n' +
+        '**1. 選擇合適的遊戲類型**\n' +
+        '- 高RTP(回報率)遊戲優先\n' +
+        '- 根據風險承受能力選擇波動率\n' +
+        '- 考慮遊戲主題和獎金功能\n' +
+        '\n' +
+        '**2. 進階老虎機策略**\n' +
+        '- **全面激活支付線**：確保所有支付線激活以最大化獲勝機會\n' +
+        '- **利用示範模式**：免費試玩新遊戲，了解其特點\n' +
+        '- **設定贏輸限額**：提前決定何時停止遊玩\n' +
+        '\n' +
+        '這些slot machine技巧經過無數玩家驗證，能幫助你延長遊玩時間並增加樂趣。\n' +
+        '\n' +
+        '### 資金管理方法\n' +
+        '\n' +
+        '有效的資金管理是老虎機技巧中最關鍵卻最常被忽視的部分：\n' +
+        '\n' +
+        '**預算設定原則：**\n' +
+        '- 只使用娛樂預算，絕不動用生活必需資金\n' +
+        '- 將會話預算分成較小單位，避免快速消耗\n' +
+        '- 設定時間限制，防止過度遊玩\n' +
+        '\n' +
+        '**實用資金管理策略：**\n' +
+        '1. **單位系統**：將總預算分成20-50個單位，每次會議使用3-5單位\n' +
+        '2. **百分比投注**：每次投注不超過總會話資金的1-2%\n' +
+        '3. **贏利分配**：將大贏利的50%存入儲蓄，只用其餘部分繼續遊玩\n' +
+        '\n' +
+        '通過嚴格執行這些資金管理原則，你可以顯著延長遊玩時間，並在長期內減少損失風險。\n' +
+        '\n' +
+        '## 數學期望值與數據分析\n' +
+        '\n' +
+        '### RTP與波動率\n' +
+        '\n' +
+        '理解老虎機背後的數學原理是提升老虎機技巧的關鍵：\n' +
+        '\n' +
+        '**RTP(回報玩家百分比)**\n' +
+        '- 定義：長期內返還給玩家的投注金額百分比\n' +
+        '- 例子：96% RTP意味著每投注100元，預期回收96元\n' +
+        '- 選擇標準：盡量選擇RTP高於96%的遊戲\n' +
+        '\n' +
+        '**波動率(方差)**\n' +
+        '- 低波動率：頻繁但較小的支付，適合資金較少的玩家\n' +
+        '- 高波動率：不頻繁但潛在巨大的支付，適合追求大獎的玩家\n' +
+        '- 選擇建議：根據你的風險偏好和資金選擇合適波動率\n' +
+        '\n' +
+        '深入了解這些概念將幫助你在我們的[老虎機數據分析指南]中做出更明智的遊戲選擇。\n' +
+        '\n' +
+        '### 期望值計算\n' +
+        '\n' +
+        '掌握期望值計算能讓你客觀評估老虎機遊戲的潛在價值：\n' +
+        '\n' +
+        '**基本計算公式：**\n' +
+        '```\n' +
+        '期望值 = (獲勝概率 × 獲勝金額) - (失敗概率 × 投注金額)\n' +
+        '```\n' +
+        '\n' +
+        '**實例分析：**\n' +
+        '假設一個符號組合：\n' +
+        '- 出現概率：1/100\n' +
+        '- 支付金額：50倍投注\n' +
+        '- 投注金額：10元\n' +
+        '\n' +
+        '計算：\n' +
+        '```\n' +
+        '期望值 = (1/100 × 10 × 50) - (99/100 × 10) = (5) - (9.9) = -4.9元\n' +
+        '```\n' +
+        '\n' +
+        '這個負期望值表明長期來看這是不利的投注。通過這樣的數據分析，你可以識別哪些遊戲和投注策略更具價值。\n' +
+        '\n' +
+        '## 台灣法規風險與平台比較\n' +
+        '\n' +
+        '### 台灣賭博法律\n' +
+        '\n' +
+        '在台灣遊玩老虎機前，必須了解相關法律限制：\n' +
+        '\n' +
+        '**台灣賭博法規要點：**\n' +
+        '- 根據刑法第266條，在公共場所賭博財物可處罰金\n' +
+        '- 台灣僅允許少數特許博弈活動（如公益彩券）\n' +
+        '- 線上賭博處於法律灰色地帶，可能面臨法律風險\n' +
+        '\n' +
+        '**風險提示：**\n' +
+        '- 參與未經許可的賭博活動可能面臨法律後果\n' +
+        '- 境外線上賭場不受台灣法律保護\n' +
+        '- 玩家需自行承擔所有相關風險\n' +
+        '\n' +
+        '了解這些台灣法規對負責任地遊玩至關重要，更多詳細信息請參考我們的[台灣博弈法律完整解析]。\n' +
+        '\n' +
+        '### 線上平台評測\n' +
+        '\n' +
+        '如果決定在線上平台遊玩，需仔細比較不同選項：\n' +
+        '\n' +
+        '**評估標準：**\n' +
+        '- **合法許可**：是否持有信譽良好的國際博弈許可證\n' +
+        '- **遊戲供應商**：與知名遊戲開發商合作\n' +
+        '- **支付方式**：提供安全便捷的入金出金選項\n' +
+        '- **客戶支持**：提供中文客服及及時響應\n' +
+        '\n' +
+        '**平台比較表：**\n' +
+        '| 平台特點 | 平台A | 平台B | 平台C |\n' +
+        '|---------|------|------|------|\n' +
+        '| RTP範圍 | 95-97% | 94-96% | 96-98% |\n' +
+        '| 遊戲多樣性 | 高 | 中 | 高 |\n' +
+        '| 中文支持 | 有 | 有限 | 有 |\n' +
+        '| 支付方式 | 多樣 | 一般 | 多樣 |\n' +
+        '\n' +
+        '選擇平台時，務必平衡娛樂價值與潛在風險，並始終將責任賭博放在首位。\n' +
+        '\n' +
+        '## 結論\n' +
+        '\n' +
+        '本指南涵蓋了老虎機從入門到精通的技巧，幫助玩家更聰明地遊玩。從了解基本工作原理和術語，到掌握核心策略和資金管理，再到理解背後的數學原理和法律風險，這些知識將使你的老虎機體驗更加豐富和可控。應用所學技巧，但務必遵守法律並負責任地賭博。記住，老虎機最終是娛樂活動，應以健康的心態對待。\n' +
+        '\n' +
+        '## 常見問題\n' +
+        '\n' +
+        '### 老虎機有必勝策略嗎？\n' +
+        '沒有絕對必勝策略，因為老虎機結果由RNG隨機決定。但選擇高RTP遊戲和良好資金管理可提高勝率，並延長遊玩時間。\n' +
+        '\n' +
+        '### 在台灣玩線上老虎機合法嗎？\n' +
+        '台灣賭博法律嚴格，線上賭博可能違法。雖然有些玩家通過境外網站遊玩，但這仍存在法律風險，玩家需自行承擔風險。\n' +
+        '\n' +
+        '### 如何選擇最適合的老虎機遊戲？\n' +
+        '考慮以下因素：RTP（選擇96%以上）、波動率（根據資金和風險偏好）、獎金功能（免費旋轉、獎金回合）和個人偏好（主題、遊戲性）。\n' +
+        '\n' +
+        '### 應該避免哪些常見的老虎機錯誤？\n' +
+        '常見錯誤包括：追逐損失、超過預算、迷信"即將中獎"模式、不了解遊戲規則就開始玩，以及忽視資金管理原則。',
+      html: '<h1>老虎機技巧教學完整指南：從入門到精通</h1>\n' +
+        '<h2>導言</h2>\n' +
+        '<p>想成為老虎機高手嗎？從零開始學習技巧！老虎機是賭場中最常見的遊戲，但許多人盲目遊玩，錯失獲勝機會。本指南完整教學從基礎到精通，涵蓋策略、數學分析和台灣法規，幫助你聰明遊玩。無論你是剛接觸老虎機玩法的新手，還是想精進slot machine技巧的玩家，這篇完整的吃角子老虎機教學都將提供實用的知識。</p>\n' +
+        '<h2>老虎機基礎入門</h2>\n' +
+        '<h3>老虎機工作原理</h3>\n' +
+        '<p>老虎機的核心是隨機數生成器(RNG)系統，這個電腦程式確保每次旋轉結果完全隨機且獨立。現代老虎機已從傳統的機械結構進化為全電子系統：</p>\n' +
+        '<ul>\n' +
+        '<li><strong>RNG系統</strong>：每秒產生數千個隨機數字，決定旋轉結果</li>\n' +
+        '<li><strong>支付線</strong>：獲勝符號組合必須出現在激活的支付線上</li>\n' +
+        '<li><strong>虛擬轉軸</strong>：現代老虎機使用虛擬轉軸而非物理轉軸</li>\n' +
+        '</ul>\n' +
+        '<p>了解這些基本工作原理是掌握老虎機技巧的第一步，有助於破除常見的迷思，例如&quot;機器即將支付&quot;的錯誤觀念。</p>\n' +
+        '<h3>專業術語解析</h3>\n' +
+        '<p>掌握老虎機術語對制定有效策略至關重要：</p>\n' +
+        '<p><strong>基本術語：</strong></p>\n' +
+        '<ul>\n' +
+        '<li><strong>支付線(Payline)</strong>：獲勝符號必須連成的線路</li>\n' +
+        '<li><strong>投注額(Bet)</strong>：每次旋轉下注的金額</li>\n' +
+        '<li><strong>累積獎金(Jackpot)</strong>：遊戲最高獎金</li>\n' +
+        '</ul>\n' +
+        '<p><strong>符號類型：</strong></p>\n' +
+        '<ul>\n' +
+        '<li><strong>標準符號</strong>：基礎支付符號</li>\n' +
+        '<li><strong>百搭符號(Wild)</strong>：可替代大多數其他符號</li>\n' +
+        '<li><strong>分散符號(Scatter)</strong>：通常觸發獎金回合，不限位置</li>\n' +
+        '</ul>\n' +
+        '<p><strong>特殊功能：</strong></p>\n' +
+        '<ul>\n' +
+        '<li><strong>免費旋轉(Free Spins)</strong>：不扣費的旋轉機會</li>\n' +
+        '<li><strong>獎金回合(Bonus Round)</strong>：特殊遊戲模式，提供額外獲獎機會</li>\n' +
+        '</ul>\n' +
+        '<p>熟悉這些術語將幫助你更好地理解遊戲規則和老虎機策略，從而做出更明智的遊玩決策。</p>\n' +
+        '<h2>核心技巧與策略</h2>\n' +
+        '<h3>熱門策略介紹</h3>\n' +
+        '<p>雖然老虎機結果本質上隨機，但採用正確的策略可以最大化你的遊玩體驗和潛在回報：</p>\n' +
+        '<p><strong>1. 選擇合適的遊戲類型</strong></p>\n' +
+        '<ul>\n' +
+        '<li>高RTP(回報率)遊戲優先</li>\n' +
+        '<li>根據風險承受能力選擇波動率</li>\n' +
+        '<li>考慮遊戲主題和獎金功能</li>\n' +
+        '</ul>\n' +
+        '<p><strong>2. 進階老虎機策略</strong></p>\n' +
+        '<ul>\n' +
+        '<li><strong>全面激活支付線</strong>：確保所有支付線激活以最大化獲勝機會</li>\n' +
+        '<li><strong>利用示範模式</strong>：免費試玩新遊戲，了解其特點</li>\n' +
+        '<li><strong>設定贏輸限額</strong>：提前決定何時停止遊玩</li>\n' +
+        '</ul>\n' +
+        '<p>這些slot machine技巧經過無數玩家驗證，能幫助你延長遊玩時間並增加樂趣。</p>\n' +
+        '<h3>資金管理方法</h3>\n' +
+        '<p>有效的資金管理是老虎機技巧中最關鍵卻最常被忽視的部分：</p>\n' +
+        '<p><strong>預算設定原則：</strong></p>\n' +
+        '<ul>\n' +
+        '<li>只使用娛樂預算，絕不動用生活必需資金</li>\n' +
+        '<li>將會話預算分成較小單位，避免快速消耗</li>\n' +
+        '<li>設定時間限制，防止過度遊玩</li>\n' +
+        '</ul>\n' +
+        '<p><strong>實用資金管理策略：</strong></p>\n' +
+        '<ol>\n' +
+        '<li><strong>單位系統</strong>：將總預算分成20-50個單位，每次會議使用3-5單位</li>\n' +
+        '<li><strong>百分比投注</strong>：每次投注不超過總會話資金的1-2%</li>\n' +
+        '<li><strong>贏利分配</strong>：將大贏利的50%存入儲蓄，只用其餘部分繼續遊玩</li>\n' +
+        '</ol>\n' +
+        '<p>通過嚴格執行這些資金管理原則，你可以顯著延長遊玩時間，並在長期內減少損失風險。</p>\n' +
+        '<h2>數學期望值與數據分析</h2>\n' +
+        '<h3>RTP與波動率</h3>\n' +
+        '<p>理解老虎機背後的數學原理是提升老虎機技巧的關鍵：</p>\n' +
+        '<p><strong>RTP(回報玩家百分比)</strong></p>\n' +
+        '<ul>\n' +
+        '<li>定義：長期內返還給玩家的投注金額百分比</li>\n' +
+        '<li>例子：96% RTP意味著每投注100元，預期回收96元</li>\n' +
+        '<li>選擇標準：盡量選擇RTP高於96%的遊戲</li>\n' +
+        '</ul>\n' +
+        '<p><strong>波動率(方差)</strong></p>\n' +
+        '<ul>\n' +
+        '<li>低波動率：頻繁但較小的支付，適合資金較少的玩家</li>\n' +
+        '<li>高波動率：不頻繁但潛在巨大的支付，適合追求大獎的玩家</li>\n' +
+        '<li>選擇建議：根據你的風險偏好和資金選擇合適波動率</li>\n' +
+        '</ul>\n' +
+        '<p>深入了解這些概念將幫助你在我們的[老虎機數據分析指南]中做出更明智的遊戲選擇。</p>\n' +
+        '<h3>期望值計算</h3>\n' +
+        '<p>掌握期望值計算能讓你客觀評估老虎機遊戲的潛在價值：</p>\n' +
+        '<p><strong>基本計算公式：</strong></p>\n' +
+        '<pre><code>期望值 = (獲勝概率 × 獲勝金額) - (失敗概率 × 投注金額)\n' +
+        '</code></pre>\n' +
+        '<p><strong>實例分析：</strong>\n' +
+        '假設一個符號組合：</p>\n' +
+        '<ul>\n' +
+        '<li>出現概率：1/100</li>\n' +
+        '<li>支付金額：50倍投注</li>\n' +
+        '<li>投注金額：10元</li>\n' +
+        '</ul>\n' +
+        '<p>計算：</p>\n' +
+        '<pre><code>期望值 = (1/100 × 10 × 50) - (99/100 × 10) = (5) - (9.9) = -4.9元\n' +
+        '</code></pre>\n' +
+        '<p>這個負期望值表明長期來看這是不利的投注。通過這樣的數據分析，你可以識別哪些遊戲和投注策略更具價值。</p>\n' +
+        '<h2>台灣法規風險與平台比較</h2>\n' +
+        '<h3>台灣賭博法律</h3>\n' +
+        '<p>在台灣遊玩老虎機前，必須了解相關法律限制：</p>\n' +
+        '<p><strong>台灣賭博法規要點：</strong></p>\n' +
+        '<ul>\n' +
+        '<li>根據刑法第266條，在公共場所賭博財物可處罰金</li>\n' +
+        '<li>台灣僅允許少數特許博弈活動（如公益彩券）</li>\n' +
+        '<li>線上賭博處於法律灰色地帶，可能面臨法律風險</li>\n' +
+        '</ul>\n' +
+        '<p><strong>風險提示：</strong></p>\n' +
+        '<ul>\n' +
+        '<li>參與未經許可的賭博活動可能面臨法律後果</li>\n' +
+        '<li>境外線上賭場不受台灣法律保護</li>\n' +
+        '<li>玩家需自行承擔所有相關風險</li>\n' +
+        '</ul>\n' +
+        '<p>了解這些台灣法規對負責任地遊玩至關重要，更多詳細信息請參考我們的[台灣博弈法律完整解析]。</p>\n' +
+        '<h3>線上平台評測</h3>\n' +
+        '<p>如果決定在線上平台遊玩，需仔細比較不同選項：</p>\n' +
+        '<p><strong>評估標準：</strong></p>\n' +
+        '<ul>\n' +
+        '<li><strong>合法許可</strong>：是否持有信譽良好的國際博弈許可證</li>\n' +
+        '<li><strong>遊戲供應商</strong>：與知名遊戲開發商合作</li>\n' +
+        '<li><strong>支付方式</strong>：提供安全便捷的入金出金選項</li>\n' +
+        '<li><strong>客戶支持</strong>：提供中文客服及及時響應</li>\n' +
+        '</ul>\n' +
+        '<p><strong>平台比較表：</strong></p>\n' +
+        '<table>\n' +
+        '<thead>\n' +
+        '<tr>\n' +
+        '<th>平台特點</th>\n' +
+        '<th>平台A</th>\n' +
+        '<th>平台B</th>\n' +
+        '<th>平台C</th>\n' +
+        '</tr>\n' +
+        '</thead>\n' +
+        '<tbody><tr>\n' +
+        '<td>RTP範圍</td>\n' +
+        '<td>95-97%</td>\n' +
+        '<td>94-96%</td>\n' +
+        '<td>96-98%</td>\n' +
+        '</tr>\n' +
+        '<tr>\n' +
+        '<td>遊戲多樣性</td>\n' +
+        '<td>高</td>\n' +
+        '<td>中</td>\n' +
+        '<td>高</td>\n' +
+        '</tr>\n' +
+        '<tr>\n' +
+        '<td>中文支持</td>\n' +
+        '<td>有</td>\n' +
+        '<td>有限</td>\n' +
+        '<td>有</td>\n' +
+        '</tr>\n' +
+        '<tr>\n' +
+        '<td>支付方式</td>\n' +
+        '<td>多樣</td>\n' +
+        '<td>一般</td>\n' +
+        '<td>多樣</td>\n' +
+        '</tr>\n' +
+        '</tbody></table>\n' +
+        '<p>選擇平台時，務必平衡娛樂價值與潛在風險，並始終將責任賭博放在首位。</p>\n' +
+        '<h2>結論</h2>\n' +
+        '<p>本指南涵蓋了老虎機從入門到精通的技巧，幫助玩家更聰明地遊玩。從了解基本工作原理和術語，到掌握核心策略和資金管理，再到理解背後的數學原理和法律風險，這些知識將使你的老虎機體驗更加豐富和可控。應用所學技巧，但務必遵守法律並負責任地賭博。記住，老虎機最終是娛樂活動，應以健康的心態對待。</p>\n' +
+        '<h2>常見問題</h2>\n' +
+        '<h3>老虎機有必勝策略嗎？</h3>\n' +
+        '<p>沒有絕對必勝策略，因為老虎機結果由RNG隨機決定。但選擇高RTP遊戲和良好資金管理可提高勝率，並延長遊玩時間。</p>\n' +
+        '<h3>在台灣玩線上老虎機合法嗎？</h3>\n' +
+        '<p>台灣賭博法律嚴格，線上賭博可能違法。雖然有些玩家通過境外網站遊玩，但這仍存在法律風險，玩家需自行承擔風險。</p>\n' +
+        '<h3>如何選擇最適合的老虎機遊戲？</h3>\n' +
+        '<p>考慮以下因素：RTP（選擇96%以上）、波動率（根據資金和風險偏好）、獎金功能（免費旋轉、獎金回合）和個人偏好（主題、遊戲性）。</p>\n' +
+        '<h3>應該避免哪些常見的老虎機錯誤？</h3>\n' +
+        '<p>常見錯誤包括：追逐損失、超過預算、迷信&quot;即將中獎&quot;模式、不了解遊戲規則就開始玩，以及忽視資金管理原則。</p>\n',
+      statistics: [Object],
+      internalLinks: [],
+      keywordUsage: [Object],
+      readability: [Object],
+      executionInfo: [Object]
+    },
+    keyword: '老虎機技巧教學',
+    titleOptions: [
+      '老虎機技巧教學完整指南：從入門到精通',
+      '2025 最新老虎機技巧教學教學：實用技巧大公開',
+      '老虎機技巧教學全攻略：專家推薦的 10 個關鍵重點'
+    ],
+    model: 'deepseek/deepseek-chat-v3.1:free',
+    temperature: 0.7,
+    maxTokens: 2000
+  }
+}
+[MetaAgent] AI completion successful {
+  model: 'deepseek-chat',
+  tokens: { promptTokens: 730, completionTokens: 214, totalTokens: 944 }
+}
+[MetaAgent] MetaAgent completed { executionTime: 8583, tokenUsage: { input: 730, output: 214 } }
+[HTMLAgent] HTMLAgent started {
+  input: {
+    html: '<h1>老虎機技巧教學完整指南：從入門到精通</h1>\n' +
+      '<h2>導言</h2>\n' +
+      '<p>想成為老虎機高手嗎？從零開始學習技巧！老虎機是賭場中最常見的遊戲，但許多人盲目遊玩，錯失獲勝機會。本指南完整教學從基礎到精通，涵蓋策略、數學分析和台灣法規，幫助你聰明遊玩。無論你是剛接觸老虎機玩法的新手，還是想精進slot machine技巧的玩家，這篇完整的吃角子老虎機教學都將提供實用的知識。</p>\n' +
+      '<h2>老虎機基礎入門</h2>\n' +
+      '<h3>老虎機工作原理</h3>\n' +
+      '<p>老虎機的核心是隨機數生成器(RNG)系統，這個電腦程式確保每次旋轉結果完全隨機且獨立。現代老虎機已從傳統的機械結構進化為全電子系統：</p>\n' +
+      '<ul>\n' +
+      '<li><strong>RNG系統</strong>：每秒產生數千個隨機數字，決定旋轉結果</li>\n' +
+      '<li><strong>支付線</strong>：獲勝符號組合必須出現在激活的支付線上</li>\n' +
+      '<li><strong>虛擬轉軸</strong>：現代老虎機使用虛擬轉軸而非物理轉軸</li>\n' +
+      '</ul>\n' +
+      '<p>了解這些基本工作原理是掌握老虎機技巧的第一步，有助於破除常見的迷思，例如&quot;機器即將支付&quot;的錯誤觀念。</p>\n' +
+      '<h3>專業術語解析</h3>\n' +
+      '<p>掌握老虎機術語對制定有效策略至關重要：</p>\n' +
+      '<p><strong>基本術語：</strong></p>\n' +
+      '<ul>\n' +
+      '<li><strong>支付線(Payline)</strong>：獲勝符號必須連成的線路</li>\n' +
+      '<li><strong>投注額(Bet)</strong>：每次旋轉下注的金額</li>\n' +
+      '<li><strong>累積獎金(Jackpot)</strong>：遊戲最高獎金</li>\n' +
+      '</ul>\n' +
+      '<p><strong>符號類型：</strong></p>\n' +
+      '<ul>\n' +
+      '<li><strong>標準符號</strong>：基礎支付符號</li>\n' +
+      '<li><strong>百搭符號(Wild)</strong>：可替代大多數其他符號</li>\n' +
+      '<li><strong>分散符號(Scatter)</strong>：通常觸發獎金回合，不限位置</li>\n' +
+      '</ul>\n' +
+      '<p><strong>特殊功能：</strong></p>\n' +
+      '<ul>\n' +
+      '<li><strong>免費旋轉(Free Spins)</strong>：不扣費的旋轉機會</li>\n' +
+      '<li><strong>獎金回合(Bonus Round)</strong>：特殊遊戲模式，提供額外獲獎機會</li>\n' +
+      '</ul>\n' +
+      '<p>熟悉這些術語將幫助你更好地理解遊戲規則和老虎機策略，從而做出更明智的遊玩決策。</p>\n' +
+      '<h2>核心技巧與策略</h2>\n' +
+      '<h3>熱門策略介紹</h3>\n' +
+      '<p>雖然老虎機結果本質上隨機，但採用正確的策略可以最大化你的遊玩體驗和潛在回報：</p>\n' +
+      '<p><strong>1. 選擇合適的遊戲類型</strong></p>\n' +
+      '<ul>\n' +
+      '<li>高RTP(回報率)遊戲優先</li>\n' +
+      '<li>根據風險承受能力選擇波動率</li>\n' +
+      '<li>考慮遊戲主題和獎金功能</li>\n' +
+      '</ul>\n' +
+      '<p><strong>2. 進階老虎機策略</strong></p>\n' +
+      '<ul>\n' +
+      '<li><strong>全面激活支付線</strong>：確保所有支付線激活以最大化獲勝機會</li>\n' +
+      '<li><strong>利用示範模式</strong>：免費試玩新遊戲，了解其特點</li>\n' +
+      '<li><strong>設定贏輸限額</strong>：提前決定何時停止遊玩</li>\n' +
+      '</ul>\n' +
+      '<p>這些slot machine技巧經過無數玩家驗證，能幫助你延長遊玩時間並增加樂趣。</p>\n' +
+      '<h3>資金管理方法</h3>\n' +
+      '<p>有效的資金管理是老虎機技巧中最關鍵卻最常被忽視的部分：</p>\n' +
+      '<p><strong>預算設定原則：</strong></p>\n' +
+      '<ul>\n' +
+      '<li>只使用娛樂預算，絕不動用生活必需資金</li>\n' +
+      '<li>將會話預算分成較小單位，避免快速消耗</li>\n' +
+      '<li>設定時間限制，防止過度遊玩</li>\n' +
+      '</ul>\n' +
+      '<p><strong>實用資金管理策略：</strong></p>\n' +
+      '<ol>\n' +
+      '<li><strong>單位系統</strong>：將總預算分成20-50個單位，每次會議使用3-5單位</li>\n' +
+      '<li><strong>百分比投注</strong>：每次投注不超過總會話資金的1-2%</li>\n' +
+      '<li><strong>贏利分配</strong>：將大贏利的50%存入儲蓄，只用其餘部分繼續遊玩</li>\n' +
+      '</ol>\n' +
+      '<p>通過嚴格執行這些資金管理原則，你可以顯著延長遊玩時間，並在長期內減少損失風險。</p>\n' +
+      '<h2>數學期望值與數據分析</h2>\n' +
+      '<h3>RTP與波動率</h3>\n' +
+      '<p>理解老虎機背後的數學原理是提升老虎機技巧的關鍵：</p>\n' +
+      '<p><strong>RTP(回報玩家百分比)</strong></p>\n' +
+      '<ul>\n' +
+      '<li>定義：長期內返還給玩家的投注金額百分比</li>\n' +
+      '<li>例子：96% RTP意味著每投注100元，預期回收96元</li>\n' +
+      '<li>選擇標準：盡量選擇RTP高於96%的遊戲</li>\n' +
+      '</ul>\n' +
+      '<p><strong>波動率(方差)</strong></p>\n' +
+      '<ul>\n' +
+      '<li>低波動率：頻繁但較小的支付，適合資金較少的玩家</li>\n' +
+      '<li>高波動率：不頻繁但潛在巨大的支付，適合追求大獎的玩家</li>\n' +
+      '<li>選擇建議：根據你的風險偏好和資金選擇合適波動率</li>\n' +
+      '</ul>\n' +
+      '<p>深入了解這些概念將幫助你在我們的[老虎機數據分析指南]中做出更明智的遊戲選擇。</p>\n' +
+      '<h3>期望值計算</h3>\n' +
+      '<p>掌握期望值計算能讓你客觀評估老虎機遊戲的潛在價值：</p>\n' +
+      '<p><strong>基本計算公式：</strong></p>\n' +
+      '<pre><code>期望值 = (獲勝概率 × 獲勝金額) - (失敗概率 × 投注金額)\n' +
+      '</code></pre>\n' +
+      '<p><strong>實例分析：</strong>\n' +
+      '假設一個符號組合：</p>\n' +
+      '<ul>\n' +
+      '<li>出現概率：1/100</li>\n' +
+      '<li>支付金額：50倍投注</li>\n' +
+      '<li>投注金額：10元</li>\n' +
+      '</ul>\n' +
+      '<p>計算：</p>\n' +
+      '<pre><code>期望值 = (1/100 × 10 × 50) - (99/100 × 10) = (5) - (9.9) = -4.9元\n' +
+      '</code></pre>\n' +
+      '<p>這個負期望值表明長期來看這是不利的投注。通過這樣的數據分析，你可以識別哪些遊戲和投注策略更具價值。</p>\n' +
+      '<h2>台灣法規風險與平台比較</h2>\n' +
+      '<h3>台灣賭博法律</h3>\n' +
+      '<p>在台灣遊玩老虎機前，必須了解相關法律限制：</p>\n' +
+      '<p><strong>台灣賭博法規要點：</strong></p>\n' +
+      '<ul>\n' +
+      '<li>根據刑法第266條，在公共場所賭博財物可處罰金</li>\n' +
+      '<li>台灣僅允許少數特許博弈活動（如公益彩券）</li>\n' +
+      '<li>線上賭博處於法律灰色地帶，可能面臨法律風險</li>\n' +
+      '</ul>\n' +
+      '<p><strong>風險提示：</strong></p>\n' +
+      '<ul>\n' +
+      '<li>參與未經許可的賭博活動可能面臨法律後果</li>\n' +
+      '<li>境外線上賭場不受台灣法律保護</li>\n' +
+      '<li>玩家需自行承擔所有相關風險</li>\n' +
+      '</ul>\n' +
+      '<p>了解這些台灣法規對負責任地遊玩至關重要，更多詳細信息請參考我們的[台灣博弈法律完整解析]。</p>\n' +
+      '<h3>線上平台評測</h3>\n' +
+      '<p>如果決定在線上平台遊玩，需仔細比較不同選項：</p>\n' +
+      '<p><strong>評估標準：</strong></p>\n' +
+      '<ul>\n' +
+      '<li><strong>合法許可</strong>：是否持有信譽良好的國際博弈許可證</li>\n' +
+      '<li><strong>遊戲供應商</strong>：與知名遊戲開發商合作</li>\n' +
+      '<li><strong>支付方式</strong>：提供安全便捷的入金出金選項</li>\n' +
+      '<li><strong>客戶支持</strong>：提供中文客服及及時響應</li>\n' +
+      '</ul>\n' +
+      '<p><strong>平台比較表：</strong></p>\n' +
+      '<table>\n' +
+      '<thead>\n' +
+      '<tr>\n' +
+      '<th>平台特點</th>\n' +
+      '<th>平台A</th>\n' +
+      '<th>平台B</th>\n' +
+      '<th>平台C</th>\n' +
+      '</tr>\n' +
+      '</thead>\n' +
+      '<tbody><tr>\n' +
+      '<td>RTP範圍</td>\n' +
+      '<td>95-97%</td>\n' +
+      '<td>94-96%</td>\n' +
+      '<td>96-98%</td>\n' +
+      '</tr>\n' +
+      '<tr>\n' +
+      '<td>遊戲多樣性</td>\n' +
+      '<td>高</td>\n' +
+      '<td>中</td>\n' +
+      '<td>高</td>\n' +
+      '</tr>\n' +
+      '<tr>\n' +
+      '<td>中文支持</td>\n' +
+      '<td>有</td>\n' +
+      '<td>有限</td>\n' +
+      '<td>有</td>\n' +
+      '</tr>\n' +
+      '<tr>\n' +
+      '<td>支付方式</td>\n' +
+      '<td>多樣</td>\n' +
+      '<td>一般</td>\n' +
+      '<td>多樣</td>\n' +
+      '</tr>\n' +
+      '</tbody></table>\n' +
+      '<p>選擇平台時，務必平衡娛樂價值與潛在風險，並始終將責任賭博放在首位。</p>\n' +
+      '<h2>結論</h2>\n' +
+      '<p>本指南涵蓋了老虎機從入門到精通的技巧，幫助玩家更聰明地遊玩。從了解基本工作原理和術語，到掌握核心策略和資金管理，再到理解背後的數學原理和法律風險，這些知識將使你的老虎機體驗更加豐富和可控。應用所學技巧，但務必遵守法律並負責任地賭博。記住，老虎機最終是娛樂活動，應以健康的心態對待。</p>\n' +
+      '<h2>常見問題</h2>\n' +
+      '<h3>老虎機有必勝策略嗎？</h3>\n' +
+      '<p>沒有絕對必勝策略，因為老虎機結果由RNG隨機決定。但選擇高RTP遊戲和良好資金管理可提高勝率，並延長遊玩時間。</p>\n' +
+      '<h3>在台灣玩線上老虎機合法嗎？</h3>\n' +
+      '<p>台灣賭博法律嚴格，線上賭博可能違法。雖然有些玩家通過境外網站遊玩，但這仍存在法律風險，玩家需自行承擔風險。</p>\n' +
+      '<h3>如何選擇最適合的老虎機遊戲？</h3>\n' +
+      '<p>考慮以下因素：RTP（選擇96%以上）、波動率（根據資金和風險偏好）、獎金功能（免費旋轉、獎金回合）和個人偏好（主題、遊戲性）。</p>\n' +
+      '<h3>應該避免哪些常見的老虎機錯誤？</h3>\n' +
+      '<p>常見錯誤包括：追逐損失、超過預算、迷信&quot;即將中獎&quot;模式、不了解遊戲規則就開始玩，以及忽視資金管理原則。</p>\n',
+    internalLinks: [],
+    externalReferences: [ [Object], [Object], [Object], [Object], [Object] ]
+  }
+}
+[HTMLAgent] HTMLAgent completed { executionTime: 99, tokenUsage: { input: 0, output: 0 } }
+[QualityAgent] QualityAgent started {
+  input: {
+    content: {
+      markdown: '# 老虎機技巧教學完整指南：從入門到精通\n' +
+        '\n' +
+        '## 導言\n' +
+        '\n' +
+        '想成為老虎機高手嗎？從零開始學習技巧！老虎機是賭場中最常見的遊戲，但許多人盲目遊玩，錯失獲勝機會。本指南完整教學從基礎到精通，涵蓋策略、數學分析和台灣法規，幫助你聰明遊玩。無論你是剛接觸老虎機玩法的新手，還是想精進slot machine技巧的玩家，這篇完整的吃角子老虎機教學都將提供實用的知識。\n' +
+        '\n' +
+        '## 老虎機基礎入門\n' +
+        '\n' +
+        '### 老虎機工作原理\n' +
+        '\n' +
+        '老虎機的核心是隨機數生成器(RNG)系統，這個電腦程式確保每次旋轉結果完全隨機且獨立。現代老虎機已從傳統的機械結構進化為全電子系統：\n' +
+        '\n' +
+        '- **RNG系統**：每秒產生數千個隨機數字，決定旋轉結果\n' +
+        '- **支付線**：獲勝符號組合必須出現在激活的支付線上\n' +
+        '- **虛擬轉軸**：現代老虎機使用虛擬轉軸而非物理轉軸\n' +
+        '\n' +
+        '了解這些基本工作原理是掌握老虎機技巧的第一步，有助於破除常見的迷思，例如"機器即將支付"的錯誤觀念。\n' +
+        '\n' +
+        '### 專業術語解析\n' +
+        '\n' +
+        '掌握老虎機術語對制定有效策略至關重要：\n' +
+        '\n' +
+        '**基本術語：**\n' +
+        '- **支付線(Payline)**：獲勝符號必須連成的線路\n' +
+        '- **投注額(Bet)**：每次旋轉下注的金額\n' +
+        '- **累積獎金(Jackpot)**：遊戲最高獎金\n' +
+        '\n' +
+        '**符號類型：**\n' +
+        '- **標準符號**：基礎支付符號\n' +
+        '- **百搭符號(Wild)**：可替代大多數其他符號\n' +
+        '- **分散符號(Scatter)**：通常觸發獎金回合，不限位置\n' +
+        '\n' +
+        '**特殊功能：**\n' +
+        '- **免費旋轉(Free Spins)**：不扣費的旋轉機會\n' +
+        '- **獎金回合(Bonus Round)**：特殊遊戲模式，提供額外獲獎機會\n' +
+        '\n' +
+        '熟悉這些術語將幫助你更好地理解遊戲規則和老虎機策略，從而做出更明智的遊玩決策。\n' +
+        '\n' +
+        '## 核心技巧與策略\n' +
+        '\n' +
+        '### 熱門策略介紹\n' +
+        '\n' +
+        '雖然老虎機結果本質上隨機，但採用正確的策略可以最大化你的遊玩體驗和潛在回報：\n' +
+        '\n' +
+        '**1. 選擇合適的遊戲類型**\n' +
+        '- 高RTP(回報率)遊戲優先\n' +
+        '- 根據風險承受能力選擇波動率\n' +
+        '- 考慮遊戲主題和獎金功能\n' +
+        '\n' +
+        '**2. 進階老虎機策略**\n' +
+        '- **全面激活支付線**：確保所有支付線激活以最大化獲勝機會\n' +
+        '- **利用示範模式**：免費試玩新遊戲，了解其特點\n' +
+        '- **設定贏輸限額**：提前決定何時停止遊玩\n' +
+        '\n' +
+        '這些slot machine技巧經過無數玩家驗證，能幫助你延長遊玩時間並增加樂趣。\n' +
+        '\n' +
+        '### 資金管理方法\n' +
+        '\n' +
+        '有效的資金管理是老虎機技巧中最關鍵卻最常被忽視的部分：\n' +
+        '\n' +
+        '**預算設定原則：**\n' +
+        '- 只使用娛樂預算，絕不動用生活必需資金\n' +
+        '- 將會話預算分成較小單位，避免快速消耗\n' +
+        '- 設定時間限制，防止過度遊玩\n' +
+        '\n' +
+        '**實用資金管理策略：**\n' +
+        '1. **單位系統**：將總預算分成20-50個單位，每次會議使用3-5單位\n' +
+        '2. **百分比投注**：每次投注不超過總會話資金的1-2%\n' +
+        '3. **贏利分配**：將大贏利的50%存入儲蓄，只用其餘部分繼續遊玩\n' +
+        '\n' +
+        '通過嚴格執行這些資金管理原則，你可以顯著延長遊玩時間，並在長期內減少損失風險。\n' +
+        '\n' +
+        '## 數學期望值與數據分析\n' +
+        '\n' +
+        '### RTP與波動率\n' +
+        '\n' +
+        '理解老虎機背後的數學原理是提升老虎機技巧的關鍵：\n' +
+        '\n' +
+        '**RTP(回報玩家百分比)**\n' +
+        '- 定義：長期內返還給玩家的投注金額百分比\n' +
+        '- 例子：96% RTP意味著每投注100元，預期回收96元\n' +
+        '- 選擇標準：盡量選擇RTP高於96%的遊戲\n' +
+        '\n' +
+        '**波動率(方差)**\n' +
+        '- 低波動率：頻繁但較小的支付，適合資金較少的玩家\n' +
+        '- 高波動率：不頻繁但潛在巨大的支付，適合追求大獎的玩家\n' +
+        '- 選擇建議：根據你的風險偏好和資金選擇合適波動率\n' +
+        '\n' +
+        '深入了解這些概念將幫助你在我們的[老虎機數據分析指南]中做出更明智的遊戲選擇。\n' +
+        '\n' +
+        '### 期望值計算\n' +
+        '\n' +
+        '掌握期望值計算能讓你客觀評估老虎機遊戲的潛在價值：\n' +
+        '\n' +
+        '**基本計算公式：**\n' +
+        '```\n' +
+        '期望值 = (獲勝概率 × 獲勝金額) - (失敗概率 × 投注金額)\n' +
+        '```\n' +
+        '\n' +
+        '**實例分析：**\n' +
+        '假設一個符號組合：\n' +
+        '- 出現概率：1/100\n' +
+        '- 支付金額：50倍投注\n' +
+        '- 投注金額：10元\n' +
+        '\n' +
+        '計算：\n' +
+        '```\n' +
+        '期望值 = (1/100 × 10 × 50) - (99/100 × 10) = (5) - (9.9) = -4.9元\n' +
+        '```\n' +
+        '\n' +
+        '這個負期望值表明長期來看這是不利的投注。通過這樣的數據分析，你可以識別哪些遊戲和投注策略更具價值。\n' +
+        '\n' +
+        '## 台灣法規風險與平台比較\n' +
+        '\n' +
+        '### 台灣賭博法律\n' +
+        '\n' +
+        '在台灣遊玩老虎機前，必須了解相關法律限制：\n' +
+        '\n' +
+        '**台灣賭博法規要點：**\n' +
+        '- 根據刑法第266條，在公共場所賭博財物可處罰金\n' +
+        '- 台灣僅允許少數特許博弈活動（如公益彩券）\n' +
+        '- 線上賭博處於法律灰色地帶，可能面臨法律風險\n' +
+        '\n' +
+        '**風險提示：**\n' +
+        '- 參與未經許可的賭博活動可能面臨法律後果\n' +
+        '- 境外線上賭場不受台灣法律保護\n' +
+        '- 玩家需自行承擔所有相關風險\n' +
+        '\n' +
+        '了解這些台灣法規對負責任地遊玩至關重要，更多詳細信息請參考我們的[台灣博弈法律完整解析]。\n' +
+        '\n' +
+        '### 線上平台評測\n' +
+        '\n' +
+        '如果決定在線上平台遊玩，需仔細比較不同選項：\n' +
+        '\n' +
+        '**評估標準：**\n' +
+        '- **合法許可**：是否持有信譽良好的國際博弈許可證\n' +
+        '- **遊戲供應商**：與知名遊戲開發商合作\n' +
+        '- **支付方式**：提供安全便捷的入金出金選項\n' +
+        '- **客戶支持**：提供中文客服及及時響應\n' +
+        '\n' +
+        '**平台比較表：**\n' +
+        '| 平台特點 | 平台A | 平台B | 平台C |\n' +
+        '|---------|------|------|------|\n' +
+        '| RTP範圍 | 95-97% | 94-96% | 96-98% |\n' +
+        '| 遊戲多樣性 | 高 | 中 | 高 |\n' +
+        '| 中文支持 | 有 | 有限 | 有 |\n' +
+        '| 支付方式 | 多樣 | 一般 | 多樣 |\n' +
+        '\n' +
+        '選擇平台時，務必平衡娛樂價值與潛在風險，並始終將責任賭博放在首位。\n' +
+        '\n' +
+        '## 結論\n' +
+        '\n' +
+        '本指南涵蓋了老虎機從入門到精通的技巧，幫助玩家更聰明地遊玩。從了解基本工作原理和術語，到掌握核心策略和資金管理，再到理解背後的數學原理和法律風險，這些知識將使你的老虎機體驗更加豐富和可控。應用所學技巧，但務必遵守法律並負責任地賭博。記住，老虎機最終是娛樂活動，應以健康的心態對待。\n' +
+        '\n' +
+        '## 常見問題\n' +
+        '\n' +
+        '### 老虎機有必勝策略嗎？\n' +
+        '沒有絕對必勝策略，因為老虎機結果由RNG隨機決定。但選擇高RTP遊戲和良好資金管理可提高勝率，並延長遊玩時間。\n' +
+        '\n' +
+        '### 在台灣玩線上老虎機合法嗎？\n' +
+        '台灣賭博法律嚴格，線上賭博可能違法。雖然有些玩家通過境外網站遊玩，但這仍存在法律風險，玩家需自行承擔風險。\n' +
+        '\n' +
+        '### 如何選擇最適合的老虎機遊戲？\n' +
+        '考慮以下因素：RTP（選擇96%以上）、波動率（根據資金和風險偏好）、獎金功能（免費旋轉、獎金回合）和個人偏好（主題、遊戲性）。\n' +
+        '\n' +
+        '### 應該避免哪些常見的老虎機錯誤？\n' +
+        '常見錯誤包括：追逐損失、超過預算、迷信"即將中獎"模式、不了解遊戲規則就開始玩，以及忽視資金管理原則。',
+      html: '<h1 id="">老虎機技巧教學完整指南：從入門到精通</h1>\n' +
+        '<h2 id="">導言</h2>\n' +
+        '<p>想成為老虎機高手嗎？從零開始學習技巧！老虎機是賭場中最常見的遊戲，但許多人盲目遊玩，錯失獲勝機會。本指南完整教學從基礎到精通，涵蓋策略、數學分析和台灣法規，幫助你聰明遊玩。無論你是剛接觸老虎機玩法的新手，還是想精進slot machine技巧的玩家，這篇完整的吃角子老虎機教學都將提供實用的知識。</p>\n' +
+        '<h2 id="">老虎機基礎入門</h2>\n' +
+        '<h3 id="">老虎機工作原理</h3>\n' +
+        '<p>老虎機的核心是隨機數生成器(RNG)系統，這個電腦程式確保每次旋轉結果完全隨機且獨立。現代老虎機已從傳統的機械結構進化為全電子系統：</p>\n' +
+        '<ul>\n' +
+        '<li><strong>RNG系統</strong>：每秒產生數千個隨機數字，決定旋轉結果</li>\n' +
+        '<li><strong>支付線</strong>：獲勝符號組合必須出現在激活的支付線上</li>\n' +
+        '<li><strong>虛擬轉軸</strong>：現代老虎機使用虛擬轉軸而非物理轉軸</li>\n' +
+        '</ul>\n' +
+        '<p>了解這些基本工作原理是掌握老虎機技巧的第一步，有助於破除常見的迷思，例如"機器即將支付"的錯誤觀念。</p>\n' +
+        '<h3 id="">專業術語解析</h3>\n' +
+        '<p>掌握老虎機術語對制定有效策略至關重要：</p>\n' +
+        '<p><strong>基本術語：</strong></p>\n' +
+        '<ul>\n' +
+        '<li><strong>支付線(Payline)</strong>：獲勝符號必須連成的線路</li>\n' +
+        '<li><strong>投注額(Bet)</strong>：每次旋轉下注的金額</li>\n' +
+        '<li><strong>累積獎金(Jackpot)</strong>：遊戲最高獎金</li>\n' +
+        '</ul>\n' +
+        '<p><strong>符號類型：</strong></p>\n' +
+        '<ul>\n' +
+        '<li><strong>標準符號</strong>：基礎支付符號</li>\n' +
+        '<li><strong>百搭符號(Wild)</strong>：可替代大多數其他符號</li>\n' +
+        '<li><strong>分散符號(Scatter)</strong>：通常觸發獎金回合，不限位置</li>\n' +
+        '</ul>\n' +
+        '<p><strong>特殊功能：</strong></p>\n' +
+        '<ul>\n' +
+        '<li><strong>免費旋轉(Free Spins)</strong>：不扣費的旋轉機會</li>\n' +
+        '<li><strong>獎金回合(Bonus Round)</strong>：特殊遊戲模式，提供額外獲獎機會</li>\n' +
+        '</ul>\n' +
+        '<p>熟悉這些術語將幫助你更好地理解遊戲規則和老虎機策略，從而做出更明智的遊玩決策。</p>\n' +
+        '<h2 id="">核心技巧與策略</h2>\n' +
+        '<h3 id="">熱門策略介紹</h3>\n' +
+        '<p>雖然老虎機結果本質上隨機，但採用正確的策略可以最大化你的遊玩體驗和潛在回報：</p>\n' +
+        '<p><strong>1. 選擇合適的遊戲類型</strong></p>\n' +
+        '<ul>\n' +
+        '<li>高RTP(回報率)遊戲優先</li>\n' +
+        '<li>根據風險承受能力選擇波動率</li>\n' +
+        '<li>考慮遊戲主題和獎金功能</li>\n' +
+        '</ul>\n' +
+        '<p><strong>2. 進階老虎機策略</strong></p>\n' +
+        '<ul>\n' +
+        '<li><strong>全面激活支付線</strong>：確保所有支付線激活以最大化獲勝機會</li>\n' +
+        '<li><strong>利用示範模式</strong>：免費試玩新遊戲，了解其特點</li>\n' +
+        '<li><strong>設定贏輸限額</strong>：提前決定何時停止遊玩</li>\n' +
+        '</ul>\n' +
+        '<p>這些slot machine技巧經過無數玩家驗證，能幫助你延長遊玩時間並增加樂趣。</p>\n' +
+        '<h3 id="">資金管理方法</h3>\n' +
+        '<p>有效的資金管理是老虎機技巧中最關鍵卻最常被忽視的部分：</p>\n' +
+        '<p><strong>預算設定原則：</strong></p>\n' +
+        '<ul>\n' +
+        '<li>只使用娛樂預算，絕不動用生活必需資金</li>\n' +
+        '<li>將會話預算分成較小單位，避免快速消耗</li>\n' +
+        '<li>設定時間限制，防止過度遊玩</li>\n' +
+        '</ul>\n' +
+        '<p><strong>實用資金管理策略：</strong></p>\n' +
+        '<ol>\n' +
+        '<li><strong>單位系統</strong>：將總預算分成20-50個單位，每次會議使用3-5單位</li>\n' +
+        '<li><strong>百分比投注</strong>：每次投注不超過總會話資金的1-2%</li>\n' +
+        '<li><strong>贏利分配</strong>：將大贏利的50%存入儲蓄，只用其餘部分繼續遊玩</li>\n' +
+        '</ol>\n' +
+        '<p>通過嚴格執行這些資金管理原則，你可以顯著延長遊玩時間，並在長期內減少損失風險。</p>\n' +
+        '<h2 id="">數學期望值與數據分析</h2>\n' +
+        '<h3 id="rtp">RTP與波動率</h3>\n' +
+        '<p>理解老虎機背後的數學原理是提升老虎機技巧的關鍵：</p>\n' +
+        '<p><strong>RTP(回報玩家百分比)</strong></p>\n' +
+        '<ul>\n' +
+        '<li>定義：長期內返還給玩家的投注金額百分比</li>\n' +
+        '<li>例子：96% RTP意味著每投注100元，預期回收96元</li>\n' +
+        '<li>選擇標準：盡量選擇RTP高於96%的遊戲</li>\n' +
+        '</ul>\n' +
+        '<p><strong>波動率(方差)</strong></p>\n' +
+        '<ul>\n' +
+        '<li>低波動率：頻繁但較小的支付，適合資金較少的玩家</li>\n' +
+        '<li>高波動率：不頻繁但潛在巨大的支付，適合追求大獎的玩家</li>\n' +
+        '<li>選擇建議：根據你的風險偏好和資金選擇合適波動率</li>\n' +
+        '</ul>\n' +
+        '<p>深入了解這些概念將幫助你在我們的[老虎機數據分析指南]中做出更明智的遊戲選擇。</p>\n' +
+        '<h3 id="">期望值計算</h3>\n' +
+        '<p>掌握期望值計算能讓你客觀評估老虎機遊戲的潛在價值：</p>\n' +
+        '<p><strong>基本計算公式：</strong></p>\n' +
+        '<pre><code>期望值 = (獲勝概率 × 獲勝金額) - (失敗概率 × 投注金額)\n' +
+        '</code></pre>\n' +
+        '<p><strong>實例分析：</strong>\n' +
+        '假設一個符號組合：</p>\n' +
+        '<ul>\n' +
+        '<li>出現概率：1/100</li>\n' +
+        '<li>支付金額：50倍投注</li>\n' +
+        '<li>投注金額：10元</li>\n' +
+        '</ul>\n' +
+        '<p>計算：</p>\n' +
+        '<pre><code>期望值 = (1/100 × 10 × 50) - (99/100 × 10) = (5) - (9.9) = -4.9元\n' +
+        '</code></pre>\n' +
+        '<p>這個負期望值表明長期來看這是不利的投注。通過這樣的數據分析，你可以識別哪些遊戲和投注策略更具價值。</p>\n' +
+        '<h2 id="">台灣法規風險與平台比較</h2>\n' +
+        '<h3 id="">台灣賭博法律</h3>\n' +
+        '<p>在台灣遊玩老虎機前，必須了解相關法律限制：</p>\n' +
+        '<p><strong>台灣賭博法規要點：</strong></p>\n' +
+        '<ul>\n' +
+        '<li>根據刑法第266條，在公共場所賭博財物可處罰金</li>\n' +
+        '<li>台灣僅允許少數特許博弈活動（如公益彩券）</li>\n' +
+        '<li>線上賭博處於法律灰色地帶，可能面臨法律風險</li>\n' +
+        '</ul>\n' +
+        '<p><strong>風險提示：</strong></p>\n' +
+        '<ul>\n' +
+        '<li>參與未經許可的賭博活動可能面臨法律後果</li>\n' +
+        '<li>境外線上賭場不受台灣法律保護</li>\n' +
+        '<li>玩家需自行承擔所有相關風險</li>\n' +
+        '</ul>\n' +
+        '<p>了解這些台灣法規對負責任地遊玩至關重要，更多詳細信息請參考我們的[台灣博弈法律完整解析]。</p>\n' +
+        '<h3 id="">線上平台評測</h3>\n' +
+        '<p>如果決定在線上平台遊玩，需仔細比較不同選項：</p>\n' +
+        '<p><strong>評估標準：</strong></p>\n' +
+        '<ul>\n' +
+        '<li><strong>合法許可</strong>：是否持有信譽良好的國際博弈許可證</li>\n' +
+        '<li><strong>遊戲供應商</strong>：與知名遊戲開發商合作</li>\n' +
+        '<li><strong>支付方式</strong>：提供安全便捷的入金出金選項</li>\n' +
+        '<li><strong>客戶支持</strong>：提供中文客服及及時響應</li>\n' +
+        '</ul>\n' +
+        '<p><strong>平台比較表：</strong></p>\n' +
+        '<div class="table-responsive"><table class="wp-table">\n' +
+        '<thead>\n' +
+        '<tr>\n' +
+        '<th>平台特點</th>\n' +
+        '<th>平台A</th>\n' +
+        '<th>平台B</th>\n' +
+        '<th>平台C</th>\n' +
+        '</tr>\n' +
+        '</thead>\n' +
+        '<tbody><tr>\n' +
+        '<td>RTP範圍</td>\n' +
+        '<td>95-97%</td>\n' +
+        '<td>94-96%</td>\n' +
+        '<td>96-98%</td>\n' +
+        '</tr>\n' +
+        '<tr>\n' +
+        '<td>遊戲多樣性</td>\n' +
+        '<td>高</td>\n' +
+        '<td>中</td>\n' +
+        '<td>高</td>\n' +
+        '</tr>\n' +
+        '<tr>\n' +
+        '<td>中文支持</td>\n' +
+        '<td>有</td>\n' +
+        '<td>有限</td>\n' +
+        '<td>有</td>\n' +
+        '</tr>\n' +
+        '<tr>\n' +
+        '<td>支付方式</td>\n' +
+        '<td>多樣</td>\n' +
+        '<td>一般</td>\n' +
+        '<td>多樣</td>\n' +
+        '</tr>\n' +
+        '</tbody></table></div>\n' +
+        '<p>選擇平台時，務必平衡娛樂價值與潛在風險，並始終將責任賭博放在首位。</p>\n' +
+        '<h2 id="">結論</h2>\n' +
+        '<p>本指南涵蓋了老虎機從入門到精通的技巧，幫助玩家更聰明地遊玩。從了解基本工作原理和術語，到掌握核心策略和資金管理，再到理解背後的數學原理和法律風險，這些知識將使你的老虎機體驗更加豐富和可控。應用所學技巧，但務必遵守法律並負責任地賭博。記住，老虎機最終是娛樂活動，應以健康的心態對待。</p>\n' +
+        '<h2 id="">常見問題</h2>\n' +
+        '<h3 id="">老虎機有必勝策略嗎？</h3>\n' +
+        '<p>沒有絕對必勝策略，因為老虎機結果由RNG隨機決定。但選擇高RTP遊戲和良好資金管理可提高勝率，並延長遊玩時間。</p>\n' +
+        '<h3 id="">在台灣玩線上老虎機合法嗎？</h3>\n' +
+        '<p>台灣賭博法律嚴格，線上賭博可能違法。雖然有些玩家通過境外網站遊玩，但這仍存在法律風險，玩家需自行承擔風險。</p>\n' +
+        '<h3 id="">如何選擇最適合的老虎機遊戲？</h3>\n' +
+        '<p>考慮以下因素：RTP（選擇96%以上）、波動率（根據資金和風險偏好）、獎金功能（免費旋轉、獎金回合）和個人偏好（主題、遊戲性）。</p>\n' +
+        '<h3 id="">應該避免哪些常見的老虎機錯誤？</h3>\n' +
+        '<p>常見錯誤包括：追逐損失、超過預算、迷信"即將中獎"模式、不了解遊戲規則就開始玩，以及忽視資金管理原則。</p>\n',
+      statistics: [Object],
+      internalLinks: [],
+      keywordUsage: [Object],
+      readability: [Object],
+      executionInfo: [Object]
+    },
+    images: { featuredImage: null, contentImages: [], executionInfo: [Object] },
+    meta: {
+      title: '老虎機技巧教學完整指南：從入門到精通策略解析',
+      description: '完整老虎機技巧教學指南，從基礎原理到進階策略全解析。學習RNG系統運作、支付線配置、數學分析與實用技巧，幫助你成為老虎機高手。適合新手與進階玩家！',
+      slug: 'tiger-machine-skills-teaching-guide',
+      seo: [Object],
+      openGraph: [Object],
+      twitterCard: [Object],
+      focusKeyphrase: '老虎機技巧教學',
+      executionInfo: [Object]
+    },
+    thresholds: {
+      quality_threshold: 80,
+      content_length_min: 1500,
+      content_length_max: 2500,
+      keyword_density_min: 1.5,
+      keyword_density_max: 2.5
+    }
+  }
+}
+[QualityAgent] QualityAgent completed { executionTime: 1, tokenUsage: { input: 0, output: 0 } }
+[WordPress] 獲取分類: https://x-marks.com/wp-json/wp/v2/categories?per_page=100
+[WordPress] 獲取標籤: https://x-marks.com/wp-json/wp/v2/tags?per_page=100
+[WordPress] 成功獲取 12 個標籤
+[WordPress] 成功獲取 7 個分類
+[Orchestrator] 從 WordPress 獲取: 7 個分類, 12 個標籤
+[CategoryAgent] 開始分析文章分類和標籤...
+[CategoryAgent] 錯誤: Error: DeepSeek API error: {"error":{"message":"Model Not Exist","type":"invalid_request_error","param":null,"code":"invalid_request_error"}}
+    at CategoryAgent.callDeepSeekAPI (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/category-agent.ts:76:13)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async CategoryAgent.generateCategories (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/category-agent.ts:89:24)
+    at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:230:30)
+    at async generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/generate-article-wordpress.ts:24:20)
+[WordPress] 發布完整文章: 老虎機技巧教學完整指南：從入門到精通策略解析
+[WordPress] 獲取分類: https://x-marks.com/wp-json/wp/v2/categories?per_page=100
+[WordPress] 獲取標籤: https://x-marks.com/wp-json/wp/v2/tags?per_page=100
+[WordPress] 成功獲取 12 個標籤
+[WordPress] 成功獲取 7 個分類
+[WordPress] 創建新分類: 老虎機技巧教學
+[WordPress] 創建新標籤: 老虎機技巧教學
+[WordPress] 創建新標籤: 老虎機玩法
+[WordPress] 創建新標籤: 老虎機策略
+[WordPress] 創建新標籤: slot machine 技巧
+[WordPress] 創建新標籤: 吃角子老虎機教學
+[WordPress] 創建新文章: 老虎機技巧教學完整指南：從入門到精通策略解析
+[WordPress] 文章創建成功: 2234
+[WordPress] 文章發布成功！
+  - 文章 ID: 2234
+  - 文章連結: https://x-marks.com/?p=2234
+  - 分類: 1 個
+  - 標籤: 5 個
+
+=== 生成完成 ===
+
+❌ 生成失敗或品質未通過
+
+品質檢查結果:
+通過: false
+分數: undefined
+
+執行統計:
+總時間: 282.50 秒
+各階段時間: {
+  research: 87371,
+  strategy: 105187,
+  contentGeneration: 69446,
+  metaGeneration: 8583,
+  qualityCheck: 1
+}

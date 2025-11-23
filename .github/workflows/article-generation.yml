@@ -1,0 +1,170 @@
+name: Article Generation Worker
+run-name: 處理文章生成任務 - ${{ github.event.client_payload.title || '批次處理' }}
+
+on:
+  # 手動觸發（從 Vercel API 觸發）
+  repository_dispatch:
+    types: [generate-article]
+
+  # 定時執行（每 5 分鐘檢查一次待處理任務）
+  schedule:
+    - cron: "*/5 * * * *"
+
+  # 手動執行（用於測試）
+  workflow_dispatch:
+    inputs:
+      jobId:
+        description: "Article Job ID (optional)"
+        required: false
+        type: string
+
+jobs:
+  generate-article:
+    name: 生成文章
+    runs-on: ubuntu-latest
+    timeout-minutes: 30 # 最多 30 分鐘，足夠處理複雜文章
+
+    steps:
+      - name: 檢出代碼
+        uses: actions/checkout@v4
+
+      - name: 設置 Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 安裝 pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: 獲取 pnpm store 目錄
+        id: pnpm-cache
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path)" >> $GITHUB_OUTPUT
+
+      - name: 設置 pnpm 緩存
+        uses: actions/cache@v3
+        with:
+          path: ${{ steps.pnpm-cache.outputs.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - name: 安裝依賴
+        run: pnpm install --frozen-lockfile
+
+      - name: 編譯 TypeScript 腳本
+        run: pnpm run build:scripts
+
+      - name: 清理環境變數
+        run: |
+          # 清理所有環境變數的換行符和回車符
+          echo "NEXT_PUBLIC_SUPABASE_URL=$(echo -n '${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$(echo -n '${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "SUPABASE_SERVICE_ROLE_KEY=$(echo -n '${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "OPENAI_API_KEY=$(echo -n '${{ secrets.OPENAI_API_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "DEEPSEEK_API_KEY=$(echo -n '${{ secrets.DEEPSEEK_API_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "ANTHROPIC_API_KEY=$(echo -n '${{ secrets.ANTHROPIC_API_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "OPENROUTER_API_KEY=$(echo -n '${{ secrets.OPENROUTER_API_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "PERPLEXITY_API_KEY=$(echo -n '${{ secrets.PERPLEXITY_API_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "R2_ACCESS_KEY_ID=$(echo -n '${{ secrets.R2_ACCESS_KEY_ID }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "R2_SECRET_ACCESS_KEY=$(echo -n '${{ secrets.R2_SECRET_ACCESS_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "R2_ACCOUNT_ID=$(echo -n '${{ secrets.R2_ACCOUNT_ID }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "R2_BUCKET_NAME=$(echo -n '${{ secrets.R2_BUCKET_NAME }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "USE_MULTI_AGENT_ARCHITECTURE=$(echo -n '${{ secrets.USE_MULTI_AGENT_ARCHITECTURE }}' | tr -d '\n\r')" >> $GITHUB_ENV
+
+      - name: 處理單個文章（repository_dispatch）
+        if: github.event_name == 'repository_dispatch'
+        id: generate_single
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+          USE_MULTI_AGENT_ARCHITECTURE: ${{ secrets.USE_MULTI_AGENT_ARCHITECTURE }}
+        run: |
+          echo "處理文章: ${{ github.event.client_payload.title }}"
+          echo "Job ID: ${{ github.event.client_payload.jobId }}"
+
+          # 執行文章生成腳本
+          node scripts/process-single-article.js \
+            --jobId "${{ github.event.client_payload.jobId }}" \
+            --title "${{ github.event.client_payload.title }}"
+
+      - name: 扣除 Token（repository_dispatch）
+        if: github.event_name == 'repository_dispatch' && success()
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          JOB_ID: ${{ github.event.client_payload.jobId }}
+          TOKEN_AMOUNT: "15000"
+        run: |
+          echo "扣除 Token for Job ID: ${{ github.event.client_payload.jobId }}"
+          node dist/scripts/deduct-tokens.js
+
+      - name: 批次處理待處理文章（schedule）
+        if: github.event_name == 'schedule'
+        id: generate_batch
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+          USE_MULTI_AGENT_ARCHITECTURE: ${{ secrets.USE_MULTI_AGENT_ARCHITECTURE }}
+        run: |
+          echo "批次處理待處理的文章..."
+          node scripts/process-batch-articles.js
+
+      - name: 手動執行（workflow_dispatch）
+        if: github.event_name == 'workflow_dispatch'
+        env:
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          DEEPSEEK_API_KEY: ${{ secrets.DEEPSEEK_API_KEY }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          OPENROUTER_API_KEY: ${{ secrets.OPENROUTER_API_KEY }}
+          PERPLEXITY_API_KEY: ${{ secrets.PERPLEXITY_API_KEY }}
+          R2_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
+          R2_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
+          R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
+          USE_MULTI_AGENT_ARCHITECTURE: ${{ secrets.USE_MULTI_AGENT_ARCHITECTURE }}
+        run: |
+          if [ -n "${{ github.event.inputs.jobId }}" ]; then
+            echo "處理指定的 Job: ${{ github.event.inputs.jobId }}"
+            node scripts/process-single-article.js --jobId "${{ github.event.inputs.jobId }}"
+          else
+            echo "批次處理所有待處理文章"
+            node scripts/process-batch-articles.js
+          fi
+
+      - name: 上傳日誌（如果失敗）
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: error-logs
+          path: |
+            npm-debug.log
+            yarn-error.log
+          retention-days: 7

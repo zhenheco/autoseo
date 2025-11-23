@@ -1,0 +1,10 @@
+修正: 修復所有 TypeScript 類型錯誤
+
+- 修正 article-storage.ts 中 result.writing 可能為 undefined 的類型錯誤
+- 為所有 result.writing 引用添加非空斷言 (!)
+- 修正 result.meta 可能為 undefined 的類型錯誤
+- 確保所有必填欄位都有正確的非空檢查
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>

@@ -1,0 +1,58 @@
+name: Process Article Jobs
+
+on:
+  schedule:
+    # 每分鐘執行一次（備援機制）
+    - cron: "* * * * *"
+
+  # 支援手動觸發
+  workflow_dispatch:
+
+  # 支援 API 觸發（當前端創建任務時立即執行）
+  repository_dispatch:
+    types: [article-jobs-created]
+
+jobs:
+  process-jobs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install tsx
+        run: pnpm add -g tsx
+
+      - name: Clean environment variables
+        run: |
+          # 清理所有環境變數的換行符和回車符
+          echo "SUPABASE_URL=$(echo -n '${{ secrets.SUPABASE_URL }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "SUPABASE_SERVICE_ROLE_KEY=$(echo -n '${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_SUPABASE_URL=$(echo -n '${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=$(echo -n '${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "DEEPSEEK_API_KEY=$(echo -n '${{ secrets.DEEPSEEK_API_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "OPENAI_API_KEY=$(echo -n '${{ secrets.OPENAI_API_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "PERPLEXITY_API_KEY=$(echo -n '${{ secrets.PERPLEXITY_API_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "R2_ACCESS_KEY_ID=$(echo -n '${{ secrets.R2_ACCESS_KEY_ID }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "R2_SECRET_ACCESS_KEY=$(echo -n '${{ secrets.R2_SECRET_ACCESS_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "R2_ACCOUNT_ID=$(echo -n '${{ secrets.R2_ACCOUNT_ID }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "R2_BUCKET_NAME=$(echo -n '${{ secrets.R2_BUCKET_NAME }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "USE_MULTI_AGENT_ARCHITECTURE=$(echo -n '${{ secrets.USE_MULTI_AGENT_ARCHITECTURE }}' | tr -d '\n\r')" >> $GITHUB_ENV
+
+      - name: Process pending article jobs
+        run: tsx scripts/process-jobs.ts

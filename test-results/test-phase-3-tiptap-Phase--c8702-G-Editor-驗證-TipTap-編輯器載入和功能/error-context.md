@@ -1,0 +1,169 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+    - generic [ref=e2]:
+        - complementary [ref=e3]:
+            - generic [ref=e4]:
+                - generic [ref=e5]:
+                    - link "Auto Pilot" [ref=e6] [cursor=pointer]:
+                        - /url: /dashboard
+                        - img [ref=e8]
+                        - generic [ref=e11]: Auto Pilot
+                    - button [ref=e12] [cursor=pointer]:
+                        - img
+                - navigation [ref=e13]:
+                    - link "儀表版" [ref=e14] [cursor=pointer]:
+                        - /url: /dashboard
+                        - img [ref=e15]
+                        - generic [ref=e20]: 儀表版
+                    - link "文章管理" [ref=e21] [cursor=pointer]:
+                        - /url: /dashboard/articles
+                        - img [ref=e23]
+                        - generic [ref=e26]: 文章管理
+                    - link "網站管理" [ref=e27] [cursor=pointer]:
+                        - /url: /dashboard/websites
+                        - img [ref=e28]
+                        - generic [ref=e31]: 網站管理
+                    - link "訂閱方案" [ref=e32] [cursor=pointer]:
+                        - /url: /dashboard/subscription
+                        - img [ref=e33]
+                        - generic [ref=e35]: 訂閱方案
+                    - link "設定" [ref=e36] [cursor=pointer]:
+                        - /url: /dashboard/settings
+                        - img [ref=e37]
+                        - generic [ref=e40]: 設定
+                - generic [ref=e42]:
+                    - generic [ref=e44]: U
+                    - paragraph [ref=e46]: nelsonjou@gmail.com
+        - generic [ref=e47]:
+            - banner [ref=e48]:
+                - generic [ref=e49]:
+                    - generic [ref=e51]:
+                        - img [ref=e52]
+                        - textbox "搜尋功能、文章或設定..." [ref=e55]
+                    - generic [ref=e56]:
+                        - button "新增文章" [ref=e58] [cursor=pointer]:
+                            - img
+                            - text: 新增文章
+                        - generic [ref=e59]:
+                            - generic [ref=e60]: "Credits:"
+                            - generic [ref=e61]: 50,000
+                        - generic [ref=e62]:
+                            - generic [ref=e63]: 撰寫語系
+                            - combobox [ref=e64] [cursor=pointer]:
+                                - img [ref=e65]
+                                - generic:
+                                    - generic:
+                                        - generic: 🇹🇼
+                                        - generic: 繁體中文
+                                - img [ref=e69]
+                        - button [ref=e72] [cursor=pointer]:
+                            - img
+                        - button "切換主題" [ref=e74] [cursor=pointer]:
+                            - img
+                            - generic [ref=e75]: 切換主題
+                        - button [ref=e76] [cursor=pointer]:
+                            - generic [ref=e78]:
+                                - img
+            - main [ref=e79]:
+                - generic [ref=e84]:
+                    - generic [ref=e86]:
+                        - button "全選文章" [ref=e88] [cursor=pointer]
+                        - generic [ref=e92]:
+                            - generic [ref=e94] [cursor=pointer]:
+                                - checkbox [ref=e95]
+                                - generic [ref=e96]:
+                                    - generic [ref=e97]:
+                                        - heading "5個讓Claude寫出爆款文章的秘訣｜提升內容創作效率與品質" [level=3] [ref=e98]
+                                        - img "已完成" [ref=e99]:
+                                            - img [ref=e100]
+                                    - generic [ref=e102]:
+                                        - generic [ref=e103]: 2025/11/15 下午1:53:52
+                                        - generic [ref=e104]: "字數: 1859"
+                                        - generic [ref=e105]: "閱讀: 10 分鐘"
+                                - button [ref=e106]:
+                                    - img
+                            - generic [ref=e108] [cursor=pointer]:
+                                - checkbox [ref=e109]
+                                - generic [ref=e110]:
+                                    - generic [ref=e111]:
+                                        - heading "5個方法確保AI寫作內容的正確性｜實用技巧指南" [level=3] [ref=e112]
+                                        - img "已完成" [ref=e113]:
+                                            - img [ref=e114]
+                                    - generic [ref=e116]:
+                                        - generic [ref=e117]: 2025/11/15 上午3:13:13
+                                        - generic [ref=e118]: "字數: 1781"
+                                        - generic [ref=e119]: "閱讀: 9 分鐘"
+                                - button [ref=e120]:
+                                    - img
+                            - generic [ref=e122] [cursor=pointer]:
+                                - checkbox [ref=e123]
+                                - generic [ref=e124]:
+                                    - generic [ref=e125]:
+                                        - heading "10個Claude程式碼應用技巧讓你效率翻倍 | 開發者必學" [level=3] [ref=e126]
+                                        - img "已完成" [ref=e127]:
+                                            - img [ref=e128]
+                                    - generic [ref=e130]:
+                                        - generic [ref=e131]: 2025/11/15 上午2:27:08
+                                        - generic [ref=e132]: "字數: 1915"
+                                        - generic [ref=e133]: "閱讀: 10 分鐘"
+                                - button [ref=e134]:
+                                    - img
+                            - generic [ref=e136] [cursor=pointer]:
+                                - checkbox [ref=e137]
+                                - generic [ref=e138]:
+                                    - generic [ref=e139]:
+                                        - heading "10個Claude程式碼應用技巧讓你效率翻倍 | 開發者必學" [level=3] [ref=e140]
+                                        - img "已完成" [ref=e141]:
+                                            - img [ref=e142]
+                                    - generic [ref=e144]:
+                                        - generic [ref=e145]: 2025/11/15 上午2:20:29
+                                        - generic [ref=e146]: "字數: 1898"
+                                        - generic [ref=e147]: "閱讀: 10 分鐘"
+                                - button [ref=e148]:
+                                    - img
+                            - generic [ref=e150] [cursor=pointer]:
+                                - checkbox [ref=e151]
+                                - generic [ref=e152]:
+                                    - generic [ref=e153]:
+                                        - heading "10個讓網站流量暴增的SEO秘訣 | 快速提升搜尋排名" [level=3] [ref=e154]
+                                        - img "已完成" [ref=e155]:
+                                            - img [ref=e156]
+                                    - generic [ref=e158]:
+                                        - generic [ref=e159]: 2025/11/14 下午11:39:52
+                                        - generic [ref=e160]: "字數: 1883"
+                                        - generic [ref=e161]: "閱讀: 10 分鐘"
+                                - button [ref=e162]:
+                                    - img
+                    - generic [ref=e164]:
+                        - generic [ref=e166]:
+                            - textbox "文章標題" [ref=e167]: 5個讓Claude寫出爆款文章的秘訣｜提升內容創作效率與品質
+                            - button "儲存" [ref=e168] [cursor=pointer]
+                            - button "發布" [disabled]
+                        - generic [ref=e170]:
+                            - generic [ref=e171]:
+                                - button "粗體" [ref=e172] [cursor=pointer]:
+                                    - img
+                                - button "斜體" [ref=e173] [cursor=pointer]:
+                                    - img
+                                - button "標題 1" [ref=e174] [cursor=pointer]:
+                                    - img
+                                - button "標題 2" [ref=e175] [cursor=pointer]:
+                                    - img
+                                - button "項目符號清單" [ref=e176] [cursor=pointer]:
+                                    - img
+                                - button "編號清單" [ref=e177] [cursor=pointer]:
+                                    - img
+                                - button "插入連結" [ref=e178] [cursor=pointer]:
+                                    - img
+                                - button "復原" [disabled]:
+                                    - img
+                                - button "重做" [ref=e179] [cursor=pointer]:
+                                    - img
+                            - paragraph [ref=e182]
+    - region "Notifications alt+T"
+    - button "Open Next.js Dev Tools" [ref=e188] [cursor=pointer]:
+        - img [ref=e189]
+    - alert [ref=e192]
+```

@@ -1,0 +1,29 @@
+tree a1ef18d3f1399109544d02e38e1f0cbba7bd0d15
+parent c50a5e7e8184812dba1464eced8026bcbe6b1dc6
+author acejou27 <acejou27@gmail.com> 1763004901 +0800
+committer acejou27 <acejou27@gmail.com> 1763004901 +0800
+
+新增: GitHub Actions 文章生成架構（解決 Vercel 超時問題）
+
+實施完全免費的 GitHub Actions 方案處理長時間文章生成：
+
+✨ 新功能：
+- GitHub Actions workflow 支援 30 分鐘執行時間
+- 單篇文章處理腳本（直接調用 Orchestrator）
+- 批次處理腳本（每 5 分鐘自動執行）
+- Repository dispatch API 整合
+- 自動觸發機制（從 Vercel API 觸發 GitHub Actions）
+
+📝 文件：
+- 完整設置指南 (docs/GITHUB_ACTIONS_SETUP.md)
+- 環境變數範例更新 (.env.example)
+
+🔧 技術細節：
+- 避免 Vercel 5 分鐘超時限制
+- 支援 DeepSeek Reasoner 4+ 分鐘處理時間
+- 免費額度：2000 分鐘/月（約 400-600 篇文章）
+- 可選：未來升級到 Cloudflare Workers Pro
+
+🤖 Generated with [Claude Code](https://claude.com/claude-code)
+
+Co-Authored-By: Claude <noreply@anthropic.com>

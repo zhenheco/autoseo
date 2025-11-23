@@ -1,0 +1,42 @@
+[
+  {
+    "round": 1,
+    "success": false,
+    "totalTime": 423874,
+    "contentLength": 12708,
+    "categoryCount": 1,
+    "tagCount": 4
+  },
+  {
+    "round": 2,
+    "success": false,
+    "totalTime": 392045,
+    "contentLength": 15085,
+    "categoryCount": 1,
+    "tagCount": 5
+  },
+  {
+    "round": 3,
+    "success": false,
+    "totalTime": 321282,
+    "contentLength": 11560,
+    "categoryCount": 1,
+    "tagCount": 4
+  },
+  {
+    "round": 4,
+    "success": false,
+    "totalTime": 449942,
+    "contentLength": 5363,
+    "categoryCount": 1,
+    "tagCount": 5
+  },
+  {
+    "round": 5,
+    "success": false,
+    "totalTime": 401139,
+    "contentLength": 4847,
+    "categoryCount": 1,
+    "tagCount": 4
+  }
+]

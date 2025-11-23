@@ -1,0 +1,845 @@
+
+=== Round 1 ===
+✅ Environment variables loaded from .env.local
+🚀 簡化測試 - 直接執行 Orchestrator
+
+📋 請先在 Supabase Dashboard 手動準備資料：
+1. 在 companies 表新增一筆資料
+2. 在 website_configs 表新增一筆資料
+3. 在 brand_voices 表新增一筆資料
+4. 在 workflow_settings 表新增一筆資料
+
+✅ 找到網站: Test Website
+
+✅ 任務已建立: 30b299d7-6d1c-4648-8191-e0c63b9e457f
+
+🎯 開始執行文章生成...
+
+[ResearchAgent] ResearchAgent started {
+  input: {
+    keyword: 'AI content generation',
+    region: 'en-US',
+    competitorCount: 10,
+    model: 'deepseek/deepseek-v3.2-exp',
+    temperature: 0.3,
+    maxTokens: 4000
+  }
+}
+[ResearchAgent] SERP_API_KEY not configured, using mock data
+[ResearchAgent] AI completion successful {
+  model: 'deepseek/deepseek-v3.2-exp',
+  tokens: { promptTokens: 494, completionTokens: 758, totalTokens: 1252 }
+}
+[ResearchAgent] 無法從 Perplexity 獲取引用，使用預設來源
+[ResearchAgent] ResearchAgent completed { executionTime: 37655, tokenUsage: { input: 494, output: 758 } }
+[StrategyAgent] StrategyAgent started {
+  input: {
+    researchData: {
+      keyword: 'AI content generation',
+      region: 'en-US',
+      searchIntent: 'informational',
+      intentConfidence: 0.9,
+      topRankingFeatures: [Object],
+      contentGaps: [Array],
+      competitorAnalysis: [Array],
+      recommendedStrategy: '創建綜合性指南，結合理論概念與實戰應用，包含：1) AI內容生成基礎概念解析；2) 不同工具的實際比較測試；3) 行業應用案例研究；4) SEO優化策略；5) 內容品質檢測方法。重點填補現有內容的實用性缺口，提供可立即應用的解決方案。',
+      relatedKeywords: [Array],
+      externalReferences: [Array],
+      executionInfo: [Object]
+    },
+    brandVoice: {
+      id: 'a10f9f32-a701-4eef-9ab7-f3718052472c',
+      website_id: 'acdfecee-e9a9-4996-9c03-8649ff9e2364',
+      tone_of_voice: 'Professional and friendly',
+      target_audience: 'Web developers and tech enthusiasts',
+      keywords: [Array],
+      sentence_style: 'Clear and concise',
+      interactivity: 'Engaging with practical examples',
+      created_at: '2025-10-27T09:54:17.154332+00:00',
+      updated_at: '2025-10-27T09:54:17.154332+00:00'
+    },
+    targetWordCount: 1500,
+    model: 'deepseek/deepseek-v3.2-exp',
+    temperature: 0.7,
+    maxTokens: 4000
+  }
+}
+[StrategyAgent] AI completion successful {
+  model: 'deepseek/deepseek-v3.2-exp',
+  tokens: { promptTokens: 185, completionTokens: 45, totalTokens: 230 }
+}
+[StrategyAgent] AI completion successful {
+  model: 'deepseek/deepseek-v3.2-exp',
+  tokens: { promptTokens: 576, completionTokens: 717, totalTokens: 1293 }
+}
+[StrategyAgent] Using related keywords as LSI keywords (fallback)
+[StrategyAgent] StrategyAgent completed { executionTime: 23991, tokenUsage: { input: 761, output: 762 } }
+[WritingAgent] WritingAgent started {
+  input: {
+    strategy: {
+      titleOptions: [Array],
+      selectedTitle: 'AI 內容生成：5 個開發者必知的核心概念',
+      outline: [Object],
+      targetWordCount: 1500,
+      sectionWordDistribution: [Object],
+      keywordDensityTarget: 1.5,
+      keywords: [Array],
+      relatedKeywords: [Array],
+      lsiKeywords: [Array],
+      internalLinkingStrategy: [Object],
+      differentiationStrategy: [Object],
+      externalReferences: [Array],
+      executionInfo: [Object]
+    },
+    brandVoice: {
+      id: 'a10f9f32-a701-4eef-9ab7-f3718052472c',
+      website_id: 'acdfecee-e9a9-4996-9c03-8649ff9e2364',
+      tone_of_voice: 'Professional and friendly',
+      target_audience: 'Web developers and tech enthusiasts',
+      keywords: [Array],
+      sentence_style: 'Clear and concise',
+      interactivity: 'Engaging with practical examples',
+      created_at: '2025-10-27T09:54:17.154332+00:00',
+      updated_at: '2025-10-27T09:54:17.154332+00:00'
+    },
+    previousArticles: [],
+    model: 'deepseek/deepseek-chat-v3.1:free',
+    temperature: 0.7,
+    maxTokens: 8000
+  }
+}
+[ImageAgent] ImageAgent started {
+  input: {
+    title: 'AI 內容生成：5 個開發者必知的核心概念',
+    outline: {
+      introduction: [Object],
+      mainSections: [Array],
+      conclusion: [Object],
+      faq: [Array]
+    },
+    count: 3,
+    model: 'none',
+    quality: 'standard',
+    size: '1024x1024'
+  }
+}
+[ImageAgent] Image generation skipped (model is "none")
+[ImageAgent] ImageAgent completed { executionTime: 1, tokenUsage: { input: 0, output: 0 } }
+[WritingAgent] AI completion failed {
+  error: Error: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+      at AIClient.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/ai/ai-client.ts:75:15)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async WritingAgent.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:67:24)
+      at async WritingAgent.generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:82:22)
+      at async WritingAgent.process (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:11:22)
+      at async WritingAgent.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:45:22)
+      at async Promise.all (index 0)
+      at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:110:44)
+      at async testSimple (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/test-simple.ts:103:20),
+  options: {
+    model: 'deepseek/deepseek-chat-v3.1:free',
+    temperature: 0.7,
+    maxTokens: 8000
+  }
+}
+[WritingAgent] WritingAgent failed {
+  error: Error: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+      at AIClient.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/ai/ai-client.ts:75:15)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async WritingAgent.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:67:24)
+      at async WritingAgent.generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:82:22)
+      at async WritingAgent.process (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:11:22)
+      at async WritingAgent.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:45:22)
+      at async Promise.all (index 0)
+      at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:110:44)
+      at async testSimple (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/test-simple.ts:103:20)
+}
+
+❌ 測試失敗: Error: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+    at AIClient.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/ai/ai-client.ts:75:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async WritingAgent.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:67:24)
+    at async WritingAgent.generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:82:22)
+    at async WritingAgent.process (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:11:22)
+    at async WritingAgent.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:45:22)
+    at async Promise.all (index 0)
+    at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:110:44)
+    at async testSimple (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/test-simple.ts:103:20)
+錯誤: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+
+
+=== Round 2 ===
+✅ Environment variables loaded from .env.local
+🚀 簡化測試 - 直接執行 Orchestrator
+
+📋 請先在 Supabase Dashboard 手動準備資料：
+1. 在 companies 表新增一筆資料
+2. 在 website_configs 表新增一筆資料
+3. 在 brand_voices 表新增一筆資料
+4. 在 workflow_settings 表新增一筆資料
+
+✅ 找到網站: Test Website
+
+✅ 任務已建立: 15c609af-4653-40fa-9682-20339135bd5d
+
+🎯 開始執行文章生成...
+
+[ResearchAgent] ResearchAgent started {
+  input: {
+    keyword: 'AI content generation',
+    region: 'en-US',
+    competitorCount: 10,
+    model: 'deepseek/deepseek-v3.2-exp',
+    temperature: 0.3,
+    maxTokens: 4000
+  }
+}
+[ResearchAgent] SERP_API_KEY not configured, using mock data
+[ResearchAgent] AI completion successful {
+  model: 'deepseek/deepseek-v3.2-exp',
+  tokens: { promptTokens: 494, completionTokens: 691, totalTokens: 1185 }
+}
+[ResearchAgent] 無法從 Perplexity 獲取引用，使用預設來源
+[ResearchAgent] ResearchAgent completed { executionTime: 59520, tokenUsage: { input: 494, output: 691 } }
+[StrategyAgent] StrategyAgent started {
+  input: {
+    researchData: {
+      keyword: 'AI content generation',
+      region: 'en-US',
+      searchIntent: 'informational',
+      intentConfidence: 0.9,
+      topRankingFeatures: [Object],
+      contentGaps: [Array],
+      competitorAnalysis: [Array],
+      recommendedStrategy: '創建綜合性指南，結合理論概念與實際應用，包含具體案例研究、不同工具的比較分析，以及SEO優化建議。內容應平衡技術深度與可讀性，針對不同用戶層級提供有價值的見解。',
+      relatedKeywords: [Array],
+      externalReferences: [Array],
+      executionInfo: [Object]
+    },
+    brandVoice: {
+      id: 'a10f9f32-a701-4eef-9ab7-f3718052472c',
+      website_id: 'acdfecee-e9a9-4996-9c03-8649ff9e2364',
+      tone_of_voice: 'Professional and friendly',
+      target_audience: 'Web developers and tech enthusiasts',
+      keywords: [Array],
+      sentence_style: 'Clear and concise',
+      interactivity: 'Engaging with practical examples',
+      created_at: '2025-10-27T09:54:17.154332+00:00',
+      updated_at: '2025-10-27T09:54:17.154332+00:00'
+    },
+    targetWordCount: 1500,
+    model: 'deepseek/deepseek-v3.2-exp',
+    temperature: 0.7,
+    maxTokens: 4000
+  }
+}
+[StrategyAgent] AI completion successful {
+  model: 'deepseek/deepseek-v3.2-exp',
+  tokens: { promptTokens: 185, completionTokens: 32, totalTokens: 217 }
+}
+[StrategyAgent] AI completion successful {
+  model: 'deepseek/deepseek-v3.2-exp',
+  tokens: { promptTokens: 557, completionTokens: 659, totalTokens: 1216 }
+}
+[StrategyAgent] Using related keywords as LSI keywords (fallback)
+[StrategyAgent] StrategyAgent completed { executionTime: 58535, tokenUsage: { input: 742, output: 691 } }
+[WritingAgent] WritingAgent started {
+  input: {
+    strategy: {
+      titleOptions: [Array],
+      selectedTitle: 'AI Content Generation: 5 Key Concepts Explained',
+      outline: [Object],
+      targetWordCount: 1500,
+      sectionWordDistribution: [Object],
+      keywordDensityTarget: 1.5,
+      keywords: [Array],
+      relatedKeywords: [Array],
+      lsiKeywords: [Array],
+      internalLinkingStrategy: [Object],
+      differentiationStrategy: [Object],
+      externalReferences: [Array],
+      executionInfo: [Object]
+    },
+    brandVoice: {
+      id: 'a10f9f32-a701-4eef-9ab7-f3718052472c',
+      website_id: 'acdfecee-e9a9-4996-9c03-8649ff9e2364',
+      tone_of_voice: 'Professional and friendly',
+      target_audience: 'Web developers and tech enthusiasts',
+      keywords: [Array],
+      sentence_style: 'Clear and concise',
+      interactivity: 'Engaging with practical examples',
+      created_at: '2025-10-27T09:54:17.154332+00:00',
+      updated_at: '2025-10-27T09:54:17.154332+00:00'
+    },
+    previousArticles: [],
+    model: 'deepseek/deepseek-chat-v3.1:free',
+    temperature: 0.7,
+    maxTokens: 8000
+  }
+}
+[ImageAgent] ImageAgent started {
+  input: {
+    title: 'AI Content Generation: 5 Key Concepts Explained',
+    outline: {
+      introduction: [Object],
+      mainSections: [Array],
+      conclusion: [Object],
+      faq: [Array]
+    },
+    count: 3,
+    model: 'none',
+    quality: 'standard',
+    size: '1024x1024'
+  }
+}
+[ImageAgent] Image generation skipped (model is "none")
+[ImageAgent] ImageAgent completed { executionTime: 2, tokenUsage: { input: 0, output: 0 } }
+[WritingAgent] AI completion failed {
+  error: Error: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+      at AIClient.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/ai/ai-client.ts:75:15)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async WritingAgent.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:67:24)
+      at async WritingAgent.generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:82:22)
+      at async WritingAgent.process (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:11:22)
+      at async WritingAgent.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:45:22)
+      at async Promise.all (index 0)
+      at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:110:44)
+      at async testSimple (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/test-simple.ts:103:20),
+  options: {
+    model: 'deepseek/deepseek-chat-v3.1:free',
+    temperature: 0.7,
+    maxTokens: 8000
+  }
+}
+[WritingAgent] WritingAgent failed {
+  error: Error: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+      at AIClient.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/ai/ai-client.ts:75:15)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async WritingAgent.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:67:24)
+      at async WritingAgent.generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:82:22)
+      at async WritingAgent.process (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:11:22)
+      at async WritingAgent.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:45:22)
+      at async Promise.all (index 0)
+      at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:110:44)
+      at async testSimple (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/test-simple.ts:103:20)
+}
+
+❌ 測試失敗: Error: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+    at AIClient.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/ai/ai-client.ts:75:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async WritingAgent.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:67:24)
+    at async WritingAgent.generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:82:22)
+    at async WritingAgent.process (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:11:22)
+    at async WritingAgent.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:45:22)
+    at async Promise.all (index 0)
+    at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:110:44)
+    at async testSimple (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/test-simple.ts:103:20)
+錯誤: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+
+
+=== Round 3 ===
+✅ Environment variables loaded from .env.local
+🚀 簡化測試 - 直接執行 Orchestrator
+
+📋 請先在 Supabase Dashboard 手動準備資料：
+1. 在 companies 表新增一筆資料
+2. 在 website_configs 表新增一筆資料
+3. 在 brand_voices 表新增一筆資料
+4. 在 workflow_settings 表新增一筆資料
+
+✅ 找到網站: Test Website
+
+✅ 任務已建立: a78f339c-6cac-45ff-9e19-7c9c210eae0a
+
+🎯 開始執行文章生成...
+
+[ResearchAgent] ResearchAgent started {
+  input: {
+    keyword: 'AI content generation',
+    region: 'en-US',
+    competitorCount: 10,
+    model: 'deepseek/deepseek-v3.2-exp',
+    temperature: 0.3,
+    maxTokens: 4000
+  }
+}
+[ResearchAgent] SERP_API_KEY not configured, using mock data
+[ResearchAgent] AI completion successful {
+  model: 'deepseek/deepseek-v3.2-exp',
+  tokens: { promptTokens: 496, completionTokens: 755, totalTokens: 1251 }
+}
+[ResearchAgent] 無法從 Perplexity 獲取引用，使用預設來源
+[ResearchAgent] ResearchAgent completed { executionTime: 83724, tokenUsage: { input: 496, output: 755 } }
+[StrategyAgent] StrategyAgent started {
+  input: {
+    researchData: {
+      keyword: 'AI content generation',
+      region: 'en-US',
+      searchIntent: 'informational',
+      intentConfidence: 0.9,
+      topRankingFeatures: [Object],
+      contentGaps: [Array],
+      competitorAnalysis: [Array],
+      recommendedStrategy: '創建一個綜合性指南，結合理論概念與實戰應用，包含：1) AI內容生成的基礎概念解析；2) 不同工具的比較分析；3) 行業特定應用案例；4) 效能優化技巧；5) 倫理和最佳實踐考量。內容應採用多媒體形式，包含圖表、案例研究和互動元素，字數目標3000-5000字，確保內容深度和實用性平衡。',
+      relatedKeywords: [Array],
+      externalReferences: [Array],
+      executionInfo: [Object]
+    },
+    brandVoice: {
+      id: 'a10f9f32-a701-4eef-9ab7-f3718052472c',
+      website_id: 'acdfecee-e9a9-4996-9c03-8649ff9e2364',
+      tone_of_voice: 'Professional and friendly',
+      target_audience: 'Web developers and tech enthusiasts',
+      keywords: [Array],
+      sentence_style: 'Clear and concise',
+      interactivity: 'Engaging with practical examples',
+      created_at: '2025-10-27T09:54:17.154332+00:00',
+      updated_at: '2025-10-27T09:54:17.154332+00:00'
+    },
+    targetWordCount: 1500,
+    model: 'deepseek/deepseek-v3.2-exp',
+    temperature: 0.7,
+    maxTokens: 4000
+  }
+}
+[StrategyAgent] AI completion successful {
+  model: 'deepseek/deepseek-v3.2-exp',
+  tokens: { promptTokens: 185, completionTokens: 51, totalTokens: 236 }
+}
+[StrategyAgent] AI completion successful {
+  model: 'deepseek/deepseek-v3.2-exp',
+  tokens: { promptTokens: 556, completionTokens: 669, totalTokens: 1225 }
+}
+[StrategyAgent] Using related keywords as LSI keywords (fallback)
+[StrategyAgent] StrategyAgent completed { executionTime: 24573, tokenUsage: { input: 741, output: 720 } }
+[WritingAgent] WritingAgent started {
+  input: {
+    strategy: {
+      titleOptions: [Array],
+      selectedTitle: 'AI Content Generation 入門：給開發者的 5 個核心概念',
+      outline: [Object],
+      targetWordCount: 1500,
+      sectionWordDistribution: [Object],
+      keywordDensityTarget: 1.5,
+      keywords: [Array],
+      relatedKeywords: [Array],
+      lsiKeywords: [Array],
+      internalLinkingStrategy: [Object],
+      differentiationStrategy: [Object],
+      externalReferences: [Array],
+      executionInfo: [Object]
+    },
+    brandVoice: {
+      id: 'a10f9f32-a701-4eef-9ab7-f3718052472c',
+      website_id: 'acdfecee-e9a9-4996-9c03-8649ff9e2364',
+      tone_of_voice: 'Professional and friendly',
+      target_audience: 'Web developers and tech enthusiasts',
+      keywords: [Array],
+      sentence_style: 'Clear and concise',
+      interactivity: 'Engaging with practical examples',
+      created_at: '2025-10-27T09:54:17.154332+00:00',
+      updated_at: '2025-10-27T09:54:17.154332+00:00'
+    },
+    previousArticles: [],
+    model: 'deepseek/deepseek-chat-v3.1:free',
+    temperature: 0.7,
+    maxTokens: 8000
+  }
+}
+[ImageAgent] ImageAgent started {
+  input: {
+    title: 'AI Content Generation 入門：給開發者的 5 個核心概念',
+    outline: {
+      introduction: [Object],
+      mainSections: [Array],
+      conclusion: [Object],
+      faq: [Array]
+    },
+    count: 3,
+    model: 'none',
+    quality: 'standard',
+    size: '1024x1024'
+  }
+}
+[ImageAgent] Image generation skipped (model is "none")
+[ImageAgent] ImageAgent completed { executionTime: 1, tokenUsage: { input: 0, output: 0 } }
+[WritingAgent] AI completion failed {
+  error: Error: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+      at AIClient.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/ai/ai-client.ts:75:15)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async WritingAgent.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:67:24)
+      at async WritingAgent.generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:82:22)
+      at async WritingAgent.process (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:11:22)
+      at async WritingAgent.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:45:22)
+      at async Promise.all (index 0)
+      at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:110:44)
+      at async testSimple (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/test-simple.ts:103:20),
+  options: {
+    model: 'deepseek/deepseek-chat-v3.1:free',
+    temperature: 0.7,
+    maxTokens: 8000
+  }
+}
+[WritingAgent] WritingAgent failed {
+  error: Error: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+      at AIClient.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/ai/ai-client.ts:75:15)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async WritingAgent.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:67:24)
+      at async WritingAgent.generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:82:22)
+      at async WritingAgent.process (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:11:22)
+      at async WritingAgent.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:45:22)
+      at async Promise.all (index 0)
+      at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:110:44)
+      at async testSimple (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/test-simple.ts:103:20)
+}
+
+❌ 測試失敗: Error: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+    at AIClient.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/ai/ai-client.ts:75:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async WritingAgent.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:67:24)
+    at async WritingAgent.generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:82:22)
+    at async WritingAgent.process (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:11:22)
+    at async WritingAgent.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:45:22)
+    at async Promise.all (index 0)
+    at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:110:44)
+    at async testSimple (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/test-simple.ts:103:20)
+錯誤: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+
+
+=== Round 4 ===
+✅ Environment variables loaded from .env.local
+🚀 簡化測試 - 直接執行 Orchestrator
+
+📋 請先在 Supabase Dashboard 手動準備資料：
+1. 在 companies 表新增一筆資料
+2. 在 website_configs 表新增一筆資料
+3. 在 brand_voices 表新增一筆資料
+4. 在 workflow_settings 表新增一筆資料
+
+✅ 找到網站: Test Website
+
+✅ 任務已建立: 2c54468c-a2c8-46cc-9748-7c9262cdca4b
+
+🎯 開始執行文章生成...
+
+[ResearchAgent] ResearchAgent started {
+  input: {
+    keyword: 'AI content generation',
+    region: 'en-US',
+    competitorCount: 10,
+    model: 'deepseek/deepseek-v3.2-exp',
+    temperature: 0.3,
+    maxTokens: 4000
+  }
+}
+[ResearchAgent] SERP_API_KEY not configured, using mock data
+[ResearchAgent] AI completion successful {
+  model: 'deepseek/deepseek-v3.2-exp',
+  tokens: { promptTokens: 494, completionTokens: 765, totalTokens: 1259 }
+}
+[ResearchAgent] 無法從 Perplexity 獲取引用，使用預設來源
+[ResearchAgent] ResearchAgent completed { executionTime: 35602, tokenUsage: { input: 494, output: 765 } }
+[StrategyAgent] StrategyAgent started {
+  input: {
+    researchData: {
+      keyword: 'AI content generation',
+      region: 'en-US',
+      searchIntent: 'informational',
+      intentConfidence: 0.9,
+      topRankingFeatures: [Object],
+      contentGaps: [Array],
+      competitorAnalysis: [Array],
+      recommendedStrategy: '創建一個綜合性指南，結合理論概念與實際案例，包含：1) 初學者友好的基礎概念解釋；2) 不同行業的實際應用案例；3) 多工具橫向比較；4) 內容質量評估框架；5) SEO最佳實踐。採用階梯式內容結構，從基礎到進階，滿足不同層級用戶需求。',
+      relatedKeywords: [Array],
+      externalReferences: [Array],
+      executionInfo: [Object]
+    },
+    brandVoice: {
+      id: 'a10f9f32-a701-4eef-9ab7-f3718052472c',
+      website_id: 'acdfecee-e9a9-4996-9c03-8649ff9e2364',
+      tone_of_voice: 'Professional and friendly',
+      target_audience: 'Web developers and tech enthusiasts',
+      keywords: [Array],
+      sentence_style: 'Clear and concise',
+      interactivity: 'Engaging with practical examples',
+      created_at: '2025-10-27T09:54:17.154332+00:00',
+      updated_at: '2025-10-27T09:54:17.154332+00:00'
+    },
+    targetWordCount: 1500,
+    model: 'deepseek/deepseek-v3.2-exp',
+    temperature: 0.7,
+    maxTokens: 4000
+  }
+}
+[StrategyAgent] AI completion successful {
+  model: 'deepseek/deepseek-v3.2-exp',
+  tokens: { promptTokens: 185, completionTokens: 41, totalTokens: 226 }
+}
+[StrategyAgent] AI completion successful {
+  model: 'deepseek/deepseek-v3.2-exp',
+  tokens: { promptTokens: 571, completionTokens: 765, totalTokens: 1336 }
+}
+[StrategyAgent] Using related keywords as LSI keywords (fallback)
+[StrategyAgent] StrategyAgent completed { executionTime: 26908, tokenUsage: { input: 756, output: 806 } }
+[WritingAgent] WritingAgent started {
+  input: {
+    strategy: {
+      titleOptions: [Array],
+      selectedTitle: 'AI 內容生成：給開發者的 5 個核心概念',
+      outline: [Object],
+      targetWordCount: 1500,
+      sectionWordDistribution: [Object],
+      keywordDensityTarget: 1.5,
+      keywords: [Array],
+      relatedKeywords: [Array],
+      lsiKeywords: [Array],
+      internalLinkingStrategy: [Object],
+      differentiationStrategy: [Object],
+      externalReferences: [Array],
+      executionInfo: [Object]
+    },
+    brandVoice: {
+      id: 'a10f9f32-a701-4eef-9ab7-f3718052472c',
+      website_id: 'acdfecee-e9a9-4996-9c03-8649ff9e2364',
+      tone_of_voice: 'Professional and friendly',
+      target_audience: 'Web developers and tech enthusiasts',
+      keywords: [Array],
+      sentence_style: 'Clear and concise',
+      interactivity: 'Engaging with practical examples',
+      created_at: '2025-10-27T09:54:17.154332+00:00',
+      updated_at: '2025-10-27T09:54:17.154332+00:00'
+    },
+    previousArticles: [],
+    model: 'deepseek/deepseek-chat-v3.1:free',
+    temperature: 0.7,
+    maxTokens: 8000
+  }
+}
+[ImageAgent] ImageAgent started {
+  input: {
+    title: 'AI 內容生成：給開發者的 5 個核心概念',
+    outline: {
+      introduction: [Object],
+      mainSections: [Array],
+      conclusion: [Object],
+      faq: [Array]
+    },
+    count: 3,
+    model: 'none',
+    quality: 'standard',
+    size: '1024x1024'
+  }
+}
+[ImageAgent] Image generation skipped (model is "none")
+[ImageAgent] ImageAgent completed { executionTime: 1, tokenUsage: { input: 0, output: 0 } }
+[WritingAgent] AI completion failed {
+  error: Error: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+      at AIClient.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/ai/ai-client.ts:75:15)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async WritingAgent.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:67:24)
+      at async WritingAgent.generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:82:22)
+      at async WritingAgent.process (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:11:22)
+      at async WritingAgent.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:45:22)
+      at async Promise.all (index 0)
+      at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:110:44)
+      at async testSimple (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/test-simple.ts:103:20),
+  options: {
+    model: 'deepseek/deepseek-chat-v3.1:free',
+    temperature: 0.7,
+    maxTokens: 8000
+  }
+}
+[WritingAgent] WritingAgent failed {
+  error: Error: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+      at AIClient.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/ai/ai-client.ts:75:15)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async WritingAgent.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:67:24)
+      at async WritingAgent.generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:82:22)
+      at async WritingAgent.process (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:11:22)
+      at async WritingAgent.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:45:22)
+      at async Promise.all (index 0)
+      at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:110:44)
+      at async testSimple (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/test-simple.ts:103:20)
+}
+
+❌ 測試失敗: Error: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+    at AIClient.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/ai/ai-client.ts:75:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async WritingAgent.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:67:24)
+    at async WritingAgent.generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:82:22)
+    at async WritingAgent.process (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:11:22)
+    at async WritingAgent.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:45:22)
+    at async Promise.all (index 0)
+    at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:110:44)
+    at async testSimple (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/test-simple.ts:103:20)
+錯誤: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+
+
+=== Round 5 ===
+✅ Environment variables loaded from .env.local
+🚀 簡化測試 - 直接執行 Orchestrator
+
+📋 請先在 Supabase Dashboard 手動準備資料：
+1. 在 companies 表新增一筆資料
+2. 在 website_configs 表新增一筆資料
+3. 在 brand_voices 表新增一筆資料
+4. 在 workflow_settings 表新增一筆資料
+
+✅ 找到網站: Test Website
+
+✅ 任務已建立: 054766a4-b164-4306-9155-428eb6260001
+
+🎯 開始執行文章生成...
+
+[ResearchAgent] ResearchAgent started {
+  input: {
+    keyword: 'AI content generation',
+    region: 'en-US',
+    competitorCount: 10,
+    model: 'deepseek/deepseek-v3.2-exp',
+    temperature: 0.3,
+    maxTokens: 4000
+  }
+}
+[ResearchAgent] SERP_API_KEY not configured, using mock data
+[ResearchAgent] AI completion successful {
+  model: 'deepseek/deepseek-v3.2-exp',
+  tokens: { promptTokens: 494, completionTokens: 772, totalTokens: 1266 }
+}
+[ResearchAgent] 無法從 Perplexity 獲取引用，使用預設來源
+[ResearchAgent] ResearchAgent completed { executionTime: 29311, tokenUsage: { input: 494, output: 772 } }
+[StrategyAgent] StrategyAgent started {
+  input: {
+    researchData: {
+      keyword: 'AI content generation',
+      region: 'en-US',
+      searchIntent: 'informational',
+      intentConfidence: 0.9,
+      topRankingFeatures: [Object],
+      contentGaps: [Array],
+      competitorAnalysis: [Array],
+      recommendedStrategy: '創建綜合性指南，結合概念解釋、實務操作、案例分析和行業應用。內容應包含：1) AI內容生成的基礎概念與技術原理；2) 具體操作步驟與工具使用；3) 各行業應用案例與成效分析；4) 內容質量評估與優化技巧；5) SEO整合策略與最佳實踐。採用圖文並茂方式，加入實際數據和案例佐證，提升內容的實用性和可信度。',
+      relatedKeywords: [Array],
+      externalReferences: [Array],
+      executionInfo: [Object]
+    },
+    brandVoice: {
+      id: 'a10f9f32-a701-4eef-9ab7-f3718052472c',
+      website_id: 'acdfecee-e9a9-4996-9c03-8649ff9e2364',
+      tone_of_voice: 'Professional and friendly',
+      target_audience: 'Web developers and tech enthusiasts',
+      keywords: [Array],
+      sentence_style: 'Clear and concise',
+      interactivity: 'Engaging with practical examples',
+      created_at: '2025-10-27T09:54:17.154332+00:00',
+      updated_at: '2025-10-27T09:54:17.154332+00:00'
+    },
+    targetWordCount: 1500,
+    model: 'deepseek/deepseek-v3.2-exp',
+    temperature: 0.7,
+    maxTokens: 4000
+  }
+}
+[StrategyAgent] AI completion successful {
+  model: 'deepseek/deepseek-v3.2-exp',
+  tokens: { promptTokens: 187, completionTokens: 49, totalTokens: 236 }
+}
+[StrategyAgent] AI completion successful {
+  model: 'deepseek/deepseek-v3.2-exp',
+  tokens: { promptTokens: 561, completionTokens: 646, totalTokens: 1207 }
+}
+[StrategyAgent] Using related keywords as LSI keywords (fallback)
+[StrategyAgent] StrategyAgent completed { executionTime: 59888, tokenUsage: { input: 748, output: 695 } }
+[WritingAgent] WritingAgent started {
+  input: {
+    strategy: {
+      titleOptions: [Array],
+      selectedTitle: "AI Content Generation: A Developer's Guide to the Core Concepts",
+      outline: [Object],
+      targetWordCount: 1500,
+      sectionWordDistribution: [Object],
+      keywordDensityTarget: 1.5,
+      keywords: [Array],
+      relatedKeywords: [Array],
+      lsiKeywords: [Array],
+      internalLinkingStrategy: [Object],
+      differentiationStrategy: [Object],
+      externalReferences: [Array],
+      executionInfo: [Object]
+    },
+    brandVoice: {
+      id: 'a10f9f32-a701-4eef-9ab7-f3718052472c',
+      website_id: 'acdfecee-e9a9-4996-9c03-8649ff9e2364',
+      tone_of_voice: 'Professional and friendly',
+      target_audience: 'Web developers and tech enthusiasts',
+      keywords: [Array],
+      sentence_style: 'Clear and concise',
+      interactivity: 'Engaging with practical examples',
+      created_at: '2025-10-27T09:54:17.154332+00:00',
+      updated_at: '2025-10-27T09:54:17.154332+00:00'
+    },
+    previousArticles: [],
+    model: 'deepseek/deepseek-chat-v3.1:free',
+    temperature: 0.7,
+    maxTokens: 8000
+  }
+}
+[ImageAgent] ImageAgent started {
+  input: {
+    title: "AI Content Generation: A Developer's Guide to the Core Concepts",
+    outline: {
+      introduction: [Object],
+      mainSections: [Array],
+      conclusion: [Object],
+      faq: [Array]
+    },
+    count: 3,
+    model: 'none',
+    quality: 'standard',
+    size: '1024x1024'
+  }
+}
+[ImageAgent] Image generation skipped (model is "none")
+[ImageAgent] ImageAgent completed { executionTime: 1, tokenUsage: { input: 0, output: 0 } }
+[WritingAgent] AI completion failed {
+  error: Error: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+      at AIClient.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/ai/ai-client.ts:75:15)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async WritingAgent.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:67:24)
+      at async WritingAgent.generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:82:22)
+      at async WritingAgent.process (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:11:22)
+      at async WritingAgent.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:45:22)
+      at async Promise.all (index 0)
+      at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:110:44)
+      at async testSimple (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/test-simple.ts:103:20),
+  options: {
+    model: 'deepseek/deepseek-chat-v3.1:free',
+    temperature: 0.7,
+    maxTokens: 8000
+  }
+}
+[WritingAgent] WritingAgent failed {
+  error: Error: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+      at AIClient.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/ai/ai-client.ts:75:15)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async WritingAgent.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:67:24)
+      at async WritingAgent.generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:82:22)
+      at async WritingAgent.process (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:11:22)
+      at async WritingAgent.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:45:22)
+      at async Promise.all (index 0)
+      at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:110:44)
+      at async testSimple (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/test-simple.ts:103:20)
+}
+
+❌ 測試失敗: Error: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+    at AIClient.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/ai/ai-client.ts:75:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async WritingAgent.complete (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:67:24)
+    at async WritingAgent.generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:82:22)
+    at async WritingAgent.process (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/writing-agent.ts:11:22)
+    at async WritingAgent.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:45:22)
+    at async Promise.all (index 0)
+    at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:110:44)
+    at async testSimple (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/test-simple.ts:103:20)
+錯誤: AI completion failed: OpenRouter API error: {"error":{"message":"No endpoints found matching your data policy (Free model publication). Configure: https://openrouter.ai/settings/privacy","code":404}}
+
