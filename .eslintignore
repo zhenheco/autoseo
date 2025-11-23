@@ -1,0 +1,46 @@
+# 依賴和建置輸出
+node_modules
+.next
+.open-next
+out
+dist
+build
+
+# 測試和覆蓋率
+coverage
+.nyc_output
+
+# 環境檔案
+.env*
+!.env.example
+
+# 配置和資料檔案
+*.config.js
+*.config.ts
+next-env.d.ts
+
+# 文件和日誌
+*.md
+*.log
+診斷報告.md
+ISSUELOG.md
+
+# OpenSpec
+openspec/
+
+# Vercel
+.vercel
+
+# Git
+.git
+.gitignore
+
+# IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# 其他
+public
+.DS_Store

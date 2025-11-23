@@ -1,0 +1,2 @@
+# 只檢查修改的檔案（lint-staged）
+pnpm run lint:staged

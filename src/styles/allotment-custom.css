@@ -1,0 +1,21 @@
+.split-view-container {
+  --sash-color: hsl(var(--border));
+  --sash-hover-color: hsl(var(--primary));
+  --sash-size: 6px;
+}
+
+.split-view-container .split-sash:hover {
+  background-color: var(--sash-hover-color);
+}
+
+.split-view-container .split-sash.collapsed::before {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 2px;
+  height: 40px;
+  background: hsl(var(--primary));
+  border-radius: 1px;
+}

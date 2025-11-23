@@ -1,0 +1,358 @@
+✅ Environment variables loaded from .env.local
+=== 生成文章並發布到 WordPress ===
+
+網站名稱: Test Website
+網站 ID: acdfecee-e9a9-4996-9c03-8649ff9e2364
+公司 ID: cbb4ad22-8078-4b20-89d0-25a10186fce3
+WordPress URL: https://x-marks.com
+關鍵字: UUID修復測試
+
+開始生成文章...
+
+[ResearchAgent] ResearchAgent started {
+  input: {
+    keyword: 'UUID修復測試',
+    region: 'zh-TW',
+    competitorCount: 10,
+    model: 'deepseek/deepseek-reasoner',
+    temperature: 0.3,
+    maxTokens: 4000
+  }
+}
+[ResearchAgent] AI completion successful {
+  model: 'deepseek-reasoner',
+  tokens: { promptTokens: 366, completionTokens: 1835, totalTokens: 2201 }
+}
+[ResearchAgent] 開始 Perplexity 搜尋: UUID修復測試
+[Perplexity] Raw API response: {
+  "id": "28cff859-dc02-4042-9575-669015a3b059",
+  "model": "sonar",
+  "created": 1761741105,
+  "usage": {
+    "prompt_tokens": 179,
+    "completion_tokens": 536,
+    "total_tokens": 715,
+    "search_context_size": "low",
+    "cost": {
+      "input_tokens_cost": 0,
+      "output_tokens_cost": 0.001,
+      "request_cost": 0.005,
+      "total_cost": 0.006
+    }
+  },
+  "citations": [
+    "https://blog.csdn.net/gitblog_00767/article/details/151540619",
+    "https://www.scribd.com/document/807753167/%E7%89%A9%E8%81%94%E7%BD%91%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95-%E4%BA%9A%E4%BC%A6-%E5%8F%A4%E5%85%B9%E6%9B%BC-Z-Library",
+    "https://www.aliyun.com/sswd/10807376-2.html",
+    "https://s3plus.meituan.net/v1/mss_e63d09aec75b41879dcb3069234793ac/file/2022%E5%B9%B4%E7%BE%8E%E5%9B%A2%E6%8A%80%E6%9C%AF%E5%B9%B4%E8%B4%A7-%E5%90%88%E8%BE%91.pdf",
+    "https://github.com/ulid/spec",
+    "https://devpress.csdn.net/aibjcy/68c60f97a6dc56200e847491.html",
+    "https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/xcode-v5?view=azure-pipelines",
+    "https://patents.google.com/patent/CN105474166A/zh",
+    "https://blog.csdn.net/gitblog_00940/article/details/152304517",
+    "https://cuiqingcai.com/page/10/",
+    "https://developer.android.com/jetpack/androidx/releases/work",
+    "https://huggingface.co/yulan-team/YuLan-Mini-Phase7/commit/51f559446657172cd16104ccf14e4b6f02c90714.diff",
+    "https://www.elastic.co/docs/reference/logstash/plugins/filter-plugins",
+    "https://www.cnblogs.com/apachecn/p/19108224",
+    "https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/",
+    "https://huggingface.co/OpenBuddy/OpenBuddy-R10528DistillQwen-72B-Preview3/raw/main/Evaluation.txt",
+    "https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/env.html"
+  ],
+  "search_results": [
+    {
+      "title": "终极解决方案：EssentialsX插件UUID转换故障深度排查与修复指南",
+      "url": "https://blog.csdn.net/gitblog_00767/article/details/151540619",
+      "date": null,
+      "last_updated": null,
+      "snippet": "UUID转换的核心原理与EssentialsX实现机制 · 5种故障检测工具与3套完整修复流程 · 性能优化方案使转换速度提升400% · 防患于未然的UUID管理最佳实践 ...",
+      "source": "web"
+    },
+    {
+      "title": "物联网渗透测试(亚伦·古兹曼) (Z-Library) | PDF - Scribd",
+      "url": "https://www.scribd.com/document/807753167/%E7%89%A9%E8%81%94%E7%BD%91%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95-%E4%BA%9A%E4%BC%A6-%E5%8F%A4%E5%85%B9%E6%9B%BC-Z-Library",
+      "date": "2025-06-03",
+      "last_updated": "2025-06-03",
+      "snippet": "本书中，我们将从多个方面介绍针对IoT设备的渗透测试，为测试人员提供具有可操作性的安全实践指导，并帮助用户在现实环境中实现对IoT设备的攻击防护。",
+      "source": "web"
+    },
+    {
+      "title": "linux 网卡uuid恢复文档介绍内容-阿里云",
+      "url": "https://www.aliyun.com/sswd/10807376-2.html",
+      "date": "2017-11-10",
+      "last_updated": "2024-10-27",
+      "snippet": "如果您将快照创建的云盘挂载到原Linux实例（原云盘所挂载的实例），新创建云盘的UUID会和原云盘冲突。本文介绍如何修改新云盘的UUID。背景信息使用快照创建云 ...",
+      "source": "web"
+    },
+    {
+      "title": "[PDF] 2022年美团技术年货",
+      "url": "https://s3plus.meituan.net/v1/mss_e63d09aec75b41879dcb3069234793ac/file/2022%E5%B9%B4%E7%BE%8E%E5%9B%A2%E6%8A%80%E6%9C%AF%E5%B9%B4%E8%B4%A7-%E5%90%88%E8%BE%91.pdf",
+      "date": null,
+      "last_updated": "2025-03-21",
+      "snippet": "这本电子书内容覆盖算法、前端、后端、数据、安全等多个技术领域，. 希望能对同学们的工作和学习有所帮助。 也欢迎大家转给更多有相同兴趣、积极上进的同事和朋友们，一起切.",
+      "source": "web"
+    },
+    {
+      "title": "The canonical spec for ulid - GitHub",
+      "url": "https://github.com/ulid/spec",
+      "date": "2017-12-04",
+      "last_updated": "2025-09-26",
+      "snippet": "UUID can be suboptimal for many use-cases because: It isn't the most character efficient way of encoding 128 bits of randomness; UUID v1/v2 is impractical ...",
+      "source": "web"
+    },
+    {
+      "title": "生成式人工智能入门指南（一）_布客飞龙 - DevPress官方社区- CSDN",
+      "url": "https://devpress.csdn.net/aibjcy/68c60f97a6dc56200e847491.html",
+      "date": "2025-09-14",
+      "last_updated": "2025-10-17",
+      "snippet": "用于训练LLM 的最常见的文本语料库（即文本集合）包括维基百科、Reddit 和谷歌新闻/谷歌图书。维基百科可能是LLM 最知名的数据来源，并且具有许多优点 ...",
+      "source": "web"
+    },
+    {
+      "title": "Xcode@5 - Xcode v5 task - Microsoft Learn",
+      "url": "https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/xcode-v5?view=azure-pipelines",
+      "date": "2025-07-21",
+      "last_updated": "2025-08-29",
+      "snippet": "Use this task to build, test, or archive an Xcode workspace on macOS, and optionally package an app.",
+      "source": "web"
+    },
+    {
+      "title": "CN105474166A - 用于有目的计算的方法和系统 - Google Patents",
+      "url": "https://patents.google.com/patent/CN105474166A/zh",
+      "date": "2014-03-14",
+      "last_updated": "2025-08-07",
+      "snippet": "本发明提供经配置以在计算架构中促进用户目的的系统、方法和计算机可读存储媒体。",
+      "source": "web"
+    },
+    {
+      "title": "从问题到修复：ramsey/uuid的issue处理流程 - CSDN博客",
+      "url": "https://blog.csdn.net/gitblog_00940/article/details/152304517",
+      "date": null,
+      "last_updated": null,
+      "snippet": "一、Issue报告前的准备 · 官方文档：docs/faq.rst 包含常见问题解答，docs/quickstart.rst 提供基础使用指南。 · 现有Issue：通过项目Issue跟踪系统搜索类似 ...",
+      "source": "web"
+    },
+    {
+      "title": "静觅丨崔庆才的个人站点- Python爬虫教程",
+      "url": "https://cuiqingcai.com/page/10/",
+      "date": "2018-09-14",
+      "last_updated": "2025-09-12",
+      "snippet": "首先，打开某个网站的登录页面，输入用户名，密码，验证码之类的参数， 抓包看到了下面这个页面： 我实际输入的值全是1, 然后都被加密了， 没办法，只能去找加密的 ...",
+      "source": "web"
+    },
+    {
+      "title": "WorkManager | Jetpack | Android Developers",
+      "url": "https://developer.android.com/jetpack/androidx/releases/work",
+      "date": "2025-10-22",
+      "last_updated": "2025-10-22",
+      "snippet": "The WorkManager API makes it easy to schedule deferrable, asynchronous tasks that must be run reliably.",
+      "source": "web"
+    },
+    {
+      "title": "https://huggingface.co/yulan-team/YuLan-Mini-Phase...",
+      "url": "https://huggingface.co/yulan-team/YuLan-Mini-Phase7/commit/51f559446657172cd16104ccf14e4b6f02c90714.diff",
+      "date": null,
+      "last_updated": null,
+      "snippet": "... 1, + \"dim_model_base\": 1920, + \"dim_model_base_attn\": 64, + \"dim_model_base_init\": null, + \"dim_model_base_lmh\": 1, + \"dim_model_base_logits\": 1920.0, + ...",
+      "source": "web"
+    },
+    {
+      "title": "Filter plugins | Logstash Plugins - Elastic",
+      "url": "https://www.elastic.co/docs/reference/logstash/plugins/filter-plugins",
+      "date": null,
+      "last_updated": "2025-10-28",
+      "snippet": "A filter plugin performs intermediary processing on an event. Filters are often applied conditionally depending on the characteristics of the event. The...",
+      "source": "web"
+    },
+    {
+      "title": "精通-Python-网络编程第四版-全- - 绝不原创的飞龙- 博客园",
+      "url": "https://www.cnblogs.com/apachecn/p/19108224",
+      "date": null,
+      "last_updated": null,
+      "snippet": "第一章TCP/IP 协议套件和Python 回顾，回顾了今天互联网通信的基本技术，从OSI 和客户端-服务器模型到TCP、UDP 和IP 套件。本章将回顾Python 语言的基础知识 ...",
+      "source": "web"
+    },
+    {
+      "title": "Language Server Protocol Specification - 3.17",
+      "url": "https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/",
+      "date": "2022-10-05",
+      "last_updated": "2025-10-23",
+      "snippet": "This document describes the 3.17.x version of the language server protocol. An implementation for node of the 3.17.x version of the protocol can be found here.",
+      "source": "web"
+    },
+    {
+      "title": "Evaluation.txt - Hugging Face",
+      "url": "https://huggingface.co/OpenBuddy/OpenBuddy-R10528DistillQwen-72B-Preview3/raw/main/Evaluation.txt",
+      "date": null,
+      "last_updated": "2025-10-29",
+      "snippet": "根据问题，我们需要找出哪个选项最有可能出售面包。面包是一种常见的烘焙食品，通常在食品零售场所销售。下面是对每个选项的简要分析，基于常识和实际场景： - **蛋糕 ...",
+      "source": "web"
+    },
+    {
+      "title": "Environment Variables — NCCL 2.28.6 documentation",
+      "url": "https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/env.html",
+      "date": "2015-01-02",
+      "last_updated": "2025-10-28",
+      "snippet": "NCCL has an extensive set of environment variables to tune for specific usage. Environment variables can also be set statically in /etc/nccl.conf.",
+      "source": "web"
+    }
+  ],
+  "object": "chat.completion",
+  "choices": [
+    {
+      "index": 0,
+      "finish_reason": "stop",
+      "message": {
+        "role": "assistant",
+        "content": "關於「UUID修復測試」的權威且最新外部來源，根據搜尋結果，以下列出5個符合優先順序且包含實際可訪問URL的來源：\n\n1. **CSDN 技術博客：EssentialsX插件UUID轉換故障深度排查與修復指南**  \n   這篇文章詳細介紹了UUID轉換的核心原理、故障檢測工具及修復流程，屬於實務操作層面的權威指引。  \n   URL: https://blog.csdn.net/gitblog_00767/article/details/151540619\n\n2. **阿里雲官方文檔：Linux網卡UUID恢復文檔介紹**  \n   阿里雲官方文檔說明了Linux系統中因快照創建導致UUID衝突的問題及修復方法，具備官方權威性。  \n   URL: https://www.aliyun.com/sswd/10807376-2.html\n\n3. **CSDN 技術博客：ramsey/uuid的issue處理流程**  \n   這篇博客從問題報告到修復流程，涵蓋了UUID相關問題的處理細節，對UUID修復測試有實用參考價值。  \n   URL: https://blog.csdn.net/gitblog_00940/article/details/152304517\n\n4. **GitHub：ulid規範（與UUID相關的改良方案）**  \n   雖非直接UUID修復，但ULID作為UUID的替代方案，提供了更高效的唯一標識符生成方式，對UUID相關測試與修復有啟發意義。  \n   URL: https://github.com/ulid/spec\n\n5. **Google Patents：CN105474166A 用於有目的計算的方法和系統**  \n   這份專利文件涉及UUID相關的計算系統與方法，具備技術深度與權威性，適合作為UUID修復測試的理論參考。  \n   URL: https://patents.google.com/patent/CN105474166A/zh\n\n這些來源涵蓋了百科（間接）、官方文檔、技術博客與專利，均為可訪問且具權威性的資料，適合用於UUID修復測試的深入研究與實務應用。"
+      },
+      "delta": {
+        "role": "assistant",
+        "content": ""
+      }
+    }
+  ]
+}
+[Perplexity] Citations summary: {
+  apiCitations: 17,
+  extractedCitations: 0,
+  totalUnique: 17,
+  citations: [
+    'https://blog.csdn.net/gitblog_00767/article/details/151540619',
+    'https://www.scribd.com/document/807753167/%E7%89%A9%E8%81%94%E7%BD%91%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95-%E4%BA%9A%E4%BC%A6-%E5%8F%A4%E5%85%B9%E6%9B%BC-Z-Library',
+    'https://www.aliyun.com/sswd/10807376-2.html',
+    'https://s3plus.meituan.net/v1/mss_e63d09aec75b41879dcb3069234793ac/file/2022%E5%B9%B4%E7%BE%8E%E5%9B%A2%E6%8A%80%E6%9C%AF%E5%B9%B4%E8%B4%A7-%E5%90%88%E8%BE%91.pdf',
+    'https://github.com/ulid/spec',
+    'https://devpress.csdn.net/aibjcy/68c60f97a6dc56200e847491.html',
+    'https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/xcode-v5?view=azure-pipelines',
+    'https://patents.google.com/patent/CN105474166A/zh',
+    'https://blog.csdn.net/gitblog_00940/article/details/152304517',
+    'https://cuiqingcai.com/page/10/',
+    'https://developer.android.com/jetpack/androidx/releases/work',
+    'https://huggingface.co/yulan-team/YuLan-Mini-Phase7/commit/51f559446657172cd16104ccf14e4b6f02c90714.diff',
+    'https://www.elastic.co/docs/reference/logstash/plugins/filter-plugins',
+    'https://www.cnblogs.com/apachecn/p/19108224',
+    'https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/',
+    'https://huggingface.co/OpenBuddy/OpenBuddy-R10528DistillQwen-72B-Preview3/raw/main/Evaluation.txt',
+    'https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/env.html'
+  ]
+}
+[ResearchAgent] Perplexity 回應: {
+  contentLength: 918,
+  citationsCount: 17,
+  citations: [
+    'https://blog.csdn.net/gitblog_00767/article/details/151540619',
+    'https://www.scribd.com/document/807753167/%E7%89%A9%E8%81%94%E7%BD%91%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95-%E4%BA%9A%E4%BC%A6-%E5%8F%A4%E5%85%B9%E6%9B%BC-Z-Library',
+    'https://www.aliyun.com/sswd/10807376-2.html',
+    'https://s3plus.meituan.net/v1/mss_e63d09aec75b41879dcb3069234793ac/file/2022%E5%B9%B4%E7%BE%8E%E5%9B%A2%E6%8A%80%E6%9C%AF%E5%B9%B4%E8%B4%A7-%E5%90%88%E8%BE%91.pdf',
+    'https://github.com/ulid/spec',
+    'https://devpress.csdn.net/aibjcy/68c60f97a6dc56200e847491.html',
+    'https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/xcode-v5?view=azure-pipelines',
+    'https://patents.google.com/patent/CN105474166A/zh',
+    'https://blog.csdn.net/gitblog_00940/article/details/152304517',
+    'https://cuiqingcai.com/page/10/',
+    'https://developer.android.com/jetpack/androidx/releases/work',
+    'https://huggingface.co/yulan-team/YuLan-Mini-Phase7/commit/51f559446657172cd16104ccf14e4b6f02c90714.diff',
+    'https://www.elastic.co/docs/reference/logstash/plugins/filter-plugins',
+    'https://www.cnblogs.com/apachecn/p/19108224',
+    'https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/',
+    'https://huggingface.co/OpenBuddy/OpenBuddy-R10528DistillQwen-72B-Preview3/raw/main/Evaluation.txt',
+    'https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/env.html'
+  ]
+}
+[ResearchAgent] 處理 Perplexity citations: [
+  'https://blog.csdn.net/gitblog_00767/article/details/151540619',
+  'https://www.scribd.com/document/807753167/%E7%89%A9%E8%81%94%E7%BD%91%E6%B8%97%E9%80%8F%E6%B5%8B%E8%AF%95-%E4%BA%9A%E4%BC%A6-%E5%8F%A4%E5%85%B9%E6%9B%BC-Z-Library',
+  'https://www.aliyun.com/sswd/10807376-2.html',
+  'https://s3plus.meituan.net/v1/mss_e63d09aec75b41879dcb3069234793ac/file/2022%E5%B9%B4%E7%BE%8E%E5%9B%A2%E6%8A%80%E6%9C%AF%E5%B9%B4%E8%B4%A7-%E5%90%88%E8%BE%91.pdf',
+  'https://github.com/ulid/spec',
+  'https://devpress.csdn.net/aibjcy/68c60f97a6dc56200e847491.html',
+  'https://learn.microsoft.com/en-us/azure/devops/pipelines/tasks/reference/xcode-v5?view=azure-pipelines',
+  'https://patents.google.com/patent/CN105474166A/zh',
+  'https://blog.csdn.net/gitblog_00940/article/details/152304517',
+  'https://cuiqingcai.com/page/10/',
+  'https://developer.android.com/jetpack/androidx/releases/work',
+  'https://huggingface.co/yulan-team/YuLan-Mini-Phase7/commit/51f559446657172cd16104ccf14e4b6f02c90714.diff',
+  'https://www.elastic.co/docs/reference/logstash/plugins/filter-plugins',
+  'https://www.cnblogs.com/apachecn/p/19108224',
+  'https://microsoft.github.io/language-server-protocol/specifications/lsp/3.17/specification/',
+  'https://huggingface.co/OpenBuddy/OpenBuddy-R10528DistillQwen-72B-Preview3/raw/main/Evaluation.txt',
+  'https://docs.nvidia.com/deeplearning/nccl/user-guide/docs/env.html'
+]
+[ResearchAgent] 成功獲取 5 個外部引用
+[ResearchAgent] ResearchAgent completed { executionTime: 79671, tokenUsage: { input: 366, output: 1835 } }
+[StrategyAgent] StrategyAgent started {
+  input: {
+    researchData: {
+      keyword: 'UUID修復測試',
+      region: 'zh-TW',
+      searchIntent: 'informational',
+      intentConfidence: 0.85,
+      topRankingFeatures: [Object],
+      contentGaps: [Array],
+      competitorAnalysis: [Array],
+      recommendedStrategy: '創建繁體中文專屬的完整教學內容，結合理論與實務，包含逐步操作指南、程式碼範例（支援多種程式語言）、常見問題排查，並加入台灣在地化案例與效能測試數據，同時製作影片教程提升使用者體驗。',
+      relatedKeywords: [Array],
+      externalReferences: [Array],
+      executionInfo: [Object]
+    },
+    brandVoice: {
+      id: 'a10f9f32-a701-4eef-9ab7-f3718052472c',
+      website_id: 'acdfecee-e9a9-4996-9c03-8649ff9e2364',
+      tone_of_voice: 'Professional and friendly',
+      target_audience: 'Web developers and tech enthusiasts',
+      keywords: [Array],
+      sentence_style: 'Clear and concise',
+      interactivity: 'Engaging with practical examples',
+      created_at: '2025-10-27T09:54:17.154332+00:00',
+      updated_at: '2025-10-27T09:54:17.154332+00:00'
+    },
+    targetWordCount: 1500,
+    model: 'deepseek/deepseek-reasoner',
+    temperature: 0.7,
+    maxTokens: 4000
+  }
+}
+[StrategyAgent] AI completion successful {
+  model: 'deepseek-reasoner',
+  tokens: { promptTokens: 104, completionTokens: 300, totalTokens: 404 }
+}
+[StrategyAgent] Empty response, using fallback titles
+[StrategyAgent] AI completion successful {
+  model: 'deepseek-reasoner',
+  tokens: { promptTokens: 342, completionTokens: 2499, totalTokens: 2841 }
+}
+[StrategyAgent] Outline generation failed: SyntaxError: Unterminated string in JSON at position 136 (line 5 column 26)
+    at JSON.parse (<anonymous>)
+    at StrategyAgent.generateOutline (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/strategy-agent.ts:199:28)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async StrategyAgent.process (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/strategy-agent.ts:12:21)
+    at async StrategyAgent.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:45:22)
+    at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:95:30)
+    at async generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/generate-article-wordpress.ts:46:20)
+[StrategyAgent] StrategyAgent failed {
+  error: ReferenceError: response is not defined
+      at StrategyAgent.generateOutline (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/strategy-agent.ts:210:62)
+      at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+      at async StrategyAgent.process (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/strategy-agent.ts:12:21)
+      at async StrategyAgent.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:45:22)
+      at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:95:30)
+      at async generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/generate-article-wordpress.ts:46:20)
+}
+
+❌ 生成失敗: ReferenceError: response is not defined
+    at StrategyAgent.generateOutline (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/strategy-agent.ts:210:62)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async StrategyAgent.process (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/strategy-agent.ts:12:21)
+    at async StrategyAgent.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:45:22)
+    at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:95:30)
+    at async generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/generate-article-wordpress.ts:46:20)
+錯誤訊息: response is not defined
+
+錯誤堆疊: ReferenceError: response is not defined
+    at StrategyAgent.generateOutline (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/strategy-agent.ts:210:62)
+    at process.processTicksAndRejections (node:internal/process/task_queues:105:5)
+    at async StrategyAgent.process (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/strategy-agent.ts:12:21)
+    at async StrategyAgent.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/base-agent.ts:45:22)
+    at async ParallelOrchestrator.execute (/Users/avyshiu/Claudecode/Auto-pilot-SEO/src/lib/agents/orchestrator.ts:95:30)
+    at async generateArticle (/Users/avyshiu/Claudecode/Auto-pilot-SEO/scripts/generate-article-wordpress.ts:46:20)
