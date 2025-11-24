@@ -1,7 +1,8 @@
-import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
-import { v4 as uuidv4 } from 'uuid';
-import { TokenBillingService } from '@/lib/billing/token-billing-service';
+import { NextRequest, NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { v4 as uuidv4 } from "uuid";
+import { TokenBillingService } from "@/lib/billing/token-billing-service";
+import { createSearchRouter } from "@/lib/search/search-router";
 
 // Vercel 無伺服器函數最大執行時間：5 分鐘（Hobby 計劃上限）
 export const maxDuration = 300;
@@ -10,100 +11,133 @@ const ESTIMATED_TOKENS_PER_ARTICLE = 15000;
 
 export async function POST(request: NextRequest) {
   try {
-    const { keyword, title, mode } = await request.json();
+    // 支持新舊兩種參數格式：
+    // 舊版：{ keyword, title, mode }
+    // 新版：{ industry, region, language, competitors }
+    const body = await request.json();
+    const { keyword, title, mode, industry, region, language, competitors } =
+      body;
 
+    // 向後兼容：支持舊版 keyword/title 和新版 industry 參數
     const articleTitle = title || keyword;
 
-    if (!articleTitle || typeof articleTitle !== 'string') {
+    // 新版驗證
+    if (industry || region || language) {
+      if (!industry || typeof industry !== "string") {
+        return NextResponse.json(
+          { error: "Industry is required" },
+          { status: 400 },
+        );
+      }
+      if (!region || typeof region !== "string") {
+        return NextResponse.json(
+          { error: "Region is required" },
+          { status: 400 },
+        );
+      }
+      if (!language || typeof language !== "string") {
+        return NextResponse.json(
+          { error: "Language is required" },
+          { status: 400 },
+        );
+      }
+    } else if (!articleTitle || typeof articleTitle !== "string") {
+      // 舊版驗證
       return NextResponse.json(
-        { error: 'Title is required' },
-        { status: 400 }
+        { error: "Title or industry is required" },
+        { status: 400 },
       );
     }
 
     // 支持兩種認證方式：
     // 1. Authorization header（用於 API/curl 請求）
     // 2. Cookies（用於瀏覽器請求）
-    const authHeader = request.headers.get('authorization');
+    const authHeader = request.headers.get("authorization");
     let user = null;
 
-    if (authHeader && authHeader.startsWith('Bearer ')) {
+    if (authHeader && authHeader.startsWith("Bearer ")) {
       const token = authHeader.substring(7);
-      const { createClient: createSupabaseClient } = await import('@supabase/supabase-js');
+      const { createClient: createSupabaseClient } = await import(
+        "@supabase/supabase-js"
+      );
       const authClient = createSupabaseClient(
         process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
       );
 
       // 使用 JWT token 獲取用戶信息
-      const { data: userData, error: userError } = await authClient.auth.getUser(token);
+      const { data: userData, error: userError } =
+        await authClient.auth.getUser(token);
 
       if (userError || !userData.user) {
         return NextResponse.json(
-          { error: 'Invalid token', details: userError?.message },
-          { status: 401 }
+          { error: "Invalid token", details: userError?.message },
+          { status: 401 },
         );
       }
 
       user = userData.user;
     } else {
       const cookieClient = await createClient();
-      const { data: { user: cookieUser } } = await cookieClient.auth.getUser();
+      const {
+        data: { user: cookieUser },
+      } = await cookieClient.auth.getUser();
       user = cookieUser;
     }
 
     // 使用 service role client 進行資料庫查詢（避免 RLS 問題）
-    const { createClient: createSupabaseClient } = await import('@supabase/supabase-js');
+    const { createClient: createSupabaseClient } = await import(
+      "@supabase/supabase-js"
+    );
     const supabase = createSupabaseClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
     );
 
     if (!user) {
-      return NextResponse.json(
-        { error: 'Unauthorized' },
-        { status: 401 }
-      );
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
     const { data: membership, error: membershipError } = await supabase
-      .from('company_members')
-      .select('company_id')
-      .eq('user_id', user.id)
-      .eq('status', 'active')
+      .from("company_members")
+      .select("company_id")
+      .eq("user_id", user.id)
+      .eq("status", "active")
       .single();
 
     if (!membership || membershipError) {
-      console.error('Membership error:', membershipError);
+      console.error("Membership error:", membershipError);
       return NextResponse.json(
-        { error: 'No active company membership' },
-        { status: 403 }
+        { error: "No active company membership" },
+        { status: 403 },
       );
     }
 
     const billingService = new TokenBillingService(supabase);
-    const balance = await billingService.getCurrentBalance(membership.company_id);
+    const balance = await billingService.getCurrentBalance(
+      membership.company_id,
+    );
 
     if (balance.total < ESTIMATED_TOKENS_PER_ARTICLE) {
       console.warn(
-        `餘額不足: 當前 ${balance.total} tokens，需要約 ${ESTIMATED_TOKENS_PER_ARTICLE} tokens`
+        `餘額不足: 當前 ${balance.total} tokens，需要約 ${ESTIMATED_TOKENS_PER_ARTICLE} tokens`,
       );
       return NextResponse.json(
         {
-          error: 'Insufficient balance',
+          error: "Insufficient balance",
           message: `餘額不足：當前 ${balance.total.toLocaleString()} tokens，預估需要 ${ESTIMATED_TOKENS_PER_ARTICLE.toLocaleString()} tokens`,
           currentBalance: balance.total,
           estimatedCost: ESTIMATED_TOKENS_PER_ARTICLE,
-          upgradeUrl: '/dashboard/billing/upgrade',
+          upgradeUrl: "/dashboard/billing/upgrade",
         },
-        { status: 402 }
+        { status: 402 },
       );
     }
 
     const websiteQuery = await supabase
-      .from('website_configs')
-      .select('id')
-      .eq('company_id', membership.company_id)
+      .from("website_configs")
+      .select("id")
+      .eq("company_id", membership.company_id)
       .limit(1);
 
     const websites = websiteQuery.data;
@@ -113,42 +147,70 @@ export async function POST(request: NextRequest) {
 
     if (websites && websites.length > 0) {
       websiteId = websites[0].id;
-      console.log('使用現有網站配置:', websiteId);
+      console.log("使用現有網站配置:", websiteId);
     } else {
-      console.log('無網站配置 - 文章將稍後決定發佈目標');
+      console.log("無網站配置 - 文章將稍後決定發佈目標");
     }
 
     const articleJobId = uuidv4();
 
-    const { error: jobError } = await supabase
-      .from('article_jobs')
-      .insert({
-        id: articleJobId,
-        job_id: articleJobId,
-        company_id: membership.company_id,
-        website_id: websiteId,
-        user_id: user.id,
-        keywords: [articleTitle],
-        status: 'pending',
-        metadata: {
-          mode: mode || 'single',
-          title: articleTitle,
-        },
-      });
+    // 建立 SearchRouter 用於競爭對手分析配額檢查
+    const searchRouter = createSearchRouter({
+      companyId: membership.company_id,
+      enableCache: true,
+    });
+
+    // 如果有競爭對手，檢查配額
+    let competitorAnalysisResult = null;
+    if (competitors && Array.isArray(competitors) && competitors.length > 0) {
+      competitorAnalysisResult =
+        await searchRouter.analyzeCompetitors(competitors);
+
+      if (!competitorAnalysisResult.allowed) {
+        return NextResponse.json(
+          {
+            error: "Quota exceeded",
+            message: competitorAnalysisResult.message,
+          },
+          { status: 403 },
+        );
+      }
+    }
+
+    const { error: jobError } = await supabase.from("article_jobs").insert({
+      id: articleJobId,
+      job_id: articleJobId,
+      company_id: membership.company_id,
+      website_id: websiteId,
+      user_id: user.id,
+      keywords: industry ? [industry] : [articleTitle],
+      status: "pending",
+      metadata: {
+        mode: mode || "single",
+        title: articleTitle,
+        // 新版參數
+        industry: industry || null,
+        region: region || null,
+        language: language || null,
+        competitors: competitors || [],
+        // 競爭對手分析結果（如果有）
+        competitorAnalysis: competitorAnalysisResult?.results || null,
+      },
+    });
 
     if (jobError) {
-      console.error('Failed to create article job:', jobError);
+      console.error("Failed to create article job:", jobError);
       return NextResponse.json(
-        { error: 'Failed to create article job' },
-        { status: 500 }
+        { error: "Failed to create article job" },
+        { status: 500 },
       );
     }
 
     // 觸發 GitHub Actions 處理（避免 Vercel 5 分鐘超時）
-    if (process.env.USE_GITHUB_ACTIONS === 'true') {
+    if (process.env.USE_GITHUB_ACTIONS === "true") {
       try {
-        const owner = 'acejou27';
-        const repo = 'Auto-pilot-SEO';
+        const owner = "acejou27";
+        const repo = "Auto-pilot-SEO";
         const token = process.env.GITHUB_PERSONAL_ACCESS_TOKEN;
 
         if (token) {
@@ -156,21 +218,21 @@ export async function POST(request: NextRequest) {
           const githubResponse = await fetch(
             `https://api.github.com/repos/${owner}/${repo}/dispatches`,
             {
-              method: 'POST',
+              method: "POST",
               headers: {
-                'Accept': 'application/vnd.github+json',
-                'Authorization': `Bearer ${token}`,
-                'X-GitHub-Api-Version': '2022-11-28',
+                Accept: "application/vnd.github+json",
+                Authorization: `Bearer ${token}`,
+                "X-GitHub-Api-Version": "2022-11-28",
               },
               body: JSON.stringify({
-                event_type: 'generate-article',
+                event_type: "generate-article",
                 client_payload: {
                   jobId: articleJobId,
                   title: articleTitle,
                   timestamp: new Date().toISOString(),
-                }
-              })
-            }
+                },
+              }),
+            },
           );
 
           if (githubResponse.status === 204) {
@@ -178,15 +240,19 @@ export async function POST(request: NextRequest) {
             return NextResponse.json({
               success: true,
               articleJobId,
-              message: 'Article generation triggered via GitHub Actions (no timeout limit)',
-              processor: 'github-actions',
+              message:
+                "Article generation triggered via GitHub Actions (no timeout limit)",
+              processor: "github-actions",
             });
           } else {
-            console.error('Failed to trigger GitHub Actions:', githubResponse.status);
+            console.error(
+              "Failed to trigger GitHub Actions:",
+              githubResponse.status,
+            );
           }
         }
       } catch (githubError) {
-        console.error('GitHub Actions trigger error:', githubError);
+        console.error("GitHub Actions trigger error:", githubError);
       }
     }
 
@@ -195,13 +261,14 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({
       success: true,
       articleJobId,
-      message: 'Article generation job created, processing will be handled by cron job',
+      message:
+        "Article generation job created, processing will be handled by cron job",
     });
   } catch (error) {
-    console.error('Generate article error:', error);
+    console.error("Generate article error:", error);
     return NextResponse.json(
-      { error: 'Internal server error', details: (error as Error).message },
-      { status: 500 }
+      { error: "Internal server error", details: (error as Error).message },
+      { status: 500 },
     );
   }
 }
