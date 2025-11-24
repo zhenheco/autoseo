@@ -47,7 +47,20 @@ const LANGUAGES = [
   { value: "zh-CN", label: "简体中文" },
 ];
 
-export function ArticleForm() {
+interface QuotaStatus {
+  plan: string;
+  quota: number;
+  used: number;
+  remaining: number;
+  canUseCompetitors: boolean;
+  month: string;
+}
+
+interface ArticleFormProps {
+  quotaStatus: QuotaStatus | null;
+}
+
+export function ArticleForm({ quotaStatus }: ArticleFormProps) {
   const router = useRouter();
   const [industry, setIndustry] = useState("");
   const [customIndustry, setCustomIndustry] = useState("");
@@ -55,6 +68,11 @@ export function ArticleForm() {
   const [language, setLanguage] = useState("zh-TW");
   const [competitors, setCompetitors] = useState<string[]>([""]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const canAddCompetitors = quotaStatus?.canUseCompetitors ?? false;
+  const hasRemainingQuota = quotaStatus
+    ? quotaStatus.remaining > 0 || quotaStatus.quota === -1
+    : true;
 
   const handleAddCompetitor = () => {
     if (competitors.length < 5) {
@@ -157,42 +175,58 @@ export function ArticleForm() {
         </Select>
       </div>
 
-      <div className="space-y-2">
-        <Label>競爭對手網站（選填，最多 5 個）</Label>
-        <p className="text-sm text-muted-foreground">
-          輸入競爭對手的網站 URL，系統將分析他們的內容策略
-        </p>
-        {competitors.map((competitor, index) => (
-          <div key={index} className="flex gap-2">
-            <Input
-              type="url"
-              value={competitor}
-              onChange={(e) => handleCompetitorChange(index, e.target.value)}
-              placeholder="https://example.com"
-              className="flex-1"
-            />
-            {competitors.length > 1 && (
-              <Button
-                type="button"
-                variant="outline"
-                onClick={() => handleRemoveCompetitor(index)}
-              >
-                移除
-              </Button>
+      {canAddCompetitors && (
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label>
+              競爭對手網站（選填，最多 5 個）
+              {quotaStatus && quotaStatus.plan !== "free" && (
+                <span className="text-xs text-muted-foreground ml-2">
+                  ⚡ 付費功能
+                </span>
+              )}
+            </Label>
+            {!hasRemainingQuota && (
+              <span className="text-xs text-red-600">配額已用完</span>
             )}
           </div>
-        ))}
-        {competitors.length < 5 && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={handleAddCompetitor}
-            className="w-full mt-2"
-          >
-            + 新增競爭對手
-          </Button>
-        )}
-      </div>
+          <p className="text-sm text-muted-foreground">
+            輸入競爭對手的網站 URL，系統將使用 AI 深度分析他們的內容策略
+          </p>
+          {competitors.map((competitor, index) => (
+            <div key={index} className="flex gap-2">
+              <Input
+                type="url"
+                value={competitor}
+                onChange={(e) => handleCompetitorChange(index, e.target.value)}
+                placeholder="https://example.com"
+                className="flex-1"
+                disabled={!hasRemainingQuota}
+              />
+              {competitors.length > 1 && (
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => handleRemoveCompetitor(index)}
+                  disabled={!hasRemainingQuota}
+                >
+                  移除
+                </Button>
+              )}
+            </div>
+          ))}
+          {competitors.length < 5 && hasRemainingQuota && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleAddCompetitor}
+              className="w-full mt-2"
+            >
+              + 新增競爭對手
+            </Button>
+          )}
+        </div>
+      )}
 
       <Button type="submit" className="w-full" disabled={isSubmitting}>
         {isSubmitting ? "生成中..." : "開始生成文章"}
