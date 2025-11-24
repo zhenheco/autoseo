@@ -1,10 +1,24 @@
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { createArticle } from './actions'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { createArticle } from "./actions";
+import { ArticleForm } from "./components/ArticleForm";
 
-export const dynamic = 'force-dynamic'
+export const dynamic = "force-dynamic";
 
 export default async function NewArticlePage() {
   return (
@@ -12,36 +26,19 @@ export default async function NewArticlePage() {
       <div className="mb-8">
         <h1 className="text-3xl font-bold">生成新文章</h1>
         <p className="text-muted-foreground mt-2">
-          輸入關鍵字來生成 SEO 優化的文章
+          填寫產業、地區等資訊，AI 將自動分析並生成 SEO 優化的文章
         </p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>📝 關鍵字輸入</CardTitle>
+          <CardTitle>📝 文章設定</CardTitle>
           <CardDescription>
-            輸入主要關鍵字，AI 將自動生成相關文章
+            告訴我們您的產業和目標市場，我們會自動分析並生成最佳內容
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={createArticle} className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="keyword">主要關鍵字</Label>
-              <Input
-                id="keyword"
-                name="keyword"
-                placeholder="例如: Next.js 教學"
-                required
-              />
-              <p className="text-xs text-muted-foreground">
-                輸入您想要優化的主要關鍵字
-              </p>
-            </div>
-
-            <Button type="submit" className="w-full">
-              開始生成文章
-            </Button>
-          </form>
+          <ArticleForm />
         </CardContent>
       </Card>
 
@@ -51,7 +48,7 @@ export default async function NewArticlePage() {
         </CardHeader>
         <CardContent>
           <ol className="list-decimal list-inside space-y-2 text-sm">
-            <li>Research Agent: 分析關鍵字並收集相關資訊</li>
+            <li>Research Agent: 分析產業和競爭對手</li>
             <li>Strategy Agent: 規劃文章架構和內容策略</li>
             <li>Writing Agent: 撰寫完整的文章內容</li>
             <li>HTML Agent: 處理內部連結和格式優化</li>
@@ -63,5 +60,5 @@ export default async function NewArticlePage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
