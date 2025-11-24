@@ -15,12 +15,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createArticle } from "./actions";
+import { createArticle, getQuotaStatus } from "./actions";
 import { ArticleForm } from "./components/ArticleForm";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
 export default async function NewArticlePage() {
+  const quotaStatus = await getQuotaStatus();
+
   return (
     <div className="container mx-auto p-8 max-w-2xl">
       <div className="mb-8">
@@ -30,6 +34,49 @@ export default async function NewArticlePage() {
         </p>
       </div>
 
+      {quotaStatus && !quotaStatus.canUseCompetitors && (
+        <Alert className="mb-6">
+          <AlertTitle>🔒 競爭對手分析功能已鎖定</AlertTitle>
+          <AlertDescription>
+            您當前的方案（{quotaStatus.plan.toUpperCase()}
+            ）不支援競爭對手深度分析功能。
+            <Link
+              href="/dashboard/billing"
+              className="underline ml-1 font-medium"
+            >
+              升級至 STARTER 或更高方案
+            </Link>
+            即可解鎖此功能。
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {quotaStatus &&
+        quotaStatus.canUseCompetitors &&
+        quotaStatus.quota > 0 && (
+          <Alert className="mb-6">
+            <AlertTitle>📊 配額使用情況</AlertTitle>
+            <AlertDescription>
+              本月競爭對手分析配額：已使用 {quotaStatus.used} /{" "}
+              {quotaStatus.quota} 次
+              {quotaStatus.remaining <= 3 && quotaStatus.remaining > 0 && (
+                <span className="text-orange-600 ml-2">
+                  （剩餘 {quotaStatus.remaining} 次）
+                </span>
+              )}
+              {quotaStatus.remaining === 0 && (
+                <span className="text-red-600 ml-2">
+                  （已達上限，請
+                  <Link href="/dashboard/billing" className="underline mx-1">
+                    升級方案
+                  </Link>
+                  或等待下月重置）
+                </span>
+              )}
+            </AlertDescription>
+          </Alert>
+        )}
+
       <Card>
         <CardHeader>
           <CardTitle>📝 文章設定</CardTitle>
@@ -38,7 +85,7 @@ export default async function NewArticlePage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ArticleForm />
+          <ArticleForm quotaStatus={quotaStatus} />
         </CardContent>
       </Card>
 

@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { getCompanyQuotaStatus } from "@/lib/quota/quota-service";
 
 export async function createArticle(formData: FormData) {
   const industry = formData.get("industry") as string;
@@ -68,4 +70,29 @@ export async function createArticle(formData: FormData) {
       "/dashboard/articles/new?error=" + encodeURIComponent(errorMessage),
     );
   }
+}
+
+export async function getQuotaStatus() {
+  const supabase = await createClient();
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return null;
+  }
+
+  // 取得用戶的公司 ID
+  const { data: member } = await supabase
+    .from("company_members")
+    .select("company_id")
+    .eq("user_id", user.id)
+    .single();
+
+  if (!member) {
+    return null;
+  }
+
+  return await getCompanyQuotaStatus(member.company_id);
 }
