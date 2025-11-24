@@ -1,37 +1,71 @@
-'use server'
+"use server";
 
-import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
 
 export async function createArticle(formData: FormData) {
-  const keyword = formData.get('keyword') as string
+  const industry = formData.get("industry") as string;
+  const region = formData.get("region") as string;
+  const language = formData.get("language") as string;
+  const competitorsJson = formData.get("competitors") as string;
 
-  if (!keyword || keyword.trim().length === 0) {
-    redirect('/dashboard/articles/new?error=' + encodeURIComponent('請輸入關鍵字'))
+  if (!industry || industry.trim().length === 0) {
+    redirect(
+      "/dashboard/articles/new?error=" + encodeURIComponent("請選擇產業"),
+    );
+  }
+
+  if (!region || region.trim().length === 0) {
+    redirect(
+      "/dashboard/articles/new?error=" + encodeURIComponent("請選擇地區"),
+    );
+  }
+
+  if (!language || language.trim().length === 0) {
+    redirect(
+      "/dashboard/articles/new?error=" + encodeURIComponent("請選擇語言"),
+    );
+  }
+
+  let competitors: string[] = [];
+  try {
+    competitors = competitorsJson ? JSON.parse(competitorsJson) : [];
+  } catch {
+    competitors = [];
   }
 
   try {
-    const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/articles/generate`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/articles/generate`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          industry: industry.trim(),
+          region: region.trim(),
+          language: language.trim(),
+          competitors: competitors.filter((c) => c.trim() !== ""),
+        }),
       },
-      body: JSON.stringify({
-        title: keyword.trim(),
-      }),
-    })
+    );
 
     if (!response.ok) {
-      const error = await response.json()
-      throw new Error(error.message || '文章生成失敗')
+      const error = await response.json();
+      throw new Error(error.message || "文章生成失敗");
     }
 
-    const data = await response.json()
+    const data = await response.json();
 
-    revalidatePath('/dashboard/articles')
-    redirect(`/dashboard/articles?success=${encodeURIComponent('文章生成任務已啟動')}`)
+    revalidatePath("/dashboard/articles");
+    redirect(
+      `/dashboard/articles?success=${encodeURIComponent("文章生成任務已啟動")}`,
+    );
   } catch (error: unknown) {
-    const errorMessage = error instanceof Error ? error.message : '未知錯誤'
-    redirect('/dashboard/articles/new?error=' + encodeURIComponent(errorMessage))
+    const errorMessage = error instanceof Error ? error.message : "未知錯誤";
+    redirect(
+      "/dashboard/articles/new?error=" + encodeURIComponent(errorMessage),
+    );
   }
 }
