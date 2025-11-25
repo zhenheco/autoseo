@@ -2,7 +2,6 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
@@ -279,9 +278,9 @@ export function ArticlePreview({ article, onSave }: ArticlePreviewProps) {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <EditorToolbar editor={editor} />
-        <ScrollArea className="flex-1">
+        <div className="flex-1 overflow-hidden">
           <EditorContent editor={editor} />
-        </ScrollArea>
+        </div>
       </div>
     </div>
   );
