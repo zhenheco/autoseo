@@ -1,14 +1,14 @@
-import Link from 'next/link'
-import { ThemeToggle } from '@/components/ui/theme-toggle'
-import { Sparkles } from 'lucide-react'
-import { SignupForm } from './signup-form'
+import Link from "next/link";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { Sparkles } from "lucide-react";
+import { SignupForm } from "./signup-form";
 
 export default async function SignupPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; success?: string; verified?: string; unverified?: string; email?: string }>
+  searchParams: Promise<{ error?: string; success?: string }>;
 }) {
-  const params = await searchParams
+  const params = await searchParams;
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden p-4">
@@ -26,30 +26,32 @@ export default async function SignupPage({
           <h1 className="text-3xl font-bold tracking-tight mb-2 text-foreground">
             建立新帳號
           </h1>
-          <p className="text-base text-muted-foreground">輸入您的 Email 以建立新帳號</p>
+          <p className="text-base text-muted-foreground">
+            使用 Google 帳號快速註冊
+          </p>
         </div>
 
         <div className="bg-card border border-border rounded-2xl p-8 shadow-lg">
-          <SignupForm
-            error={params.error}
-            success={params.success}
-            verified={params.verified}
-            unverified={params.unverified}
-            email={params.email}
-          />
+          <SignupForm error={params.error} success={params.success} />
         </div>
 
         <p className="text-xs text-center text-muted-foreground mt-8 px-8">
-          註冊即表示您同意我們的{' '}
-          <Link href="/terms" className="underline underline-offset-2 hover:text-foreground transition-all">
+          註冊即表示您同意我們的{" "}
+          <Link
+            href="/terms"
+            className="underline underline-offset-2 hover:text-foreground transition-all"
+          >
             服務條款
-          </Link>
-          {' '}和{' '}
-          <Link href="/privacy" className="underline underline-offset-2 hover:text-foreground transition-all">
+          </Link>{" "}
+          和{" "}
+          <Link
+            href="/privacy"
+            className="underline underline-offset-2 hover:text-foreground transition-all"
+          >
             隱私政策
           </Link>
         </p>
       </div>
     </div>
-  )
+  );
 }
