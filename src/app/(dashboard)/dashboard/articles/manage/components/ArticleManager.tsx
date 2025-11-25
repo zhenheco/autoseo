@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { ArticleList } from "./ArticleList";
 import { ArticlePreview } from "./ArticlePreview";
+import { useArticleJobRealtime } from "@/lib/hooks/useArticleJobRealtime";
+import { useRouter } from "next/navigation";
 
 interface Article {
   id: string;
@@ -22,15 +24,71 @@ interface Article {
   wordpress_post_url: string | null;
 }
 
-interface ArticleManagerProps {
-  initialArticles: Article[];
+export interface ArticleJob {
+  id: string;
+  keywords: string[] | null;
+  status: string;
+  progress: number | null;
+  current_step: string | null;
+  created_at: string;
+  metadata: { title?: string } | null;
 }
 
-export function ArticleManager({ initialArticles }: ArticleManagerProps) {
+interface ArticleManagerProps {
+  initialArticles: Article[];
+  initialJobs?: ArticleJob[];
+  companyId?: string;
+}
+
+export function ArticleManager({
+  initialArticles,
+  initialJobs = [],
+  companyId,
+}: ArticleManagerProps) {
+  const router = useRouter();
   const [articles, setArticles] = useState<Article[]>(initialArticles);
+  const [jobs, setJobs] = useState<ArticleJob[]>(initialJobs);
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(
     initialArticles[0] || null,
   );
+
+  const handleJobCompleted = useCallback(() => {
+    router.refresh();
+  }, [router]);
+
+  const handleJobStatusChange = useCallback(
+    (job: {
+      id: string;
+      status: string;
+      progress: number | null;
+      current_step: string | null;
+    }) => {
+      setJobs((prev) =>
+        prev.map((j) =>
+          j.id === job.id
+            ? {
+                ...j,
+                status: job.status,
+                progress: job.progress ?? j.progress,
+                current_step: job.current_step ?? j.current_step,
+              }
+            : j,
+        ),
+      );
+    },
+    [],
+  );
+
+  useArticleJobRealtime({
+    companyId: companyId || "",
+    onCompleted: handleJobCompleted,
+    onFailed: handleJobCompleted,
+    onStatusChange: handleJobStatusChange,
+  });
+
+  useEffect(() => {
+    setJobs(initialJobs);
+  }, [initialJobs]);
 
   const handleSelectArticle = (article: Article) => {
     setSelectedArticle(article);
@@ -97,6 +155,7 @@ export function ArticleManager({ initialArticles }: ArticleManagerProps) {
     <div className="h-[calc(100vh-7rem)] flex overflow-hidden">
       <ArticleList
         articles={articles}
+        jobs={jobs}
         selectedId={selectedArticle?.id || null}
         onSelect={handleSelectArticle}
         onDelete={handleDeleteArticle}
