@@ -9,9 +9,12 @@ import {
   CheckCircle,
   XCircle,
   Eye,
+  Loader2,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { zhTW } from "date-fns/locale";
+import { useMemo } from "react";
+import type { ArticleJob } from "./ArticleManager";
 
 interface Article {
   id: string;
@@ -31,8 +34,13 @@ interface Article {
   wordpress_post_url: string | null;
 }
 
+type ListItem =
+  | { type: "article"; data: Article }
+  | { type: "job"; data: ArticleJob };
+
 interface ArticleListProps {
   articles: Article[];
+  jobs?: ArticleJob[];
   selectedId: string | null;
   onSelect: (article: Article) => void;
   onDelete: (id: string) => void;
@@ -40,8 +48,19 @@ interface ArticleListProps {
 
 const statusConfig: Record<
   string,
-  { label: string; color: string; icon: React.ElementType }
+  { label: string; color: string; icon: React.ElementType; animate?: boolean }
 > = {
+  pending: {
+    label: "等待中",
+    color: "text-gray-500 bg-gray-50",
+    icon: Clock,
+  },
+  processing: {
+    label: "生成中",
+    color: "text-blue-500 bg-blue-50",
+    icon: Loader2,
+    animate: true,
+  },
   generated: {
     label: "已生成",
     color: "text-blue-500 bg-blue-50",
@@ -66,10 +85,30 @@ const statusConfig: Record<
 
 export function ArticleList({
   articles,
+  jobs = [],
   selectedId,
   onSelect,
   onDelete,
 }: ArticleListProps) {
+  const combinedList = useMemo<ListItem[]>(() => {
+    const articleItems: ListItem[] = articles.map((a) => ({
+      type: "article" as const,
+      data: a,
+    }));
+    const jobItems: ListItem[] = jobs.map((j) => ({
+      type: "job" as const,
+      data: j,
+    }));
+
+    return [...articleItems, ...jobItems].sort(
+      (a, b) =>
+        new Date(b.data.created_at).getTime() -
+        new Date(a.data.created_at).getTime(),
+    );
+  }, [articles, jobs]);
+
+  const totalCount = articles.length + jobs.length;
+
   return (
     <div className="w-[400px] flex flex-col overflow-hidden">
       <div className="p-4">
@@ -77,14 +116,72 @@ export function ArticleList({
       </div>
 
       <div className="flex-1 overflow-hidden">
-        <div className="p-2 h-full">
-          {articles.length === 0 ? (
+        <div className="p-2 h-full overflow-y-auto">
+          {combinedList.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
               <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
               <p>沒有找到文章</p>
             </div>
           ) : (
-            articles.map((article) => {
+            combinedList.map((item) => {
+              if (item.type === "job") {
+                const job = item.data;
+                const title =
+                  job.metadata?.title ||
+                  (job.keywords && job.keywords[0]) ||
+                  "生成中的文章";
+                const status = statusConfig[job.status] || statusConfig.pending;
+                const StatusIcon = status.icon;
+
+                return (
+                  <div
+                    key={`job-${job.id}`}
+                    className="p-3 rounded-lg mb-2 border border-dashed border-blue-200 bg-blue-50/30"
+                  >
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex-1 min-w-0">
+                        <h3 className="font-medium text-sm truncate text-muted-foreground">
+                          {title}
+                        </h3>
+                        {job.current_step && (
+                          <p className="text-xs text-muted-foreground truncate mt-1">
+                            {job.current_step}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 mt-2 flex-wrap">
+                      <span
+                        className={cn(
+                          "inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full",
+                          status.color,
+                        )}
+                      >
+                        <StatusIcon
+                          className={cn(
+                            "h-3 w-3",
+                            status.animate && "animate-spin",
+                          )}
+                        />
+                        {status.label}
+                        {job.progress != null && job.progress > 0 && (
+                          <span className="ml-1">{job.progress}%</span>
+                        )}
+                      </span>
+                      <span className="text-xs text-muted-foreground flex items-center gap-1">
+                        <Clock className="h-3 w-3" />
+                        {formatDistanceToNow(new Date(job.created_at), {
+                          addSuffix: true,
+                          locale: zhTW,
+                        })}
+                      </span>
+                    </div>
+                  </div>
+                );
+              }
+
+              const article = item.data;
               const status =
                 statusConfig[article.status] || statusConfig.generated;
               const StatusIcon = status.icon;
@@ -131,7 +228,12 @@ export function ArticleList({
                         status.color,
                       )}
                     >
-                      <StatusIcon className="h-3 w-3" />
+                      <StatusIcon
+                        className={cn(
+                          "h-3 w-3",
+                          status.animate && "animate-spin",
+                        )}
+                      />
                       {status.label}
                     </span>
                     <span className="text-xs text-muted-foreground flex items-center gap-1">
@@ -152,7 +254,7 @@ export function ArticleList({
 
       <div className="p-3 bg-muted/50">
         <p className="text-xs text-muted-foreground text-center">
-          共 {articles.length} 篇文章
+          共 {totalCount} 篇{jobs.length > 0 && `（${jobs.length} 篇生成中）`}
         </p>
       </div>
     </div>

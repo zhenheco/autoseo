@@ -6,6 +6,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 interface QuotaStatus {
@@ -27,6 +36,8 @@ export function QuickArticleForm({ quotaStatus }: QuickArticleFormProps) {
   const [batchKeywords, setBatchKeywords] = useState("");
   const [mode, setMode] = useState<"single" | "batch">("single");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [generatedKeyword, setGeneratedKeyword] = useState("");
 
   const hasRemainingQuota = quotaStatus
     ? quotaStatus.remaining > 0 || quotaStatus.quota === -1
@@ -54,7 +65,9 @@ export function QuickArticleForm({ quotaStatus }: QuickArticleFormProps) {
           throw new Error(data.error || data.message || "生成失敗");
         }
 
-        router.refresh();
+        setGeneratedKeyword(keyword.trim());
+        setShowSuccessDialog(true);
+        setKeyword("");
       } else {
         const keywords = batchKeywords
           .split("\n")
@@ -79,7 +92,9 @@ export function QuickArticleForm({ quotaStatus }: QuickArticleFormProps) {
           throw new Error(data.error || data.message || "批量生成失敗");
         }
 
-        router.refresh();
+        setGeneratedKeyword(`${keywords.length} 篇文章`);
+        setShowSuccessDialog(true);
+        setBatchKeywords("");
       }
     } catch (error) {
       console.error("提交失敗:", error);
@@ -179,6 +194,43 @@ export function QuickArticleForm({ quotaStatus }: QuickArticleFormProps) {
             ? "開始生成文章"
             : `開始批量生成 (${batchKeywords.split("\n").filter((k) => k.trim()).length || 0} 篇)`}
       </Button>
+
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+              生成任務已建立
+            </DialogTitle>
+            <DialogDescription className="pt-2">
+              <span className="font-medium text-foreground">
+                {generatedKeyword}
+              </span>{" "}
+              正在生成中
+              <br />
+              <span className="text-muted-foreground">
+                您可以關閉此視窗，在文章管理頁面查看進度
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setShowSuccessDialog(false)}
+            >
+              繼續生成其他文章
+            </Button>
+            <Button
+              onClick={() => {
+                setShowSuccessDialog(false);
+                router.push("/dashboard/articles/manage");
+              }}
+            >
+              查看文章管理
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </form>
   );
 }
