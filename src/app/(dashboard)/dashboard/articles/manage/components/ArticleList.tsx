@@ -145,7 +145,7 @@ export function ArticleList({
                     </Button>
                   </div>
 
-                  <div className="flex items-center gap-2 mt-2">
+                  <div className="flex items-center gap-2 mt-2 flex-wrap">
                     <span
                       className={cn(
                         "inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full",
@@ -161,15 +161,9 @@ export function ArticleList({
                         addSuffix: true,
                         locale: zhTW,
                       })}
+                      {article.word_count && ` · ${article.word_count} 字`}
                     </span>
                   </div>
-
-                  {article.word_count && (
-                    <p className="text-xs text-muted-foreground mt-1">
-                      {article.word_count} 字 · {article.reading_time || 1}{" "}
-                      分鐘閱讀
-                    </p>
-                  )}
                 </div>
               );
             })
