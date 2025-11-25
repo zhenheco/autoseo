@@ -61,8 +61,10 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
 請在推理後，輸出以下 JSON 格式：
 {
   "reasoning_summary": "簡要說明選擇這些標題的原因",
-  "titles": ["標題1", "標題2", "標題3"]
-}`;
+  "titles": ["<你生成的第一個標題>", "<你生成的第二個標題>", "<你生成的第三個標題>"]
+}
+
+注意：不要使用「標題1」「標題2」等作為實際標題，請生成具體、有意義的文章標題。`;
 
     try {
       const response = await this.complete(prompt, {
@@ -502,18 +504,18 @@ ${gaps
   },
   "mainSections": [
     {
-      "heading": "第一個主要段落標題",
-      "subheadings": ["子標題1", "子標題2"],
-      "keyPoints": ["重點1", "重點2"],
+      "heading": "<第一個章節的具體標題>",
+      "subheadings": ["<第一個子標題>", "<第二個子標題>"],
+      "keyPoints": ["<第一個重點>", "<第二個重點>"],
       "targetWordCount": 500,
-      "keywords": ["關鍵字1", "關鍵字2"]
+      "keywords": ["<相關關鍵字1>", "<相關關鍵字2>"]
     },
     {
-      "heading": "第二個主要段落標題",
-      "subheadings": ["子標題1", "子標題2"],
-      "keyPoints": ["重點1", "重點2"],
+      "heading": "<第二個章節的具體標題>",
+      "subheadings": ["<第一個子標題>", "<第二個子標題>"],
+      "keyPoints": ["<第一個重點>", "<第二個重點>"],
       "targetWordCount": 500,
-      "keywords": ["關鍵字1"]
+      "keywords": ["<相關關鍵字>"]
     }
   ],
   "conclusion": {
@@ -523,11 +525,13 @@ ${gaps
   },
   "faq": [
     {
-      "question": "常見問題1？",
-      "answerOutline": "答案大綱"
+      "question": "<與主題相關的常見問題>？",
+      "answerOutline": "<答案大綱>"
     }
   ]
 }
+
+注意：請勿使用「標題1」「子標題1」「常見問題1」等占位符作為實際內容，請生成具體、有意義的標題和內容。
 
 **規則：**
 1. mainSections 2-4 個

@@ -1,22 +1,36 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ScrollArea } from "@/components/ui/scroll-area";
-import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Link from "@tiptap/extension-link";
+import Image from "@tiptap/extension-image";
 import {
   Edit3,
-  Eye,
   Save,
   X,
   ExternalLink,
   Copy,
   Check,
   FileText,
+  Bold,
+  Italic,
+  List,
+  ListOrdered,
+  Link as LinkIcon,
+  ImageIcon,
+  Heading1,
+  Heading2,
+  Heading3,
+  Code,
+  Undo,
+  Redo,
 } from "lucide-react";
+import { Toggle } from "@/components/ui/toggle";
+import { Separator } from "@/components/ui/separator";
 
 interface Article {
   id: string;
@@ -43,36 +57,196 @@ interface ArticlePreviewProps {
   onSave: (updates: Partial<Article>) => Promise<void>;
 }
 
+function EditorToolbar({
+  editor,
+}: {
+  editor: ReturnType<typeof useEditor> | null;
+}) {
+  const addLink = useCallback(() => {
+    if (!editor) return;
+    const previousUrl = editor.getAttributes("link").href;
+    const url = window.prompt("輸入連結 URL", previousUrl);
+    if (url === null) return;
+    if (url === "") {
+      editor.chain().focus().extendMarkRange("link").unsetLink().run();
+      return;
+    }
+    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+  }, [editor]);
+
+  const addImage = useCallback(() => {
+    if (!editor) return;
+    const url = window.prompt("輸入圖片 URL");
+    if (url) {
+      editor.chain().focus().setImage({ src: url }).run();
+    }
+  }, [editor]);
+
+  if (!editor) return null;
+
+  return (
+    <div className="flex flex-wrap items-center gap-1 p-2 border-b bg-muted/30">
+      <Toggle
+        size="sm"
+        pressed={editor.isActive("bold")}
+        onPressedChange={() => editor.chain().focus().toggleBold().run()}
+      >
+        <Bold className="h-4 w-4" />
+      </Toggle>
+      <Toggle
+        size="sm"
+        pressed={editor.isActive("italic")}
+        onPressedChange={() => editor.chain().focus().toggleItalic().run()}
+      >
+        <Italic className="h-4 w-4" />
+      </Toggle>
+      <Toggle
+        size="sm"
+        pressed={editor.isActive("code")}
+        onPressedChange={() => editor.chain().focus().toggleCode().run()}
+      >
+        <Code className="h-4 w-4" />
+      </Toggle>
+
+      <Separator orientation="vertical" className="mx-1 h-6" />
+
+      <Toggle
+        size="sm"
+        pressed={editor.isActive("heading", { level: 1 })}
+        onPressedChange={() =>
+          editor.chain().focus().toggleHeading({ level: 1 }).run()
+        }
+      >
+        <Heading1 className="h-4 w-4" />
+      </Toggle>
+      <Toggle
+        size="sm"
+        pressed={editor.isActive("heading", { level: 2 })}
+        onPressedChange={() =>
+          editor.chain().focus().toggleHeading({ level: 2 }).run()
+        }
+      >
+        <Heading2 className="h-4 w-4" />
+      </Toggle>
+      <Toggle
+        size="sm"
+        pressed={editor.isActive("heading", { level: 3 })}
+        onPressedChange={() =>
+          editor.chain().focus().toggleHeading({ level: 3 }).run()
+        }
+      >
+        <Heading3 className="h-4 w-4" />
+      </Toggle>
+
+      <Separator orientation="vertical" className="mx-1 h-6" />
+
+      <Toggle
+        size="sm"
+        pressed={editor.isActive("bulletList")}
+        onPressedChange={() => editor.chain().focus().toggleBulletList().run()}
+      >
+        <List className="h-4 w-4" />
+      </Toggle>
+      <Toggle
+        size="sm"
+        pressed={editor.isActive("orderedList")}
+        onPressedChange={() => editor.chain().focus().toggleOrderedList().run()}
+      >
+        <ListOrdered className="h-4 w-4" />
+      </Toggle>
+
+      <Separator orientation="vertical" className="mx-1 h-6" />
+
+      <Toggle
+        size="sm"
+        pressed={editor.isActive("link")}
+        onPressedChange={addLink}
+      >
+        <LinkIcon className="h-4 w-4" />
+      </Toggle>
+      <Toggle size="sm" pressed={false} onPressedChange={addImage}>
+        <ImageIcon className="h-4 w-4" />
+      </Toggle>
+
+      <Separator orientation="vertical" className="mx-1 h-6" />
+
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => editor.chain().focus().undo().run()}
+        disabled={!editor.can().undo()}
+      >
+        <Undo className="h-4 w-4" />
+      </Button>
+      <Button
+        variant="ghost"
+        size="sm"
+        onClick={() => editor.chain().focus().redo().run()}
+        disabled={!editor.can().redo()}
+      >
+        <Redo className="h-4 w-4" />
+      </Button>
+    </div>
+  );
+}
+
 export function ArticlePreview({
   article,
   isEditing,
   onEditToggle,
   onSave,
 }: ArticlePreviewProps) {
-  const [editedContent, setEditedContent] = useState("");
   const [editedTitle, setEditedTitle] = useState("");
-  const [editedSeoTitle, setEditedSeoTitle] = useState("");
-  const [editedSeoDescription, setEditedSeoDescription] = useState("");
   const [isSaving, setIsSaving] = useState(false);
   const [copied, setCopied] = useState(false);
 
+  const editor = useEditor({
+    extensions: [
+      StarterKit,
+      Link.configure({
+        openOnClick: false,
+        HTMLAttributes: {
+          class: "text-primary underline",
+        },
+      }),
+      Image.configure({
+        HTMLAttributes: {
+          class: "max-w-full h-auto rounded-lg",
+        },
+      }),
+    ],
+    content: article?.html_content || "",
+    editable: isEditing,
+    editorProps: {
+      attributes: {
+        class:
+          "prose prose-sm max-w-none dark:prose-invert focus:outline-none min-h-[300px] p-4",
+      },
+    },
+  });
+
   useEffect(() => {
     if (article) {
-      setEditedContent(article.html_content || "");
       setEditedTitle(article.title || "");
-      setEditedSeoTitle(article.seo_title || "");
-      setEditedSeoDescription(article.seo_description || "");
+      if (editor) {
+        editor.commands.setContent(article.html_content || "");
+      }
     }
-  }, [article]);
+  }, [article, editor]);
+
+  useEffect(() => {
+    if (editor) {
+      editor.setEditable(isEditing);
+    }
+  }, [isEditing, editor]);
 
   const handleSave = async () => {
+    if (!editor) return;
     setIsSaving(true);
     try {
       await onSave({
         title: editedTitle,
-        html_content: editedContent,
-        seo_title: editedSeoTitle,
-        seo_description: editedSeoDescription,
+        html_content: editor.getHTML(),
       });
     } finally {
       setIsSaving(false);
@@ -80,8 +254,9 @@ export function ArticlePreview({
   };
 
   const handleCopyHtml = async () => {
-    if (article?.html_content) {
-      await navigator.clipboard.writeText(article.html_content);
+    const htmlContent = editor?.getHTML() || article?.html_content;
+    if (htmlContent) {
+      await navigator.clipboard.writeText(htmlContent);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
@@ -161,131 +336,23 @@ export function ArticlePreview({
         </div>
       </div>
 
-      <Tabs defaultValue="preview" className="flex-1 flex flex-col">
-        <div className="px-4 border-b">
-          <TabsList className="h-10">
-            <TabsTrigger value="preview" className="gap-1">
-              <Eye className="h-4 w-4" />
-              預覽
-            </TabsTrigger>
-            <TabsTrigger value="html" className="gap-1">
-              <FileText className="h-4 w-4" />
-              HTML
-            </TabsTrigger>
-            <TabsTrigger value="seo" className="gap-1">
-              SEO
-            </TabsTrigger>
-          </TabsList>
-        </div>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {isEditing && <EditorToolbar editor={editor} />}
+        <ScrollArea className="flex-1">
+          <EditorContent editor={editor} />
+        </ScrollArea>
+      </div>
 
-        <TabsContent value="preview" className="flex-1 m-0">
-          <ScrollArea className="h-[calc(100vh-12rem)]">
-            <div className="p-6">
-              <article className="prose prose-sm max-w-none dark:prose-invert">
-                <div
-                  dangerouslySetInnerHTML={{
-                    __html: isEditing
-                      ? editedContent
-                      : article.html_content || "<p>無內容</p>",
-                  }}
-                />
-              </article>
-            </div>
-          </ScrollArea>
-        </TabsContent>
-
-        <TabsContent value="html" className="flex-1 m-0 p-4">
-          {isEditing ? (
-            <Textarea
-              value={editedContent}
-              onChange={(e) => setEditedContent(e.target.value)}
-              className="h-[calc(100vh-14rem)] font-mono text-sm"
-              placeholder="HTML 內容..."
-            />
-          ) : (
-            <ScrollArea className="h-[calc(100vh-12rem)]">
-              <pre className="text-sm bg-muted p-4 rounded-lg overflow-x-auto">
-                <code>{article.html_content || "無內容"}</code>
-              </pre>
-            </ScrollArea>
+      {!isEditing && article.focus_keyword && (
+        <div className="p-3 border-t bg-muted/30 text-sm text-muted-foreground">
+          <span className="font-medium">關鍵字：</span> {article.focus_keyword}
+          {article.word_count && (
+            <span className="ml-4">
+              <span className="font-medium">字數：</span> {article.word_count}
+            </span>
           )}
-        </TabsContent>
-
-        <TabsContent value="seo" className="flex-1 m-0 p-4">
-          <ScrollArea className="h-[calc(100vh-12rem)]">
-            <div className="space-y-4 max-w-2xl">
-              <div className="space-y-2">
-                <Label htmlFor="seo-title">SEO 標題</Label>
-                {isEditing ? (
-                  <Input
-                    id="seo-title"
-                    value={editedSeoTitle}
-                    onChange={(e) => setEditedSeoTitle(e.target.value)}
-                    placeholder="SEO 標題"
-                  />
-                ) : (
-                  <p className="text-sm p-2 bg-muted rounded">
-                    {article.seo_title || "未設定"}
-                  </p>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  字數:{" "}
-                  {(isEditing ? editedSeoTitle : article.seo_title)?.length ||
-                    0}{" "}
-                  / 60
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="seo-description">SEO 描述</Label>
-                {isEditing ? (
-                  <Textarea
-                    id="seo-description"
-                    value={editedSeoDescription}
-                    onChange={(e) => setEditedSeoDescription(e.target.value)}
-                    placeholder="SEO 描述"
-                    rows={3}
-                  />
-                ) : (
-                  <p className="text-sm p-2 bg-muted rounded">
-                    {article.seo_description || "未設定"}
-                  </p>
-                )}
-                <p className="text-xs text-muted-foreground">
-                  字數:{" "}
-                  {(isEditing ? editedSeoDescription : article.seo_description)
-                    ?.length || 0}{" "}
-                  / 160
-                </p>
-              </div>
-
-              <div className="space-y-2">
-                <Label>關鍵字</Label>
-                <p className="text-sm p-2 bg-muted rounded">
-                  {article.focus_keyword || "未設定"}
-                </p>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-                <div>
-                  <Label className="text-muted-foreground text-xs">字數</Label>
-                  <p className="text-sm font-medium">
-                    {article.word_count || 0} 字
-                  </p>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground text-xs">
-                    閱讀時間
-                  </Label>
-                  <p className="text-sm font-medium">
-                    {article.reading_time || 1} 分鐘
-                  </p>
-                </div>
-              </div>
-            </div>
-          </ScrollArea>
-        </TabsContent>
-      </Tabs>
+        </div>
+      )}
     </div>
   );
 }
