@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils";
 import {
   FileText,
   Globe,
-  Settings,
   ChevronLeft,
   ChevronRight,
   Sparkles,
@@ -31,11 +30,6 @@ const navItems = [
     title: "訂閱方案",
     href: "/dashboard/subscription",
     icon: CreditCard,
-  },
-  {
-    title: "設定",
-    href: "/dashboard/settings",
-    icon: Settings,
   },
 ];
 
