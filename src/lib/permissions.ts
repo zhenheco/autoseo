@@ -1,15 +1,15 @@
-import { redirect } from 'next/navigation'
-import { getUser } from '@/lib/auth'
-import { createClient } from '@/lib/supabase/server'
+import { redirect } from "next/navigation";
+import { getUser } from "@/lib/auth";
+import { createClient } from "@/lib/supabase/server";
 
-export type UserRole = 'owner' | 'admin' | 'editor' | 'writer' | 'viewer'
+export type UserRole = "owner" | "admin" | "editor" | "writer" | "viewer";
 
 export interface RolePermissions {
-  canAccessDashboard: boolean
-  canAccessArticles: boolean
-  canAccessWebsites: boolean
-  canAccessSubscription: boolean
-  canAccessSettings: boolean
+  canAccessDashboard: boolean;
+  canAccessArticles: boolean;
+  canAccessWebsites: boolean;
+  canAccessSubscription: boolean;
+  canAccessSettings: boolean;
 }
 
 const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
@@ -48,41 +48,48 @@ const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
     canAccessSubscription: false,
     canAccessSettings: false,
   },
-}
+};
 
 export async function getUserRole(): Promise<UserRole | null> {
-  const user = await getUser()
-  if (!user) return null
+  const user = await getUser();
+  if (!user) return null;
 
-  const supabase = await createClient()
+  const supabase = await createClient();
   const { data: membership } = await supabase
-    .from('company_members')
-    .select('role')
-    .eq('user_id', user.id)
-    .eq('status', 'active')
-    .single()
+    .from("company_members")
+    .select("role")
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .single();
 
-  return (membership?.role as UserRole) || null
+  return (membership?.role as UserRole) || null;
 }
 
-export async function checkPagePermission(page: keyof RolePermissions): Promise<void> {
-  const role = await getUserRole()
+export async function checkPagePermission(
+  page: keyof RolePermissions,
+): Promise<void> {
+  const user = await getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
+  const role = await getUserRole();
 
   if (!role) {
-    redirect('/login')
+    redirect("/dashboard");
   }
 
-  const permissions = ROLE_PERMISSIONS[role]
+  const permissions = ROLE_PERMISSIONS[role];
 
   if (!permissions[page]) {
-    redirect('/dashboard/unauthorized')
+    redirect("/dashboard/unauthorized");
   }
 
-  // 額外檢查：免費用戶不能訪問網站功能
-  if (page === 'canAccessWebsites') {
-    const hasWebsiteAccess = await canAccessWebsitesFeature()
+  if (page === "canAccessWebsites") {
+    const hasWebsiteAccess = await canAccessWebsitesFeature();
     if (!hasWebsiteAccess) {
-      redirect('/dashboard/unauthorized?reason=free-plan')
+      redirect("/dashboard/unauthorized?reason=free-plan");
     }
   }
 }
@@ -92,55 +99,57 @@ export async function checkPagePermission(page: keyof RolePermissions): Promise<
  * 免費方案不允許連接網站
  */
 export async function canAccessWebsitesFeature(): Promise<boolean> {
-  const user = await getUser()
-  if (!user) return false
+  const user = await getUser();
+  if (!user) return false;
 
-  const supabase = await createClient()
+  const supabase = await createClient();
 
   // 取得用戶的公司
   const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .eq('status', 'active')
-    .single()
+    .from("company_members")
+    .select("company_id")
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .single();
 
-  if (!membership) return false
+  if (!membership) return false;
 
   // 檢查公司的訂閱層級
   const { data: company } = await supabase
-    .from('companies')
-    .select('subscription_tier')
-    .eq('id', membership.company_id)
-    .single()
+    .from("companies")
+    .select("subscription_tier")
+    .eq("id", membership.company_id)
+    .single();
 
   // 免費方案不能連接網站
-  return company?.subscription_tier !== 'free'
+  return company?.subscription_tier !== "free";
 }
 
 /**
  * 取得用戶的訂閱層級
  */
-export async function getUserSubscriptionTier(): Promise<'free' | 'starter' | 'professional' | 'business' | 'agency' | null> {
-  const user = await getUser()
-  if (!user) return null
+export async function getUserSubscriptionTier(): Promise<
+  "free" | "starter" | "professional" | "business" | "agency" | null
+> {
+  const user = await getUser();
+  if (!user) return null;
 
-  const supabase = await createClient()
+  const supabase = await createClient();
 
   const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .eq('status', 'active')
-    .single()
+    .from("company_members")
+    .select("company_id")
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .single();
 
-  if (!membership) return null
+  if (!membership) return null;
 
   const { data: company } = await supabase
-    .from('companies')
-    .select('subscription_tier')
-    .eq('id', membership.company_id)
-    .single()
+    .from("companies")
+    .select("subscription_tier")
+    .eq("id", membership.company_id)
+    .single();
 
-  return company?.subscription_tier || null
+  return company?.subscription_tier || null;
 }
