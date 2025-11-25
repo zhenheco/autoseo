@@ -1,24 +1,24 @@
-import { createAdminClient } from '@/lib/supabase/server';
-import { SupabaseClient } from '@supabase/supabase-js';
-import { ArticleStorageService } from '@/lib/services/article-storage';
-import { ResearchAgent } from './research-agent';
-import { StrategyAgent } from './strategy-agent';
-import { WritingAgent } from './writing-agent';
-import { ImageAgent } from './image-agent';
-import { MetaAgent } from './meta-agent';
-import { HTMLAgent } from './html-agent';
-import { CategoryAgent } from './category-agent';
-import { IntroductionAgent } from './introduction-agent';
-import { SectionAgent } from './section-agent';
-import { ConclusionAgent } from './conclusion-agent';
-import { QAAgent } from './qa-agent';
-import { ContentAssemblerAgent } from './content-assembler-agent';
-import { MultiAgentOutputAdapter } from './output-adapter';
-import { WordPressClient } from '@/lib/wordpress/client';
-import { PerplexityClient } from '@/lib/perplexity/client';
-import { getAPIRouter } from '@/lib/ai/api-router';
-import { ErrorTracker } from './error-tracker';
-import { RetryConfigs, type AgentRetryConfig } from './retry-config';
+import { createAdminClient } from "@/lib/supabase/server";
+import { SupabaseClient } from "@supabase/supabase-js";
+import { ArticleStorageService } from "@/lib/services/article-storage";
+import { ResearchAgent } from "./research-agent";
+import { StrategyAgent } from "./strategy-agent";
+import { WritingAgent } from "./writing-agent";
+import { ImageAgent } from "./image-agent";
+import { MetaAgent } from "./meta-agent";
+import { HTMLAgent } from "./html-agent";
+import { CategoryAgent } from "./category-agent";
+import { IntroductionAgent } from "./introduction-agent";
+import { SectionAgent } from "./section-agent";
+import { ConclusionAgent } from "./conclusion-agent";
+import { QAAgent } from "./qa-agent";
+import { ContentAssemblerAgent } from "./content-assembler-agent";
+import { MultiAgentOutputAdapter } from "./output-adapter";
+import { WordPressClient } from "@/lib/wordpress/client";
+import { PerplexityClient } from "@/lib/perplexity/client";
+import { getAPIRouter } from "@/lib/ai/api-router";
+import { ErrorTracker } from "./error-tracker";
+import { RetryConfigs, type AgentRetryConfig } from "./retry-config";
 import type {
   ArticleGenerationInput,
   ArticleGenerationResult,
@@ -29,9 +29,9 @@ import type {
   AIClientConfig,
   GeneratedImage,
   SectionOutput,
-} from '@/types/agents';
-import type { AIModel } from '@/types/ai-models';
-import { AgentExecutionContext } from './base-agent';
+} from "@/types/agents";
+import type { AIModel } from "@/types/ai-models";
+import { AgentExecutionContext } from "./base-agent";
 
 export class ParallelOrchestrator {
   private supabaseClient?: SupabaseClient;
@@ -43,7 +43,7 @@ export class ParallelOrchestrator {
     this.errorTracker = new ErrorTracker({
       enableLogging: true,
       enableMetrics: true,
-      enableExternalTracking: process.env.ERROR_TRACKING_ENABLED === 'true',
+      enableExternalTracking: process.env.ERROR_TRACKING_ENABLED === "true",
       maxErrorsInMemory: 100,
       enableDatabaseTracking: true,
       getSupabase: () => this.getSupabase(),
@@ -54,7 +54,7 @@ export class ParallelOrchestrator {
     this.currentJobId = jobId;
     // Update error tracker with job ID
     this.errorTracker = new ErrorTracker({
-      ...this.errorTracker['options'],
+      ...this.errorTracker["options"],
       jobId,
       enableDatabaseTracking: true,
       getSupabase: () => this.getSupabase(),
@@ -68,7 +68,9 @@ export class ParallelOrchestrator {
     return createAdminClient();
   }
 
-  async execute(input: ArticleGenerationInput): Promise<ArticleGenerationResult> {
+  async execute(
+    input: ArticleGenerationInput,
+  ): Promise<ArticleGenerationResult> {
     const supabase = await this.getSupabase();
     const startTime = Date.now();
 
@@ -97,38 +99,46 @@ export class ParallelOrchestrator {
     try {
       // 檢查是否有保存的狀態可以恢復
       const { data: jobData } = await supabase
-        .from('article_jobs')
-        .select('metadata, status')
-        .eq('id', input.articleJobId)
+        .from("article_jobs")
+        .select("metadata, status")
+        .eq("id", input.articleJobId)
         .single();
 
       // ✅ 修復問題 1: 防止重複生成 - 檢查是否已生成文章
       if (jobData?.metadata?.saved_article_id) {
-        console.log('[Orchestrator] ⚠️ Using cached article, skipping token deduction', {
-          articleId: jobData.metadata.saved_article_id,
-          jobId: input.articleJobId,
-          reason: 'Article already generated (idempotency check)',
-        });
+        console.log(
+          "[Orchestrator] ⚠️ Using cached article, skipping token deduction",
+          {
+            articleId: jobData.metadata.saved_article_id,
+            jobId: input.articleJobId,
+            reason: "Article already generated (idempotency check)",
+          },
+        );
 
         const { data: existingArticle, error: loadError } = await supabase
-          .from('generated_articles')
-          .select('*')
-          .eq('id', jobData.metadata.saved_article_id)
+          .from("generated_articles")
+          .select("*")
+          .eq("id", jobData.metadata.saved_article_id)
           .single();
 
         if (!loadError && existingArticle) {
           // 重構已生成的文章為 ArticleGenerationResult 格式
-          console.log('[Orchestrator] ✅ Returning existing article:', existingArticle.title);
+          console.log(
+            "[Orchestrator] ✅ Returning existing article:",
+            existingArticle.title,
+          );
           return this.reconstructResultFromArticle(existingArticle);
         } else {
-          console.warn('[Orchestrator] ⚠️ saved_article_id exists but article not found, will regenerate');
+          console.warn(
+            "[Orchestrator] ⚠️ saved_article_id exists but article not found, will regenerate",
+          );
         }
       }
 
       let currentPhase = jobData?.metadata?.current_phase;
       const savedState = jobData?.metadata;
 
-      console.log('[Orchestrator] 🔄 Checking resume state', {
+      console.log("[Orchestrator] 🔄 Checking resume state", {
         currentPhase,
         canResume: !!currentPhase,
         hasSavedArticle: !!jobData?.metadata?.saved_article_id,
@@ -149,12 +159,15 @@ export class ParallelOrchestrator {
         articleJobId: input.articleJobId,
       };
 
-      console.log('[Orchestrator] 📋 Agent Models Configuration', {
+      console.log("[Orchestrator] 📋 Agent Models Configuration", {
         research_model: agentConfig.research_model,
         strategy_model: agentConfig.strategy_model,
         writing_model: agentConfig.writing_model,
-        meta_model: agentConfig.meta_model || agentConfig.simple_processing_model || 'deepseek-chat',
-        image_model: agentConfig.image_model || 'gpt-image-1-mini',
+        meta_model:
+          agentConfig.meta_model ||
+          agentConfig.simple_processing_model ||
+          "deepseek-chat",
+        image_model: agentConfig.image_model || "gpt-image-1-mini",
       });
 
       // === 階段 1: Research & Strategy (初始階段) ===
@@ -163,7 +176,9 @@ export class ParallelOrchestrator {
       let strategyOutput;
 
       if (!currentPhase) {
-        console.log('[Orchestrator] 🚀 Starting Phase 1-2: Research & Strategy');
+        console.log(
+          "[Orchestrator] 🚀 Starting Phase 1-2: Research & Strategy",
+        );
 
         // Phase 1: Research
         const phase1Start = Date.now();
@@ -179,9 +194,9 @@ export class ParallelOrchestrator {
         phaseTimings.research = Date.now() - phase1Start;
         result.research = researchOutput;
 
-        await this.updateJobStatus(input.articleJobId, 'processing', {
+        await this.updateJobStatus(input.articleJobId, "processing", {
           research: researchOutput,
-          current_phase: 'research_completed',
+          current_phase: "research_completed",
         });
 
         // Phase 2: Strategy
@@ -190,8 +205,9 @@ export class ParallelOrchestrator {
         strategyOutput = await strategyAgent.execute({
           researchData: researchOutput,
           brandVoice,
-          targetWordCount: input.wordCount || workflowSettings.content_length_min,
-          targetLanguage: input.targetLanguage || 'zh-TW',
+          targetWordCount:
+            input.wordCount || workflowSettings.content_length_min,
+          targetLanguage: input.targetLanguage || "zh-TW",
           model: agentConfig.strategy_model,
           temperature: agentConfig.strategy_temperature,
           maxTokens: agentConfig.strategy_max_tokens,
@@ -199,16 +215,18 @@ export class ParallelOrchestrator {
         phaseTimings.strategy = Date.now() - phase2Start;
         result.strategy = strategyOutput;
 
-        await this.updateJobStatus(input.articleJobId, 'processing', {
+        await this.updateJobStatus(input.articleJobId, "processing", {
           ...savedState,
           research: researchOutput,
           strategy: strategyOutput,
-          current_phase: 'strategy_completed',
+          current_phase: "strategy_completed",
         });
 
         // 更新 currentPhase 變數以繼續執行 Phase 3
-        currentPhase = 'strategy_completed';
-        console.log('[Orchestrator] ✅ Phase 1-2 completed, continuing to Phase 3');
+        currentPhase = "strategy_completed";
+        console.log(
+          "[Orchestrator] ✅ Phase 1-2 completed, continuing to Phase 3",
+        );
       } else {
         // 載入已保存的 research 和 strategy
         researchOutput = savedState?.research;
@@ -219,14 +237,18 @@ export class ParallelOrchestrator {
 
       // === 階段 2: Content Generation (寫作+圖片) ===
       // 如果 currentPhase === 'strategy_completed'，執行 Phase 3 然後返回
-      let writingOutput: ArticleGenerationResult['writing'];
-      let imageOutput: ArticleGenerationResult['image'];
+      let writingOutput: ArticleGenerationResult["writing"];
+      let imageOutput: ArticleGenerationResult["image"];
 
-      if (currentPhase === 'strategy_completed') {
-        console.log('[Orchestrator] 🚀 Starting Phase 3: Content & Image Generation');
+      if (currentPhase === "strategy_completed") {
+        console.log(
+          "[Orchestrator] 🚀 Starting Phase 3: Content & Image Generation",
+        );
 
         const useMultiAgent = this.shouldUseMultiAgent(input);
-        console.log(`[Orchestrator] Using ${useMultiAgent ? 'Multi-Agent' : 'Legacy'} architecture`);
+        console.log(
+          `[Orchestrator] Using ${useMultiAgent ? "Multi-Agent" : "Legacy"} architecture`,
+        );
 
         const phase3Start = Date.now();
 
@@ -236,12 +258,12 @@ export class ParallelOrchestrator {
               strategyOutput,
               agentConfig,
               aiConfig,
-              context
+              context,
             );
 
-            await this.updateJobStatus(input.articleJobId, 'processing', {
+            await this.updateJobStatus(input.articleJobId, "processing", {
               ...savedState,
-              current_phase: 'images_completed',
+              current_phase: "images_completed",
               image: imageOutput,
             });
 
@@ -252,13 +274,21 @@ export class ParallelOrchestrator {
               agentConfig,
               aiConfig,
               context,
-              input.targetLanguage || 'zh-TW'
+              input.targetLanguage || "zh-TW",
             );
 
-            console.log('[Orchestrator] ✅ Multi-agent content generation succeeded');
+            console.log(
+              "[Orchestrator] ✅ Multi-agent content generation succeeded",
+            );
           } catch (multiAgentError) {
-            console.error('[Orchestrator] ❌ Multi-agent flow failed, falling back to legacy:', multiAgentError);
-            this.errorTracker.trackFallback('multi-agent-to-legacy', multiAgentError);
+            console.error(
+              "[Orchestrator] ❌ Multi-agent flow failed, falling back to legacy:",
+              multiAgentError,
+            );
+            this.errorTracker.trackFallback(
+              "multi-agent-to-legacy",
+              multiAgentError,
+            );
 
             const [legacyWriting, legacyImage] = await Promise.all([
               this.executeWritingAgent(
@@ -267,14 +297,15 @@ export class ParallelOrchestrator {
                 previousArticles,
                 agentConfig,
                 aiConfig,
-                context
+                context,
               ),
-              imageOutput || this.executeImageAgent(
-                strategyOutput,
-                agentConfig,
-                aiConfig,
-                context
-              ),
+              imageOutput ||
+                this.executeImageAgent(
+                  strategyOutput,
+                  agentConfig,
+                  aiConfig,
+                  context,
+                ),
             ]);
 
             writingOutput = legacyWriting;
@@ -288,13 +319,13 @@ export class ParallelOrchestrator {
               previousArticles,
               agentConfig,
               aiConfig,
-              context
+              context,
             ),
             this.executeImageAgent(
               strategyOutput,
               agentConfig,
               aiConfig,
-              context
+              context,
             ),
           ]);
         }
@@ -303,23 +334,27 @@ export class ParallelOrchestrator {
         result.writing = writingOutput;
         result.image = imageOutput;
 
-        await this.updateJobStatus(input.articleJobId, 'processing', {
+        await this.updateJobStatus(input.articleJobId, "processing", {
           ...savedState,
           writing: writingOutput,
           image: imageOutput,
-          current_phase: 'content_completed',
+          current_phase: "content_completed",
         });
 
         // 更新 currentPhase 變數以繼續執行 Phase 4-6
-        currentPhase = 'content_completed';
-        console.log('[Orchestrator] ✅ Phase 3 completed, continuing to Phase 4-6');
+        currentPhase = "content_completed";
+        console.log(
+          "[Orchestrator] ✅ Phase 3 completed, continuing to Phase 4-6",
+        );
       } else {
         // 載入已保存的 writing 和 image
         writingOutput = savedState?.writing;
         imageOutput = savedState?.image;
 
         if (!writingOutput || !imageOutput) {
-          throw new Error('Cannot resume from content_completed phase: missing writing or image data');
+          throw new Error(
+            "Cannot resume from content_completed phase: missing writing or image data",
+          );
         }
 
         result.writing = writingOutput;
@@ -327,7 +362,9 @@ export class ParallelOrchestrator {
       }
 
       // === 階段 3: Meta, Quality & Publish (最終階段) ===
-      console.log('[Orchestrator] 🚀 Starting Phase 4-6: Meta, Quality & Publish');
+      console.log(
+        "[Orchestrator] 🚀 Starting Phase 4-6: Meta, Quality & Publish",
+      );
 
       // 重新計算 useMultiAgent 以判斷是否需要插入圖片
       const useMultiAgent = this.shouldUseMultiAgent(input);
@@ -335,10 +372,15 @@ export class ParallelOrchestrator {
       const phase4Start = Date.now();
       const metaAgent = new MetaAgent(aiConfig, context);
 
-      let metaModel = agentConfig.meta_model || agentConfig.simple_processing_model || 'deepseek-chat';
-      if (metaModel === 'gpt-3.5-turbo') {
-        console.warn('[Orchestrator] ⚠️ Replacing gpt-3.5-turbo with deepseek-chat for MetaAgent');
-        metaModel = 'deepseek-chat';
+      let metaModel =
+        agentConfig.meta_model ||
+        agentConfig.simple_processing_model ||
+        "deepseek-chat";
+      if (metaModel === "gpt-3.5-turbo") {
+        console.warn(
+          "[Orchestrator] ⚠️ Replacing gpt-3.5-turbo with deepseek-chat for MetaAgent",
+        );
+        metaModel = "deepseek-chat";
       }
 
       const metaOutput = await metaAgent.execute({
@@ -357,8 +399,8 @@ export class ParallelOrchestrator {
         metaOutput.twitterCard.image = imageOutput.featuredImage.url;
       }
 
-      await this.updateJobStatus(input.articleJobId, 'processing', {
-        current_phase: 'meta_completed',
+      await this.updateJobStatus(input.articleJobId, "processing", {
+        current_phase: "meta_completed",
         meta: metaOutput,
       });
 
@@ -375,16 +417,16 @@ export class ParallelOrchestrator {
 
       writingOutput.html = htmlOutput.html;
 
-      if (!useMultiAgent && imageOutput) {
+      if (imageOutput) {
         writingOutput.html = this.insertImagesToHtml(
           writingOutput.html,
           imageOutput.featuredImage,
-          imageOutput.contentImages
+          imageOutput.contentImages,
         );
       }
 
-      await this.updateJobStatus(input.articleJobId, 'processing', {
-        current_phase: 'html_completed',
+      await this.updateJobStatus(input.articleJobId, "processing", {
+        current_phase: "html_completed",
         html: htmlOutput,
       });
 
@@ -397,8 +439,13 @@ export class ParallelOrchestrator {
       const wordpressConfig = await this.getWordPressConfig(input.websiteId);
 
       // 從 WordPress 抓取現有分類和標籤（如果配置了）
-      let existingCategories: Array<{ name: string; slug: string; count: number }> = [];
-      let existingTags: Array<{ name: string; slug: string; count: number }> = [];
+      let existingCategories: Array<{
+        name: string;
+        slug: string;
+        count: number;
+      }> = [];
+      let existingTags: Array<{ name: string; slug: string; count: number }> =
+        [];
 
       if (wordpressConfig?.enabled) {
         try {
@@ -421,40 +468,45 @@ export class ParallelOrchestrator {
           }));
 
           console.log(
-            `[Orchestrator] 從 WordPress 獲取: ${existingCategories.length} 個分類, ${existingTags.length} 個標籤`
+            `[Orchestrator] 從 WordPress 獲取: ${existingCategories.length} 個分類, ${existingTags.length} 個標籤`,
           );
         } catch (wpError) {
-          console.error('[Orchestrator] 獲取 WordPress 分類/標籤失敗:', wpError);
+          console.error(
+            "[Orchestrator] 獲取 WordPress 分類/標籤失敗:",
+            wpError,
+          );
         }
       }
 
       // CategoryAgent 使用 DeepSeek 自己的 API
       // 如果 meta_model 不是 DeepSeek 模型，使用預設的 deepseek-chat
-      let categoryModel = agentConfig.meta_model || 'deepseek-chat';
-      if (categoryModel.startsWith('deepseek/')) {
-        categoryModel = categoryModel.replace('deepseek/', '');
+      let categoryModel = agentConfig.meta_model || "deepseek-chat";
+      if (categoryModel.startsWith("deepseek/")) {
+        categoryModel = categoryModel.replace("deepseek/", "");
       }
       // 如果不是 deepseek-chat 或 deepseek-reasoner，使用預設值
-      if (!categoryModel.startsWith('deepseek-')) {
-        categoryModel = 'deepseek-chat';
+      if (!categoryModel.startsWith("deepseek-")) {
+        categoryModel = "deepseek-chat";
       }
       // 移除 :free 等版本後綴，DeepSeek API 只接受 deepseek-chat 或 deepseek-reasoner
-      categoryModel = categoryModel.replace(/:.*$/, '').replace(/-v[\d.]+/, '');
-      console.log(`[Orchestrator] CategoryAgent model: ${agentConfig.meta_model} -> ${categoryModel}`);
+      categoryModel = categoryModel.replace(/:.*$/, "").replace(/-v[\d.]+/, "");
+      console.log(
+        `[Orchestrator] CategoryAgent model: ${agentConfig.meta_model} -> ${categoryModel}`,
+      );
       const categoryAgent = new CategoryAgent(categoryModel);
       const categoryOutput = await categoryAgent.generateCategories({
         title: metaOutput.seo.title,
-        content: writingOutput.html || writingOutput.markdown || '',
+        content: writingOutput.html || writingOutput.markdown || "",
         keywords: [input.title, ...strategyOutput.keywords.slice(0, 5)],
         outline: strategyOutput,
-        language: input.region?.startsWith('zh') ? 'zh-TW' : 'en',
+        language: input.region?.startsWith("zh") ? "zh-TW" : "en",
         existingCategories,
         existingTags,
       });
       result.category = categoryOutput;
 
-      await this.updateJobStatus(input.articleJobId, 'processing', {
-        current_phase: 'category_completed',
+      await this.updateJobStatus(input.articleJobId, "processing", {
+        current_phase: "category_completed",
         category: categoryOutput,
       });
 
@@ -462,18 +514,21 @@ export class ParallelOrchestrator {
       if (wordpressConfig?.enabled) {
         try {
           const wordpressClient = new WordPressClient(wordpressConfig);
-          const publishResult = await wordpressClient.publishArticle({
-            title: metaOutput.seo.title,
-            content: writingOutput.html || writingOutput.markdown || '',
-            excerpt: metaOutput.seo.description,
-            slug: metaOutput.slug,
-            featuredImageUrl: imageOutput?.featuredImage?.url,
-            categories: categoryOutput.categories.map(c => c.name),
-            tags: categoryOutput.tags.map(t => t.name),
-            seoTitle: metaOutput.seo.title,
-            seoDescription: metaOutput.seo.description,
-            focusKeyword: categoryOutput.focusKeywords[0] || input.title,
-          }, workflowSettings.auto_publish ? 'publish' : 'draft');
+          const publishResult = await wordpressClient.publishArticle(
+            {
+              title: metaOutput.seo.title,
+              content: writingOutput.html || writingOutput.markdown || "",
+              excerpt: metaOutput.seo.description,
+              slug: metaOutput.slug,
+              featuredImageUrl: imageOutput?.featuredImage?.url,
+              categories: categoryOutput.categories.map((c) => c.name),
+              tags: categoryOutput.tags.map((t) => t.name),
+              seoTitle: metaOutput.seo.title,
+              seoDescription: metaOutput.seo.description,
+              focusKeyword: categoryOutput.focusKeywords[0] || input.title,
+            },
+            workflowSettings.auto_publish ? "publish" : "draft",
+          );
 
           result.wordpress = {
             postId: publishResult.post.id,
@@ -481,12 +536,12 @@ export class ParallelOrchestrator {
             status: publishResult.post.status,
           };
 
-          await this.updateJobStatus(input.articleJobId, 'processing', {
-            current_phase: 'wordpress_published',
+          await this.updateJobStatus(input.articleJobId, "processing", {
+            current_phase: "wordpress_published",
             wordpress: result.wordpress,
           });
         } catch (wpError) {
-          console.error('[Orchestrator] WordPress 發布失敗:', wpError);
+          console.error("[Orchestrator] WordPress 發布失敗:", wpError);
           // 不中斷流程，WordPress 發布失敗不影響文章生成
         }
       }
@@ -506,7 +561,7 @@ export class ParallelOrchestrator {
         parallelSpeedup,
       };
 
-      const finalStatus = result.success ? 'completed' : 'failed';
+      const finalStatus = result.success ? "completed" : "failed";
       await this.updateJobStatus(input.articleJobId, finalStatus, result);
 
       // Phase 8: 儲存文章到資料庫（如果生成成功或已發布到 WordPress）
@@ -525,16 +580,16 @@ export class ParallelOrchestrator {
           // 如果仍然沒有 userId，從 article_job 的 company_members 查詢
           if (!userId && input.articleJobId) {
             const { data: jobData } = await supabase
-              .from('article_jobs')
-              .select('company_id')
-              .eq('id', input.articleJobId)
+              .from("article_jobs")
+              .select("company_id")
+              .eq("id", input.articleJobId)
               .single();
 
             if (jobData) {
               const { data: memberData } = await supabase
-                .from('company_members')
-                .select('user_id')
-                .eq('company_id', jobData.company_id)
+                .from("company_members")
+                .select("user_id")
+                .eq("company_id", jobData.company_id)
                 .limit(1)
                 .single();
 
@@ -543,41 +598,48 @@ export class ParallelOrchestrator {
           }
 
           if (!userId) {
-            throw new Error('無法取得有效的 user_id，文章儲存失敗');
+            throw new Error("無法取得有效的 user_id，文章儲存失敗");
           }
 
           // 在儲存文章前，先確保 article_job 記錄存在
           const { error: upsertError } = await supabase
-            .from('article_jobs')
-            .upsert({
-              id: input.articleJobId,
-              job_id: input.articleJobId,
-              company_id: input.companyId,
-              website_id: input.websiteId,
-              user_id: userId,
-              keywords: input.title ? [input.title] : [],
-              status: 'processing',
-              metadata: { message: '準備儲存文章到資料庫' },
-            }, {
-              onConflict: 'id',
-            });
+            .from("article_jobs")
+            .upsert(
+              {
+                id: input.articleJobId,
+                job_id: input.articleJobId,
+                company_id: input.companyId,
+                website_id: input.websiteId,
+                user_id: userId,
+                keywords: input.title ? [input.title] : [],
+                status: "processing",
+                metadata: { message: "準備儲存文章到資料庫" },
+              },
+              {
+                onConflict: "id",
+              },
+            );
 
           if (upsertError) {
-            console.error('[Orchestrator] 建立 job 記錄失敗:', upsertError);
+            console.error("[Orchestrator] 建立 job 記錄失敗:", upsertError);
             throw new Error(`建立 job 記錄失敗: ${upsertError.message}`);
           }
-          console.log('[Orchestrator] Job 記錄已準備:', input.articleJobId);
+          console.log("[Orchestrator] Job 記錄已準備:", input.articleJobId);
 
-          const savedArticle = await articleStorage.saveArticleWithRecommendations({
-            articleJobId: input.articleJobId,
-            result,
-            websiteId: input.websiteId,
-            companyId: input.companyId,
-            userId,
-          });
+          const savedArticle =
+            await articleStorage.saveArticleWithRecommendations({
+              articleJobId: input.articleJobId,
+              result,
+              websiteId: input.websiteId,
+              companyId: input.companyId,
+              userId,
+            });
 
-          console.log('[Orchestrator] 文章已儲存:', savedArticle.article.id);
-          console.log('[Orchestrator] 推薦數量:', savedArticle.recommendations.length);
+          console.log("[Orchestrator] 文章已儲存:", savedArticle.article.id);
+          console.log(
+            "[Orchestrator] 推薦數量:",
+            savedArticle.recommendations.length,
+          );
 
           // 更新 result 加入儲存資訊
           result.savedArticle = {
@@ -587,7 +649,7 @@ export class ParallelOrchestrator {
 
           // ✅ 修復問題 2: Token 扣除
           const totalTokenUsage = this.calculateTotalTokenUsage(result);
-          console.log('[Orchestrator] 📊 Token usage calculated:', {
+          console.log("[Orchestrator] 📊 Token usage calculated:", {
             official: totalTokenUsage.official,
             charged: totalTokenUsage.charged,
             articleJobId: input.articleJobId,
@@ -600,7 +662,7 @@ export class ParallelOrchestrator {
             },
           });
 
-          console.log('[Orchestrator] 💳 Token deduction decision:', {
+          console.log("[Orchestrator] 💳 Token deduction decision:", {
             charged: totalTokenUsage.charged,
             willDeduct: totalTokenUsage.charged > 0,
             jobId: input.articleJobId,
@@ -610,7 +672,9 @@ export class ParallelOrchestrator {
 
           if (totalTokenUsage.charged > 0) {
             try {
-              const { TokenBillingService } = await import('@/lib/billing/token-billing-service');
+              const { TokenBillingService } = await import(
+                "@/lib/billing/token-billing-service"
+              );
               const tokenBillingService = new TokenBillingService(supabase);
 
               await tokenBillingService.deductTokensIdempotent({
@@ -619,7 +683,7 @@ export class ParallelOrchestrator {
                 articleId: savedArticle.article.id,
                 amount: totalTokenUsage.charged,
                 metadata: {
-                  modelName: 'multi-agent-generation',
+                  modelName: "multi-agent-generation",
                   articleTitle: result.meta?.seo.title,
                   breakdown: {
                     research: result.research?.executionInfo.tokenUsage,
@@ -633,15 +697,18 @@ export class ParallelOrchestrator {
                 },
               });
 
-              console.log('[Orchestrator] ✅ Token 已扣除:', {
+              console.log("[Orchestrator] ✅ Token 已扣除:", {
                 official: totalTokenUsage.official,
                 charged: totalTokenUsage.charged,
               });
             } catch (tokenError) {
-              console.error('[Orchestrator] ⚠️ Token 扣除失敗（不影響文章生成）:', tokenError);
+              console.error(
+                "[Orchestrator] ⚠️ Token 扣除失敗（不影響文章生成）:",
+                tokenError,
+              );
               // 記錄錯誤但不中斷流程
               await supabase
-                .from('article_jobs')
+                .from("article_jobs")
                 .update({
                   metadata: {
                     ...(jobData?.metadata || {}),
@@ -649,13 +716,13 @@ export class ParallelOrchestrator {
                     token_deduction_attempted_at: new Date().toISOString(),
                   },
                 })
-                .eq('id', input.articleJobId);
+                .eq("id", input.articleJobId);
             }
           }
 
           // ✅ 修復問題 3: 更新 metadata.saved_article_id 防止重複生成
           await supabase
-            .from('article_jobs')
+            .from("article_jobs")
             .update({
               metadata: {
                 ...(jobData?.metadata || {}),
@@ -663,12 +730,14 @@ export class ParallelOrchestrator {
                 generation_completed_at: new Date().toISOString(),
               },
             })
-            .eq('id', input.articleJobId);
+            .eq("id", input.articleJobId);
 
-          console.log('[Orchestrator] ✅ Metadata 已更新，saved_article_id:', savedArticle.article.id);
-
+          console.log(
+            "[Orchestrator] ✅ Metadata 已更新，saved_article_id:",
+            savedArticle.article.id,
+          );
         } catch (storageError) {
-          console.error('[Orchestrator] 文章儲存失敗:', storageError);
+          console.error("[Orchestrator] 文章儲存失敗:", storageError);
           // 不中斷流程，儲存失敗不影響文章生成
         }
       }
@@ -676,20 +745,20 @@ export class ParallelOrchestrator {
       return result;
     } catch (error) {
       result.errors = { orchestrator: error as Error };
-      await this.updateJobStatus(input.articleJobId, 'failed', result);
+      await this.updateJobStatus(input.articleJobId, "failed", result);
       throw error;
     }
   }
 
   private async executeWritingAgent(
-    strategyOutput: ArticleGenerationResult['strategy'],
+    strategyOutput: ArticleGenerationResult["strategy"],
     brandVoice: BrandVoice,
     previousArticles: PreviousArticle[],
     agentConfig: AgentConfig,
     aiConfig: AIClientConfig,
-    context: AgentExecutionContext
+    context: AgentExecutionContext,
   ) {
-    if (!strategyOutput) throw new Error('Strategy output is required');
+    if (!strategyOutput) throw new Error("Strategy output is required");
 
     const writingAgent = new WritingAgent(aiConfig, context);
     return writingAgent.execute({
@@ -703,12 +772,12 @@ export class ParallelOrchestrator {
   }
 
   private async executeImageAgent(
-    strategyOutput: ArticleGenerationResult['strategy'],
+    strategyOutput: ArticleGenerationResult["strategy"],
     agentConfig: AgentConfig,
     aiConfig: AIClientConfig,
-    context: AgentExecutionContext
+    context: AgentExecutionContext,
   ) {
-    if (!strategyOutput) throw new Error('Strategy output is required');
+    if (!strategyOutput) throw new Error("Strategy output is required");
 
     const imageAgent = new ImageAgent(aiConfig, context);
     return imageAgent.execute({
@@ -716,21 +785,21 @@ export class ParallelOrchestrator {
       outline: strategyOutput.outline,
       count: agentConfig.image_count,
       model: agentConfig.image_model,
-      quality: 'medium' as const,
+      quality: "medium" as const,
       size: agentConfig.image_size,
     });
   }
 
   private async executeContentGeneration(
-    strategyOutput: ArticleGenerationResult['strategy'],
-    imageOutput: ArticleGenerationResult['image'],
+    strategyOutput: ArticleGenerationResult["strategy"],
+    imageOutput: ArticleGenerationResult["image"],
     brandVoice: BrandVoice,
     agentConfig: AgentConfig,
     aiConfig: AIClientConfig,
     context: AgentExecutionContext,
-    targetLanguage: string = 'zh-TW'
+    targetLanguage: string = "zh-TW",
   ) {
-    if (!strategyOutput) throw new Error('Strategy output is required');
+    if (!strategyOutput) throw new Error("Strategy output is required");
 
     const { outline, selectedTitle } = strategyOutput;
 
@@ -749,7 +818,7 @@ export class ParallelOrchestrator {
           });
         },
         RetryConfigs.INTRODUCTION_AGENT,
-        'content_generation'
+        "content_generation",
       ),
       this.executeWithRetry(
         async () => {
@@ -764,7 +833,7 @@ export class ParallelOrchestrator {
           });
         },
         RetryConfigs.CONCLUSION_AGENT,
-        'content_generation'
+        "content_generation",
       ),
       this.executeWithRetry(
         async () => {
@@ -781,14 +850,15 @@ export class ParallelOrchestrator {
           });
         },
         RetryConfigs.QA_AGENT,
-        'content_generation'
+        "content_generation",
       ),
     ]);
 
     const sections: SectionOutput[] = [];
     for (let i = 0; i < outline.mainSections.length; i++) {
       const section = outline.mainSections[i];
-      const previousSummary: string | undefined = i > 0 ? sections[i - 1].summary : undefined;
+      const previousSummary: string | undefined =
+        i > 0 ? sections[i - 1].summary : undefined;
       const sectionImage = imageOutput?.contentImages?.[i] || null;
 
       const sectionOutput = await this.executeWithRetry(
@@ -807,7 +877,7 @@ export class ParallelOrchestrator {
           });
         },
         RetryConfigs.SECTION_AGENT,
-        'content_generation'
+        "content_generation",
       );
 
       sections.push(sectionOutput);
@@ -830,7 +900,8 @@ export class ParallelOrchestrator {
         selectedTitle,
         outline,
         keywords: strategyOutput.keywords,
-        targetSections: strategyOutput.internalLinkingStrategy?.targetSections || [],
+        targetSections:
+          strategyOutput.internalLinkingStrategy?.targetSections || [],
         competitorAnalysis: [],
         contentGaps: [],
       },
@@ -843,40 +914,59 @@ export class ParallelOrchestrator {
         (introduction.executionInfo.tokenUsage?.input || 0) +
         (conclusion.executionInfo.tokenUsage?.input || 0) +
         (qa.executionInfo.tokenUsage?.input || 0) +
-        sections.reduce((sum, s) => sum + (s.executionInfo.tokenUsage?.input || 0), 0),
+        sections.reduce(
+          (sum, s) => sum + (s.executionInfo.tokenUsage?.input || 0),
+          0,
+        ),
       output:
         (introduction.executionInfo.tokenUsage?.output || 0) +
         (conclusion.executionInfo.tokenUsage?.output || 0) +
         (qa.executionInfo.tokenUsage?.output || 0) +
-        sections.reduce((sum, s) => sum + (s.executionInfo.tokenUsage?.output || 0), 0),
+        sections.reduce(
+          (sum, s) => sum + (s.executionInfo.tokenUsage?.output || 0),
+          0,
+        ),
     };
 
     const totalExecutionTime =
       (introduction.executionInfo.executionTime || 0) +
       (conclusion.executionInfo.executionTime || 0) +
       (qa.executionInfo.executionTime || 0) +
-      sections.reduce((sum, s) => sum + (s.executionInfo.executionTime || 0), 0) +
+      sections.reduce(
+        (sum, s) => sum + (s.executionInfo.executionTime || 0),
+        0,
+      ) +
       assembled.executionInfo.executionTime;
 
     // 計算統計資料
-    const plainText = assembled.html.replace(/<[^>]*>/g, ' ').replace(/\s+/g, ' ').trim();
-    const sentences = plainText.split(/[.!?]+/).filter(s => s.trim().length > 0);
-    const paragraphs = assembled.html.split(/<\/p>/gi).filter(p => p.trim().length > 0);
+    const plainText = assembled.html
+      .replace(/<[^>]*>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
+    const sentences = plainText
+      .split(/[.!?]+/)
+      .filter((s) => s.trim().length > 0);
+    const paragraphs = assembled.html
+      .split(/<\/p>/gi)
+      .filter((p) => p.trim().length > 0);
 
     const statistics = {
       wordCount: assembled.statistics.totalWords,
       paragraphCount: paragraphs.length,
       sentenceCount: sentences.length,
       readingTime: Math.ceil(assembled.statistics.totalWords / 200), // 假設每分鐘 200 字
-      averageSentenceLength: sentences.length > 0 ? assembled.statistics.totalWords / sentences.length : 0,
+      averageSentenceLength:
+        sentences.length > 0
+          ? assembled.statistics.totalWords / sentences.length
+          : 0,
     };
 
     // 將 InternalLink[] 轉換為 WritingOutput 格式
-    const internalLinks = writingOutput.internalLinks.map(link => ({
+    const internalLinks = writingOutput.internalLinks.map((link) => ({
       anchor: link.anchor || link.title,
       url: link.url,
-      section: '',
-      articleId: '',
+      section: "",
+      articleId: "",
     }));
 
     // 構建符合 WritingOutput 類型的回傳
@@ -905,43 +995,45 @@ export class ParallelOrchestrator {
 
   private async getBrandVoice(websiteId: string | null): Promise<BrandVoice> {
     // 如果 websiteId 為 null，直接返回預設值
-    if (!websiteId || websiteId === 'null') {
-      console.warn('[Orchestrator] website_id 為 null，使用預設 brand_voices');
+    if (!websiteId || websiteId === "null") {
+      console.warn("[Orchestrator] website_id 為 null，使用預設 brand_voices");
       return {
-        id: '',
-        website_id: websiteId || '',
-        tone_of_voice: '專業、友善、易懂',
-        target_audience: '一般網路使用者',
+        id: "",
+        website_id: websiteId || "",
+        tone_of_voice: "專業、友善、易懂",
+        target_audience: "一般網路使用者",
         keywords: [],
       };
     }
 
     const supabase = await this.getSupabase();
     const { data: brandVoices, error } = await supabase
-      .from('brand_voices')
-      .select('*')
-      .eq('website_id', websiteId);
+      .from("brand_voices")
+      .select("*")
+      .eq("website_id", websiteId);
 
     if (error) {
-      console.error('[Orchestrator] 查詢 brand_voices 失敗:', error);
+      console.error("[Orchestrator] 查詢 brand_voices 失敗:", error);
       // 返回預設 brand voice
       return {
-        id: '',
+        id: "",
         website_id: websiteId,
-        tone_of_voice: '專業、友善、易懂',
-        target_audience: '一般網路使用者',
+        tone_of_voice: "專業、友善、易懂",
+        target_audience: "一般網路使用者",
         keywords: [],
       };
     }
 
     const brandVoice = brandVoices?.[0];
     if (!brandVoice) {
-      console.warn('[Orchestrator] website_id 沒有對應的 brand_voices，使用預設值');
+      console.warn(
+        "[Orchestrator] website_id 沒有對應的 brand_voices，使用預設值",
+      );
       return {
-        id: '',
+        id: "",
         website_id: websiteId,
-        tone_of_voice: '專業、友善、易懂',
-        target_audience: '一般網路使用者',
+        tone_of_voice: "專業、友善、易懂",
+        target_audience: "一般網路使用者",
         keywords: [],
       };
     }
@@ -949,13 +1041,17 @@ export class ParallelOrchestrator {
     return brandVoice;
   }
 
-  private async getWorkflowSettings(websiteId: string | null): Promise<WorkflowSettings> {
+  private async getWorkflowSettings(
+    websiteId: string | null,
+  ): Promise<WorkflowSettings> {
     // 如果 websiteId 為 null，直接返回預設值
-    if (!websiteId || websiteId === 'null') {
-      console.warn('[Orchestrator] website_id 為 null，使用預設 workflow_settings');
+    if (!websiteId || websiteId === "null") {
+      console.warn(
+        "[Orchestrator] website_id 為 null，使用預設 workflow_settings",
+      );
       return {
-        id: '',
-        website_id: websiteId || '',
+        id: "",
+        website_id: websiteId || "",
         serp_analysis_enabled: true,
         competitor_count: 10,
         content_length_min: 1000,
@@ -964,23 +1060,23 @@ export class ParallelOrchestrator {
         keyword_density_max: 3,
         quality_threshold: 80,
         auto_publish: false,
-        serp_model: 'perplexity-research',
-        content_model: 'deepseek-chat',
-        meta_model: 'deepseek-chat',
+        serp_model: "perplexity-research",
+        content_model: "deepseek-chat",
+        meta_model: "deepseek-chat",
       };
     }
 
     const supabase = await this.getSupabase();
     const { data: workflowSettings, error } = await supabase
-      .from('workflow_settings')
-      .select('*')
-      .eq('website_id', websiteId);
+      .from("workflow_settings")
+      .select("*")
+      .eq("website_id", websiteId);
 
     if (error) {
-      console.error('[Orchestrator] 查詢 workflow_settings 失敗:', error);
+      console.error("[Orchestrator] 查詢 workflow_settings 失敗:", error);
       // 返回預設 workflow settings
       return {
-        id: '',
+        id: "",
         website_id: websiteId,
         serp_analysis_enabled: true,
         competitor_count: 10,
@@ -990,17 +1086,19 @@ export class ParallelOrchestrator {
         keyword_density_max: 3,
         quality_threshold: 80,
         auto_publish: false,
-        serp_model: 'perplexity-research',
-        content_model: 'deepseek-chat',
-        meta_model: 'deepseek-chat',
+        serp_model: "perplexity-research",
+        content_model: "deepseek-chat",
+        meta_model: "deepseek-chat",
       };
     }
 
     const workflowSetting = workflowSettings?.[0];
     if (!workflowSetting) {
-      console.warn('[Orchestrator] website_id 沒有對應的 workflow_settings，使用預設值');
+      console.warn(
+        "[Orchestrator] website_id 沒有對應的 workflow_settings，使用預設值",
+      );
       return {
-        id: '',
+        id: "",
         website_id: websiteId,
         serp_analysis_enabled: true,
         competitor_count: 10,
@@ -1010,44 +1108,48 @@ export class ParallelOrchestrator {
         keyword_density_max: 3,
         quality_threshold: 80,
         auto_publish: false,
-        serp_model: 'perplexity-research',
-        content_model: 'deepseek-chat',
-        meta_model: 'deepseek-chat',
+        serp_model: "perplexity-research",
+        content_model: "deepseek-chat",
+        meta_model: "deepseek-chat",
       };
     }
 
     return workflowSetting;
   }
 
-  private async getAgentConfig(websiteId: string | null): Promise<AgentConfig & {
-    complexModel?: AIModel;
-    simpleModel?: AIModel;
-    imageModelInfo?: AIModel;
-    researchModelInfo?: AIModel;
-  }> {
+  private async getAgentConfig(websiteId: string | null): Promise<
+    AgentConfig & {
+      complexModel?: AIModel;
+      simpleModel?: AIModel;
+      imageModelInfo?: AIModel;
+      researchModelInfo?: AIModel;
+    }
+  > {
     // 如果 websiteId 為 null，直接返回預設配置
-    if (!websiteId || websiteId === 'null') {
-      console.warn('[Orchestrator] website_id 為 null，使用預設 agent_configs');
+    if (!websiteId || websiteId === "null") {
+      console.warn("[Orchestrator] website_id 為 null，使用預設 agent_configs");
       return this.getDefaultAgentConfig();
     }
 
     const supabase = await this.getSupabase();
 
     const { data: agentConfigs, error: configError } = await supabase
-      .from('agent_configs')
-      .select('*')
-      .eq('website_id', websiteId);
+      .from("agent_configs")
+      .select("*")
+      .eq("website_id", websiteId);
 
     const agentConfig = agentConfigs?.[0];
 
     if (configError) {
-      console.error('[Orchestrator] 查詢 agent_configs 失敗:', configError);
-      console.warn('[Orchestrator] 回滾到預設配置');
+      console.error("[Orchestrator] 查詢 agent_configs 失敗:", configError);
+      console.warn("[Orchestrator] 回滾到預設配置");
       return this.getDefaultAgentConfig();
     }
 
     if (!agentConfig) {
-      console.warn('[Orchestrator] website_id 沒有對應的 agent_configs，使用預設配置');
+      console.warn(
+        "[Orchestrator] website_id 沒有對應的 agent_configs，使用預設配置",
+      );
       return this.getDefaultAgentConfig();
     }
 
@@ -1059,12 +1161,12 @@ export class ParallelOrchestrator {
     ].filter(Boolean);
 
     const { data: models, error: modelsError } = await supabase
-      .from('ai_models')
-      .select('*')
-      .in('model_id', modelIds);
+      .from("ai_models")
+      .select("*")
+      .in("model_id", modelIds);
 
     if (modelsError) {
-      console.error('[Orchestrator] 查詢 ai_models 失敗:', modelsError);
+      console.error("[Orchestrator] 查詢 ai_models 失敗:", modelsError);
     }
 
     const modelsMap = new Map<string, AIModel>();
@@ -1076,10 +1178,14 @@ export class ParallelOrchestrator {
       complex_processing_model: agentConfig.complex_processing_model,
       simple_processing_model: agentConfig.simple_processing_model,
 
-      research_model: agentConfig.research_model || agentConfig.complex_processing_model || 'deepseek-reasoner',
-      strategy_model: agentConfig.complex_processing_model || 'deepseek-reasoner',
-      writing_model: agentConfig.simple_processing_model || 'deepseek-chat',
-      image_model: agentConfig.image_model || 'gpt-image-1-mini',
+      research_model:
+        agentConfig.research_model ||
+        agentConfig.complex_processing_model ||
+        "deepseek-reasoner",
+      strategy_model:
+        agentConfig.complex_processing_model || "deepseek-reasoner",
+      writing_model: agentConfig.simple_processing_model || "deepseek-chat",
+      image_model: agentConfig.image_model || "gpt-image-1-mini",
 
       research_temperature: agentConfig.research_temperature || 0.7,
       strategy_temperature: agentConfig.strategy_temperature || 0.7,
@@ -1088,11 +1194,14 @@ export class ParallelOrchestrator {
       strategy_max_tokens: agentConfig.strategy_max_tokens || 64000,
       writing_max_tokens: agentConfig.writing_max_tokens || 64000,
 
-      image_size: agentConfig.image_size || '1024x1024',
+      image_size: agentConfig.image_size || "1024x1024",
       image_count: agentConfig.image_count || 3,
 
       meta_enabled: agentConfig.meta_enabled !== false,
-      meta_model: agentConfig.meta_model || agentConfig.simple_processing_model || 'deepseek-chat',
+      meta_model:
+        agentConfig.meta_model ||
+        agentConfig.simple_processing_model ||
+        "deepseek-chat",
       meta_temperature: agentConfig.meta_temperature || 0.7,
       meta_max_tokens: agentConfig.meta_max_tokens || 16000,
 
@@ -1103,69 +1212,74 @@ export class ParallelOrchestrator {
     };
   }
 
-  private async ensureAgentConfigExists(websiteId: string): Promise<any | null> {
+  private async ensureAgentConfigExists(
+    websiteId: string,
+  ): Promise<any | null> {
     const supabase = await this.getSupabase();
 
     try {
       const { data: existing } = await supabase
-        .from('agent_configs')
-        .select('*')
-        .eq('website_id', websiteId)
+        .from("agent_configs")
+        .select("*")
+        .eq("website_id", websiteId)
         .limit(1);
 
       if (existing && existing.length > 0) {
-        console.log('[Orchestrator] agent_configs 已存在');
+        console.log("[Orchestrator] agent_configs 已存在");
         return existing[0];
       }
 
       const defaultConfig = {
         website_id: websiteId,
-        research_model: 'deepseek-reasoner',
-        complex_processing_model: 'deepseek-reasoner',
-        simple_processing_model: 'deepseek-chat',
-        image_model: 'gpt-image-1-mini',
+        research_model: "deepseek-reasoner",
+        complex_processing_model: "deepseek-reasoner",
+        simple_processing_model: "deepseek-chat",
+        image_model: "gpt-image-1-mini",
         research_temperature: 0.7,
         research_max_tokens: 16000,
         strategy_temperature: 0.7,
         strategy_max_tokens: 16000,
         writing_temperature: 0.7,
         writing_max_tokens: 16000,
-        image_size: '1024x1024',
+        image_size: "1024x1024",
         image_count: 3,
         meta_enabled: true,
-        meta_model: 'deepseek-chat',
+        meta_model: "deepseek-chat",
         meta_temperature: 0.7,
         meta_max_tokens: 16000,
       };
 
-      console.log('[Orchestrator] 正在為 website_id 創建 agent_configs:', websiteId);
+      console.log(
+        "[Orchestrator] 正在為 website_id 創建 agent_configs:",
+        websiteId,
+      );
 
       const { data: created, error: createError } = await supabase
-        .from('agent_configs')
+        .from("agent_configs")
         .insert(defaultConfig)
-        .select('*')
+        .select("*")
         .single();
 
       if (createError) {
-        console.error('[Orchestrator] 創建 agent_configs 失敗:', createError);
+        console.error("[Orchestrator] 創建 agent_configs 失敗:", createError);
         return null;
       }
 
-      console.log('[Orchestrator] agent_configs 已成功創建:', websiteId);
+      console.log("[Orchestrator] agent_configs 已成功創建:", websiteId);
       return created;
     } catch (error) {
-      console.error('[Orchestrator] ensureAgentConfigExists 出錯:', error);
+      console.error("[Orchestrator] ensureAgentConfigExists 出錯:", error);
       return null;
     }
   }
 
   private async getPreviousArticles(
     websiteId: string | null,
-    currentArticleTitle: string
+    currentArticleTitle: string,
   ): Promise<PreviousArticle[]> {
     // 如果 websiteId 為 null，返回空陣列（沒有網站就沒有歷史文章）
-    if (!websiteId || websiteId === 'null') {
-      console.warn('[Orchestrator] website_id 為 null，返回空的歷史文章列表');
+    if (!websiteId || websiteId === "null") {
+      console.warn("[Orchestrator] website_id 為 null，返回空的歷史文章列表");
       return [];
     }
 
@@ -1173,27 +1287,27 @@ export class ParallelOrchestrator {
 
     // 1. 取得網站基礎 URL
     const { data: websiteConfig } = await supabase
-      .from('website_configs')
-      .select('wordpress_url')
-      .eq('id', websiteId)
+      .from("website_configs")
+      .select("wordpress_url")
+      .eq("id", websiteId)
       .single();
 
-    const baseUrl = websiteConfig?.wordpress_url || '';
+    const baseUrl = websiteConfig?.wordpress_url || "";
 
     // 2. 使用全文搜尋查詢相關文章
     const { data, error } = await supabase
-      .from('generated_articles')
-      .select('id, title, slug, keywords, excerpt, wordpress_post_url, status')
-      .eq('website_id', websiteId)
-      .or('status.eq.published,status.eq.reviewed')
-      .textSearch('title', currentArticleTitle, {
-        type: 'websearch',
-        config: 'simple'
+      .from("generated_articles")
+      .select("id, title, slug, keywords, excerpt, wordpress_post_url, status")
+      .eq("website_id", websiteId)
+      .or("status.eq.published,status.eq.reviewed")
+      .textSearch("title", currentArticleTitle, {
+        type: "websearch",
+        config: "simple",
       })
       .limit(20);
 
     if (error) {
-      console.error('[Orchestrator] 查詢相關文章失敗:', error);
+      console.error("[Orchestrator] 查詢相關文章失敗:", error);
       return [];
     }
 
@@ -1205,16 +1319,17 @@ export class ParallelOrchestrator {
 
     // 3. 構建 URL（已發佈用網站網址，未發佈用預覽 URL）
     return (data || []).map((article) => {
-      const url = article.status === 'published' && baseUrl
-        ? `${baseUrl}/${article.slug}`
-        : `/dashboard/articles/${article.id}/preview`;
+      const url =
+        article.status === "published" && baseUrl
+          ? `${baseUrl}/${article.slug}`
+          : `/dashboard/articles/${article.id}/preview`;
 
       return {
         id: article.id,
         title: article.title,
         url,
         keywords: article.keywords || [],
-        excerpt: article.excerpt || '',
+        excerpt: article.excerpt || "",
       };
     });
   }
@@ -1226,22 +1341,22 @@ export class ParallelOrchestrator {
     researchModelInfo?: AIModel;
   } {
     return {
-      complex_processing_model: 'deepseek-reasoner',
-      simple_processing_model: 'deepseek-chat',
-      research_model: 'deepseek-reasoner',
-      strategy_model: 'deepseek-reasoner',
-      writing_model: 'deepseek-chat',
-      image_model: 'gpt-image-1-mini',
+      complex_processing_model: "deepseek-reasoner",
+      simple_processing_model: "deepseek-chat",
+      research_model: "deepseek-reasoner",
+      strategy_model: "deepseek-reasoner",
+      writing_model: "deepseek-chat",
+      image_model: "gpt-image-1-mini",
       research_temperature: 0.7,
       strategy_temperature: 0.7,
       writing_temperature: 0.7,
       research_max_tokens: 64000,
       strategy_max_tokens: 64000,
       writing_max_tokens: 64000,
-      image_size: '1024x1024',
+      image_size: "1024x1024",
       image_count: 3,
       meta_enabled: true,
-      meta_model: 'deepseek-chat',
+      meta_model: "deepseek-chat",
       meta_temperature: 0.7,
       meta_max_tokens: 64000,
     };
@@ -1259,12 +1374,14 @@ export class ParallelOrchestrator {
   private async getWordPressConfig(websiteId: string): Promise<any> {
     const supabase = await this.getSupabase();
     const { data: configs, error } = await supabase
-      .from('website_configs')
-      .select('wordpress_url, wp_username, wp_app_password, wp_enabled, wordpress_access_token, wordpress_refresh_token')
-      .eq('id', websiteId);
+      .from("website_configs")
+      .select(
+        "wordpress_url, wp_username, wp_app_password, wp_enabled, wordpress_access_token, wordpress_refresh_token",
+      )
+      .eq("id", websiteId);
 
     if (error) {
-      console.error('[Orchestrator] 查詢 website_configs 失敗:', error);
+      console.error("[Orchestrator] 查詢 website_configs 失敗:", error);
       return null;
     }
 
@@ -1274,7 +1391,10 @@ export class ParallelOrchestrator {
     }
 
     // 確保配置格式正確
-    if (!data.wordpress_url || (!data.wp_app_password && !data.wordpress_access_token)) {
+    if (
+      !data.wordpress_url ||
+      (!data.wp_app_password && !data.wordpress_access_token)
+    ) {
       return null;
     }
 
@@ -1291,20 +1411,23 @@ export class ParallelOrchestrator {
   private async updateJobStatus(
     articleJobId: string,
     status: string,
-    data: any
+    data: any,
   ): Promise<void> {
-    console.log(`[Orchestrator] 更新任務狀態: ${articleJobId.substring(0, 8)}... -> ${status}`);
+    console.log(
+      `[Orchestrator] 更新任務狀態: ${articleJobId.substring(0, 8)}... -> ${status}`,
+    );
 
     const supabase = await this.getSupabase();
 
     // 先讀取現有的 metadata
     const { data: existingJob } = await supabase
-      .from('article_jobs')
-      .select('metadata')
-      .eq('id', articleJobId)
+      .from("article_jobs")
+      .select("metadata")
+      .eq("id", articleJobId)
       .single();
 
-    const existingMetadata = (existingJob?.metadata as Record<string, unknown>) || {};
+    const existingMetadata =
+      (existingJob?.metadata as Record<string, unknown>) || {};
 
     // 驗證並格式化資料
     const validatedData = this.validateAndFormatStateData(data);
@@ -1322,19 +1445,19 @@ export class ParallelOrchestrator {
     };
 
     // 如果是 completed 或 failed，設定 completed_at
-    if (status === 'completed' || status === 'failed') {
+    if (status === "completed" || status === "failed") {
       updateData.completed_at = new Date().toISOString();
     }
 
     // 如果 data 包含 keywords，則更新 keywords
-    if (data && typeof data === 'object' && 'keywords' in data) {
+    if (data && typeof data === "object" && "keywords" in data) {
       updateData.keywords = data.keywords;
     }
 
     const { data: result, error } = await supabase
-      .from('article_jobs')
+      .from("article_jobs")
       .update(updateData)
-      .eq('id', articleJobId)
+      .eq("id", articleJobId)
       .select();
 
     if (error) {
@@ -1348,7 +1471,7 @@ export class ParallelOrchestrator {
   private insertImagesToHtml(
     html: string,
     featuredImage: GeneratedImage | null,
-    contentImages: GeneratedImage[]
+    contentImages: GeneratedImage[],
   ): string {
     let modifiedHtml = html;
 
@@ -1359,11 +1482,11 @@ export class ParallelOrchestrator {
   <figcaption>${featuredImage.altText}</figcaption>
 </figure>\n\n`;
 
-      const firstPTagIndex = modifiedHtml.indexOf('</p>');
+      const firstPTagIndex = modifiedHtml.indexOf("</p>");
       if (firstPTagIndex !== -1) {
         modifiedHtml =
           modifiedHtml.slice(0, firstPTagIndex + 4) +
-          '\n\n' +
+          "\n\n" +
           featuredImageHtml +
           modifiedHtml.slice(firstPTagIndex + 4);
       }
@@ -1409,11 +1532,17 @@ export class ParallelOrchestrator {
         insertPositions = [...h2Positions];
         const remainingImages = imageCount - h2Count;
         const h3ToUse = h3Positions.slice(0, remainingImages);
-        insertPositions = [...insertPositions, ...h3ToUse].sort((a, b) => a - b);
+        insertPositions = [...insertPositions, ...h3ToUse].sort(
+          (a, b) => a - b,
+        );
       }
 
       // 從後往前插入，避免位置偏移
-      for (let i = Math.min(insertPositions.length, imageCount) - 1; i >= 0; i--) {
+      for (
+        let i = Math.min(insertPositions.length, imageCount) - 1;
+        i >= 0;
+        i--
+      ) {
         const image = contentImages[i];
         const imageHtml = `\n\n<figure class="wp-block-image size-large">
   <img src="${image.url}" alt="${image.altText}" width="${image.width}" height="${image.height}" />
@@ -1434,7 +1563,7 @@ export class ParallelOrchestrator {
   private async executeWithRetry<T>(
     fn: () => Promise<T>,
     config: AgentRetryConfig,
-    phase: string = 'unknown'
+    phase: string = "unknown",
   ): Promise<T> {
     let lastError: Error | null = null;
     let delay = config.initialDelayMs;
@@ -1443,7 +1572,10 @@ export class ParallelOrchestrator {
       try {
         const timeoutPromise = config.timeoutMs
           ? new Promise<never>((_, reject) =>
-              setTimeout(() => reject(new Error('Agent execution timeout')), config.timeoutMs)
+              setTimeout(
+                () => reject(new Error("Agent execution timeout")),
+                config.timeoutMs,
+              ),
             )
           : null;
 
@@ -1458,15 +1590,24 @@ export class ParallelOrchestrator {
       } catch (error) {
         lastError = error as Error;
 
-        await this.errorTracker.trackError(config.agentName, phase, error, attempt, config.maxAttempts);
+        await this.errorTracker.trackError(
+          config.agentName,
+          phase,
+          error,
+          attempt,
+          config.maxAttempts,
+        );
 
-        const isRetryable = this.isRetryableError(error, config.retryableErrors);
+        const isRetryable = this.isRetryableError(
+          error,
+          config.retryableErrors,
+        );
         const hasMoreAttempts = attempt < config.maxAttempts;
 
         if (!isRetryable || !hasMoreAttempts) {
           console.error(
             `[Orchestrator] ${config.agentName} failed after ${attempt} attempts`,
-            { error: lastError.message }
+            { error: lastError.message },
           );
           throw lastError;
         }
@@ -1474,7 +1615,7 @@ export class ParallelOrchestrator {
         const currentDelay = Math.min(delay, config.maxDelayMs);
         console.warn(
           `[Orchestrator] ${config.agentName} attempt ${attempt} failed, retrying in ${currentDelay}ms`,
-          { error: lastError.message }
+          { error: lastError.message },
         );
 
         await this.sleep(currentDelay);
@@ -1482,10 +1623,18 @@ export class ParallelOrchestrator {
       }
     }
 
-    throw lastError || new Error(`${config.agentName} failed after ${config.maxAttempts} attempts`);
+    throw (
+      lastError ||
+      new Error(
+        `${config.agentName} failed after ${config.maxAttempts} attempts`,
+      )
+    );
   }
 
-  private isRetryableError(error: unknown, retryableErrors: readonly string[]): boolean {
+  private isRetryableError(
+    error: unknown,
+    retryableErrors: readonly string[],
+  ): boolean {
     const err = error as Error & { code?: string; type?: string };
 
     if (err.code && retryableErrors.includes(err.code)) {
@@ -1503,16 +1652,19 @@ export class ParallelOrchestrator {
   }
 
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   private shouldUseMultiAgent(input: ArticleGenerationInput): boolean {
-    const enabled = process.env.USE_MULTI_AGENT_ARCHITECTURE === 'true';
+    const enabled = process.env.USE_MULTI_AGENT_ARCHITECTURE === "true";
     if (!enabled) {
       return false;
     }
 
-    const rolloutPercentage = parseInt(process.env.MULTI_AGENT_ROLLOUT_PERCENTAGE || '100', 10);
+    const rolloutPercentage = parseInt(
+      process.env.MULTI_AGENT_ROLLOUT_PERCENTAGE || "100",
+      10,
+    );
 
     if (rolloutPercentage >= 100) {
       return true;
@@ -1528,7 +1680,7 @@ export class ParallelOrchestrator {
     let hash = 0;
     for (let i = 0; i < str.length; i++) {
       const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
+      hash = (hash << 5) - hash + char;
       hash = hash & hash;
     }
     return Math.abs(hash);
@@ -1548,34 +1700,35 @@ export class ParallelOrchestrator {
 
       // 驗證 introduction
       if (multiState.introduction && !multiState.introduction.markdown) {
-        console.warn('[Orchestrator] Invalid introduction state, removing');
+        console.warn("[Orchestrator] Invalid introduction state, removing");
         delete multiState.introduction;
       }
 
       // 驗證 sections
       if (multiState.sections) {
-        multiState.sections = multiState.sections.filter((s: any) =>
-          s && s.markdown && s.wordCount !== undefined
+        multiState.sections = multiState.sections.filter(
+          (s: any) => s && s.markdown && s.wordCount !== undefined,
         );
       }
 
       // 驗證 conclusion
       if (multiState.conclusion && !multiState.conclusion.markdown) {
-        console.warn('[Orchestrator] Invalid conclusion state, removing');
+        console.warn("[Orchestrator] Invalid conclusion state, removing");
         delete multiState.conclusion;
       }
 
       // 驗證 qa
       if (multiState.qa && !multiState.qa.markdown) {
-        console.warn('[Orchestrator] Invalid QA state, removing');
+        console.warn("[Orchestrator] Invalid QA state, removing");
         delete multiState.qa;
       }
     }
 
     // 限制 metadata 大小（< 100KB）
     const jsonString = JSON.stringify(validated);
-    if (jsonString.length > 102400) { // 100KB
-      console.warn('[Orchestrator] Metadata too large, truncating errors');
+    if (jsonString.length > 102400) {
+      // 100KB
+      console.warn("[Orchestrator] Metadata too large, truncating errors");
       // 移除舊的錯誤以減少大小
       if (validated.errors && validated.errors.length > 5) {
         validated.errors = validated.errors.slice(-5);
@@ -1609,12 +1762,13 @@ export class ParallelOrchestrator {
       if (phase?.executionInfo) {
         const execInfo = phase.executionInfo;
         // ImageAgent 的 executionInfo 沒有 tokenUsage
-        if ('tokenUsage' in execInfo && execInfo.tokenUsage) {
+        if ("tokenUsage" in execInfo && execInfo.tokenUsage) {
           const tokenUsage = execInfo.tokenUsage;
           const total = tokenUsage.input + tokenUsage.output;
           officialTotal += total;
           // 如果有 charged 欄位則使用，否則使用 total
-          chargedTotal += (tokenUsage as Record<string, number>).charged || total;
+          chargedTotal +=
+            (tokenUsage as Record<string, number>).charged || total;
         }
       }
     }
@@ -1629,14 +1783,16 @@ export class ParallelOrchestrator {
    * 從資料庫已儲存的文章重構 ArticleGenerationResult
    * 用於冪等性檢查，避免重複生成
    */
-  private reconstructResultFromArticle(article: Record<string, unknown>): ArticleGenerationResult {
+  private reconstructResultFromArticle(
+    article: Record<string, unknown>,
+  ): ArticleGenerationResult {
     return {
       success: true,
       articleJobId: article.article_job_id as string,
       research: {
         title: article.title as string,
-        region: 'zh-TW',
-        searchIntent: 'informational' as const,
+        region: "zh-TW",
+        searchIntent: "informational" as const,
         intentConfidence: 0.8,
         topRankingFeatures: {
           contentLength: { min: 0, max: 0, avg: 0 },
@@ -1647,11 +1803,11 @@ export class ParallelOrchestrator {
         },
         contentGaps: [],
         competitorAnalysis: [],
-        recommendedStrategy: '',
+        recommendedStrategy: "",
         relatedKeywords: [],
         externalReferences: [],
         executionInfo: {
-          model: 'cached',
+          model: "cached",
           executionTime: 0,
           tokenUsage: { input: 0, output: 0 },
         },
@@ -1662,20 +1818,20 @@ export class ParallelOrchestrator {
         keywords: [],
         outline: {
           introduction: {
-            hook: '',
-            context: '',
-            thesis: '',
+            hook: "",
+            context: "",
+            thesis: "",
             wordCount: 0,
           },
           mainSections: [],
           conclusion: {
-            summary: '',
-            callToAction: '',
+            summary: "",
+            callToAction: "",
             wordCount: 0,
           },
           faq: [],
         },
-        targetWordCount: article.word_count as number || 0,
+        targetWordCount: (article.word_count as number) || 0,
         sectionWordDistribution: {
           introduction: 0,
           mainSections: 0,
@@ -1692,13 +1848,13 @@ export class ParallelOrchestrator {
         },
         differentiationStrategy: {
           uniqueAngles: [],
-          valueProposition: '',
+          valueProposition: "",
           competitiveAdvantages: [],
         },
         externalReferences: [],
         executionInfo: {
           executionTime: 0,
-          model: 'cached',
+          model: "cached",
           tokenUsage: { input: 0, output: 0 },
         },
       },
@@ -1725,7 +1881,7 @@ export class ParallelOrchestrator {
         },
         executionInfo: {
           executionTime: 0,
-          model: 'cached',
+          model: "cached",
           tokenUsage: { input: 0, output: 0 },
         },
       },
@@ -1742,18 +1898,18 @@ export class ParallelOrchestrator {
         openGraph: {
           title: article.og_title as string,
           description: article.og_description as string,
-          type: 'article' as const,
+          type: "article" as const,
           image: article.og_image as string,
         },
         twitterCard: {
-          card: 'summary_large_image' as const,
+          card: "summary_large_image" as const,
           title: article.twitter_title as string,
           description: article.twitter_description as string,
           image: article.twitter_image as string,
         },
         executionInfo: {
           executionTime: 0,
-          model: 'cached',
+          model: "cached",
           tokenUsage: { input: 0, output: 0 },
         },
       },
