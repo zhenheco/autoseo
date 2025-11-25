@@ -5,6 +5,16 @@ import { ArticleManager } from "./components/ArticleManager";
 
 export const dynamic = "force-dynamic";
 
+interface ArticleJob {
+  id: string;
+  keywords: string[] | null;
+  status: string;
+  progress: number | null;
+  current_step: string | null;
+  created_at: string;
+  metadata: { title?: string } | null;
+}
+
 async function getArticles(companyId: string) {
   const supabase = await createClient();
 
@@ -40,6 +50,26 @@ async function getArticles(companyId: string) {
   return data || [];
 }
 
+async function getArticleJobs(companyId: string): Promise<ArticleJob[]> {
+  const supabase = await createClient();
+
+  const { data, error } = await supabase
+    .from("article_jobs")
+    .select(
+      "id, keywords, status, progress, current_step, created_at, metadata",
+    )
+    .eq("company_id", companyId)
+    .in("status", ["pending", "processing"])
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("Error fetching article jobs:", error);
+    return [];
+  }
+
+  return (data || []) as ArticleJob[];
+}
+
 async function getCompanyId(userId: string) {
   const supabase = await createClient();
 
@@ -66,7 +96,16 @@ export default async function ArticleManagePage() {
     redirect("/dashboard?error=no-company");
   }
 
-  const articles = await getArticles(companyId);
+  const [articles, jobs] = await Promise.all([
+    getArticles(companyId),
+    getArticleJobs(companyId),
+  ]);
 
-  return <ArticleManager initialArticles={articles} />;
+  return (
+    <ArticleManager
+      initialArticles={articles}
+      initialJobs={jobs}
+      companyId={companyId}
+    />
+  );
 }
