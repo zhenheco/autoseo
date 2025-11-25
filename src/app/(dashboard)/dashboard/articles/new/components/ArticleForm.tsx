@@ -4,6 +4,8 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import {
   Select,
   SelectContent,
@@ -11,6 +13,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import { createArticle } from "../actions";
 import { useRouter } from "next/navigation";
 
@@ -69,6 +78,12 @@ export function ArticleForm({ quotaStatus }: ArticleFormProps) {
   const [competitors, setCompetitors] = useState<string[]>([""]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const [titleMode, setTitleMode] = useState<"auto" | "preview">("auto");
+  const [isLoadingTitles, setIsLoadingTitles] = useState(false);
+  const [titleOptions, setTitleOptions] = useState<string[]>([]);
+  const [selectedTitle, setSelectedTitle] = useState("");
+  const [showTitleDialog, setShowTitleDialog] = useState(false);
+
   const canAddCompetitors = quotaStatus?.canUseCompetitors ?? false;
   const hasRemainingQuota = quotaStatus
     ? quotaStatus.remaining > 0 || quotaStatus.quota === -1
@@ -90,10 +105,44 @@ export function ArticleForm({ quotaStatus }: ArticleFormProps) {
     setCompetitors(newCompetitors);
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsSubmitting(true);
+  const handlePreviewTitles = async () => {
+    setIsLoadingTitles(true);
+    try {
+      const response = await fetch("/api/articles/preview-titles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          industry: industry === "other" ? customIndustry : industry,
+          region,
+          language,
+          competitors: competitors.filter((c) => c.trim() !== ""),
+        }),
+      });
 
+      if (!response.ok) {
+        throw new Error("標題生成失敗");
+      }
+
+      const data = await response.json();
+      setTitleOptions(data.titles || []);
+      setSelectedTitle(data.titles?.[0] || "");
+      setShowTitleDialog(true);
+    } catch (error) {
+      console.error("標題預覽失敗:", error);
+      alert("標題生成失敗，請稍後再試");
+    } finally {
+      setIsLoadingTitles(false);
+    }
+  };
+
+  const handleConfirmTitle = async () => {
+    if (!selectedTitle) return;
+    setShowTitleDialog(false);
+    await submitArticle(selectedTitle);
+  };
+
+  const submitArticle = async (title?: string) => {
+    setIsSubmitting(true);
     try {
       const formData = new FormData();
       formData.append(
@@ -102,6 +151,9 @@ export function ArticleForm({ quotaStatus }: ArticleFormProps) {
       );
       formData.append("region", region);
       formData.append("language", language);
+      if (title) {
+        formData.append("title", title);
+      }
 
       const validCompetitors = competitors.filter((c) => c.trim() !== "");
       formData.append("competitors", JSON.stringify(validCompetitors));
@@ -112,6 +164,16 @@ export function ArticleForm({ quotaStatus }: ArticleFormProps) {
       console.error("提交失敗:", error);
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+
+    if (titleMode === "preview") {
+      await handlePreviewTitles();
+    } else {
+      await submitArticle();
     }
   };
 
@@ -228,9 +290,90 @@ export function ArticleForm({ quotaStatus }: ArticleFormProps) {
         </div>
       )}
 
-      <Button type="submit" className="w-full" disabled={isSubmitting}>
-        {isSubmitting ? "生成中..." : "開始生成文章"}
+      <div className="space-y-3 rounded-lg border p-4 bg-muted/50">
+        <Label className="text-base font-medium">標題生成模式</Label>
+        <RadioGroup
+          value={titleMode}
+          onValueChange={(value) => setTitleMode(value as "auto" | "preview")}
+          className="space-y-2"
+        >
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="auto" id="auto" />
+            <Label htmlFor="auto" className="font-normal cursor-pointer">
+              AI 自動選擇最佳標題
+              <span className="text-xs text-muted-foreground ml-2">
+                （系統會自動評分並選擇最適合的標題）
+              </span>
+            </Label>
+          </div>
+          <div className="flex items-center space-x-2">
+            <RadioGroupItem value="preview" id="preview" />
+            <Label htmlFor="preview" className="font-normal cursor-pointer">
+              先預覽標題選項
+              <span className="text-xs text-muted-foreground ml-2">
+                （AI 生成多個標題供您選擇）
+              </span>
+            </Label>
+          </div>
+        </RadioGroup>
+      </div>
+
+      <Button
+        type="submit"
+        className="w-full"
+        disabled={isSubmitting || isLoadingTitles}
+      >
+        {isSubmitting
+          ? "生成中..."
+          : isLoadingTitles
+            ? "正在生成標題..."
+            : titleMode === "preview"
+              ? "生成標題選項"
+              : "開始生成文章"}
       </Button>
+
+      <Dialog open={showTitleDialog} onOpenChange={setShowTitleDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>選擇文章標題</DialogTitle>
+            <DialogDescription>
+              AI 根據您的產業和地區生成了以下標題，請選擇最適合的一個
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-4">
+            {titleOptions.map((title, index) => (
+              <div
+                key={index}
+                className={`p-3 rounded-lg border cursor-pointer transition-colors ${
+                  selectedTitle === title
+                    ? "border-primary bg-primary/5"
+                    : "border-border hover:border-primary/50"
+                }`}
+                onClick={() => setSelectedTitle(title)}
+              >
+                <div className="flex items-start gap-2">
+                  <Checkbox
+                    checked={selectedTitle === title}
+                    className="mt-0.5"
+                  />
+                  <span className="text-sm">{title}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setShowTitleDialog(false)}>
+              取消
+            </Button>
+            <Button
+              onClick={handleConfirmTitle}
+              disabled={!selectedTitle || isSubmitting}
+            >
+              {isSubmitting ? "生成中..." : "使用此標題生成文章"}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </form>
   );
 }
