@@ -117,12 +117,7 @@ export function ArticleList({
         type: "article" as const,
         data: a,
       }));
-    const jobItems: ListItem[] = jobs
-      .filter((j) => j.metadata?.title)
-      .map((j) => ({
-        type: "job" as const,
-        data: j,
-      }));
+    const jobItems: ListItem[] = [];
 
     return [...articleItems, ...jobItems].sort(
       (a, b) =>
@@ -134,8 +129,7 @@ export function ArticleList({
   const articlesWithTitle = articles.filter(
     (a) => a.title && a.title.trim() !== "",
   );
-  const jobsWithTitle = jobs.filter((j) => j.metadata?.title);
-  const totalCount = articlesWithTitle.length + jobsWithTitle.length;
+  const totalCount = articlesWithTitle.length;
 
   const publishableArticles = articlesWithTitle.filter(
     (a) => a.status === "generated" || a.status === "reviewed",
@@ -159,11 +153,11 @@ export function ArticleList({
         {onSchedulePublish && publishableArticles.length > 0 && (
           <div className="space-y-2">
             <div className="flex gap-2">
-              <div className="flex-1">
+              <div className="w-[160px]">
                 <WebsiteSelector
                   value={selectedWebsiteId}
                   onChange={setSelectedWebsiteId}
-                  placeholder="選擇發布網站"
+                  placeholder="選擇網站"
                   disabled={isScheduling}
                 />
               </div>
@@ -172,7 +166,7 @@ export function ArticleList({
                 onValueChange={setArticlesPerDay}
                 disabled={isScheduling}
               >
-                <SelectTrigger className="w-[100px]">
+                <SelectTrigger className="flex-1 min-w-[120px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -345,7 +339,7 @@ export function ArticleList({
 
       <div className="p-3 bg-muted/50">
         <p className="text-xs text-muted-foreground text-center">
-          共 {totalCount} 篇{jobs.length > 0 && `（${jobs.length} 篇生成中）`}
+          共 {totalCount} 篇文章
         </p>
       </div>
     </div>
