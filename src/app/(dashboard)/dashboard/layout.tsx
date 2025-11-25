@@ -1,9 +1,9 @@
-import { getUser } from '@/lib/auth'
-import { redirect } from 'next/navigation'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
-import { ThemeToggle } from '@/components/ui/theme-toggle'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { getUser } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,50 +11,41 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { signOut } from '@/lib/auth'
-import { User, Settings, Bell, Search } from 'lucide-react'
-import { Sidebar } from '@/components/dashboard/sidebar'
-import { Input } from '@/components/ui/input'
-import { DashboardLayoutClient, MainContent } from '@/components/dashboard/dashboard-layout-client'
-import { LogoutButton } from '@/components/dashboard/logout-button'
-import { TokenBalanceDisplay } from '@/components/billing/TokenBalanceDisplay'
-import { LanguageSelector } from '@/components/common/LanguageSelector'
-import { NewArticleButton } from '@/components/articles/NewArticleButton'
+} from "@/components/ui/dropdown-menu";
+import { signOut } from "@/lib/auth";
+import { User, Settings, Bell, Search } from "lucide-react";
+import { Sidebar } from "@/components/dashboard/sidebar";
+import { Input } from "@/components/ui/input";
+import {
+  DashboardLayoutClient,
+  MainContent,
+} from "@/components/dashboard/dashboard-layout-client";
+import { LogoutButton } from "@/components/dashboard/logout-button";
+import { TokenBalanceDisplay } from "@/components/billing/TokenBalanceDisplay";
+import { LanguageSelector } from "@/components/common/LanguageSelector";
+import { NewArticleButton } from "@/components/articles/NewArticleButton";
 
 async function performLogout() {
-  'use server'
-  await signOut()
-  redirect('/login')
+  "use server";
+  await signOut();
+  redirect("/login");
 }
 
 export default async function DashboardLayout({
   children,
 }: {
-  children: React.ReactNode
+  children: React.ReactNode;
 }) {
-  const user = await getUser()
+  const user = await getUser();
 
   if (!user) {
-    redirect('/login')
+    redirect("/login");
   }
-
-  const { createClient } = await import('@/lib/supabase/server')
-  const supabase = await createClient()
-
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('role, company_id')
-    .eq('user_id', user.id)
-    .eq('status', 'active')
-    .single()
-
-  const userRole = membership?.role || 'viewer'
 
   return (
     <DashboardLayoutClient>
       <div className="min-h-screen bg-background">
-        <Sidebar userEmail={user.email} userRole={userRole} />
+        <Sidebar userEmail={user.email} />
 
         <MainContent>
           <header className="sticky top-0 z-30 h-16 border-b border-border bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60">
@@ -91,7 +82,10 @@ export default async function DashboardLayout({
 
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" className="relative h-9 w-9 rounded-full ring-2 ring-primary/20 hover:ring-primary/40 transition-all">
+                    <Button
+                      variant="ghost"
+                      className="relative h-9 w-9 rounded-full ring-2 ring-primary/20 hover:ring-primary/40 transition-all"
+                    >
                       <Avatar className="h-9 w-9">
                         <AvatarImage src="" alt="User avatar" />
                         <AvatarFallback className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground">
@@ -103,12 +97,17 @@ export default async function DashboardLayout({
                   <DropdownMenuContent className="w-56" align="end" forceMount>
                     <DropdownMenuLabel className="font-normal">
                       <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{user.email}</p>
+                        <p className="text-sm font-medium leading-none">
+                          {user.email}
+                        </p>
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem asChild>
-                      <Link href="/dashboard/settings" className="cursor-pointer">
+                      <Link
+                        href="/dashboard/settings"
+                        className="cursor-pointer"
+                      >
                         <Settings className="mr-2 h-4 w-4" />
                         <span>設定</span>
                       </Link>
@@ -127,5 +126,5 @@ export default async function DashboardLayout({
         </MainContent>
       </div>
     </DashboardLayoutClient>
-  )
+  );
 }

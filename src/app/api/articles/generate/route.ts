@@ -98,25 +98,19 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: membership, error: membershipError } = await supabase
+    // 嘗試獲取 company_id（如果用戶有加入公司），否則使用 user_id
+    const { data: membership } = await supabase
       .from("company_members")
       .select("company_id")
       .eq("user_id", user.id)
       .eq("status", "active")
       .single();
 
-    if (!membership || membershipError) {
-      console.error("Membership error:", membershipError);
-      return NextResponse.json(
-        { error: "No active company membership" },
-        { status: 403 },
-      );
-    }
+    // 使用 company_id 或 user_id 作為 billing identifier
+    const billingId = membership?.company_id || user.id;
 
     const billingService = new TokenBillingService(supabase);
-    const balance = await billingService.getCurrentBalance(
-      membership.company_id,
-    );
+    const balance = await billingService.getCurrentBalance(billingId);
 
     if (balance.total < ESTIMATED_TOKENS_PER_ARTICLE) {
       console.warn(
@@ -137,7 +131,7 @@ export async function POST(request: NextRequest) {
     const websiteQuery = await supabase
       .from("website_configs")
       .select("id")
-      .eq("company_id", membership.company_id)
+      .eq("company_id", billingId)
       .limit(1);
 
     const websites = websiteQuery.data;
@@ -156,7 +150,7 @@ export async function POST(request: NextRequest) {
 
     // 建立 SearchRouter 用於競爭對手分析配額檢查
     const searchRouter = createSearchRouter({
-      companyId: membership.company_id,
+      companyId: billingId,
       enableCache: true,
     });
 
@@ -180,7 +174,7 @@ export async function POST(request: NextRequest) {
     const { error: jobError } = await supabase.from("article_jobs").insert({
       id: articleJobId,
       job_id: articleJobId,
-      company_id: membership.company_id,
+      company_id: billingId,
       website_id: websiteId,
       user_id: user.id,
       keywords: industry ? [industry] : [articleTitle],
