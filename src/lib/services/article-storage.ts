@@ -3,9 +3,9 @@
  * 負責將生成的文章儲存到資料庫
  */
 
-import { SupabaseClient } from '@supabase/supabase-js';
-import { marked } from 'marked';
-import type { ArticleGenerationResult } from '@/types/agents';
+import { SupabaseClient } from "@supabase/supabase-js";
+import { marked } from "marked";
+import type { ArticleGenerationResult } from "@/types/agents";
 
 export interface SaveArticleParams {
   articleJobId: string;
@@ -34,46 +34,58 @@ export class ArticleStorageService {
     const missingFields: string[] = [];
 
     // 只檢查核心必要欄位
-    if (!result.writing) missingFields.push('writing');
-    if (!result.meta) missingFields.push('meta');
+    if (!result.writing) missingFields.push("writing");
+    if (!result.meta) missingFields.push("meta");
 
     if (missingFields.length > 0) {
-      throw new Error(`缺少核心必要欄位: ${missingFields.join(', ')}`);
+      throw new Error(`缺少核心必要欄位: ${missingFields.join(", ")}`);
     }
 
     // 檢查 writing 必須包含內容（markdown, html, 或 content 其中之一）
-    const hasContent = result.writing!.markdown || result.writing!.html || (result.writing as any).content;
+    const hasContent =
+      result.writing!.markdown ||
+      result.writing!.html ||
+      (result.writing as any).content;
     if (!hasContent) {
-      missingFields.push('writing content (需要 markdown, html 或 content 其中之一)');
+      missingFields.push(
+        "writing content (需要 markdown, html 或 content 其中之一)",
+      );
     }
 
     // 檢查 meta 必須包含標題
     const hasTitle = result.meta!.seo?.title || (result.meta as any).title;
     if (!hasTitle) {
-      missingFields.push('meta title (需要 meta.seo.title 或 meta.title 其中之一)');
+      missingFields.push(
+        "meta title (需要 meta.seo.title 或 meta.title 其中之一)",
+      );
     }
 
     if (missingFields.length > 0) {
-      console.error('[ArticleStorage] 核心欄位驗證失敗:', missingFields);
-      throw new Error(`缺少核心欄位:\n${missingFields.join('\n')}`);
+      console.error("[ArticleStorage] 核心欄位驗證失敗:", missingFields);
+      throw new Error(`缺少核心欄位:\n${missingFields.join("\n")}`);
     }
 
     // 可選欄位警告（不拋出錯誤）
     const warnings: string[] = [];
-    if (!result.writing!.statistics) warnings.push('writing.statistics (將使用預設值)');
-    if (!result.writing!.readability) warnings.push('writing.readability (將使用預設值)');
-    if (!result.writing!.keywordUsage) warnings.push('writing.keywordUsage (將使用預設值)');
-    if (!result.meta!.slug) warnings.push('meta.slug (將自動生成)');
+    if (!result.writing!.statistics)
+      warnings.push("writing.statistics (將使用預設值)");
+    if (!result.writing!.readability)
+      warnings.push("writing.readability (將使用預設值)");
+    if (!result.writing!.keywordUsage)
+      warnings.push("writing.keywordUsage (將使用預設值)");
+    if (!result.meta!.slug) warnings.push("meta.slug (將自動生成)");
 
     if (warnings.length > 0) {
-      console.warn('[ArticleStorage] 可選欄位缺失（將使用預設值）:', warnings);
+      console.warn("[ArticleStorage] 可選欄位缺失（將使用預設值）:", warnings);
     }
   }
 
   /**
    * 為缺失的欄位提供預設值
    */
-  private normalizeResult(result: ArticleGenerationResult): ArticleGenerationResult {
+  private normalizeResult(
+    result: ArticleGenerationResult,
+  ): ArticleGenerationResult {
     // 提供 writing 欄位的預設值
     if (result.writing) {
       // 如果缺少 markdown，從 html 或 content 生成
@@ -92,7 +104,11 @@ export class ArticleStorageService {
 
       // 提供預設的 statistics
       if (!result.writing.statistics) {
-        const content = result.writing.markdown || result.writing.html || (result.writing as any).content || '';
+        const content =
+          result.writing.markdown ||
+          result.writing.html ||
+          (result.writing as any).content ||
+          "";
         const wordCount = content.split(/\s+/).length;
         const sentenceCount = content.split(/[.!?]+/).length;
         result.writing.statistics = {
@@ -100,7 +116,8 @@ export class ArticleStorageService {
           readingTime: Math.ceil(wordCount / 200),
           paragraphCount: content.split(/\n\n+/).length,
           sentenceCount,
-          averageSentenceLength: sentenceCount > 0 ? wordCount / sentenceCount : 0,
+          averageSentenceLength:
+            sentenceCount > 0 ? wordCount / sentenceCount : 0,
         };
       }
 
@@ -126,13 +143,14 @@ export class ArticleStorageService {
     // 提供 meta 欄位的預設值
     if (result.meta) {
       // 統一標題來源
-      const title = result.meta.seo?.title || (result.meta as any).title || 'Untitled';
+      const title =
+        result.meta.seo?.title || (result.meta as any).title || "Untitled";
 
       // 確保 seo 物件存在
       if (!result.meta.seo) {
         result.meta.seo = {
           title,
-          description: '',
+          description: "",
           keywords: [],
         };
       }
@@ -141,16 +159,16 @@ export class ArticleStorageService {
       if (!result.meta.slug && title) {
         result.meta.slug = title
           .toLowerCase()
-          .replace(/[^\w\u4e00-\u9fa5]+/g, '-')
-          .replace(/^-+|-+$/g, '');
+          .replace(/[^\w\u4e00-\u9fa5]+/g, "-")
+          .replace(/^-+|-+$/g, "");
       } else if (!result.meta.slug) {
         // 如果 title 也不存在，使用預設 slug
-        result.meta.slug = 'untitled-article';
+        result.meta.slug = "untitled-article";
       }
 
       // 提供預設的 focusKeyphrase
       if (!result.meta.focusKeyphrase) {
-        result.meta.focusKeyphrase = result.meta.seo.keywords?.[0] || '';
+        result.meta.focusKeyphrase = result.meta.seo.keywords?.[0] || "";
       }
 
       // 提供預設的 openGraph
@@ -158,18 +176,18 @@ export class ArticleStorageService {
         result.meta.openGraph = {
           title: result.meta.seo.title,
           description: result.meta.seo.description,
-          image: '',
-          type: 'article',
+          image: "",
+          type: "article",
         };
       }
 
       // 提供預設的 twitterCard
       if (!result.meta.twitterCard) {
         result.meta.twitterCard = {
-          card: 'summary_large_image',
+          card: "summary_large_image",
           title: result.meta.seo.title,
           description: result.meta.seo.description,
-          image: '',
+          image: "",
         };
       }
     }
@@ -192,25 +210,45 @@ export class ArticleStorageService {
 
     // 驗證並修復 HTML 內容
     if (!this.isValidHTML(result.writing!.html)) {
-      console.error('[ArticleStorage] ⚠️  Invalid HTML detected, attempting to fix...', {
-        htmlSample: result.writing!.html.substring(0, 200),
-        markdownSample: result.writing!.markdown.substring(0, 200),
-      });
+      console.error(
+        "[ArticleStorage] ⚠️  Invalid HTML detected, attempting to fix...",
+        {
+          htmlSample: result.writing!.html.substring(0, 200),
+          markdownSample: result.writing!.markdown.substring(0, 200),
+        },
+      );
 
       try {
-        const fixedHtml = await this.convertMarkdownToHTML(result.writing!.markdown);
+        const fixedHtml = await this.convertMarkdownToHTML(
+          result.writing!.markdown,
+        );
 
         if (this.isValidHTML(fixedHtml)) {
           result.writing!.html = fixedHtml;
-          console.log('[ArticleStorage] ✅ HTML fixed successfully');
+          console.log("[ArticleStorage] ✅ HTML fixed successfully");
         } else {
-          console.error('[ArticleStorage] ❌ HTML fix failed, storing invalid HTML anyway');
+          console.error(
+            "[ArticleStorage] ❌ HTML fix failed, storing invalid HTML anyway",
+          );
         }
       } catch (error) {
-        console.error('[ArticleStorage] ❌ HTML fix error:', error);
+        console.error("[ArticleStorage] ❌ HTML fix error:", error);
       }
     } else {
-      console.log('[ArticleStorage] ✅ HTML validation passed before storage');
+      console.log("[ArticleStorage] ✅ HTML validation passed before storage");
+    }
+
+    // 保底機制：如果 HTML 中沒有圖片但 result.image 有值，則插入圖片
+    if (result.image && !result.writing!.html.includes("<img ")) {
+      console.log(
+        "[ArticleStorage] 📸 HTML missing images, inserting from result.image...",
+      );
+      result.writing!.html = this.insertImagesToHtml(
+        result.writing!.html,
+        result.image.featuredImage,
+        result.image.contentImages || [],
+      );
+      console.log("[ArticleStorage] ✅ Images inserted successfully");
     }
 
     // 準備文章數據
@@ -243,8 +281,8 @@ export class ArticleStorageService {
       twitter_image: result.meta!.twitterCard.image,
 
       // 分類與標籤
-      categories: result.category?.categories.map(c => c.name) || [],
-      tags: result.category?.tags.map(t => t.name) || [],
+      categories: result.category?.categories.map((c) => c.name) || [],
+      tags: result.category?.tags.map((t) => t.name) || [],
 
       // 文章統計
       word_count: result.writing!.statistics.wordCount,
@@ -283,7 +321,7 @@ export class ArticleStorageService {
       // WordPress 發布資訊
       wordpress_post_id: result.wordpress?.postId,
       wordpress_post_url: result.wordpress?.postUrl,
-      wordpress_status: result.wordpress?.status || 'generated',
+      wordpress_status: result.wordpress?.status || "generated",
 
       // 圖片資訊
       featured_image_url: result.image?.featuredImage?.url,
@@ -312,28 +350,30 @@ export class ArticleStorageService {
       cost_breakdown: result.costBreakdown,
 
       // 狀態
-      status: result.wordpress ? 'published' : 'generated',
+      status: result.wordpress ? "published" : "generated",
       published_at: result.wordpress ? new Date().toISOString() : null,
     };
 
-    console.log('[ArticleStorage] 儲存文章:', {
+    console.log("[ArticleStorage] 儲存文章:", {
       title: articleData.title,
       word_count: articleData.word_count,
       keywords_count: articleData.keywords.length,
     });
 
     const { data, error } = await this.supabase
-      .from('generated_articles')
+      .from("generated_articles")
       .insert(articleData)
-      .select('id, title, slug, wordpress_post_id, wordpress_post_url, created_at')
+      .select(
+        "id, title, slug, wordpress_post_id, wordpress_post_url, created_at",
+      )
       .single();
 
     if (error) {
-      console.error('[ArticleStorage] 儲存失敗:', error);
+      console.error("[ArticleStorage] 儲存失敗:", error);
       throw new Error(`儲存文章失敗: ${error.message}`);
     }
 
-    console.log('[ArticleStorage] 儲存成功:', data.id);
+    console.log("[ArticleStorage] 儲存成功:", data.id);
 
     return data;
   }
@@ -344,29 +384,29 @@ export class ArticleStorageService {
   async generateRecommendations(
     articleId: string,
     maxRecommendations: number = 5,
-    minScore: number = 20.0
+    minScore: number = 20.0,
   ): Promise<any[]> {
-    console.log('[ArticleStorage] 生成推薦:', {
+    console.log("[ArticleStorage] 生成推薦:", {
       articleId,
       maxRecommendations,
       minScore,
     });
 
     const { data, error } = await this.supabase.rpc(
-      'generate_article_recommendations',
+      "generate_article_recommendations",
       {
         target_article_id: articleId,
         max_recommendations: maxRecommendations,
         min_score: minScore,
-      }
+      },
     );
 
     if (error) {
-      console.error('[ArticleStorage] 推薦生成失敗:', error);
+      console.error("[ArticleStorage] 推薦生成失敗:", error);
       return [];
     }
 
-    console.log('[ArticleStorage] 推薦數量:', data?.length || 0);
+    console.log("[ArticleStorage] 推薦數量:", data?.length || 0);
 
     return data || [];
   }
@@ -376,39 +416,37 @@ export class ArticleStorageService {
    */
   async saveRecommendations(
     sourceArticleId: string,
-    recommendations: any[]
+    recommendations: any[],
   ): Promise<void> {
     if (recommendations.length === 0) {
-      console.log('[ArticleStorage] 沒有推薦要儲存');
+      console.log("[ArticleStorage] 沒有推薦要儲存");
       return;
     }
 
-    const recommendationData = recommendations.map(rec => ({
+    const recommendationData = recommendations.map((rec) => ({
       source_article_id: sourceArticleId,
       target_article_id: rec.article_id,
       recommendation_score: rec.score,
       recommendation_reason: rec.reason,
-      status: 'suggested',
+      status: "suggested",
     }));
 
     const { error } = await this.supabase
-      .from('article_recommendations')
+      .from("article_recommendations")
       .insert(recommendationData);
 
     if (error) {
-      console.error('[ArticleStorage] 推薦儲存失敗:', error);
+      console.error("[ArticleStorage] 推薦儲存失敗:", error);
       throw new Error(`儲存推薦失敗: ${error.message}`);
     }
 
-    console.log('[ArticleStorage] 推薦儲存成功:', recommendationData.length);
+    console.log("[ArticleStorage] 推薦儲存成功:", recommendationData.length);
   }
 
   /**
    * 完整的儲存流程：儲存文章 + 生成並儲存推薦
    */
-  async saveArticleWithRecommendations(
-    params: SaveArticleParams
-  ): Promise<{
+  async saveArticleWithRecommendations(params: SaveArticleParams): Promise<{
     article: SavedArticle;
     recommendations: any[];
   }> {
@@ -416,7 +454,11 @@ export class ArticleStorageService {
     const article = await this.saveArticle(params);
 
     // 2. 生成推薦（2-5 個）
-    const recommendations = await this.generateRecommendations(article.id, 5, 20);
+    const recommendations = await this.generateRecommendations(
+      article.id,
+      5,
+      20,
+    );
 
     // 3. 儲存推薦關聯
     if (recommendations.length > 0) {
@@ -437,12 +479,12 @@ export class ArticleStorageService {
       return false;
     }
 
-    if (!html.includes('<') || !html.includes('>')) {
+    if (!html.includes("<") || !html.includes(">")) {
       return false;
     }
 
-    const markdownPatterns = ['##', '**', '```'];
-    if (markdownPatterns.some(p => html.includes(p))) {
+    const markdownPatterns = ["##", "**", "```"];
+    if (markdownPatterns.some((p) => html.includes(p))) {
       return false;
     }
 
@@ -454,5 +496,97 @@ export class ArticleStorageService {
    */
   private async convertMarkdownToHTML(markdown: string): Promise<string> {
     return await marked.parse(markdown);
+  }
+
+  /**
+   * 將圖片插入到 HTML 中（保底機制）
+   */
+  private insertImagesToHtml(
+    html: string,
+    featuredImage:
+      | { url: string; altText: string; width: number; height: number }
+      | null
+      | undefined,
+    contentImages: Array<{
+      url: string;
+      altText: string;
+      width: number;
+      height: number;
+    }>,
+  ): string {
+    let modifiedHtml = html;
+
+    if (featuredImage) {
+      const featuredImageHtml = `<figure class="wp-block-image size-large">
+  <img src="${featuredImage.url}" alt="${featuredImage.altText}" width="${featuredImage.width}" height="${featuredImage.height}" />
+  <figcaption>${featuredImage.altText}</figcaption>
+</figure>\n\n`;
+
+      const firstPTagIndex = modifiedHtml.indexOf("</p>");
+      if (firstPTagIndex !== -1) {
+        modifiedHtml =
+          modifiedHtml.slice(0, firstPTagIndex + 4) +
+          "\n\n" +
+          featuredImageHtml +
+          modifiedHtml.slice(firstPTagIndex + 4);
+      }
+    }
+
+    if (contentImages && contentImages.length > 0) {
+      const h2Regex = /<h2[^>]*>.*?<\/h2>/g;
+      const h3Regex = /<h3[^>]*>.*?<\/h3>/g;
+      let match;
+      const h2Positions: number[] = [];
+      const h3Positions: number[] = [];
+
+      while ((match = h2Regex.exec(modifiedHtml)) !== null) {
+        h2Positions.push(match.index + match[0].length);
+      }
+
+      while ((match = h3Regex.exec(modifiedHtml)) !== null) {
+        h3Positions.push(match.index + match[0].length);
+      }
+
+      const h2Count = h2Positions.length;
+      const imageCount = contentImages.length;
+
+      let insertPositions: number[] = [];
+
+      if (imageCount <= Math.ceil(h2Count / 2)) {
+        const step = Math.max(1, Math.floor(h2Count / imageCount));
+        for (let i = 0; i < imageCount && i * step < h2Count; i++) {
+          insertPositions.push(h2Positions[i * step]);
+        }
+      } else if (imageCount <= h2Count) {
+        insertPositions = h2Positions.slice(0, imageCount);
+      } else {
+        insertPositions = [...h2Positions];
+        const remainingImages = imageCount - h2Count;
+        const h3ToUse = h3Positions.slice(0, remainingImages);
+        insertPositions = [...insertPositions, ...h3ToUse].sort(
+          (a, b) => a - b,
+        );
+      }
+
+      for (
+        let i = Math.min(insertPositions.length, imageCount) - 1;
+        i >= 0;
+        i--
+      ) {
+        const image = contentImages[i];
+        const imageHtml = `\n\n<figure class="wp-block-image size-large">
+  <img src="${image.url}" alt="${image.altText}" width="${image.width}" height="${image.height}" />
+  <figcaption>${image.altText}</figcaption>
+</figure>\n\n`;
+
+        const position = insertPositions[i];
+        modifiedHtml =
+          modifiedHtml.slice(0, position) +
+          imageHtml +
+          modifiedHtml.slice(position);
+      }
+    }
+
+    return modifiedHtml;
   }
 }
