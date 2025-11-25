@@ -1,12 +1,9 @@
 "use client";
 
-import { useState } from "react";
 import { cn } from "@/lib/utils";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
-  Search,
   Trash2,
   Clock,
   FileText,
@@ -74,38 +71,22 @@ export function ArticleList({
   onSelect,
   onDelete,
 }: ArticleListProps) {
-  const [searchQuery, setSearchQuery] = useState("");
-
-  const filteredArticles = articles.filter(
-    (article) =>
-      article.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      article.focus_keyword?.toLowerCase().includes(searchQuery.toLowerCase()),
-  );
-
   return (
-    <div className="w-80 border-r bg-muted/30 flex flex-col">
+    <div className="w-80 border-r bg-muted/30 flex flex-col overflow-hidden">
       <div className="p-4 border-b">
-        <h2 className="text-lg font-semibold mb-3">文章列表</h2>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-          <Input
-            placeholder="搜尋文章..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
-        </div>
+        <h2 className="text-lg font-semibold">文章列表</h2>
       </div>
+      <div className="p-2 border-b bg-muted/30" />
 
       <ScrollArea className="flex-1">
         <div className="p-2">
-          {filteredArticles.length === 0 ? (
+          {articles.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
               <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
               <p>沒有找到文章</p>
             </div>
           ) : (
-            filteredArticles.map((article) => {
+            articles.map((article) => {
               const status =
                 statusConfig[article.status] || statusConfig.generated;
               const StatusIcon = status.icon;
@@ -173,7 +154,7 @@ export function ArticleList({
 
       <div className="p-3 border-t bg-muted/50">
         <p className="text-xs text-muted-foreground text-center">
-          共 {filteredArticles.length} 篇文章
+          共 {articles.length} 篇文章
         </p>
       </div>
     </div>
