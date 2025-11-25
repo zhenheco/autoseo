@@ -2,7 +2,6 @@
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Trash2,
   Clock,
@@ -72,13 +71,13 @@ export function ArticleList({
   onDelete,
 }: ArticleListProps) {
   return (
-    <div className="w-[400px] border-r border-black flex flex-col overflow-hidden">
+    <div className="w-[400px] flex flex-col overflow-hidden">
       <div className="p-4">
         <h2 className="text-lg font-semibold">文章列表</h2>
       </div>
 
-      <ScrollArea className="flex-1">
-        <div className="p-2">
+      <div className="flex-1 overflow-hidden">
+        <div className="p-2 h-full">
           {articles.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
               <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
@@ -149,7 +148,7 @@ export function ArticleList({
             })
           )}
         </div>
-      </ScrollArea>
+      </div>
 
       <div className="p-3 bg-muted/50">
         <p className="text-xs text-muted-foreground text-center">
