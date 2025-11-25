@@ -31,11 +31,9 @@ export function ArticleManager({ initialArticles }: ArticleManagerProps) {
   const [selectedArticle, setSelectedArticle] = useState<Article | null>(
     initialArticles[0] || null,
   );
-  const [isEditing, setIsEditing] = useState(false);
 
   const handleSelectArticle = (article: Article) => {
     setSelectedArticle(article);
-    setIsEditing(false);
   };
 
   const handleUpdateArticle = async (
@@ -64,8 +62,6 @@ export function ArticleManager({ initialArticles }: ArticleManagerProps) {
           prev ? { ...prev, ...updatedArticle } : null,
         );
       }
-
-      setIsEditing(false);
     } catch (error) {
       console.error("更新文章失敗:", error);
       alert("更新失敗，請稍後再試");
@@ -107,8 +103,6 @@ export function ArticleManager({ initialArticles }: ArticleManagerProps) {
       />
       <ArticlePreview
         article={selectedArticle}
-        isEditing={isEditing}
-        onEditToggle={() => setIsEditing(!isEditing)}
         onSave={async (updates) => {
           if (selectedArticle) {
             await handleUpdateArticle(selectedArticle.id, updates);
