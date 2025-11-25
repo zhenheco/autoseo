@@ -115,21 +115,12 @@ export default async function SubscriptionPage() {
                     {companySubscription?.purchased_token_balance?.toLocaleString() ||
                       0}
                   </p>
-                  <p className="text-xs text-blue-600 mt-1">一次性配額</p>
+                  <p className="text-xs text-blue-600 mt-1">每月配額</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">配額類型</p>
                   <p className="text-lg font-semibold">永不過期</p>
                   <p className="text-xs text-muted-foreground mt-1">免費方案</p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">升級方案</p>
-                  <a
-                    href="/pricing"
-                    className="inline-block px-4 py-2 bg-primary text-primary-foreground rounded-md hover:bg-primary/90 transition-colors text-sm"
-                  >
-                    查看方案
-                  </a>
                 </div>
               </>
             ) : (

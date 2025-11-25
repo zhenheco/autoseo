@@ -13,9 +13,8 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "@/lib/auth";
-import { User, Settings, Bell, Search } from "lucide-react";
+import { User, Settings, Bell } from "lucide-react";
 import { Sidebar } from "@/components/dashboard/sidebar";
-import { Input } from "@/components/ui/input";
 import {
   DashboardLayoutClient,
   MainContent,
@@ -50,15 +49,7 @@ export default async function DashboardLayout({
         <MainContent>
           <header className="sticky top-0 z-30 h-16 border-b border-border bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60">
             <div className="flex h-full items-center justify-between px-6">
-              <div className="flex items-center gap-4 flex-1">
-                <div className="relative w-full max-w-md">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="搜尋功能、文章或設定..."
-                    className="pl-9 h-9 bg-muted/50 border-border focus:bg-background transition-colors"
-                  />
-                </div>
-              </div>
+              <div className="flex items-center gap-4 flex-1"></div>
 
               <div className="flex items-center gap-3">
                 <NewArticleButton />
