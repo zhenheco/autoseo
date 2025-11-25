@@ -5,6 +5,7 @@ import { ArticleList } from "./ArticleList";
 import { ArticlePreview } from "./ArticlePreview";
 import { useArticleJobRealtime } from "@/lib/hooks/useArticleJobRealtime";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface Article {
   id: string;
@@ -151,6 +152,37 @@ export function ArticleManager({
     }
   };
 
+  const handleSchedulePublish = async (
+    websiteId: string,
+    articlesPerDay: number,
+  ) => {
+    try {
+      const response = await fetch("/api/articles/schedule-batch-publish", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          website_id: websiteId,
+          articles_per_day: articlesPerDay,
+        }),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(error.error || "排程發布失敗");
+      }
+
+      const result = await response.json();
+      toast.success(`成功排程 ${result.scheduled_count} 篇文章發布`);
+      router.refresh();
+    } catch (error) {
+      console.error("排程發布失敗:", error);
+      toast.error(
+        "排程發布失敗: " +
+          (error instanceof Error ? error.message : "未知錯誤"),
+      );
+    }
+  };
+
   return (
     <div className="h-[calc(100vh-7rem)] flex overflow-hidden">
       <ArticleList
@@ -159,6 +191,7 @@ export function ArticleManager({
         selectedId={selectedArticle?.id || null}
         onSelect={handleSelectArticle}
         onDelete={handleDeleteArticle}
+        onSchedulePublish={handleSchedulePublish}
       />
       <ArticlePreview
         article={selectedArticle}
