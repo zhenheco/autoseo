@@ -7,7 +7,7 @@ import { createSearchRouter } from "@/lib/search/search-router";
 // Vercel 無伺服器函數最大執行時間：5 分鐘（Hobby 計劃上限）
 export const maxDuration = 300;
 
-const ESTIMATED_TOKENS_PER_ARTICLE = 15000;
+const ESTIMATED_TOKENS_PER_ARTICLE = 3000;
 
 export async function POST(request: NextRequest) {
   try {
