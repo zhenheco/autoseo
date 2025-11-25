@@ -5,18 +5,8 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { createArticle, getQuotaStatus } from "./actions";
-import { ArticleForm } from "./components/ArticleForm";
+import { getQuotaStatus } from "./actions";
+import { ArticleFormTabs } from "./components/ArticleFormTabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import Link from "next/link";
 
@@ -81,11 +71,11 @@ export default async function NewArticlePage() {
         <CardHeader>
           <CardTitle>📝 文章設定</CardTitle>
           <CardDescription>
-            告訴我們您的產業和目標市場，我們會自動分析並生成最佳內容
+            選擇生成模式：快速生成適合一般需求，進階生成可設定更多參數
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ArticleForm quotaStatus={quotaStatus} />
+          <ArticleFormTabs quotaStatus={quotaStatus} />
         </CardContent>
       </Card>
     </div>
