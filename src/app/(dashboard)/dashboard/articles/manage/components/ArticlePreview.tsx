@@ -9,12 +9,8 @@ import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
 import Image from "@tiptap/extension-image";
 import {
-  Edit3,
   Save,
-  X,
   ExternalLink,
-  Copy,
-  Check,
   FileText,
   Bold,
   Italic,
@@ -52,8 +48,6 @@ interface Article {
 
 interface ArticlePreviewProps {
   article: Article | null;
-  isEditing: boolean;
-  onEditToggle: () => void;
   onSave: (updates: Partial<Article>) => Promise<void>;
 }
 
@@ -190,15 +184,9 @@ function EditorToolbar({
   );
 }
 
-export function ArticlePreview({
-  article,
-  isEditing,
-  onEditToggle,
-  onSave,
-}: ArticlePreviewProps) {
+export function ArticlePreview({ article, onSave }: ArticlePreviewProps) {
   const [editedTitle, setEditedTitle] = useState("");
   const [isSaving, setIsSaving] = useState(false);
-  const [copied, setCopied] = useState(false);
 
   const editor = useEditor({
     extensions: [
@@ -216,7 +204,7 @@ export function ArticlePreview({
       }),
     ],
     content: article?.html_content || "",
-    editable: isEditing,
+    editable: true,
     editorProps: {
       attributes: {
         class:
@@ -234,12 +222,6 @@ export function ArticlePreview({
     }
   }, [article, editor]);
 
-  useEffect(() => {
-    if (editor) {
-      editor.setEditable(isEditing);
-    }
-  }, [isEditing, editor]);
-
   const handleSave = async () => {
     if (!editor) return;
     setIsSaving(true);
@@ -250,15 +232,6 @@ export function ArticlePreview({
       });
     } finally {
       setIsSaving(false);
-    }
-  };
-
-  const handleCopyHtml = async () => {
-    const htmlContent = editor?.getHTML() || article?.html_content;
-    if (htmlContent) {
-      await navigator.clipboard.writeText(htmlContent);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
     }
   };
 
@@ -278,17 +251,13 @@ export function ArticlePreview({
     <div className="flex-1 flex flex-col">
       <div className="p-4 border-b flex items-center justify-between bg-background">
         <div className="flex-1 min-w-0">
-          {isEditing ? (
-            <Input
-              value={editedTitle}
-              onChange={(e) => setEditedTitle(e.target.value)}
-              className="text-lg font-semibold"
-              placeholder="文章標題"
-            />
-          ) : (
-            <h2 className="text-lg font-semibold truncate">{article.title}</h2>
-          )}
-          {article.wordpress_post_url && !isEditing && (
+          <Input
+            value={editedTitle}
+            onChange={(e) => setEditedTitle(e.target.value)}
+            className="text-lg font-semibold"
+            placeholder="文章標題"
+          />
+          {article.wordpress_post_url && (
             <a
               href={article.wordpress_post_url}
               target="_blank"
@@ -301,58 +270,19 @@ export function ArticlePreview({
         </div>
 
         <div className="flex items-center gap-2 ml-4">
-          {isEditing ? (
-            <>
-              <Button variant="outline" size="sm" onClick={onEditToggle}>
-                <X className="h-4 w-4 mr-1" />
-                取消
-              </Button>
-              <Button size="sm" onClick={handleSave} disabled={isSaving}>
-                <Save className="h-4 w-4 mr-1" />
-                {isSaving ? "儲存中..." : "儲存"}
-              </Button>
-            </>
-          ) : (
-            <>
-              <Button variant="outline" size="sm" onClick={handleCopyHtml}>
-                {copied ? (
-                  <>
-                    <Check className="h-4 w-4 mr-1" />
-                    已複製
-                  </>
-                ) : (
-                  <>
-                    <Copy className="h-4 w-4 mr-1" />
-                    複製 HTML
-                  </>
-                )}
-              </Button>
-              <Button variant="outline" size="sm" onClick={onEditToggle}>
-                <Edit3 className="h-4 w-4 mr-1" />
-                編輯
-              </Button>
-            </>
-          )}
+          <Button size="sm" onClick={handleSave} disabled={isSaving}>
+            <Save className="h-4 w-4 mr-1" />
+            {isSaving ? "儲存中..." : "儲存"}
+          </Button>
         </div>
       </div>
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        {isEditing && <EditorToolbar editor={editor} />}
+        <EditorToolbar editor={editor} />
         <ScrollArea className="flex-1">
           <EditorContent editor={editor} />
         </ScrollArea>
       </div>
-
-      {!isEditing && article.focus_keyword && (
-        <div className="p-3 border-t bg-muted/30 text-sm text-muted-foreground">
-          <span className="font-medium">關鍵字：</span> {article.focus_keyword}
-          {article.word_count && (
-            <span className="ml-4">
-              <span className="font-medium">字數：</span> {article.word_count}
-            </span>
-          )}
-        </div>
-      )}
     </div>
   );
 }
