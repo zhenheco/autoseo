@@ -130,13 +130,14 @@ export async function canAccessWebsitesFeature(): Promise<boolean> {
   const activeMembership = memberships.find((m) => m.status === "active");
   const membership = activeMembership || memberships[0];
 
-  const { data: company } = await supabase
+  const { data: companies } = await supabase
     .from("companies")
     .select("subscription_tier")
-    .eq("id", membership.company_id)
-    .single();
+    .eq("id", membership.company_id);
 
-  return company?.subscription_tier !== "free";
+  if (!companies || companies.length === 0) return false;
+
+  return companies[0].subscription_tier !== "free";
 }
 
 /**
@@ -160,11 +161,12 @@ export async function getUserSubscriptionTier(): Promise<
   const activeMembership = memberships.find((m) => m.status === "active");
   const membership = activeMembership || memberships[0];
 
-  const { data: company } = await supabase
+  const { data: companies } = await supabase
     .from("companies")
     .select("subscription_tier")
-    .eq("id", membership.company_id)
-    .single();
+    .eq("id", membership.company_id);
 
-  return company?.subscription_tier || null;
+  if (!companies || companies.length === 0) return null;
+
+  return companies[0].subscription_tier || null;
 }
