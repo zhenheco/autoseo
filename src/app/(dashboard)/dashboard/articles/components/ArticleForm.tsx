@@ -49,14 +49,6 @@ const REGIONS = [
   { value: "other", label: "其他" },
 ];
 
-const LANGUAGES = [
-  { value: "zh-TW", label: "繁體中文" },
-  { value: "en-US", label: "English" },
-  { value: "ja-JP", label: "日本語" },
-  { value: "ko-KR", label: "한국어" },
-  { value: "zh-CN", label: "简体中文" },
-];
-
 interface QuotaStatus {
   plan: string;
   quota: number;
@@ -76,7 +68,6 @@ export function ArticleForm({ quotaStatus }: ArticleFormProps) {
   const [customIndustry, setCustomIndustry] = useState("");
   const [region, setRegion] = useState("");
   const [customRegion, setCustomRegion] = useState("");
-  const [language, setLanguage] = useState("zh-TW");
   const [competitors, setCompetitors] = useState<string[]>([""]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -116,7 +107,6 @@ export function ArticleForm({ quotaStatus }: ArticleFormProps) {
         body: JSON.stringify({
           industry: industry === "other" ? customIndustry : industry,
           region: region === "other" ? customRegion : region,
-          language,
           competitors: competitors.filter((c) => c.trim() !== ""),
         }),
       });
@@ -155,7 +145,6 @@ export function ArticleForm({ quotaStatus }: ArticleFormProps) {
         industry === "other" ? customIndustry : industry,
       );
       formData.append("region", region === "other" ? customRegion : region);
-      formData.append("language", language);
       if (title) {
         formData.append("title", title);
       }
@@ -234,22 +223,6 @@ export function ArticleForm({ quotaStatus }: ArticleFormProps) {
             className="mt-2"
           />
         )}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="language">語言 *</Label>
-        <Select value={language} onValueChange={setLanguage} required>
-          <SelectTrigger id="language">
-            <SelectValue placeholder="請選擇文章語言" />
-          </SelectTrigger>
-          <SelectContent>
-            {LANGUAGES.map((lang) => (
-              <SelectItem key={lang.value} value={lang.value}>
-                {lang.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
       </div>
 
       {canAddCompetitors && (
