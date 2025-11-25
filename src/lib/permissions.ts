@@ -55,14 +55,27 @@ export async function getUserRole(): Promise<UserRole | null> {
   if (!user) return null;
 
   const supabase = await createClient();
-  const { data: membership } = await supabase
-    .from("company_members")
-    .select("role")
-    .eq("user_id", user.id)
-    .eq("status", "active")
-    .single();
 
-  return (membership?.role as UserRole) || null;
+  const { data: allMemberships, error: allError } = await supabase
+    .from("company_members")
+    .select("role, status")
+    .eq("user_id", user.id);
+
+  if (allError || !allMemberships || allMemberships.length === 0) {
+    console.error("[getUserRole] 查詢失敗或無記錄:", allError);
+    return null;
+  }
+
+  const activeMembership = allMemberships.find((m) => m.status === "active");
+  if (activeMembership) {
+    return activeMembership.role as UserRole;
+  }
+
+  console.warn(
+    "[getUserRole] 無 active 記錄，使用第一個記錄:",
+    allMemberships[0],
+  );
+  return allMemberships[0].role as UserRole;
 }
 
 export async function checkPagePermission(
@@ -77,7 +90,10 @@ export async function checkPagePermission(
   const role = await getUserRole();
 
   if (!role) {
-    redirect("/dashboard");
+    if (page === "canAccessDashboard") {
+      return;
+    }
+    redirect("/dashboard?error=no-company");
   }
 
   const permissions = ROLE_PERMISSIONS[role];
