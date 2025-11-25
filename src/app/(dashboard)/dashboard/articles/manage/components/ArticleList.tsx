@@ -95,10 +95,12 @@ export function ArticleList({
       type: "article" as const,
       data: a,
     }));
-    const jobItems: ListItem[] = jobs.map((j) => ({
-      type: "job" as const,
-      data: j,
-    }));
+    const jobItems: ListItem[] = jobs
+      .filter((j) => j.metadata?.title)
+      .map((j) => ({
+        type: "job" as const,
+        data: j,
+      }));
 
     return [...articleItems, ...jobItems].sort(
       (a, b) =>
@@ -107,7 +109,8 @@ export function ArticleList({
     );
   }, [articles, jobs]);
 
-  const totalCount = articles.length + jobs.length;
+  const jobsWithTitle = jobs.filter((j) => j.metadata?.title);
+  const totalCount = articles.length + jobsWithTitle.length;
 
   return (
     <div className="w-[400px] flex flex-col overflow-hidden">
