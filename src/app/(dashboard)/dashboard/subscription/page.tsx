@@ -85,7 +85,7 @@ export default async function SubscriptionPage() {
               升級方案
             </a>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
               <p className="text-sm text-muted-foreground mb-1">方案類型</p>
               <p className="text-lg font-semibold">
@@ -101,21 +101,12 @@ export default async function SubscriptionPage() {
             </div>
             {isFree ? (
               <>
-                {/* 免費方案：顯示一次性 Token 餘額 */}
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">繳費類型</p>
-                  <p className="text-lg font-semibold">-</p>
-                  <p className="text-xs text-muted-foreground mt-1">免費方案</p>
-                </div>
+                {/* 免費方案 */}
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">
-                    Credit 餘額
+                    每月重置 Credits
                   </p>
-                  <p className="text-lg font-semibold">
-                    {companySubscription?.purchased_token_balance?.toLocaleString() ||
-                      0}
-                  </p>
-                  <p className="text-xs text-blue-600 mt-1">每月配額</p>
+                  <p className="text-lg font-semibold">0</p>
                 </div>
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">配額類型</p>
@@ -125,25 +116,14 @@ export default async function SubscriptionPage() {
               </>
             ) : (
               <>
-                {/* 付費方案：顯示月配額和購買 Credit */}
+                {/* 付費方案 */}
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">繳費類型</p>
-                  <p className="text-lg font-semibold">終身</p>
-                  <p className="text-xs text-purple-600 mt-1">
-                    一次付清，永久使用
+                  <p className="text-sm text-muted-foreground mb-1">
+                    每月重置 Credits
                   </p>
-                </div>
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">月配額</p>
                   <p className="text-lg font-semibold">
-                    {companySubscription?.monthly_quota_balance?.toLocaleString() ||
-                      0}{" "}
-                    /{" "}
                     {companySubscription?.monthly_token_quota?.toLocaleString() ||
                       0}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    剩餘 / 總額
                   </p>
                 </div>
                 <div>
@@ -170,9 +150,6 @@ export default async function SubscriptionPage() {
                           day: "numeric",
                         })
                       : "永久"}
-                  </p>
-                  <p className="text-xs text-muted-foreground mt-1">
-                    月配額每月重置
                   </p>
                 </div>
               </>
