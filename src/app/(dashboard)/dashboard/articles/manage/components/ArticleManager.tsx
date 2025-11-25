@@ -94,7 +94,7 @@ export function ArticleManager({ initialArticles }: ArticleManagerProps) {
   };
 
   return (
-    <div className="h-[calc(100vh-4rem)] flex overflow-hidden">
+    <div className="h-[calc(100vh-7rem)] flex overflow-hidden">
       <ArticleList
         articles={articles}
         selectedId={selectedArticle?.id || null}

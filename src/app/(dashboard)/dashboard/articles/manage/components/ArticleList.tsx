@@ -72,11 +72,10 @@ export function ArticleList({
   onDelete,
 }: ArticleListProps) {
   return (
-    <div className="w-80 border-r bg-muted/30 flex flex-col overflow-hidden">
-      <div className="p-4 border-b">
+    <div className="w-[400px] border-r border-black flex flex-col overflow-hidden">
+      <div className="p-4">
         <h2 className="text-lg font-semibold">文章列表</h2>
       </div>
-      <div className="p-2 border-b bg-muted/30" />
 
       <ScrollArea className="flex-1">
         <div className="p-2">
@@ -152,7 +151,7 @@ export function ArticleList({
         </div>
       </ScrollArea>
 
-      <div className="p-3 border-t bg-muted/50">
+      <div className="p-3 bg-muted/50">
         <p className="text-xs text-muted-foreground text-center">
           共 {articles.length} 篇文章
         </p>
