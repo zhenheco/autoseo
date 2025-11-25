@@ -23,6 +23,7 @@ const REGION_LABELS: Record<string, string> = {
   hongkong: "香港",
   china: "中國",
   korea: "韓國",
+  global: "全球",
 };
 
 const LANGUAGE_CONFIG: Record<string, { name: string; instruction: string }> = {

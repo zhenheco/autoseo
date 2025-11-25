@@ -45,6 +45,7 @@ const REGIONS = [
   { value: "hongkong", label: "香港" },
   { value: "china", label: "中國" },
   { value: "korea", label: "韓國" },
+  { value: "global", label: "全球" },
   { value: "other", label: "其他" },
 ];
 
@@ -74,6 +75,7 @@ export function ArticleForm({ quotaStatus }: ArticleFormProps) {
   const [industry, setIndustry] = useState("");
   const [customIndustry, setCustomIndustry] = useState("");
   const [region, setRegion] = useState("");
+  const [customRegion, setCustomRegion] = useState("");
   const [language, setLanguage] = useState("zh-TW");
   const [competitors, setCompetitors] = useState<string[]>([""]);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -113,23 +115,26 @@ export function ArticleForm({ quotaStatus }: ArticleFormProps) {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           industry: industry === "other" ? customIndustry : industry,
-          region,
+          region: region === "other" ? customRegion : region,
           language,
           competitors: competitors.filter((c) => c.trim() !== ""),
         }),
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        throw new Error("標題生成失敗");
+        throw new Error(data.error || "標題生成失敗");
       }
 
-      const data = await response.json();
       setTitleOptions(data.titles || []);
       setSelectedTitle(data.titles?.[0] || "");
       setShowTitleDialog(true);
     } catch (error) {
       console.error("標題預覽失敗:", error);
-      alert("標題生成失敗，請稍後再試");
+      const errorMessage =
+        error instanceof Error ? error.message : "標題生成失敗";
+      alert(errorMessage);
     } finally {
       setIsLoadingTitles(false);
     }
@@ -149,7 +154,7 @@ export function ArticleForm({ quotaStatus }: ArticleFormProps) {
         "industry",
         industry === "other" ? customIndustry : industry,
       );
-      formData.append("region", region);
+      formData.append("region", region === "other" ? customRegion : region);
       formData.append("language", language);
       if (title) {
         formData.append("title", title);
@@ -219,6 +224,16 @@ export function ArticleForm({ quotaStatus }: ArticleFormProps) {
             ))}
           </SelectContent>
         </Select>
+        {region === "other" && (
+          <Input
+            id="customRegion"
+            value={customRegion}
+            onChange={(e) => setCustomRegion(e.target.value)}
+            placeholder="請輸入您的目標地區"
+            required
+            className="mt-2"
+          />
+        )}
       </div>
 
       <div className="space-y-2">
