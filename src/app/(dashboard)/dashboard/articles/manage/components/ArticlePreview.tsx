@@ -278,7 +278,7 @@ export function ArticlePreview({ article, onSave }: ArticlePreviewProps) {
 
       <div className="flex-1 flex flex-col overflow-hidden">
         <EditorToolbar editor={editor} />
-        <div className="flex-1 overflow-hidden">
+        <div className="flex-1 overflow-y-auto">
           <EditorContent editor={editor} />
         </div>
       </div>
