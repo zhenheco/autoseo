@@ -10,11 +10,20 @@ import {
   XCircle,
   Eye,
   Loader2,
+  Calendar,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { zhTW } from "date-fns/locale";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import type { ArticleJob } from "./ArticleManager";
+import { WebsiteSelector } from "@/components/articles/WebsiteSelector";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 interface Article {
   id: string;
@@ -44,6 +53,10 @@ interface ArticleListProps {
   selectedId: string | null;
   onSelect: (article: Article) => void;
   onDelete: (id: string) => void;
+  onSchedulePublish?: (
+    websiteId: string,
+    articlesPerDay: number,
+  ) => Promise<void>;
 }
 
 const statusConfig: Record<
@@ -89,12 +102,21 @@ export function ArticleList({
   selectedId,
   onSelect,
   onDelete,
+  onSchedulePublish,
 }: ArticleListProps) {
+  const [selectedWebsiteId, setSelectedWebsiteId] = useState<string | null>(
+    null,
+  );
+  const [articlesPerDay, setArticlesPerDay] = useState<string>("1");
+  const [isScheduling, setIsScheduling] = useState(false);
+
   const combinedList = useMemo<ListItem[]>(() => {
-    const articleItems: ListItem[] = articles.map((a) => ({
-      type: "article" as const,
-      data: a,
-    }));
+    const articleItems: ListItem[] = articles
+      .filter((a) => a.title && a.title.trim() !== "")
+      .map((a) => ({
+        type: "article" as const,
+        data: a,
+      }));
     const jobItems: ListItem[] = jobs
       .filter((j) => j.metadata?.title)
       .map((j) => ({
@@ -109,13 +131,79 @@ export function ArticleList({
     );
   }, [articles, jobs]);
 
+  const articlesWithTitle = articles.filter(
+    (a) => a.title && a.title.trim() !== "",
+  );
   const jobsWithTitle = jobs.filter((j) => j.metadata?.title);
-  const totalCount = articles.length + jobsWithTitle.length;
+  const totalCount = articlesWithTitle.length + jobsWithTitle.length;
+
+  const publishableArticles = articlesWithTitle.filter(
+    (a) => a.status === "generated" || a.status === "reviewed",
+  );
+
+  const handleSchedulePublish = async () => {
+    if (!selectedWebsiteId || !onSchedulePublish) return;
+    setIsScheduling(true);
+    try {
+      await onSchedulePublish(selectedWebsiteId, parseInt(articlesPerDay));
+    } finally {
+      setIsScheduling(false);
+    }
+  };
 
   return (
     <div className="w-[400px] flex flex-col overflow-hidden">
-      <div className="p-4">
+      <div className="p-4 space-y-3">
         <h2 className="text-lg font-semibold">文章列表</h2>
+
+        {onSchedulePublish && publishableArticles.length > 0 && (
+          <div className="space-y-2">
+            <div className="flex gap-2">
+              <div className="flex-1">
+                <WebsiteSelector
+                  value={selectedWebsiteId}
+                  onChange={setSelectedWebsiteId}
+                  placeholder="選擇發布網站"
+                  disabled={isScheduling}
+                />
+              </div>
+              <Select
+                value={articlesPerDay}
+                onValueChange={setArticlesPerDay}
+                disabled={isScheduling}
+              >
+                <SelectTrigger className="w-[100px]">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                    <SelectItem key={n} value={String(n)}>
+                      每天 {n} 篇
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <Button
+              size="sm"
+              className="w-full"
+              onClick={handleSchedulePublish}
+              disabled={!selectedWebsiteId || isScheduling}
+            >
+              {isScheduling ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
+                  排程中...
+                </>
+              ) : (
+                <>
+                  <Calendar className="h-4 w-4 mr-1" />
+                  設定排程發布（{publishableArticles.length} 篇）
+                </>
+              )}
+            </Button>
+          </div>
+        )}
       </div>
 
       <div className="flex-1 overflow-hidden">
