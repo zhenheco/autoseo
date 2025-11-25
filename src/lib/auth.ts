@@ -23,7 +23,7 @@ export async function signUp(email: string, password: string) {
     email,
     password,
     options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL}/auth/confirm`,
+      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "https://seo.zhenhe-dm.com"}/auth/confirm`,
     },
   });
 

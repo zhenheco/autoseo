@@ -1,54 +1,60 @@
-import { getUser, getUserPrimaryCompany } from '@/lib/auth'
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import Link from 'next/link'
-import { updateWebsite } from '../../actions'
+import { getUser, getUserPrimaryCompany } from "@/lib/auth";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import Link from "next/link";
+import { updateWebsite } from "../../actions";
 
 async function getWebsite(websiteId: string, companyId: string) {
-  const supabase = await createClient()
+  const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from('website_configs')
-    .select('*')
-    .eq('id', websiteId)
-    .eq('company_id', companyId)
-    .single()
+    .from("website_configs")
+    .select("*")
+    .eq("id", websiteId)
+    .eq("company_id", companyId)
+    .single();
 
-  if (error) throw error
+  if (error) throw error;
 
-  return data
+  return data;
 }
 
 export default async function EditWebsitePage({
   params,
 }: {
-  params: Promise<{ id: string }>
+  params: Promise<{ id: string }>;
 }) {
-  const user = await getUser()
+  const user = await getUser();
 
   if (!user) {
-    redirect('/login')
+    redirect("/login");
   }
 
-  const company = await getUserPrimaryCompany(user.id)
+  const company = await getUserPrimaryCompany(user.id);
 
   if (!company) {
     return (
       <div className="container mx-auto p-8">
         <p className="text-muted-foreground">您尚未加入任何公司</p>
       </div>
-    )
+    );
   }
 
-  const { id } = await params
-  const website = await getWebsite(id, company.id)
+  const { id } = await params;
+  const website = await getWebsite(id, company.id);
 
   if (!website) {
-    redirect('/dashboard/websites?error=' + encodeURIComponent('找不到該網站'))
+    redirect("/dashboard/websites?error=" + encodeURIComponent("找不到該網站"));
   }
 
   return (
@@ -78,7 +84,7 @@ export default async function EditWebsitePage({
                 id="site-name"
                 name="siteName"
                 placeholder="我的部落格"
-                defaultValue={website.site_name || website.website_name || ''}
+                defaultValue={website.website_name || ""}
                 required
               />
               <p className="text-xs text-muted-foreground">
@@ -93,7 +99,7 @@ export default async function EditWebsitePage({
                 name="siteUrl"
                 type="url"
                 placeholder="https://your-blog.com"
-                defaultValue={website.site_url || website.wordpress_url || ''}
+                defaultValue={website.wordpress_url || ""}
                 required
               />
               <p className="text-xs text-muted-foreground">
@@ -107,7 +113,7 @@ export default async function EditWebsitePage({
                 id="wp-username"
                 name="wpUsername"
                 placeholder="admin"
-                defaultValue={website.wp_username || ''}
+                defaultValue={website.wp_username || ""}
                 required
               />
             </div>
@@ -121,7 +127,8 @@ export default async function EditWebsitePage({
                 placeholder="留空表示不更改"
               />
               <p className="text-xs text-muted-foreground">
-                請至 WordPress 後台 → 使用者 → 個人資料 → 應用程式密碼 建立新的應用密碼。留空表示不更改現有密碼。
+                請至 WordPress 後台 → 使用者 → 個人資料 → 應用程式密碼
+                建立新的應用密碼。留空表示不更改現有密碼。
               </p>
             </div>
 
@@ -137,5 +144,5 @@ export default async function EditWebsitePage({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
