@@ -9,35 +9,36 @@ on:
 jobs:
   monitor:
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     steps:
-      - name: Call Monitoring API
-        timeout-minutes: 2
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install tsx
+        run: pnpm add -g tsx
+
+      - name: Set environment variables
         run: |
-          response=$(curl -s -w "\n%{http_code}" --max-time 90 -X POST \
-            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}" \
-            -H "Content-Type: application/json" \
-            "${{ secrets.NEXT_PUBLIC_APP_URL }}/api/cron/monitor-article-jobs")
+          echo "SUPABASE_URL=$(echo -n '${{ secrets.SUPABASE_URL }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "SUPABASE_SERVICE_ROLE_KEY=$(echo -n '${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
 
-          # 分離響應內容和 HTTP 狀態碼
-          body=$(echo "$response" | head -n -1)
-          status_code=$(echo "$response" | tail -n 1)
-
-          # 輸出響應內容
-          echo "Response: $body"
-          echo "Status Code: $status_code"
-
-          # 檢查狀態碼（允許 504 timeout，因為可能是長時間運行的任務）
-          if [ "$status_code" = "504" ]; then
-            echo "⚠️ API timeout (504) - 監控任務可能仍在執行中"
-            echo "這不一定是錯誤，可能是處理大量文章導致超時"
-            exit 0
-          elif [ "$status_code" != "200" ]; then
-            echo "❌ Monitoring failed with status code: $status_code"
-            exit 1
-          fi
-
-          echo "✅ Monitoring completed successfully"
+      - name: Run monitoring script
+        run: tsx scripts/monitor-jobs.ts
 
       - name: Log Results
         if: always()
