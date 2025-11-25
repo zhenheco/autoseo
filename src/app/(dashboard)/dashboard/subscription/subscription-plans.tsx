@@ -128,7 +128,7 @@ export function SubscriptionPlans({
                   <span className="text-4xl font-bold text-purple-600">
                     NT$ {plan.lifetime_price?.toLocaleString()}
                   </span>
-                  <span className="text-muted-foreground">一次性</span>
+                  <span className="text-muted-foreground">每月配額</span>
                 </div>
                 <p className="text-xs text-purple-600">
                   終身使用，月配額每月自動重置
