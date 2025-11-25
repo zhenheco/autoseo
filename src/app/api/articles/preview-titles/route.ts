@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAPIRouter } from "@/lib/ai/api-router";
+import { getAPIRouter, detectAPIProvider } from "@/lib/ai/api-router";
 import { createClient } from "@/lib/supabase/server";
 
 const INDUSTRY_LABELS: Record<string, string> = {
@@ -86,10 +86,12 @@ ${langConfig.instruction}
 請直接輸出 5 個標題，每行一個，不要編號：`;
 
     const router = getAPIRouter();
+    const model = "google/gemini-2.5-flash-lite";
+    const apiProvider = detectAPIProvider(model);
 
     const response = await router.complete({
-      model: "deepseek-chat",
-      apiProvider: "deepseek",
+      model,
+      apiProvider,
       prompt,
       temperature: 0.8,
       maxTokens: 500,

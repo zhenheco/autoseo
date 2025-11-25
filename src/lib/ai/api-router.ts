@@ -3,18 +3,18 @@
  * 根據模型的 api_provider 選擇正確的 API 客戶端
  */
 
-import { getDeepSeekClient } from '@/lib/deepseek/client';
-import { callOpenRouter } from '@/lib/openrouter';
-import { getOpenAIImageClient } from '@/lib/openai/image-client';
-import { getOpenAITextClient } from '@/lib/openai/text-client';
-import { getPerplexityClient } from '@/lib/perplexity/client';
+import { getDeepSeekClient } from "@/lib/deepseek/client";
+import { callOpenRouter } from "@/lib/openrouter";
+import { getOpenAIImageClient } from "@/lib/openai/image-client";
+import { getOpenAITextClient } from "@/lib/openai/text-client";
+import { getPerplexityClient } from "@/lib/perplexity/client";
 import type {
   APIProvider,
   ProcessingTier,
   TokenUsage,
   UnifiedAPIResponse,
-} from '@/types/ai-models';
-import type { AIMessage } from '@/types/agents';
+} from "@/types/ai-models";
+import type { AIMessage } from "@/types/agents";
 
 export interface APIRouterConfig {
   deepseekApiKey?: string;
@@ -32,7 +32,7 @@ export interface TextCompletionOptions {
   prompt: string | AIMessage[];
   temperature?: number;
   maxTokens?: number;
-  responseFormat?: 'text' | 'json';
+  responseFormat?: "text" | "json";
 }
 
 export interface ImageGenerationOptions {
@@ -40,7 +40,7 @@ export interface ImageGenerationOptions {
   apiProvider: APIProvider;
   prompt: string;
   size?: string;
-  quality?: 'standard' | 'hd';
+  quality?: "standard" | "hd";
   count?: number;
 }
 
@@ -57,19 +57,19 @@ export class APIRouter {
     // 預設 Fallback 鏈
     this.fallbackChains = {
       complex: [
-        'deepseek-reasoner',
-        'openai/gpt-5',
-        'openai/gpt-4o',
-        'google/gemini-2.5-pro',
-        'google/gemini-2.5-flash',
-        'anthropic/claude-sonnet-4.5',
+        "deepseek-reasoner",
+        "openai/gpt-5",
+        "openai/gpt-4o",
+        "google/gemini-2.5-pro",
+        "google/gemini-2.5-flash",
+        "anthropic/claude-sonnet-4.5",
       ],
       simple: [
-        'deepseek-chat',
-        'openai/gpt-5-mini',
-        'openai/gpt-4o-mini',
-        'openai/gpt-4o',
-        'anthropic/claude-sonnet-4.5',
+        "deepseek-chat",
+        "openai/gpt-5-mini",
+        "openai/gpt-4o-mini",
+        "openai/gpt-4o",
+        "anthropic/claude-sonnet-4.5",
       ],
     };
   }
@@ -78,9 +78,10 @@ export class APIRouter {
    * 文字完成（根據 api_provider 路由）
    */
   async complete(options: TextCompletionOptions): Promise<UnifiedAPIResponse> {
-    const messages = typeof options.prompt === 'string'
-      ? [{ role: 'user' as const, content: options.prompt }]
-      : options.prompt;
+    const messages =
+      typeof options.prompt === "string"
+        ? [{ role: "user" as const, content: options.prompt }]
+        : options.prompt;
 
     let lastError: Error | null = null;
     const enableFallback = this.config.enableFallback !== false;
@@ -88,7 +89,7 @@ export class APIRouter {
 
     // 取得 Fallback 鏈
     const tier = this.detectProcessingTier(options.model);
-    const fallbackChain = [...this.fallbackChains[tier] || []];
+    const fallbackChain = [...(this.fallbackChains[tier] || [])];
     let currentModel = options.model;
     let currentProvider = options.apiProvider;
 
@@ -100,33 +101,44 @@ export class APIRouter {
           messages,
           options.temperature,
           options.maxTokens,
-          options.responseFormat
+          options.responseFormat,
         );
 
         // 如果使用了 fallback，記錄日誌
         if (attempt > 1) {
-          console.log(`[APIRouter] ✅ Fallback 成功: ${currentModel} (原: ${options.model}, 嘗試: ${attempt})`);
+          console.log(
+            `[APIRouter] ✅ Fallback 成功: ${currentModel} (原: ${options.model}, 嘗試: ${attempt})`,
+          );
         }
 
         return result;
       } catch (error: unknown) {
         lastError = error as Error;
-        const errorMessage = (error as Error).message || '';
+        const errorMessage = (error as Error).message || "";
 
         // Rate limit 或服務器錯誤，嘗試 fallback
         const isRateLimitOrServerError =
-          errorMessage.includes('429') ||
-          errorMessage.includes('rate-limited') ||
-          errorMessage.includes('Rate limit') ||
-          errorMessage.includes('500') ||
-          errorMessage.includes('502') ||
-          errorMessage.includes('503');
+          errorMessage.includes("429") ||
+          errorMessage.includes("rate-limited") ||
+          errorMessage.includes("Rate limit") ||
+          errorMessage.includes("500") ||
+          errorMessage.includes("502") ||
+          errorMessage.includes("503");
 
-        if (isRateLimitOrServerError && enableFallback && attempt < maxAttempts) {
-          const nextModel = this.getNextFallbackModel(currentModel, fallbackChain);
+        if (
+          isRateLimitOrServerError &&
+          enableFallback &&
+          attempt < maxAttempts
+        ) {
+          const nextModel = this.getNextFallbackModel(
+            currentModel,
+            fallbackChain,
+          );
 
           if (nextModel) {
-            console.log(`[APIRouter] ⚠️ ${currentModel} 失敗 (${errorMessage})`);
+            console.log(
+              `[APIRouter] ⚠️ ${currentModel} 失敗 (${errorMessage})`,
+            );
             console.log(`[APIRouter] 🔄 切換到 Fallback: ${nextModel}`);
 
             currentModel = nextModel;
@@ -138,7 +150,9 @@ export class APIRouter {
         // 其他錯誤或無 fallback 可用
         if (attempt < maxAttempts) {
           const delay = Math.min(1000 * Math.pow(2, attempt), 10000);
-          console.log(`[APIRouter] ⏳ 重試中... (${delay}ms 後第 ${attempt + 1} 次)`);
+          console.log(
+            `[APIRouter] ⏳ 重試中... (${delay}ms 後第 ${attempt + 1} 次)`,
+          );
           await this.sleep(delay);
           continue;
         }
@@ -148,7 +162,7 @@ export class APIRouter {
     }
 
     throw new Error(
-      `API 請求失敗（已重試 ${maxAttempts} 次）: ${lastError?.message || 'Unknown error'}`
+      `API 請求失敗（已重試 ${maxAttempts} 次）: ${lastError?.message || "Unknown error"}`,
     );
   }
 
@@ -159,8 +173,10 @@ export class APIRouter {
     url: string;
     revisedPrompt?: string;
   }> {
-    if (options.apiProvider !== 'openai') {
-      throw new Error(`圖片生成目前只支援 OpenAI API，收到: ${options.apiProvider}`);
+    if (options.apiProvider !== "openai") {
+      throw new Error(
+        `圖片生成目前只支援 OpenAI API，收到: ${options.apiProvider}`,
+      );
     }
 
     const client = getOpenAIImageClient({
@@ -178,12 +194,18 @@ export class APIRouter {
   /**
    * 批量圖片生成
    */
-  async generateImages(options: ImageGenerationOptions & { count: number }): Promise<Array<{
-    url: string;
-    revisedPrompt?: string;
-  }>> {
-    if (options.apiProvider !== 'openai') {
-      throw new Error(`圖片生成目前只支援 OpenAI API，收到: ${options.apiProvider}`);
+  async generateImages(
+    options: ImageGenerationOptions & { count: number },
+  ): Promise<
+    Array<{
+      url: string;
+      revisedPrompt?: string;
+    }>
+  > {
+    if (options.apiProvider !== "openai") {
+      throw new Error(
+        `圖片生成目前只支援 OpenAI API，收到: ${options.apiProvider}`,
+      );
     }
 
     const client = getOpenAIImageClient({
@@ -208,19 +230,37 @@ export class APIRouter {
     messages: AIMessage[],
     temperature?: number,
     maxTokens?: number,
-    responseFormat?: 'text' | 'json'
+    responseFormat?: "text" | "json",
   ): Promise<UnifiedAPIResponse> {
     switch (apiProvider) {
-      case 'deepseek':
-        return this.callDeepSeekAPI(model, messages, temperature, maxTokens, responseFormat);
+      case "deepseek":
+        return this.callDeepSeekAPI(
+          model,
+          messages,
+          temperature,
+          maxTokens,
+          responseFormat,
+        );
 
-      case 'openai':
-        return this.callOpenAIAPI(model, messages, temperature, maxTokens, responseFormat);
+      case "openai":
+        return this.callOpenAIAPI(
+          model,
+          messages,
+          temperature,
+          maxTokens,
+          responseFormat,
+        );
 
-      case 'openrouter':
-        return this.callOpenRouterAPI(model, messages, temperature, maxTokens, responseFormat);
+      case "openrouter":
+        return this.callOpenRouterAPI(
+          model,
+          messages,
+          temperature,
+          maxTokens,
+          responseFormat,
+        );
 
-      case 'perplexity':
+      case "perplexity":
         return this.callPerplexityAPI(model, messages, temperature, maxTokens);
 
       default:
@@ -236,7 +276,7 @@ export class APIRouter {
     messages: AIMessage[],
     temperature?: number,
     maxTokens?: number,
-    responseFormat?: 'text' | 'json'
+    responseFormat?: "text" | "json",
   ): Promise<UnifiedAPIResponse> {
     const client = getDeepSeekClient({
       apiKey: this.config.deepseekApiKey,
@@ -245,10 +285,12 @@ export class APIRouter {
     });
 
     // DeepSeek 只接受 deepseek-reasoner 或 deepseek-chat
-    const deepseekModel = model.includes('reasoner') ? 'deepseek-reasoner' : 'deepseek-chat';
+    const deepseekModel = model.includes("reasoner")
+      ? "deepseek-reasoner"
+      : "deepseek-chat";
 
     const result = await client.complete({
-      model: deepseekModel as 'deepseek-reasoner' | 'deepseek-chat',
+      model: deepseekModel as "deepseek-reasoner" | "deepseek-chat",
       prompt: messages,
       temperature,
       max_tokens: maxTokens,
@@ -266,7 +308,7 @@ export class APIRouter {
         total_billing_tokens: result.usage.total_tokens * 2,
       },
       model: result.model,
-      api_provider: 'deepseek',
+      api_provider: "deepseek",
     };
   }
 
@@ -278,7 +320,7 @@ export class APIRouter {
     messages: AIMessage[],
     temperature?: number,
     maxTokens?: number,
-    responseFormat?: 'text' | 'json'
+    responseFormat?: "text" | "json",
   ): Promise<UnifiedAPIResponse> {
     const client = getOpenAITextClient({
       apiKey: this.config.openaiApiKey,
@@ -287,11 +329,12 @@ export class APIRouter {
     });
 
     const result = await client.complete({
-      model: model.replace('openai/', ''),
+      model: model.replace("openai/", ""),
       messages,
       temperature,
       max_tokens: maxTokens,
-      response_format: responseFormat === 'json' ? { type: 'json_object' } : undefined,
+      response_format:
+        responseFormat === "json" ? { type: "json_object" } : undefined,
     });
 
     return {
@@ -305,7 +348,7 @@ export class APIRouter {
         total_billing_tokens: result.usage.total_tokens,
       },
       model: result.model,
-      api_provider: 'openai',
+      api_provider: "openai",
     };
   }
 
@@ -317,18 +360,19 @@ export class APIRouter {
     messages: AIMessage[],
     temperature?: number,
     maxTokens?: number,
-    responseFormat?: 'text' | 'json'
+    responseFormat?: "text" | "json",
   ): Promise<UnifiedAPIResponse> {
     const response = await callOpenRouter({
       model,
       messages,
       temperature: temperature ?? 0.7,
       max_tokens: maxTokens ?? 2000,
-      response_format: responseFormat === 'json' ? { type: 'json_object' } : undefined,
+      response_format:
+        responseFormat === "json" ? { type: "json_object" } : undefined,
     });
 
     return {
-      content: response.choices[0].message.content || '',
+      content: response.choices[0].message.content || "",
       usage: {
         input_tokens: response.usage?.prompt_tokens || 0,
         output_tokens: response.usage?.completion_tokens || 0,
@@ -338,7 +382,7 @@ export class APIRouter {
         total_billing_tokens: (response.usage?.total_tokens || 0) * 2,
       },
       model: response.model,
-      api_provider: 'openrouter',
+      api_provider: "openrouter",
     };
   }
 
@@ -349,11 +393,11 @@ export class APIRouter {
     model: string,
     messages: AIMessage[],
     temperature?: number,
-    maxTokens?: number
+    maxTokens?: number,
   ): Promise<UnifiedAPIResponse> {
     const client = getPerplexityClient();
 
-    const query = messages.map(m => m.content).join('\n');
+    const query = messages.map((m) => m.content).join("\n");
 
     const result = await client.search(query, {
       model,
@@ -372,7 +416,7 @@ export class APIRouter {
         total_billing_tokens: 0,
       },
       model: model,
-      api_provider: 'perplexity',
+      api_provider: "perplexity",
     };
   }
 
@@ -380,35 +424,51 @@ export class APIRouter {
    * 偵測模型的處理階段
    */
   private detectProcessingTier(model: string): string {
-    if (model.includes('reasoner') || model.includes('gpt-5') || model.includes('gemini-2.5-pro')) {
-      return 'complex';
+    if (
+      model.includes("reasoner") ||
+      model.includes("gpt-5") ||
+      model.includes("gemini-2.5-pro")
+    ) {
+      return "complex";
     }
-    return 'simple';
+    return "simple";
   }
 
   /**
    * 偵測模型的 API Provider
    */
   private detectAPIProvider(model: string): APIProvider {
-    if (model.startsWith('deepseek') || model === 'deepseek-reasoner' || model === 'deepseek-chat') {
-      return 'deepseek';
+    if (
+      model.startsWith("deepseek") ||
+      model === "deepseek-reasoner" ||
+      model === "deepseek-chat"
+    ) {
+      return "deepseek";
     }
-    if (model.startsWith('openai/') || model.includes('gpt-') || model.includes('dall-e') || model.includes('gpt-image')) {
-      return 'openai';
+    if (
+      model.startsWith("openai/") ||
+      model.includes("gpt-") ||
+      model.includes("dall-e") ||
+      model.includes("gpt-image")
+    ) {
+      return "openai";
     }
-    if (model.startsWith('google/') || model.startsWith('anthropic/')) {
-      return 'openrouter';
+    if (model.startsWith("google/") || model.startsWith("anthropic/")) {
+      return "openrouter";
     }
-    if (model.includes('sonar')) {
-      return 'perplexity';
+    if (model.includes("sonar")) {
+      return "perplexity";
     }
-    return 'openrouter'; // 預設使用 OpenRouter
+    return "openrouter"; // 預設使用 OpenRouter
   }
 
   /**
    * 取得下一個 Fallback 模型
    */
-  private getNextFallbackModel(currentModel: string, chain: string[]): string | null {
+  private getNextFallbackModel(
+    currentModel: string,
+    chain: string[],
+  ): string | null {
     const currentIndex = chain.indexOf(currentModel);
     if (currentIndex === -1 || currentIndex >= chain.length - 1) {
       return null;
@@ -420,7 +480,7 @@ export class APIRouter {
    * Sleep 工具函數
    */
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 
@@ -450,6 +510,34 @@ export function getAPIRouter(config?: APIRouterConfig): APIRouter {
  */
 export function resetAPIRouter(): void {
   globalRouter = null;
+}
+
+/**
+ * 偵測模型的 API Provider（獨立函數版本）
+ */
+export function detectAPIProvider(model: string): APIProvider {
+  if (
+    model.startsWith("deepseek") ||
+    model === "deepseek-reasoner" ||
+    model === "deepseek-chat"
+  ) {
+    return "deepseek";
+  }
+  if (
+    model.startsWith("openai/") ||
+    model.includes("gpt-") ||
+    model.includes("dall-e") ||
+    model.includes("gpt-image")
+  ) {
+    return "openai";
+  }
+  if (model.startsWith("google/") || model.startsWith("anthropic/")) {
+    return "openrouter";
+  }
+  if (model.includes("sonar")) {
+    return "perplexity";
+  }
+  return "openrouter";
 }
 
 // 預設導出
