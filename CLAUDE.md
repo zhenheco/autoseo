@@ -22,6 +22,12 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 ---
 
+# ⛔ 禁止事項
+
+- **不要啟用開發伺服器**（`pnpm dev`、`npm run dev` 等）
+
+---
+
 # 🚀 部署前檢查清單（Pre-Deployment Checklist）
 
 **❗ 重要：每次提交前必須執行以下檢查，避免 Vercel 部署失敗**
