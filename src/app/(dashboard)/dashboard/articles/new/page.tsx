@@ -88,24 +88,6 @@ export default async function NewArticlePage() {
           <ArticleForm quotaStatus={quotaStatus} />
         </CardContent>
       </Card>
-
-      <Card className="mt-6">
-        <CardHeader>
-          <CardTitle>生成流程</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ol className="list-decimal list-inside space-y-2 text-sm">
-            <li>Research Agent: 分析產業和競爭對手</li>
-            <li>Strategy Agent: 規劃文章架構和內容策略</li>
-            <li>Writing Agent: 撰寫完整的文章內容</li>
-            <li>HTML Agent: 處理內部連結和格式優化</li>
-            <li>Meta Agent: 生成 SEO 元數據</li>
-            <li>Category Agent: 自動分類和標籤</li>
-            <li>Quality Agent: 品質檢查和優化建議</li>
-            <li>Publish Agent: 發布到 WordPress (如有設定)</li>
-          </ol>
-        </CardContent>
-      </Card>
     </div>
   );
 }

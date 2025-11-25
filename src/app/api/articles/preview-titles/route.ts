@@ -59,20 +59,6 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { data: membership } = await supabase
-      .from("company_members")
-      .select("company_id")
-      .eq("user_id", user.id)
-      .eq("status", "active")
-      .single();
-
-    if (!membership) {
-      return NextResponse.json(
-        { error: "No active company membership" },
-        { status: 403 },
-      );
-    }
-
     const industryLabel = INDUSTRY_LABELS[industry] || industry;
     const regionLabel = REGION_LABELS[region] || region;
     const langConfig = LANGUAGE_CONFIG[language] || LANGUAGE_CONFIG["zh-TW"];
