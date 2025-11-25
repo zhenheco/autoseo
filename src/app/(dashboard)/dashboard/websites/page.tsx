@@ -1,54 +1,60 @@
-import { getUser, getUserPrimaryCompany } from '@/lib/auth'
+import { getUser, getUserPrimaryCompany } from "@/lib/auth";
 
-export const dynamic = 'force-dynamic'
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import Link from 'next/link'
-import { deleteWebsite } from './actions'
-import { checkPagePermission } from '@/lib/permissions'
-import { WebsiteStatusToggle } from './website-status-toggle'
+export const dynamic = "force-dynamic";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import Link from "next/link";
+import { deleteWebsite } from "./actions";
+import { checkPagePermission } from "@/lib/permissions";
+import { WebsiteStatusToggle } from "./website-status-toggle";
 
 async function getCompanyWebsites(companyId: string) {
-  const supabase = await createClient()
+  const supabase = await createClient();
 
   const { data, error } = await supabase
-    .from('website_configs')
-    .select('*')
-    .eq('company_id', companyId)
-    .order('created_at', { ascending: false })
+    .from("website_configs")
+    .select("*")
+    .eq("company_id", companyId)
+    .order("created_at", { ascending: false });
 
-  if (error) throw error
+  if (error) throw error;
 
-  return data
+  return data;
 }
 
 export default async function WebsitesPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; success?: string }>
+  searchParams: Promise<{ error?: string; success?: string }>;
 }) {
-  await checkPagePermission('canAccessWebsites')
+  await checkPagePermission("canAccessWebsites");
 
-  const user = await getUser()
+  const user = await getUser();
 
   if (!user) {
-    redirect('/login')
+    redirect("/login");
   }
 
-  const company = await getUserPrimaryCompany(user.id)
+  const company = await getUserPrimaryCompany(user.id);
 
   if (!company) {
     return (
       <div className="container mx-auto p-8">
         <p className="text-muted-foreground">您尚未加入任何公司</p>
       </div>
-    )
+    );
   }
 
-  const websites = await getCompanyWebsites(company.id)
-  const params = await searchParams
+  const websites = await getCompanyWebsites(company.id);
+  const params = await searchParams;
 
   return (
     <div className="container mx-auto p-8">
@@ -80,12 +86,17 @@ export default async function WebsitesPage({
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {websites && websites.length > 0 ? (
           websites.map((website: any) => (
-            <Card key={website.id} className="hover:shadow-lg transition-shadow">
+            <Card
+              key={website.id}
+              className="hover:shadow-lg transition-shadow"
+            >
               <Link href={`/dashboard/websites/${website.id}`}>
                 <CardHeader className="cursor-pointer">
-                  <CardTitle className="text-lg">{website.site_name || website.website_name}</CardTitle>
+                  <CardTitle className="text-lg">
+                    {website.website_name}
+                  </CardTitle>
                   <CardDescription className="break-all">
-                    {website.site_url || website.wordpress_url}
+                    {website.wordpress_url}
                   </CardDescription>
                 </CardHeader>
               </Link>
@@ -99,7 +110,10 @@ export default async function WebsitesPage({
                     />
                   </div>
                   <div className="flex gap-2 pt-2">
-                    <Link href={`/dashboard/websites/${website.id}`} className="flex-1">
+                    <Link
+                      href={`/dashboard/websites/${website.id}`}
+                      className="flex-1"
+                    >
                       <Button variant="default" size="sm" className="w-full">
                         查看文章
                       </Button>
@@ -110,7 +124,11 @@ export default async function WebsitesPage({
                       </Button>
                     </Link>
                     <form action={deleteWebsite} className="inline">
-                      <input type="hidden" name="websiteId" value={website.id} />
+                      <input
+                        type="hidden"
+                        name="websiteId"
+                        value={website.id}
+                      />
                       <Button
                         variant="outline"
                         size="sm"
@@ -139,5 +157,5 @@ export default async function WebsitesPage({
         )}
       </div>
     </div>
-  )
+  );
 }

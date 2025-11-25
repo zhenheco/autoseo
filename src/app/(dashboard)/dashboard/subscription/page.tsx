@@ -41,7 +41,7 @@ export default async function SubscriptionPage() {
   const { data: companySubscription } = await supabase
     .from("company_subscriptions")
     .select(
-      "monthly_quota_balance, purchased_token_balance, monthly_token_quota, current_period_end, is_lifetime, subscription_plans(name, slug, billing_period)",
+      "monthly_quota_balance, purchased_token_balance, monthly_token_quota, current_period_end, is_lifetime, subscription_plans(name, slug)",
     )
     .eq("company_id", member.company_id)
     .eq("status", "active")
@@ -53,7 +53,6 @@ export default async function SubscriptionPage() {
   const { data: plans } = await supabase
     .from("subscription_plans")
     .select<"*", Database["public"]["Tables"]["subscription_plans"]["Row"]>("*")
-    .eq("is_active", true)
     .eq("is_lifetime", true)
     .neq("slug", "free")
     .order("lifetime_price", { ascending: true });
