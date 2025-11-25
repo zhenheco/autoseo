@@ -10,6 +10,7 @@ import {
   ChevronRight,
   Sparkles,
   CreditCard,
+  PenSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -18,8 +19,13 @@ import { useSidebar } from "./dashboard-layout-client";
 const navItems = [
   {
     title: "文章管理",
-    href: "/dashboard/articles",
+    href: "/dashboard/articles/manage",
     icon: FileText,
+  },
+  {
+    title: "寫新文章",
+    href: "/dashboard/articles",
+    icon: PenSquare,
   },
   {
     title: "網站管理",
