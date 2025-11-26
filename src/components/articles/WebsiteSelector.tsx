@@ -91,7 +91,6 @@ export function WebsiteSelector({
         .from("company_members")
         .select("company_id")
         .eq("user_id", user.id)
-        .eq("status", "active")
         .single();
 
       if (!membership) {
