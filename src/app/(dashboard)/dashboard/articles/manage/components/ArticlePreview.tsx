@@ -1,9 +1,13 @@
 "use client";
 
+import { useState, useEffect, useCallback, useRef } from "react";
+import Image from "next/image";
 import { useScheduleContext } from "./ScheduleContext";
-import { ArticleWithWebsite } from "../actions";
+import { ArticleWithWebsite, updateArticleContent } from "../actions";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { FileText, Save, Check } from "lucide-react";
 import { TiptapEditor } from "@/components/articles/TiptapEditor";
 
 interface ArticlePreviewProps {
@@ -12,8 +16,75 @@ interface ArticlePreviewProps {
 
 export function ArticlePreview({ articles }: ArticlePreviewProps) {
   const { previewArticleId } = useScheduleContext();
+  const [editedTitle, setEditedTitle] = useState("");
+  const [editedContent, setEditedContent] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveSuccess, setSaveSuccess] = useState(false);
+  const [hasChanges, setHasChanges] = useState(false);
+  const prevArticleIdRef = useRef<string | null>(null);
 
   const article = articles.find((a) => a.id === previewArticleId);
+
+  const generatedContent = article?.generated_content as {
+    title?: string;
+    content?: string;
+    meta_description?: string;
+    featured_image?: string;
+  } | null;
+
+  const originalTitle =
+    article?.article_title ||
+    generatedContent?.title ||
+    article?.keywords?.join(", ") ||
+    "未命名文章";
+  const originalContent = generatedContent?.content || "";
+  const metaDescription = generatedContent?.meta_description || "";
+  const featuredImage = generatedContent?.featured_image || "";
+
+  useEffect(() => {
+    if (article && article.id !== prevArticleIdRef.current) {
+      prevArticleIdRef.current = article.id;
+      setTimeout(() => {
+        setEditedTitle(originalTitle);
+        setEditedContent(originalContent);
+        setHasChanges(false);
+        setSaveSuccess(false);
+      }, 0);
+    }
+  }, [article, originalTitle, originalContent]);
+
+  const handleTitleChange = useCallback(
+    (e: React.ChangeEvent<HTMLInputElement>) => {
+      setEditedTitle(e.target.value);
+      setHasChanges(true);
+      setSaveSuccess(false);
+    },
+    [],
+  );
+
+  const handleContentChange = useCallback((html: string) => {
+    setEditedContent(html);
+    setHasChanges(true);
+    setSaveSuccess(false);
+  }, []);
+
+  const handleSave = async () => {
+    if (!article || !hasChanges) return;
+
+    setIsSaving(true);
+    const result = await updateArticleContent(
+      article.id,
+      editedTitle,
+      editedContent,
+    );
+    setIsSaving(false);
+
+    if (result.success) {
+      setSaveSuccess(true);
+      setHasChanges(false);
+      setTimeout(() => setSaveSuccess(false), 2000);
+    }
+  };
 
   if (!article) {
     return (
@@ -26,36 +97,51 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
     );
   }
 
-  const generatedContent = article.generated_content as {
-    title?: string;
-    content?: string;
-    meta_description?: string;
-    featured_image?: string;
-  } | null;
-
-  const title =
-    article.article_title ||
-    generatedContent?.title ||
-    article.keywords?.join(", ") ||
-    "未命名文章";
-  const content = generatedContent?.content || "";
-  const metaDescription = generatedContent?.meta_description || "";
-  const featuredImage = generatedContent?.featured_image || "";
-
   return (
     <Card className="h-full overflow-hidden">
       <CardContent className="h-full overflow-y-auto p-0">
         <div className="wordpress-preview">
           {featuredImage && (
-            <div className="featured-image">
-              <img src={featuredImage} alt={title} className="w-full" />
+            <div className="featured-image relative w-full aspect-video">
+              <Image
+                src={featuredImage}
+                alt={editedTitle}
+                fill
+                className="object-cover"
+                unoptimized
+              />
             </div>
           )}
           <article className="p-6">
             <header className="mb-6">
-              <h1 className="mb-4 text-2xl font-bold leading-tight text-foreground lg:text-3xl">
-                {title}
-              </h1>
+              <div className="mb-4 flex items-center gap-2">
+                <Input
+                  value={editedTitle}
+                  onChange={handleTitleChange}
+                  className="text-2xl font-bold border-none shadow-none focus-visible:ring-0 p-0 h-auto lg:text-3xl"
+                  placeholder="輸入標題..."
+                />
+                <Button
+                  size="sm"
+                  onClick={handleSave}
+                  disabled={isSaving || !hasChanges}
+                  variant={saveSuccess ? "outline" : "default"}
+                >
+                  {isSaving ? (
+                    "儲存中..."
+                  ) : saveSuccess ? (
+                    <>
+                      <Check className="mr-1 h-4 w-4" />
+                      已儲存
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-1 h-4 w-4" />
+                      儲存
+                    </>
+                  )}
+                </Button>
+              </div>
               {metaDescription && (
                 <p className="text-sm italic text-muted-foreground">
                   {metaDescription}
@@ -63,9 +149,9 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
               )}
             </header>
             <TiptapEditor
-              content={content}
-              onChange={() => {}}
-              editable={false}
+              content={editedContent}
+              onChange={handleContentChange}
+              editable={true}
             />
           </article>
         </div>
