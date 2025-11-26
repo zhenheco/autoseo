@@ -10,6 +10,7 @@ import {
   Sparkles,
   CreditCard,
   PenSquare,
+  FileText,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -25,6 +26,11 @@ const navItems = [
     title: "寫新文章",
     href: "/dashboard/articles",
     icon: PenSquare,
+  },
+  {
+    title: "文章管理",
+    href: "/dashboard/articles/manage",
+    icon: FileText,
   },
   {
     title: "訂閱方案",

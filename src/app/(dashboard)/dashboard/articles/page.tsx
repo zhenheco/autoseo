@@ -5,9 +5,10 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { getQuotaStatus } from "./actions";
+import { getQuotaStatus, getFreeTrialStatus } from "./actions";
 import { ArticleFormTabs } from "./components/ArticleFormTabs";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { FreeTrialBanner } from "@/components/articles/FreeTrialBanner";
 import Link from "next/link";
 
 export const dynamic = "force-dynamic";
@@ -17,7 +18,10 @@ interface PageProps {
 }
 
 export default async function ArticlesPage({ searchParams }: PageProps) {
-  const quotaStatus = await getQuotaStatus();
+  const [quotaStatus, freeTrialStatus] = await Promise.all([
+    getQuotaStatus(),
+    getFreeTrialStatus(),
+  ]);
   const { website: websiteId } = await searchParams;
 
   return (
@@ -28,6 +32,15 @@ export default async function ArticlesPage({ searchParams }: PageProps) {
           填寫產業、地區等資訊，AI 將自動分析並生成 SEO 優化的文章
         </p>
       </div>
+
+      {freeTrialStatus && !freeTrialStatus.isUnlimited && (
+        <FreeTrialBanner
+          used={freeTrialStatus.used}
+          limit={freeTrialStatus.limit}
+          remaining={freeTrialStatus.remaining}
+          isUnlimited={freeTrialStatus.isUnlimited}
+        />
+      )}
 
       {quotaStatus && !quotaStatus.canUseCompetitors && (
         <Alert className="mb-6">
