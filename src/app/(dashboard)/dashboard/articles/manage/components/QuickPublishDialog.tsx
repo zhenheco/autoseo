@@ -81,7 +81,7 @@ export function QuickPublishDialog({
           <DialogDescription>
             {publishState === "success"
               ? "文章已成功發布至 WordPress"
-              : `將「${article.article_title || "未命名"}」發布到指定網站`}
+              : `將「${article.generated_articles?.[0]?.title || article.keywords?.join(", ") || "未命名"}」發布到指定網站`}
           </DialogDescription>
         </DialogHeader>
 

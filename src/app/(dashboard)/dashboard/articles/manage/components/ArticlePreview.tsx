@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
-import Image from "next/image";
 import { useScheduleContext } from "./ScheduleContext";
 import { ArticleWithWebsite, updateArticleContent } from "../actions";
 import { Card, CardContent } from "@/components/ui/card";
@@ -25,21 +24,11 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
 
   const article = articles.find((a) => a.id === previewArticleId);
 
-  const generatedContent = article?.generated_content as {
-    title?: string;
-    content?: string;
-    meta_description?: string;
-    featured_image?: string;
-  } | null;
+  const generatedArticle = article?.generated_articles?.[0] || null;
 
   const originalTitle =
-    article?.article_title ||
-    generatedContent?.title ||
-    article?.keywords?.join(", ") ||
-    "未命名文章";
-  const originalContent = generatedContent?.content || "";
-  const metaDescription = generatedContent?.meta_description || "";
-  const featuredImage = generatedContent?.featured_image || "";
+    generatedArticle?.title || article?.keywords?.join(", ") || "未命名文章";
+  const originalContent = generatedArticle?.html_content || "";
 
   useEffect(() => {
     if (article && article.id !== prevArticleIdRef.current) {
@@ -101,17 +90,6 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
     <Card className="h-full overflow-hidden">
       <CardContent className="h-full overflow-y-auto p-0">
         <div className="wordpress-preview">
-          {featuredImage && (
-            <div className="featured-image relative w-full aspect-video">
-              <Image
-                src={featuredImage}
-                alt={editedTitle}
-                fill
-                className="object-cover"
-                unoptimized
-              />
-            </div>
-          )}
           <article className="p-6">
             <header className="mb-6">
               <div className="mb-4 flex items-center gap-2">
@@ -142,11 +120,6 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
                   )}
                 </Button>
               </div>
-              {metaDescription && (
-                <p className="text-sm italic text-muted-foreground">
-                  {metaDescription}
-                </p>
-              )}
             </header>
             <TiptapEditor
               content={editedContent}

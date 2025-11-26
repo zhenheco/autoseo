@@ -12,22 +12,24 @@ export interface ArticleWithWebsite {
   user_id: string;
   keywords: string[];
   status: string;
-  article_title: string | null;
-  input_type: string | null;
-  input_content: Record<string, unknown> | null;
-  generated_content: Record<string, unknown> | null;
   error_message: string | null;
   metadata: Record<string, unknown> | null;
   created_at: string;
-  updated_at: string;
   published_at: string | null;
   scheduled_publish_at: string | null;
-  wp_post_id: string | null;
   website_configs: {
     id: string;
     website_name: string;
     wordpress_url: string;
   } | null;
+  generated_articles:
+    | {
+        id: string;
+        title: string;
+        html_content: string;
+        content_json: Record<string, unknown> | null;
+      }[]
+    | null;
 }
 
 export interface GeneratedArticle {
@@ -71,6 +73,12 @@ export async function getArticles(
         id,
         website_name,
         wordpress_url
+      ),
+      generated_articles (
+        id,
+        title,
+        html_content,
+        content_json
       )
     `,
     )
@@ -401,7 +409,7 @@ export async function cancelArticleSchedule(
 }
 
 export async function updateArticleContent(
-  articleId: string,
+  articleJobId: string,
   title: string,
   content: string,
 ): Promise<{ success: boolean; error?: string }> {
@@ -410,32 +418,14 @@ export async function updateArticleContent(
 
   const supabase = await createClient();
 
-  const { data: article, error: fetchError } = await supabase
-    .from("article_jobs")
-    .select("generated_content")
-    .eq("id", articleId)
-    .single();
-
-  if (fetchError || !article) {
-    return { success: false, error: "找不到文章" };
-  }
-
-  const existingContent =
-    (article.generated_content as Record<string, unknown>) || {};
-  const updatedContent = {
-    ...existingContent,
-    title,
-    content,
-  };
-
   const { error } = await supabase
-    .from("article_jobs")
+    .from("generated_articles")
     .update({
-      article_title: title,
-      generated_content: updatedContent,
+      title,
+      html_content: content,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", articleId);
+    .eq("article_job_id", articleJobId);
 
   if (error) {
     console.error("Failed to update article:", error);
