@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -10,15 +9,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,16 +21,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  MoreHorizontal,
-  Eye,
-  Send,
-  Trash2,
-  Globe,
-  CalendarClock,
-} from "lucide-react";
+import { Globe, CalendarClock } from "lucide-react";
 import { ArticleWithWebsite, deleteArticle } from "../actions";
-import { QuickPublishDialog } from "./QuickPublishDialog";
 import { useScheduleContext } from "./ScheduleContext";
 
 interface ArticleListProps {
@@ -63,7 +47,6 @@ const statusConfig: Record<
 };
 
 export function ArticleList({ articles }: ArticleListProps) {
-  const router = useRouter();
   const {
     toggleSelection,
     isSelected,
@@ -72,7 +55,6 @@ export function ArticleList({ articles }: ArticleListProps) {
     setPreviewArticleId,
   } = useScheduleContext();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [publishDialogOpen, setPublishDialogOpen] = useState(false);
   const [selectedArticle, setSelectedArticle] =
     useState<ArticleWithWebsite | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
@@ -106,16 +88,6 @@ export function ArticleList({ articles }: ArticleListProps) {
     }
   };
 
-  const openDeleteDialog = (article: ArticleWithWebsite) => {
-    setSelectedArticle(article);
-    setDeleteDialogOpen(true);
-  };
-
-  const openPublishDialog = (article: ArticleWithWebsite) => {
-    setSelectedArticle(article);
-    setPublishDialogOpen(true);
-  };
-
   const getStatusBadge = (status: string) => {
     const config = statusConfig[status] || {
       label: status,
@@ -132,28 +104,23 @@ export function ArticleList({ articles }: ArticleListProps) {
     });
   };
 
-  const canPublish = (status: string) => {
-    return status === "completed" || status === "draft";
-  };
-
   return (
     <>
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[50px]"></TableHead>
+              <TableHead className="w-[40px]"></TableHead>
               <TableHead>標題</TableHead>
               <TableHead className="w-[100px]">目標網站</TableHead>
               <TableHead className="w-[80px]">狀態</TableHead>
-              <TableHead className="w-[100px]">建立時間</TableHead>
-              <TableHead className="w-[70px]">操作</TableHead>
+              <TableHead className="w-[90px]">建立時間</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {articles.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
+                <TableCell colSpan={5} className="h-24 text-center">
                   尚無文章
                 </TableCell>
               </TableRow>
@@ -164,7 +131,7 @@ export function ArticleList({ articles }: ArticleListProps) {
                   className={`cursor-pointer transition-colors ${previewArticleId === article.id ? "bg-muted" : "hover:bg-muted/50"}`}
                   onClick={() => setPreviewArticleId(article.id)}
                 >
-                  <TableCell>
+                  <TableCell className="py-2">
                     {canSchedule(article.status) && (
                       <Checkbox
                         checked={isSelected(article.id)}
@@ -174,27 +141,27 @@ export function ArticleList({ articles }: ArticleListProps) {
                       />
                     )}
                   </TableCell>
-                  <TableCell className="font-medium">
+                  <TableCell className="py-2 text-sm font-medium">
                     {article.generated_articles?.[0]?.title ||
                       article.keywords?.join(", ") ||
                       "未命名"}
                   </TableCell>
-                  <TableCell>
+                  <TableCell className="py-2">
                     {article.website_configs ? (
                       <div className="flex items-center gap-1">
                         <Globe className="h-3 w-3" />
-                        <span className="text-sm">
+                        <span className="text-xs">
                           {article.website_configs.website_name}
                         </span>
                       </div>
                     ) : (
-                      <span className="text-muted-foreground text-sm">
+                      <span className="text-muted-foreground text-xs">
                         未指定
                       </span>
                     )}
                   </TableCell>
-                  <TableCell>
-                    <div className="flex flex-col gap-1">
+                  <TableCell className="py-2">
+                    <div className="flex flex-col gap-0.5">
                       {getStatusBadge(article.status)}
                       {article.status === "scheduled" &&
                         article.scheduled_publish_at && (
@@ -205,45 +172,8 @@ export function ArticleList({ articles }: ArticleListProps) {
                         )}
                     </div>
                   </TableCell>
-                  <TableCell className="text-sm text-muted-foreground">
+                  <TableCell className="py-2 text-xs text-muted-foreground">
                     {formatDate(article.created_at)}
-                  </TableCell>
-                  <TableCell>
-                    <DropdownMenu>
-                      <DropdownMenuTrigger
-                        asChild
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <Button variant="ghost" className="h-8 w-8 p-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem
-                          onClick={() =>
-                            router.push(`/dashboard/articles/${article.id}`)
-                          }
-                        >
-                          <Eye className="mr-2 h-4 w-4" />
-                          查看詳情
-                        </DropdownMenuItem>
-                        {canPublish(article.status) && (
-                          <DropdownMenuItem
-                            onClick={() => openPublishDialog(article)}
-                          >
-                            <Send className="mr-2 h-4 w-4" />
-                            發布文章
-                          </DropdownMenuItem>
-                        )}
-                        <DropdownMenuItem
-                          className="text-destructive"
-                          onClick={() => openDeleteDialog(article)}
-                        >
-                          <Trash2 className="mr-2 h-4 w-4" />
-                          刪除
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
                   </TableCell>
                 </TableRow>
               ))
@@ -276,14 +206,6 @@ export function ArticleList({ articles }: ArticleListProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
-      {selectedArticle && (
-        <QuickPublishDialog
-          open={publishDialogOpen}
-          onOpenChange={setPublishDialogOpen}
-          article={selectedArticle}
-        />
-      )}
     </>
   );
 }

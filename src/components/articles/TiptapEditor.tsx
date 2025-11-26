@@ -1,9 +1,9 @@
-'use client'
+"use client";
 
-import { useEditor, EditorContent } from '@tiptap/react'
-import StarterKit from '@tiptap/starter-kit'
-import Link from '@tiptap/extension-link'
-import Image from '@tiptap/extension-image'
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import Link from "@tiptap/extension-link";
+import Image from "@tiptap/extension-image";
 import {
   Bold,
   Italic,
@@ -14,19 +14,23 @@ import {
   Link as LinkIcon,
   Undo,
   Redo,
-} from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Toggle } from '@/components/ui/toggle'
-import { Separator } from '@/components/ui/separator'
-import { useCallback, useEffect } from 'react'
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Toggle } from "@/components/ui/toggle";
+import { Separator } from "@/components/ui/separator";
+import { useCallback, useEffect } from "react";
 
 interface TiptapEditorProps {
-  content: string
-  onChange: (html: string, json: object) => void
-  editable?: boolean
+  content: string;
+  onChange: (html: string, json: object) => void;
+  editable?: boolean;
 }
 
-export function TiptapEditor({ content, onChange, editable = true }: TiptapEditorProps) {
+export function TiptapEditor({
+  content,
+  onChange,
+  editable = true,
+}: TiptapEditorProps) {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -37,14 +41,14 @@ export function TiptapEditor({ content, onChange, editable = true }: TiptapEdito
       Link.configure({
         openOnClick: false,
         HTMLAttributes: {
-          class: 'text-primary underline underline-offset-4',
+          class: "text-primary underline underline-offset-4",
         },
       }),
       Image.configure({
         inline: true,
         allowBase64: true,
         HTMLAttributes: {
-          class: 'rounded-lg max-w-full h-auto',
+          class: "rounded-lg max-w-[800px] h-auto",
         },
       }),
     ],
@@ -53,43 +57,44 @@ export function TiptapEditor({ content, onChange, editable = true }: TiptapEdito
     immediatelyRender: false,
     shouldRerenderOnTransaction: false,
     onUpdate: ({ editor }) => {
-      const html = editor.getHTML()
-      const json = editor.getJSON()
-      onChange(html, json)
+      const html = editor.getHTML();
+      const json = editor.getJSON();
+      onChange(html, json);
     },
     editorProps: {
       attributes: {
-        class: 'prose prose-sm max-w-none dark:prose-invert focus:outline-none min-h-[500px] p-6',
+        class:
+          "prose prose-sm max-w-none dark:prose-invert focus:outline-none min-h-[500px] p-6",
       },
     },
-  })
+  });
 
   useEffect(() => {
     if (editor && content !== editor.getHTML()) {
-      editor.commands.setContent(content)
+      editor.commands.setContent(content);
     }
-  }, [editor, content])
+  }, [editor, content]);
 
   const setLink = useCallback(() => {
-    if (!editor) return
+    if (!editor) return;
 
-    const previousUrl = editor.getAttributes('link').href
-    const url = window.prompt('輸入連結網址', previousUrl)
+    const previousUrl = editor.getAttributes("link").href;
+    const url = window.prompt("輸入連結網址", previousUrl);
 
     if (url === null) {
-      return
+      return;
     }
 
-    if (url === '') {
-      editor.chain().focus().extendMarkRange('link').unsetLink().run()
-      return
+    if (url === "") {
+      editor.chain().focus().extendMarkRange("link").unsetLink().run();
+      return;
     }
 
-    editor.chain().focus().extendMarkRange('link').setLink({ href: url }).run()
-  }, [editor])
+    editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+  }, [editor]);
 
   if (!editor) {
-    return null
+    return null;
   }
 
   return (
@@ -97,7 +102,7 @@ export function TiptapEditor({ content, onChange, editable = true }: TiptapEdito
       <div className="border-b p-2 flex flex-wrap gap-1 items-center bg-muted/50">
         <Toggle
           size="sm"
-          pressed={editor.isActive('bold')}
+          pressed={editor.isActive("bold")}
           onPressedChange={() => editor.chain().focus().toggleBold().run()}
           disabled={!editable}
           aria-label="粗體"
@@ -107,7 +112,7 @@ export function TiptapEditor({ content, onChange, editable = true }: TiptapEdito
 
         <Toggle
           size="sm"
-          pressed={editor.isActive('italic')}
+          pressed={editor.isActive("italic")}
           onPressedChange={() => editor.chain().focus().toggleItalic().run()}
           disabled={!editable}
           aria-label="斜體"
@@ -119,8 +124,10 @@ export function TiptapEditor({ content, onChange, editable = true }: TiptapEdito
 
         <Toggle
           size="sm"
-          pressed={editor.isActive('heading', { level: 1 })}
-          onPressedChange={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
+          pressed={editor.isActive("heading", { level: 1 })}
+          onPressedChange={() =>
+            editor.chain().focus().toggleHeading({ level: 1 }).run()
+          }
           disabled={!editable}
           aria-label="標題 1"
         >
@@ -129,8 +136,10 @@ export function TiptapEditor({ content, onChange, editable = true }: TiptapEdito
 
         <Toggle
           size="sm"
-          pressed={editor.isActive('heading', { level: 2 })}
-          onPressedChange={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
+          pressed={editor.isActive("heading", { level: 2 })}
+          onPressedChange={() =>
+            editor.chain().focus().toggleHeading({ level: 2 }).run()
+          }
           disabled={!editable}
           aria-label="標題 2"
         >
@@ -141,8 +150,10 @@ export function TiptapEditor({ content, onChange, editable = true }: TiptapEdito
 
         <Toggle
           size="sm"
-          pressed={editor.isActive('bulletList')}
-          onPressedChange={() => editor.chain().focus().toggleBulletList().run()}
+          pressed={editor.isActive("bulletList")}
+          onPressedChange={() =>
+            editor.chain().focus().toggleBulletList().run()
+          }
           disabled={!editable}
           aria-label="項目符號清單"
         >
@@ -151,8 +162,10 @@ export function TiptapEditor({ content, onChange, editable = true }: TiptapEdito
 
         <Toggle
           size="sm"
-          pressed={editor.isActive('orderedList')}
-          onPressedChange={() => editor.chain().focus().toggleOrderedList().run()}
+          pressed={editor.isActive("orderedList")}
+          onPressedChange={() =>
+            editor.chain().focus().toggleOrderedList().run()
+          }
           disabled={!editable}
           aria-label="編號清單"
         >
@@ -166,7 +179,7 @@ export function TiptapEditor({ content, onChange, editable = true }: TiptapEdito
           variant="ghost"
           onClick={setLink}
           disabled={!editable}
-          className={editor.isActive('link') ? 'bg-muted' : ''}
+          className={editor.isActive("link") ? "bg-muted" : ""}
           aria-label="插入連結"
         >
           <LinkIcon className="h-4 w-4" />
@@ -197,5 +210,5 @@ export function TiptapEditor({ content, onChange, editable = true }: TiptapEdito
 
       <EditorContent editor={editor} />
     </div>
-  )
+  );
 }

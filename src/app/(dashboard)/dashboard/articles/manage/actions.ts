@@ -305,7 +305,15 @@ export async function scheduleArticlesForPublish(
 
   const { data: articles, error: fetchError } = await supabase
     .from("article_jobs")
-    .select("id, article_title, status")
+    .select(
+      `
+      id,
+      status,
+      generated_articles (
+        title
+      )
+    `,
+    )
     .in("id", articleIds)
     .in("status", ["completed", "draft"]);
 
@@ -340,9 +348,14 @@ export async function scheduleArticlesForPublish(
       continue;
     }
 
+    const generatedArticle = article.generated_articles as
+      | { title: string }[]
+      | null;
+    const title = generatedArticle?.[0]?.title || null;
+
     scheduledArticles.push({
       articleId: article.id,
-      title: article.article_title,
+      title,
       scheduledAt,
     });
   }
