@@ -43,77 +43,83 @@ export default async function DashboardLayout({
 
   return (
     <DashboardLayoutClient>
-      <div className="min-h-screen bg-background">
+      <div className="h-screen overflow-hidden bg-background">
         <Sidebar userEmail={user.email} />
 
         <MainContent>
-          <header className="sticky top-0 z-30 h-16 border-b border-border bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60">
-            <div className="flex h-full items-center justify-between px-6">
-              <div className="flex items-center gap-4 flex-1"></div>
+          <div className="h-screen flex flex-col overflow-hidden">
+            <header className="flex-shrink-0 z-30 h-16 border-b border-border bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60">
+              <div className="flex h-full items-center justify-between px-6">
+                <div className="flex items-center gap-4 flex-1"></div>
 
-              <div className="flex items-center gap-3">
-                <NewArticleButton />
+                <div className="flex items-center gap-3">
+                  <NewArticleButton />
 
-                <TokenBalanceDisplay compact />
+                  <TokenBalanceDisplay compact />
 
-                <LanguageSelector />
+                  <LanguageSelector />
 
-                <div className="h-6 w-px bg-border" />
+                  <div className="h-6 w-px bg-border" />
 
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-9 w-9 relative hover:bg-accent"
-                >
-                  <Bell className="h-5 w-5 text-foreground/70" />
-                  <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-primary rounded-full" />
-                </Button>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="h-9 w-9 relative hover:bg-accent"
+                  >
+                    <Bell className="h-5 w-5 text-foreground/70" />
+                    <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-primary rounded-full" />
+                  </Button>
 
-                <ThemeToggle />
+                  <ThemeToggle />
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      variant="ghost"
-                      className="relative h-9 w-9 rounded-full ring-2 ring-primary/20 hover:ring-primary/40 transition-all"
-                    >
-                      <Avatar className="h-9 w-9">
-                        <AvatarImage src="" alt="User avatar" />
-                        <AvatarFallback className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground">
-                          <User className="h-4 w-4" />
-                        </AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent className="w-56" align="end" forceMount>
-                    <DropdownMenuLabel className="font-normal">
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">
-                          {user.email}
-                        </p>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem asChild>
-                      <Link
-                        href="/dashboard/settings"
-                        className="cursor-pointer"
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button
+                        variant="ghost"
+                        className="relative h-9 w-9 rounded-full ring-2 ring-primary/20 hover:ring-primary/40 transition-all"
                       >
-                        <Settings className="mr-2 h-4 w-4" />
-                        <span>設定</span>
-                      </Link>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <form action={performLogout} id="logout-form">
-                      <LogoutButton />
-                    </form>
-                  </DropdownMenuContent>
-                </DropdownMenu>
+                        <Avatar className="h-9 w-9">
+                          <AvatarImage src="" alt="User avatar" />
+                          <AvatarFallback className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground">
+                            <User className="h-4 w-4" />
+                          </AvatarFallback>
+                        </Avatar>
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent
+                      className="w-56"
+                      align="end"
+                      forceMount
+                    >
+                      <DropdownMenuLabel className="font-normal">
+                        <div className="flex flex-col space-y-1">
+                          <p className="text-sm font-medium leading-none">
+                            {user.email}
+                          </p>
+                        </div>
+                      </DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
+                        <Link
+                          href="/dashboard/settings"
+                          className="cursor-pointer"
+                        >
+                          <Settings className="mr-2 h-4 w-4" />
+                          <span>設定</span>
+                        </Link>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <form action={performLogout} id="logout-form">
+                        <LogoutButton />
+                      </form>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
               </div>
-            </div>
-          </header>
+            </header>
 
-          <main className="p-6">{children}</main>
+            <main className="flex-1 overflow-auto p-6">{children}</main>
+          </div>
         </MainContent>
       </div>
     </DashboardLayoutClient>

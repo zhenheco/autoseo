@@ -139,7 +139,7 @@ export function ArticleList({ articles }: ArticleListProps) {
                       <div className="flex items-center gap-1">
                         <Globe className="h-3 w-3" />
                         <span className="text-sm">
-                          {article.website_configs.site_name}
+                          {article.website_configs.website_name}
                         </span>
                       </div>
                     ) : (

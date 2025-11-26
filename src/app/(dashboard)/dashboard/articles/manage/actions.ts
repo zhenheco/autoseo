@@ -24,8 +24,8 @@ export interface ArticleWithWebsite {
   wp_post_id: string | null;
   website_configs: {
     id: string;
-    site_name: string;
-    site_url: string;
+    website_name: string;
+    wordpress_url: string;
   } | null;
 }
 
@@ -68,8 +68,8 @@ export async function getArticles(
       *,
       website_configs (
         id,
-        site_name,
-        site_url
+        website_name,
+        wordpress_url
       )
     `,
     )
