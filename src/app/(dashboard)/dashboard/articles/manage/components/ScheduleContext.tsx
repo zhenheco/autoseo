@@ -20,6 +20,8 @@ interface ScheduleContextType {
   setArticlesPerDay: (n: number) => void;
   isScheduling: boolean;
   setIsScheduling: (v: boolean) => void;
+  previewArticleId: string | null;
+  setPreviewArticleId: (id: string | null) => void;
 }
 
 const ScheduleContext = createContext<ScheduleContextType | null>(null);
@@ -31,6 +33,7 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
   const [websiteId, setWebsiteId] = useState<string | null>(null);
   const [articlesPerDay, setArticlesPerDay] = useState<number>(3);
   const [isScheduling, setIsScheduling] = useState(false);
+  const [previewArticleId, setPreviewArticleId] = useState<string | null>(null);
 
   const toggleSelection = useCallback((id: string) => {
     setSelectedArticleIds((prev) => {
@@ -79,6 +82,8 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
         setArticlesPerDay,
         isScheduling,
         setIsScheduling,
+        previewArticleId,
+        setPreviewArticleId,
       }}
     >
       {children}

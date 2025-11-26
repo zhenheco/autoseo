@@ -64,7 +64,13 @@ const statusConfig: Record<
 
 export function ArticleList({ articles }: ArticleListProps) {
   const router = useRouter();
-  const { toggleSelection, isSelected, isScheduling } = useScheduleContext();
+  const {
+    toggleSelection,
+    isSelected,
+    isScheduling,
+    previewArticleId,
+    setPreviewArticleId,
+  } = useScheduleContext();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [publishDialogOpen, setPublishDialogOpen] = useState(false);
   const [selectedArticle, setSelectedArticle] =
@@ -155,13 +161,18 @@ export function ArticleList({ articles }: ArticleListProps) {
               </TableRow>
             ) : (
               articles.map((article) => (
-                <TableRow key={article.id}>
+                <TableRow
+                  key={article.id}
+                  className={`cursor-pointer transition-colors ${previewArticleId === article.id ? "bg-muted" : "hover:bg-muted/50"}`}
+                  onClick={() => setPreviewArticleId(article.id)}
+                >
                   <TableCell>
                     {canSchedule(article.status) && (
                       <Checkbox
                         checked={isSelected(article.id)}
                         onCheckedChange={() => toggleSelection(article.id)}
                         disabled={isScheduling}
+                        onClick={(e) => e.stopPropagation()}
                       />
                     )}
                   </TableCell>
@@ -201,7 +212,10 @@ export function ArticleList({ articles }: ArticleListProps) {
                   </TableCell>
                   <TableCell>
                     <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
+                      <DropdownMenuTrigger
+                        asChild
+                        onClick={(e) => e.stopPropagation()}
+                      >
                         <Button variant="ghost" className="h-8 w-8 p-0">
                           <MoreHorizontal className="h-4 w-4" />
                         </Button>
