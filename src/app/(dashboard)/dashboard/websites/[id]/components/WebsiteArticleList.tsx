@@ -52,9 +52,10 @@ const statusConfig: Record<
   { label: string; color: string; icon: React.ElementType; animate?: boolean }
 > = {
   pending: {
-    label: "等待中",
-    color: "text-gray-500 bg-gray-50",
-    icon: Clock,
+    label: "生成中",
+    color: "text-blue-500 bg-blue-50",
+    icon: Loader2,
+    animate: true,
   },
   processing: {
     label: "生成中",
