@@ -365,6 +365,14 @@ export class PaymentService {
       });
 
       if (status === "SUCCESS") {
+        if (orderData.status === "success") {
+          console.log("[PaymentService] 訂單已處理過，跳過重複處理:", {
+            orderId: orderData.id,
+            orderNo,
+          });
+          return { success: true };
+        }
+
         const { error: updateError } = await this.supabase
           .from("payment_orders")
           .update({
