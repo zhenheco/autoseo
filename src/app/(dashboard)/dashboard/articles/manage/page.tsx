@@ -11,8 +11,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { PenSquare, RefreshCw } from "lucide-react";
 import Link from "next/link";
-import { getArticles } from "./actions";
-import { ArticleList } from "./components/ArticleList";
+import { getArticles, ArticleWithWebsite } from "./actions";
+import { ArticleListWrapper } from "./components/ArticleListWrapper";
 import { ArticleFilters } from "./components/ArticleFilters";
 
 export const dynamic = "force-dynamic";
@@ -36,7 +36,7 @@ async function ArticleListContent({
     );
   }
 
-  return <ArticleList articles={articles} />;
+  return <ArticleListWrapper articles={articles} />;
 }
 
 export default async function ArticleManagePage({ searchParams }: PageProps) {

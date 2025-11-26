@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -28,9 +29,17 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { MoreHorizontal, Eye, Send, Trash2, Globe } from "lucide-react";
+import {
+  MoreHorizontal,
+  Eye,
+  Send,
+  Trash2,
+  Globe,
+  CalendarClock,
+} from "lucide-react";
 import { ArticleWithWebsite, deleteArticle } from "../actions";
 import { QuickPublishDialog } from "./QuickPublishDialog";
+import { useScheduleContext } from "./ScheduleContext";
 
 interface ArticleListProps {
   articles: ArticleWithWebsite[];
@@ -47,17 +56,34 @@ const statusConfig: Record<
   processing: { label: "生成中", variant: "secondary" },
   draft: { label: "草稿", variant: "outline" },
   completed: { label: "待發布", variant: "default" },
+  scheduled: { label: "已排程", variant: "secondary" },
   published: { label: "已發布", variant: "default" },
   failed: { label: "失敗", variant: "destructive" },
+  schedule_failed: { label: "排程失敗", variant: "destructive" },
 };
 
 export function ArticleList({ articles }: ArticleListProps) {
   const router = useRouter();
+  const { toggleSelection, isSelected, isScheduling } = useScheduleContext();
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
   const [publishDialogOpen, setPublishDialogOpen] = useState(false);
   const [selectedArticle, setSelectedArticle] =
     useState<ArticleWithWebsite | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  const canSchedule = (status: string) => {
+    return status === "completed" || status === "draft";
+  };
+
+  const formatScheduledDate = (dateString: string | null) => {
+    if (!dateString) return null;
+    return new Date(dateString).toLocaleString("zh-TW", {
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+  };
 
   const handleDelete = async () => {
     if (!selectedArticle) return;
@@ -112,7 +138,8 @@ export function ArticleList({ articles }: ArticleListProps) {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead className="w-[300px]">標題</TableHead>
+              <TableHead className="w-[50px]"></TableHead>
+              <TableHead className="w-[280px]">標題</TableHead>
               <TableHead>目標網站</TableHead>
               <TableHead>狀態</TableHead>
               <TableHead>建立時間</TableHead>
@@ -122,13 +149,22 @@ export function ArticleList({ articles }: ArticleListProps) {
           <TableBody>
             {articles.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
+                <TableCell colSpan={6} className="h-24 text-center">
                   尚無文章
                 </TableCell>
               </TableRow>
             ) : (
               articles.map((article) => (
                 <TableRow key={article.id}>
+                  <TableCell>
+                    {canSchedule(article.status) && (
+                      <Checkbox
+                        checked={isSelected(article.id)}
+                        onCheckedChange={() => toggleSelection(article.id)}
+                        disabled={isScheduling}
+                      />
+                    )}
+                  </TableCell>
                   <TableCell className="font-medium">
                     {article.article_title ||
                       article.keywords?.join(", ") ||
@@ -148,7 +184,18 @@ export function ArticleList({ articles }: ArticleListProps) {
                       </span>
                     )}
                   </TableCell>
-                  <TableCell>{getStatusBadge(article.status)}</TableCell>
+                  <TableCell>
+                    <div className="flex flex-col gap-1">
+                      {getStatusBadge(article.status)}
+                      {article.status === "scheduled" &&
+                        article.scheduled_publish_at && (
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <CalendarClock className="h-3 w-3" />
+                            {formatScheduledDate(article.scheduled_publish_at)}
+                          </span>
+                        )}
+                    </div>
+                  </TableCell>
                   <TableCell className="text-sm text-muted-foreground">
                     {formatDate(article.created_at)}
                   </TableCell>
