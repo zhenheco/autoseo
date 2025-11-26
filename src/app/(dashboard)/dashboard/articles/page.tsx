@@ -12,8 +12,13 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
-export default async function ArticlesPage() {
+interface PageProps {
+  searchParams: Promise<{ website?: string }>;
+}
+
+export default async function ArticlesPage({ searchParams }: PageProps) {
   const quotaStatus = await getQuotaStatus();
+  const { website: websiteId } = await searchParams;
 
   return (
     <div className="container mx-auto p-8 max-w-2xl">
@@ -75,7 +80,10 @@ export default async function ArticlesPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <ArticleFormTabs quotaStatus={quotaStatus} />
+          <ArticleFormTabs
+            quotaStatus={quotaStatus}
+            initialWebsiteId={websiteId}
+          />
         </CardContent>
       </Card>
     </div>
