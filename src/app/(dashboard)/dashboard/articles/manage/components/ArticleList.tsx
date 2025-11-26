@@ -125,12 +125,10 @@ export function ArticleList({ articles }: ArticleListProps) {
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString("zh-TW", {
+    return new Date(dateString).toLocaleDateString("zh-TW", {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
     });
   };
 
