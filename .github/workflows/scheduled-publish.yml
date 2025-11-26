@@ -1,0 +1,27 @@
+name: Scheduled Article Publisher
+
+on:
+  schedule:
+    - cron: "0 * * * *" # 每小時執行
+  workflow_dispatch: # 允許手動觸發
+
+jobs:
+  publish-articles:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger scheduled article processing
+        run: |
+          response=$(curl -s -w "\n%{http_code}" -X GET \
+            "${{ secrets.APP_URL }}/api/cron/process-scheduled-articles" \
+            -H "Authorization: Bearer ${{ secrets.CRON_SECRET }}")
+
+          http_code=$(echo "$response" | tail -n1)
+          body=$(echo "$response" | sed '$d')
+
+          echo "Response: $body"
+          echo "HTTP Code: $http_code"
+
+          if [ "$http_code" -ne 200 ]; then
+            echo "Error: API returned $http_code"
+            exit 1
+          fi
