@@ -2,7 +2,21 @@
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { Trash2, Clock, FileText, CheckCircle, Loader2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Trash2,
+  Clock,
+  FileText,
+  CheckCircle,
+  Loader2,
+  Calendar,
+} from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { zhTW } from "date-fns/locale";
 import { useMemo } from "react";
@@ -45,6 +59,11 @@ interface WebsiteArticleListProps {
   selectedId: string | null;
   onSelect: (article: Article) => void;
   onDelete: (id: string) => void;
+  articlesPerDay: string;
+  onArticlesPerDayChange: (value: string) => void;
+  isScheduling: boolean;
+  publishableCount: number;
+  onSchedulePublish: () => void;
 }
 
 const statusConfig: Record<
@@ -86,6 +105,11 @@ export function WebsiteArticleList({
   selectedId,
   onSelect,
   onDelete,
+  articlesPerDay,
+  onArticlesPerDayChange,
+  isScheduling,
+  publishableCount,
+  onSchedulePublish,
 }: WebsiteArticleListProps) {
   const combinedList = useMemo<ListItem[]>(() => {
     const jobItems: ListItem[] = jobs.map((j) => ({
@@ -114,8 +138,47 @@ export function WebsiteArticleList({
 
   return (
     <div className="w-[400px] flex flex-col overflow-hidden border-r">
-      <div className="p-4">
-        <h2 className="text-lg font-semibold">文章列表</h2>
+      <div className="p-4 border-b">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="text-lg font-semibold">文章列表</h2>
+        </div>
+        <div className="flex items-center gap-2">
+          <Select
+            value={articlesPerDay}
+            onValueChange={onArticlesPerDayChange}
+            disabled={isScheduling || publishableCount === 0}
+          >
+            <SelectTrigger className="w-[100px] h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                <SelectItem key={n} value={String(n)}>
+                  每天 {n} 篇
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            onClick={onSchedulePublish}
+            disabled={isScheduling || publishableCount === 0}
+            variant="outline"
+            size="sm"
+            className="h-8 text-xs"
+          >
+            {isScheduling ? (
+              <>
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                排程中...
+              </>
+            ) : (
+              <>
+                <Calendar className="h-3 w-3 mr-1" />
+                排程發布（{publishableCount}）
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       <div className="flex-1 overflow-hidden">

@@ -6,16 +6,6 @@ import { WebsiteArticlePreview } from "./WebsiteArticlePreview";
 import { useArticleJobRealtime } from "@/lib/hooks/useArticleJobRealtime";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Calendar, Loader2, Plus } from "lucide-react";
-import Link from "next/link";
 
 interface Article {
   id: string;
@@ -212,50 +202,6 @@ export function WebsiteArticleManager({
 
   return (
     <div className="flex flex-col h-full">
-      <div className="flex items-center justify-between p-4 border-b">
-        <Link href={`/dashboard/articles?website=${websiteId}`}>
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            新增文章
-          </Button>
-        </Link>
-        <div className="flex items-center gap-4">
-          <Select
-            value={articlesPerDay}
-            onValueChange={setArticlesPerDay}
-            disabled={isScheduling || publishableArticles.length === 0}
-          >
-            <SelectTrigger className="w-[140px]">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                <SelectItem key={n} value={String(n)}>
-                  每天 {n} 篇
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <Button
-            onClick={handleSchedulePublish}
-            disabled={isScheduling || publishableArticles.length === 0}
-            variant="outline"
-          >
-            {isScheduling ? (
-              <>
-                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                排程中...
-              </>
-            ) : (
-              <>
-                <Calendar className="h-4 w-4 mr-2" />
-                排程發布（{publishableArticles.length} 篇）
-              </>
-            )}
-          </Button>
-        </div>
-      </div>
-
       <div className="flex-1 flex overflow-hidden">
         <WebsiteArticleList
           articles={articles}
@@ -263,6 +209,11 @@ export function WebsiteArticleManager({
           selectedId={selectedArticle?.id || null}
           onSelect={handleSelectArticle}
           onDelete={handleDeleteArticle}
+          articlesPerDay={articlesPerDay}
+          onArticlesPerDayChange={setArticlesPerDay}
+          isScheduling={isScheduling}
+          publishableCount={publishableArticles.length}
+          onSchedulePublish={handleSchedulePublish}
         />
         <WebsiteArticlePreview
           article={selectedArticle}
