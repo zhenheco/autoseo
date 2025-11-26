@@ -143,10 +143,10 @@ export function ArticleList({ articles }: ArticleListProps) {
           <TableHeader>
             <TableRow>
               <TableHead className="w-[50px]"></TableHead>
-              <TableHead className="w-[280px]">標題</TableHead>
-              <TableHead>目標網站</TableHead>
-              <TableHead>狀態</TableHead>
-              <TableHead>建立時間</TableHead>
+              <TableHead>標題</TableHead>
+              <TableHead className="w-[100px]">目標網站</TableHead>
+              <TableHead className="w-[80px]">狀態</TableHead>
+              <TableHead className="w-[100px]">建立時間</TableHead>
               <TableHead className="w-[70px]">操作</TableHead>
             </TableRow>
           </TableHeader>
@@ -175,7 +175,7 @@ export function ArticleList({ articles }: ArticleListProps) {
                     )}
                   </TableCell>
                   <TableCell className="font-medium">
-                    {article.article_title ||
+                    {article.generated_articles?.[0]?.title ||
                       article.keywords?.join(", ") ||
                       "未命名"}
                   </TableCell>
@@ -257,7 +257,10 @@ export function ArticleList({ articles }: ArticleListProps) {
           <AlertDialogHeader>
             <AlertDialogTitle>確定要刪除這篇文章嗎？</AlertDialogTitle>
             <AlertDialogDescription>
-              此操作無法復原。文章「{selectedArticle?.article_title || "未命名"}
+              此操作無法復原。文章「
+              {selectedArticle?.generated_articles?.[0]?.title ||
+                selectedArticle?.keywords?.join(", ") ||
+                "未命名"}
               」將被永久刪除。
             </AlertDialogDescription>
           </AlertDialogHeader>
