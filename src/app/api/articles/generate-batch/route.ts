@@ -8,7 +8,7 @@ export const maxDuration = 10; // 10 秒足夠（實際 < 1 秒）
 
 export async function POST(request: NextRequest) {
   try {
-    const { keywords, items, options } = await request.json();
+    const { keywords, items, options, website_id } = await request.json();
 
     const generationItems =
       items ||
@@ -42,79 +42,86 @@ export async function POST(request: NextRequest) {
     // 使用 company_id 或 user_id 作為 billing identifier
     const billingId = membership?.company_id || user.id;
 
-    const websiteQuery = await supabase
-      .from("website_configs")
-      .select("id")
-      .eq("company_id", billingId)
-      .limit(1);
+    // 優先使用傳入的 website_id
+    let websiteId: string | null = website_id || null;
 
-    let websites = websiteQuery.data;
-    const websiteError = websiteQuery.error;
-
-    if ((!websites || websites.length === 0) && !websiteError) {
-      console.log("Creating default website config for:", billingId);
-      const { data: newWebsite, error: createError } = await supabase
+    if (!websiteId) {
+      const websiteQuery = await supabase
         .from("website_configs")
-        .insert({
-          company_id: billingId,
-          website_name: "",
-          wordpress_url: "",
-        })
         .select("id")
-        .single();
+        .eq("company_id", billingId)
+        .limit(1);
 
-      if (createError || !newWebsite) {
-        console.error("Failed to create website config:", createError);
+      let websites = websiteQuery.data;
+      const websiteError = websiteQuery.error;
+
+      if ((!websites || websites.length === 0) && !websiteError) {
+        console.log("Creating default website config for:", billingId);
+        const { data: newWebsite, error: createError } = await supabase
+          .from("website_configs")
+          .insert({
+            company_id: billingId,
+            website_name: "",
+            wordpress_url: "",
+          })
+          .select("id")
+          .single();
+
+        if (createError || !newWebsite) {
+          console.error("Failed to create website config:", createError);
+          return NextResponse.json(
+            { error: "Failed to create website configuration" },
+            { status: 500 },
+          );
+        }
+
+        const { error: agentConfigError } = await supabase
+          .from("agent_configs")
+          .insert({
+            website_id: newWebsite.id,
+            research_model: "deepseek-reasoner",
+            complex_processing_model: "deepseek-reasoner",
+            simple_processing_model: "deepseek-chat",
+            image_model: "gpt-image-1-mini",
+            research_temperature: 0.7,
+            research_max_tokens: 64000,
+            strategy_temperature: 0.7,
+            strategy_max_tokens: 64000,
+            writing_temperature: 0.7,
+            writing_max_tokens: 64000,
+            image_size: "1024x1024",
+            image_count: 3,
+            meta_enabled: true,
+            meta_temperature: 0.7,
+            meta_max_tokens: 64000,
+          });
+
+        if (agentConfigError) {
+          console.error("Failed to create agent config:", agentConfigError);
+          return NextResponse.json(
+            {
+              error: "Failed to create agent configuration",
+              details: agentConfigError.message,
+            },
+            { status: 500 },
+          );
+        }
+
+        websites = [newWebsite];
+      }
+
+      if (!websites || websites.length === 0) {
+        console.error("Website error:", websiteError);
         return NextResponse.json(
-          { error: "Failed to create website configuration" },
-          { status: 500 },
+          { error: "No website configured" },
+          { status: 404 },
         );
       }
 
-      const { error: agentConfigError } = await supabase
-        .from("agent_configs")
-        .insert({
-          website_id: newWebsite.id,
-          research_model: "deepseek-reasoner",
-          complex_processing_model: "deepseek-reasoner",
-          simple_processing_model: "deepseek-chat",
-          image_model: "gpt-image-1-mini",
-          research_temperature: 0.7,
-          research_max_tokens: 64000,
-          strategy_temperature: 0.7,
-          strategy_max_tokens: 64000,
-          writing_temperature: 0.7,
-          writing_max_tokens: 64000,
-          image_size: "1024x1024",
-          image_count: 3,
-          meta_enabled: true,
-          meta_temperature: 0.7,
-          meta_max_tokens: 64000,
-        });
-
-      if (agentConfigError) {
-        console.error("Failed to create agent config:", agentConfigError);
-        return NextResponse.json(
-          {
-            error: "Failed to create agent configuration",
-            details: agentConfigError.message,
-          },
-          { status: 500 },
-        );
-      }
-
-      websites = [newWebsite];
+      websiteId = websites[0].id;
+    } else {
+      console.log("使用指定網站:", websiteId);
     }
-
-    if (!websites || websites.length === 0) {
-      console.error("Website error:", websiteError);
-      return NextResponse.json(
-        { error: "No website configured" },
-        { status: 404 },
-      );
-    }
-
-    const websiteId = websites[0].id;
 
     const jobIds: string[] = [];
     const failedItems: string[] = [];

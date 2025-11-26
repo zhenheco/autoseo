@@ -15,8 +15,16 @@ export async function POST(request: NextRequest) {
     // 舊版：{ keyword, title, mode }
     // 新版：{ industry, region, language, competitors }
     const body = await request.json();
-    const { keyword, title, mode, industry, region, language, competitors } =
-      body;
+    const {
+      keyword,
+      title,
+      mode,
+      industry,
+      region,
+      language,
+      competitors,
+      website_id,
+    } = body;
 
     // 向後兼容：支持舊版 keyword/title 和新版 industry 參數
     const articleTitle = title || keyword;
@@ -128,22 +136,26 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const websiteQuery = await supabase
-      .from("website_configs")
-      .select("id")
-      .eq("company_id", billingId)
-      .limit(1);
+    // 優先使用傳入的 website_id，否則查詢第一個可用網站
+    let websiteId: string | null = website_id || null;
 
-    const websites = websiteQuery.data;
+    if (!websiteId) {
+      const websiteQuery = await supabase
+        .from("website_configs")
+        .select("id")
+        .eq("company_id", billingId)
+        .limit(1);
 
-    // website_id 是可選的：文章可以先寫好，之後再決定發佈到哪個網站
-    let websiteId: string | null = null;
+      const websites = websiteQuery.data;
 
-    if (websites && websites.length > 0) {
-      websiteId = websites[0].id;
-      console.log("使用現有網站配置:", websiteId);
+      if (websites && websites.length > 0) {
+        websiteId = websites[0].id;
+        console.log("使用現有網站配置:", websiteId);
+      } else {
+        console.log("無網站配置 - 文章將稍後決定發佈目標");
+      }
     } else {
-      console.log("無網站配置 - 文章將稍後決定發佈目標");
+      console.log("使用指定網站:", websiteId);
     }
 
     const articleJobId = uuidv4();

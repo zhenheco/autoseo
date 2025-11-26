@@ -2,28 +2,10 @@
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import {
-  Trash2,
-  Clock,
-  FileText,
-  CheckCircle,
-  XCircle,
-  Eye,
-  Loader2,
-  Calendar,
-} from "lucide-react";
+import { Trash2, Clock, FileText, CheckCircle, Loader2 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { zhTW } from "date-fns/locale";
-import { useMemo, useState } from "react";
-import type { ArticleJob } from "./ArticleManager";
-import { WebsiteSelector } from "@/components/articles/WebsiteSelector";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { useMemo } from "react";
 
 interface Article {
   id: string;
@@ -43,20 +25,26 @@ interface Article {
   wordpress_post_url: string | null;
 }
 
+export interface ArticleJob {
+  id: string;
+  keywords: string[] | null;
+  status: string;
+  progress: number | null;
+  current_step: string | null;
+  created_at: string;
+  metadata: { title?: string } | null;
+}
+
 type ListItem =
   | { type: "article"; data: Article }
   | { type: "job"; data: ArticleJob };
 
-interface ArticleListProps {
+interface WebsiteArticleListProps {
   articles: Article[];
   jobs?: ArticleJob[];
   selectedId: string | null;
   onSelect: (article: Article) => void;
   onDelete: (id: string) => void;
-  onSchedulePublish?: (
-    websiteId: string,
-    articlesPerDay: number,
-  ) => Promise<void>;
 }
 
 const statusConfig: Record<
@@ -75,51 +63,43 @@ const statusConfig: Record<
     animate: true,
   },
   generated: {
-    label: "已生成",
-    color: "text-blue-500 bg-blue-50",
+    label: "未發佈",
+    color: "text-yellow-500 bg-yellow-50",
     icon: FileText,
   },
   reviewed: {
-    label: "已審核",
+    label: "未發佈",
     color: "text-yellow-500 bg-yellow-50",
-    icon: Eye,
+    icon: FileText,
   },
   published: {
-    label: "已發布",
+    label: "已發佈",
     color: "text-green-500 bg-green-50",
     icon: CheckCircle,
   },
-  archived: {
-    label: "已封存",
-    color: "text-gray-500 bg-gray-50",
-    icon: XCircle,
-  },
 };
 
-export function ArticleList({
+export function WebsiteArticleList({
   articles,
   jobs = [],
   selectedId,
   onSelect,
   onDelete,
-  onSchedulePublish,
-}: ArticleListProps) {
-  const [selectedWebsiteId, setSelectedWebsiteId] = useState<string | null>(
-    null,
-  );
-  const [articlesPerDay, setArticlesPerDay] = useState<string>("1");
-  const [isScheduling, setIsScheduling] = useState(false);
-
+}: WebsiteArticleListProps) {
   const combinedList = useMemo<ListItem[]>(() => {
+    const jobItems: ListItem[] = jobs.map((j) => ({
+      type: "job" as const,
+      data: j,
+    }));
+
     const articleItems: ListItem[] = articles
       .filter((a) => a.title && a.title.trim() !== "")
       .map((a) => ({
         type: "article" as const,
         data: a,
       }));
-    const jobItems: ListItem[] = [];
 
-    return [...articleItems, ...jobItems].sort(
+    return [...jobItems, ...articleItems].sort(
       (a, b) =>
         new Date(b.data.created_at).getTime() -
         new Date(a.data.created_at).getTime(),
@@ -129,75 +109,12 @@ export function ArticleList({
   const articlesWithTitle = articles.filter(
     (a) => a.title && a.title.trim() !== "",
   );
-  const totalCount = articlesWithTitle.length;
-
-  const publishableArticles = articlesWithTitle.filter(
-    (a) => a.status === "generated" || a.status === "reviewed",
-  );
-
-  const handleSchedulePublish = async () => {
-    if (!selectedWebsiteId || !onSchedulePublish) return;
-    setIsScheduling(true);
-    try {
-      await onSchedulePublish(selectedWebsiteId, parseInt(articlesPerDay));
-    } finally {
-      setIsScheduling(false);
-    }
-  };
+  const totalCount = articlesWithTitle.length + jobs.length;
 
   return (
-    <div className="w-[400px] flex flex-col overflow-hidden">
-      <div className="p-4 space-y-3">
+    <div className="w-[400px] flex flex-col overflow-hidden border-r">
+      <div className="p-4">
         <h2 className="text-lg font-semibold">文章列表</h2>
-
-        {onSchedulePublish && publishableArticles.length > 0 && (
-          <div className="space-y-2">
-            <div className="flex gap-2">
-              <div className="w-[160px]">
-                <WebsiteSelector
-                  value={selectedWebsiteId}
-                  onChange={setSelectedWebsiteId}
-                  placeholder="選擇網站"
-                  disabled={isScheduling}
-                />
-              </div>
-              <Select
-                value={articlesPerDay}
-                onValueChange={setArticlesPerDay}
-                disabled={isScheduling}
-              >
-                <SelectTrigger className="flex-1 min-w-[120px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                    <SelectItem key={n} value={String(n)}>
-                      每天 {n} 篇
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <Button
-              size="sm"
-              className="w-full"
-              onClick={handleSchedulePublish}
-              disabled={!selectedWebsiteId || isScheduling}
-            >
-              {isScheduling ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                  排程中...
-                </>
-              ) : (
-                <>
-                  <Calendar className="h-4 w-4 mr-1" />
-                  設定排程發布（{publishableArticles.length} 篇）
-                </>
-              )}
-            </Button>
-          </div>
-        )}
       </div>
 
       <div className="flex-1 overflow-hidden">
