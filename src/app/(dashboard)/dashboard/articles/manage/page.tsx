@@ -50,30 +50,22 @@ export default async function ArticleManagePage({ searchParams }: PageProps) {
 
   return (
     <div className="container mx-auto p-8 max-w-[1600px]">
-      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold">文章管理</h1>
-          <p className="text-muted-foreground mt-2">
-            管理所有生成的文章，選擇要發布到哪個網站
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <Suspense fallback={null}>
-            <ArticleFilters />
-          </Suspense>
-          <Button variant="outline" asChild>
-            <Link href="/dashboard/articles/manage">
-              <RefreshCw className="mr-2 h-4 w-4" />
-              重新整理
-            </Link>
-          </Button>
-          <Button asChild>
-            <Link href="/dashboard/articles">
-              <PenSquare className="mr-2 h-4 w-4" />
-              生成新文章
-            </Link>
-          </Button>
-        </div>
+      <div className="mb-6 flex flex-wrap items-center justify-end gap-2">
+        <Suspense fallback={null}>
+          <ArticleFilters />
+        </Suspense>
+        <Button variant="outline" asChild>
+          <Link href="/dashboard/articles/manage">
+            <RefreshCw className="mr-2 h-4 w-4" />
+            重新整理
+          </Link>
+        </Button>
+        <Button asChild>
+          <Link href="/dashboard/articles">
+            <PenSquare className="mr-2 h-4 w-4" />
+            生成新文章
+          </Link>
+        </Button>
       </div>
 
       <Suspense

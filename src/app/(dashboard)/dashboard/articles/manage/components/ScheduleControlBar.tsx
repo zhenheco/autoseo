@@ -10,7 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { WebsiteSelector } from "@/components/articles/WebsiteSelector";
 import { CalendarClock, Loader2 } from "lucide-react";
 import { useScheduleContext } from "./ScheduleContext";
 import { scheduleArticlesForPublish } from "../actions";
@@ -97,17 +96,8 @@ export function ScheduleControlBar({
   }
 
   return (
-    <div className="border rounded-lg p-4 mb-4 bg-muted/30">
-      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-        <div className="flex-1 min-w-[200px]">
-          <WebsiteSelector
-            value={websiteId}
-            onChange={setWebsiteId}
-            placeholder="選擇發布網站"
-            disabled={isScheduling}
-          />
-        </div>
-
+    <div className="border rounded-lg p-3 mb-4 bg-muted/30">
+      <div className="flex items-center gap-3">
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground whitespace-nowrap">
             每日
@@ -117,7 +107,7 @@ export function ScheduleControlBar({
             onValueChange={(v) => setArticlesPerDay(parseInt(v))}
             disabled={isScheduling}
           >
-            <SelectTrigger className="w-[70px]">
+            <SelectTrigger className="w-[60px] h-8">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -133,44 +123,43 @@ export function ScheduleControlBar({
           </span>
         </div>
 
-        <div className="flex items-center gap-4">
-          <label className="flex items-center gap-2 cursor-pointer">
-            <Checkbox
-              checked={allSelected}
-              onCheckedChange={handleSelectAll}
-              disabled={isScheduling}
-            />
-            <span className="text-sm whitespace-nowrap">
-              全選
-              {selectedCount > 0 && (
-                <span className="text-muted-foreground ml-1">
-                  (已選 {selectedCount} 篇)
-                </span>
-              )}
-            </span>
-          </label>
-
-          <Button
-            onClick={handleSchedule}
-            disabled={isScheduling || selectedCount === 0 || !websiteId}
-            className="whitespace-nowrap"
-          >
-            {isScheduling ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                排程中...
-              </>
-            ) : (
-              <>
-                <CalendarClock className="mr-2 h-4 w-4" />
-                開始排程
-              </>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <Checkbox
+            checked={allSelected}
+            onCheckedChange={handleSelectAll}
+            disabled={isScheduling}
+          />
+          <span className="text-sm whitespace-nowrap">
+            全選
+            {selectedCount > 0 && (
+              <span className="text-muted-foreground ml-1">
+                ({selectedCount})
+              </span>
             )}
-          </Button>
-        </div>
-      </div>
+          </span>
+        </label>
 
-      {error && <p className="text-sm text-destructive mt-2">{error}</p>}
+        <Button
+          size="sm"
+          onClick={handleSchedule}
+          disabled={isScheduling || selectedCount === 0 || !websiteId}
+          className="whitespace-nowrap"
+        >
+          {isScheduling ? (
+            <>
+              <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+              排程中...
+            </>
+          ) : (
+            <>
+              <CalendarClock className="mr-1 h-3 w-3" />
+              排程
+            </>
+          )}
+        </Button>
+
+        {error && <p className="text-sm text-destructive">{error}</p>}
+      </div>
     </div>
   );
 }
