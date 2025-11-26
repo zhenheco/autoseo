@@ -399,3 +399,49 @@ export async function cancelArticleSchedule(
   revalidatePath("/dashboard/articles/manage");
   return { success: true };
 }
+
+export async function updateArticleContent(
+  articleId: string,
+  title: string,
+  content: string,
+): Promise<{ success: boolean; error?: string }> {
+  const user = await getUser();
+  if (!user) return { success: false, error: "未登入" };
+
+  const supabase = await createClient();
+
+  const { data: article, error: fetchError } = await supabase
+    .from("article_jobs")
+    .select("generated_content")
+    .eq("id", articleId)
+    .single();
+
+  if (fetchError || !article) {
+    return { success: false, error: "找不到文章" };
+  }
+
+  const existingContent =
+    (article.generated_content as Record<string, unknown>) || {};
+  const updatedContent = {
+    ...existingContent,
+    title,
+    content,
+  };
+
+  const { error } = await supabase
+    .from("article_jobs")
+    .update({
+      article_title: title,
+      generated_content: updatedContent,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", articleId);
+
+  if (error) {
+    console.error("Failed to update article:", error);
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath("/dashboard/articles/manage");
+  return { success: true };
+}
