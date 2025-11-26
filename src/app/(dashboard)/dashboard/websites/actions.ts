@@ -1,222 +1,295 @@
-'use server'
+"use server";
 
-import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
-import { createClient } from '@/lib/supabase/server'
-import { getUser } from '@/lib/auth'
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
+import { getUser } from "@/lib/auth";
+
+interface Website {
+  id: string;
+  website_name: string;
+  wordpress_url: string;
+  company_id: string;
+  is_active: boolean | null;
+}
+
+/**
+ * 取得用戶的網站列表
+ */
+export async function getUserWebsites(): Promise<{
+  websites: Website[];
+  companyId: string | null;
+}> {
+  const user = await getUser();
+  if (!user) {
+    return { websites: [], companyId: null };
+  }
+
+  const supabase = await createClient();
+
+  const { data: membership } = await supabase
+    .from("company_members")
+    .select("company_id")
+    .eq("user_id", user.id)
+    .single();
+
+  if (!membership) {
+    return { websites: [], companyId: null };
+  }
+
+  const { data: websites, error } = await supabase
+    .from("website_configs")
+    .select("id, website_name, wordpress_url, company_id, is_active")
+    .eq("company_id", membership.company_id)
+    .order("website_name");
+
+  if (error) {
+    console.error("Failed to fetch websites:", error);
+    return { websites: [], companyId: membership.company_id };
+  }
+
+  return {
+    websites: (websites || []) as Website[],
+    companyId: membership.company_id,
+  };
+}
 
 /**
  * 刪除 WordPress 網站
  */
 export async function deleteWebsite(formData: FormData) {
-  const user = await getUser()
+  const user = await getUser();
   if (!user) {
-    redirect('/login')
+    redirect("/login");
   }
 
-  const websiteId = formData.get('websiteId') as string
+  const websiteId = formData.get("websiteId") as string;
 
   if (!websiteId) {
-    redirect('/dashboard/websites?error=' + encodeURIComponent('缺少網站 ID'))
+    redirect("/dashboard/websites?error=" + encodeURIComponent("缺少網站 ID"));
   }
 
-  const supabase = await createClient()
+  const supabase = await createClient();
 
   // 取得網站資訊以檢查權限
   const { data: website } = await supabase
-    .from('website_configs')
-    .select('company_id')
-    .eq('id', websiteId)
-    .single()
+    .from("website_configs")
+    .select("company_id")
+    .eq("id", websiteId)
+    .single();
 
   if (!website) {
-    redirect('/dashboard/websites?error=' + encodeURIComponent('找不到該網站'))
+    redirect("/dashboard/websites?error=" + encodeURIComponent("找不到該網站"));
   }
 
   // 檢查使用者是否有權限刪除
   const { data: membership } = await supabase
-    .from('company_members')
-    .select('role')
-    .eq('company_id', website.company_id)
-    .eq('user_id', user.id)
-    .single()
+    .from("company_members")
+    .select("role")
+    .eq("company_id", website.company_id)
+    .eq("user_id", user.id)
+    .single();
 
-  if (!membership || (membership.role !== 'owner' && membership.role !== 'admin')) {
-    redirect('/dashboard/websites?error=' + encodeURIComponent('您沒有權限刪除網站'))
+  if (
+    !membership ||
+    (membership.role !== "owner" && membership.role !== "admin")
+  ) {
+    redirect(
+      "/dashboard/websites?error=" + encodeURIComponent("您沒有權限刪除網站"),
+    );
   }
 
   // 刪除網站
   const { error } = await supabase
-    .from('website_configs')
+    .from("website_configs")
     .delete()
-    .eq('id', websiteId)
+    .eq("id", websiteId);
 
   if (error) {
-    redirect('/dashboard/websites?error=' + encodeURIComponent(error.message))
+    redirect("/dashboard/websites?error=" + encodeURIComponent(error.message));
   }
 
-  revalidatePath('/dashboard/websites')
-  redirect('/dashboard/websites?success=' + encodeURIComponent('網站已刪除'))
+  revalidatePath("/dashboard/websites");
+  redirect("/dashboard/websites?success=" + encodeURIComponent("網站已刪除"));
 }
 
 /**
  * 更新 WordPress 網站
  */
 export async function updateWebsite(formData: FormData) {
-  const user = await getUser()
+  const user = await getUser();
   if (!user) {
-    redirect('/login')
+    redirect("/login");
   }
 
-  const websiteId = formData.get('websiteId') as string
-  const companyId = formData.get('companyId') as string
-  const siteName = formData.get('siteName') as string
-  const siteUrl = formData.get('siteUrl') as string
-  const wpUsername = formData.get('wpUsername') as string
-  const wpPassword = formData.get('wpPassword') as string
+  const websiteId = formData.get("websiteId") as string;
+  const companyId = formData.get("companyId") as string;
+  const siteName = formData.get("siteName") as string;
+  const siteUrl = formData.get("siteUrl") as string;
+  const wpUsername = formData.get("wpUsername") as string;
+  const wpPassword = formData.get("wpPassword") as string;
 
   if (!websiteId || !companyId || !siteName || !siteUrl || !wpUsername) {
-    redirect(`/dashboard/websites/${websiteId}/edit?error=` + encodeURIComponent('缺少必要欄位'))
+    redirect(
+      `/dashboard/websites/${websiteId}/edit?error=` +
+        encodeURIComponent("缺少必要欄位"),
+    );
   }
 
   // 檢查 URL 格式
   try {
-    new URL(siteUrl)
+    new URL(siteUrl);
   } catch {
-    redirect(`/dashboard/websites/${websiteId}/edit?error=` + encodeURIComponent('無效的網站 URL'))
+    redirect(
+      `/dashboard/websites/${websiteId}/edit?error=` +
+        encodeURIComponent("無效的網站 URL"),
+    );
   }
 
-  const supabase = await createClient()
+  const supabase = await createClient();
 
   // 檢查使用者是否有權限更新網站
   const { data: membership } = await supabase
-    .from('company_members')
-    .select('role')
-    .eq('company_id', companyId)
-    .eq('user_id', user.id)
-    .single()
+    .from("company_members")
+    .select("role")
+    .eq("company_id", companyId)
+    .eq("user_id", user.id)
+    .single();
 
-  if (!membership || (membership.role !== 'owner' && membership.role !== 'admin')) {
-    redirect('/dashboard/websites?error=' + encodeURIComponent('您沒有權限更新網站'))
+  if (
+    !membership ||
+    (membership.role !== "owner" && membership.role !== "admin")
+  ) {
+    redirect(
+      "/dashboard/websites?error=" + encodeURIComponent("您沒有權限更新網站"),
+    );
   }
 
   // 準備更新資料
   const updateData: any = {
     website_name: siteName,
-    wordpress_url: siteUrl.replace(/\/$/, ''), // 移除尾部斜線
+    wordpress_url: siteUrl.replace(/\/$/, ""), // 移除尾部斜線
     wp_username: wpUsername,
-  }
+  };
 
   // 只有在提供新密碼時才更新
-  if (wpPassword && wpPassword.trim() !== '') {
-    updateData.wp_app_password = wpPassword
+  if (wpPassword && wpPassword.trim() !== "") {
+    updateData.wp_app_password = wpPassword;
   }
 
   // 更新網站記錄
   const { error } = await supabase
-    .from('website_configs')
+    .from("website_configs")
     .update(updateData)
-    .eq('id', websiteId)
+    .eq("id", websiteId);
 
   if (error) {
-    redirect(`/dashboard/websites/${websiteId}/edit?error=` + encodeURIComponent(error.message))
+    redirect(
+      `/dashboard/websites/${websiteId}/edit?error=` +
+        encodeURIComponent(error.message),
+    );
   }
 
-  revalidatePath('/dashboard/websites')
-  redirect('/dashboard/websites?success=' + encodeURIComponent('網站已更新'))
+  revalidatePath("/dashboard/websites");
+  redirect("/dashboard/websites?success=" + encodeURIComponent("網站已更新"));
 }
 
 /**
  * 切換網站啟用狀態
  */
 export async function toggleWebsiteStatus(formData: FormData) {
-  const user = await getUser()
+  const user = await getUser();
   if (!user) {
-    throw new Error('未登入')
+    throw new Error("未登入");
   }
 
-  const websiteId = formData.get('websiteId') as string
-  const currentStatus = formData.get('currentStatus') === 'true'
+  const websiteId = formData.get("websiteId") as string;
+  const currentStatus = formData.get("currentStatus") === "true";
 
   if (!websiteId) {
-    throw new Error('缺少網站 ID')
+    throw new Error("缺少網站 ID");
   }
 
-  const supabase = await createClient()
+  const supabase = await createClient();
 
   // 取得網站資訊以檢查權限
   const { data: website } = await supabase
-    .from('website_configs')
-    .select('company_id')
-    .eq('id', websiteId)
-    .single()
+    .from("website_configs")
+    .select("company_id")
+    .eq("id", websiteId)
+    .single();
 
   if (!website) {
-    throw new Error('找不到該網站')
+    throw new Error("找不到該網站");
   }
 
   // 檢查使用者是否有權限
   const { data: membership } = await supabase
-    .from('company_members')
-    .select('role')
-    .eq('company_id', website.company_id)
-    .eq('user_id', user.id)
-    .single()
+    .from("company_members")
+    .select("role")
+    .eq("company_id", website.company_id)
+    .eq("user_id", user.id)
+    .single();
 
-  if (!membership || (membership.role !== 'owner' && membership.role !== 'admin')) {
-    throw new Error('您沒有權限修改網站狀態')
+  if (
+    !membership ||
+    (membership.role !== "owner" && membership.role !== "admin")
+  ) {
+    throw new Error("您沒有權限修改網站狀態");
   }
 
   // 切換狀態
   const { error } = await supabase
-    .from('website_configs')
+    .from("website_configs")
     .update({ is_active: !currentStatus })
-    .eq('id', websiteId)
+    .eq("id", websiteId);
 
   if (error) {
-    throw new Error(error.message)
+    throw new Error(error.message);
   }
 
-  revalidatePath('/dashboard/websites')
+  revalidatePath("/dashboard/websites");
 }
 
 /**
  * 更新 Brand Voice 設定
  */
 export async function updateBrandVoice(formData: FormData) {
-  const user = await getUser()
+  const user = await getUser();
   if (!user) {
-    redirect('/login')
+    redirect("/login");
   }
 
-  const websiteId = formData.get('websiteId') as string
-  const toneOfVoice = formData.get('toneOfVoice') as string
-  const targetAudience = formData.get('targetAudience') as string
-  const keywords = formData.get('keywords') as string
+  const websiteId = formData.get("websiteId") as string;
+  const toneOfVoice = formData.get("toneOfVoice") as string;
+  const targetAudience = formData.get("targetAudience") as string;
+  const keywords = formData.get("keywords") as string;
 
   if (!websiteId) {
-    redirect('/dashboard/websites?error=' + encodeURIComponent('缺少網站 ID'))
+    redirect("/dashboard/websites?error=" + encodeURIComponent("缺少網站 ID"));
   }
 
-  const supabase = await createClient()
+  const supabase = await createClient();
 
   // 建立 brand_voice JSON 物件
   const brandVoice = {
-    tone_of_voice: toneOfVoice || '',
-    target_audience: targetAudience || '',
-    keywords: keywords ? keywords.split(',').map(k => k.trim()) : [],
-  }
+    tone_of_voice: toneOfVoice || "",
+    target_audience: targetAudience || "",
+    keywords: keywords ? keywords.split(",").map((k) => k.trim()) : [],
+  };
 
   // 更新網站的 brand_voice
   const { error } = await supabase
-    .from('website_configs')
+    .from("website_configs")
     .update({ brand_voice: brandVoice })
-    .eq('id', websiteId)
+    .eq("id", websiteId);
 
   if (error) {
-    redirect('/dashboard/websites?error=' + encodeURIComponent(error.message))
+    redirect("/dashboard/websites?error=" + encodeURIComponent(error.message));
   }
 
-  revalidatePath('/dashboard/websites')
-  redirect('/dashboard/websites?success=' + encodeURIComponent('Brand Voice 已更新'))
+  revalidatePath("/dashboard/websites");
+  redirect(
+    "/dashboard/websites?success=" + encodeURIComponent("Brand Voice 已更新"),
+  );
 }
