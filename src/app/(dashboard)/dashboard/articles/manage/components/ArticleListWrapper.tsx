@@ -24,14 +24,20 @@ export function ArticleListWrapper({
 
   return (
     <ScheduleProvider>
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-        <Card>
-          <CardContent className="pt-6">
-            <ScheduleControlBar schedulableArticleIds={schedulableArticleIds} />
-            <ArticleList articles={articles} />
-          </CardContent>
-        </Card>
-        <div className="lg:sticky lg:top-4 lg:self-start">{children}</div>
+      <div className="flex gap-4">
+        <div className="flex-1 min-w-0">
+          <Card>
+            <CardContent className="pt-6">
+              <ScheduleControlBar
+                schedulableArticleIds={schedulableArticleIds}
+              />
+              <ArticleList articles={articles} />
+            </CardContent>
+          </Card>
+        </div>
+        <div className="w-[500px] shrink-0 lg:sticky lg:top-4 lg:self-start">
+          {children}
+        </div>
       </div>
     </ScheduleProvider>
   );
