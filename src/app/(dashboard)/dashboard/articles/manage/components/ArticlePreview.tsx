@@ -4,6 +4,7 @@ import { useScheduleContext } from "./ScheduleContext";
 import { ArticleWithWebsite } from "../actions";
 import { Card, CardContent } from "@/components/ui/card";
 import { FileText } from "lucide-react";
+import { TiptapEditor } from "@/components/articles/TiptapEditor";
 
 interface ArticlePreviewProps {
   articles: ArticleWithWebsite[];
@@ -61,9 +62,10 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
                 </p>
               )}
             </header>
-            <div
-              className="prose prose-sm max-w-none dark:prose-invert lg:prose-base"
-              dangerouslySetInnerHTML={{ __html: content }}
+            <TiptapEditor
+              content={content}
+              onChange={() => {}}
+              editable={false}
             />
           </article>
         </div>
