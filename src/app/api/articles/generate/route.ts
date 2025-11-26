@@ -3,6 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 import { v4 as uuidv4 } from "uuid";
 import { TokenBillingService } from "@/lib/billing/token-billing-service";
 import { createSearchRouter } from "@/lib/search/search-router";
+import {
+  checkFreeTrialLimit,
+  incrementFreeTrialUsage,
+} from "@/lib/quota/free-trial-service";
 
 // Vercel 無伺服器函數最大執行時間：5 分鐘（Hobby 計劃上限）
 export const maxDuration = 300;
@@ -117,6 +121,32 @@ export async function POST(request: NextRequest) {
     // 使用 company_id 或 user_id 作為 billing identifier
     const billingId = membership?.company_id || user.id;
 
+    // 檢查免費方案終身配額
+    const { data: company } = await supabase
+      .from("companies")
+      .select("subscription_tier")
+      .eq("id", billingId)
+      .single();
+
+    const subscriptionTier = company?.subscription_tier || "free";
+
+    if (subscriptionTier === "free") {
+      const freeTrialStatus = await checkFreeTrialLimit(supabase, billingId);
+
+      if (!freeTrialStatus.canGenerate) {
+        return NextResponse.json(
+          {
+            error: "FREE_LIMIT_EXCEEDED",
+            message: `免費試用已達上限 ${freeTrialStatus.limit} 篇，請升級方案繼續使用`,
+            used: freeTrialStatus.used,
+            limit: freeTrialStatus.limit,
+            upgradeUrl: "/dashboard/subscription",
+          },
+          { status: 403 },
+        );
+      }
+    }
+
     const billingService = new TokenBillingService(supabase);
     const balance = await billingService.getCurrentBalance(billingId);
 
@@ -210,6 +240,11 @@ export async function POST(request: NextRequest) {
         { error: "Failed to create article job" },
         { status: 500 },
       );
+    }
+
+    // 免費方案：遞增終身使用量
+    if (subscriptionTier === "free") {
+      await incrementFreeTrialUsage(supabase, billingId, articleJobId);
     }
 
     // 觸發 GitHub Actions 處理（避免 Vercel 5 分鐘超時）
