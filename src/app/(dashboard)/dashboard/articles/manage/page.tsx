@@ -1,19 +1,14 @@
 import { Suspense } from "react";
 import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PenSquare, RefreshCw } from "lucide-react";
 import Link from "next/link";
-import { getArticles, ArticleWithWebsite } from "./actions";
+import { getArticles } from "./actions";
 import { ArticleListWrapper } from "./components/ArticleListWrapper";
 import { ArticleFilters } from "./components/ArticleFilters";
+import { ArticlePreview } from "./components/ArticlePreview";
 
 export const dynamic = "force-dynamic";
 
@@ -36,7 +31,11 @@ async function ArticleListContent({
     );
   }
 
-  return <ArticleListWrapper articles={articles} />;
+  return (
+    <ArticleListWrapper articles={articles}>
+      <ArticlePreview articles={articles} />
+    </ArticleListWrapper>
+  );
 }
 
 export default async function ArticleManagePage({ searchParams }: PageProps) {
@@ -50,15 +49,18 @@ export default async function ArticleManagePage({ searchParams }: PageProps) {
     (params.filter as "all" | "unpublished" | "published") || "all";
 
   return (
-    <div className="container mx-auto p-8 max-w-6xl">
-      <div className="mb-8 flex items-center justify-between">
+    <div className="container mx-auto p-8 max-w-[1600px]">
+      <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-3xl font-bold">文章管理</h1>
           <p className="text-muted-foreground mt-2">
             管理所有生成的文章，選擇要發布到哪個網站
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <Suspense fallback={null}>
+            <ArticleFilters />
+          </Suspense>
           <Button variant="outline" asChild>
             <Link href="/dashboard/articles/manage">
               <RefreshCw className="mr-2 h-4 w-4" />
@@ -74,32 +76,15 @@ export default async function ArticleManagePage({ searchParams }: PageProps) {
         </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <div className="flex items-center justify-between">
-            <div>
-              <CardTitle>文章列表</CardTitle>
-              <CardDescription>
-                查看所有文章的狀態，並決定發布到哪個網站
-              </CardDescription>
-            </div>
-            <Suspense fallback={null}>
-              <ArticleFilters />
-            </Suspense>
+      <Suspense
+        fallback={
+          <div className="text-center py-8 text-muted-foreground">
+            載入中...
           </div>
-        </CardHeader>
-        <CardContent>
-          <Suspense
-            fallback={
-              <div className="text-center py-8 text-muted-foreground">
-                載入中...
-              </div>
-            }
-          >
-            <ArticleListContent filter={filter} />
-          </Suspense>
-        </CardContent>
-      </Card>
+        }
+      >
+        <ArticleListContent filter={filter} />
+      </Suspense>
     </div>
   );
 }
