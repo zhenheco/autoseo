@@ -463,6 +463,8 @@ export type Database = {
           monthly_token_quota: number;
           is_lifetime: boolean;
           lifetime_discount: number;
+          lifetime_free_articles_used: number;
+          lifetime_free_articles_limit: number;
           current_period_start: string | null;
           current_period_end: string | null;
           trial_end: string | null;
@@ -480,6 +482,8 @@ export type Database = {
           monthly_token_quota: number;
           is_lifetime?: boolean;
           lifetime_discount?: number;
+          lifetime_free_articles_used?: number;
+          lifetime_free_articles_limit?: number;
           current_period_start?: string | null;
           current_period_end?: string | null;
           trial_end?: string | null;
@@ -497,6 +501,8 @@ export type Database = {
           monthly_token_quota?: number;
           is_lifetime?: boolean;
           lifetime_discount?: number;
+          lifetime_free_articles_used?: number;
+          lifetime_free_articles_limit?: number;
           current_period_start?: string | null;
           current_period_end?: string | null;
           trial_end?: string | null;
@@ -945,6 +951,7 @@ export type Database = {
           image_generation_prompt: string | null;
           image_alt_text: string | null;
           metadata: Json | null;
+          free_quota_deducted: boolean;
           created_at: string;
           started_at: string | null;
           completed_at: string | null;
@@ -971,6 +978,7 @@ export type Database = {
           image_generation_prompt?: string | null;
           image_alt_text?: string | null;
           metadata?: Json | null;
+          free_quota_deducted?: boolean;
           created_at?: string;
           started_at?: string | null;
           completed_at?: string | null;
@@ -997,6 +1005,7 @@ export type Database = {
           image_generation_prompt?: string | null;
           image_alt_text?: string | null;
           metadata?: Json | null;
+          free_quota_deducted?: boolean;
           created_at?: string;
           started_at?: string | null;
           completed_at?: string | null;
