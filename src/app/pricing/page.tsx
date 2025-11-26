@@ -1,14 +1,24 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
-import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
-import type { Tables } from '@/types/database.types'
-import { Check, Sparkles, ArrowRight, CreditCard, Crown, User, LogOut, LayoutDashboard, Zap } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Badge } from '@/components/ui/badge'
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { createClient } from "@/lib/supabase/client";
+import type { Tables } from "@/types/database.types";
+import {
+  Check,
+  Sparkles,
+  ArrowRight,
+  CreditCard,
+  Crown,
+  User,
+  LogOut,
+  LayoutDashboard,
+  Zap,
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -16,133 +26,137 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from '@/components/ui/dropdown-menu'
-import { ThemeToggle } from '@/components/ui/theme-toggle'
-import { SUPPORT_TIERS, type SupportLevel } from '@/config/support-tiers'
+} from "@/components/ui/dropdown-menu";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { SUPPORT_TIERS, type SupportLevel } from "@/config/support-tiers";
 
-type SubscriptionPlan = Tables<'subscription_plans'>
-type TokenPackage = Tables<'token_packages'>
+type SubscriptionPlan = Tables<"subscription_plans">;
+type TokenPackage = Tables<"token_packages">;
 
 interface PlanFeatures {
-  models?: string[] | 'all'
-  wordpress_sites?: number
-  images_per_article?: number
-  team_members?: number
-  brand_voices?: number
-  api_access?: boolean
-  white_label?: boolean
-  support_level?: SupportLevel
+  models?: string[] | "all";
+  wordpress_sites?: number;
+  images_per_article?: number;
+  team_members?: number;
+  brand_voices?: number;
+  api_access?: boolean;
+  white_label?: boolean;
+  support_level?: SupportLevel;
 }
 
 export default function PricingPage() {
-  const router = useRouter()
-  const [plans, setPlans] = useState<SubscriptionPlan[]>([])
-  const [tokenPackages, setTokenPackages] = useState<TokenPackage[]>([])
-  const [loading, setLoading] = useState(true)
-  const [processingPlanId, setProcessingPlanId] = useState<string | null>(null)
-  const [processingPackageId, setProcessingPackageId] = useState<string | null>(null)
-  const [userEmail, setUserEmail] = useState<string | null>(null)
-  const [currentTier, setCurrentTier] = useState<string | null>(null)
+  const router = useRouter();
+  const [plans, setPlans] = useState<SubscriptionPlan[]>([]);
+  const [tokenPackages, setTokenPackages] = useState<TokenPackage[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [processingPlanId, setProcessingPlanId] = useState<string | null>(null);
+  const [processingPackageId, setProcessingPackageId] = useState<string | null>(
+    null,
+  );
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [currentTier, setCurrentTier] = useState<string | null>(null);
 
   useEffect(() => {
-    loadPlans()
-    loadUser()
-  }, [])
+    loadPlans();
+    loadUser();
+  }, []);
 
   async function loadUser() {
     try {
-      const supabase = createClient()
-      const { data: { user } } = await supabase.auth.getUser()
+      const supabase = createClient();
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
       if (user) {
-        setUserEmail(user.email || null)
+        setUserEmail(user.email || null);
 
         const { data: member } = await supabase
-          .from('company_members')
-          .select('company_id')
-          .eq('user_id', user.id)
-          .single()
+          .from("company_members")
+          .select("company_id")
+          .eq("user_id", user.id)
+          .single();
 
         if (member) {
           const { data: subscription } = await supabase
-            .from('company_subscriptions')
-            .select('plan_id')
-            .eq('company_id', member.company_id)
-            .single()
+            .from("company_subscriptions")
+            .select("plan_id")
+            .eq("company_id", member.company_id)
+            .single();
 
           if (subscription) {
             const { data: plan } = await supabase
-              .from('subscription_plans')
-              .select('slug')
-              .eq('id', subscription.plan_id)
-              .single()
+              .from("subscription_plans")
+              .select("slug")
+              .eq("id", subscription.plan_id)
+              .single();
 
             if (plan) {
-              setCurrentTier(plan.slug)
+              setCurrentTier(plan.slug);
             }
           }
         }
       }
     } catch (error) {
-      console.error('Failed to load user:', error)
+      console.error("Failed to load user:", error);
     }
   }
 
   async function handleLogout() {
     try {
-      const supabase = createClient()
-      await supabase.auth.signOut()
-      router.push('/login')
-      router.refresh()
+      const supabase = createClient();
+      await supabase.auth.signOut();
+      router.push("/login");
+      router.refresh();
     } catch (error) {
-      console.error('Failed to logout:', error)
+      console.error("Failed to logout:", error);
     }
   }
 
   async function loadPlans() {
     try {
-      const supabase = createClient()
+      const supabase = createClient();
       const [plansRes, packagesRes] = await Promise.all([
         supabase
-          .from('subscription_plans')
-          .select('*')
-          .eq('is_lifetime', true)
-          .neq('slug', 'free')
-          .order('lifetime_price', { ascending: true }),
+          .from("subscription_plans")
+          .select("*")
+          .eq("is_lifetime", true)
+          .neq("slug", "free")
+          .order("lifetime_price", { ascending: true }),
         supabase
-          .from('token_packages')
-          .select('*')
-          .eq('is_active', true)
-          .order('price', { ascending: true })
-      ])
+          .from("token_packages")
+          .select("*")
+          .eq("is_active", true)
+          .order("price", { ascending: true }),
+      ]);
 
-      if (plansRes.error) throw plansRes.error
-      if (packagesRes.error) throw packagesRes.error
+      if (plansRes.error) throw plansRes.error;
+      if (packagesRes.error) throw packagesRes.error;
 
       if (plansRes.data) {
-        setPlans(plansRes.data)
+        setPlans(plansRes.data);
       }
 
       if (packagesRes.data) {
-        const displayedPackages = packagesRes.data.filter(pkg =>
-          ['entry-10k', 'standard-50k', 'advanced-100k'].includes(pkg.slug)
-        )
-        setTokenPackages(displayedPackages)
+        const displayedPackages = packagesRes.data.filter((pkg) =>
+          ["entry-10k", "standard-50k", "advanced-100k"].includes(pkg.slug),
+        );
+        setTokenPackages(displayedPackages);
       }
     } catch (error) {
-      console.error('Failed to load plans:', error)
+      console.error("Failed to load plans:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
   const submitPaymentForm = (paymentForm: {
-    merchantId: string
-    tradeInfo?: string
-    tradeSha?: string
-    postData?: string
-    postDataSha?: string
-    version?: string
-    apiUrl: string
+    merchantId: string;
+    tradeInfo?: string;
+    tradeSha?: string;
+    postData?: string;
+    postDataSha?: string;
+    version?: string;
+    apiUrl: string;
   }) => {
     const formData = {
       apiUrl: paymentForm.apiUrl,
@@ -150,132 +164,132 @@ export default function PricingPage() {
       tradeInfo: paymentForm.tradeInfo,
       tradeSha: paymentForm.tradeSha,
       version: paymentForm.version,
-      merchantId: paymentForm.merchantId
-    }
+      merchantId: paymentForm.merchantId,
+    };
 
-    const encodedFormData = encodeURIComponent(JSON.stringify(formData))
-    const authorizingUrl = `/dashboard/billing/authorizing?paymentForm=${encodedFormData}`
-    router.push(authorizingUrl)
-  }
+    const encodedFormData = encodeURIComponent(JSON.stringify(formData));
+    const authorizingUrl = `/dashboard/billing/authorizing?paymentForm=${encodedFormData}`;
+    router.push(authorizingUrl);
+  };
 
   async function handlePlanPurchase(plan: SubscriptionPlan) {
     try {
-      setProcessingPlanId(plan.id)
+      setProcessingPlanId(plan.id);
 
-      const supabase = createClient()
+      const supabase = createClient();
       const {
         data: { user },
-      } = await supabase.auth.getUser()
+      } = await supabase.auth.getUser();
 
       if (!user) {
-        router.push('/login?redirect=/pricing')
-        return
+        router.push("/login?redirect=/pricing");
+        return;
       }
 
       const { data: companies } = await supabase
-        .from('company_members')
-        .select('company_id')
-        .eq('user_id', user.id)
-        .limit(1)
+        .from("company_members")
+        .select("company_id")
+        .eq("user_id", user.id)
+        .limit(1);
 
-      const companyId = companies?.[0]?.company_id
+      const companyId = companies?.[0]?.company_id;
       if (!companyId) {
-        alert('找不到公司資訊，請先完成註冊')
-        return
+        alert("找不到公司資訊，請先完成註冊");
+        return;
       }
 
-      const response = await fetch('/api/payment/onetime/create', {
-        method: 'POST',
+      const response = await fetch("/api/payment/onetime/create", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           companyId,
-          paymentType: 'lifetime',
+          paymentType: "lifetime",
           relatedId: plan.id,
           amount: plan.lifetime_price || 0,
           description: `${plan.name} 終身方案`,
-          email: user.email || '',
+          email: user.email || "",
         }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || '支付請求失敗')
+        throw new Error(data.error || "支付請求失敗");
       }
 
       if (data.paymentForm) {
-        submitPaymentForm(data.paymentForm)
+        submitPaymentForm(data.paymentForm);
       }
     } catch (error) {
-      console.error('購買失敗:', error)
-      alert(error instanceof Error ? error.message : '購買失敗，請稍後再試')
+      console.error("購買失敗:", error);
+      alert(error instanceof Error ? error.message : "購買失敗，請稍後再試");
     } finally {
-      setProcessingPlanId(null)
+      setProcessingPlanId(null);
     }
   }
 
   async function handleTokenPackagePurchase(pkg: TokenPackage) {
     try {
-      setProcessingPackageId(pkg.id)
+      setProcessingPackageId(pkg.id);
 
-      const supabase = createClient()
+      const supabase = createClient();
       const {
         data: { user },
-      } = await supabase.auth.getUser()
+      } = await supabase.auth.getUser();
 
       if (!user) {
-        router.push('/login?redirect=/pricing')
-        return
+        router.push("/login?redirect=/pricing");
+        return;
       }
 
       const { data: companies } = await supabase
-        .from('company_members')
-        .select('company_id')
-        .eq('user_id', user.id)
-        .limit(1)
+        .from("company_members")
+        .select("company_id")
+        .eq("user_id", user.id)
+        .limit(1);
 
-      const companyId = companies?.[0]?.company_id
+      const companyId = companies?.[0]?.company_id;
       if (!companyId) {
-        alert('找不到公司資訊，請先完成註冊')
-        return
+        alert("找不到公司資訊，請先完成註冊");
+        return;
       }
 
-      const response = await fetch('/api/payment/onetime/create', {
-        method: 'POST',
+      const response = await fetch("/api/payment/onetime/create", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           companyId,
-          paymentType: 'token_package',
+          paymentType: "token_package",
           relatedId: pkg.id,
           amount: pkg.price,
           description: `購買 ${pkg.name}`,
-          email: user.email || '',
+          email: user.email || "",
         }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || '支付請求失敗')
+        throw new Error(data.error || "支付請求失敗");
       }
 
       if (data.paymentForm) {
-        submitPaymentForm(data.paymentForm)
+        submitPaymentForm(data.paymentForm);
       }
     } catch (error) {
-      console.error('購買失敗:', error)
-      alert(error instanceof Error ? error.message : '購買失敗，請稍後再試')
+      console.error("購買失敗:", error);
+      alert(error instanceof Error ? error.message : "購買失敗，請稍後再試");
     } finally {
-      setProcessingPackageId(null)
+      setProcessingPackageId(null);
     }
   }
 
   const renderFeatureList = (features: PlanFeatures) => {
-    const items = []
+    const items = [];
 
     if (features.wordpress_sites !== undefined) {
       items.push(
@@ -285,11 +299,11 @@ export default function PricingPage() {
           </div>
           <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
             {features.wordpress_sites === -1
-              ? '無限 WordPress 網站'
+              ? "無限 WordPress 網站"
               : `${features.wordpress_sites} 個 WordPress 網站`}
           </span>
-        </li>
-      )
+        </li>,
+      );
     }
 
     if (features.team_members !== undefined) {
@@ -300,11 +314,11 @@ export default function PricingPage() {
           </div>
           <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
             {features.team_members === -1
-              ? '無限團隊成員'
+              ? "無限團隊成員"
               : `${features.team_members} 個團隊成員`}
           </span>
-        </li>
-      )
+        </li>,
+      );
     }
 
     if (features.brand_voices !== undefined) {
@@ -315,13 +329,13 @@ export default function PricingPage() {
           </div>
           <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
             {features.brand_voices === -1
-              ? '無限品牌聲音'
+              ? "無限品牌聲音"
               : features.brand_voices === 0
-                ? '無品牌聲音'
+                ? "無品牌聲音"
                 : `${features.brand_voices} 個品牌聲音`}
           </span>
-        </li>
-      )
+        </li>,
+      );
     }
 
     if (features.api_access) {
@@ -333,8 +347,8 @@ export default function PricingPage() {
           <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
             API 存取
           </span>
-        </li>
-      )
+        </li>,
+      );
     }
 
     if (features.white_label) {
@@ -346,12 +360,12 @@ export default function PricingPage() {
           <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
             白標服務
           </span>
-        </li>
-      )
+        </li>,
+      );
     }
 
     if (features.support_level) {
-      const supportTier = SUPPORT_TIERS[features.support_level]
+      const supportTier = SUPPORT_TIERS[features.support_level];
       items.push(
         <li key="support" className="flex items-start gap-3 group">
           <div className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 group-hover:bg-primary/20 transition-colors">
@@ -360,12 +374,12 @@ export default function PricingPage() {
           <span className="text-sm text-muted-foreground group-hover:text-foreground transition-colors">
             {supportTier.label}
           </span>
-        </li>
-      )
+        </li>,
+      );
     }
 
-    return items
-  }
+    return items;
+  };
 
   if (loading) {
     return (
@@ -375,10 +389,12 @@ export default function PricingPage() {
             <div className="h-12 w-12 rounded-full border-4 border-primary/20 border-t-primary animate-spin" />
             <div className="absolute inset-0 h-12 w-12 rounded-full bg-primary/20 blur-xl animate-pulse" />
           </div>
-          <p className="text-sm text-muted-foreground animate-pulse">載入中...</p>
+          <p className="text-sm text-muted-foreground animate-pulse">
+            載入中...
+          </p>
         </div>
       </div>
-    )
+    );
   }
 
   return (
@@ -386,7 +402,10 @@ export default function PricingPage() {
       <header className="sticky top-0 z-50 h-16 border-b border-border bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60">
         <div className="flex h-full items-center justify-between px-6 max-w-7xl mx-auto">
           <div className="flex items-center gap-8">
-            <Link href="/dashboard" className="flex items-center gap-2 hover:opacity-80 transition-opacity">
+            <Link
+              href="/dashboard"
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+            >
               <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
                 <Sparkles className="h-5 w-5 text-primary-foreground" />
               </div>
@@ -400,7 +419,10 @@ export default function PricingPage() {
             {userEmail ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-9 w-9 rounded-full ring-2 ring-primary/20 hover:ring-primary/40 transition-all">
+                  <Button
+                    variant="ghost"
+                    className="relative h-9 w-9 rounded-full ring-2 ring-primary/20 hover:ring-primary/40 transition-all"
+                  >
                     <Avatar className="h-9 w-9">
                       <AvatarImage src="" alt="User avatar" />
                       <AvatarFallback className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground">
@@ -412,7 +434,9 @@ export default function PricingPage() {
                 <DropdownMenuContent className="w-56" align="end" forceMount>
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">使用者帳號</p>
+                      <p className="text-sm font-medium leading-none">
+                        使用者帳號
+                      </p>
                       <p className="text-xs leading-none text-muted-foreground">
                         {userEmail}
                       </p>
@@ -449,13 +473,18 @@ export default function PricingPage() {
       <div className="absolute inset-0 bg-[linear-gradient(to_right,hsl(var(--border))_1px,transparent_1px),linear-gradient(to_bottom,hsl(var(--border))_1px,transparent_1px)] bg-[size:4rem_4rem] [mask-image:radial-gradient(ellipse_80%_50%_at_50%_0%,#000_70%,transparent_110%)]" />
 
       <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl opacity-20 animate-pulse" />
-      <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl opacity-20 animate-pulse" style={{ animationDelay: '1s' }} />
+      <div
+        className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-primary/10 rounded-full blur-3xl opacity-20 animate-pulse"
+        style={{ animationDelay: "1s" }}
+      />
 
       <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
         <div className="text-center mb-16 space-y-6">
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-purple-200 dark:border-purple-800 bg-gradient-to-r from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 backdrop-blur-sm">
             <Crown className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-            <span className="text-sm font-medium text-purple-700 dark:text-purple-300">終身定價 - 一次付清，永久享有</span>
+            <span className="text-sm font-medium text-purple-700 dark:text-purple-300">
+              終身定價 - 一次付清，永久享有
+            </span>
           </div>
 
           <h1 className="text-5xl md:text-6xl font-bold bg-gradient-to-r from-foreground via-foreground to-foreground/70 bg-clip-text text-transparent">
@@ -467,17 +496,17 @@ export default function PricingPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-16 max-w-7xl mx-auto">
           {plans.map((plan, index) => {
-            const features = plan.features as PlanFeatures
-            const isRecommended = plan.slug === 'professional'
-            const isCurrentPlan = currentTier === plan.slug
+            const features = plan.features as PlanFeatures;
+            const isRecommended = plan.slug === "professional";
+            const isCurrentPlan = currentTier === plan.slug;
 
             return (
               <div
                 key={plan.id}
                 className={`group relative rounded-3xl transition-all duration-500 ${
-                  isRecommended ? 'lg:scale-105' : 'lg:hover:scale-105'
+                  isRecommended ? "lg:scale-105" : "lg:hover:scale-105"
                 }`}
               >
                 {isRecommended && (
@@ -490,19 +519,21 @@ export default function PricingPage() {
                 )}
 
                 <div
-                  className={`relative h-full flex flex-col rounded-3xl border p-8 transition-all duration-500 ${
+                  className={`relative h-full flex flex-col rounded-3xl border p-6 transition-all duration-500 ${
                     isRecommended
-                      ? 'border-primary/50 shadow-2xl shadow-primary/30 hover:shadow-primary/40 bg-gradient-to-br from-primary/5 via-transparent to-primary/5'
-                      : 'border-border/50 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/20 bg-card'
+                      ? "border-primary/50 shadow-2xl shadow-primary/30 hover:shadow-primary/40 bg-gradient-to-br from-primary/5 via-transparent to-primary/5"
+                      : "border-border/50 hover:border-primary/30 hover:shadow-xl hover:shadow-primary/20 bg-card"
                   }`}
                 >
-                  <div className="mb-8">
+                  <div className="mb-6">
                     <h3 className="text-2xl font-bold mb-2">{plan.name}</h3>
 
                     <div className="mb-1">
-                      <div className="text-lg text-muted-foreground mb-1">NT$</div>
+                      <div className="text-lg text-muted-foreground mb-1">
+                        NT$
+                      </div>
                       <div className="flex items-baseline gap-2">
-                        <span className="text-4xl font-bold">
+                        <span className="text-3xl font-bold">
                           {plan.lifetime_price?.toLocaleString() || 0}
                         </span>
                       </div>
@@ -513,8 +544,8 @@ export default function PricingPage() {
                     </p>
                   </div>
 
-                  <div className="mb-8 p-4 rounded-xl bg-primary/5 border border-primary/10">
-                    <div className="text-3xl font-bold text-primary mb-1">
+                  <div className="mb-6 p-3 rounded-xl bg-primary/5 border border-primary/10">
+                    <div className="text-2xl font-bold text-primary mb-1">
                       {(plan.base_tokens / 1000).toLocaleString()}K
                     </div>
                     <div className="text-sm text-muted-foreground">
@@ -525,7 +556,7 @@ export default function PricingPage() {
                     </div>
                   </div>
 
-                  <ul className="space-y-3 mb-8 flex-1">
+                  <ul className="space-y-2 mb-6 flex-1">
                     {renderFeatureList(features)}
                   </ul>
 
@@ -534,16 +565,16 @@ export default function PricingPage() {
                     disabled={processingPlanId === plan.id || isCurrentPlan}
                     className={`w-full group/button mt-auto ${
                       isRecommended
-                        ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30'
-                        : 'bg-secondary hover:bg-secondary/80 text-secondary-foreground'
+                        ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30"
+                        : "bg-secondary hover:bg-secondary/80 text-secondary-foreground"
                     }`}
                   >
                     <span>
                       {processingPlanId === plan.id
-                        ? '處理中...'
+                        ? "處理中..."
                         : isCurrentPlan
-                          ? '目前方案'
-                          : '開始使用'}
+                          ? "目前方案"
+                          : "開始使用"}
                     </span>
                     {processingPlanId !== plan.id && !isCurrentPlan && (
                       <ArrowRight className="w-4 h-4 ml-2 group-hover/button:translate-x-1 transition-transform" />
@@ -555,7 +586,7 @@ export default function PricingPage() {
                   <div className="absolute inset-0 -z-10 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 blur-2xl opacity-50 group-hover:opacity-75 transition-opacity" />
                 )}
               </div>
-            )
+            );
           })}
         </div>
 
@@ -572,19 +603,33 @@ export default function PricingPage() {
               <table className="w-full">
                 <thead className="bg-muted/50">
                   <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold">支援等級</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold">響應時間</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold">支援渠道</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold">服務時間</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold">
+                      支援等級
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold">
+                      響應時間
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold">
+                      支援渠道
+                    </th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold">
+                      服務時間
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
                   {Object.entries(SUPPORT_TIERS).map(([key, tier]) => (
                     <tr key={key} className="hover:bg-muted/30">
                       <td className="px-6 py-4 font-medium">{tier.label}</td>
-                      <td className="px-6 py-4 text-muted-foreground">{tier.response_time}</td>
-                      <td className="px-6 py-4 text-muted-foreground">{tier.channels.join(', ')}</td>
-                      <td className="px-6 py-4 text-muted-foreground">{tier.availability}</td>
+                      <td className="px-6 py-4 text-muted-foreground">
+                        {tier.response_time}
+                      </td>
+                      <td className="px-6 py-4 text-muted-foreground">
+                        {tier.channels.join(", ")}
+                      </td>
+                      <td className="px-6 py-4 text-muted-foreground">
+                        {tier.availability}
+                      </td>
                     </tr>
                   ))}
                 </tbody>
@@ -597,7 +642,9 @@ export default function PricingPage() {
           <div className="text-center mb-12 space-y-4">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-900/20 backdrop-blur-sm">
               <CreditCard className="w-4 h-4 text-amber-600 dark:text-amber-400" />
-              <span className="text-sm font-medium text-amber-700 dark:text-amber-300">彈性加值包（永不過期）</span>
+              <span className="text-sm font-medium text-amber-700 dark:text-amber-300">
+                彈性加值包（永不過期）
+              </span>
             </div>
             <h2 className="text-4xl font-bold">彈性加值，永不過期</h2>
             <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
@@ -608,7 +655,9 @@ export default function PricingPage() {
           <div className="flex justify-center mb-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-3xl">
               {tokenPackages.map((pkg) => {
-                const perTokenPrice = (pkg.price / (pkg.tokens / 1000)).toFixed(2)
+                const perTokenPrice = (pkg.price / (pkg.tokens / 1000)).toFixed(
+                  2,
+                );
                 return (
                   <div
                     key={pkg.id}
@@ -618,7 +667,9 @@ export default function PricingPage() {
                       <div className="text-3xl font-bold">
                         {(pkg.tokens / 1000).toLocaleString()}K
                       </div>
-                      <div className="text-xs text-muted-foreground">Credits</div>
+                      <div className="text-xs text-muted-foreground">
+                        Credits
+                      </div>
                       <div className="text-2xl font-bold text-amber-600 dark:text-amber-400">
                         NT$ {pkg.price.toLocaleString()}
                       </div>
@@ -631,16 +682,16 @@ export default function PricingPage() {
                         disabled={processingPackageId === pkg.id}
                         className="w-full bg-amber-600 hover:bg-amber-700 text-white disabled:opacity-50"
                       >
-                        {processingPackageId === pkg.id ? '處理中...' : '購買'}
+                        {processingPackageId === pkg.id ? "處理中..." : "購買"}
                       </Button>
                     </div>
                   </div>
-                )
+                );
               })}
             </div>
           </div>
         </section>
       </div>
     </div>
-  )
+  );
 }
