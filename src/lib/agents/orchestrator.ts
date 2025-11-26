@@ -721,11 +721,18 @@ export class ParallelOrchestrator {
           }
 
           // ✅ 修復問題 3: 更新 metadata.saved_article_id 防止重複生成
+          // 先取得最新的 metadata（包含可能的 token_deduction_error）
+          const { data: latestJobData } = await supabase
+            .from("article_jobs")
+            .select("metadata")
+            .eq("id", input.articleJobId)
+            .single();
+
           await supabase
             .from("article_jobs")
             .update({
               metadata: {
-                ...(jobData?.metadata || {}),
+                ...(latestJobData?.metadata || jobData?.metadata || {}),
                 saved_article_id: savedArticle.article.id,
                 generation_completed_at: new Date().toISOString(),
               },
@@ -1739,8 +1746,21 @@ export class ParallelOrchestrator {
   }
 
   /**
+   * 取得模型的倍率
+   * advanced 模型 (如 deepseek-reasoner) = 2.0x
+   * basic 模型 (如 deepseek-chat) = 1.0x
+   */
+  private getModelMultiplier(modelName?: string): number {
+    if (!modelName) return 1.0;
+    const advancedModels = ["deepseek-reasoner", "claude-3-5-sonnet", "gpt-4"];
+    return advancedModels.some((m) => modelName.includes(m)) ? 2.0 : 1.0;
+  }
+
+  /**
    * 計算所有 AI 調用的總 Token 使用量
    * 用於 Token 扣除
+   *
+   * 計費公式：實際扣除 = 官方 Token × 模型倍率 × 150%
    */
   private calculateTotalTokenUsage(result: ArticleGenerationResult): {
     official: number;
@@ -1749,7 +1769,7 @@ export class ParallelOrchestrator {
     let officialTotal = 0;
     let chargedTotal = 0;
 
-    // 累積所有階段的 token 使用量
+    const phaseNames = ["research", "strategy", "writing", "meta", "image"];
     const phases = [
       result.research,
       result.strategy,
@@ -1758,20 +1778,64 @@ export class ParallelOrchestrator {
       result.image,
     ];
 
-    for (const phase of phases) {
-      if (phase?.executionInfo) {
-        const execInfo = phase.executionInfo;
-        // ImageAgent 的 executionInfo 沒有 tokenUsage
-        if ("tokenUsage" in execInfo && execInfo.tokenUsage) {
-          const tokenUsage = execInfo.tokenUsage;
-          const total = tokenUsage.input + tokenUsage.output;
-          officialTotal += total;
-          // 如果有 charged 欄位則使用，否則使用 total
-          chargedTotal +=
-            (tokenUsage as Record<string, number>).charged || total;
-        }
+    console.log("[Orchestrator] 📊 calculateTotalTokenUsage - 開始計算");
+
+    for (let i = 0; i < phases.length; i++) {
+      const phase = phases[i];
+      const phaseName = phaseNames[i];
+
+      if (!phase) {
+        console.log(`[Orchestrator]   ${phaseName}: ❌ phase 不存在`);
+        continue;
       }
+
+      if (!phase.executionInfo) {
+        console.log(`[Orchestrator]   ${phaseName}: ❌ executionInfo 不存在`);
+        continue;
+      }
+
+      const execInfo = phase.executionInfo;
+
+      if (!("tokenUsage" in execInfo)) {
+        console.log(
+          `[Orchestrator]   ${phaseName}: ⚠️ executionInfo 中沒有 tokenUsage 屬性`,
+        );
+        continue;
+      }
+
+      if (!execInfo.tokenUsage) {
+        console.log(
+          `[Orchestrator]   ${phaseName}: ⚠️ tokenUsage 是 null/undefined`,
+        );
+        continue;
+      }
+
+      const tokenUsage = execInfo.tokenUsage as {
+        input: number;
+        output: number;
+        charged?: number;
+      };
+      const rawTotal = (tokenUsage.input || 0) + (tokenUsage.output || 0);
+
+      // 取得模型倍率
+      const modelName =
+        "model" in execInfo ? (execInfo.model as string) : undefined;
+      const multiplier = this.getModelMultiplier(modelName);
+
+      // 計費公式：官方 Token × 模型倍率 × 150%
+      const charged = Math.ceil(rawTotal * multiplier * 1.5);
+
+      officialTotal += rawTotal;
+      chargedTotal += charged;
+
+      console.log(
+        `[Orchestrator]   ${phaseName}: ✅ model=${modelName}, raw=${rawTotal}, multiplier=${multiplier}, charged=${charged}`,
+      );
     }
+
+    console.log(
+      `[Orchestrator] 📊 calculateTotalTokenUsage - 完成: official=${officialTotal}, charged=${chargedTotal}`,
+    );
 
     return {
       official: officialTotal,
