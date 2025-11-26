@@ -9,14 +9,14 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Globe } from "lucide-react";
-import { createClient } from "@/lib/supabase/client";
+import { getUserWebsites } from "@/app/(dashboard)/dashboard/websites/actions";
 
 interface Website {
   id: string;
   website_name: string;
   wordpress_url: string;
   company_id: string;
-  is_active?: boolean;
+  is_active?: boolean | null;
 }
 
 interface WebsiteSelectorProps {
@@ -40,7 +40,6 @@ export function WebsiteSelector({
   const [loading, setLoading] = useState(true);
   const [companyId, setCompanyId] = useState<string | null>(null);
   const hasSetDefaultRef = useRef(false);
-  const hasFetchedRef = useRef(false);
 
   const getDefaultWebsite = useCallback(
     (
@@ -73,63 +72,48 @@ export function WebsiteSelector({
   );
 
   useEffect(() => {
+    let mounted = true;
+
     async function fetchWebsites() {
-      if (hasFetchedRef.current) return;
-      hasFetchedRef.current = true;
+      try {
+        const result = await getUserWebsites();
 
-      const supabase = createClient();
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+        if (!mounted) return;
 
-      if (!user) {
+        setCompanyId(result.companyId);
+        setWebsites(result.websites);
         setLoading(false);
-        return;
-      }
 
-      const { data: membership } = await supabase
-        .from("company_members")
-        .select("company_id")
-        .eq("user_id", user.id)
-        .single();
-
-      if (!membership) {
-        setLoading(false);
-        return;
-      }
-
-      setCompanyId(membership.company_id);
-
-      const { data, error } = await supabase
-        .from("website_configs")
-        .select("id, website_name, wordpress_url, company_id, is_active")
-        .eq("company_id", membership.company_id)
-        .order("website_name");
-
-      if (error) {
+        if (
+          !value &&
+          !hasSetDefaultRef.current &&
+          result.websites.length > 0 &&
+          result.companyId
+        ) {
+          const defaultWebsite = getDefaultWebsite(
+            result.websites,
+            result.companyId,
+            articleWebsiteId,
+          );
+          if (defaultWebsite) {
+            hasSetDefaultRef.current = true;
+            onChange(defaultWebsite.id);
+          }
+        }
+      } catch (error) {
         console.error("Failed to fetch websites:", error);
-        setLoading(false);
-        return;
-      }
-
-      setWebsites(data || []);
-      setLoading(false);
-
-      if (!value && !hasSetDefaultRef.current && (data || []).length > 0) {
-        const defaultWebsite = getDefaultWebsite(
-          data || [],
-          membership.company_id,
-          articleWebsiteId,
-        );
-        if (defaultWebsite) {
-          hasSetDefaultRef.current = true;
-          onChange(defaultWebsite.id);
+        if (mounted) {
+          setLoading(false);
         }
       }
     }
 
     fetchWebsites();
-  }, [onlyUserWebsites, articleWebsiteId, getDefaultWebsite]);
+
+    return () => {
+      mounted = false;
+    };
+  }, [articleWebsiteId, getDefaultWebsite, onChange, value]);
 
   const handleChange = (websiteId: string) => {
     onChange(websiteId);
