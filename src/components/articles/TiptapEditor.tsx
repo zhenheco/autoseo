@@ -48,7 +48,7 @@ export function TiptapEditor({
         inline: true,
         allowBase64: true,
         HTMLAttributes: {
-          class: "rounded-lg max-w-[800px] h-auto",
+          class: "rounded-lg max-w-[70%] h-auto",
         },
       }),
     ],

@@ -1,7 +1,6 @@
 import { Suspense } from "react";
 import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { PenSquare, RefreshCw } from "lucide-react";
 import Link from "next/link";
@@ -14,6 +13,28 @@ export const dynamic = "force-dynamic";
 
 interface PageProps {
   searchParams: Promise<{ filter?: string }>;
+}
+
+function HeaderFilters() {
+  return (
+    <div className="flex items-center gap-2">
+      <Suspense fallback={null}>
+        <ArticleFilters />
+      </Suspense>
+      <Button variant="outline" size="sm" asChild>
+        <Link href="/dashboard/articles/manage">
+          <RefreshCw className="mr-1 h-3 w-3" />
+          重新整理
+        </Link>
+      </Button>
+      <Button size="sm" asChild>
+        <Link href="/dashboard/articles">
+          <PenSquare className="mr-1 h-3 w-3" />
+          生成新文章
+        </Link>
+      </Button>
+    </div>
+  );
 }
 
 async function ArticleListContent({
@@ -32,7 +53,7 @@ async function ArticleListContent({
   }
 
   return (
-    <ArticleListWrapper articles={articles}>
+    <ArticleListWrapper articles={articles} filters={<HeaderFilters />}>
       <ArticlePreview articles={articles} />
     </ArticleListWrapper>
   );
@@ -49,25 +70,7 @@ export default async function ArticleManagePage({ searchParams }: PageProps) {
     (params.filter as "all" | "unpublished" | "published") || "all";
 
   return (
-    <div className="container mx-auto p-8 max-w-[1600px]">
-      <div className="mb-6 flex flex-wrap items-center justify-end gap-2">
-        <Suspense fallback={null}>
-          <ArticleFilters />
-        </Suspense>
-        <Button variant="outline" asChild>
-          <Link href="/dashboard/articles/manage">
-            <RefreshCw className="mr-2 h-4 w-4" />
-            重新整理
-          </Link>
-        </Button>
-        <Button asChild>
-          <Link href="/dashboard/articles">
-            <PenSquare className="mr-2 h-4 w-4" />
-            生成新文章
-          </Link>
-        </Button>
-      </div>
-
+    <div className="container mx-auto p-6 max-w-[1600px]">
       <Suspense
         fallback={
           <div className="text-center py-8 text-muted-foreground">

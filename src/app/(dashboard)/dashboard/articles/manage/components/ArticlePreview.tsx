@@ -3,7 +3,6 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useScheduleContext } from "./ScheduleContext";
 import { ArticleWithWebsite, updateArticleContent } from "../actions";
-import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FileText, Save, Check } from "lucide-react";
@@ -77,58 +76,54 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
 
   if (!article) {
     return (
-      <Card className="h-full">
-        <CardContent className="flex h-full min-h-[400px] flex-col items-center justify-center text-muted-foreground">
-          <FileText className="mb-4 h-12 w-12" />
-          <p>點擊文章以預覽</p>
-        </CardContent>
-      </Card>
+      <div className="flex h-full min-h-[400px] flex-col items-center justify-center text-muted-foreground">
+        <FileText className="mb-4 h-12 w-12" />
+        <p>點擊文章以預覽</p>
+      </div>
     );
   }
 
   return (
-    <Card className="h-full overflow-hidden">
-      <CardContent className="h-full overflow-y-auto p-0">
-        <div className="wordpress-preview">
-          <article className="p-6">
-            <header className="mb-6">
-              <div className="mb-4 flex items-center gap-2">
-                <Input
-                  value={editedTitle}
-                  onChange={handleTitleChange}
-                  className="text-2xl font-bold border-none shadow-none focus-visible:ring-0 p-0 h-auto lg:text-3xl"
-                  placeholder="輸入標題..."
-                />
-                <Button
-                  size="sm"
-                  onClick={handleSave}
-                  disabled={isSaving || !hasChanges}
-                  variant={saveSuccess ? "outline" : "default"}
-                >
-                  {isSaving ? (
-                    "儲存中..."
-                  ) : saveSuccess ? (
-                    <>
-                      <Check className="mr-1 h-4 w-4" />
-                      已儲存
-                    </>
-                  ) : (
-                    <>
-                      <Save className="mr-1 h-4 w-4" />
-                      儲存
-                    </>
-                  )}
-                </Button>
-              </div>
-            </header>
-            <TiptapEditor
-              content={editedContent}
-              onChange={handleContentChange}
-              editable={true}
-            />
-          </article>
-        </div>
-      </CardContent>
-    </Card>
+    <div className="h-full overflow-y-auto">
+      <div className="wordpress-preview">
+        <article>
+          <header className="mb-4">
+            <div className="flex items-center gap-2">
+              <Input
+                value={editedTitle}
+                onChange={handleTitleChange}
+                className="text-xl font-bold border-none shadow-none focus-visible:ring-0 p-0 h-auto lg:text-2xl"
+                placeholder="輸入標題..."
+              />
+              <Button
+                size="sm"
+                onClick={handleSave}
+                disabled={isSaving || !hasChanges}
+                variant={saveSuccess ? "outline" : "default"}
+              >
+                {isSaving ? (
+                  "儲存中..."
+                ) : saveSuccess ? (
+                  <>
+                    <Check className="mr-1 h-4 w-4" />
+                    已儲存
+                  </>
+                ) : (
+                  <>
+                    <Save className="mr-1 h-4 w-4" />
+                    儲存
+                  </>
+                )}
+              </Button>
+            </div>
+          </header>
+          <TiptapEditor
+            content={editedContent}
+            onChange={handleContentChange}
+            editable={true}
+          />
+        </article>
+      </div>
+    </div>
   );
 }

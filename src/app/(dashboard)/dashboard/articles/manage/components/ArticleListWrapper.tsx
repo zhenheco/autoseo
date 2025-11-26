@@ -5,22 +5,22 @@ import { ScheduleProvider } from "./ScheduleContext";
 import { ScheduleControlBar } from "./ScheduleControlBar";
 import { ArticleList } from "./ArticleList";
 import { ArticleWithWebsite } from "../actions";
-import { Card, CardContent } from "@/components/ui/card";
 import { WebsiteSelector } from "@/components/articles/WebsiteSelector";
 import { useScheduleContext } from "./ScheduleContext";
 
 interface ArticleListWrapperProps {
   articles: ArticleWithWebsite[];
+  filters?: ReactNode;
   children?: ReactNode;
 }
 
-function PageHeader() {
+function PageHeader({ filters }: { filters?: ReactNode }) {
   const { websiteId, setWebsiteId, isScheduling } = useScheduleContext();
 
   return (
-    <div className="mb-6 flex items-center gap-4">
-      <h1 className="text-3xl font-bold">文章管理</h1>
-      <div className="w-[200px]">
+    <div className="mb-4 flex items-center gap-4">
+      <h1 className="text-2xl font-bold whitespace-nowrap">文章管理</h1>
+      <div className="w-[180px]">
         <WebsiteSelector
           value={websiteId}
           onChange={setWebsiteId}
@@ -28,12 +28,15 @@ function PageHeader() {
           disabled={isScheduling}
         />
       </div>
+      <div className="flex-1" />
+      {filters}
     </div>
   );
 }
 
 export function ArticleListWrapper({
   articles,
+  filters,
   children,
 }: ArticleListWrapperProps) {
   const schedulableArticleIds = useMemo(() => {
@@ -44,19 +47,13 @@ export function ArticleListWrapper({
 
   return (
     <ScheduleProvider>
-      <PageHeader />
+      <PageHeader filters={filters} />
       <div className="flex gap-4">
-        <div className="w-1/2 min-w-0">
-          <Card>
-            <CardContent className="pt-6">
-              <ScheduleControlBar
-                schedulableArticleIds={schedulableArticleIds}
-              />
-              <ArticleList articles={articles} />
-            </CardContent>
-          </Card>
+        <div className="w-2/5 min-w-0">
+          <ScheduleControlBar schedulableArticleIds={schedulableArticleIds} />
+          <ArticleList articles={articles} />
         </div>
-        <div className="w-1/2 shrink-0 lg:sticky lg:top-4 lg:self-start">
+        <div className="w-3/5 shrink-0 lg:sticky lg:top-4 lg:self-start">
           {children}
         </div>
       </div>
