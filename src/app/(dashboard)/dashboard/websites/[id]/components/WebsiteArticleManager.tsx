@@ -92,6 +92,14 @@ export function WebsiteArticleManager({
   });
 
   useEffect(() => {
+    const interval = setInterval(() => {
+      router.refresh();
+    }, 60000);
+
+    return () => clearInterval(interval);
+  }, [router]);
+
+  useEffect(() => {
     setJobs(initialJobs);
   }, [initialJobs]);
 

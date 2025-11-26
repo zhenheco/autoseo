@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import { useArticleJobStatus } from '@/hooks/useArticleJobStatus';
+import { useArticleJobStatus } from "@/hooks/useArticleJobStatus";
 
 interface ArticleGenerationProgressProps {
   jobId: string;
@@ -18,12 +18,12 @@ export function ArticleGenerationProgress({
   });
 
   // 當任務完成時觸發回調
-  if (job?.status === 'completed' && job.result_url && onComplete) {
+  if (job?.status === "completed" && job.result_url && onComplete) {
     onComplete(job.result_url);
   }
 
   // 當任務失敗時觸發回調
-  if (job?.status === 'failed' && job.error_message && onError) {
+  if (job?.status === "failed" && job.error_message && onError) {
     onError(job.error_message);
   }
 
@@ -53,29 +53,29 @@ export function ArticleGenerationProgress({
 
   const getStatusColor = () => {
     switch (job.status) {
-      case 'pending':
-        return 'text-yellow-600';
-      case 'processing':
-        return 'text-blue-600';
-      case 'completed':
-        return 'text-green-600';
-      case 'failed':
-        return 'text-red-600';
+      case "pending":
+        return "text-blue-600";
+      case "processing":
+        return "text-blue-600";
+      case "completed":
+        return "text-green-600";
+      case "failed":
+        return "text-red-600";
       default:
-        return 'text-gray-600';
+        return "text-gray-600";
     }
   };
 
   const getStatusText = () => {
     switch (job.status) {
-      case 'pending':
-        return '等待處理';
-      case 'processing':
-        return '處理中';
-      case 'completed':
-        return '已完成';
-      case 'failed':
-        return '失敗';
+      case "pending":
+        return "生成中";
+      case "processing":
+        return "處理中";
+      case "completed":
+        return "已完成";
+      case "failed":
+        return "失敗";
       default:
         return job.status;
     }
@@ -83,16 +83,16 @@ export function ArticleGenerationProgress({
 
   const getBorderColor = () => {
     switch (job.status) {
-      case 'pending':
-        return 'border-yellow-300 bg-yellow-50';
-      case 'processing':
-        return 'border-blue-300 bg-blue-50';
-      case 'completed':
-        return 'border-green-300 bg-green-50';
-      case 'failed':
-        return 'border-red-300 bg-red-50';
+      case "pending":
+        return "border-blue-300 bg-blue-50";
+      case "processing":
+        return "border-blue-300 bg-blue-50";
+      case "completed":
+        return "border-green-300 bg-green-50";
+      case "failed":
+        return "border-red-300 bg-red-50";
       default:
-        return 'border-gray-300 bg-gray-50';
+        return "border-gray-300 bg-gray-50";
     }
   };
 
@@ -104,7 +104,9 @@ export function ArticleGenerationProgress({
       <div className="mb-3">
         <div className="flex items-center justify-between mb-2">
           <span className="text-sm text-gray-600">任務 ID:</span>
-          <span className="text-sm font-mono text-gray-800">{job.job_id.slice(0, 8)}...</span>
+          <span className="text-sm font-mono text-gray-800">
+            {job.job_id.slice(0, 8)}...
+          </span>
         </div>
         <div className="flex items-center justify-between">
           <span className="text-sm text-gray-600">狀態:</span>
@@ -115,7 +117,7 @@ export function ArticleGenerationProgress({
       </div>
 
       {/* 處理中的進度條 */}
-      {job.status === 'processing' && (
+      {job.status === "processing" && (
         <div className="mb-3">
           <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
             <div
@@ -124,17 +126,15 @@ export function ArticleGenerationProgress({
             />
           </div>
           <p className="text-sm text-gray-600">
-            {job.current_step || '處理中...'} ({job.progress || 0}%)
+            {job.current_step || "處理中..."} ({job.progress || 0}%)
           </p>
         </div>
       )}
 
       {/* 等待處理的提示 */}
-      {job.status === 'pending' && (
+      {job.status === "pending" && (
         <div className="mb-3">
-          <p className="text-sm text-gray-600">
-            任務已排隊，等待處理...
-          </p>
+          <p className="text-sm text-gray-600">任務已排隊，等待處理...</p>
           <p className="text-xs text-gray-500 mt-1">
             每 5 分鐘會自動檢查並處理待處理的任務
           </p>
@@ -142,7 +142,7 @@ export function ArticleGenerationProgress({
       )}
 
       {/* 完成結果 */}
-      {job.status === 'completed' && (
+      {job.status === "completed" && (
         <div className="mt-3">
           {job.result_url ? (
             <a
@@ -173,7 +173,7 @@ export function ArticleGenerationProgress({
       )}
 
       {/* 錯誤訊息 */}
-      {job.status === 'failed' && job.error_message && (
+      {job.status === "failed" && job.error_message && (
         <div className="mt-3 p-3 bg-red-100 rounded border border-red-200">
           <p className="text-sm text-red-800 font-semibold mb-1">錯誤訊息:</p>
           <p className="text-sm text-red-700">{job.error_message}</p>
@@ -186,27 +186,27 @@ export function ArticleGenerationProgress({
           <div>
             <span className="font-medium">建立時間:</span>
             <br />
-            {new Date(job.created_at).toLocaleString('zh-TW')}
+            {new Date(job.created_at).toLocaleString("zh-TW")}
           </div>
           {job.started_at && (
             <div>
               <span className="font-medium">開始時間:</span>
               <br />
-              {new Date(job.started_at).toLocaleString('zh-TW')}
+              {new Date(job.started_at).toLocaleString("zh-TW")}
             </div>
           )}
           {job.completed_at && (
             <div className="col-span-2">
               <span className="font-medium">完成時間:</span>
               <br />
-              {new Date(job.completed_at).toLocaleString('zh-TW')}
+              {new Date(job.completed_at).toLocaleString("zh-TW")}
             </div>
           )}
         </div>
       </div>
 
       {/* 輪詢提示 */}
-      {(job.status === 'pending' || job.status === 'processing') && (
+      {(job.status === "pending" || job.status === "processing") && (
         <div className="mt-3 pt-3 border-t border-gray-300">
           <p className="text-xs text-gray-500 flex items-center">
             <svg
