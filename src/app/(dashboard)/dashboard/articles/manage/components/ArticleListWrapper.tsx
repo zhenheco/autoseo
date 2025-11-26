@@ -25,7 +25,7 @@ export function ArticleListWrapper({
   return (
     <ScheduleProvider>
       <div className="flex gap-4">
-        <div className="flex-1 min-w-0">
+        <div className="w-1/2 min-w-0">
           <Card>
             <CardContent className="pt-6">
               <ScheduleControlBar
@@ -35,7 +35,7 @@ export function ArticleListWrapper({
             </CardContent>
           </Card>
         </div>
-        <div className="w-[500px] shrink-0 lg:sticky lg:top-4 lg:self-start">
+        <div className="w-1/2 shrink-0 lg:sticky lg:top-4 lg:self-start">
           {children}
         </div>
       </div>
