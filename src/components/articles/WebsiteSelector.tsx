@@ -14,7 +14,7 @@ import { createClient } from "@/lib/supabase/client";
 interface Website {
   id: string;
   website_name: string;
-  base_url: string;
+  wordpress_url: string;
   company_id: string;
   is_active?: boolean;
 }
@@ -103,7 +103,7 @@ export function WebsiteSelector({
 
       const { data, error } = await supabase
         .from("website_configs")
-        .select("id, website_name, base_url, company_id, is_active")
+        .select("id, website_name, wordpress_url, company_id, is_active")
         .eq("company_id", membership.company_id)
         .order("website_name");
 
@@ -205,9 +205,9 @@ export function WebsiteSelector({
                     <span className="text-xs text-muted-foreground">
                       {(() => {
                         try {
-                          return new URL(website.base_url).hostname;
+                          return new URL(website.wordpress_url).hostname;
                         } catch {
-                          return website.base_url;
+                          return website.wordpress_url;
                         }
                       })()}
                     </span>
