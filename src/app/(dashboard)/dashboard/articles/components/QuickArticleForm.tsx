@@ -28,9 +28,13 @@ interface QuotaStatus {
 
 interface QuickArticleFormProps {
   quotaStatus: QuotaStatus | null;
+  websiteId: string | null;
 }
 
-export function QuickArticleForm({ quotaStatus }: QuickArticleFormProps) {
+export function QuickArticleForm({
+  quotaStatus,
+  websiteId,
+}: QuickArticleFormProps) {
   const router = useRouter();
   const [keyword, setKeyword] = useState("");
   const [batchKeywords, setBatchKeywords] = useState("");
@@ -42,6 +46,8 @@ export function QuickArticleForm({ quotaStatus }: QuickArticleFormProps) {
   const hasRemainingQuota = quotaStatus
     ? quotaStatus.remaining > 0 || quotaStatus.quota === -1
     : true;
+
+  const isFormDisabled = !hasRemainingQuota || !websiteId;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -56,6 +62,7 @@ export function QuickArticleForm({ quotaStatus }: QuickArticleFormProps) {
             keyword: keyword.trim(),
             title: keyword.trim(),
             mode: "single",
+            website_id: websiteId,
           }),
         });
 
@@ -83,6 +90,7 @@ export function QuickArticleForm({ quotaStatus }: QuickArticleFormProps) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             keywords,
+            website_id: websiteId,
           }),
         });
 
@@ -145,7 +153,7 @@ export function QuickArticleForm({ quotaStatus }: QuickArticleFormProps) {
             onChange={(e) => setKeyword(e.target.value)}
             placeholder="例如：AI 行銷工具"
             required
-            disabled={!hasRemainingQuota}
+            disabled={isFormDisabled}
           />
           <p className="text-sm text-muted-foreground">
             輸入您想生成文章的主題關鍵字，AI 會自動生成完整的 SEO 文章
@@ -163,7 +171,7 @@ export function QuickArticleForm({ quotaStatus }: QuickArticleFormProps) {
             }
             rows={6}
             required
-            disabled={!hasRemainingQuota}
+            disabled={isFormDisabled}
           />
           <p className="text-sm text-muted-foreground">
             每行輸入一個關鍵字，系統會為每個關鍵字生成一篇文章
@@ -186,7 +194,7 @@ export function QuickArticleForm({ quotaStatus }: QuickArticleFormProps) {
       <Button
         type="submit"
         className="w-full"
-        disabled={isSubmitting || !hasRemainingQuota}
+        disabled={isSubmitting || isFormDisabled}
       >
         {isSubmitting
           ? "生成中..."
@@ -209,7 +217,7 @@ export function QuickArticleForm({ quotaStatus }: QuickArticleFormProps) {
               正在生成中
               <br />
               <span className="text-muted-foreground">
-                您可以關閉此視窗，在文章管理頁面查看進度
+                您可以關閉此視窗，在網站詳情頁查看進度
               </span>
             </DialogDescription>
           </DialogHeader>
@@ -223,10 +231,14 @@ export function QuickArticleForm({ quotaStatus }: QuickArticleFormProps) {
             <Button
               onClick={() => {
                 setShowSuccessDialog(false);
-                router.push("/dashboard/articles/manage");
+                router.push(
+                  websiteId
+                    ? `/dashboard/websites/${websiteId}`
+                    : "/dashboard/websites",
+                );
               }}
             >
-              查看文章管理
+              查看文章
             </Button>
           </DialogFooter>
         </DialogContent>

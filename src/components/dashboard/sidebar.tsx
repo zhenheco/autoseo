@@ -4,7 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
-  FileText,
   Globe,
   ChevronLeft,
   ChevronRight,
@@ -18,19 +17,14 @@ import { useSidebar } from "./dashboard-layout-client";
 
 const navItems = [
   {
-    title: "文章管理",
-    href: "/dashboard/articles/manage",
-    icon: FileText,
+    title: "網站管理",
+    href: "/dashboard/websites",
+    icon: Globe,
   },
   {
     title: "寫新文章",
     href: "/dashboard/articles",
     icon: PenSquare,
-  },
-  {
-    title: "網站管理",
-    href: "/dashboard/websites",
-    icon: Globe,
   },
   {
     title: "訂閱方案",

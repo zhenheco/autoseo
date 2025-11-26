@@ -60,9 +60,10 @@ interface QuotaStatus {
 
 interface ArticleFormProps {
   quotaStatus: QuotaStatus | null;
+  websiteId: string | null;
 }
 
-export function ArticleForm({ quotaStatus }: ArticleFormProps) {
+export function ArticleForm({ quotaStatus, websiteId }: ArticleFormProps) {
   const router = useRouter();
   const [industry, setIndustry] = useState("");
   const [customIndustry, setCustomIndustry] = useState("");
@@ -148,12 +149,17 @@ export function ArticleForm({ quotaStatus }: ArticleFormProps) {
       if (title) {
         formData.append("title", title);
       }
+      if (websiteId) {
+        formData.append("website_id", websiteId);
+      }
 
       const validCompetitors = competitors.filter((c) => c.trim() !== "");
       formData.append("competitors", JSON.stringify(validCompetitors));
 
       await createArticle(formData);
-      router.refresh();
+      router.push(
+        websiteId ? `/dashboard/websites/${websiteId}` : "/dashboard/websites",
+      );
     } catch (error) {
       console.error("提交失敗:", error);
     } finally {

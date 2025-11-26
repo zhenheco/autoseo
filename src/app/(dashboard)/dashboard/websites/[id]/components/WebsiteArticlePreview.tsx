@@ -45,7 +45,7 @@ interface Article {
   wordpress_post_url: string | null;
 }
 
-interface ArticlePreviewProps {
+interface WebsiteArticlePreviewProps {
   article: Article | null;
   onSave: (updates: Partial<Article>) => Promise<void>;
 }
@@ -183,7 +183,10 @@ function EditorToolbar({
   );
 }
 
-export function ArticlePreview({ article, onSave }: ArticlePreviewProps) {
+export function WebsiteArticlePreview({
+  article,
+  onSave,
+}: WebsiteArticlePreviewProps) {
   const [editedTitle, setEditedTitle] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
