@@ -1,49 +1,60 @@
-'use client'
+"use client";
 
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Coins } from 'lucide-react'
-import { useState } from 'react'
-import { useRouter } from 'next/navigation'
-import type { Database } from '@/types/database.types'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Coins } from "lucide-react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import type { Database } from "@/types/database.types";
 
-type TokenPackage = Database['public']['Tables']['token_packages']['Row']
+type TokenPackage = Database["public"]["Tables"]["token_packages"]["Row"];
 
 interface TokenPackagesProps {
-  packages: TokenPackage[]
-  companyId: string
-  userEmail: string
+  packages: TokenPackage[];
+  companyId: string;
+  userEmail: string;
 }
 
-export function TokenPackages({ packages, companyId, userEmail }: TokenPackagesProps) {
-  const [loading, setLoading] = useState<string | null>(null)
-  const router = useRouter()
+export function TokenPackages({
+  packages,
+  companyId,
+  userEmail,
+}: TokenPackagesProps) {
+  const [loading, setLoading] = useState<string | null>(null);
+  const router = useRouter();
 
   const handlePurchase = async (pkg: TokenPackage) => {
     try {
-      setLoading(pkg.id)
+      setLoading(pkg.id);
 
-      const response = await fetch('/api/payment/onetime/create', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/payment/onetime/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           companyId,
-          paymentType: 'token_package',
+          paymentType: "token_package",
           relatedId: pkg.id,
           amount: pkg.price,
           description: `購買 ${pkg.name}`,
           email: userEmail,
         }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error(`API 錯誤: ${response.status}`)
+        throw new Error(`API 錯誤: ${response.status}`);
       }
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (!data.success) {
-        throw new Error(data.error || '未知錯誤')
+        throw new Error(data.error || "未知錯誤");
       }
 
       if (data.paymentForm) {
@@ -52,20 +63,24 @@ export function TokenPackages({ packages, companyId, userEmail }: TokenPackagesP
           tradeInfo: data.paymentForm.tradeInfo,
           tradeSha: data.paymentForm.tradeSha,
           version: data.paymentForm.version,
-          merchantId: data.paymentForm.merchantId
-        }
+          merchantId: data.paymentForm.merchantId,
+        };
 
-        const encodedForm = encodeURIComponent(JSON.stringify(formData))
-        router.push(`/dashboard/billing/authorizing?paymentForm=${encodedForm}`)
+        const encodedForm = encodeURIComponent(JSON.stringify(formData));
+        router.push(
+          `/dashboard/billing/authorizing?paymentForm=${encodedForm}`,
+        );
       } else {
-        throw new Error('缺少付款表單資料')
+        throw new Error("缺少付款表單資料");
       }
     } catch (error) {
-      console.error('購買錯誤:', error)
-      alert(`購買失敗: ${error instanceof Error ? error.message : '請稍後再試'}`)
-      setLoading(null)
+      console.error("購買錯誤:", error);
+      alert(
+        `購買失敗: ${error instanceof Error ? error.message : "請稍後再試"}`,
+      );
+      setLoading(null);
     }
-  }
+  };
 
   return (
     <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -76,7 +91,9 @@ export function TokenPackages({ packages, companyId, userEmail }: TokenPackagesP
               <Coins className="h-5 w-5" />
               {pkg.name}
             </CardTitle>
-            <CardDescription>{pkg.tokens?.toLocaleString()} Tokens</CardDescription>
+            <CardDescription>
+              {pkg.tokens?.toLocaleString()} Credits
+            </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-2">
@@ -96,11 +113,11 @@ export function TokenPackages({ packages, companyId, userEmail }: TokenPackagesP
               onClick={() => handlePurchase(pkg)}
               disabled={loading === pkg.id}
             >
-              {loading === pkg.id ? '處理中...' : '立即購買'}
+              {loading === pkg.id ? "處理中..." : "立即購買"}
             </Button>
           </CardFooter>
         </Card>
       ))}
     </div>
-  )
+  );
 }
