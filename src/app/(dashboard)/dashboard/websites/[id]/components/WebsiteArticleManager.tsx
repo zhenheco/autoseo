@@ -205,51 +205,47 @@ export function WebsiteArticleManager({
   return (
     <div className="flex flex-col h-full">
       <div className="flex items-center justify-between p-4 border-b">
-        <div className="flex items-center gap-4">
-          {publishableArticles.length > 0 && (
-            <>
-              <Select
-                value={articlesPerDay}
-                onValueChange={setArticlesPerDay}
-                disabled={isScheduling}
-              >
-                <SelectTrigger className="w-[140px]">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                    <SelectItem key={n} value={String(n)}>
-                      每天 {n} 篇
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-              <Button
-                onClick={handleSchedulePublish}
-                disabled={isScheduling}
-                variant="outline"
-              >
-                {isScheduling ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    排程中...
-                  </>
-                ) : (
-                  <>
-                    <Calendar className="h-4 w-4 mr-2" />
-                    設定排程發布（{publishableArticles.length} 篇）
-                  </>
-                )}
-              </Button>
-            </>
-          )}
-        </div>
         <Link href={`/dashboard/articles?website=${websiteId}`}>
           <Button>
             <Plus className="h-4 w-4 mr-2" />
             新增文章
           </Button>
         </Link>
+        <div className="flex items-center gap-4">
+          <Select
+            value={articlesPerDay}
+            onValueChange={setArticlesPerDay}
+            disabled={isScheduling || publishableArticles.length === 0}
+          >
+            <SelectTrigger className="w-[140px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
+                <SelectItem key={n} value={String(n)}>
+                  每天 {n} 篇
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button
+            onClick={handleSchedulePublish}
+            disabled={isScheduling || publishableArticles.length === 0}
+            variant="outline"
+          >
+            {isScheduling ? (
+              <>
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                排程中...
+              </>
+            ) : (
+              <>
+                <Calendar className="h-4 w-4 mr-2" />
+                排程發布（{publishableArticles.length} 篇）
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       <div className="flex-1 flex overflow-hidden">
