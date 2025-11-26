@@ -21,6 +21,7 @@ export interface ArticleWithWebsite {
   created_at: string;
   updated_at: string;
   published_at: string | null;
+  scheduled_publish_at: string | null;
   wp_post_id: string | null;
   website_configs: {
     id: string;
@@ -245,4 +246,156 @@ export async function deleteArticle(articleJobId: string) {
 
   revalidatePath("/dashboard/articles/manage");
   return { success: true, error: null };
+}
+
+export interface ScheduleResult {
+  articleId: string;
+  title: string | null;
+  scheduledAt: string;
+}
+
+export async function scheduleArticlesForPublish(
+  articleIds: string[],
+  websiteId: string,
+  articlesPerDay: number,
+): Promise<{
+  success: boolean;
+  error?: string;
+  scheduledCount?: number;
+  scheduledArticles?: ScheduleResult[];
+}> {
+  const user = await getUser();
+  if (!user) return { success: false, error: "未登入" };
+
+  if (articleIds.length === 0) {
+    return { success: false, error: "請選擇要排程的文章" };
+  }
+
+  if (!websiteId) {
+    return { success: false, error: "請選擇發布網站" };
+  }
+
+  if (articlesPerDay < 1 || articlesPerDay > 10) {
+    return { success: false, error: "每日發布數量必須在 1-10 之間" };
+  }
+
+  const supabase = await createClient();
+
+  const { data: website, error: websiteError } = await supabase
+    .from("website_configs")
+    .select("id, website_name, is_active")
+    .eq("id", websiteId)
+    .single();
+
+  if (websiteError || !website) {
+    return { success: false, error: "找不到網站配置" };
+  }
+
+  if (website.is_active === false) {
+    return { success: false, error: "網站已停用" };
+  }
+
+  const { data: articles, error: fetchError } = await supabase
+    .from("article_jobs")
+    .select("id, article_title, status")
+    .in("id", articleIds)
+    .in("status", ["completed", "draft"]);
+
+  if (fetchError) {
+    return { success: false, error: "無法取得文章資料" };
+  }
+
+  if (!articles || articles.length === 0) {
+    return { success: false, error: "沒有符合條件的文章可排程" };
+  }
+
+  const scheduleTimes = calculateScheduleTimes(articles.length, articlesPerDay);
+
+  const scheduledArticles: ScheduleResult[] = [];
+
+  for (let i = 0; i < articles.length; i++) {
+    const article = articles[i];
+    const scheduledAt = scheduleTimes[i].toISOString();
+
+    const { error: updateError } = await supabase
+      .from("article_jobs")
+      .update({
+        status: "scheduled",
+        website_id: websiteId,
+        scheduled_publish_at: scheduledAt,
+        auto_publish: true,
+      })
+      .eq("id", article.id);
+
+    if (updateError) {
+      console.error(`Failed to schedule article ${article.id}:`, updateError);
+      continue;
+    }
+
+    scheduledArticles.push({
+      articleId: article.id,
+      title: article.article_title,
+      scheduledAt,
+    });
+  }
+
+  revalidatePath("/dashboard/articles/manage");
+
+  return {
+    success: true,
+    scheduledCount: scheduledArticles.length,
+    scheduledArticles,
+  };
+}
+
+function calculateScheduleTimes(
+  articleCount: number,
+  articlesPerDay: number,
+): Date[] {
+  const times: Date[] = [];
+  const hoursInterval = Math.floor(12 / articlesPerDay);
+
+  const now = new Date();
+  const startDate = new Date(now);
+  startDate.setDate(startDate.getDate() + 1);
+  startDate.setHours(9, 0, 0, 0);
+
+  for (let i = 0; i < articleCount; i++) {
+    const dayIndex = Math.floor(i / articlesPerDay);
+    const slotIndex = i % articlesPerDay;
+
+    const scheduleTime = new Date(startDate);
+    scheduleTime.setDate(scheduleTime.getDate() + dayIndex);
+    scheduleTime.setHours(9 + slotIndex * hoursInterval);
+
+    times.push(scheduleTime);
+  }
+
+  return times;
+}
+
+export async function cancelArticleSchedule(
+  articleId: string,
+): Promise<{ success: boolean; error?: string }> {
+  const user = await getUser();
+  if (!user) return { success: false, error: "未登入" };
+
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("article_jobs")
+    .update({
+      status: "completed",
+      scheduled_publish_at: null,
+      auto_publish: false,
+    })
+    .eq("id", articleId)
+    .eq("status", "scheduled");
+
+  if (error) {
+    return { success: false, error: "取消排程失敗" };
+  }
+
+  revalidatePath("/dashboard/articles/manage");
+  return { success: true };
 }
