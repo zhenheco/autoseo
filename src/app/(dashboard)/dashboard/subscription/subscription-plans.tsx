@@ -69,7 +69,9 @@ export function SubscriptionPlans({
         };
 
         const encodedForm = encodeURIComponent(JSON.stringify(formData));
-        router.push(`/dashboard/billing/checkout?paymentForm=${encodedForm}`);
+        router.push(
+          `/dashboard/billing/authorizing?paymentForm=${encodedForm}`,
+        );
       } else {
         throw new Error("缺少付款表單資料");
       }
