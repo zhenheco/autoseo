@@ -1,9 +1,10 @@
-import { config } from 'dotenv';
-import { createClient } from '@supabase/supabase-js';
+import { config } from "dotenv";
+import { createClient } from "@supabase/supabase-js";
 
-config({ path: '.env.local' });
+config({ path: ".env.local" });
 
-const ARTICLE_ID = 'c5a3ef4e-49b9-4bf5-8868-c2c313f59d3f';
+// 可選：指定單一文章 ID，或留空處理所有文章
+const ARTICLE_ID = process.argv[2] || null;
 
 // 轉換 Google Drive URL 格式
 function fixGoogleDriveUrl(url: string): string {
@@ -25,7 +26,7 @@ interface GeneratedImage {
 function insertImagesToHtml(
   html: string,
   featuredImage: GeneratedImage | null,
-  contentImages: GeneratedImage[]
+  contentImages: GeneratedImage[],
 ): string {
   let modifiedHtml = html;
 
@@ -36,11 +37,11 @@ function insertImagesToHtml(
   <figcaption>${featuredImage.altText}</figcaption>
 </figure>\n\n`;
 
-    const firstPTagIndex = modifiedHtml.indexOf('</p>');
+    const firstPTagIndex = modifiedHtml.indexOf("</p>");
     if (firstPTagIndex !== -1) {
       modifiedHtml =
         modifiedHtml.slice(0, firstPTagIndex + 4) +
-        '\n\n' +
+        "\n\n" +
         featuredImageHtml +
         modifiedHtml.slice(firstPTagIndex + 4);
     }
@@ -85,7 +86,11 @@ function insertImagesToHtml(
     }
 
     // 從後往前插入
-    for (let i = Math.min(insertPositions.length, imageCount) - 1; i >= 0; i--) {
+    for (
+      let i = Math.min(insertPositions.length, imageCount) - 1;
+      i >= 0;
+      i--
+    ) {
       const image = contentImages[i];
       const imageHtml = `\n\n<figure class="wp-block-image size-large">
   <img src="${image.url}" alt="${image.altText}" width="${image.width}" height="${image.height}" />
@@ -103,27 +108,16 @@ function insertImagesToHtml(
   return modifiedHtml;
 }
 
-async function main() {
-  console.log(`[修正文章] 開始處理: ${ARTICLE_ID}`);
+async function processArticle(
+  supabase: ReturnType<typeof createClient>,
+  article: any,
+): Promise<boolean> {
+  const hasImages = article.html_content?.includes("<img ");
 
-  const supabase = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-
-  // 讀取文章
-  const { data: article, error: fetchError } = await supabase
-    .from('generated_articles')
-    .select('*')
-    .eq('id', ARTICLE_ID)
-    .single();
-
-  if (fetchError || !article) {
-    console.error('[錯誤]', fetchError);
-    process.exit(1);
+  if (hasImages) {
+    console.log(`  ✓ ${article.title.substring(0, 30)}... - 已有圖片，跳過`);
+    return false;
   }
-
-  console.log('[✓] 文章讀取成功');
 
   // 修正 URL 格式
   const fixedFeaturedUrl = article.featured_image_url
@@ -135,40 +129,44 @@ async function main() {
     url: fixGoogleDriveUrl(img.url),
   }));
 
-  console.log('[✓] URL 格式已修正');
-  console.log(`   - 精選圖片: ${fixedFeaturedUrl}`);
-  console.log(`   - 內文圖片: ${fixedContentImages.length} 張`);
-
   // 準備圖片資料
-  const featuredImage = fixedFeaturedUrl ? {
-    url: fixedFeaturedUrl,
-    altText: article.featured_image_alt || article.title,
-    width: article.featured_image_width || 1024,
-    height: article.featured_image_height || 1024,
-  } : null;
+  const featuredImage = fixedFeaturedUrl
+    ? {
+        url: fixedFeaturedUrl,
+        altText: article.featured_image_alt || article.title,
+        width: article.featured_image_width || 1024,
+        height: article.featured_image_height || 1024,
+      }
+    : null;
 
-  const contentImages: GeneratedImage[] = fixedContentImages.map((img: any) => ({
-    url: img.url,
-    altText: img.alt_text || img.altText || img.suggested_section || '內文圖片',
-    width: img.width || 1024,
-    height: img.height || 1024,
-  }));
+  const contentImages: GeneratedImage[] = fixedContentImages.map(
+    (img: any) => ({
+      url: img.url,
+      altText:
+        img.alt_text || img.altText || img.suggested_section || "內文圖片",
+      width: img.width || 1024,
+      height: img.height || 1024,
+    }),
+  );
 
-  // 重新生成 HTML（使用原始HTML去除舊圖片）
-  const cleanHtml = article.markdown_content; // 使用 markdown 重新轉換，或者手動清理
+  if (!featuredImage && contentImages.length === 0) {
+    console.log(
+      `  ✗ ${article.title.substring(0, 30)}... - 沒有圖片資料，跳過`,
+    );
+    return false;
+  }
 
-  // 這裡簡化：直接使用當前 HTML 並移除現有 figure 標籤
-  let htmlWithoutImages = article.html_content.replace(/<figure[^>]*>[\s\S]*?<\/figure>/g, '');
+  // 直接使用當前 HTML 並移除現有 figure 標籤
+  const htmlWithoutImages = article.html_content.replace(
+    /<figure[^>]*>[\s\S]*?<\/figure>/g,
+    "",
+  );
 
   const updatedHtml = insertImagesToHtml(
     htmlWithoutImages,
     featuredImage,
-    contentImages
+    contentImages,
   );
-
-  console.log('[✓] HTML 已重新生成');
-  console.log(`   - 原始長度: ${article.html_content.length}`);
-  console.log(`   - 更新後長度: ${updatedHtml.length}`);
 
   // 更新資料庫
   const updateData: any = {
@@ -176,7 +174,6 @@ async function main() {
     updated_at: new Date().toISOString(),
   };
 
-  // 也更新 URL 欄位
   if (fixedFeaturedUrl) {
     updateData.featured_image_url = fixedFeaturedUrl;
   }
@@ -185,17 +182,66 @@ async function main() {
   }
 
   const { error: updateError } = await supabase
-    .from('generated_articles')
+    .from("generated_articles")
     .update(updateData)
-    .eq('id', ARTICLE_ID);
+    .eq("id", article.id);
 
   if (updateError) {
-    console.error('[錯誤]', updateError);
+    console.error(
+      `  ✗ ${article.title.substring(0, 30)}... - 更新失敗:`,
+      updateError.message,
+    );
+    return false;
+  }
+
+  console.log(
+    `  ✓ ${article.title.substring(0, 30)}... - 已插入 ${contentImages.length + (featuredImage ? 1 : 0)} 張圖片`,
+  );
+  return true;
+}
+
+async function main() {
+  console.log("[修正文章圖片] 開始處理...\n");
+
+  const supabase = createClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  );
+
+  // 根據是否提供 ID 決定查詢方式
+  let query = supabase
+    .from("generated_articles")
+    .select(
+      "id, title, html_content, featured_image_url, featured_image_alt, content_images",
+    )
+    .not("featured_image_url", "is", null);
+
+  if (ARTICLE_ID) {
+    query = query.eq("id", ARTICLE_ID);
+  }
+
+  const { data: articles, error: fetchError } = await query;
+
+  if (fetchError) {
+    console.error("[錯誤] 查詢文章失敗:", fetchError);
     process.exit(1);
   }
 
-  console.log('[✅] 文章修正完成！');
-  console.log(`\n預覽：http://localhost:3000/dashboard/articles/${ARTICLE_ID}/preview`);
+  if (!articles || articles.length === 0) {
+    console.log("[完成] 沒有找到需要處理的文章");
+    return;
+  }
+
+  console.log(`找到 ${articles.length} 篇有圖片資訊的文章\n`);
+
+  let fixedCount = 0;
+
+  for (const article of articles) {
+    const fixed = await processArticle(supabase, article);
+    if (fixed) fixedCount++;
+  }
+
+  console.log(`\n[完成] 共修復 ${fixedCount} 篇文章`);
 }
 
 main();
