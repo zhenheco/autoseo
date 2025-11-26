@@ -63,7 +63,7 @@ export async function middleware(request: NextRequest) {
     ].join(" "),
     "frame-ancestors 'self'",
     "base-uri 'self'",
-    "form-action 'self'",
+    "form-action 'self' https://ccore.newebpay.com https://core.newebpay.com",
   ];
 
   response.headers.set("Content-Security-Policy", cspDirectives.join("; "));
