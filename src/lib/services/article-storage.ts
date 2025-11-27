@@ -7,6 +7,179 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { marked } from "marked";
 import type { ArticleGenerationResult } from "@/types/agents";
 
+function cleanFigcaption(altText: string): string {
+  return altText
+    .replace(/\s*-?\s*(說明圖片|精選圖片|示意圖|配圖|插圖)$/g, "")
+    .replace(/^<[^>]+>\s*-?\s*(說明圖片|精選圖片|示意圖|配圖|插圖)$/g, "")
+    .trim();
+}
+
+export interface PreviousArticle {
+  title: string;
+  slug: string;
+  url?: string;
+  keywords?: string[];
+}
+
+export interface ExternalReference {
+  url: string;
+  title: string;
+  description: string;
+  relevantSection?: string;
+}
+
+export interface LinkStats {
+  internalCount: number;
+  externalCount: number;
+  wasEnriched: boolean;
+}
+
+function countInternalLinks(html: string): number {
+  const internalPattern = /<a[^>]*rel=["'][^"']*internal[^"']*["'][^>]*>/gi;
+  const relativePattern = /<a[^>]*href=["']\/[^"']*["'][^>]*>/gi;
+  const internalMatches = html.match(internalPattern) || [];
+  const relativeMatches = html.match(relativePattern) || [];
+  return internalMatches.length + relativeMatches.length;
+}
+
+function countExternalLinks(html: string): number {
+  const externalPattern = /<a[^>]*rel=["'][^"']*external[^"']*["'][^>]*>/gi;
+  const httpPattern =
+    /<a[^>]*href=["']https?:\/\/[^"']*["'][^>]*target=["']_blank["'][^>]*>/gi;
+  const externalMatches = html.match(externalPattern) || [];
+  const httpMatches = html.match(httpPattern) || [];
+  return Math.max(externalMatches.length, httpMatches.length);
+}
+
+function injectInternalLinks(
+  html: string,
+  articles: PreviousArticle[],
+  count: number,
+): string {
+  if (articles.length === 0 || count <= 0) return html;
+
+  let modifiedHtml = html;
+  let injected = 0;
+
+  for (const article of articles) {
+    if (injected >= count) break;
+
+    const keywords = article.keywords || [article.title];
+    for (const keyword of keywords) {
+      if (injected >= count) break;
+
+      const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const pattern = new RegExp(
+        `(?<!<a[^>]*>)(?<![\\u4e00-\\u9fa5a-zA-Z])${escapedKeyword}(?![\\u4e00-\\u9fa5a-zA-Z])(?![^<]*<\\/a>)`,
+        "i",
+      );
+
+      if (pattern.test(modifiedHtml)) {
+        const url = article.url || `/${article.slug}`;
+        modifiedHtml = modifiedHtml.replace(
+          pattern,
+          `<a href="${url}" rel="internal">${keyword}</a>`,
+        );
+        injected++;
+        break;
+      }
+    }
+  }
+
+  console.log(`[LinkProcessor] 注入 ${injected} 個內部連結`);
+  return modifiedHtml;
+}
+
+function injectExternalLinks(
+  html: string,
+  refs: ExternalReference[],
+  count: number,
+): string {
+  if (refs.length === 0 || count <= 0) return html;
+
+  let modifiedHtml = html;
+  let injected = 0;
+
+  for (const ref of refs) {
+    if (injected >= count) break;
+
+    const keywords = extractKeywordsFromText(ref.title + " " + ref.description);
+    for (const keyword of keywords) {
+      if (injected >= count) break;
+
+      const escapedKeyword = keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const pattern = new RegExp(
+        `(?<!<a[^>]*>)(?<![\\u4e00-\\u9fa5a-zA-Z])${escapedKeyword}(?![\\u4e00-\\u9fa5a-zA-Z])(?![^<]*<\\/a>)`,
+        "i",
+      );
+
+      if (pattern.test(modifiedHtml)) {
+        modifiedHtml = modifiedHtml.replace(
+          pattern,
+          `<a href="${ref.url}" target="_blank" rel="noopener noreferrer external">${keyword}</a>`,
+        );
+        injected++;
+        break;
+      }
+    }
+  }
+
+  console.log(`[LinkProcessor] 注入 ${injected} 個外部連結`);
+  return modifiedHtml;
+}
+
+function extractKeywordsFromText(text: string): string[] {
+  const words = text.split(/[\s,，、。]+/).filter((w) => w.length >= 2);
+  return words.slice(0, 10);
+}
+
+export function ensureMinimumLinks(
+  html: string,
+  internalArticles: PreviousArticle[],
+  externalRefs: ExternalReference[],
+  minInternal: number = 3,
+  minExternal: number = 2,
+): { html: string; stats: LinkStats } {
+  const initialInternalCount = countInternalLinks(html);
+  const initialExternalCount = countExternalLinks(html);
+
+  let modifiedHtml = html;
+
+  if (initialInternalCount < minInternal && internalArticles.length > 0) {
+    modifiedHtml = injectInternalLinks(
+      modifiedHtml,
+      internalArticles,
+      minInternal - initialInternalCount,
+    );
+  }
+
+  if (initialExternalCount < minExternal && externalRefs.length > 0) {
+    modifiedHtml = injectExternalLinks(
+      modifiedHtml,
+      externalRefs,
+      minExternal - initialExternalCount,
+    );
+  }
+
+  const finalInternalCount = countInternalLinks(modifiedHtml);
+  const finalExternalCount = countExternalLinks(modifiedHtml);
+
+  const stats: LinkStats = {
+    internalCount: finalInternalCount,
+    externalCount: finalExternalCount,
+    wasEnriched:
+      initialInternalCount < minInternal || initialExternalCount < minExternal,
+  };
+
+  console.log(`[LinkProcessor] 連結統計:`, {
+    initial: { internal: initialInternalCount, external: initialExternalCount },
+    final: { internal: finalInternalCount, external: finalExternalCount },
+    wasEnriched: stats.wasEnriched,
+  });
+
+  return { html: modifiedHtml, stats };
+}
+
 export interface SaveArticleParams {
   articleJobId: string;
   result: ArticleGenerationResult;
@@ -574,9 +747,10 @@ export class ArticleStorageService {
         i--
       ) {
         const image = contentImages[i];
+        const cleanedCaption = cleanFigcaption(image.altText);
         const imageHtml = `\n\n<figure class="wp-block-image size-large">
   <img src="${image.url}" alt="${image.altText}" width="${image.width}" height="${image.height}" />
-  <figcaption>${image.altText}</figcaption>
+  <figcaption>${cleanedCaption}</figcaption>
 </figure>\n\n`;
 
         const position = insertPositions[i];

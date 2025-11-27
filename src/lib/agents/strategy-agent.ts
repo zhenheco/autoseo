@@ -25,7 +25,7 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
       outline,
       targetWordCount: input.targetWordCount,
       sectionWordDistribution: sectionDistribution,
-      keywordDensityTarget: 1.5,
+      keywordDensityTarget: 2.0,
       keywords: input.researchData.relatedKeywords || [],
       relatedKeywords: input.researchData.relatedKeywords,
       lsiKeywords: input.researchData.relatedKeywords.slice(0, 5),
@@ -273,6 +273,12 @@ ${JSON.stringify(outlineSchema, null, 2)}
 3. Each section's heading must be unique
 4. Total targetWordCount should be close to ${input.targetWordCount}
 5. Output JSON object directly (don't wrap with \`\`\`)
+6. **FORBIDDEN sections/subheadings** (DO NOT include any of these):
+   - ❌ 常見問題解決 / 常見問題 / 問題解決 / FAQ
+   - ❌ 實戰案例分析 / 案例分析 / 成功案例
+   - ❌ 進階應用與最佳實踐
+   - ❌ Any section that looks like troubleshooting or FAQ
+   (FAQ will be generated separately by another agent)
 
 Please output the complete JSON that conforms to the above schema in ${languageName}:`;
 
@@ -1007,13 +1013,6 @@ ${gaps
           keyPoints: ["關鍵功能說明", "實用操作方法", "效率提升技巧"],
           targetWordCount: sectionWordCount,
           keywords: [keyTopic, "功能", "技巧", "方法"],
-        },
-        {
-          heading: "進階應用與最佳實踐",
-          subheadings: ["實戰案例分析", "常見問題解決"],
-          keyPoints: ["實際應用場景", "最佳實踐建議", "問題排除方法"],
-          targetWordCount: sectionWordCount,
-          keywords: [keyTopic, "應用", "實踐", "案例"],
         },
       ],
       conclusion: {

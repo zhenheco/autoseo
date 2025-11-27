@@ -1,6 +1,6 @@
-import { BaseAgent } from './base-agent';
-import type { WritingInput, WritingOutput } from '@/types/agents';
-import { marked } from 'marked';
+import { BaseAgent } from "./base-agent";
+import type { WritingInput, WritingOutput } from "@/types/agents";
+import { marked } from "marked";
 
 // 配置 marked 全局選項（使用推薦的 marked.use() 方式）
 marked.use({
@@ -12,7 +12,7 @@ marked.use({
 
 export class WritingAgent extends BaseAgent<WritingInput, WritingOutput> {
   get agentName(): string {
-    return 'WritingAgent';
+    return "WritingAgent";
   }
 
   protected async process(input: WritingInput): Promise<WritingOutput> {
@@ -21,60 +21,90 @@ export class WritingAgent extends BaseAgent<WritingInput, WritingOutput> {
     // 移除開頭的重複標題（H1 或 H2）
     let cleanedMarkdown = markdown;
     // 移除開頭的 H1
-    cleanedMarkdown = cleanedMarkdown.replace(/^#\s+.+?\n\n?/, '');
+    cleanedMarkdown = cleanedMarkdown.replace(/^#\s+.+?\n\n?/, "");
     // 移除開頭的 H2（如果標題與文章標題相同且標題存在）
     if (input.strategy.selectedTitle) {
-      const titleRegex = new RegExp(`^##\\s+${input.strategy.selectedTitle.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\s*\\n\\n?`, 'm');
-      cleanedMarkdown = cleanedMarkdown.replace(titleRegex, '');
+      const titleRegex = new RegExp(
+        `^##\\s+${input.strategy.selectedTitle.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s*\\n\\n?`,
+        "m",
+      );
+      cleanedMarkdown = cleanedMarkdown.replace(titleRegex, "");
     }
 
     // 轉換 Markdown 為 HTML（使用 marked v16+ 與全局配置）
-    console.log('[WritingAgent] 📝 Converting Markdown to HTML...');
-    console.log('[WritingAgent] Markdown length:', cleanedMarkdown.length);
-    console.log('[WritingAgent] Markdown preview (first 300 chars):', cleanedMarkdown.substring(0, 300));
+    console.log("[WritingAgent] 📝 Converting Markdown to HTML...");
+    console.log("[WritingAgent] Markdown length:", cleanedMarkdown.length);
+    console.log(
+      "[WritingAgent] Markdown preview (first 300 chars):",
+      cleanedMarkdown.substring(0, 300),
+    );
 
     let html: string;
     try {
       // marked.use() 已設置 async: true，parse 返回 Promise<string>
       html = await marked.parse(cleanedMarkdown);
 
-      console.log('[WritingAgent] ✅ Markdown parsed successfully');
-      console.log('[WritingAgent] HTML length:', html.length);
-      console.log('[WritingAgent] HTML preview (first 300 chars):', html.substring(0, 300));
-      console.log('[WritingAgent] Starts with HTML tag?:', html.trim().startsWith('<'));
+      console.log("[WritingAgent] ✅ Markdown parsed successfully");
+      console.log("[WritingAgent] HTML length:", html.length);
+      console.log(
+        "[WritingAgent] HTML preview (first 300 chars):",
+        html.substring(0, 300),
+      );
+      console.log(
+        "[WritingAgent] Starts with HTML tag?:",
+        html.trim().startsWith("<"),
+      );
 
       // 驗證轉換是否成功
       if (!html || html.trim().length === 0) {
-        throw new Error('Marked returned empty HTML');
+        throw new Error("Marked returned empty HTML");
       }
 
       // 檢查是否仍然包含 Markdown 語法（可能是轉換失敗的標記）
-      const markdownPatterns = ['##', '**', '```', '* ', '- '];
-      const containsMarkdown = markdownPatterns.some(pattern => html.includes(pattern));
+      const markdownPatterns = ["##", "**", "```", "* ", "- "];
+      const containsMarkdown = markdownPatterns.some((pattern) =>
+        html.includes(pattern),
+      );
       if (containsMarkdown) {
-        console.warn('[WritingAgent] ⚠️  Warning: HTML still contains potential Markdown syntax');
-        console.warn('[WritingAgent] Sample:', html.substring(0, 500));
+        console.warn(
+          "[WritingAgent] ⚠️  Warning: HTML still contains potential Markdown syntax",
+        );
+        console.warn("[WritingAgent] Sample:", html.substring(0, 500));
       }
     } catch (error) {
-      console.error('[WritingAgent] ❌ Failed to convert Markdown to HTML');
-      console.error('[WritingAgent] Error:', error instanceof Error ? error.message : String(error));
-      console.error('[WritingAgent] Markdown sample that failed:', cleanedMarkdown.substring(0, 500));
-      throw new Error(`Failed to convert Markdown to HTML: ${error instanceof Error ? error.message : String(error)}`);
+      console.error("[WritingAgent] ❌ Failed to convert Markdown to HTML");
+      console.error(
+        "[WritingAgent] Error:",
+        error instanceof Error ? error.message : String(error),
+      );
+      console.error(
+        "[WritingAgent] Markdown sample that failed:",
+        cleanedMarkdown.substring(0, 500),
+      );
+      throw new Error(
+        `Failed to convert Markdown to HTML: ${error instanceof Error ? error.message : String(error)}`,
+      );
     }
 
     // 為表格添加樣式類別
     const styledHtml = this.addTableStyles(html);
 
-    console.log('[WritingAgent] Styled HTML length:', styledHtml.length);
-    console.log('[WritingAgent] Styled HTML preview (first 300 chars):', styledHtml.substring(0, 300));
+    console.log("[WritingAgent] Styled HTML length:", styledHtml.length);
+    console.log(
+      "[WritingAgent] Styled HTML preview (first 300 chars):",
+      styledHtml.substring(0, 300),
+    );
 
     const statistics = this.calculateStatistics(markdown);
 
-    const internalLinks = this.extractInternalLinks(styledHtml, input.previousArticles);
+    const internalLinks = this.extractInternalLinks(
+      styledHtml,
+      input.previousArticles,
+    );
 
     const keywordUsage = this.analyzeKeywordUsage(
       markdown,
-      input.strategy.outline
+      input.strategy.outline,
     );
 
     const readability = this.calculateReadability(markdown);
@@ -102,8 +132,8 @@ ${strategy.selectedTitle}
 **請在整篇文章中貫徹以下品牌聲音設定**：
 - 語調: ${brandVoice.tone_of_voice}（請在用詞、語氣、表達方式上體現此語調）
 - 目標受眾: ${brandVoice.target_audience}（內容深度和表達方式要符合此受眾）
-- 句子風格: ${brandVoice.sentence_style || '清晰簡潔'}（控制句子長度和複雜度）
-- 互動性: ${brandVoice.interactivity || '中等'}（適當使用問句、呼籲行動等互動元素）
+- 句子風格: ${brandVoice.sentence_style || "清晰簡潔"}（控制句子長度和複雜度）
+- 互動性: ${brandVoice.interactivity || "中等"}（適當使用問句、呼籲行動等互動元素）
 
 # 文章大綱
 ${this.formatOutline(strategy.outline)}
@@ -113,8 +143,8 @@ ${this.formatOutline(strategy.outline)}
 1. 目標字數: ${strategy.targetWordCount} 字
 2. **關鍵字密度目標: ${strategy.keywordDensityTarget}% (1.8-2.2% 之間)**
 3. **主要關鍵字總出現次數: 8-12 次**
-4. 主要關鍵字: ${strategy.outline.mainSections.flatMap((s) => s.keywords).join(', ')}
-5. LSI 關鍵字（語義相關詞）: ${strategy.lsiKeywords.join(', ')}
+4. 主要關鍵字: ${strategy.outline.mainSections.flatMap((s) => s.keywords).join(", ")}
+5. LSI 關鍵字（語義相關詞）: ${strategy.lsiKeywords.join(", ")}
 
 **關鍵字使用原則**：
 - 自然融入文章，避免生硬堆砌
@@ -123,15 +153,19 @@ ${this.formatOutline(strategy.outline)}
 - 變化關鍵字形式（同義詞、相關詞）
 
 # 內部連結機會
-${previousArticles.length > 0 ? previousArticles
-  .map(
-    (a) => `
+${
+  previousArticles.length > 0
+    ? previousArticles
+        .map(
+          (a) => `
 - [${a.title}](${a.url})
-  關鍵字: ${a.keywords.join(', ')}
+  關鍵字: ${a.keywords.join(", ")}
   摘要: ${a.excerpt}
-`
-  )
-  .join('\n') : '（暫無內部文章可連結）'}
+`,
+        )
+        .join("\n")
+    : "（暫無內部文章可連結）"
+}
 
 **內部連結要求**：
 - 至少融入 ${strategy.internalLinkingStrategy.minLinks} 個內部連結
@@ -140,15 +174,19 @@ ${previousArticles.length > 0 ? previousArticles
 - 範例：根據[先前文章標題](/article-url)的分析，我們可以看出...
 
 # 外部引用來源（權威性來源）
-${strategy.externalReferences && strategy.externalReferences.length > 0 ? strategy.externalReferences
-  .map(
-    (ref) => `
+${
+  strategy.externalReferences && strategy.externalReferences.length > 0
+    ? strategy.externalReferences
+        .map(
+          (ref) => `
 - 來源: ${ref.title || ref.domain}
   URL: ${ref.url}
-  摘要: ${ref.snippet || '權威來源'}
-`
-  )
-  .join('\n') : ''}
+  摘要: ${ref.snippet || "權威來源"}
+`,
+        )
+        .join("\n")
+    : ""
+}
 
 **🔴 外部連結要求（重要）**：
 - **每篇文章必須包含至少 3-5 個外部引用連結**
@@ -203,11 +241,21 @@ ${strategy.externalReferences && strategy.externalReferences.length > 0 ? strate
    - ✅ 如需展示範例，使用引言區塊 (>) 或格式化文字
    - ✅ 如需展示步驟，使用編號清單或項目符號
 
-6. **FAQ 格式要求**：
-   - 必須在文章結尾加入「## 常見問題」章節
-   - 包含 3-5 個常見問題
-   - 每個問題使用 H3 (### Q: 問題內容)
-   - 每個答案以「A:」開頭，並提供詳細解答（100-150 字）
+6. **連結要求（必須遵守）**：
+   - **內部連結**（至少 ${strategy.internalLinkingStrategy.minLinks} 個）：
+     - 格式：[文章標題](文章URL)
+     - 範例：[SEO 入門指南](/seo-beginners-guide)
+     - 插入位置：在相關段落的自然語境中
+   - **外部連結**（至少 3 個）：
+     - 格式：[來源名稱](外部URL)
+     - 範例：[Google Search Central](https://developers.google.com/search)
+     - 必須是權威來源
+   - ⚠️ 如果沒有包含足夠連結，文章將被退回！
+
+7. **禁止生成 FAQ 段落**：
+   - ❌ 不要在文章中加入「常見問題」、「常見問題解決」、「FAQ」等章節
+   - ❌ 不要在文章中生成 Q&A 格式內容
+   - ✅ FAQ 會由專門的 QA Agent 在文章最後獨立生成
 
 # 最終檢查清單
 請確保文章包含：
@@ -215,17 +263,18 @@ ${strategy.externalReferences && strategy.externalReferences.length > 0 ? strate
 ✅ 關鍵字密度在 1.8-2.2% 之間
 ✅ 主要關鍵字出現 8-12 次
 ✅ 至少 ${strategy.internalLinkingStrategy.minLinks} 個內部連結（如有可用文章）
-✅ 至少 3-5 個外部引用連結
+✅ 至少 3 個外部引用連結
 ✅ 每個章節結構完整（引言、主體、小結）
-✅ FAQ 章節（3-5 個問題）
 ✅ 無程式碼區塊
 ✅ Markdown 格式正確
+❌ 不包含 FAQ/常見問題段落
 
 請撰寫完整的文章（Markdown 格式），確保包含實際可點擊的內外部連結。
 **重要**：
 1. 直接輸出 Markdown 文字，不要使用程式碼區塊包裹（不要使用 \`\`\`markdown）
 2. 直接從 ## 導言 開始，不要重複標題
-3. **務必包含至少 3-5 個外部引用連結**`;
+3. **務必包含至少 3 個外部引用連結**
+4. **不要生成任何 FAQ 或常見問題段落**`;
 
     const response = await this.complete(prompt, {
       model: input.model,
@@ -235,17 +284,17 @@ ${strategy.externalReferences && strategy.externalReferences.length > 0 ? strate
 
     // 移除可能存在的程式碼區塊包裹
     let content = response.content.trim();
-    if (content.startsWith('```markdown')) {
-      content = content.replace(/^```markdown\n/, '').replace(/\n```$/, '');
-    } else if (content.startsWith('```')) {
-      content = content.replace(/^```\n/, '').replace(/\n```$/, '');
+    if (content.startsWith("```markdown")) {
+      content = content.replace(/^```markdown\n/, "").replace(/\n```$/, "");
+    } else if (content.startsWith("```")) {
+      content = content.replace(/^```\n/, "").replace(/\n```$/, "");
     }
 
     return content;
   }
 
-  private formatOutline(outline: WritingInput['strategy']['outline']): string {
-    let result = '## 導言\n';
+  private formatOutline(outline: WritingInput["strategy"]["outline"]): string {
+    let result = "## 導言\n";
     result += `- 開場: ${outline.introduction.hook}\n`;
     result += `- 背景: ${outline.introduction.context}\n`;
     result += `- 主旨: ${outline.introduction.thesis}\n\n`;
@@ -255,32 +304,26 @@ ${strategy.externalReferences && strategy.externalReferences.length > 0 ? strate
       section.subheadings.forEach((sub) => {
         result += `### ${sub}\n`;
       });
-      result += `重點: ${section.keyPoints.join(', ')}\n`;
+      result += `重點: ${section.keyPoints.join(", ")}\n`;
       result += `字數: ${section.targetWordCount}\n\n`;
     });
 
     if (outline.conclusion) {
-      result += '## 結論\n';
+      result += "## 結論\n";
       result += `- 總結: ${outline.conclusion.summary}\n`;
       result += `- 行動呼籲: ${outline.conclusion.callToAction}\n\n`;
-    }
-
-    if (outline.faq && outline.faq.length > 0) {
-      result += '## 常見問題\n';
-      outline.faq.forEach((faq) => {
-        result += `### ${faq.question}\n`;
-        result += `${faq.answerOutline}\n\n`;
-      });
     }
 
     return result;
   }
 
-  private calculateStatistics(markdown: string): WritingOutput['statistics'] {
-    const text = markdown.replace(/[#*\[\]`]/g, '');
+  private calculateStatistics(markdown: string): WritingOutput["statistics"] {
+    const text = markdown.replace(/[#*\[\]`]/g, "");
     const paragraphs = text.split(/\n\n+/).filter((p) => p.trim().length > 0);
-    const sentences = text.split(/[。！？.!?]+/).filter((s) => s.trim().length > 0);
-    const words = text.replace(/\s+/g, '');
+    const sentences = text
+      .split(/[。！？.!?]+/)
+      .filter((s) => s.trim().length > 0);
+    const words = text.replace(/\s+/g, "");
 
     return {
       wordCount: words.length,
@@ -293,9 +336,9 @@ ${strategy.externalReferences && strategy.externalReferences.length > 0 ? strate
 
   private extractInternalLinks(
     html: string,
-    previousArticles: WritingInput['previousArticles']
-  ): WritingOutput['internalLinks'] {
-    const links: WritingOutput['internalLinks'] = [];
+    previousArticles: WritingInput["previousArticles"],
+  ): WritingOutput["internalLinks"] {
+    const links: WritingOutput["internalLinks"] = [];
     const linkRegex = /<a[^>]+href=["']([^"']+)["'][^>]*>([^<]+)<\/a>/g;
 
     let match;
@@ -308,7 +351,7 @@ ${strategy.externalReferences && strategy.externalReferences.length > 0 ? strate
         links.push({
           anchor,
           url,
-          section: '',
+          section: "",
           articleId: article.id,
         });
       }
@@ -319,18 +362,19 @@ ${strategy.externalReferences && strategy.externalReferences.length > 0 ? strate
 
   private analyzeKeywordUsage(
     markdown: string,
-    outline: WritingInput['strategy']['outline']
-  ): WritingOutput['keywordUsage'] {
+    outline: WritingInput["strategy"]["outline"],
+  ): WritingOutput["keywordUsage"] {
     const text = markdown.toLowerCase();
     const keywords = outline.mainSections.flatMap((s) => s.keywords);
 
     let totalCount = 0;
     keywords.forEach((keyword) => {
-      const count = (text.match(new RegExp(keyword.toLowerCase(), 'g')) || []).length;
+      const count = (text.match(new RegExp(keyword.toLowerCase(), "g")) || [])
+        .length;
       totalCount += count;
     });
 
-    const wordCount = markdown.replace(/\s+/g, '').length;
+    const wordCount = markdown.replace(/\s+/g, "").length;
     const density = (totalCount / wordCount) * 100;
 
     return {
@@ -343,10 +387,12 @@ ${strategy.externalReferences && strategy.externalReferences.length > 0 ? strate
     };
   }
 
-  private calculateReadability(markdown: string): WritingOutput['readability'] {
-    const text = markdown.replace(/[#*\[\]`]/g, '');
-    const sentences = text.split(/[。！？.!?]+/).filter((s) => s.trim().length > 0);
-    const words = text.replace(/\s+/g, '');
+  private calculateReadability(markdown: string): WritingOutput["readability"] {
+    const text = markdown.replace(/[#*\[\]`]/g, "");
+    const sentences = text
+      .split(/[。！？.!?]+/)
+      .filter((s) => s.trim().length > 0);
+    const words = text.replace(/\s+/g, "");
     const syllables = words.length * 1.5;
 
     const avgSentenceLength = words.length / sentences.length;
@@ -358,7 +404,8 @@ ${strategy.externalReferences && strategy.externalReferences.length > 0 ? strate
     const fleschReadingEase =
       206.835 - 1.015 * avgSentenceLength - 84.6 * avgSyllablesPerWord;
 
-    const gunningFogIndex = 0.4 * (avgSentenceLength + 100 * (syllables / words.length));
+    const gunningFogIndex =
+      0.4 * (avgSentenceLength + 100 * (syllables / words.length));
 
     return {
       fleschKincaidGrade: Math.max(0, fleschKincaidGrade),
@@ -371,19 +418,20 @@ ${strategy.externalReferences && strategy.externalReferences.length > 0 ? strate
     let result = html;
 
     // 為表格添加 inline style，使其更美觀
-    result = result.replace(
-      /<table>/g,
-      '<table style="width: 100%; border-collapse: collapse; margin: 20px 0;">'
-    ).replace(
-      /<th>/g,
-      '<th style="border: 1px solid #ddd; padding: 12px 15px; text-align: left; background-color: #f8f9fa; font-weight: 600;">'
-    ).replace(
-      /<td>/g,
-      '<td style="border: 1px solid #ddd; padding: 12px 15px; text-align: left;">'
-    ).replace(
-      /<tr>/g,
-      '<tr style="border-bottom: 1px solid #ddd;">'
-    );
+    result = result
+      .replace(
+        /<table>/g,
+        '<table style="width: 100%; border-collapse: collapse; margin: 20px 0;">',
+      )
+      .replace(
+        /<th>/g,
+        '<th style="border: 1px solid #ddd; padding: 12px 15px; text-align: left; background-color: #f8f9fa; font-weight: 600;">',
+      )
+      .replace(
+        /<td>/g,
+        '<td style="border: 1px solid #ddd; padding: 12px 15px; text-align: left;">',
+      )
+      .replace(/<tr>/g, '<tr style="border-bottom: 1px solid #ddd;">');
 
     // 移除程式碼區塊，轉換為引言區塊
     result = this.convertCodeBlocksToBlockquotes(result);
@@ -399,20 +447,25 @@ ${strategy.externalReferences && strategy.externalReferences.length > 0 ? strate
       (_match, code) => {
         // 解碼 HTML 實體
         const decodedCode = code
-          .replace(/&lt;/g, '<')
-          .replace(/&gt;/g, '>')
+          .replace(/&lt;/g, "<")
+          .replace(/&gt;/g, ">")
           .replace(/&quot;/g, '"')
           .replace(/&#39;/g, "'")
-          .replace(/&amp;/g, '&');
+          .replace(/&amp;/g, "&");
 
         // 將程式碼轉換為格式化的引言區塊
-        const lines = decodedCode.split('\n').filter((line: string) => line.trim());
-        const formattedLines = lines.map((line: string) =>
-          `<p style="margin: 0; padding-left: 20px; font-family: monospace; background: #f5f5f5;">${line}</p>`
-        ).join('');
+        const lines = decodedCode
+          .split("\n")
+          .filter((line: string) => line.trim());
+        const formattedLines = lines
+          .map(
+            (line: string) =>
+              `<p style="margin: 0; padding-left: 20px; font-family: monospace; background: #f5f5f5;">${line}</p>`,
+          )
+          .join("");
 
         return `<blockquote style="border-left: 4px solid #ddd; margin: 20px 0; padding: 10px 20px; background: #f9f9f9;">${formattedLines}</blockquote>`;
-      }
+      },
     );
   }
 }
