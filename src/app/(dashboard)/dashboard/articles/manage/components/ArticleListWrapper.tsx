@@ -48,12 +48,12 @@ export function ArticleListWrapper({
   return (
     <ScheduleProvider>
       <PageHeader filters={filters} />
-      <div className="flex gap-4">
-        <div className="w-2/5 min-w-0">
+      <div className="flex gap-4 h-[calc(100vh-180px)]">
+        <div className="w-2/5 min-w-0 overflow-y-auto">
           <ScheduleControlBar schedulableArticleIds={schedulableArticleIds} />
           <ArticleList articles={articles} />
         </div>
-        <div className="w-3/5 shrink-0 lg:sticky lg:top-4 lg:self-start">
+        <div className="w-3/5 shrink-0 overflow-hidden flex flex-col">
           {children}
         </div>
       </div>
