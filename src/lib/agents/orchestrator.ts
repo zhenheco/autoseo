@@ -37,13 +37,6 @@ import type {
 import type { AIModel } from "@/types/ai-models";
 import { AgentExecutionContext } from "./base-agent";
 
-function cleanFigcaption(altText: string): string {
-  return altText
-    .replace(/\s*-?\s*(說明圖片|精選圖片|示意圖|配圖|插圖)$/g, "")
-    .replace(/^<[^>]+>\s*-?\s*(說明圖片|精選圖片|示意圖|配圖|插圖)$/g, "")
-    .trim();
-}
-
 export class ParallelOrchestrator {
   private supabaseClient?: SupabaseClient;
   private errorTracker: ErrorTracker;
@@ -1574,10 +1567,8 @@ export class ParallelOrchestrator {
 
     // 1. 在第一個 <p> 標籤之後插入精選圖片
     if (featuredImage) {
-      const cleanedCaption = cleanFigcaption(featuredImage.altText);
       const featuredImageHtml = `<figure class="wp-block-image size-large">
   <img src="${featuredImage.url}" alt="${featuredImage.altText}" width="${featuredImage.width}" height="${featuredImage.height}" />
-  <figcaption>${cleanedCaption}</figcaption>
 </figure>\n\n`;
 
       const firstPTagIndex = modifiedHtml.indexOf("</p>");

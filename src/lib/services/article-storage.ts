@@ -7,13 +7,6 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { marked } from "marked";
 import type { ArticleGenerationResult } from "@/types/agents";
 
-function cleanFigcaption(altText: string): string {
-  return altText
-    .replace(/\s*-?\s*(說明圖片|精選圖片|示意圖|配圖|插圖)$/g, "")
-    .replace(/^<[^>]+>\s*-?\s*(說明圖片|精選圖片|示意圖|配圖|插圖)$/g, "")
-    .trim();
-}
-
 export interface PreviousArticle {
   title: string;
   slug: string;
@@ -747,10 +740,8 @@ export class ArticleStorageService {
         i--
       ) {
         const image = contentImages[i];
-        const cleanedCaption = cleanFigcaption(image.altText);
         const imageHtml = `\n\n<figure class="wp-block-image size-large">
   <img src="${image.url}" alt="${image.altText}" width="${image.width}" height="${image.height}" />
-  <figcaption>${cleanedCaption}</figcaption>
 </figure>\n\n`;
 
         const position = insertPositions[i];
