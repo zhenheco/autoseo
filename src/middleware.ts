@@ -48,10 +48,11 @@ export async function middleware(request: NextRequest) {
     // img-src: 允許所有 HTTPS 圖片來源（用於文章圖片）
     "img-src 'self' data: https:",
     "font-src 'self' data:",
-    // connect-src: 允許 API 連接
+    // connect-src: 允許 API 連接和 WebSocket
     [
       "connect-src 'self'",
       "https://*.supabase.co",
+      "wss://*.supabase.co",
       "https://api.openai.com",
       "https://api.deepseek.com",
       "https://openrouter.ai",
