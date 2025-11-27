@@ -1,6 +1,9 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { SupabaseClient } from "@supabase/supabase-js";
-import { ArticleStorageService } from "@/lib/services/article-storage";
+import {
+  ArticleStorageService,
+  ensureMinimumLinks,
+} from "@/lib/services/article-storage";
 import { ResearchAgent } from "./research-agent";
 import { StrategyAgent } from "./strategy-agent";
 import { WritingAgent } from "./writing-agent";
@@ -29,9 +32,17 @@ import type {
   AIClientConfig,
   GeneratedImage,
   SectionOutput,
+  ExternalReference,
 } from "@/types/agents";
 import type { AIModel } from "@/types/ai-models";
 import { AgentExecutionContext } from "./base-agent";
+
+function cleanFigcaption(altText: string): string {
+  return altText
+    .replace(/\s*-?\s*(說明圖片|精選圖片|示意圖|配圖|插圖)$/g, "")
+    .replace(/^<[^>]+>\s*-?\s*(說明圖片|精選圖片|示意圖|配圖|插圖)$/g, "")
+    .trim();
+}
 
 export class ParallelOrchestrator {
   private supabaseClient?: SupabaseClient;
@@ -144,13 +155,30 @@ export class ParallelOrchestrator {
         hasSavedArticle: !!jobData?.metadata?.saved_article_id,
       });
 
-      const [brandVoice, workflowSettings, agentConfig, previousArticles] =
-        await Promise.all([
-          this.getBrandVoice(input.websiteId, input.companyId),
-          this.getWorkflowSettings(input.websiteId),
-          this.getAgentConfig(input.websiteId),
-          this.getPreviousArticles(input.websiteId, input.title),
-        ]);
+      const [
+        brandVoice,
+        workflowSettings,
+        agentConfig,
+        previousArticles,
+        websiteSettings,
+      ] = await Promise.all([
+        this.getBrandVoice(input.websiteId, input.companyId),
+        this.getWorkflowSettings(input.websiteId),
+        this.getAgentConfig(input.websiteId),
+        this.getPreviousArticles(input.websiteId, input.title),
+        this.getWebsiteSettings(input.websiteId),
+      ]);
+
+      const targetLanguage =
+        input.targetLanguage || websiteSettings.language || "zh-TW";
+      const targetRegion = websiteSettings.region || "台灣";
+      const targetIndustry = websiteSettings.industry;
+
+      console.log("[Orchestrator] 🌐 Website Settings:", {
+        language: targetLanguage,
+        region: targetRegion,
+        industry: targetIndustry,
+      });
 
       const aiConfig = this.getAIConfig();
       const context: AgentExecutionContext = {
@@ -207,7 +235,9 @@ export class ParallelOrchestrator {
           brandVoice,
           targetWordCount:
             input.wordCount || workflowSettings.content_length_min,
-          targetLanguage: input.targetLanguage || "zh-TW",
+          targetLanguage,
+          industry: targetIndustry,
+          region: targetRegion,
           model: agentConfig.strategy_model,
           temperature: agentConfig.strategy_temperature,
           maxTokens: agentConfig.strategy_max_tokens,
@@ -274,7 +304,7 @@ export class ParallelOrchestrator {
               agentConfig,
               aiConfig,
               context,
-              input.targetLanguage || "zh-TW",
+              targetLanguage,
             );
 
             console.log(
@@ -424,6 +454,28 @@ export class ParallelOrchestrator {
           imageOutput.contentImages,
         );
       }
+
+      const linkResult = ensureMinimumLinks(
+        writingOutput.html,
+        previousArticles.map((a) => ({
+          title: a.title,
+          slug: a.slug,
+          url: a.url,
+          keywords: a.keywords,
+        })),
+        (strategyOutput.externalReferences || []).map(
+          (r: ExternalReference) => ({
+            url: r.url,
+            title: r.title || "",
+            description: r.description || "",
+            relevantSection: r.relevantSection,
+          }),
+        ),
+        3,
+        2,
+      );
+      writingOutput.html = linkResult.html;
+      console.log("[Orchestrator] 連結補充結果:", linkResult.stats);
 
       await this.updateJobStatus(input.articleJobId, "processing", {
         current_phase: "html_completed",
@@ -601,30 +653,34 @@ export class ParallelOrchestrator {
             throw new Error("無法取得有效的 user_id，文章儲存失敗");
           }
 
-          // 在儲存文章前，先確保 article_job 記錄存在
-          const { error: upsertError } = await supabase
+          // 在儲存文章前，檢查 article_job 記錄是否存在
+          const { data: existingJob } = await supabase
             .from("article_jobs")
-            .upsert(
-              {
+            .select("id")
+            .eq("id", input.articleJobId)
+            .single();
+
+          if (!existingJob) {
+            // 只在記錄不存在時才建立
+            const { error: insertError } = await supabase
+              .from("article_jobs")
+              .insert({
                 id: input.articleJobId,
                 job_id: input.articleJobId,
                 company_id: input.companyId,
                 website_id: input.websiteId,
                 user_id: userId,
                 keywords: input.title ? [input.title] : [],
-                status: "processing",
+                status: "completed",
                 metadata: { message: "準備儲存文章到資料庫" },
-              },
-              {
-                onConflict: "id",
-              },
-            );
+              });
 
-          if (upsertError) {
-            console.error("[Orchestrator] 建立 job 記錄失敗:", upsertError);
-            throw new Error(`建立 job 記錄失敗: ${upsertError.message}`);
+            if (insertError) {
+              console.error("[Orchestrator] 建立 job 記錄失敗:", insertError);
+              throw new Error(`建立 job 記錄失敗: ${insertError.message}`);
+            }
           }
-          console.log("[Orchestrator] Job 記錄已準備:", input.articleJobId);
+          console.log("[Orchestrator] Job 記錄已確認:", input.articleJobId);
 
           const savedArticle =
             await articleStorage.saveArticleWithRecommendations({
@@ -1034,6 +1090,8 @@ export class ParallelOrchestrator {
       tone_of_voice?: string;
       target_audience?: string;
       writing_style?: string;
+      sentence_style?: string;
+      interactivity?: string;
     };
     console.log("[Orchestrator] 使用 website brand_voice", bv);
     return {
@@ -1042,7 +1100,40 @@ export class ParallelOrchestrator {
       tone_of_voice: bv.tone_of_voice || defaultBrandVoice.tone_of_voice,
       target_audience: bv.target_audience || defaultBrandVoice.target_audience,
       keywords: [],
-      sentence_style: bv.writing_style,
+      sentence_style: bv.sentence_style || bv.writing_style || "清晰簡潔",
+      interactivity: bv.interactivity || "適度互動",
+    };
+  }
+
+  private async getWebsiteSettings(
+    websiteId: string | null,
+  ): Promise<{ language: string; industry: string | null; region: string }> {
+    const defaults = {
+      language: "zh-TW",
+      industry: null as string | null,
+      region: "台灣",
+    };
+
+    if (!websiteId || websiteId === "null") {
+      return defaults;
+    }
+
+    const supabase = await this.getSupabase();
+    const { data, error } = await supabase
+      .from("website_configs")
+      .select("language, industry, region")
+      .eq("id", websiteId)
+      .single();
+
+    if (error || !data) {
+      console.warn("[Orchestrator] 使用預設網站設定");
+      return defaults;
+    }
+
+    return {
+      language: data.language || defaults.language,
+      industry: data.industry || defaults.industry,
+      region: data.region || defaults.region,
     };
   }
 
@@ -1332,6 +1423,7 @@ export class ParallelOrchestrator {
       return {
         id: article.id,
         title: article.title,
+        slug: article.slug || "",
         url,
         keywords: article.keywords || [],
         excerpt: article.excerpt || "",
@@ -1482,9 +1574,10 @@ export class ParallelOrchestrator {
 
     // 1. 在第一個 <p> 標籤之後插入精選圖片
     if (featuredImage) {
+      const cleanedCaption = cleanFigcaption(featuredImage.altText);
       const featuredImageHtml = `<figure class="wp-block-image size-large">
   <img src="${featuredImage.url}" alt="${featuredImage.altText}" width="${featuredImage.width}" height="${featuredImage.height}" />
-  <figcaption>${featuredImage.altText}</figcaption>
+  <figcaption>${cleanedCaption}</figcaption>
 </figure>\n\n`;
 
       const firstPTagIndex = modifiedHtml.indexOf("</p>");

@@ -1,9 +1,9 @@
-import { BaseAgent } from './base-agent';
-import type { QAInput, QAOutput } from '@/types/agents';
+import { BaseAgent } from "./base-agent";
+import type { QAInput, QAOutput } from "@/types/agents";
 
 export class QAAgent extends BaseAgent<QAInput, QAOutput> {
   get agentName(): string {
-    return 'QAAgent';
+    return "QAAgent";
   }
 
   protected async process(input: QAInput): Promise<QAOutput> {
@@ -11,27 +11,27 @@ export class QAAgent extends BaseAgent<QAInput, QAOutput> {
 
     // Language mapping
     const languageNames: Record<string, string> = {
-      'zh-TW': 'Traditional Chinese (繁體中文)',
-      'zh-CN': 'Simplified Chinese (简体中文)',
-      'en': 'English',
-      'ja': 'Japanese (日本語)',
-      'ko': 'Korean (한국어)',
-      'es': 'Spanish (Español)',
-      'fr': 'French (Français)',
-      'de': 'German (Deutsch)',
-      'pt': 'Portuguese (Português)',
-      'it': 'Italian (Italiano)',
-      'ru': 'Russian (Русский)',
-      'ar': 'Arabic (العربية)',
-      'th': 'Thai (ไทย)',
-      'vi': 'Vietnamese (Tiếng Việt)',
-      'id': 'Indonesian (Bahasa Indonesia)',
+      "zh-TW": "Traditional Chinese (繁體中文)",
+      "zh-CN": "Simplified Chinese (简体中文)",
+      en: "English",
+      ja: "Japanese (日本語)",
+      ko: "Korean (한국어)",
+      es: "Spanish (Español)",
+      fr: "French (Français)",
+      de: "German (Deutsch)",
+      pt: "Portuguese (Português)",
+      it: "Italian (Italiano)",
+      ru: "Russian (Русский)",
+      ar: "Arabic (العربية)",
+      th: "Thai (ไทย)",
+      vi: "Vietnamese (Tiếng Việt)",
+      id: "Indonesian (Bahasa Indonesia)",
     };
 
-    const targetLang = (input as any).targetLanguage || 'zh-TW';
-    const languageName = languageNames[targetLang] || languageNames['zh-TW'];
+    const targetLang = (input as any).targetLanguage || "zh-TW";
+    const languageName = languageNames[targetLang] || languageNames["zh-TW"];
 
-    const mainTopics = outline.mainSections.map(s => s.heading).join(', ');
+    const mainTopics = outline.mainSections.map((s) => s.heading).join(", ");
 
     const prompt = `Generate frequently asked questions (FAQ) for the article "${title}".
 
@@ -44,6 +44,8 @@ export class QAAgent extends BaseAgent<QAInput, QAOutput> {
 ## Brand Voice
 - Tone: ${brandVoice.tone_of_voice}
 - Target Audience: ${brandVoice.target_audience}
+- Sentence Style: ${brandVoice.sentence_style || "Clear and concise"}
+- Interactivity: ${brandVoice.interactivity || "Moderate"}
 
 ## Requirements
 1. Generate ${count} frequently asked questions
@@ -68,7 +70,7 @@ export class QAAgent extends BaseAgent<QAInput, QAOutput> {
       model: input.model,
       temperature: input.temperature || 0.7,
       maxTokens: input.maxTokens || 1500,
-      format: 'json',
+      format: "json",
     });
 
     let faqs: Array<{ question: string; answer: string }> = [];
@@ -103,33 +105,40 @@ export class QAAgent extends BaseAgent<QAInput, QAOutput> {
     };
   }
 
-  private formatFAQsAsMarkdown(faqs: Array<{ question: string; answer: string }>): string {
-    const lines = ['## 常見問題', ''];
+  private formatFAQsAsMarkdown(
+    faqs: Array<{ question: string; answer: string }>,
+  ): string {
+    const lines = ["## 常見問題", ""];
 
     faqs.forEach((faq, index) => {
-      lines.push(`### ${index + 1}. ${faq.question}`, '');
-      lines.push(faq.answer, '');
+      lines.push(`### ${index + 1}. ${faq.question}`, "");
+      lines.push(faq.answer, "");
     });
 
-    return lines.join('\n');
+    return lines.join("\n");
   }
 
-  private parseFallbackFAQs(content: string): Array<{ question: string; answer: string }> {
+  private parseFallbackFAQs(
+    content: string,
+  ): Array<{ question: string; answer: string }> {
     const faqs: Array<{ question: string; answer: string }> = [];
-    const lines = content.split('\n');
+    const lines = content.split("\n");
 
-    let currentQuestion = '';
-    let currentAnswer = '';
+    let currentQuestion = "";
+    let currentAnswer = "";
 
     for (const line of lines) {
       if (line.match(/[?？]/)) {
         if (currentQuestion && currentAnswer) {
-          faqs.push({ question: currentQuestion, answer: currentAnswer.trim() });
+          faqs.push({
+            question: currentQuestion,
+            answer: currentAnswer.trim(),
+          });
         }
         currentQuestion = line.trim();
-        currentAnswer = '';
+        currentAnswer = "";
       } else if (currentQuestion && line.trim()) {
-        currentAnswer += line + ' ';
+        currentAnswer += line + " ";
       }
     }
 
@@ -140,7 +149,9 @@ export class QAAgent extends BaseAgent<QAInput, QAOutput> {
     return faqs;
   }
 
-  private getFallbackFAQs(title: string): Array<{ question: string; answer: string }> {
+  private getFallbackFAQs(
+    title: string,
+  ): Array<{ question: string; answer: string }> {
     return [
       {
         question: `什麼是${title}？`,

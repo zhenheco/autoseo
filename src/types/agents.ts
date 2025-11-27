@@ -28,8 +28,8 @@ export interface WorkflowSettings {
 
 export interface AgentConfig {
   // 新的模型配置系統
-  complex_processing_model?: string;  // 複雜處理（研究、策略）
-  simple_processing_model?: string;   // 簡單功能（寫作、分類、標籤）
+  complex_processing_model?: string; // 複雜處理（研究、策略）
+  simple_processing_model?: string; // 簡單功能（寫作、分類、標籤）
 
   // 舊的配置（向後相容）
   research_model: string;
@@ -57,7 +57,7 @@ export interface Keyword {
   region?: string;
   search_volume?: number;
   difficulty?: number;
-  status: 'active' | 'used' | 'archived';
+  status: "active" | "used" | "archived";
   priority: number;
   created_at: string;
   last_used_at?: string;
@@ -84,7 +84,11 @@ export interface SERPResult {
 export interface ResearchOutput {
   title: string;
   region?: string;
-  searchIntent: 'informational' | 'commercial' | 'transactional' | 'navigational';
+  searchIntent:
+    | "informational"
+    | "commercial"
+    | "transactional"
+    | "navigational";
   intentConfidence: number;
   topRankingFeatures: {
     contentLength: { min: number; max: number; avg: number };
@@ -120,6 +124,8 @@ export interface StrategyInput {
   brandVoice: BrandVoice;
   targetWordCount: number;
   targetLanguage?: string;
+  industry?: string | null;
+  region?: string;
   title?: string;
   model: string;
   temperature: number;
@@ -190,6 +196,7 @@ export interface StrategyOutput {
 export interface PreviousArticle {
   id: string;
   title: string;
+  slug: string;
   url: string;
   keywords: string[];
   excerpt: string;
@@ -248,7 +255,7 @@ export interface ImageInput {
     mood?: string;
   };
   model: string;
-  quality: 'low' | 'medium' | 'high' | 'auto';
+  quality: "low" | "medium" | "high" | "auto";
   size: string;
 }
 
@@ -296,11 +303,11 @@ export interface MetaOutput {
   openGraph: {
     title: string;
     description: string;
-    type: 'article';
+    type: "article";
     image?: string;
   };
   twitterCard: {
-    card: 'summary_large_image';
+    card: "summary_large_image";
     title: string;
     description: string;
     image?: string;
@@ -320,7 +327,7 @@ export interface ExternalReference {
   title: string;
   domain?: string;
   snippet?: string;
-  type: 'wikipedia' | 'official_docs' | 'research' | 'news' | 'blog';
+  type: "wikipedia" | "official_docs" | "research" | "news" | "blog";
   relevantSection?: string;
   description: string;
 }
@@ -406,7 +413,11 @@ export interface QualityOutput {
   checks: {
     wordCount: QualityCheck & { actual: number; expected: string };
     keywordDensity: QualityCheck & { actual: number; expected: string };
-    structure: QualityCheck & { h1Count: number; h2Count: number; h3Count: number };
+    structure: QualityCheck & {
+      h1Count: number;
+      h2Count: number;
+      h3Count: number;
+    };
     internalLinks: QualityCheck & { count: number; expected: number };
     readability: QualityCheck & { score: number; level: string };
     seoOptimization: QualityCheck & { issues: string[] };
@@ -414,7 +425,7 @@ export interface QualityOutput {
     formatting: QualityCheck & { issues: string[] };
   };
   recommendations: {
-    priority: 'high' | 'medium' | 'low';
+    priority: "high" | "medium" | "low";
     category: string;
     message: string;
     section?: string;
@@ -482,7 +493,7 @@ export interface ArticleGenerationResult {
 
 // AI Client Types
 export interface AIMessage {
-  role: 'system' | 'user' | 'assistant';
+  role: "system" | "user" | "assistant";
   content: string;
 }
 
@@ -491,7 +502,7 @@ export interface AICompletionOptions {
   temperature?: number;
   maxTokens?: number;
   messages?: AIMessage[];
-  format?: 'text' | 'json';
+  format?: "text" | "json";
   responseFormat?: any;
 }
 
