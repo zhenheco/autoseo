@@ -31,7 +31,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // 嘗試獲取 company_id（如果用戶有加入公司），否則使用 user_id
+    // 嘗試獲取 company_id（如果用戶有加入公司）
     const { data: membership } = await supabase
       .from("company_members")
       .select("company_id")
@@ -39,8 +39,56 @@ export async function POST(request: NextRequest) {
       .eq("status", "active")
       .single();
 
-    // 使用 company_id 或 user_id 作為 billing identifier
-    const billingId = membership?.company_id || user.id;
+    let billingId = membership?.company_id;
+
+    // 如果沒有公司，檢查是否已有用戶擁有的公司或自動創建個人公司
+    if (!billingId) {
+      const { data: existingCompany } = await supabase
+        .from("companies")
+        .select("id")
+        .eq("owner_id", user.id)
+        .single();
+
+      if (existingCompany) {
+        billingId = existingCompany.id;
+      } else {
+        // 創建個人公司
+        const baseSlug = slugify(user.email?.split("@")[0] || "user", {
+          lower: true,
+          strict: true,
+        });
+        const uniqueSlug = `${baseSlug}-${Date.now()}`;
+
+        const { data: newCompany, error: companyError } = await supabase
+          .from("companies")
+          .insert({
+            name: user.email?.split("@")[0] || "個人用戶",
+            slug: uniqueSlug,
+            owner_id: user.id,
+          })
+          .select("id")
+          .single();
+
+        if (companyError || !newCompany) {
+          console.error("Failed to create personal company:", companyError);
+          return NextResponse.json(
+            { error: "無法建立用戶帳戶，請聯繫客服" },
+            { status: 500 },
+          );
+        }
+
+        // 將用戶加入公司成員
+        await supabase.from("company_members").insert({
+          company_id: newCompany.id,
+          user_id: user.id,
+          role: "owner",
+          status: "active",
+        });
+
+        billingId = newCompany.id;
+        console.log(`[Batch] ✅ Created personal company for user: ${user.id}`);
+      }
+    }
 
     // 優先使用傳入的 website_id
     let websiteId: string | null = website_id || null;

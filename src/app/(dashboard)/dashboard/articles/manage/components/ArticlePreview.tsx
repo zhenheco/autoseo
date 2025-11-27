@@ -76,7 +76,7 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
 
   if (!article) {
     return (
-      <div className="flex h-full min-h-[400px] flex-col items-center justify-center text-muted-foreground">
+      <div className="flex h-full flex-col items-center justify-center text-muted-foreground">
         <FileText className="mb-4 h-12 w-12" />
         <p>點擊文章以預覽</p>
       </div>
@@ -84,39 +84,39 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
   }
 
   return (
-    <div className="h-full overflow-y-auto">
-      <div className="wordpress-preview">
+    <div className="flex h-full flex-col overflow-hidden">
+      <header className="mb-4 shrink-0 bg-background pb-2">
+        <div className="flex items-center gap-2">
+          <Input
+            value={editedTitle}
+            onChange={handleTitleChange}
+            className="text-xl font-bold border-none shadow-none focus-visible:ring-0 p-0 h-auto lg:text-2xl"
+            placeholder="輸入標題..."
+          />
+          <Button
+            size="sm"
+            onClick={handleSave}
+            disabled={isSaving || !hasChanges}
+            variant={saveSuccess ? "outline" : "default"}
+          >
+            {isSaving ? (
+              "儲存中..."
+            ) : saveSuccess ? (
+              <>
+                <Check className="mr-1 h-4 w-4" />
+                已儲存
+              </>
+            ) : (
+              <>
+                <Save className="mr-1 h-4 w-4" />
+                儲存
+              </>
+            )}
+          </Button>
+        </div>
+      </header>
+      <div className="flex-1 overflow-y-auto wordpress-preview">
         <article>
-          <header className="mb-4">
-            <div className="flex items-center gap-2">
-              <Input
-                value={editedTitle}
-                onChange={handleTitleChange}
-                className="text-xl font-bold border-none shadow-none focus-visible:ring-0 p-0 h-auto lg:text-2xl"
-                placeholder="輸入標題..."
-              />
-              <Button
-                size="sm"
-                onClick={handleSave}
-                disabled={isSaving || !hasChanges}
-                variant={saveSuccess ? "outline" : "default"}
-              >
-                {isSaving ? (
-                  "儲存中..."
-                ) : saveSuccess ? (
-                  <>
-                    <Check className="mr-1 h-4 w-4" />
-                    已儲存
-                  </>
-                ) : (
-                  <>
-                    <Save className="mr-1 h-4 w-4" />
-                    儲存
-                  </>
-                )}
-              </Button>
-            </div>
-          </header>
           <TiptapEditor
             content={editedContent}
             onChange={handleContentChange}
