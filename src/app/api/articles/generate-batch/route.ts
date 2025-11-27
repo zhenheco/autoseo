@@ -123,7 +123,8 @@ export async function POST(request: NextRequest) {
       console.log("使用指定網站:", websiteId);
     }
 
-    const jobIds: string[] = [];
+    const newJobIds: string[] = [];
+    const skippedJobIds: string[] = [];
     const failedItems: string[] = [];
 
     // 批次生成模式：直接執行，實作冪等性檢查
@@ -151,7 +152,7 @@ export async function POST(request: NextRequest) {
       // 如果存在未完成的任務，跳過創建並記錄 ID
       if (existingJobs && existingJobs.length > 0) {
         const existingJob = existingJobs[0];
-        jobIds.push(existingJob.id);
+        skippedJobIds.push(existingJob.id);
         console.log(
           `[Batch] ⏭️  Skipping duplicate job: ${title} (existing: ${existingJob.id}, status: ${existingJob.status})`,
         );
@@ -188,12 +189,15 @@ export async function POST(request: NextRequest) {
         continue;
       }
 
-      jobIds.push(articleJobId);
+      newJobIds.push(articleJobId);
       console.log(`[Batch] ✅ Article job queued: ${title}`);
     }
 
-    // 觸發 GitHub Actions workflow 立即處理任務
-    if (jobIds.length > 0) {
+    // 合併所有 job ID（新建立 + 跳過的）
+    const allJobIds = [...newJobIds, ...skippedJobIds];
+
+    // 只有新建立的 job 才需要觸發 GitHub Actions
+    if (newJobIds.length > 0) {
       try {
         const githubToken = process.env.GITHUB_TOKEN;
         if (githubToken) {
@@ -209,8 +213,8 @@ export async function POST(request: NextRequest) {
               body: JSON.stringify({
                 event_type: "article-jobs-created",
                 client_payload: {
-                  jobCount: jobIds.length,
-                  jobIds: jobIds,
+                  jobCount: newJobIds.length,
+                  jobIds: newJobIds,
                   timestamp: new Date().toISOString(),
                 },
               }),
@@ -219,7 +223,7 @@ export async function POST(request: NextRequest) {
 
           if (response.ok) {
             console.log(
-              `[Batch] ✅ Triggered GitHub Actions workflow for ${jobIds.length} jobs`,
+              `[Batch] ✅ Triggered GitHub Actions workflow for ${newJobIds.length} jobs`,
             );
           } else {
             console.error(
@@ -238,17 +242,38 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // 判斷是否成功：至少要有新建立的 job 或跳過的 job（代表任務已在處理中）
+    const hasJobs = allJobIds.length > 0;
+    const allFailed =
+      failedItems.length > 0 &&
+      newJobIds.length === 0 &&
+      skippedJobIds.length === 0;
+
+    if (allFailed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: "所有文章任務建立失敗",
+          failedItems,
+        },
+        { status: 500 },
+      );
+    }
+
     return NextResponse.json({
-      success: true,
-      jobIds,
-      totalJobs: jobIds.length,
+      success: hasJobs,
+      jobIds: allJobIds,
+      newJobs: newJobIds.length,
+      skippedJobs: skippedJobIds.length,
       failedJobs: failedItems.length,
       failedItems,
       message:
-        "Article generation jobs queued. Use /api/articles/status/[jobId] to check progress.",
+        newJobIds.length > 0
+          ? `已建立 ${newJobIds.length} 個新任務${skippedJobIds.length > 0 ? `，${skippedJobIds.length} 個已在處理中` : ""}`
+          : `${skippedJobIds.length} 個任務已在處理中`,
       polling: {
         statusUrl: "/api/articles/status/[jobId]",
-        recommendedInterval: 60000, // 60 秒
+        recommendedInterval: 60000,
       },
     });
   } catch (error) {
