@@ -146,7 +146,7 @@ export class ParallelOrchestrator {
 
       const [brandVoice, workflowSettings, agentConfig, previousArticles] =
         await Promise.all([
-          this.getBrandVoice(input.websiteId),
+          this.getBrandVoice(input.websiteId, input.companyId),
           this.getWorkflowSettings(input.websiteId),
           this.getAgentConfig(input.websiteId),
           this.getPreviousArticles(input.websiteId, input.title),
@@ -1000,52 +1000,50 @@ export class ParallelOrchestrator {
     };
   }
 
-  private async getBrandVoice(websiteId: string | null): Promise<BrandVoice> {
-    // 如果 websiteId 為 null，直接返回預設值
+  private async getBrandVoice(
+    websiteId: string | null,
+    companyId: string | null,
+  ): Promise<BrandVoice> {
+    const defaultBrandVoice: BrandVoice = {
+      id: "",
+      website_id: websiteId || "",
+      tone_of_voice: "專業、友善、易懂",
+      target_audience: "一般網路使用者",
+      keywords: [],
+    };
+
     if (!websiteId || websiteId === "null") {
-      console.warn("[Orchestrator] website_id 為 null，使用預設 brand_voices");
-      return {
-        id: "",
-        website_id: websiteId || "",
-        tone_of_voice: "專業、友善、易懂",
-        target_audience: "一般網路使用者",
-        keywords: [],
-      };
+      console.warn("[Orchestrator] 無 websiteId，使用預設 brand_voice");
+      return defaultBrandVoice;
     }
 
     const supabase = await this.getSupabase();
-    const { data: brandVoices, error } = await supabase
-      .from("brand_voices")
-      .select("*")
-      .eq("website_id", websiteId);
+    const { data: website, error } = await supabase
+      .from("website_configs")
+      .select("brand_voice")
+      .eq("id", websiteId)
+      .single();
 
-    if (error) {
-      console.error("[Orchestrator] 查詢 brand_voices 失敗:", error);
-      // 返回預設 brand voice
-      return {
-        id: "",
-        website_id: websiteId,
-        tone_of_voice: "專業、友善、易懂",
-        target_audience: "一般網路使用者",
-        keywords: [],
-      };
+    if (error || !website?.brand_voice) {
+      console.warn("[Orchestrator] 使用預設 brand_voice");
+      return defaultBrandVoice;
     }
 
-    const brandVoice = brandVoices?.[0];
-    if (!brandVoice) {
-      console.warn(
-        "[Orchestrator] website_id 沒有對應的 brand_voices，使用預設值",
-      );
-      return {
-        id: "",
-        website_id: websiteId,
-        tone_of_voice: "專業、友善、易懂",
-        target_audience: "一般網路使用者",
-        keywords: [],
-      };
-    }
-
-    return brandVoice;
+    const bv = website.brand_voice as {
+      brand_name?: string;
+      tone_of_voice?: string;
+      target_audience?: string;
+      writing_style?: string;
+    };
+    console.log("[Orchestrator] 使用 website brand_voice", bv);
+    return {
+      id: "",
+      website_id: websiteId,
+      tone_of_voice: bv.tone_of_voice || defaultBrandVoice.tone_of_voice,
+      target_audience: bv.target_audience || defaultBrandVoice.target_audience,
+      keywords: [],
+      sentence_style: bv.writing_style,
+    };
   }
 
   private async getWorkflowSettings(

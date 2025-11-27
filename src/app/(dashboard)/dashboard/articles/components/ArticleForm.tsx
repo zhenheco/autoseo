@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -69,6 +69,7 @@ export function ArticleForm({ quotaStatus, websiteId }: ArticleFormProps) {
   const [customIndustry, setCustomIndustry] = useState("");
   const [region, setRegion] = useState("");
   const [customRegion, setCustomRegion] = useState("");
+  const [language, setLanguage] = useState("zh-TW");
   const [competitors, setCompetitors] = useState<string[]>([""]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -77,6 +78,23 @@ export function ArticleForm({ quotaStatus, websiteId }: ArticleFormProps) {
   const [titleOptions, setTitleOptions] = useState<string[]>([]);
   const [selectedTitle, setSelectedTitle] = useState("");
   const [showTitleDialog, setShowTitleDialog] = useState(false);
+
+  useEffect(() => {
+    const stored = localStorage.getItem("preferred-language");
+    if (stored) {
+      setLanguage(stored);
+    }
+
+    const handleLanguageChange = (e: Event) => {
+      const customEvent = e as CustomEvent<string>;
+      setLanguage(customEvent.detail);
+    };
+
+    window.addEventListener("languageChanged", handleLanguageChange);
+    return () => {
+      window.removeEventListener("languageChanged", handleLanguageChange);
+    };
+  }, []);
 
   const canAddCompetitors = quotaStatus?.canUseCompetitors ?? false;
   const hasRemainingQuota = quotaStatus
@@ -108,6 +126,7 @@ export function ArticleForm({ quotaStatus, websiteId }: ArticleFormProps) {
         body: JSON.stringify({
           industry: industry === "other" ? customIndustry : industry,
           region: region === "other" ? customRegion : region,
+          language,
           competitors: competitors.filter((c) => c.trim() !== ""),
         }),
       });
@@ -146,6 +165,7 @@ export function ArticleForm({ quotaStatus, websiteId }: ArticleFormProps) {
         industry === "other" ? customIndustry : industry,
       );
       formData.append("region", region === "other" ? customRegion : region);
+      formData.append("language", language);
       if (title) {
         formData.append("title", title);
       }

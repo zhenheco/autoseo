@@ -254,16 +254,17 @@ export async function toggleWebsiteStatus(formData: FormData) {
 /**
  * 更新 Brand Voice 設定
  */
-export async function updateBrandVoice(formData: FormData) {
+export async function updateWebsiteBrandVoice(formData: FormData) {
   const user = await getUser();
   if (!user) {
     redirect("/login");
   }
 
   const websiteId = formData.get("websiteId") as string;
+  const brandName = formData.get("brandName") as string;
   const toneOfVoice = formData.get("toneOfVoice") as string;
   const targetAudience = formData.get("targetAudience") as string;
-  const keywords = formData.get("keywords") as string;
+  const writingStyle = formData.get("writingStyle") as string;
 
   if (!websiteId) {
     redirect("/dashboard/websites?error=" + encodeURIComponent("缺少網站 ID"));
@@ -271,25 +272,54 @@ export async function updateBrandVoice(formData: FormData) {
 
   const supabase = await createClient();
 
-  // 建立 brand_voice JSON 物件
+  const { data: website } = await supabase
+    .from("website_configs")
+    .select("company_id")
+    .eq("id", websiteId)
+    .single();
+
+  if (!website) {
+    redirect("/dashboard/websites?error=" + encodeURIComponent("找不到網站"));
+  }
+
+  const { data: membership } = await supabase
+    .from("company_members")
+    .select("role")
+    .eq("company_id", website.company_id)
+    .eq("user_id", user.id)
+    .single();
+
+  if (
+    !membership ||
+    (membership.role !== "owner" && membership.role !== "admin")
+  ) {
+    redirect(
+      "/dashboard/websites?error=" + encodeURIComponent("您沒有權限編輯此網站"),
+    );
+  }
+
   const brandVoice = {
-    tone_of_voice: toneOfVoice || "",
+    brand_name: brandName || "",
+    tone_of_voice: toneOfVoice || "專業親切",
     target_audience: targetAudience || "",
-    keywords: keywords ? keywords.split(",").map((k) => k.trim()) : [],
+    writing_style: writingStyle || "專業正式",
   };
 
-  // 更新網站的 brand_voice
   const { error } = await supabase
     .from("website_configs")
     .update({ brand_voice: brandVoice })
     .eq("id", websiteId);
 
   if (error) {
-    redirect("/dashboard/websites?error=" + encodeURIComponent(error.message));
+    redirect(
+      `/dashboard/websites/${websiteId}/edit?error=` +
+        encodeURIComponent(error.message),
+    );
   }
 
   revalidatePath("/dashboard/websites");
   redirect(
-    "/dashboard/websites?success=" + encodeURIComponent("Brand Voice 已更新"),
+    `/dashboard/websites/${websiteId}/edit?success=` +
+      encodeURIComponent("品牌設定已更新"),
   );
 }
