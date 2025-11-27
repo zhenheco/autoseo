@@ -100,7 +100,25 @@ export function QuickArticleForm({
           throw new Error(data.error || data.message || "批量生成失敗");
         }
 
-        setGeneratedKeyword(`${keywords.length} 篇文章`);
+        // 檢查是否真的有建立任務
+        if (!data.success) {
+          throw new Error(data.error || "未能建立任何任務");
+        }
+
+        // 組合顯示訊息
+        const newJobs = data.newJobs || 0;
+        const skippedJobs = data.skippedJobs || 0;
+        let message = "";
+        if (newJobs > 0) {
+          message = `${newJobs} 篇新文章`;
+          if (skippedJobs > 0) {
+            message += `（${skippedJobs} 篇已在處理中）`;
+          }
+        } else if (skippedJobs > 0) {
+          message = `${skippedJobs} 篇文章已在處理中`;
+        }
+
+        setGeneratedKeyword(message || `${keywords.length} 篇文章`);
         setShowSuccessDialog(true);
         setBatchKeywords("");
       }
