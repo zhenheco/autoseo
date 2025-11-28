@@ -258,6 +258,19 @@ export function ArticleForm({ quotaStatus, websiteId }: ArticleFormProps) {
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    const actualIndustry = industry === "other" ? customIndustry : industry;
+    const actualRegion = region === "other" ? customRegion : region;
+
+    if (!actualIndustry || actualIndustry.trim() === "") {
+      alert("請選擇或輸入產業");
+      return;
+    }
+
+    if (!actualRegion || actualRegion.trim() === "") {
+      alert("請選擇或輸入地區");
+      return;
+    }
+
     if (titleMode === "preview") {
       await handlePreviewTitles();
     } else {
