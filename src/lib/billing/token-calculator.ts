@@ -2,11 +2,11 @@
  * Token 計費系統核心計算邏輯
  *
  * 計費公式：
- * 實際扣除 Token = 官方 Token × 模型倍率 × 150%
+ * 實際扣除 Token = 官方 Token × 150%
  *
  * 範例：
- * - DeepSeek-Chat (1x): 1000 官方 tokens → 扣 1500 tokens
- * - Claude 3.5 (2x): 1000 官方 tokens → 扣 3000 tokens
+ * - DeepSeek-Chat: 1000 官方 tokens → 扣 1500 tokens
+ * - Claude 3.5: 1000 官方 tokens → 扣 1500 tokens
  */
 
 import { createClient } from "@supabase/supabase-js";
@@ -73,11 +73,9 @@ export class TokenCalculator {
     // 2. 計算收費成本 (官方 × 150%)
     const chargedCostUsd = officialCostUsd * 1.5;
 
-    // 3. 計算扣除 Token (官方 × 倍率 × 150%)
+    // 3. 計算扣除 Token (官方 × 150%)
     const totalOfficialTokens = usage.inputTokens + usage.outputTokens;
-    const chargedTokens = Math.ceil(
-      totalOfficialTokens * pricing.multiplier * 1.5,
-    );
+    const chargedTokens = Math.ceil(totalOfficialTokens * 1.5);
 
     return {
       officialInputTokens: usage.inputTokens,
