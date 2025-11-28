@@ -1,10 +1,10 @@
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from "@supabase/supabase-js";
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!supabaseUrl || !supabaseKey) {
-  console.error('Missing Supabase credentials');
+  console.error("Missing Supabase credentials");
   process.exit(1);
 }
 
@@ -32,19 +32,19 @@ interface AgentConfig {
 }
 
 async function main() {
-  console.log('開始修復缺少 agent_configs 的 website_configs...\n');
+  console.log("開始修復缺少 agent_configs 的 website_configs...\n");
 
   const { data: websites, error: websiteError } = await supabase
-    .from('website_configs')
-    .select('id, company_id');
+    .from("website_configs")
+    .select("id, company_id");
 
   if (websiteError) {
-    console.error('無法查詢 website_configs:', websiteError);
+    console.error("無法查詢 website_configs:", websiteError);
     process.exit(1);
   }
 
   if (!websites || websites.length === 0) {
-    console.log('沒有找到任何 website_configs');
+    console.log("沒有找到任何 website_configs");
     return;
   }
 
@@ -55,9 +55,9 @@ async function main() {
 
   for (const website of websites as WebsiteConfig[]) {
     const { data: existing } = await supabase
-      .from('agent_configs')
-      .select('id')
-      .eq('website_id', website.id)
+      .from("agent_configs")
+      .select("id")
+      .eq("website_id", website.id)
       .single();
 
     if (existing) {
@@ -68,22 +68,22 @@ async function main() {
 
     const defaultConfig: AgentConfig = {
       website_id: website.id,
-      research_model: 'deepseek-reasoner',
-      complex_processing_model: 'deepseek-reasoner',
-      simple_processing_model: 'deepseek-chat',
-      image_model: 'gpt-image-1-mini',
+      research_model: "deepseek-reasoner",
+      complex_processing_model: "deepseek-reasoner",
+      simple_processing_model: "deepseek-chat",
+      image_model: "gemini-imagen",
       research_temperature: 0.7,
       research_max_tokens: 4000,
-      image_size: '1024x1024',
+      image_size: "1024x1024",
       image_count: 3,
       meta_enabled: true,
-      meta_model: 'deepseek-chat',
+      meta_model: "deepseek-chat",
       meta_temperature: 0.7,
       meta_max_tokens: 2000,
     };
 
     const { error: createError } = await supabase
-      .from('agent_configs')
+      .from("agent_configs")
       .insert(defaultConfig);
 
     if (createError) {

@@ -1,22 +1,22 @@
-import { config } from 'dotenv';
-import { createClient } from '@supabase/supabase-js';
+import { config } from "dotenv";
+import { createClient } from "@supabase/supabase-js";
 
-config({ path: '.env.local' });
+config({ path: ".env.local" });
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
 );
 
 async function main() {
-  console.log('\n=== 更新 Agent 配置為 DeepSeek 模型 ===\n');
+  console.log("\n=== 更新 Agent 配置為 DeepSeek 模型 ===\n");
 
   const { data: configs, error } = await supabase
-    .from('agent_configs')
-    .select('*');
+    .from("agent_configs")
+    .select("*");
 
   if (error) {
-    console.error('❌ 獲取配置失敗:', error);
+    console.error("❌ 獲取配置失敗:", error);
     return;
   }
 
@@ -32,25 +32,25 @@ async function main() {
 
     // 更新為 DeepSeek 模型並設定正確的 max_tokens
     const updates = {
-      research_model: 'deepseek-reasoner',
+      research_model: "deepseek-reasoner",
       research_max_tokens: 64000,
-      complex_processing_model: 'deepseek-reasoner',
+      complex_processing_model: "deepseek-reasoner",
       strategy_temperature: 0.7,
       strategy_max_tokens: 64000,
-      simple_processing_model: 'deepseek-chat',
-      writing_model: 'deepseek-chat',
+      simple_processing_model: "deepseek-chat",
+      writing_model: "deepseek-chat",
       writing_temperature: 0.7,
-      writing_max_tokens: 8192,  // deepseek-chat 的限制
-      meta_model: 'deepseek-chat',
+      writing_max_tokens: 8192, // deepseek-chat 的限制
+      meta_model: "deepseek-chat",
       meta_temperature: 0.7,
-      meta_max_tokens: 8192,  // deepseek-chat 的限制
-      image_model: 'gpt-image-1-mini',
+      meta_max_tokens: 8192, // deepseek-chat 的限制
+      image_model: "gemini-imagen",
     };
 
     const { error: updateError } = await supabase
-      .from('agent_configs')
+      .from("agent_configs")
       .update(updates)
-      .eq('id', cfg.id);
+      .eq("id", cfg.id);
 
     if (updateError) {
       console.error(`❌ 更新失敗:`, updateError);
@@ -64,7 +64,7 @@ async function main() {
     }
   }
 
-  console.log('\n=== 完成 ===\n');
+  console.log("\n=== 完成 ===\n");
 }
 
 main().catch(console.error);
