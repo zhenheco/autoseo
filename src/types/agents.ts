@@ -608,6 +608,7 @@ export interface QAOutput {
     answer: string;
   }>;
   markdown: string;
+  schemaJson: string;
   executionInfo: {
     model?: string;
     executionTime: number;
