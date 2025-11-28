@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { v4 as uuidv4 } from "uuid";
 import slugify from "slugify";
 
@@ -31,8 +31,11 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // 使用 Admin Client 繞過 RLS 進行公司/成員操作
+    const adminClient = createAdminClient();
+
     // 嘗試獲取 company_id（如果用戶有加入公司）
-    const { data: membership } = await supabase
+    const { data: membership } = await adminClient
       .from("company_members")
       .select("company_id")
       .eq("user_id", user.id)
@@ -43,7 +46,7 @@ export async function POST(request: NextRequest) {
 
     // 驗證 company_id 是否真的存在於 companies 表
     if (billingId) {
-      const { data: companyExists } = await supabase
+      const { data: companyExists } = await adminClient
         .from("companies")
         .select("id")
         .eq("id", billingId)
@@ -59,7 +62,7 @@ export async function POST(request: NextRequest) {
 
     // 如果沒有有效的公司，檢查是否已有用戶擁有的公司或自動創建個人公司
     if (!billingId) {
-      const { data: existingCompany } = await supabase
+      const { data: existingCompany } = await adminClient
         .from("companies")
         .select("id")
         .eq("owner_id", user.id)
@@ -68,14 +71,14 @@ export async function POST(request: NextRequest) {
       if (existingCompany) {
         billingId = existingCompany.id;
       } else {
-        // 創建個人公司
+        // 創建個人公司（使用 Admin Client 繞過 RLS）
         const baseSlug = slugify(user.email?.split("@")[0] || "user", {
           lower: true,
           strict: true,
         });
         const uniqueSlug = `${baseSlug}-${Date.now()}`;
 
-        const { data: newCompany, error: companyError } = await supabase
+        const { data: newCompany, error: companyError } = await adminClient
           .from("companies")
           .insert({
             name: user.email?.split("@")[0] || "個人用戶",
@@ -86,19 +89,19 @@ export async function POST(request: NextRequest) {
           .single();
 
         if (companyError || !newCompany) {
-          console.error("Failed to create personal company:", companyError);
+          console.error("[Batch] Failed to create company:", companyError);
           return NextResponse.json(
-            { error: "無法建立用戶帳戶，請聯繫客服" },
+            { error: "無法建立用戶帳戶", details: companyError?.message },
             { status: 500 },
           );
         }
 
         billingId = newCompany.id;
-        console.log(`[Batch] ✅ Created personal company: ${billingId}`);
+        console.log(`[Batch] ✅ Created company: ${billingId}`);
       }
 
-      // 更新或創建 company_members 記錄
-      const { error: memberError } = await supabase
+      // 更新或創建 company_members 記錄（使用 Admin Client）
+      const { error: memberError } = await adminClient
         .from("company_members")
         .upsert(
           {
@@ -113,7 +116,7 @@ export async function POST(request: NextRequest) {
         );
 
       if (memberError) {
-        console.error("Failed to upsert company member:", memberError);
+        console.error("[Batch] Failed to upsert member:", memberError);
       }
     }
 
@@ -121,7 +124,7 @@ export async function POST(request: NextRequest) {
     let websiteId: string | null = website_id || null;
 
     if (!websiteId) {
-      const websiteQuery = await supabase
+      const websiteQuery = await adminClient
         .from("website_configs")
         .select("id")
         .eq("company_id", billingId)
@@ -131,8 +134,8 @@ export async function POST(request: NextRequest) {
       const websiteError = websiteQuery.error;
 
       if ((!websites || websites.length === 0) && !websiteError) {
-        console.log("Creating default website config for:", billingId);
-        const { data: newWebsite, error: createError } = await supabase
+        console.log("[Batch] Creating default website config for:", billingId);
+        const { data: newWebsite, error: createError } = await adminClient
           .from("website_configs")
           .insert({
             company_id: billingId,
@@ -143,14 +146,20 @@ export async function POST(request: NextRequest) {
           .single();
 
         if (createError || !newWebsite) {
-          console.error("Failed to create website config:", createError);
+          console.error(
+            "[Batch] Failed to create website config:",
+            createError,
+          );
           return NextResponse.json(
-            { error: "Failed to create website configuration" },
+            {
+              error: "Failed to create website configuration",
+              details: createError?.message,
+            },
             { status: 500 },
           );
         }
 
-        const { error: agentConfigError } = await supabase
+        const { error: agentConfigError } = await adminClient
           .from("agent_configs")
           .insert({
             website_id: newWebsite.id,
@@ -172,7 +181,10 @@ export async function POST(request: NextRequest) {
           });
 
         if (agentConfigError) {
-          console.error("Failed to create agent config:", agentConfigError);
+          console.error(
+            "[Batch] Failed to create agent config:",
+            agentConfigError,
+          );
           return NextResponse.json(
             {
               error: "Failed to create agent configuration",
@@ -186,7 +198,7 @@ export async function POST(request: NextRequest) {
       }
 
       if (!websites || websites.length === 0) {
-        console.error("Website error:", websiteError);
+        console.error("[Batch] Website error:", websiteError);
         return NextResponse.json(
           { error: "No website configured" },
           { status: 404 },
@@ -195,7 +207,7 @@ export async function POST(request: NextRequest) {
 
       websiteId = websites[0].id;
     } else {
-      console.log("使用指定網站:", websiteId);
+      console.log("[Batch] 使用指定網站:", websiteId);
     }
 
     const newJobIds: string[] = [];
@@ -215,7 +227,7 @@ export async function POST(request: NextRequest) {
       });
 
       // 檢查是否已存在相同標題的 pending/processing 任務
-      const { data: existingJobs } = await supabase
+      const { data: existingJobs } = await adminClient
         .from("article_jobs")
         .select("id, status")
         .eq("company_id", billingId)
@@ -239,27 +251,29 @@ export async function POST(request: NextRequest) {
       const timestamp = Date.now();
       const uniqueSlug = `${baseSlug}-${timestamp}`;
 
-      const { error: jobError } = await supabase.from("article_jobs").insert({
-        id: articleJobId,
-        job_id: articleJobId,
-        company_id: billingId,
-        website_id: websiteId,
-        user_id: user.id,
-        keywords: [keyword],
-        status: "pending",
-        slug: uniqueSlug,
-        metadata: {
-          mode: "batch",
-          title,
-          batchIndex: generationItems.indexOf(item),
-          totalBatch: generationItems.length,
-          targetLanguage: options?.targetLanguage || "zh-TW",
-          wordCount: options?.wordCount || "1500",
-        },
-      });
+      const { error: jobError } = await adminClient
+        .from("article_jobs")
+        .insert({
+          id: articleJobId,
+          job_id: articleJobId,
+          company_id: billingId,
+          website_id: websiteId,
+          user_id: user.id,
+          keywords: [keyword],
+          status: "pending",
+          slug: uniqueSlug,
+          metadata: {
+            mode: "batch",
+            title,
+            batchIndex: generationItems.indexOf(item),
+            totalBatch: generationItems.length,
+            targetLanguage: options?.targetLanguage || "zh-TW",
+            wordCount: options?.wordCount || "1500",
+          },
+        });
 
       if (jobError) {
-        console.error("Failed to create article job:", jobError);
+        console.error("[Batch] Failed to create article job:", jobError);
         failedItems.push(title);
         continue;
       }
