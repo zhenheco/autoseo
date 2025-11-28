@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { useRouter } from "next/navigation";
+import { WebsiteSelector } from "@/components/articles/WebsiteSelector";
 
 interface QuotaStatus {
   plan: string;
@@ -27,6 +28,7 @@ export function QuickArticleForm({ quotaStatus }: QuickArticleFormProps) {
   const [batchKeywords, setBatchKeywords] = useState("");
   const [mode, setMode] = useState<"single" | "batch">("single");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [websiteId, setWebsiteId] = useState<string | null>(null);
 
   const hasRemainingQuota = quotaStatus
     ? quotaStatus.remaining > 0 || quotaStatus.quota === -1
@@ -45,6 +47,7 @@ export function QuickArticleForm({ quotaStatus }: QuickArticleFormProps) {
             keyword: keyword.trim(),
             title: keyword.trim(),
             mode: "single",
+            website_id: websiteId,
           }),
         });
 
@@ -70,6 +73,7 @@ export function QuickArticleForm({ quotaStatus }: QuickArticleFormProps) {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             keywords,
+            website_id: websiteId,
           }),
         });
 
@@ -119,6 +123,19 @@ export function QuickArticleForm({ quotaStatus }: QuickArticleFormProps) {
             </Label>
           </div>
         </RadioGroup>
+      </div>
+
+      <div className="space-y-2">
+        <Label>發布網站（選填）</Label>
+        <WebsiteSelector
+          value={websiteId}
+          onChange={setWebsiteId}
+          allowNoWebsite={true}
+          placeholder="選擇發布網站"
+        />
+        <p className="text-sm text-muted-foreground">
+          可稍後在文章管理中指定發布網站
+        </p>
       </div>
 
       {mode === "single" ? (

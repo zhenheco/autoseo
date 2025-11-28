@@ -21,11 +21,12 @@ interface Website {
 
 interface WebsiteSelectorProps {
   value: string | null;
-  onChange: (websiteId: string) => void;
+  onChange: (websiteId: string | null) => void;
   onlyUserWebsites?: boolean;
   disabled?: boolean;
   placeholder?: string;
   articleWebsiteId?: string | null;
+  allowNoWebsite?: boolean;
 }
 
 export function WebsiteSelector({
@@ -35,6 +36,7 @@ export function WebsiteSelector({
   disabled = false,
   placeholder = "選擇網站",
   articleWebsiteId = null,
+  allowNoWebsite = false,
 }: WebsiteSelectorProps) {
   const [websites, setWebsites] = useState<Website[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,7 +90,8 @@ export function WebsiteSelector({
           !value &&
           !hasSetDefaultRef.current &&
           result.websites.length > 0 &&
-          result.companyId
+          result.companyId &&
+          !allowNoWebsite
         ) {
           const defaultWebsite = getDefaultWebsite(
             result.websites,
@@ -113,12 +116,19 @@ export function WebsiteSelector({
     return () => {
       mounted = false;
     };
-  }, [articleWebsiteId, getDefaultWebsite, onChange, value]);
+  }, [articleWebsiteId, getDefaultWebsite, onChange, value, allowNoWebsite]);
 
   const handleChange = (websiteId: string) => {
-    onChange(websiteId);
-    if (companyId) {
-      localStorage.setItem(`last-selected-website-${companyId}`, websiteId);
+    if (websiteId === "__none__") {
+      onChange(null);
+      if (companyId) {
+        localStorage.removeItem(`last-selected-website-${companyId}`);
+      }
+    } else {
+      onChange(websiteId);
+      if (companyId) {
+        localStorage.setItem(`last-selected-website-${companyId}`, websiteId);
+      }
     }
   };
 
@@ -132,7 +142,7 @@ export function WebsiteSelector({
     );
   }
 
-  if (websites.length === 0) {
+  if (websites.length === 0 && !allowNoWebsite) {
     return (
       <Select disabled>
         <SelectTrigger>
@@ -143,25 +153,33 @@ export function WebsiteSelector({
   }
 
   const selectedWebsite = websites.find((w) => w.id === value);
+  const selectValue = value === null ? "__none__" : value || "";
 
   return (
     <>
       <Select
-        value={value || ""}
+        value={selectValue}
         onValueChange={handleChange}
         disabled={disabled}
       >
         <SelectTrigger>
           <SelectValue placeholder={placeholder}>
-            {selectedWebsite && (
+            {value === null && allowNoWebsite ? (
+              <span className="text-muted-foreground">不指定網站</span>
+            ) : selectedWebsite ? (
               <div className="flex items-center gap-2">
                 <Globe className="h-4 w-4 text-muted-foreground" />
                 <span>{selectedWebsite.website_name}</span>
               </div>
-            )}
+            ) : null}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
+          {allowNoWebsite && (
+            <SelectItem value="__none__">
+              <span className="text-muted-foreground">不指定網站</span>
+            </SelectItem>
+          )}
           {websites.map((website) => {
             const isActive = website.is_active !== false;
             return (

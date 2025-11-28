@@ -166,10 +166,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 優先使用傳入的 website_id，否則查詢第一個可用網站
+    // 處理 website_id：
+    // - 如果 body 中包含 website_id 欄位（即使是 null），則使用該值
+    // - 如果 body 中沒有 website_id 欄位，則自動查詢第一個可用網站
+    const hasWebsiteIdField = "website_id" in body;
     let websiteId: string | null = website_id || null;
 
-    if (!websiteId) {
+    if (!hasWebsiteIdField && !websiteId) {
       const websiteQuery = await supabase
         .from("website_configs")
         .select("id")
@@ -180,12 +183,14 @@ export async function POST(request: NextRequest) {
 
       if (websites && websites.length > 0) {
         websiteId = websites[0].id;
-        console.log("使用現有網站配置:", websiteId);
+        console.log("自動使用現有網站配置:", websiteId);
       } else {
         console.log("無網站配置 - 文章將稍後決定發佈目標");
       }
-    } else {
+    } else if (websiteId) {
       console.log("使用指定網站:", websiteId);
+    } else {
+      console.log("用戶選擇不指定網站");
     }
 
     const articleJobId = uuidv4();
