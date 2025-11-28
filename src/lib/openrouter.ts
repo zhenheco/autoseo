@@ -27,13 +27,13 @@ export async function fetchOpenRouterModels(): Promise<OpenRouterModel[]> {
   const apiKey = process.env.OPENROUTER_API_KEY;
 
   if (!apiKey) {
-    throw new Error('OPENROUTER_API_KEY is not set');
+    throw new Error("OPENROUTER_API_KEY is not set");
   }
 
-  const response = await fetch('https://openrouter.ai/api/v1/models', {
+  const response = await fetch("https://openrouter.ai/api/v1/models", {
     headers: {
       Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
+      "Content-Type": "application/json",
     },
   });
 
@@ -46,9 +46,13 @@ export async function fetchOpenRouterModels(): Promise<OpenRouterModel[]> {
 }
 
 export function normalizeOpenRouterModel(model: OpenRouterModel) {
-  const modality = model.architecture?.modality || 'text';
-  const modelType = modality === 'text->image' ? 'image' :
-                   modality.includes('multimodal') ? 'multimodal' : 'text';
+  const modality = model.architecture?.modality || "text";
+  const modelType =
+    modality === "text->image"
+      ? "image"
+      : modality.includes("multimodal")
+        ? "multimodal"
+        : "text";
 
   return {
     model_id: model.id,
@@ -74,7 +78,7 @@ export async function callOpenRouter(params: {
   const apiKey = process.env.OPENROUTER_API_KEY;
 
   if (!apiKey) {
-    throw new Error('OPENROUTER_API_KEY is not set');
+    throw new Error("OPENROUTER_API_KEY is not set");
   }
 
   // 構建請求參數，圖片模型不支援 temperature
@@ -87,25 +91,30 @@ export async function callOpenRouter(params: {
 
   // 只有非圖片模型才加入 temperature
   const modelName = params.model.toLowerCase();
-  const isImageModel = modelName.includes('image') ||
-                       modelName.includes('dalle') ||
-                       modelName.includes('flux') ||
-                       modelName.includes('stable-diffusion');
+  const isImageModel =
+    modelName.includes("image") ||
+    modelName.includes("dalle") ||
+    modelName.includes("flux") ||
+    modelName.includes("stable-diffusion");
 
   if (!isImageModel) {
     requestBody.temperature = params.temperature ?? 0.7;
   }
 
-  const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      Authorization: `Bearer ${apiKey}`,
-      'Content-Type': 'application/json',
-      'HTTP-Referer': process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3168',
-      'X-Title': 'Auto Pilot SEO',
+  const response = await fetch(
+    "https://openrouter.ai/api/v1/chat/completions",
+    {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+        "Content-Type": "application/json",
+        "HTTP-Referer":
+          process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3168",
+        "X-Title": "1waySEO",
+      },
+      body: JSON.stringify(requestBody),
     },
-    body: JSON.stringify(requestBody),
-  });
+  );
 
   if (!response.ok) {
     const error = await response.json();

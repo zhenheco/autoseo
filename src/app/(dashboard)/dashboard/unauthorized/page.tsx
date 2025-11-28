@@ -80,7 +80,7 @@ export default async function UnauthorizedPage({
                   </Link>
                 </Button>
                 <Button asChild variant="outline" size="lg">
-                  <Link href="/pricing">查看所有方案</Link>
+                  <Link href="/#pricing">查看所有方案</Link>
                 </Button>
               </div>
             </div>

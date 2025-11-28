@@ -24,7 +24,7 @@ export default async function LoginPage({
             </div>
           </div>
           <h1 className="text-3xl font-bold tracking-tight mb-2 text-foreground">
-            歡迎使用 Auto Pilot SEO
+            歡迎使用 1waySEO
           </h1>
           <p className="text-base text-muted-foreground">
             使用 Google 帳號快速開始
