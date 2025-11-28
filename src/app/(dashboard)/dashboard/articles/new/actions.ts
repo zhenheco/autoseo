@@ -11,6 +11,7 @@ export async function createArticle(formData: FormData) {
   const language = formData.get("language") as string;
   const competitorsJson = formData.get("competitors") as string;
   const title = formData.get("title") as string | null;
+  const websiteId = formData.get("website_id") as string | null;
 
   if (!industry || industry.trim().length === 0) {
     redirect(
@@ -51,6 +52,7 @@ export async function createArticle(formData: FormData) {
           language: language.trim(),
           competitors: competitors.filter((c) => c.trim() !== ""),
           ...(title && { title: title.trim() }),
+          ...(websiteId && { website_id: websiteId }),
         }),
       },
     );
