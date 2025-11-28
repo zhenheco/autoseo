@@ -1,34 +1,49 @@
-import { BaseAgent } from './base-agent';
-import type { ImageInput, ImageOutput, GeneratedImage } from '@/types/agents';
-import { SupabaseStorageClient, getSupabaseStorageConfig } from '@/lib/storage/supabase-storage-client';
-import { processBase64Image, formatFileSize, calculateCompressionRatio } from '@/lib/image-processor';
+import { BaseAgent } from "./base-agent";
+import type { ImageInput, ImageOutput, GeneratedImage } from "@/types/agents";
+import {
+  SupabaseStorageClient,
+  getSupabaseStorageConfig,
+} from "@/lib/storage/supabase-storage-client";
+import {
+  processBase64Image,
+  formatFileSize,
+  calculateCompressionRatio,
+} from "@/lib/image-processor";
 
 const IMAGE_MODELS = {
-  'dall-e-3': {
-    provider: 'openai' as const,
-    pricing: { '1024x1024': 0.04, '1024x1792': 0.08, '1792x1024': 0.08 },
+  "gemini-imagen": {
+    provider: "google" as const,
+    pricing: { "1024x1024": 0.02 },
   },
-  'dall-e-2': {
-    provider: 'openai' as const,
-    pricing: { '256x256': 0.016, '512x512': 0.018, '1024x1024': 0.02 },
+  "gemini-imagen-flash": {
+    provider: "google" as const,
+    pricing: { "1024x1024": 0.01 },
   },
-  'nano-banana': {
-    provider: 'nano' as const,
-    pricing: { '1024x1024': 0.01 },
+  "dall-e-3": {
+    provider: "openai" as const,
+    pricing: { "1024x1024": 0.04, "1024x1792": 0.08, "1792x1024": 0.08 },
   },
-  'chatgpt-image-mini': {
-    provider: 'openai' as const,
-    pricing: { '1024x1024': 0.015 },
+  "dall-e-2": {
+    provider: "openai" as const,
+    pricing: { "256x256": 0.016, "512x512": 0.018, "1024x1024": 0.02 },
   },
-  'gpt-image-1-mini': {
-    provider: 'openai' as const,
-    pricing: { '1024x1024': 0.015 },
+  "nano-banana": {
+    provider: "nano" as const,
+    pricing: { "1024x1024": 0.01 },
+  },
+  "chatgpt-image-mini": {
+    provider: "openai" as const,
+    pricing: { "1024x1024": 0.015 },
+  },
+  "gpt-image-1-mini": {
+    provider: "openai" as const,
+    pricing: { "1024x1024": 0.015 },
   },
 };
 
 export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
   get agentName(): string {
-    return 'ImageAgent';
+    return "ImageAgent";
   }
 
   /**
@@ -45,13 +60,13 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
   }
 
   protected async process(input: ImageInput): Promise<ImageOutput> {
-    if (input.model === 'none') {
+    if (input.model === "none") {
       console.warn('[ImageAgent] Image generation skipped (model is "none")');
       return {
         featuredImage: null as any,
         contentImages: [],
         executionInfo: {
-          model: 'none',
+          model: "none",
           totalImages: 0,
           executionTime: 0,
           totalCost: 0,
@@ -66,10 +81,13 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
     try {
       featuredImage = await this.generateFeaturedImageWithRetry(input, 3);
       successfulImages.push(featuredImage);
-      console.log('[ImageAgent] ✅ Featured image generated successfully');
+      console.log("[ImageAgent] ✅ Featured image generated successfully");
     } catch (error) {
       const err = error as Error;
-      console.error('[ImageAgent] ❌ Featured image generation failed after retries:', err.message);
+      console.error(
+        "[ImageAgent] ❌ Featured image generation failed after retries:",
+        err.message,
+      );
       failedImages.push(0);
     }
 
@@ -78,37 +96,50 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
     const calculatedCount = ImageAgent.calculateImageCount(input.outline);
     const sectionsNeedingImages = Math.min(
       calculatedCount - 1, // 扣除特色圖片
-      input.outline.mainSections.length
+      input.outline.mainSections.length,
     );
 
-    console.log(`[ImageAgent] 自動計算圖片數量: ${calculatedCount} (1 特色圖片 + ${sectionsNeedingImages} H2 圖片)`);
+    console.log(
+      `[ImageAgent] 自動計算圖片數量: ${calculatedCount} (1 特色圖片 + ${sectionsNeedingImages} H2 圖片)`,
+    );
 
     for (let i = 0; i < sectionsNeedingImages; i++) {
       const section = input.outline.mainSections[i];
       try {
-        const image = await this.generateContentImageWithRetry(input, section, i, 3);
+        const image = await this.generateContentImageWithRetry(
+          input,
+          section,
+          i,
+          3,
+        );
         contentImages.push(image);
         successfulImages.push(image);
-        console.log(`[ImageAgent] ✅ Content image ${i + 1}/${sectionsNeedingImages} generated successfully`);
+        console.log(
+          `[ImageAgent] ✅ Content image ${i + 1}/${sectionsNeedingImages} generated successfully`,
+        );
       } catch (error) {
         const err = error as Error;
-        console.warn(`[ImageAgent] ⚠️ Content image ${i + 1} failed after retries: ${err.message}`);
+        console.warn(
+          `[ImageAgent] ⚠️ Content image ${i + 1} failed after retries: ${err.message}`,
+        );
         failedImages.push(i + 1);
       }
     }
 
     if (failedImages.length > 0) {
-      console.warn(`[ImageAgent] ⚠️ Failed images (positions): ${failedImages.join(', ')}`);
+      console.warn(
+        `[ImageAgent] ⚠️ Failed images (positions): ${failedImages.join(", ")}`,
+      );
     }
 
     const totalCost = this.calculateTotalCost(
       successfulImages,
       input.model,
-      input.size
+      input.size,
     );
 
     if (!featuredImage) {
-      throw new Error('Featured image generation failed completely');
+      throw new Error("Featured image generation failed completely");
     }
 
     return {
@@ -123,46 +154,24 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
     };
   }
 
-  private async generateFeaturedImageWithRetry(input: ImageInput, maxRetries: number): Promise<GeneratedImage> {
-    let lastError: Error | null = null;
-
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-      try {
-        console.log(`[ImageAgent] 🎨 Generating featured image (attempt ${attempt}/${maxRetries})...`);
-        const image = await this.generateFeaturedImage(input);
-        return image;
-      } catch (error) {
-        lastError = error as Error;
-        console.warn(`[ImageAgent] ⚠️ Featured image attempt ${attempt} failed: ${lastError.message}`);
-
-        if (attempt < maxRetries) {
-          const delays = [5000, 10000, 20000];
-          const delay = delays[attempt - 1] || 20000;
-          console.log(`[ImageAgent] ⏳ Retrying in ${delay}ms...`);
-          await this.sleep(delay);
-        }
-      }
-    }
-
-    throw new Error(`Featured image generation failed after ${maxRetries} attempts: ${lastError?.message}`);
-  }
-
-  private async generateContentImageWithRetry(
+  private async generateFeaturedImageWithRetry(
     input: ImageInput,
-    section: ImageInput['outline']['mainSections'][0],
-    index: number,
-    maxRetries: number
+    maxRetries: number,
   ): Promise<GeneratedImage> {
     let lastError: Error | null = null;
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.log(`[ImageAgent] 🎨 Generating content image ${index + 1} (attempt ${attempt}/${maxRetries})...`);
-        const image = await this.generateContentImage(input, section, index);
+        console.log(
+          `[ImageAgent] 🎨 Generating featured image (attempt ${attempt}/${maxRetries})...`,
+        );
+        const image = await this.generateFeaturedImage(input);
         return image;
       } catch (error) {
         lastError = error as Error;
-        console.warn(`[ImageAgent] ⚠️ Content image ${index + 1} attempt ${attempt} failed: ${lastError.message}`);
+        console.warn(
+          `[ImageAgent] ⚠️ Featured image attempt ${attempt} failed: ${lastError.message}`,
+        );
 
         if (attempt < maxRetries) {
           const delays = [5000, 10000, 20000];
@@ -173,14 +182,53 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
       }
     }
 
-    throw new Error(`Content image ${index + 1} generation failed after ${maxRetries} attempts: ${lastError?.message}`);
+    throw new Error(
+      `Featured image generation failed after ${maxRetries} attempts: ${lastError?.message}`,
+    );
+  }
+
+  private async generateContentImageWithRetry(
+    input: ImageInput,
+    section: ImageInput["outline"]["mainSections"][0],
+    index: number,
+    maxRetries: number,
+  ): Promise<GeneratedImage> {
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(
+          `[ImageAgent] 🎨 Generating content image ${index + 1} (attempt ${attempt}/${maxRetries})...`,
+        );
+        const image = await this.generateContentImage(input, section, index);
+        return image;
+      } catch (error) {
+        lastError = error as Error;
+        console.warn(
+          `[ImageAgent] ⚠️ Content image ${index + 1} attempt ${attempt} failed: ${lastError.message}`,
+        );
+
+        if (attempt < maxRetries) {
+          const delays = [5000, 10000, 20000];
+          const delay = delays[attempt - 1] || 20000;
+          console.log(`[ImageAgent] ⏳ Retrying in ${delay}ms...`);
+          await this.sleep(delay);
+        }
+      }
+    }
+
+    throw new Error(
+      `Content image ${index + 1} generation failed after ${maxRetries} attempts: ${lastError?.message}`,
+    );
   }
 
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
-  private async generateFeaturedImage(input: ImageInput): Promise<GeneratedImage> {
+  private async generateFeaturedImage(
+    input: ImageInput,
+  ): Promise<GeneratedImage> {
     const prompt = this.buildFeaturedImagePrompt(input);
 
     const result = await this.generateImage(prompt, {
@@ -191,46 +239,57 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
 
     let finalUrl = result.url;
 
-    console.log('[ImageAgent] 📦 Processing and compressing featured image...');
+    console.log("[ImageAgent] 📦 Processing and compressing featured image...");
 
     const processed = await processBase64Image(result.url, {
-      format: 'jpeg',
+      format: "jpeg",
       quality: 85,
       maxWidth: 1920,
       maxHeight: 1920,
     });
 
-    const originalSize = Buffer.from(result.url.split(',')[1], 'base64').length;
-    const compressionRatio = calculateCompressionRatio(originalSize, processed.size);
+    const originalSize = Buffer.from(result.url.split(",")[1], "base64").length;
+    const compressionRatio = calculateCompressionRatio(
+      originalSize,
+      processed.size,
+    );
 
-    console.log(`[ImageAgent] ✅ Compressed: ${formatFileSize(originalSize)} → ${formatFileSize(processed.size)} (${compressionRatio}% reduction)`);
+    console.log(
+      `[ImageAgent] ✅ Compressed: ${formatFileSize(originalSize)} → ${formatFileSize(processed.size)} (${compressionRatio}% reduction)`,
+    );
 
     const timestamp = Date.now();
     const filename = `article-hero-${timestamp}.jpg`;
-    const base64Data = processed.buffer.toString('base64');
+    const base64Data = processed.buffer.toString("base64");
 
     const supabaseConfig = getSupabaseStorageConfig();
     if (supabaseConfig) {
       try {
-        console.log('[ImageAgent] 🔄 上傳到 Supabase Storage...');
+        console.log("[ImageAgent] 🔄 上傳到 Supabase Storage...");
         const supabaseClient = new SupabaseStorageClient(supabaseConfig);
         const uploaded = await supabaseClient.uploadImage(
           base64Data,
           filename,
-          'image/jpeg'
+          "image/jpeg",
         );
         finalUrl = uploaded.url;
-        console.log(`[ImageAgent] ☁️ Supabase Storage 上傳成功: ${uploaded.path}`);
+        console.log(
+          `[ImageAgent] ☁️ Supabase Storage 上傳成功: ${uploaded.path}`,
+        );
       } catch (error) {
         const err = error as Error;
-        console.warn('[ImageAgent] ⚠️ Supabase Storage 上傳失敗:', err.message);
-        console.log('[ImageAgent] ℹ️ 儲存失敗，使用 OpenAI 臨時 URL（1 小時有效）');
+        console.warn("[ImageAgent] ⚠️ Supabase Storage 上傳失敗:", err.message);
+        console.log(
+          "[ImageAgent] ℹ️ 儲存失敗，使用 OpenAI 臨時 URL（1 小時有效）",
+        );
       }
     } else {
-      console.log('[ImageAgent] ℹ️ Supabase Storage 未配置，使用 OpenAI 臨時 URL（1 小時有效）');
+      console.log(
+        "[ImageAgent] ℹ️ Supabase Storage 未配置，使用 OpenAI 臨時 URL（1 小時有效）",
+      );
     }
 
-    const [width, height] = input.size.split('x').map(Number);
+    const [width, height] = input.size.split("x").map(Number);
 
     return {
       url: finalUrl,
@@ -244,8 +303,8 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
 
   private async generateContentImage(
     input: ImageInput,
-    section: ImageInput['outline']['mainSections'][0],
-    index: number
+    section: ImageInput["outline"]["mainSections"][0],
+    index: number,
   ): Promise<GeneratedImage> {
     const prompt = this.buildContentImagePrompt(input, section);
 
@@ -257,46 +316,64 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
 
     let finalUrl = result.url;
 
-    console.log(`[ImageAgent] 📦 Processing and compressing content image ${index + 1}...`);
+    console.log(
+      `[ImageAgent] 📦 Processing and compressing content image ${index + 1}...`,
+    );
 
     const processed = await processBase64Image(result.url, {
-      format: 'jpeg',
+      format: "jpeg",
       quality: 85,
       maxWidth: 1920,
       maxHeight: 1920,
     });
 
-    const originalSize = Buffer.from(result.url.split(',')[1], 'base64').length;
-    const compressionRatio = calculateCompressionRatio(originalSize, processed.size);
+    const originalSize = Buffer.from(result.url.split(",")[1], "base64").length;
+    const compressionRatio = calculateCompressionRatio(
+      originalSize,
+      processed.size,
+    );
 
-    console.log(`[ImageAgent] ✅ Compressed: ${formatFileSize(originalSize)} → ${formatFileSize(processed.size)} (${compressionRatio}% reduction)`);
+    console.log(
+      `[ImageAgent] ✅ Compressed: ${formatFileSize(originalSize)} → ${formatFileSize(processed.size)} (${compressionRatio}% reduction)`,
+    );
 
     const timestamp = Date.now();
     const filename = `article-content-${index + 1}-${timestamp}.jpg`;
-    const base64Data = processed.buffer.toString('base64');
+    const base64Data = processed.buffer.toString("base64");
 
     const supabaseConfig = getSupabaseStorageConfig();
     if (supabaseConfig) {
       try {
-        console.log(`[ImageAgent] 🔄 上傳 content image ${index + 1} 到 Supabase Storage...`);
+        console.log(
+          `[ImageAgent] 🔄 上傳 content image ${index + 1} 到 Supabase Storage...`,
+        );
         const supabaseClient = new SupabaseStorageClient(supabaseConfig);
         const uploaded = await supabaseClient.uploadImage(
           base64Data,
           filename,
-          'image/jpeg'
+          "image/jpeg",
         );
         finalUrl = uploaded.url;
-        console.log(`[ImageAgent] ☁️ Supabase Storage 上傳成功 (image ${index + 1}): ${uploaded.path}`);
+        console.log(
+          `[ImageAgent] ☁️ Supabase Storage 上傳成功 (image ${index + 1}): ${uploaded.path}`,
+        );
       } catch (error) {
         const err = error as Error;
-        console.warn(`[ImageAgent] ⚠️ Supabase Storage 上傳失敗 (image ${index + 1}):`, err.message);
-        console.log(`[ImageAgent] ℹ️ Content image ${index + 1}: 儲存失敗，使用 OpenAI 臨時 URL（1 小時有效）`);
+        console.warn(
+          `[ImageAgent] ⚠️ Supabase Storage 上傳失敗 (image ${index + 1}):`,
+          err.message,
+        );
+        console.log(
+          `[ImageAgent] ℹ️ Content image ${index + 1}: 儲存失敗，使用 OpenAI 臨時 URL（1 小時有效）`,
+        );
       }
     } else {
-      console.log(`[ImageAgent] ℹ️ Content image ${index + 1}: Supabase Storage 未配置，使用 OpenAI 臨時 URL（1 小時有效）`);
+      console.log(
+        `[ImageAgent] ℹ️ Content image ${index + 1}: Supabase Storage 未配置，使用 OpenAI 臨時 URL（1 小時有效）`,
+      );
     }
 
-    const [width, height] = input.size.split('x').map(Number);
+    const [width, height] = input.size.split("x").map(Number);
 
     return {
       url: finalUrl,
@@ -312,9 +389,9 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
   private buildFeaturedImagePrompt(input: ImageInput): string {
     const styleGuide = input.brandStyle
       ? `
-Style: ${input.brandStyle.style || 'professional, modern'}
-Color scheme: ${input.brandStyle.colorScheme?.join(', ') || 'vibrant, eye-catching'}
-Mood: ${input.brandStyle.mood || 'engaging, informative'}
+Style: ${input.brandStyle.style || "professional, modern"}
+Color scheme: ${input.brandStyle.colorScheme?.join(", ") || "vibrant, eye-catching"}
+Mood: ${input.brandStyle.mood || "engaging, informative"}
 `
       : `
 Style: professional, modern, clean
@@ -337,12 +414,12 @@ Requirements:
 
   private buildContentImagePrompt(
     input: ImageInput,
-    section: ImageInput['outline']['mainSections'][0]
+    section: ImageInput["outline"]["mainSections"][0],
   ): string {
     const styleGuide = input.brandStyle
       ? `
-Style: ${input.brandStyle.style || 'professional, modern'}
-Color scheme: ${input.brandStyle.colorScheme?.join(', ') || 'clear, informative'}
+Style: ${input.brandStyle.style || "professional, modern"}
+Color scheme: ${input.brandStyle.colorScheme?.join(", ") || "clear, informative"}
 `
       : `
 Style: professional, modern, clean
@@ -354,7 +431,7 @@ Color scheme: clear, informative
 ${styleGuide}
 
 Key points to visualize:
-${section.keyPoints.join('\n')}
+${section.keyPoints.join("\n")}
 
 Requirements:
 - Clear and informative
@@ -367,7 +444,7 @@ Requirements:
   private calculateTotalCost(
     images: GeneratedImage[],
     model: string,
-    size: string
+    size: string,
   ): number {
     const modelConfig = IMAGE_MODELS[model as keyof typeof IMAGE_MODELS];
     if (!modelConfig) {
