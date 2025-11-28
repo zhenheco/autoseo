@@ -8,7 +8,9 @@ export const maxDuration = 10; // 10 秒足夠（實際 < 1 秒）
 
 export async function POST(request: NextRequest) {
   try {
-    const { keywords, items, options, website_id } = await request.json();
+    const body = await request.json();
+    const { keywords, items, options, website_id } = body;
+    const hasWebsiteIdField = "website_id" in body;
 
     const generationItems =
       items ||
@@ -120,10 +122,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // 優先使用傳入的 website_id
+    // 處理 website_id：
+    // - 如果 body 中包含 website_id 欄位（即使是 null），則使用該值
+    // - 如果 body 中沒有 website_id 欄位，則自動查詢或創建網站
     let websiteId: string | null = website_id || null;
 
-    if (!websiteId) {
+    if (hasWebsiteIdField) {
+      if (websiteId) {
+        console.log("[Batch] 使用指定網站:", websiteId);
+      } else {
+        console.log("[Batch] 用戶選擇不指定網站");
+      }
+    } else {
       const websiteQuery = await adminClient
         .from("website_configs")
         .select("id")
@@ -206,8 +216,7 @@ export async function POST(request: NextRequest) {
       }
 
       websiteId = websites[0].id;
-    } else {
-      console.log("[Batch] 使用指定網站:", websiteId);
+      console.log("[Batch] 自動使用現有網站配置:", websiteId);
     }
 
     const newJobIds: string[] = [];
