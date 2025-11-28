@@ -36,6 +36,7 @@ export function ArticleFormTabs({
         <WebsiteSelector
           value={selectedWebsiteId}
           onChange={setSelectedWebsiteId}
+          allowNoWebsite={true}
           placeholder="選擇要發布文章的網站（可稍後決定）"
         />
         <p className="text-sm text-muted-foreground">
