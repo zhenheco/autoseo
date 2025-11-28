@@ -86,21 +86,20 @@ export function WebsiteSelector({
         setWebsites(result.websites);
         setLoading(false);
 
-        if (
-          !value &&
-          !hasSetDefaultRef.current &&
-          result.websites.length > 0 &&
-          result.companyId &&
-          !allowNoWebsite
-        ) {
-          const defaultWebsite = getDefaultWebsite(
-            result.websites,
-            result.companyId,
-            articleWebsiteId,
-          );
-          if (defaultWebsite) {
+        if (!value && !hasSetDefaultRef.current) {
+          if (allowNoWebsite) {
             hasSetDefaultRef.current = true;
-            onChange(defaultWebsite.id);
+            onChange(null);
+          } else if (result.websites.length > 0 && result.companyId) {
+            const defaultWebsite = getDefaultWebsite(
+              result.websites,
+              result.companyId,
+              articleWebsiteId,
+            );
+            if (defaultWebsite) {
+              hasSetDefaultRef.current = true;
+              onChange(defaultWebsite.id);
+            }
           }
         }
       } catch (error) {
@@ -165,7 +164,7 @@ export function WebsiteSelector({
         <SelectTrigger>
           <SelectValue placeholder={placeholder}>
             {value === null && allowNoWebsite ? (
-              <span className="text-muted-foreground">不指定網站</span>
+              <span className="text-muted-foreground">單純寫文章</span>
             ) : selectedWebsite ? (
               <div className="flex items-center gap-2">
                 <Globe className="h-4 w-4 text-muted-foreground" />
@@ -177,7 +176,7 @@ export function WebsiteSelector({
         <SelectContent>
           {allowNoWebsite && (
             <SelectItem value="__none__">
-              <span className="text-muted-foreground">不指定網站</span>
+              <span className="text-muted-foreground">單純寫文章</span>
             </SelectItem>
           )}
           {websites.map((website) => {
