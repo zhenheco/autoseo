@@ -219,19 +219,12 @@ export async function POST(request: NextRequest) {
       const keyword = item.keyword || item.title;
       const title = item.title || item.keyword;
 
-      // 生成 base slug（不含時間戳，用於查詢）
-      const baseSlug = slugify(title, {
-        lower: true,
-        strict: true,
-        locale: "zh",
-      });
-
-      // 檢查是否已存在相同標題的 pending/processing 任務
+      // 檢查是否已存在相同關鍵字的 pending/processing 任務
       const { data: existingJobs } = await adminClient
         .from("article_jobs")
-        .select("id, status")
+        .select("id, status, keywords")
         .eq("company_id", billingId)
-        .ilike("slug", `${baseSlug}%`)
+        .contains("keywords", [keyword])
         .in("status", ["pending", "processing"])
         .order("created_at", { ascending: false })
         .limit(1);
@@ -248,8 +241,6 @@ export async function POST(request: NextRequest) {
 
       // 創建新任務
       const articleJobId = uuidv4();
-      const timestamp = Date.now();
-      const uniqueSlug = `${baseSlug}-${timestamp}`;
 
       const { error: jobError } = await adminClient
         .from("article_jobs")
@@ -261,7 +252,6 @@ export async function POST(request: NextRequest) {
           user_id: user.id,
           keywords: [keyword],
           status: "pending",
-          slug: uniqueSlug,
           metadata: {
             mode: "batch",
             title,
