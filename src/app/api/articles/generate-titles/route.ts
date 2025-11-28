@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
           research_model: "deepseek-reasoner",
           complex_processing_model: "deepseek-reasoner",
           simple_processing_model: "google/gemini-2.5-flash-lite",
-          image_model: "gpt-image-1-mini",
+          image_model: "gemini-imagen",
           research_temperature: 0.7,
           research_max_tokens: 4000,
           image_size: "1024x1024",
