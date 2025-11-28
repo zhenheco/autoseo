@@ -17,10 +17,11 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { createArticle } from "../actions";
+import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
 const INDUSTRIES = [
@@ -76,8 +77,10 @@ export function ArticleForm({ quotaStatus, websiteId }: ArticleFormProps) {
   const [titleMode, setTitleMode] = useState<"auto" | "preview">("auto");
   const [isLoadingTitles, setIsLoadingTitles] = useState(false);
   const [titleOptions, setTitleOptions] = useState<string[]>([]);
-  const [selectedTitle, setSelectedTitle] = useState("");
+  const [selectedTitles, setSelectedTitles] = useState<string[]>([]);
   const [showTitleDialog, setShowTitleDialog] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [generatedTitles, setGeneratedTitles] = useState<string[]>([]);
 
   useEffect(() => {
     const stored = localStorage.getItem("preferred-language");
@@ -138,7 +141,7 @@ export function ArticleForm({ quotaStatus, websiteId }: ArticleFormProps) {
       }
 
       setTitleOptions(data.titles || []);
-      setSelectedTitle(data.titles?.[0] || "");
+      setSelectedTitles(data.titles?.[0] ? [data.titles[0]] : []);
       setShowTitleDialog(true);
     } catch (error) {
       console.error("標題預覽失敗:", error);
@@ -150,36 +153,58 @@ export function ArticleForm({ quotaStatus, websiteId }: ArticleFormProps) {
     }
   };
 
+  const handleTitleToggle = (title: string) => {
+    setSelectedTitles((prev) =>
+      prev.includes(title) ? prev.filter((t) => t !== title) : [...prev, title],
+    );
+  };
+
   const handleConfirmTitle = async () => {
-    if (!selectedTitle) return;
+    if (selectedTitles.length === 0) return;
     setShowTitleDialog(false);
-    await submitArticle(selectedTitle);
+    setIsSubmitting(true);
+
+    try {
+      for (const title of selectedTitles) {
+        await submitArticleWithoutRedirect(title);
+      }
+      setGeneratedTitles([...selectedTitles]);
+      setShowSuccessDialog(true);
+    } catch (error) {
+      console.error("批量生成失敗:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const submitArticleWithoutRedirect = async (title?: string) => {
+    const response = await fetch("/api/articles/generate", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        industry: industry === "other" ? customIndustry : industry,
+        region: region === "other" ? customRegion : region,
+        language,
+        competitors: competitors.filter((c) => c.trim() !== ""),
+        ...(title && { title }),
+        ...(websiteId && { website_id: websiteId }),
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json();
+      throw new Error(error.message || "文章生成失敗");
+    }
+
+    return response.json();
   };
 
   const submitArticle = async (title?: string) => {
     setIsSubmitting(true);
     try {
-      const formData = new FormData();
-      formData.append(
-        "industry",
-        industry === "other" ? customIndustry : industry,
-      );
-      formData.append("region", region === "other" ? customRegion : region);
-      formData.append("language", language);
-      if (title) {
-        formData.append("title", title);
-      }
-      if (websiteId) {
-        formData.append("website_id", websiteId);
-      }
-
-      const validCompetitors = competitors.filter((c) => c.trim() !== "");
-      formData.append("competitors", JSON.stringify(validCompetitors));
-
-      await createArticle(formData);
-      router.push(
-        websiteId ? `/dashboard/websites/${websiteId}` : "/dashboard/websites",
-      );
+      await submitArticleWithoutRedirect(title);
+      setGeneratedTitles(title ? [title] : []);
+      setShowSuccessDialog(true);
     } catch (error) {
       console.error("提交失敗:", error);
     } finally {
@@ -351,7 +376,7 @@ export function ArticleForm({ quotaStatus, websiteId }: ArticleFormProps) {
           <DialogHeader>
             <DialogTitle>選擇文章標題</DialogTitle>
             <DialogDescription>
-              AI 根據您的產業和地區生成了以下標題，請選擇最適合的一個
+              AI 根據您的產業和地區生成了以下標題，可多選生成多篇文章
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-4">
@@ -359,15 +384,15 @@ export function ArticleForm({ quotaStatus, websiteId }: ArticleFormProps) {
               <div
                 key={index}
                 className={`p-3 rounded-lg border cursor-pointer transition-colors ${
-                  selectedTitle === title
+                  selectedTitles.includes(title)
                     ? "border-primary bg-primary/5"
                     : "border-border hover:border-primary/50"
                 }`}
-                onClick={() => setSelectedTitle(title)}
+                onClick={() => handleTitleToggle(title)}
               >
                 <div className="flex items-start gap-2">
                   <Checkbox
-                    checked={selectedTitle === title}
+                    checked={selectedTitles.includes(title)}
                     className="mt-0.5"
                   />
                   <span className="text-sm">{title}</span>
@@ -381,11 +406,71 @@ export function ArticleForm({ quotaStatus, websiteId }: ArticleFormProps) {
             </Button>
             <Button
               onClick={handleConfirmTitle}
-              disabled={!selectedTitle || isSubmitting}
+              disabled={selectedTitles.length === 0 || isSubmitting}
             >
-              {isSubmitting ? "生成中..." : "使用此標題生成文章"}
+              {isSubmitting
+                ? "生成中..."
+                : selectedTitles.length > 1
+                  ? `生成 ${selectedTitles.length} 篇文章`
+                  : "使用此標題生成文章"}
             </Button>
           </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
+              生成任務已建立
+            </DialogTitle>
+            <DialogDescription className="pt-2">
+              {generatedTitles.length > 1 ? (
+                <>
+                  已建立{" "}
+                  <span className="font-medium text-foreground">
+                    {generatedTitles.length}
+                  </span>{" "}
+                  篇文章生成任務
+                </>
+              ) : (
+                <>
+                  <span className="font-medium text-foreground">
+                    {generatedTitles[0]}
+                  </span>{" "}
+                  正在生成中
+                </>
+              )}
+              <br />
+              <span className="text-muted-foreground">
+                您可以關閉此視窗，在網站詳情頁查看進度
+              </span>
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setShowSuccessDialog(false);
+                setSelectedTitles([]);
+              }}
+            >
+              繼續生成其他文章
+            </Button>
+            <Button
+              onClick={() => {
+                setShowSuccessDialog(false);
+                router.push(
+                  websiteId
+                    ? `/dashboard/websites/${websiteId}`
+                    : "/dashboard/websites",
+                );
+              }}
+            >
+              查看文章
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </form>
