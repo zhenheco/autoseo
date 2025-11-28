@@ -39,9 +39,25 @@ export async function POST(request: NextRequest) {
       .eq("status", "active")
       .single();
 
-    let billingId = membership?.company_id;
+    let billingId: string | undefined = membership?.company_id;
 
-    // 如果沒有公司，檢查是否已有用戶擁有的公司或自動創建個人公司
+    // 驗證 company_id 是否真的存在於 companies 表
+    if (billingId) {
+      const { data: companyExists } = await supabase
+        .from("companies")
+        .select("id")
+        .eq("id", billingId)
+        .single();
+
+      if (!companyExists) {
+        console.log(
+          `[Batch] ⚠️ Company ${billingId} not found, will create new one`,
+        );
+        billingId = undefined;
+      }
+    }
+
+    // 如果沒有有效的公司，檢查是否已有用戶擁有的公司或自動創建個人公司
     if (!billingId) {
       const { data: existingCompany } = await supabase
         .from("companies")
@@ -77,16 +93,27 @@ export async function POST(request: NextRequest) {
           );
         }
 
-        // 將用戶加入公司成員
-        await supabase.from("company_members").insert({
-          company_id: newCompany.id,
-          user_id: user.id,
-          role: "owner",
-          status: "active",
-        });
-
         billingId = newCompany.id;
-        console.log(`[Batch] ✅ Created personal company for user: ${user.id}`);
+        console.log(`[Batch] ✅ Created personal company: ${billingId}`);
+      }
+
+      // 更新或創建 company_members 記錄
+      const { error: memberError } = await supabase
+        .from("company_members")
+        .upsert(
+          {
+            company_id: billingId,
+            user_id: user.id,
+            role: "owner",
+            status: "active",
+          },
+          {
+            onConflict: "company_id,user_id",
+          },
+        );
+
+      if (memberError) {
+        console.error("Failed to upsert company member:", memberError);
       }
     }
 
