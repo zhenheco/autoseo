@@ -7,7 +7,7 @@ export class QAAgent extends BaseAgent<QAInput, QAOutput> {
   }
 
   protected async process(input: QAInput): Promise<QAOutput> {
-    const { title, outline, brandVoice, count = 3 } = input;
+    const { title, outline, brandVoice, count = 5 } = input;
 
     // Language mapping
     const languageNames: Record<string, string> = {
@@ -97,12 +97,32 @@ export class QAAgent extends BaseAgent<QAInput, QAOutput> {
     }
 
     const markdown = this.formatFAQsAsMarkdown(faqs);
+    const schemaJson = this.generateFAQSchema(faqs);
 
     return {
       faqs,
       markdown,
+      schemaJson,
       executionInfo: this.getExecutionInfo(input.model),
     };
+  }
+
+  private generateFAQSchema(
+    faqs: Array<{ question: string; answer: string }>,
+  ): string {
+    const schema = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: faqs.map((faq) => ({
+        "@type": "Question",
+        name: faq.question,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: faq.answer,
+        },
+      })),
+    };
+    return JSON.stringify(schema, null, 2);
   }
 
   private formatFAQsAsMarkdown(
