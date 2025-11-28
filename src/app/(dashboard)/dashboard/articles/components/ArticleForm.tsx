@@ -82,6 +82,14 @@ export function ArticleForm({ quotaStatus, websiteId }: ArticleFormProps) {
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [generatedTitles, setGeneratedTitles] = useState<string[]>([]);
 
+  const [tokenBalance, setTokenBalance] = useState<number>(0);
+  const [articleCount, setArticleCount] = useState<number>(1);
+  const [isLoadingBalance, setIsLoadingBalance] = useState(true);
+
+  const TOKENS_PER_ARTICLE = 3000;
+  const maxArticles = Math.floor(tokenBalance / TOKENS_PER_ARTICLE);
+  const isInsufficientCredits = articleCount > maxArticles;
+
   useEffect(() => {
     const stored = localStorage.getItem("preferred-language");
     if (stored) {
@@ -97,6 +105,24 @@ export function ArticleForm({ quotaStatus, websiteId }: ArticleFormProps) {
     return () => {
       window.removeEventListener("languageChanged", handleLanguageChange);
     };
+  }, []);
+
+  useEffect(() => {
+    const fetchTokenBalance = async () => {
+      try {
+        const response = await fetch("/api/token-balance");
+        if (response.ok) {
+          const data = await response.json();
+          setTokenBalance(data.balance?.total || 0);
+        }
+      } catch (error) {
+        console.error("獲取餘額失敗:", error);
+      } finally {
+        setIsLoadingBalance(false);
+      }
+    };
+
+    fetchTokenBalance();
   }, []);
 
   const canAddCompetitors = quotaStatus?.canUseCompetitors ?? false;
@@ -212,13 +238,38 @@ export function ArticleForm({ quotaStatus, websiteId }: ArticleFormProps) {
     }
   };
 
+  const submitMultipleArticles = async (count: number) => {
+    setIsSubmitting(true);
+    try {
+      const generatedList: string[] = [];
+      for (let i = 0; i < count; i++) {
+        await submitArticleWithoutRedirect();
+        generatedList.push(`文章 ${i + 1}`);
+      }
+      setGeneratedTitles(generatedList);
+      setShowSuccessDialog(true);
+    } catch (error) {
+      console.error("批量生成失敗:", error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
     if (titleMode === "preview") {
       await handlePreviewTitles();
     } else {
-      await submitArticle();
+      if (isInsufficientCredits) {
+        alert(`Credits 不足！您目前只能生成 ${maxArticles} 篇文章`);
+        return;
+      }
+      if (articleCount > 1) {
+        await submitMultipleArticles(articleCount);
+      } else {
+        await submitArticle();
+      }
     }
   };
 
@@ -355,12 +406,46 @@ export function ArticleForm({ quotaStatus, websiteId }: ArticleFormProps) {
             </Label>
           </div>
         </RadioGroup>
+
+        {titleMode === "auto" && (
+          <div className="mt-4 pt-4 border-t space-y-2">
+            <Label htmlFor="articleCount">生成文章數量</Label>
+            <div className="flex items-center gap-3">
+              <Input
+                id="articleCount"
+                type="number"
+                min={1}
+                max={maxArticles > 0 ? maxArticles : 1}
+                value={articleCount}
+                onChange={(e) =>
+                  setArticleCount(Math.max(1, parseInt(e.target.value) || 1))
+                }
+                className="w-24"
+                disabled={isLoadingBalance}
+              />
+              <span className="text-sm text-muted-foreground">
+                {isLoadingBalance
+                  ? "載入中..."
+                  : `最多可生成 ${maxArticles} 篇（餘額 ${tokenBalance.toLocaleString()} credits）`}
+              </span>
+            </div>
+            {isInsufficientCredits && !isLoadingBalance && (
+              <p className="text-sm text-red-500">
+                ⚠️ Credits 不足！您目前只能生成 {maxArticles} 篇文章
+              </p>
+            )}
+          </div>
+        )}
       </div>
 
       <Button
         type="submit"
         className="w-full"
-        disabled={isSubmitting || isLoadingTitles}
+        disabled={
+          isSubmitting ||
+          isLoadingTitles ||
+          (titleMode === "auto" && isInsufficientCredits)
+        }
       >
         {isSubmitting
           ? "生成中..."
@@ -368,7 +453,9 @@ export function ArticleForm({ quotaStatus, websiteId }: ArticleFormProps) {
             ? "正在生成標題..."
             : titleMode === "preview"
               ? "生成標題選項"
-              : "開始生成文章"}
+              : articleCount > 1
+                ? `開始生成 ${articleCount} 篇文章`
+                : "開始生成文章"}
       </Button>
 
       <Dialog open={showTitleDialog} onOpenChange={setShowTitleDialog}>
