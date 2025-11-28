@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/dialog";
 import { createArticle } from "../actions";
 import { useRouter } from "next/navigation";
+import { WebsiteSelector } from "@/components/articles/WebsiteSelector";
 
 const INDUSTRIES = [
   { value: "tech", label: "科技" },
@@ -85,6 +86,7 @@ export function ArticleForm({ quotaStatus }: ArticleFormProps) {
   const [titleOptions, setTitleOptions] = useState<string[]>([]);
   const [selectedTitle, setSelectedTitle] = useState("");
   const [showTitleDialog, setShowTitleDialog] = useState(false);
+  const [websiteId, setWebsiteId] = useState<string | null>(null);
 
   const canAddCompetitors = quotaStatus?.canUseCompetitors ?? false;
   const hasRemainingQuota = quotaStatus
@@ -162,6 +164,10 @@ export function ArticleForm({ quotaStatus }: ArticleFormProps) {
 
       const validCompetitors = competitors.filter((c) => c.trim() !== "");
       formData.append("competitors", JSON.stringify(validCompetitors));
+
+      if (websiteId) {
+        formData.append("website_id", websiteId);
+      }
 
       await createArticle(formData);
       router.push("/dashboard/articles");
@@ -250,6 +256,19 @@ export function ArticleForm({ quotaStatus }: ArticleFormProps) {
             ))}
           </SelectContent>
         </Select>
+      </div>
+
+      <div className="space-y-2">
+        <Label>發布網站（選填）</Label>
+        <WebsiteSelector
+          value={websiteId}
+          onChange={setWebsiteId}
+          allowNoWebsite={true}
+          placeholder="選擇發布網站"
+        />
+        <p className="text-sm text-muted-foreground">
+          不選擇網站也可生成，稍後在「文章管理」頁面決定發布目標
+        </p>
       </div>
 
       {canAddCompetitors && (
