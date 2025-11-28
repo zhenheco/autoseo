@@ -249,11 +249,7 @@ export function QuickArticleForm({
             <Button
               onClick={() => {
                 setShowSuccessDialog(false);
-                router.push(
-                  websiteId
-                    ? `/dashboard/websites/${websiteId}`
-                    : "/dashboard/websites",
-                );
+                router.push("/dashboard/articles/manage");
               }}
             >
               查看文章
