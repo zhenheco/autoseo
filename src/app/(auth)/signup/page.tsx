@@ -1,5 +1,4 @@
 import Link from "next/link";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Sparkles } from "lucide-react";
 import { SignupForm } from "./signup-form";
 
@@ -12,10 +11,6 @@ export default async function SignupPage({
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden p-4">
-      <div className="absolute top-6 right-6 z-50">
-        <ThemeToggle />
-      </div>
-
       <div className="w-full max-w-md relative z-10">
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center gap-3 mb-6">

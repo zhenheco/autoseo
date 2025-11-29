@@ -47,7 +47,7 @@ export function QuickArticleForm({
     ? quotaStatus.remaining > 0 || quotaStatus.quota === -1
     : true;
 
-  const isFormDisabled = !hasRemainingQuota || !websiteId;
+  const isFormDisabled = !hasRemainingQuota;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
