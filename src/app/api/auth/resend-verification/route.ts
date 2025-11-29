@@ -18,7 +18,7 @@ export async function POST(request: NextRequest) {
       type: "signup",
       email,
       options: {
-        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "https://seo.zhenhe-dm.com"}/auth/confirm`,
+        emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "https://1wayseo.com"}/auth/confirm`,
       },
     });
 

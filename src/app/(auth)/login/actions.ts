@@ -10,7 +10,7 @@ export async function signInWithGoogle() {
   const origin =
     headersList.get("origin") ||
     process.env.NEXT_PUBLIC_APP_URL ||
-    "https://seo.zhenhe-dm.com";
+    "https://1wayseo.com";
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",

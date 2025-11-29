@@ -88,11 +88,11 @@ export const SCHEMA_ORG_CONFIG = {
  * 應用程式 URL 配置
  */
 export const APP_CONFIG = {
-  url: process.env.NEXT_PUBLIC_APP_URL || "https://seo.zhenhe-dm.com",
+  url: process.env.NEXT_PUBLIC_APP_URL || "https://1wayseo.com",
   siteUrl:
     process.env.NEXT_PUBLIC_SITE_URL ||
     process.env.NEXT_PUBLIC_APP_URL ||
-    "https://seo.zhenhe-dm.com",
+    "https://1wayseo.com",
 } as const;
 
 /**
