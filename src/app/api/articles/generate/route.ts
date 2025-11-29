@@ -150,29 +150,6 @@ export async function POST(request: NextRequest) {
     const billingService = new TokenBillingService(supabase);
     const articleJobId = uuidv4();
 
-    const reservationResult = await billingService.checkAndReserveTokens(
-      billingId,
-      articleJobId,
-      1,
-    );
-
-    if (!reservationResult.success) {
-      console.warn(
-        `餘額不足: 可用 ${reservationResult.availableBalance} tokens（已預扣 ${reservationResult.totalReserved}），需要 ${reservationResult.requiredAmount} tokens`,
-      );
-      return NextResponse.json(
-        {
-          error: "Insufficient balance",
-          message: `餘額不足：可用 ${reservationResult.availableBalance.toLocaleString()} tokens（已有 ${reservationResult.totalReserved.toLocaleString()} 進行中），預估需要 ${reservationResult.requiredAmount.toLocaleString()} tokens`,
-          availableBalance: reservationResult.availableBalance,
-          reservedBalance: reservationResult.totalReserved,
-          estimatedCost: reservationResult.requiredAmount,
-          upgradeUrl: "/dashboard/billing/upgrade",
-        },
-        { status: 402 },
-      );
-    }
-
     // 處理 website_id：
     // - 如果 body 中包含 website_id 欄位（即使是 null），則使用該值
     // - 如果 body 中沒有 website_id 欄位，則自動查詢第一個可用網站
@@ -200,6 +177,59 @@ export async function POST(request: NextRequest) {
       console.log("用戶選擇不指定網站");
     }
 
+    // 先創建 article_job（因為 token_reservations 有 FK 約束引用 article_jobs）
+    const { error: jobError } = await supabase.from("article_jobs").insert({
+      id: articleJobId,
+      job_id: articleJobId,
+      company_id: billingId,
+      website_id: websiteId,
+      user_id: user.id,
+      keywords: industry ? [industry] : [articleTitle],
+      status: "pending",
+      metadata: {
+        mode: mode || "single",
+        title: articleTitle,
+        industry: industry || null,
+        region: region || null,
+        language: language || null,
+        competitors: competitors || [],
+        competitorAnalysis: null,
+      },
+    });
+
+    if (jobError) {
+      console.error("Failed to create article job:", jobError);
+      return NextResponse.json(
+        { error: "Failed to create article job" },
+        { status: 500 },
+      );
+    }
+
+    // 預扣 tokens（現在 article_job 已存在，FK 約束不會失敗）
+    const reservationResult = await billingService.checkAndReserveTokens(
+      billingId,
+      articleJobId,
+      1,
+    );
+
+    if (!reservationResult.success) {
+      console.warn(
+        `餘額不足: 可用 ${reservationResult.availableBalance} tokens（已預扣 ${reservationResult.totalReserved}），需要 ${reservationResult.requiredAmount} tokens`,
+      );
+      await supabase.from("article_jobs").delete().eq("id", articleJobId);
+      return NextResponse.json(
+        {
+          error: "Insufficient balance",
+          message: `餘額不足：可用 ${reservationResult.availableBalance.toLocaleString()} tokens（已有 ${reservationResult.totalReserved.toLocaleString()} 進行中），預估需要 ${reservationResult.requiredAmount.toLocaleString()} tokens`,
+          availableBalance: reservationResult.availableBalance,
+          reservedBalance: reservationResult.totalReserved,
+          estimatedCost: reservationResult.requiredAmount,
+          upgradeUrl: "/dashboard/billing/upgrade",
+        },
+        { status: 402 },
+      );
+    }
+
     // 建立 SearchRouter 用於競爭對手分析配額檢查
     const searchRouter = createSearchRouter({
       companyId: billingId,
@@ -214,6 +244,7 @@ export async function POST(request: NextRequest) {
 
       if (!competitorAnalysisResult.allowed) {
         await billingService.releaseReservation(articleJobId);
+        await supabase.from("article_jobs").delete().eq("id", articleJobId);
         return NextResponse.json(
           {
             error: "Quota exceeded",
@@ -222,36 +253,22 @@ export async function POST(request: NextRequest) {
           { status: 403 },
         );
       }
-    }
 
-    const { error: jobError } = await supabase.from("article_jobs").insert({
-      id: articleJobId,
-      job_id: articleJobId,
-      company_id: billingId,
-      website_id: websiteId,
-      user_id: user.id,
-      keywords: industry ? [industry] : [articleTitle],
-      status: "pending",
-      metadata: {
-        mode: mode || "single",
-        title: articleTitle,
-        // 新版參數
-        industry: industry || null,
-        region: region || null,
-        language: language || null,
-        competitors: competitors || [],
-        // 競爭對手分析結果（如果有）
-        competitorAnalysis: competitorAnalysisResult?.results || null,
-      },
-    });
-
-    if (jobError) {
-      console.error("Failed to create article job:", jobError);
-      await billingService.releaseReservation(articleJobId);
-      return NextResponse.json(
-        { error: "Failed to create article job" },
-        { status: 500 },
-      );
+      // 更新 job metadata 加入競爭對手分析結果
+      await supabase
+        .from("article_jobs")
+        .update({
+          metadata: {
+            mode: mode || "single",
+            title: articleTitle,
+            industry: industry || null,
+            region: region || null,
+            language: language || null,
+            competitors: competitors || [],
+            competitorAnalysis: competitorAnalysisResult?.results || null,
+          },
+        })
+        .eq("id", articleJobId);
     }
 
     // 免費方案：遞增終身使用量
