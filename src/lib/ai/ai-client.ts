@@ -49,7 +49,7 @@ export class AIClient {
         `[AIClient] DeepSeek API (gateway: ${isGatewayEnabled()}, url: ${baseUrl})`,
       );
 
-      const response = await fetch(`${baseUrl}/chat/completions`, {
+      const response = await fetch(`${baseUrl}/v1/chat/completions`, {
         method: "POST",
         headers,
         body: JSON.stringify({
@@ -237,7 +237,7 @@ export class AIClient {
         const openaiBaseUrl = getOpenAIBaseUrl();
         const openaiHeaders = buildOpenAIHeaders(apiKey);
 
-        const response = await fetch(`${openaiBaseUrl}/images/generations`, {
+        const response = await fetch(`${openaiBaseUrl}/v1/images/generations`, {
           method: "POST",
           headers: openaiHeaders,
           body: JSON.stringify(requestBody),
@@ -312,7 +312,7 @@ export class AIClient {
         const dalleBaseUrl = getOpenAIBaseUrl();
         const dalleHeaders = buildOpenAIHeaders(apiKey);
 
-        const response = await fetch(`${dalleBaseUrl}/images/generations`, {
+        const response = await fetch(`${dalleBaseUrl}/v1/images/generations`, {
           method: "POST",
           headers: dalleHeaders,
           body: JSON.stringify(requestBody),
