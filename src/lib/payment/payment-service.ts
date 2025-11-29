@@ -578,51 +578,96 @@ export class PaymentService {
           );
           const periodEnd = nextMonth.toISOString();
 
-          const { data: oldSubscription } = await this.supabase
+          // 檢查是否已有相同方案的訂閱（疊加購買）
+          const { data: existingSubscription } = await this.supabase
             .from("company_subscriptions")
-            .select("purchased_token_balance")
+            .select("id, plan_id, purchased_token_balance, monthly_token_quota")
             .eq("company_id", orderData.company_id)
+            .eq("plan_id", planData.id)
             .eq("status", "active")
             .maybeSingle();
 
-          const preservedPurchasedBalance =
-            oldSubscription?.purchased_token_balance || 0;
+          if (existingSubscription) {
+            // 疊加購買：累加配額（每次購買增加基礎配額）
+            const currentQuota =
+              existingSubscription.monthly_token_quota || planData.base_tokens;
+            const newMonthlyQuota = currentQuota + planData.base_tokens;
 
-          await this.supabase
-            .from("company_subscriptions")
-            .delete()
-            .eq("company_id", orderData.company_id);
+            const { error: stackError } = await this.supabase
+              .from("company_subscriptions")
+              .update({
+                monthly_token_quota: newMonthlyQuota,
+                monthly_quota_balance: newMonthlyQuota,
+                current_period_start: periodStart,
+                current_period_end: periodEnd,
+              })
+              .eq("id", existingSubscription.id);
 
-          const { error: subscriptionError } = await this.supabase
-            .from("company_subscriptions")
-            .insert({
-              company_id: orderData.company_id,
-              plan_id: planData.id,
-              status: "active",
-              purchased_token_balance: preservedPurchasedBalance,
-              monthly_quota_balance: planData.base_tokens,
-              monthly_token_quota: planData.base_tokens,
-              is_lifetime: true,
-              lifetime_discount: 1.0,
-              current_period_start: periodStart,
-              current_period_end: periodEnd,
+            if (stackError) {
+              console.error("[PaymentService] 疊加訂閱失敗:", stackError);
+              return { success: false, error: "疊加訂閱失敗" };
+            }
+
+            console.log("[PaymentService] 終身方案疊加購買成功:", {
+              planName: planData.name,
+              planSlug: planData.slug,
+              tier,
+              companyId: orderData.company_id,
+              previousQuota: currentQuota,
+              newMonthlyTokenQuota: newMonthlyQuota,
+              periodEnd,
             });
+          } else {
+            // 首次購買或購買不同方案
+            const { data: oldSubscription } = await this.supabase
+              .from("company_subscriptions")
+              .select("purchased_token_balance")
+              .eq("company_id", orderData.company_id)
+              .eq("status", "active")
+              .maybeSingle();
 
-          if (subscriptionError) {
-            console.error(
-              "[PaymentService] 創建終身訂閱記錄失敗:",
-              subscriptionError,
-            );
+            const preservedPurchasedBalance =
+              oldSubscription?.purchased_token_balance || 0;
+
+            await this.supabase
+              .from("company_subscriptions")
+              .delete()
+              .eq("company_id", orderData.company_id);
+
+            const { error: subscriptionError } = await this.supabase
+              .from("company_subscriptions")
+              .insert({
+                company_id: orderData.company_id,
+                plan_id: planData.id,
+                status: "active",
+                purchased_token_balance: preservedPurchasedBalance,
+                monthly_quota_balance: planData.base_tokens,
+                monthly_token_quota: planData.base_tokens,
+                base_monthly_quota: planData.base_tokens,
+                purchased_count: 1,
+                is_lifetime: true,
+                lifetime_discount: 1.0,
+                current_period_start: periodStart,
+                current_period_end: periodEnd,
+              });
+
+            if (subscriptionError) {
+              console.error(
+                "[PaymentService] 創建終身訂閱記錄失敗:",
+                subscriptionError,
+              );
+            }
+
+            console.log("[PaymentService] 終身方案首次購買成功:", {
+              planName: planData.name,
+              planSlug: planData.slug,
+              tier,
+              companyId: orderData.company_id,
+              purchasedCount: 1,
+              monthlyTokenQuota: planData.base_tokens,
+              periodEnd,
+            });
           }
-
-          console.log("[PaymentService] 終身方案處理成功:", {
-            planName: planData.name,
-            planSlug: planData.slug,
-            tier,
-            companyId: orderData.company_id,
-            monthlyTokenQuota: planData.base_tokens,
-            periodEnd,
-          });
         }
 
         return { success: true };

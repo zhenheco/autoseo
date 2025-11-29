@@ -41,7 +41,12 @@ function countExternalLinks(html: string): number {
     /<a[^>]*href=["']https?:\/\/[^"']*["'][^>]*target=["']_blank["'][^>]*>/gi;
   const externalMatches = html.match(externalPattern) || [];
   const httpMatches = html.match(httpPattern) || [];
-  return Math.max(externalMatches.length, httpMatches.length);
+
+  const externalSet = new Set<string>();
+  externalMatches.forEach((m) => externalSet.add(m));
+  httpMatches.forEach((m) => externalSet.add(m));
+
+  return externalSet.size;
 }
 
 function injectInternalLinks(
