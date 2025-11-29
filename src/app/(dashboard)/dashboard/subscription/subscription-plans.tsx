@@ -9,18 +9,26 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Check } from "lucide-react";
+import { Check, Plus } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import type { Database } from "@/types/database.types";
 
 type Plan = Database["public"]["Tables"]["subscription_plans"]["Row"];
 
+interface CurrentSubscription {
+  plan_id: string;
+  purchased_count: number;
+  base_monthly_quota: number;
+  monthly_token_quota: number;
+}
+
 interface SubscriptionPlansProps {
   plans: Plan[];
   companyId: string;
   userEmail: string;
   currentTier: string;
+  currentSubscription?: CurrentSubscription | null;
 }
 
 export function SubscriptionPlans({
@@ -28,13 +36,18 @@ export function SubscriptionPlans({
   companyId,
   userEmail,
   currentTier,
+  currentSubscription,
 }: SubscriptionPlansProps) {
   const [loading, setLoading] = useState<string | null>(null);
   const router = useRouter();
 
-  const handleSubscribe = async (plan: Plan) => {
+  const handleSubscribe = async (plan: Plan, isStacking = false) => {
     try {
       setLoading(plan.id);
+
+      const description = isStacking
+        ? `${plan.name} 疊加購買（+${plan.base_tokens?.toLocaleString()} 配額）`
+        : `${plan.name} 終身方案`;
 
       const response = await fetch("/api/payment/onetime/create", {
         method: "POST",
@@ -44,7 +57,7 @@ export function SubscriptionPlans({
           paymentType: "lifetime",
           relatedId: plan.id,
           amount: plan.lifetime_price || 0,
-          description: `${plan.name} 終身方案`,
+          description,
           email: userEmail,
         }),
       });
@@ -100,6 +113,11 @@ export function SubscriptionPlans({
       {plans.map((plan) => {
         const planTier = getTierFromSlug(plan.slug);
         const isCurrentPlan = planTier === currentTier;
+        const canStack =
+          isCurrentPlan && currentSubscription?.plan_id === plan.id;
+        const purchasedCount = canStack
+          ? currentSubscription?.purchased_count || 1
+          : 0;
 
         return (
           <Card
@@ -110,13 +128,26 @@ export function SubscriptionPlans({
           >
             {isCurrentPlan && (
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-medium">
-                目前方案
+                目前方案 {purchasedCount > 1 && `(x${purchasedCount})`}
               </div>
             )}
             <CardHeader>
               <CardTitle className="text-2xl">{plan.name}</CardTitle>
               <CardDescription>
-                每月 {plan.base_tokens?.toLocaleString()} Credits
+                {canStack && purchasedCount > 1 ? (
+                  <>
+                    每月{" "}
+                    {(
+                      (plan.base_tokens || 0) * purchasedCount
+                    ).toLocaleString()}{" "}
+                    Credits
+                    <span className="text-xs text-muted-foreground ml-1">
+                      ({plan.base_tokens?.toLocaleString()} x {purchasedCount})
+                    </span>
+                  </>
+                ) : (
+                  <>每月 {plan.base_tokens?.toLocaleString()} Credits</>
+                )}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -150,19 +181,48 @@ export function SubscriptionPlans({
                     </div>
                   ))}
               </div>
+
+              {canStack && (
+                <div className="rounded-lg bg-purple-50 border border-purple-200 p-3 space-y-1">
+                  <p className="text-sm font-medium text-purple-700">
+                    可疊加購買
+                  </p>
+                  <p className="text-xs text-purple-600">
+                    再次購買可增加 +{plan.base_tokens?.toLocaleString()} 月配額
+                  </p>
+                </div>
+              )}
             </CardContent>
             <CardFooter>
-              <Button
-                className="w-full"
-                onClick={() => handleSubscribe(plan)}
-                disabled={loading === plan.id || isCurrentPlan}
-              >
-                {loading === plan.id
-                  ? "處理中..."
-                  : isCurrentPlan
-                    ? "目前方案"
-                    : "立即訂閱"}
-              </Button>
+              {canStack ? (
+                <Button
+                  className="w-full"
+                  onClick={() => handleSubscribe(plan, true)}
+                  disabled={loading === plan.id}
+                  variant="outline"
+                >
+                  {loading === plan.id ? (
+                    "處理中..."
+                  ) : (
+                    <>
+                      <Plus className="h-4 w-4 mr-1" />
+                      再次購買（+配額）
+                    </>
+                  )}
+                </Button>
+              ) : (
+                <Button
+                  className="w-full"
+                  onClick={() => handleSubscribe(plan)}
+                  disabled={loading === plan.id || isCurrentPlan}
+                >
+                  {loading === plan.id
+                    ? "處理中..."
+                    : isCurrentPlan
+                      ? "目前方案"
+                      : "立即訂閱"}
+                </Button>
+              )}
             </CardFooter>
           </Card>
         );
