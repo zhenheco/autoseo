@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse, after } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { v4 as uuidv4 } from "uuid";
 import {
@@ -10,6 +10,7 @@ import {
   checkFreeTrialLimit,
   incrementFreeTrialUsage,
 } from "@/lib/quota/free-trial-service";
+import { processArticleJob } from "@/lib/article-processor";
 
 export const maxDuration = 300;
 
@@ -276,63 +277,17 @@ export async function POST(request: NextRequest) {
       await incrementFreeTrialUsage(supabase, billingId, articleJobId);
     }
 
-    // 觸發 GitHub Actions 處理（避免 Vercel 5 分鐘超時）
-    if (process.env.USE_GITHUB_ACTIONS === "true") {
-      try {
-        const owner = "acejou27";
-        const repo = "Auto-pilot-SEO";
-        const token = process.env.GITHUB_PERSONAL_ACCESS_TOKEN;
+    // 使用 after() 在回應後立即開始處理
+    // 這樣用戶可以立即看到回應，同時後台開始處理
+    after(async () => {
+      console.log(`[Generate API] 開始後台處理任務: ${articleJobId}`);
+      await processArticleJob(articleJobId);
+    });
 
-        if (token) {
-          // 觸發 GitHub Actions workflow
-          const githubResponse = await fetch(
-            `https://api.github.com/repos/${owner}/${repo}/dispatches`,
-            {
-              method: "POST",
-              headers: {
-                Accept: "application/vnd.github+json",
-                Authorization: `Bearer ${token}`,
-                "X-GitHub-Api-Version": "2022-11-28",
-              },
-              body: JSON.stringify({
-                event_type: "generate-article",
-                client_payload: {
-                  jobId: articleJobId,
-                  title: articleTitle,
-                  timestamp: new Date().toISOString(),
-                },
-              }),
-            },
-          );
-
-          if (githubResponse.status === 204) {
-            console.log(`✅ GitHub Actions triggered for job: ${articleJobId}`);
-            return NextResponse.json({
-              success: true,
-              articleJobId,
-              message:
-                "Article generation triggered via GitHub Actions (no timeout limit)",
-              processor: "github-actions",
-            });
-          } else {
-            console.error(
-              "Failed to trigger GitHub Actions:",
-              githubResponse.status,
-            );
-          }
-        }
-      } catch (githubError) {
-        console.error("GitHub Actions trigger error:", githubError);
-      }
-    }
-
-    // 預設：API 立即回傳，由 GitHub Actions cron job 處理
-    // 避免 Vercel 函數逾時（DeepSeek reasoner 需要 4+ 分鐘）
     return NextResponse.json({
       success: true,
       articleJobId,
-      message:
-        "Article generation job created, processing will be handled by cron job",
+      message: "文章生成已開始，正在後台處理中",
     });
   } catch (error) {
     console.error("Generate article error:", error);

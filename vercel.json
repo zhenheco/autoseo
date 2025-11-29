@@ -2,8 +2,8 @@
   "framework": "nextjs",
   "crons": [
     {
-      "path": "/api/cron/daily-tasks",
-      "schedule": "0 9 * * *"
+      "path": "/api/cron/hourly-tasks",
+      "schedule": "0 * * * *"
     }
   ]
 }
