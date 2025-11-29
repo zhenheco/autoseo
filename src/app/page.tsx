@@ -4,7 +4,6 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { BackgroundGrid } from "@/components/ui/background-effects";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import {
   Sparkles,
   Zap,
@@ -143,9 +142,6 @@ export default function Home() {
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-background">
-      <div className="fixed top-4 right-4 z-50">
-        <ThemeToggle />
-      </div>
       <section className="relative py-20 sm:py-32">
         <div className="container relative z-10 mx-auto px-4">
           <div className="mx-auto max-w-5xl text-center">

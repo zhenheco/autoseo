@@ -2,7 +2,6 @@ import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -69,8 +68,6 @@ export default async function DashboardLayout({
                     <Bell className="h-5 w-5 text-foreground/70" />
                     <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-primary rounded-full" />
                   </Button>
-
-                  <ThemeToggle />
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
