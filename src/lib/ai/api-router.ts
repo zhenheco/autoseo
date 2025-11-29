@@ -6,6 +6,7 @@
 import { getDeepSeekClient } from "@/lib/deepseek/client";
 import { getOpenAIImageClient } from "@/lib/openai/image-client";
 import { getOpenAITextClient } from "@/lib/openai/text-client";
+import { getOpenRouterClient } from "@/lib/openrouter/client";
 import { getPerplexityClient } from "@/lib/perplexity/client";
 import type { APIProvider, UnifiedAPIResponse } from "@/types/ai-models";
 import type { AIMessage } from "@/types/agents";
@@ -13,6 +14,7 @@ import type { AIMessage } from "@/types/agents";
 export interface APIRouterConfig {
   deepseekApiKey?: string;
   openaiApiKey?: string;
+  openrouterApiKey?: string;
   perplexityApiKey?: string;
   maxRetries?: number;
   timeout?: number;
@@ -247,6 +249,15 @@ export class APIRouter {
       case "perplexity":
         return this.callPerplexityAPI(model, messages, temperature, maxTokens);
 
+      case "openrouter":
+        return this.callOpenRouterAPI(
+          model,
+          messages,
+          temperature,
+          maxTokens,
+          responseFormat,
+        );
+
       default:
         throw new Error(`不支援的 API Provider: ${apiProvider}`);
     }
@@ -371,6 +382,45 @@ export class APIRouter {
   }
 
   /**
+   * 呼叫 OpenRouter API
+   */
+  private async callOpenRouterAPI(
+    model: string,
+    messages: AIMessage[],
+    temperature?: number,
+    maxTokens?: number,
+    responseFormat?: "text" | "json",
+  ): Promise<UnifiedAPIResponse> {
+    const client = getOpenRouterClient({
+      apiKey: this.config.openrouterApiKey,
+      maxRetries: this.config.maxRetries,
+      timeout: this.config.timeout,
+    });
+
+    const result = await client.complete({
+      model,
+      prompt: messages,
+      temperature,
+      max_tokens: maxTokens,
+      responseFormat,
+    });
+
+    return {
+      content: result.content,
+      usage: {
+        input_tokens: result.usage.prompt_tokens,
+        output_tokens: result.usage.completion_tokens,
+        total_tokens: result.usage.total_tokens,
+        billing_input_tokens: 0,
+        billing_output_tokens: 0,
+        total_billing_tokens: 0,
+      },
+      model: result.model,
+      api_provider: "openrouter",
+    };
+  }
+
+  /**
    * 偵測模型的處理階段
    */
   private detectProcessingTier(model: string): string {
@@ -444,6 +494,7 @@ export function getAPIRouter(config?: APIRouterConfig): APIRouter {
     globalRouter = new APIRouter({
       deepseekApiKey: process.env.DEEPSEEK_API_KEY,
       openaiApiKey: process.env.OPENAI_API_KEY,
+      openrouterApiKey: process.env.OPENROUTER_API_KEY,
       perplexityApiKey: process.env.PERPLEXITY_API_KEY,
       maxRetries: 3,
       timeout: 120000,
