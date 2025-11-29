@@ -217,7 +217,7 @@ export default function PrivacyPage() {
                 如果您對我們的隱私權或個人資料保護政策有任何問題，請聯絡：
               </p>
               <p className="text-slate-600 dark:text-slate-300 mt-2">
-                Email: service@zhenhe-dm.com
+                Email: service@1wayseo.com
               </p>
             </section>
 

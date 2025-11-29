@@ -22,7 +22,9 @@ import {
   ArrowRight,
   Copy,
   Check,
+  Info,
 } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import type { AffiliateTier } from "@/types/referral.types";
 
 interface AffiliateReferral {
@@ -168,6 +170,20 @@ export default function AffiliateDashboardPage() {
         <p className="text-gray-600">追蹤您的推薦成效和佣金收入</p>
       </div>
 
+      <Alert>
+        <Info className="h-4 w-4" />
+        <AlertDescription>
+          佣金比例依推薦人數分級：15%~30%。詳細規範請參閱{" "}
+          <Link
+            href="/dashboard/affiliate/terms"
+            className="font-medium underline hover:text-primary"
+          >
+            聯盟行銷計畫服務條款
+          </Link>
+          。
+        </AlertDescription>
+      </Alert>
+
       {stats?.currentTier && (
         <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
           <CardHeader>
@@ -279,8 +295,7 @@ export default function AffiliateDashboardPage() {
         <CardHeader>
           <CardTitle>您的專屬推薦連結</CardTitle>
           <CardDescription>
-            分享此連結給新客戶，即可獲得{" "}
-            {stats?.currentTier?.commission_rate || 15}% 佣金
+            分享此連結給新客戶，可獲得 15%~30% 佣金（依推薦人數分級）
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
