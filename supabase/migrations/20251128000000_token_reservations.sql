@@ -119,9 +119,11 @@ DECLARE
   required INTEGER;
   new_reservation_id UUID;
 BEGIN
-  SELECT tb.total_tokens INTO current_balance
-  FROM token_balances tb
-  WHERE tb.company_id = p_company_id;
+  -- 從 company_subscriptions 取得餘額（monthly_quota_balance + purchased_token_balance）
+  SELECT COALESCE(cs.monthly_quota_balance, 0) + COALESCE(cs.purchased_token_balance, 0)
+  INTO current_balance
+  FROM company_subscriptions cs
+  WHERE cs.company_id = p_company_id AND cs.status = 'active';
 
   IF current_balance IS NULL THEN
     current_balance := 0;
