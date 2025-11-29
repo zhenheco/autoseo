@@ -10,8 +10,8 @@
   "env": {
     "production": {
       "routes": [
-        { "pattern": "seo.zhenhe-dm.com", "zone_name": "zhenhe-dm.com" },
-        { "pattern": "seo.zhenhe-dm.com/*", "zone_name": "zhenhe-dm.com" }
+        { "pattern": "1wayseo.com", "zone_name": "1wayseo.com" },
+        { "pattern": "1wayseo.com/*", "zone_name": "1wayseo.com" }
       ]
     }
   }
