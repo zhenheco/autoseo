@@ -39,8 +39,7 @@ export async function GET(
     landingPage: request.url,
   });
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_APP_URL || "https://seo.zhenhe-dm.com";
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://1wayseo.com";
   const redirectUrl = new URL("/zh/login", baseUrl);
   redirectUrl.searchParams.set("ref", code.toUpperCase());
 
