@@ -379,7 +379,7 @@ export default function TermsPage() {
         <CardContent className="text-sm text-gray-700">
           <p className="mb-2">如對本條款有任何疑問，請聯絡我們：</p>
           <ul className="space-y-1 pl-4">
-            <li>• Email: service@zhenhe-co.com</li>
+            <li>• Email: service@1wayseo.com</li>
             <li>• 客服時間：週一至週五 9:00-18:00（台灣時間）</li>
           </ul>
         </CardContent>
