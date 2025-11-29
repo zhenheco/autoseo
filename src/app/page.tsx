@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -15,7 +13,6 @@ import {
   CheckCircle2,
   Rocket,
   Target,
-  Brain,
   Search,
   PenTool,
   Image,
@@ -23,8 +20,13 @@ import {
   Calendar,
   Infinity,
   CreditCard,
+  Brain,
 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { createClient } from "@/lib/supabase/server";
+import type { Database } from "@/types/database.types";
+import { TestimonialsCarousel } from "@/components/home/TestimonialsCarousel";
+import { CostComparison } from "@/components/home/CostComparison";
+import { FAQSection } from "@/components/home/FAQSection";
 
 const features = [
   {
@@ -74,68 +76,28 @@ const features = [
   },
 ];
 
-const lifetimePlans = [
-  {
-    name: "STARTER",
-    price: 14900,
-    monthlyCredits: "50K",
-    description: "適合個人創作者",
-  },
-  {
-    name: "PROFESSIONAL",
-    price: 59900,
-    monthlyCredits: "250K",
-    popular: true,
-    description: "適合專業行銷人員",
-  },
-  {
-    name: "BUSINESS",
-    price: 149900,
-    monthlyCredits: "750K",
-    description: "適合中型企業",
-  },
-  {
-    name: "AGENCY",
-    price: 299900,
-    monthlyCredits: "2M",
-    description: "適合代理商與大型企業",
-  },
+const aiModels = [
+  { name: "GPT-4o", description: "OpenAI 最新旗艦模型" },
+  { name: "Claude 3.5", description: "Anthropic 高性能模型" },
+  { name: "DeepSeek", description: "高性價比中文模型" },
+  { name: "Gemini", description: "Google 多模態模型" },
 ];
 
-const creditPacks = [
-  { credits: "10K", price: 299 },
-  { credits: "50K", price: 1299, popular: true },
-  { credits: "100K", price: 2399 },
-];
+export default async function Home() {
+  const supabase = await createClient();
 
-const testimonials = [
-  {
-    name: "張經理",
-    company: "數位行銷公司",
-    content:
-      "使用 1waySEO 後，我們的內容產出效率提升了 300%，SEO 排名也顯著改善！",
-  },
-  {
-    name: "李總監",
-    company: "電商企業",
-    content: "這個平台完全改變了我們的內容策略，AI 生成的文章品質超乎想像！",
-  },
-  {
-    name: "王創辦人",
-    company: "新創公司",
-    content: "自動化功能太好用了，讓我們的內容團隊效率翻倍！",
-  },
-];
+  const { data: plans } = await supabase
+    .from("subscription_plans")
+    .select<"*", Database["public"]["Tables"]["subscription_plans"]["Row"]>("*")
+    .eq("is_lifetime", true)
+    .neq("slug", "free")
+    .order("lifetime_price", { ascending: true });
 
-export default function Home() {
-  const [activeTestimonial, setActiveTestimonial] = useState(0);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setActiveTestimonial((prev) => (prev + 1) % testimonials.length);
-    }, 5000);
-    return () => clearInterval(interval);
-  }, []);
+  const { data: tokenPackages } = await supabase
+    .from("token_packages")
+    .select<"*", Database["public"]["Tables"]["token_packages"]["Row"]>("*")
+    .eq("is_active", true)
+    .order("price", { ascending: true });
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-background">
@@ -147,19 +109,39 @@ export default function Home() {
               <span>AI 驅動的 SEO 內容平台</span>
             </div>
 
-            <h1 className="mb-6 text-xl font-bold tracking-tight text-foreground">
+            <h1 className="mb-6 text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
               讓 AI 為您打造
-              <span className="text-primary">完美的 SEO 內容</span>
+              <span className="text-primary block mt-2">完美的 SEO 內容</span>
             </h1>
 
-            <p className="mx-auto mb-10 max-w-3xl text-base text-muted-foreground leading-relaxed">
-              1waySEO 結合最先進的 AI
-              技術，依照關鍵字與搜尋結果自動決定最佳架構，
-              <br />
-              幫助您自動化內容創作流程，節省 90% 的時間成本。
+            <p className="mx-auto mb-6 max-w-3xl text-lg text-muted-foreground leading-relaxed">
+              1waySEO 結合 GPT-4o、Claude 等最先進 AI 技術，
+              <br className="hidden md:block" />
+              從關鍵字研究到文章發布，全自動化 SEO 內容生產流程。
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
+            <div className="flex flex-wrap justify-center gap-4 mb-8 text-sm">
+              <div className="flex items-center gap-2 bg-green-50 dark:bg-green-950/30 px-4 py-2 rounded-full">
+                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                <span className="text-green-700 dark:text-green-400 font-medium">
+                  省下 95% 內容成本
+                </span>
+              </div>
+              <div className="flex items-center gap-2 bg-blue-50 dark:bg-blue-950/30 px-4 py-2 rounded-full">
+                <CheckCircle2 className="h-4 w-4 text-blue-600" />
+                <span className="text-blue-700 dark:text-blue-400 font-medium">
+                  10 分鐘完成一篇文章
+                </span>
+              </div>
+              <div className="flex items-center gap-2 bg-purple-50 dark:bg-purple-950/30 px-4 py-2 rounded-full">
+                <CheckCircle2 className="h-4 w-4 text-purple-600" />
+                <span className="text-purple-700 dark:text-purple-400 font-medium">
+                  終身使用，無訂閱費
+                </span>
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
               <Button
                 asChild
                 size="lg"
@@ -195,19 +177,52 @@ export default function Home() {
         <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-muted/30 to-transparent" />
       </section>
 
-      <section id="features" className="relative py-32 bg-muted/30">
+      <CostComparison />
+
+      <section className="py-20">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
+              <Brain className="h-4 w-4" />
+              <span>AI 技術</span>
+            </div>
+            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-foreground">
+              整合<span className="text-primary">頂尖 AI 模型</span>
+            </h2>
+            <p className="text-muted-foreground max-w-2xl mx-auto">
+              根據需求自動選擇最適合的 AI 模型，確保最佳品質與性價比
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+            {aiModels.map((model, index) => (
+              <Card key={index} className="border border-border text-center">
+                <CardContent className="p-6">
+                  <div className="text-lg font-bold text-primary mb-1">
+                    {model.name}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    {model.description}
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section id="features" className="relative py-20 bg-muted/30">
         <div className="container relative z-10 mx-auto px-4">
-          <div className="text-center mb-20">
+          <div className="text-center mb-16">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
               <Target className="h-4 w-4" />
               <span>完整工作流程</span>
             </div>
-            <h2 className="text-xl font-bold mb-6 text-foreground">
+            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-foreground">
               從研究到發布，<span className="text-primary">全自動化</span>
             </h2>
-            <p className="text-base text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-              依照關鍵字與搜尋結果自動決定最佳的字數及架構，
-              <br />9 大核心功能讓您的 SEO 內容策略完全自動化。
+            <p className="text-muted-foreground max-w-3xl mx-auto">
+              9 大核心功能讓您的 SEO 內容策略完全自動化
             </p>
           </div>
 
@@ -219,14 +234,14 @@ export default function Home() {
                   key={index}
                   className="border border-border hover:border-primary/50 hover:shadow-lg transition-all duration-200 bg-card"
                 >
-                  <CardContent className="p-8">
-                    <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10">
-                      <Icon className="h-7 w-7 text-primary" />
+                  <CardContent className="p-6">
+                    <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                      <Icon className="h-6 w-6 text-primary" />
                     </div>
-                    <h3 className="mb-3 text-base font-bold text-foreground">
+                    <h3 className="mb-2 text-lg font-bold text-foreground">
                       {feature.title}
                     </h3>
-                    <p className="text-muted-foreground leading-relaxed text-sm">
+                    <p className="text-muted-foreground text-sm leading-relaxed">
                       {feature.description}
                     </p>
                   </CardContent>
@@ -237,22 +252,19 @@ export default function Home() {
         </div>
       </section>
 
-      <section id="pricing" className="relative py-32">
+      <section id="pricing" className="relative py-20">
         <div className="container relative z-10 mx-auto px-4">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
               <Infinity className="h-4 w-4" />
               <span>定價方案</span>
             </div>
-            <h2 className="text-xl font-bold mb-6 text-foreground">
+            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-foreground">
               <span className="text-primary">終身買斷</span>，永久使用
             </h2>
-            <p className="text-base text-muted-foreground max-w-2xl mx-auto">
-              一次付費，每月自動獲得 Credits 配額，無需訂閱費用。
+            <p className="text-muted-foreground max-w-2xl mx-auto mb-6">
+              一次付費，每月自動獲得 Credits 配額，無需訂閱費用
             </p>
-          </div>
-
-          <div className="mb-8 text-center">
             <div className="inline-flex items-center gap-3 rounded-full bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 px-6 py-3">
               <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
               <span className="text-green-800 dark:text-green-300 font-medium">
@@ -261,170 +273,168 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto mb-24">
-            {lifetimePlans.map((plan, index) => (
-              <Card
-                key={index}
-                className={`relative ${plan.popular ? "bg-primary text-primary-foreground" : "bg-card border border-border"}`}
-              >
-                <CardContent className="p-5">
-                  <div className="mb-3">
-                    <span className="text-xl font-bold">
-                      NT${plan.price.toLocaleString()}
-                    </span>
-                    <span className="text-xs opacity-70 ml-1">終身</span>
-                  </div>
-                  <h3 className="text-base font-bold mb-1">{plan.name}</h3>
-                  <p
-                    className={`text-xs mb-4 ${plan.popular ? "opacity-80" : "text-muted-foreground"}`}
-                  >
-                    {plan.description}
-                  </p>
-                  <ul className="space-y-2 mb-4 text-xs">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-3 w-3 flex-shrink-0" />
-                      每月 {plan.monthlyCredits} Credits
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-3 w-3 flex-shrink-0" />
-                      所有 AI 模型
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-3 w-3 flex-shrink-0" />
-                      WordPress 整合
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-3 w-3 flex-shrink-0" />
-                      自動圖片生成
-                    </li>
-                  </ul>
-                  <Button
-                    asChild
-                    size="sm"
-                    className={`w-full ${plan.popular ? "bg-white text-primary hover:bg-white/90" : ""}`}
-                    variant={plan.popular ? "secondary" : "outline"}
-                  >
-                    <Link href="/login">開始使用</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto mb-16">
+            {plans?.map((plan, index) => {
+              const isPopular = plan.slug.includes("professional");
+              const originalPrice = Math.round(
+                (plan.lifetime_price || 0) * 1.5,
+              );
 
-          <div className="max-w-4xl mx-auto">
-            <div className="text-center mb-12">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-amber-100 dark:bg-amber-950/30 px-4 py-2 text-sm font-medium text-amber-700 dark:text-amber-400">
-                <CreditCard className="h-4 w-4" />
-                <span>Credits 加值包</span>
-              </div>
-              <h3 className="text-xl font-bold mb-4 text-foreground">
-                需要更多 Credits？
-              </h3>
-              <p className="text-base text-muted-foreground">
-                免費版或終身版用戶皆可購買，直接加值不需升級方案。
-              </p>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto">
-              {creditPacks.map((pack, index) => (
+              return (
                 <Card
-                  key={index}
-                  className={`border ${pack.popular ? "border-primary" : "border-border"} bg-card`}
+                  key={plan.id}
+                  className={`relative flex flex-col h-full ${
+                    isPopular
+                      ? "bg-primary text-primary-foreground border-primary"
+                      : "bg-card border border-border"
+                  }`}
                 >
-                  <CardContent className="p-6 text-center">
-                    {pack.popular && (
-                      <span className="inline-block bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-medium mb-3">
-                        超值
-                      </span>
-                    )}
-                    <div className="text-base font-bold text-primary mb-1">
-                      {pack.credits} Credits
+                  {isPopular && (
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold">
+                      最熱門
                     </div>
-                    <div className="text-base font-bold text-foreground mb-4">
-                      NT${pack.price.toLocaleString()}
+                  )}
+                  <CardContent className="p-5 flex flex-col h-full">
+                    <div className="mb-2">
+                      <h3 className="text-lg font-bold">{plan.name}</h3>
+                    </div>
+                    <div className="mb-4">
+                      <div className="text-sm line-through opacity-60">
+                        NT${originalPrice.toLocaleString()}
+                      </div>
+                      <div className="flex items-baseline gap-1">
+                        <span className="text-2xl font-bold">
+                          NT${plan.lifetime_price?.toLocaleString()}
+                        </span>
+                        <span className="text-xs opacity-70">終身</span>
+                      </div>
+                    </div>
+                    <div className="flex-1">
+                      <ul className="space-y-2 text-sm mb-4">
+                        <li className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+                          每月 {plan.base_tokens?.toLocaleString()} Credits
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+                          所有 AI 模型
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+                          WordPress 整合
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+                          自動圖片生成
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 flex-shrink-0" />
+                          排程發布
+                        </li>
+                      </ul>
                     </div>
                     <Button
                       asChild
                       size="sm"
-                      variant="outline"
-                      className="w-full"
+                      className={`w-full mt-auto ${
+                        isPopular
+                          ? "bg-white text-primary hover:bg-white/90"
+                          : ""
+                      }`}
+                      variant={isPopular ? "secondary" : "outline"}
                     >
-                      <Link href="/login">購買</Link>
+                      <Link href="/login">開始使用</Link>
                     </Button>
                   </CardContent>
                 </Card>
-              ))}
+              );
+            })}
+          </div>
+
+          <div className="max-w-4xl mx-auto">
+            <div className="text-center mb-8">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-amber-100 dark:bg-amber-950/30 px-4 py-2 text-sm font-medium text-amber-700 dark:text-amber-400">
+                <CreditCard className="h-4 w-4" />
+                <span>Credits 加值包</span>
+              </div>
+              <h3 className="text-xl font-bold mb-2 text-foreground">
+                需要更多 Credits？
+              </h3>
+              <p className="text-sm text-muted-foreground">
+                免費版或終身版用戶皆可購買，直接加值不需升級方案。購買的 Credits
+                永不過期！
+              </p>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+              {tokenPackages?.map((pkg) => {
+                const isPopular = pkg.tokens === 50000;
+                return (
+                  <Card
+                    key={pkg.id}
+                    className={`border ${
+                      isPopular ? "border-primary" : "border-border"
+                    } bg-card`}
+                  >
+                    <CardContent className="p-6 text-center">
+                      {isPopular && (
+                        <span className="inline-block bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-medium mb-3">
+                          超值
+                        </span>
+                      )}
+                      <div className="text-lg font-bold text-primary mb-1">
+                        {pkg.tokens?.toLocaleString()} Credits
+                      </div>
+                      <div className="text-xl font-bold text-foreground mb-4">
+                        NT${pkg.price?.toLocaleString()}
+                      </div>
+                      <Button
+                        asChild
+                        size="sm"
+                        variant="outline"
+                        className="w-full"
+                      >
+                        <Link href="/login">購買</Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                );
+              })}
             </div>
           </div>
         </div>
       </section>
 
-      <section className="relative py-32 bg-muted/30">
+      <section className="relative py-20 bg-muted/30">
         <BackgroundGrid className="opacity-20" />
         <div className="container relative z-10 mx-auto px-4">
-          <div className="text-center mb-16">
+          <div className="text-center mb-12">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
               <Users className="h-4 w-4" />
               <span>客戶見證</span>
             </div>
-            <h2 className="text-xl font-bold mb-4 text-foreground">
-              <span className="text-primary">數千家企業</span>的選擇
+            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-foreground">
+              <span className="text-primary">用戶</span>怎麼說
             </h2>
-            <p className="text-base text-muted-foreground">
+            <p className="text-muted-foreground">
               看看他們如何使用 1waySEO 改變內容策略
             </p>
           </div>
 
-          <div className="max-w-4xl mx-auto">
-            <Card className="border border-border bg-card shadow-lg p-12 relative overflow-hidden">
-              {testimonials.map((testimonial, index) => (
-                <div
-                  key={index}
-                  className={`transition-all duration-500 ${
-                    index === activeTestimonial
-                      ? "opacity-100"
-                      : "opacity-0 absolute inset-12"
-                  }`}
-                >
-                  <p className="text-base leading-relaxed mb-8 text-foreground/90">
-                    &ldquo;{testimonial.content}&rdquo;
-                  </p>
-                  <div>
-                    <div className="font-bold text-base text-foreground">
-                      {testimonial.name}
-                    </div>
-                    <div className="text-sm text-muted-foreground">
-                      {testimonial.company}
-                    </div>
-                  </div>
-                </div>
-              ))}
-              <div className="flex justify-center gap-2 mt-8">
-                {testimonials.map((_, index) => (
-                  <button
-                    key={index}
-                    onClick={() => setActiveTestimonial(index)}
-                    className={`w-2 h-2 rounded-full transition-all ${
-                      index === activeTestimonial
-                        ? "w-8 bg-primary"
-                        : "bg-muted-foreground/30"
-                    }`}
-                  />
-                ))}
-              </div>
-            </Card>
-          </div>
+          <TestimonialsCarousel />
         </div>
       </section>
 
-      <section className="relative py-32">
+      <FAQSection />
+
+      <section className="relative py-20">
         <div className="container relative z-10 mx-auto px-4">
           <div className="mx-auto max-w-4xl text-center">
-            <h2 className="text-xl font-bold mb-8 text-foreground">
+            <h2 className="text-2xl md:text-3xl font-bold mb-6 text-foreground">
               準備好<span className="text-primary">提升您的內容策略</span>了嗎？
             </h2>
-            <p className="text-base text-muted-foreground mb-12 leading-relaxed">
-              立即註冊，免費獲得 10K Credits 開始體驗。
+            <p className="text-muted-foreground mb-8">
+              立即註冊，免費獲得 10K Credits 開始體驗
             </p>
             <Button
               asChild
