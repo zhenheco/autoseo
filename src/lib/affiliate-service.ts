@@ -1,15 +1,11 @@
 import { createAdminClient } from "@/lib/supabase/server";
-import type {
-  Affiliate,
-  AffiliateTier,
-  AffiliateCommission,
-  AffiliateStats,
-  AffiliateApplyForm,
+import {
+  type Affiliate,
+  type AffiliateTier,
+  type AffiliateCommission,
+  type AffiliateStats,
+  type AffiliateApplyForm,
   AFFILIATE_TIERS,
-  COMMISSION_LOCK_DAYS,
-  MIN_WITHDRAWAL_AMOUNT,
-  RESIDENT_TAX_RATE,
-  NON_RESIDENT_TAX_RATE,
 } from "@/types/referral.types";
 
 export async function getAffiliate(
@@ -132,10 +128,14 @@ export async function getAffiliateStats(
     .select("*")
     .order("tier_level", { ascending: true });
 
+  const effectiveTiers = tiers && tiers.length > 0 ? tiers : AFFILIATE_TIERS;
+
   const currentTier =
-    tiers?.find((t) => t.tier_level === affiliate.current_tier) || tiers?.[0];
+    effectiveTiers.find((t) => t.tier_level === affiliate.current_tier) ||
+    effectiveTiers[0];
   const nextTier =
-    tiers?.find((t) => t.tier_level === affiliate.current_tier + 1) || null;
+    effectiveTiers.find((t) => t.tier_level === affiliate.current_tier + 1) ||
+    null;
 
   const referralsToNextTier = nextTier
     ? Math.max(0, nextTier.min_referrals - affiliate.qualified_referrals)
