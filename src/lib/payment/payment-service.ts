@@ -5,6 +5,8 @@ import {
   type OnetimePaymentParams,
   type RecurringPaymentParams,
 } from "./newebpay-service";
+import { processFirstPaymentReward } from "@/lib/referral-service";
+import { processAffiliateCommission } from "@/lib/affiliate-service";
 
 export interface CreateOnetimeOrderParams {
   companyId: string;
@@ -678,6 +680,13 @@ export class PaymentService {
           }
         }
 
+        await this.processReferralRewards(
+          orderData.company_id,
+          orderData.amount,
+          orderData.payment_type,
+          orderData.id,
+        );
+
         return { success: true };
       } else {
         const { error: updateError } = await this.supabase
@@ -1032,6 +1041,13 @@ export class PaymentService {
           }
         }
 
+        await this.processReferralRewards(
+          mandateData.company_id,
+          mandateData.period_amount,
+          "subscription",
+          mandateData.first_payment_order_id || undefined,
+        );
+
         console.log("[PaymentService] ✅ 授權成功處理完成");
         return {
           success: true,
@@ -1053,6 +1069,82 @@ export class PaymentService {
     } catch (error) {
       console.error("[PaymentService] 處理定期定額回調失敗:", error);
       return { success: false, error: "處理定期定額回調失敗" };
+    }
+  }
+
+  private async processReferralRewards(
+    companyId: string,
+    paymentAmount: number,
+    orderType: string,
+    paymentOrderId?: string,
+  ): Promise<void> {
+    try {
+      const result = await processFirstPaymentReward(companyId, paymentAmount);
+
+      if (result.success) {
+        console.log("[PaymentService] 推薦獎勵處理結果:", {
+          companyId,
+          rewardType: result.rewardType,
+          paymentAmount,
+        });
+
+        if (result.rewardType === "commission") {
+          const { data: referral } = await this.supabase
+            .from("referrals")
+            .select("id")
+            .eq("referred_company_id", companyId)
+            .eq("reward_type", "commission")
+            .single();
+
+          if (referral) {
+            const commissionResult = await processAffiliateCommission(
+              referral.id,
+              paymentAmount,
+              orderType,
+              paymentOrderId,
+            );
+
+            console.log("[PaymentService] 聯盟佣金處理結果:", {
+              referralId: referral.id,
+              success: commissionResult.success,
+              commissionAmount: commissionResult.commissionAmount,
+            });
+          }
+        }
+      } else {
+        const { data: referral } = (await this.supabase
+          .from("referrals")
+          .select("id, reward_type, status")
+          .eq("referred_company_id", companyId)
+          .single()) as {
+          data: {
+            id: string;
+            reward_type: string | null;
+            status: string;
+          } | null;
+        };
+
+        if (
+          referral &&
+          referral.reward_type === "commission" &&
+          referral.status === "qualified"
+        ) {
+          const commissionResult = await processAffiliateCommission(
+            referral.id,
+            paymentAmount,
+            orderType,
+            paymentOrderId,
+          );
+
+          console.log("[PaymentService] 後續付款佣金處理結果:", {
+            referralId: referral.id,
+            success: commissionResult.success,
+            commissionAmount: commissionResult.commissionAmount,
+          });
+        }
+      }
+    } catch (error) {
+      console.error("[PaymentService] 處理推薦獎勵時發生錯誤:", error);
     }
   }
 

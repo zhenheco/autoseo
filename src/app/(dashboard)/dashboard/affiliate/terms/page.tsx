@@ -1,10 +1,16 @@
-'use client'
+"use client";
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Shield, CheckCircle2, XCircle, AlertTriangle } from 'lucide-react'
-import { Alert, AlertDescription } from '@/components/ui/alert'
-import Link from 'next/link'
-import { Button } from '@/components/ui/button'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Shield, CheckCircle2, XCircle, AlertTriangle } from "lucide-react";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import Link from "next/link";
+import { Button } from "@/components/ui/button";
 
 export default function TermsPage() {
   return (
@@ -48,7 +54,9 @@ export default function TermsPage() {
             </p>
           </div>
           <div>
-            <p className="font-semibold mb-1">1.3 推薦客戶（Referred Customer）</p>
+            <p className="font-semibold mb-1">
+              1.3 推薦客戶（Referred Customer）
+            </p>
             <p className="text-sm pl-4">
               透過聯盟夥伴的推薦連結註冊並付費訂閱本平台服務的客戶。
             </p>
@@ -70,12 +78,37 @@ export default function TermsPage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
-            <h4 className="font-semibold mb-2 text-blue-900">2.1 佣金比例</h4>
+            <h4 className="font-semibold mb-2 text-blue-900">
+              2.1 分級佣金比例
+            </h4>
+            <p className="text-sm text-gray-700 mb-3">
+              佣金比例依據您的有效推薦客戶數量分級計算：
+            </p>
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+              <div className="bg-white p-2 rounded border text-center">
+                <div className="text-xs text-gray-500">銅牌 (0-5 人)</div>
+                <div className="text-lg font-bold text-blue-600">15%</div>
+              </div>
+              <div className="bg-white p-2 rounded border text-center">
+                <div className="text-xs text-gray-500">銀牌 (6-15 人)</div>
+                <div className="text-lg font-bold text-blue-600">20%</div>
+              </div>
+              <div className="bg-white p-2 rounded border text-center">
+                <div className="text-xs text-gray-500">金牌 (16-30 人)</div>
+                <div className="text-lg font-bold text-blue-600">25%</div>
+              </div>
+              <div className="bg-white p-2 rounded border text-center">
+                <div className="text-xs text-gray-500">白金 (31+ 人)</div>
+                <div className="text-lg font-bold text-blue-600">30%</div>
+              </div>
+            </div>
             <ul className="space-y-1 text-sm text-gray-700">
-              <li>• 統一佣金比例：<strong className="text-blue-600">20%</strong></li>
-              <li>• 計算基準：推薦客戶的<strong>月訂閱費用</strong></li>
               <li>
-                • 不適用項目：<strong className="text-red-600">Credit 包購買不計入佣金</strong>
+                • 計算基準：推薦客戶的<strong>所有付費金額</strong>（訂閱 +
+                Credit 包）
+              </li>
+              <li>
+                • 等級升級：達到門檻後<strong>自動升級</strong>，立即適用新比例
               </li>
             </ul>
           </div>
@@ -88,10 +121,13 @@ export default function TermsPage() {
             <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
               <div className="flex items-start gap-2 mb-2">
                 <AlertTriangle className="h-5 w-5 text-orange-600 mt-0.5" />
-                <p className="text-sm font-semibold text-orange-900">不活躍終止條件</p>
+                <p className="text-sm font-semibold text-orange-900">
+                  不活躍終止條件
+                </p>
               </div>
               <p className="text-sm text-gray-700">
-                若聯盟夥伴連續 <strong>3 個月</strong> 沒有新的付費客戶，該夥伴帳號將被標記為「不活躍」，
+                若聯盟夥伴連續 <strong>3 個月</strong>{" "}
+                沒有新的付費客戶，該夥伴帳號將被標記為「不活躍」，
                 並停止所有佣金發放（包括既有客戶的續訂佣金）。
               </p>
             </div>
@@ -103,8 +139,8 @@ export default function TermsPage() {
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5" />
                 <span>
-                  <strong>鎖定期：</strong>佣金產生後需等待 <strong>30 天</strong>{' '}
-                  才可提領（用於處理退款與糾紛）
+                  <strong>鎖定期：</strong>佣金產生後需等待{" "}
+                  <strong>30 天</strong> 才可提領（用於處理退款與糾紛）
                 </span>
               </li>
               <li className="flex items-start gap-2">
@@ -122,7 +158,8 @@ export default function TermsPage() {
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5" />
                 <span>
-                  <strong>稅務扣繳：</strong>依法扣除所得稅後撥款（境內居民 10%，非居民 20%）
+                  <strong>稅務扣繳：</strong>依法扣除所得稅後撥款（境內居民
+                  10%，非居民 20%）
                 </span>
               </li>
             </ul>
@@ -147,7 +184,8 @@ export default function TermsPage() {
           <div>
             <h4 className="font-semibold mb-2">3.2 首次點擊優先</h4>
             <p className="text-sm text-gray-700">
-              若客戶點擊多個不同聯盟夥伴的推薦連結，以<strong>第一次點擊</strong>為準。
+              若客戶點擊多個不同聯盟夥伴的推薦連結，以
+              <strong>第一次點擊</strong>為準。
             </p>
           </div>
 
@@ -157,7 +195,9 @@ export default function TermsPage() {
               <div className="flex items-start gap-2">
                 <XCircle className="h-5 w-5 text-red-600 mt-0.5" />
                 <div className="text-sm text-gray-700">
-                  <p className="font-semibold text-red-900 mb-1">嚴格禁止自我推薦</p>
+                  <p className="font-semibold text-red-900 mb-1">
+                    嚴格禁止自我推薦
+                  </p>
                   <p>
                     聯盟夥伴不得使用自己的推薦連結註冊新帳號以賺取佣金。
                     一經發現，將取消聯盟資格並沒收所有佣金。
@@ -179,7 +219,9 @@ export default function TermsPage() {
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <CheckCircle2 className="h-5 w-5 text-green-600" />
-                <h4 className="font-semibold text-green-900">✅ 允許的推廣方式</h4>
+                <h4 className="font-semibold text-green-900">
+                  ✅ 允許的推廣方式
+                </h4>
               </div>
               <ul className="space-y-2 text-sm text-gray-700">
                 <li>• 個人部落格、網站文章</li>
@@ -194,7 +236,9 @@ export default function TermsPage() {
             <div>
               <div className="flex items-center gap-2 mb-3">
                 <XCircle className="h-5 w-5 text-red-600" />
-                <h4 className="font-semibold text-red-900">❌ 禁止的推廣方式</h4>
+                <h4 className="font-semibold text-red-900">
+                  ❌ 禁止的推廣方式
+                </h4>
               </div>
               <ul className="space-y-2 text-sm text-gray-700">
                 <li>• 垃圾郵件（Spam）</li>
@@ -275,8 +319,8 @@ export default function TermsPage() {
           <div>
             <h4 className="font-semibold mb-2">7.1 條款變更</h4>
             <p>
-              本平台保留隨時修改本條款的權利。重大變更將於生效前 30 天通知聯盟夥伴。
-              繼續使用服務視為接受變更後的條款。
+              本平台保留隨時修改本條款的權利。重大變更將於生效前 30
+              天通知聯盟夥伴。 繼續使用服務視為接受變更後的條款。
             </p>
           </div>
 
@@ -346,5 +390,5 @@ export default function TermsPage() {
         <p className="mt-2">本條款最後更新：2025 年 1 月 6 日</p>
       </div>
     </div>
-  )
+  );
 }

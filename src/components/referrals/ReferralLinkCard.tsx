@@ -1,29 +1,40 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
-import { Copy, Check, Link as LinkIcon } from 'lucide-react'
+import { useState } from "react";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Copy, Check, Link as LinkIcon } from "lucide-react";
+import { REFERRAL_TOKEN_REWARD } from "@/types/referral.types";
 
 interface ReferralLinkCardProps {
-  referralCode: string
+  referralCode: string;
 }
 
 export function ReferralLinkCard({ referralCode }: ReferralLinkCardProps) {
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState(false);
 
-  const referralUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/signup?ref=${referralCode}`
+  const baseUrl =
+    typeof window !== "undefined"
+      ? window.location.origin
+      : process.env.NEXT_PUBLIC_APP_URL || "";
+  const referralUrl = `${baseUrl}/r/${referralCode}`;
 
   const handleCopy = async () => {
     try {
-      await navigator.clipboard.writeText(referralUrl)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
+      await navigator.clipboard.writeText(referralUrl);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
     } catch (err) {
-      console.error('Failed to copy:', err)
+      console.error("Failed to copy:", err);
     }
-  }
+  };
 
   return (
     <Card className="border-primary/20 bg-gradient-to-br from-primary/5 to-primary/10">
@@ -34,7 +45,10 @@ export function ReferralLinkCard({ referralCode }: ReferralLinkCardProps) {
           </div>
           <div>
             <CardTitle>您的推薦連結</CardTitle>
-            <CardDescription>分享給朋友，朋友付款後您將獲得 50,000 tokens</CardDescription>
+            <CardDescription>
+              分享給朋友，朋友付款後雙方都將獲得{" "}
+              {REFERRAL_TOKEN_REWARD.toLocaleString()} tokens
+            </CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -48,7 +62,7 @@ export function ReferralLinkCard({ referralCode }: ReferralLinkCardProps) {
           <Button
             onClick={handleCopy}
             variant={copied ? "default" : "outline"}
-            className={copied ? "bg-success hover:bg-success/90" : ""}
+            className={copied ? "bg-green-600 hover:bg-green-700" : ""}
           >
             {copied ? (
               <>
@@ -64,9 +78,10 @@ export function ReferralLinkCard({ referralCode }: ReferralLinkCardProps) {
           </Button>
         </div>
         <p className="text-xs text-muted-foreground mt-3">
-          推薦碼：<span className="font-mono font-semibold">{referralCode}</span>
+          推薦碼：
+          <span className="font-mono font-semibold">{referralCode}</span>
         </p>
       </CardContent>
     </Card>
-  )
+  );
 }

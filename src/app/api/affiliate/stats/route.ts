@@ -1,90 +1,98 @@
-import { NextRequest, NextResponse } from 'next/server'
-import { createClient } from '@/lib/supabase/server'
-import type { AffiliateDashboardStats } from '@/types/affiliate.types'
+import { NextResponse } from "next/server";
+import { createClient } from "@/lib/supabase/server";
+import { getAffiliate, getAffiliateStats } from "@/lib/affiliate-service";
 
-/**
- * GET /api/affiliate/stats
- * 取得聯盟夥伴統計資料
- */
-export async function GET(request: NextRequest) {
+export async function GET() {
   try {
-    const supabase = await createClient()
+    const supabase = await createClient();
 
-    // 檢查是否已登入
     const {
       data: { user },
       error: authError,
-    } = await supabase.auth.getUser()
+    } = await supabase.auth.getUser();
 
     if (authError || !user) {
-      return NextResponse.json({ error: '請先登入' }, { status: 401 })
+      return NextResponse.json({ error: "請先登入" }, { status: 401 });
     }
 
-    // 取得用戶的 company_id
     const { data: companyMember } = await supabase
-      .from('company_members')
-      .select('company_id')
-      .eq('user_id', user.id)
-      .single()
+      .from("company_members")
+      .select("company_id")
+      .eq("user_id", user.id)
+      .single();
 
     if (!companyMember) {
-      return NextResponse.json({ error: '無法取得公司資訊' }, { status: 400 })
+      return NextResponse.json({ error: "無法取得公司資訊" }, { status: 400 });
     }
 
-    // 取得聯盟夥伴資料
-    const { data: affiliate, error: affiliateError } = await supabase
-      .from('affiliates')
-      .select('*')
-      .eq('company_id', companyMember.company_id)
-      .single()
+    const affiliate = await getAffiliate(companyMember.company_id);
 
-    if (affiliateError || !affiliate) {
-      return NextResponse.json({ error: '您還不是聯盟夥伴' }, { status: 404 })
+    if (!affiliate) {
+      return NextResponse.json({ error: "您還不是聯盟夥伴" }, { status: 404 });
     }
 
-    // 取得推薦記錄
+    const stats = await getAffiliateStats(companyMember.company_id);
+
+    if (!stats) {
+      return NextResponse.json({ error: "無法取得統計資料" }, { status: 500 });
+    }
+
+    const { data: referralCode } = await supabase
+      .from("referral_codes")
+      .select("code, total_clicks")
+      .eq("company_id", companyMember.company_id)
+      .single();
+
     const { data: referrals } = await supabase
-      .from('affiliate_referrals')
-      .select('*')
-      .eq('affiliate_id', affiliate.id)
+      .from("referrals")
+      .select("status, first_payment_at, lifetime_value, last_payment_at")
+      .eq("referrer_company_id", companyMember.company_id)
+      .eq("reward_type", "commission");
 
-    // 計算轉換率
-    const totalClicks = referrals?.length || 0
-    const paidReferrals = referrals?.filter((r) => r.first_payment_at !== null).length || 0
-    const conversionRate = totalClicks > 0 ? (paidReferrals / totalClicks) * 100 : 0
+    const totalReferrals = referrals?.length || 0;
+    const paidReferrals =
+      referrals?.filter(
+        (r) => r.status === "qualified" || r.status === "rewarded",
+      ).length || 0;
+    const conversionRate =
+      totalReferrals > 0 ? (paidReferrals / totalReferrals) * 100 : 0;
+    const totalValue =
+      referrals?.reduce((sum, r) => sum + (r.lifetime_value || 0), 0) || 0;
+    const averageOrderValue =
+      paidReferrals > 0 ? totalValue / paidReferrals : 0;
 
-    // 計算平均訂單價值
-    const totalValue = referrals?.reduce((sum, r) => sum + (r.lifetime_value || 0), 0) || 0
-    const averageOrderValue = paidReferrals > 0 ? totalValue / paidReferrals : 0
-
-    // 取得最後一次付款日期
     const lastPaymentDate = referrals
       ?.filter((r) => r.last_payment_at)
       .sort((a, b) => {
-        const dateA = a.last_payment_at ? new Date(a.last_payment_at).getTime() : 0
-        const dateB = b.last_payment_at ? new Date(b.last_payment_at).getTime() : 0
-        return dateB - dateA
-      })[0]?.last_payment_at
+        const dateA = a.last_payment_at
+          ? new Date(a.last_payment_at).getTime()
+          : 0;
+        const dateB = b.last_payment_at
+          ? new Date(b.last_payment_at).getTime()
+          : 0;
+        return dateB - dateA;
+      })[0]?.last_payment_at;
 
-    const stats: AffiliateDashboardStats = {
-      totalReferrals: affiliate.total_referrals,
-      activeReferrals: affiliate.active_referrals,
-      pendingCommission: parseFloat(affiliate.pending_commission.toString()),
-      lockedCommission: parseFloat(affiliate.locked_commission.toString()),
-      withdrawnCommission: parseFloat(affiliate.withdrawn_commission.toString()),
-      lifetimeCommission: parseFloat(affiliate.lifetime_commission.toString()),
+    return NextResponse.json({
+      totalReferrals,
+      activeReferrals: paidReferrals,
+      pendingCommission: stats.pendingCommission,
+      lockedCommission: stats.pendingCommission,
+      availableCommission: stats.availableCommission,
+      withdrawnCommission: stats.withdrawnCommission,
+      lifetimeCommission: stats.lifetimeCommission,
       conversionRate: Math.round(conversionRate * 100) / 100,
       averageOrderValue: Math.round(averageOrderValue),
       lastPaymentDate: lastPaymentDate || null,
-    }
-
-    return NextResponse.json({
-      ...stats,
-      affiliate_code: affiliate.affiliate_code,
+      affiliate_code: referralCode?.code || "",
       status: affiliate.status,
-    })
+      currentTier: stats.currentTier,
+      nextTier: stats.nextTier,
+      referralsToNextTier: stats.referralsToNextTier,
+      qualifiedReferrals: stats.qualifiedReferrals,
+    });
   } catch (error) {
-    console.error('API 錯誤:', error)
-    return NextResponse.json({ error: '伺服器錯誤' }, { status: 500 })
+    console.error("API 錯誤:", error);
+    return NextResponse.json({ error: "伺服器錯誤" }, { status: 500 });
   }
 }
