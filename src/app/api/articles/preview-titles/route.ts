@@ -86,7 +86,7 @@ ${langConfig.instruction}
 請直接輸出 5 個標題，每行一個，不要編號：`;
 
     const router = getAPIRouter();
-    const model = "google/gemini-2.0-flash-exp:free";
+    const model = "google/gemini-2.5-flash-preview-05-20";
 
     const response = await router.complete({
       model,

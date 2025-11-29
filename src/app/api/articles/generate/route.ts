@@ -184,7 +184,7 @@ export async function POST(request: NextRequest) {
       company_id: billingId,
       website_id: websiteId,
       user_id: user.id,
-      keywords: industry ? [industry] : [articleTitle],
+      keywords: articleTitle ? [articleTitle] : industry ? [industry] : [],
       status: "pending",
       metadata: {
         mode: mode || "single",
