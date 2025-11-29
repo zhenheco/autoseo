@@ -9,6 +9,12 @@
  * - RPM: 50 images per minute
  */
 
+import {
+  getOpenAIBaseUrl,
+  getGatewayHeaders,
+  isGatewayEnabled,
+} from "@/lib/cloudflare/ai-gateway";
+
 export interface OpenAIImageGenerationOptions {
   /**
    * 圖片生成模型
@@ -33,21 +39,21 @@ export interface OpenAIImageGenerationOptions {
    * dall-e-3: "1024x1024", "1792x1024", "1024x1792"
    * gpt-image-1-mini: "1024x1024"
    */
-  size?: '256x256' | '512x512' | '1024x1024' | '1792x1024' | '1024x1792';
+  size?: "256x256" | "512x512" | "1024x1024" | "1792x1024" | "1024x1792";
 
   /**
    * 圖片品質（dall-e-3 only）
    * - "standard": 標準品質
    * - "hd": 高品質（更貴）
    */
-  quality?: 'standard' | 'hd';
+  quality?: "standard" | "hd";
 
   /**
    * 回應格式
    * - "url": 返回圖片 URL（預設）
    * - "b64_json": 返回 Base64 編碼
    */
-  response_format?: 'url' | 'b64_json';
+  response_format?: "url" | "b64_json";
 
   /**
    * 使用者 ID（選填，用於追蹤）
@@ -101,16 +107,21 @@ export class OpenAIImageClient {
   private organization?: string;
   private timeout: number;
   private maxRetries: number;
-  private baseURL = 'https://api.openai.com/v1';
+
+  private get baseURL(): string {
+    return getOpenAIBaseUrl();
+  }
 
   constructor(config: OpenAIImageClientConfig = {}) {
-    this.apiKey = config.apiKey || process.env.OPENAI_API_KEY || '';
+    this.apiKey = config.apiKey || process.env.OPENAI_API_KEY || "";
     this.organization = config.organization || process.env.OPENAI_ORGANIZATION;
     this.timeout = config.timeout || 120000; // 120 秒（圖片生成較慢）
     this.maxRetries = config.maxRetries || 3;
 
     if (!this.apiKey) {
-      console.warn('[OpenAIImageClient] ⚠️ API Key 未設定，請設定 OPENAI_API_KEY 環境變數');
+      console.warn(
+        "[OpenAIImageClient] ⚠️ API Key 未設定，請設定 OPENAI_API_KEY 環境變數",
+      );
     }
   }
 
@@ -124,9 +135,11 @@ export class OpenAIImageClient {
   /**
    * 生成圖片（主要方法）
    */
-  async generate(options: OpenAIImageGenerationOptions): Promise<OpenAIImageResponse> {
+  async generate(
+    options: OpenAIImageGenerationOptions,
+  ): Promise<OpenAIImageResponse> {
     if (!this.isConfigured()) {
-      throw new Error('OpenAI API Key 未設定');
+      throw new Error("OpenAI API Key 未設定");
     }
 
     // 驗證參數
@@ -136,12 +149,12 @@ export class OpenAIImageClient {
       model: options.model,
       prompt: options.prompt,
       n: options.n,
-      size: options.size || '1024x1024',
+      size: options.size || "1024x1024",
       user: options.user,
     };
 
     // 只有 dall-e-3 支援 quality 和 response_format
-    if (options.model === 'dall-e-3') {
+    if (options.model === "dall-e-3") {
       if (options.quality) {
         requestBody.quality = options.quality;
       }
@@ -151,13 +164,13 @@ export class OpenAIImageClient {
     }
 
     // 移除 undefined 值
-    Object.keys(requestBody).forEach(key => {
+    Object.keys(requestBody).forEach((key) => {
       if (requestBody[key] === undefined) {
         delete requestBody[key];
       }
     });
 
-    return this.makeRequest('/images/generations', requestBody);
+    return this.makeRequest("/images/generations", requestBody);
   }
 
   /**
@@ -167,15 +180,16 @@ export class OpenAIImageClient {
     model?: string;
     prompt: string;
     size?: string;
-    quality?: 'standard' | 'hd';
+    quality?: "standard" | "hd";
   }): Promise<{
     url: string;
     revisedPrompt?: string;
   }> {
     const response = await this.generate({
-      model: params.model || 'gpt-image-1-mini',
+      model: params.model || "gpt-image-1-mini",
       prompt: params.prompt,
-      size: (params.size as OpenAIImageGenerationOptions['size']) || '1024x1024',
+      size:
+        (params.size as OpenAIImageGenerationOptions["size"]) || "1024x1024",
       quality: params.quality,
       n: 1,
     });
@@ -183,7 +197,7 @@ export class OpenAIImageClient {
     const imageData = response.data[0];
 
     if (!imageData.url) {
-      throw new Error('圖片生成成功但沒有返回 URL');
+      throw new Error("圖片生成成功但沒有返回 URL");
     }
 
     return {
@@ -200,13 +214,15 @@ export class OpenAIImageClient {
     prompt: string;
     count: number;
     size?: string;
-    quality?: 'standard' | 'hd';
-  }): Promise<Array<{
-    url: string;
-    revisedPrompt?: string;
-  }>> {
+    quality?: "standard" | "hd";
+  }): Promise<
+    Array<{
+      url: string;
+      revisedPrompt?: string;
+    }>
+  > {
     // dall-e-3 只支援單張，需要多次呼叫
-    const isDalle3 = params.model === 'dall-e-3';
+    const isDalle3 = params.model === "dall-e-3";
 
     if (isDalle3 && params.count > 1) {
       const promises = Array.from({ length: params.count }, () =>
@@ -215,7 +231,7 @@ export class OpenAIImageClient {
           prompt: params.prompt,
           size: params.size,
           quality: params.quality,
-        })
+        }),
       );
 
       return Promise.all(promises);
@@ -223,14 +239,15 @@ export class OpenAIImageClient {
 
     // 其他模型可以一次生成多張
     const response = await this.generate({
-      model: params.model || 'gpt-image-1-mini',
+      model: params.model || "gpt-image-1-mini",
       prompt: params.prompt,
-      size: (params.size as OpenAIImageGenerationOptions['size']) || '1024x1024',
+      size:
+        (params.size as OpenAIImageGenerationOptions["size"]) || "1024x1024",
       quality: params.quality,
       n: Math.min(params.count, 10), // 最多 10 張
     });
 
-    return response.data.map(data => ({
+    return response.data.map((data) => ({
       url: data.url!,
       revisedPrompt: data.revised_prompt,
     }));
@@ -243,31 +260,33 @@ export class OpenAIImageClient {
     // 驗證圖片數量
     if (options.n !== undefined) {
       if (options.n < 1 || options.n > 10) {
-        throw new Error('圖片數量必須在 1-10 之間');
+        throw new Error("圖片數量必須在 1-10 之間");
       }
 
-      if (options.model === 'dall-e-3' && options.n > 1) {
-        throw new Error('dall-e-3 只支援生成 1 張圖片');
+      if (options.model === "dall-e-3" && options.n > 1) {
+        throw new Error("dall-e-3 只支援生成 1 張圖片");
       }
     }
 
     // 驗證尺寸
     if (options.size) {
       const validSizes = {
-        'dall-e-2': ['256x256', '512x512', '1024x1024'],
-        'dall-e-3': ['1024x1024', '1792x1024', '1024x1792'],
-        'gpt-image-1-mini': ['1024x1024'],
+        "dall-e-2": ["256x256", "512x512", "1024x1024"],
+        "dall-e-3": ["1024x1024", "1792x1024", "1024x1792"],
+        "gpt-image-1-mini": ["1024x1024"],
       };
 
       const modelSizes = validSizes[options.model as keyof typeof validSizes];
       if (modelSizes && !modelSizes.includes(options.size)) {
-        throw new Error(`模型 ${options.model} 不支援尺寸 ${options.size}，支援的尺寸: ${modelSizes.join(', ')}`);
+        throw new Error(
+          `模型 ${options.model} 不支援尺寸 ${options.size}，支援的尺寸: ${modelSizes.join(", ")}`,
+        );
       }
     }
 
     // 驗證品質（只有 dall-e-3 支援）
-    if (options.quality && options.model !== 'dall-e-3') {
-      console.warn('[OpenAIImageClient] ⚠️ 只有 dall-e-3 支援 quality 參數');
+    if (options.quality && options.model !== "dall-e-3") {
+      console.warn("[OpenAIImageClient] ⚠️ 只有 dall-e-3 支援 quality 參數");
     }
   }
 
@@ -276,7 +295,7 @@ export class OpenAIImageClient {
    */
   private async makeRequest(
     endpoint: string,
-    body: Record<string, unknown>
+    body: Record<string, unknown>,
   ): Promise<OpenAIImageResponse> {
     const url = `${this.baseURL}${endpoint}`;
     let lastError: Error | null = null;
@@ -287,16 +306,20 @@ export class OpenAIImageClient {
         const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
         const headers: Record<string, string> = {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.apiKey}`,
+          "Content-Type": "application/json",
         };
 
         if (this.organization) {
-          headers['OpenAI-Organization'] = this.organization;
+          headers["OpenAI-Organization"] = this.organization;
+        }
+
+        if (isGatewayEnabled()) {
+          Object.assign(headers, getGatewayHeaders());
         }
 
         const response = await fetch(url, {
-          method: 'POST',
+          method: "POST",
           headers,
           body: JSON.stringify(body),
           signal: controller.signal,
@@ -306,16 +329,18 @@ export class OpenAIImageClient {
 
         // 處理 HTTP 錯誤
         if (!response.ok) {
-          const errorData = await response.json() as OpenAIImageError;
+          const errorData = (await response.json()) as OpenAIImageError;
           const error = new Error(
-            `OpenAI Image API Error [${response.status}]: ${errorData.error?.message || response.statusText}`
+            `OpenAI Image API Error [${response.status}]: ${errorData.error?.message || response.statusText}`,
           );
 
           // Rate limit 錯誤
           if (response.status === 429) {
             if (attempt < this.maxRetries) {
               const delay = Math.min(1000 * Math.pow(2, attempt), 60000);
-              console.log(`[OpenAIImageClient] ⏳ Rate limit，${delay}ms 後重試 (${attempt}/${this.maxRetries})`);
+              console.log(
+                `[OpenAIImageClient] ⏳ Rate limit，${delay}ms 後重試 (${attempt}/${this.maxRetries})`,
+              );
               await this.sleep(delay);
               continue;
             }
@@ -324,7 +349,9 @@ export class OpenAIImageClient {
           // 服務器錯誤（5xx）
           if (response.status >= 500 && attempt < this.maxRetries) {
             const delay = 2000 * attempt;
-            console.log(`[OpenAIImageClient] ⚠️ 伺服器錯誤，${delay}ms 後重試 (${attempt}/${this.maxRetries})`);
+            console.log(
+              `[OpenAIImageClient] ⚠️ 伺服器錯誤，${delay}ms 後重試 (${attempt}/${this.maxRetries})`,
+            );
             await this.sleep(delay);
             continue;
           }
@@ -332,7 +359,7 @@ export class OpenAIImageClient {
           throw error;
         }
 
-        const data = await response.json() as OpenAIImageResponse;
+        const data = (await response.json()) as OpenAIImageResponse;
 
         // 記錄成功請求
         if (attempt > 1) {
@@ -340,12 +367,11 @@ export class OpenAIImageClient {
         }
 
         return data;
-
       } catch (error: unknown) {
         lastError = error as Error;
 
         // Timeout 錯誤
-        if (error instanceof Error && error.name === 'AbortError') {
+        if (error instanceof Error && error.name === "AbortError") {
           console.log(`[OpenAIImageClient] ⏱️ 請求超時 (${this.timeout}ms)`);
           if (attempt < this.maxRetries) {
             await this.sleep(2000 * attempt);
@@ -354,7 +380,7 @@ export class OpenAIImageClient {
         }
 
         // 網路錯誤
-        if (error instanceof TypeError && error.message.includes('fetch')) {
+        if (error instanceof TypeError && error.message.includes("fetch")) {
           console.log(`[OpenAIImageClient] 🌐 網路錯誤: ${error.message}`);
           if (attempt < this.maxRetries) {
             await this.sleep(2000 * attempt);
@@ -368,7 +394,7 @@ export class OpenAIImageClient {
     }
 
     throw new Error(
-      `OpenAI Image API 請求失敗（已重試 ${this.maxRetries} 次）: ${lastError?.message || 'Unknown error'}`
+      `OpenAI Image API 請求失敗（已重試 ${this.maxRetries} 次）: ${lastError?.message || "Unknown error"}`,
     );
   }
 
@@ -376,14 +402,14 @@ export class OpenAIImageClient {
    * Sleep 工具函數
    */
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
    * 驗證模型 ID 是否有效
    */
   static isValidModel(modelId: string): boolean {
-    const validModels = ['gpt-image-1-mini', 'dall-e-2', 'dall-e-3'];
+    const validModels = ["gpt-image-1-mini", "dall-e-2", "dall-e-3"];
     return validModels.includes(modelId);
   }
 
@@ -395,12 +421,14 @@ export class OpenAIImageClient {
     maxImages: number;
   } {
     const defaults = {
-      'gpt-image-1-mini': { size: '1024x1024', maxImages: 10 },
-      'dall-e-2': { size: '1024x1024', maxImages: 10 },
-      'dall-e-3': { size: '1024x1024', maxImages: 1 },
+      "gpt-image-1-mini": { size: "1024x1024", maxImages: 10 },
+      "dall-e-2": { size: "1024x1024", maxImages: 10 },
+      "dall-e-3": { size: "1024x1024", maxImages: 1 },
     };
 
-    return defaults[modelId as keyof typeof defaults] || defaults['gpt-image-1-mini'];
+    return (
+      defaults[modelId as keyof typeof defaults] || defaults["gpt-image-1-mini"]
+    );
   }
 }
 
@@ -409,7 +437,9 @@ export class OpenAIImageClient {
  */
 let globalClient: OpenAIImageClient | null = null;
 
-export function getOpenAIImageClient(config?: OpenAIImageClientConfig): OpenAIImageClient {
+export function getOpenAIImageClient(
+  config?: OpenAIImageClientConfig,
+): OpenAIImageClient {
   if (!globalClient) {
     globalClient = new OpenAIImageClient(config);
   }

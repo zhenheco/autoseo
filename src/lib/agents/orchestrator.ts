@@ -1457,7 +1457,6 @@ export class ParallelOrchestrator {
   private getAIConfig(): AIClientConfig {
     return {
       deepseekApiKey: process.env.DEEPSEEK_API_KEY,
-      openrouterApiKey: process.env.OPENROUTER_API_KEY,
       openaiApiKey: process.env.OPENAI_API_KEY,
       perplexityApiKey: process.env.PERPLEXITY_API_KEY,
     };
