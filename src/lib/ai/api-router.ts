@@ -4,21 +4,14 @@
  */
 
 import { getDeepSeekClient } from "@/lib/deepseek/client";
-import { callOpenRouter } from "@/lib/openrouter";
 import { getOpenAIImageClient } from "@/lib/openai/image-client";
 import { getOpenAITextClient } from "@/lib/openai/text-client";
 import { getPerplexityClient } from "@/lib/perplexity/client";
-import type {
-  APIProvider,
-  ProcessingTier,
-  TokenUsage,
-  UnifiedAPIResponse,
-} from "@/types/ai-models";
+import type { APIProvider, UnifiedAPIResponse } from "@/types/ai-models";
 import type { AIMessage } from "@/types/agents";
 
 export interface APIRouterConfig {
   deepseekApiKey?: string;
-  openrouterApiKey?: string;
   openaiApiKey?: string;
   perplexityApiKey?: string;
   maxRetries?: number;
@@ -251,15 +244,6 @@ export class APIRouter {
           responseFormat,
         );
 
-      case "openrouter":
-        return this.callOpenRouterAPI(
-          model,
-          messages,
-          temperature,
-          maxTokens,
-          responseFormat,
-        );
-
       case "perplexity":
         return this.callPerplexityAPI(model, messages, temperature, maxTokens);
 
@@ -353,40 +337,6 @@ export class APIRouter {
   }
 
   /**
-   * 呼叫 OpenRouter API
-   */
-  private async callOpenRouterAPI(
-    model: string,
-    messages: AIMessage[],
-    temperature?: number,
-    maxTokens?: number,
-    responseFormat?: "text" | "json",
-  ): Promise<UnifiedAPIResponse> {
-    const response = await callOpenRouter({
-      model,
-      messages,
-      temperature: temperature ?? 0.7,
-      max_tokens: maxTokens ?? 2000,
-      response_format:
-        responseFormat === "json" ? { type: "json_object" } : undefined,
-    });
-
-    return {
-      content: response.choices[0].message.content || "",
-      usage: {
-        input_tokens: response.usage?.prompt_tokens || 0,
-        output_tokens: response.usage?.completion_tokens || 0,
-        total_tokens: response.usage?.total_tokens || 0,
-        billing_input_tokens: (response.usage?.prompt_tokens || 0) * 2,
-        billing_output_tokens: (response.usage?.completion_tokens || 0) * 2,
-        total_billing_tokens: (response.usage?.total_tokens || 0) * 2,
-      },
-      model: response.model,
-      api_provider: "openrouter",
-    };
-  }
-
-  /**
    * 呼叫 Perplexity API
    */
   private async callPerplexityAPI(
@@ -453,13 +403,13 @@ export class APIRouter {
     ) {
       return "openai";
     }
-    if (model.startsWith("google/") || model.startsWith("anthropic/")) {
-      return "openrouter";
+    if (model.startsWith("google/") || model.includes("gemini")) {
+      return "gemini";
     }
     if (model.includes("sonar")) {
       return "perplexity";
     }
-    return "openrouter"; // 預設使用 OpenRouter
+    return "deepseek";
   }
 
   /**
@@ -493,7 +443,6 @@ export function getAPIRouter(config?: APIRouterConfig): APIRouter {
   if (!globalRouter) {
     globalRouter = new APIRouter({
       deepseekApiKey: process.env.DEEPSEEK_API_KEY,
-      openrouterApiKey: process.env.OPENROUTER_API_KEY,
       openaiApiKey: process.env.OPENAI_API_KEY,
       perplexityApiKey: process.env.PERPLEXITY_API_KEY,
       maxRetries: 3,
@@ -531,13 +480,13 @@ export function detectAPIProvider(model: string): APIProvider {
   ) {
     return "openai";
   }
-  if (model.startsWith("google/") || model.startsWith("anthropic/")) {
-    return "openrouter";
+  if (model.startsWith("google/") || model.includes("gemini")) {
+    return "gemini";
   }
   if (model.includes("sonar")) {
     return "perplexity";
   }
-  return "openrouter";
+  return "deepseek";
 }
 
 // 預設導出

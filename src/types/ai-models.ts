@@ -10,17 +10,17 @@
 /**
  * API Provider 類型
  */
-export type APIProvider = 'deepseek' | 'openrouter' | 'openai' | 'perplexity';
+export type APIProvider = "deepseek" | "openai" | "perplexity" | "gemini";
 
 /**
  * 處理階段類型
  */
-export type ProcessingTier = 'complex' | 'simple' | 'both' | 'fixed';
+export type ProcessingTier = "complex" | "simple" | "both" | "fixed";
 
 /**
  * 模型類型
  */
-export type ModelType = 'text' | 'image' | 'multimodal';
+export type ModelType = "text" | "image" | "multimodal";
 
 /**
  * AI 模型資訊
@@ -68,7 +68,7 @@ export interface AgentConfigExtended {
 
   // 圖片生成
   image_model: string;
-  image_quality: 'low' | 'medium' | 'high' | 'auto';
+  image_quality: "low" | "medium" | "high" | "auto";
   image_size: string;
   image_count: number;
 
@@ -107,19 +107,19 @@ export interface FallbackChain {
  */
 export const DEFAULT_FALLBACK_CHAINS: Record<string, string[]> = {
   complex: [
-    'deepseek-reasoner',
-    'openai/gpt-5',
-    'openai/gpt-4o',
-    'google/gemini-2.5-pro',
-    'google/gemini-2.5-flash',
-    'anthropic/claude-sonnet-4.5',
+    "deepseek-reasoner",
+    "openai/gpt-5",
+    "openai/gpt-4o",
+    "google/gemini-2.5-pro",
+    "google/gemini-2.5-flash",
+    "anthropic/claude-sonnet-4.5",
   ],
   simple: [
-    'deepseek-chat',
-    'openai/gpt-5-mini',
-    'openai/gpt-4o-mini',
-    'openai/gpt-4o',
-    'anthropic/claude-sonnet-4.5',
+    "deepseek-chat",
+    "openai/gpt-5-mini",
+    "openai/gpt-4o-mini",
+    "openai/gpt-4o",
+    "anthropic/claude-sonnet-4.5",
   ],
 };
 
@@ -167,22 +167,11 @@ export interface CostCalculation {
  * DeepSeek API 選項
  */
 export interface DeepSeekAPIOptions {
-  model: 'deepseek-reasoner' | 'deepseek-chat';
+  model: "deepseek-reasoner" | "deepseek-chat";
   prompt: string;
   temperature?: number;
   max_tokens?: number;
-  response_format?: 'text' | 'json';
-}
-
-/**
- * OpenRouter API 選項
- */
-export interface OpenRouterAPIOptions {
-  model: string;
-  prompt: string;
-  temperature?: number;
-  max_tokens?: number;
-  response_format?: 'text' | 'json';
+  response_format?: "text" | "json";
 }
 
 /**
@@ -192,7 +181,7 @@ export interface OpenAIImageAPIOptions {
   model: string;
   prompt: string;
   size?: string;
-  quality?: 'low' | 'medium' | 'high' | 'auto';
+  quality?: "low" | "medium" | "high" | "auto";
   n?: number;
 }
 
@@ -205,7 +194,7 @@ export interface PerplexityAPIOptions {
   temperature?: number;
   max_tokens?: number;
   search_domain_filter?: string[];
-  search_recency_filter?: 'day' | 'week' | 'month' | 'year';
+  search_recency_filter?: "day" | "week" | "month" | "year";
 }
 
 /**
@@ -314,18 +303,24 @@ export interface CostStats {
   total_cost_twd: number;
   total_tokens: number;
   total_billing_tokens: number;
-  by_agent: Record<string, {
-    cost_usd: number;
-    cost_twd: number;
-    tokens: number;
-    billing_tokens: number;
-  }>;
-  by_model: Record<string, {
-    cost_usd: number;
-    cost_twd: number;
-    tokens: number;
-    billing_tokens: number;
-  }>;
+  by_agent: Record<
+    string,
+    {
+      cost_usd: number;
+      cost_twd: number;
+      tokens: number;
+      billing_tokens: number;
+    }
+  >;
+  by_model: Record<
+    string,
+    {
+      cost_usd: number;
+      cost_twd: number;
+      tokens: number;
+      billing_tokens: number;
+    }
+  >;
 }
 
 // ============================================
@@ -343,7 +338,7 @@ export type ModelValidator = (modelId: string) => boolean;
 export type CostCalculator = (
   inputTokens: number,
   outputTokens: number,
-  model: AIModel
+  model: AIModel,
 ) => CostCalculation;
 
 /**
@@ -351,5 +346,5 @@ export type CostCalculator = (
  */
 export type FallbackSelector = (
   currentModel: string,
-  processingTier: ProcessingTier
+  processingTier: ProcessingTier,
 ) => string | null;

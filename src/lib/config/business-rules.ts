@@ -15,48 +15,58 @@ export const BUSINESS_RULES = {
     defaultTokenQuota: 100000,
   },
   payment: {
-    orderNumberPrefix: 'ORD',
+    orderNumberPrefix: "ORD",
     orderNumberLength: 14,
     paymentGateway: {
-      version: '2.0',
-      respondType: 'JSON',
-      defaultCurrency: 'TWD',
+      version: "2.0",
+      respondType: "JSON",
+      defaultCurrency: "TWD",
     },
   },
   ai: {
     models: {
       research: {
-        defaultModel: 'deepseek/deepseek-reasoner',
+        defaultModel: "deepseek-reasoner",
         temperature: 0.3,
         maxTokens: 64000,
       },
       strategy: {
-        defaultModel: 'deepseek/deepseek-chat',
+        defaultModel: "deepseek-reasoner",
         temperature: 0.7,
         maxTokens: 64000,
       },
       outline: {
-        defaultModel: 'deepseek/deepseek-chat',
+        defaultModel: "deepseek-chat",
         temperature: 0.7,
-        maxTokens: 64000,
+        maxTokens: 8192,
       },
       writing: {
-        defaultModel: 'deepseek/deepseek-chat',
+        defaultModel: "deepseek-chat",
         temperature: 0.7,
-        maxTokens: 64000,
+        maxTokens: 8192,
       },
       seoOptimization: {
-        defaultModel: 'openai/gpt-4o',
+        defaultModel: "deepseek-chat",
         temperature: 0.5,
-        maxTokens: 16000,
+        maxTokens: 8192,
       },
       metaGeneration: {
-        defaultModel: 'openai/gpt-4o-mini',
+        defaultModel: "deepseek-chat",
         temperature: 0.3,
         maxTokens: 4000,
       },
+      featuredImage: {
+        defaultModel: "gemini-3-pro-image-preview",
+        quality: "low",
+        size: "1024x1024",
+      },
+      contentImage: {
+        defaultModel: "gpt-image-1-mini",
+        quality: "low",
+        size: "1024x1024",
+      },
     },
   },
-} as const
+} as const;
 
-export type BusinessRules = typeof BUSINESS_RULES
+export type BusinessRules = typeof BUSINESS_RULES;

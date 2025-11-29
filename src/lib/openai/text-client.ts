@@ -5,14 +5,19 @@
  * API 文件: https://platform.openai.com/docs/api-reference/chat
  */
 
-import type { AIMessage } from '@/types/agents';
+import type { AIMessage } from "@/types/agents";
+import {
+  getOpenAIBaseUrl,
+  getGatewayHeaders,
+  isGatewayEnabled,
+} from "@/lib/cloudflare/ai-gateway";
 
 export interface OpenAITextCompletionOptions {
   model: string;
   messages: AIMessage[];
   temperature?: number;
   max_tokens?: number;
-  response_format?: { type: 'text' | 'json_object' };
+  response_format?: { type: "text" | "json_object" };
   top_p?: number;
   frequency_penalty?: number;
   presence_penalty?: number;
@@ -51,16 +56,21 @@ export class OpenAITextClient {
   private organization?: string;
   private timeout: number;
   private maxRetries: number;
-  private baseURL = 'https://api.openai.com/v1';
+
+  private get baseURL(): string {
+    return getOpenAIBaseUrl();
+  }
 
   constructor(config: OpenAITextClientConfig = {}) {
-    this.apiKey = config.apiKey || process.env.OPENAI_API_KEY || '';
+    this.apiKey = config.apiKey || process.env.OPENAI_API_KEY || "";
     this.organization = config.organization || process.env.OPENAI_ORGANIZATION;
     this.timeout = config.timeout || 120000;
     this.maxRetries = config.maxRetries || 3;
 
     if (!this.apiKey) {
-      console.warn('[OpenAITextClient] ⚠️ API Key 未設定，請設定 OPENAI_API_KEY 環境變數');
+      console.warn(
+        "[OpenAITextClient] ⚠️ API Key 未設定，請設定 OPENAI_API_KEY 環境變數",
+      );
     }
   }
 
@@ -78,7 +88,7 @@ export class OpenAITextClient {
     model: string;
   }> {
     if (!this.isConfigured()) {
-      throw new Error('OpenAI API Key 未設定');
+      throw new Error("OpenAI API Key 未設定");
     }
 
     const requestBody: Record<string, unknown> = {
@@ -96,16 +106,16 @@ export class OpenAITextClient {
       requestBody.response_format = options.response_format;
     }
 
-    Object.keys(requestBody).forEach(key => {
+    Object.keys(requestBody).forEach((key) => {
       if (requestBody[key] === undefined) {
         delete requestBody[key];
       }
     });
 
-    const response = await this.makeRequest('/chat/completions', requestBody);
+    const response = await this.makeRequest("/chat/completions", requestBody);
 
     return {
-      content: response.choices[0]?.message?.content || '',
+      content: response.choices[0]?.message?.content || "",
       usage: response.usage,
       model: response.model,
     };
@@ -113,7 +123,7 @@ export class OpenAITextClient {
 
   private async makeRequest(
     endpoint: string,
-    body: Record<string, unknown>
+    body: Record<string, unknown>,
   ): Promise<OpenAITextResponse> {
     const url = `${this.baseURL}${endpoint}`;
     let lastError: Error | null = null;
@@ -124,16 +134,20 @@ export class OpenAITextClient {
         const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
         const headers: Record<string, string> = {
-          'Authorization': `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
+          Authorization: `Bearer ${this.apiKey}`,
+          "Content-Type": "application/json",
         };
 
         if (this.organization) {
-          headers['OpenAI-Organization'] = this.organization;
+          headers["OpenAI-Organization"] = this.organization;
+        }
+
+        if (isGatewayEnabled()) {
+          Object.assign(headers, getGatewayHeaders());
         }
 
         const response = await fetch(url, {
-          method: 'POST',
+          method: "POST",
           headers,
           body: JSON.stringify(body),
           signal: controller.signal,
@@ -142,21 +156,27 @@ export class OpenAITextClient {
         clearTimeout(timeoutId);
 
         if (!response.ok) {
-          const errorData = await response.json() as { error?: { message?: string } };
+          const errorData = (await response.json()) as {
+            error?: { message?: string };
+          };
           const error = new Error(
-            `OpenAI Text API Error [${response.status}]: ${errorData.error?.message || response.statusText}`
+            `OpenAI Text API Error [${response.status}]: ${errorData.error?.message || response.statusText}`,
           );
 
           if (response.status === 429 && attempt < this.maxRetries) {
             const delay = Math.min(1000 * Math.pow(2, attempt), 60000);
-            console.log(`[OpenAITextClient] ⏳ Rate limit，${delay}ms 後重試 (${attempt}/${this.maxRetries})`);
+            console.log(
+              `[OpenAITextClient] ⏳ Rate limit，${delay}ms 後重試 (${attempt}/${this.maxRetries})`,
+            );
             await this.sleep(delay);
             continue;
           }
 
           if (response.status >= 500 && attempt < this.maxRetries) {
             const delay = 2000 * attempt;
-            console.log(`[OpenAITextClient] ⚠️ 伺服器錯誤，${delay}ms 後重試 (${attempt}/${this.maxRetries})`);
+            console.log(
+              `[OpenAITextClient] ⚠️ 伺服器錯誤，${delay}ms 後重試 (${attempt}/${this.maxRetries})`,
+            );
             await this.sleep(delay);
             continue;
           }
@@ -164,18 +184,17 @@ export class OpenAITextClient {
           throw error;
         }
 
-        const data = await response.json() as OpenAITextResponse;
+        const data = (await response.json()) as OpenAITextResponse;
 
         if (attempt > 1) {
           console.log(`[OpenAITextClient] ✅ 重試成功 (第 ${attempt} 次嘗試)`);
         }
 
         return data;
-
       } catch (error: unknown) {
         lastError = error as Error;
 
-        if (error instanceof Error && error.name === 'AbortError') {
+        if (error instanceof Error && error.name === "AbortError") {
           console.log(`[OpenAITextClient] ⏱️ 請求超時 (${this.timeout}ms)`);
           if (attempt < this.maxRetries) {
             await this.sleep(2000 * attempt);
@@ -183,7 +202,7 @@ export class OpenAITextClient {
           }
         }
 
-        if (error instanceof TypeError && error.message.includes('fetch')) {
+        if (error instanceof TypeError && error.message.includes("fetch")) {
           console.log(`[OpenAITextClient] 🌐 網路錯誤: ${error.message}`);
           if (attempt < this.maxRetries) {
             await this.sleep(2000 * attempt);
@@ -196,18 +215,20 @@ export class OpenAITextClient {
     }
 
     throw new Error(
-      `OpenAI Text API 請求失敗（已重試 ${this.maxRetries} 次）: ${lastError?.message || 'Unknown error'}`
+      `OpenAI Text API 請求失敗（已重試 ${this.maxRetries} 次）: ${lastError?.message || "Unknown error"}`,
     );
   }
 
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 }
 
 let globalClient: OpenAITextClient | null = null;
 
-export function getOpenAITextClient(config?: OpenAITextClientConfig): OpenAITextClient {
+export function getOpenAITextClient(
+  config?: OpenAITextClientConfig,
+): OpenAITextClient {
   if (!globalClient) {
     globalClient = new OpenAITextClient(config);
   }

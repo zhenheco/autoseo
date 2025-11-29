@@ -20,14 +20,11 @@ export const DEEPSEEK_CONFIG = {
 } as const;
 
 /**
- * OpenRouter API 配置
+ * Gemini API 配置
  */
-export const OPENROUTER_CONFIG = {
-  baseURL:
-    process.env.OPENROUTER_API_BASE_URL || "https://openrouter.ai/api/v1",
-  apiKey: process.env.OPENROUTER_API_KEY || "",
-  modelsEndpoint: "/models",
-  chatEndpoint: "/chat/completions",
+export const GEMINI_CONFIG = {
+  baseURL: "https://generativelanguage.googleapis.com",
+  apiKey: process.env.GEMINI_API_KEY || "",
 } as const;
 
 /**
@@ -138,7 +135,7 @@ export function getApiEndpoint(service: string, path: string = ""): string {
   const configs: Record<string, { baseURL: string }> = {
     openai: OPENAI_CONFIG,
     deepseek: DEEPSEEK_CONFIG,
-    openrouter: OPENROUTER_CONFIG,
+    gemini: GEMINI_CONFIG,
     perplexity: PERPLEXITY_CONFIG,
   };
 
@@ -157,12 +154,12 @@ export function getApiEndpoint(service: string, path: string = ""): string {
  * 驗證環境變數是否已設定
  */
 export function validateApiConfig(
-  service: "openai" | "deepseek" | "openrouter" | "perplexity",
+  service: "openai" | "deepseek" | "gemini" | "perplexity",
 ): boolean {
   const configs = {
     openai: () => !!OPENAI_CONFIG.apiKey,
     deepseek: () => !!DEEPSEEK_CONFIG.apiKey,
-    openrouter: () => !!OPENROUTER_CONFIG.apiKey,
+    gemini: () => !!GEMINI_CONFIG.apiKey,
     perplexity: () => !!PERPLEXITY_CONFIG.apiKey,
   };
 
