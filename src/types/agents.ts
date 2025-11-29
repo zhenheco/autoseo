@@ -257,6 +257,7 @@ export interface ImageInput {
   model: string;
   quality: "low" | "medium" | "high" | "auto";
   size: string;
+  targetLanguage?: string;
 }
 
 export interface GeneratedImage {

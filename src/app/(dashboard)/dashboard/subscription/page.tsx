@@ -37,11 +37,11 @@ export default async function SubscriptionPage() {
     .eq("id", member.company_id)
     .single();
 
-  // 從 company_subscriptions 表讀取訂閱資訊（包含 plan 資訊）
+  // 從 company_subscriptions 表讀取訂閱資訊（包含 plan 資訊和疊加購買資訊）
   const { data: companySubscription } = await supabase
     .from("company_subscriptions")
     .select(
-      "monthly_quota_balance, purchased_token_balance, monthly_token_quota, current_period_end, is_lifetime, subscription_plans(name, slug)",
+      "plan_id, monthly_quota_balance, purchased_token_balance, monthly_token_quota, base_monthly_quota, purchased_count, current_period_end, is_lifetime, subscription_plans(name, slug)",
     )
     .eq("company_id", member.company_id)
     .eq("status", "active")
@@ -88,6 +88,11 @@ export default async function SubscriptionPage() {
                   (company.subscription_tier === "free"
                     ? "免費方案"
                     : "未知方案")}
+                {(companySubscription?.purchased_count || 1) > 1 && (
+                  <span className="ml-2 text-sm text-purple-600">
+                    (x{companySubscription?.purchased_count})
+                  </span>
+                )}
               </p>
             </div>
             <div>
@@ -98,6 +103,13 @@ export default async function SubscriptionPage() {
                 {companySubscription?.monthly_token_quota?.toLocaleString() ||
                   0}
               </p>
+              {(companySubscription?.purchased_count || 1) > 1 && (
+                <p className="text-xs text-muted-foreground">
+                  基礎{" "}
+                  {companySubscription?.base_monthly_quota?.toLocaleString()} x{" "}
+                  {companySubscription?.purchased_count}
+                </p>
+              )}
             </div>
             <div>
               <p className="text-sm text-muted-foreground mb-1">購買 Credit</p>
@@ -131,6 +143,20 @@ export default async function SubscriptionPage() {
           companyId={member.company_id}
           userEmail={user.email || ""}
           currentTier={company?.subscription_tier || "free"}
+          currentSubscription={
+            companySubscription
+              ? {
+                  plan_id: companySubscription.plan_id,
+                  purchased_count: companySubscription.purchased_count || 1,
+                  base_monthly_quota:
+                    companySubscription.base_monthly_quota ||
+                    companySubscription.monthly_token_quota ||
+                    0,
+                  monthly_token_quota:
+                    companySubscription.monthly_token_quota || 0,
+                }
+              : null
+          }
         />
       </div>
 
