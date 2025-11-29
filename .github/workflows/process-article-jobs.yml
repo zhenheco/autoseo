@@ -53,6 +53,11 @@ jobs:
           echo "R2_ACCOUNT_ID=$(echo -n '${{ secrets.R2_ACCOUNT_ID }}' | tr -d '\n\r')" >> $GITHUB_ENV
           echo "R2_BUCKET_NAME=$(echo -n '${{ secrets.R2_BUCKET_NAME }}' | tr -d '\n\r')" >> $GITHUB_ENV
           echo "USE_MULTI_AGENT_ARCHITECTURE=$(echo -n '${{ secrets.USE_MULTI_AGENT_ARCHITECTURE }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "CF_AI_GATEWAY_ENABLED=$(echo -n '${{ secrets.CF_AI_GATEWAY_ENABLED }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "CF_AI_GATEWAY_ACCOUNT_ID=$(echo -n '${{ secrets.CF_AI_GATEWAY_ACCOUNT_ID }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "CF_AI_GATEWAY_ID=$(echo -n '${{ secrets.CF_AI_GATEWAY_ID }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "CF_AI_GATEWAY_TOKEN=$(echo -n '${{ secrets.CF_AI_GATEWAY_TOKEN }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "GEMINI_API_KEY=$(echo -n '${{ secrets.GEMINI_API_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
 
       - name: Process pending article jobs
         run: tsx scripts/process-jobs.ts
