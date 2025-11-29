@@ -581,7 +581,9 @@ export class PaymentService {
           // 檢查是否已有相同方案的訂閱（疊加購買）
           const { data: existingSubscription } = await this.supabase
             .from("company_subscriptions")
-            .select("id, plan_id, purchased_token_balance, monthly_token_quota")
+            .select(
+              "id, plan_id, purchased_token_balance, monthly_token_quota, monthly_quota_balance",
+            )
             .eq("company_id", orderData.company_id)
             .eq("plan_id", planData.id)
             .eq("status", "active")
@@ -592,13 +594,17 @@ export class PaymentService {
             const currentQuota =
               existingSubscription.monthly_token_quota || planData.base_tokens;
             const newMonthlyQuota = currentQuota + planData.base_tokens;
+            // 剩餘配額 + 新購買配額
+            const currentQuotaBalance =
+              existingSubscription.monthly_quota_balance || 0;
+            const newQuotaBalance = currentQuotaBalance + planData.base_tokens;
 
             const { error: stackError } = await this.supabase
               .from("company_subscriptions")
               .update({
                 monthly_token_quota: newMonthlyQuota,
-                monthly_quota_balance: newMonthlyQuota,
-                current_period_start: periodStart,
+                monthly_quota_balance: newQuotaBalance,
+                // 不更新 current_period_start，保留原始重置日期
                 current_period_end: periodEnd,
               })
               .eq("id", existingSubscription.id);
@@ -615,6 +621,8 @@ export class PaymentService {
               companyId: orderData.company_id,
               previousQuota: currentQuota,
               newMonthlyTokenQuota: newMonthlyQuota,
+              previousQuotaBalance: currentQuotaBalance,
+              newQuotaBalance,
               periodEnd,
             });
           } else {
