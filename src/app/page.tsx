@@ -77,10 +77,9 @@ const features = [
 ];
 
 const aiModels = [
-  { name: "GPT-4o", description: "OpenAI 最新旗艦模型" },
-  { name: "Claude 3.5", description: "Anthropic 高性能模型" },
-  { name: "DeepSeek", description: "高性價比中文模型" },
-  { name: "Gemini", description: "Google 多模態模型" },
+  { name: "GPT-5", description: "OpenAI 最新旗艦模型" },
+  { name: "Claude 4.5", description: "Anthropic 高性能模型" },
+  { name: "Gemini 3 Pro", description: "Google 多模態模型" },
 ];
 
 export default async function Home() {
@@ -101,7 +100,7 @@ export default async function Home() {
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-background">
-      <section className="relative py-20 sm:py-32">
+      <section className="relative py-8 sm:py-12">
         <div className="container relative z-10 mx-auto px-4">
           <div className="mx-auto max-w-5xl text-center">
             <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
@@ -115,7 +114,7 @@ export default async function Home() {
             </h1>
 
             <p className="mx-auto mb-6 max-w-3xl text-lg text-muted-foreground leading-relaxed">
-              1waySEO 結合 GPT-4o、Claude 等最先進 AI 技術，
+              1waySEO 結合 GPT、Claude、Gemini 等最先進 AI 技術，
               <br className="hidden md:block" />
               從關鍵字研究到文章發布，全自動化 SEO 內容生產流程。
             </p>
@@ -190,11 +189,11 @@ export default async function Home() {
               整合<span className="text-primary">頂尖 AI 模型</span>
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              根據需求自動選擇最適合的 AI 模型，確保最佳品質與性價比
+              根據需求自動選擇最適合的 AI 模型，確保最佳品質
             </p>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-4xl mx-auto">
+          <div className="grid grid-cols-3 gap-4 max-w-3xl mx-auto">
             {aiModels.map((model, index) => (
               <Card key={index} className="border border-border text-center">
                 <CardContent className="p-6">
@@ -366,22 +365,22 @@ export default async function Home() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto items-stretch">
               {tokenPackages?.map((pkg) => {
                 const isPopular = pkg.tokens === 50000;
                 return (
                   <Card
                     key={pkg.id}
-                    className={`border ${
+                    className={`relative border ${
                       isPopular ? "border-primary" : "border-border"
                     } bg-card`}
                   >
+                    {isPopular && (
+                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-medium">
+                        超值
+                      </span>
+                    )}
                     <CardContent className="p-6 text-center">
-                      {isPopular && (
-                        <span className="inline-block bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-medium mb-3">
-                          超值
-                        </span>
-                      )}
                       <div className="text-lg font-bold text-primary mb-1">
                         {pkg.tokens?.toLocaleString()} Credits
                       </div>
