@@ -213,7 +213,7 @@ export function ArticleForm({ quotaStatus, websiteId }: ArticleFormProps) {
         language,
         competitors: competitors.filter((c) => c.trim() !== ""),
         ...(title && { title }),
-        ...(websiteId && { website_id: websiteId }),
+        website_id: websiteId,
       }),
     });
 
