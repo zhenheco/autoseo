@@ -148,6 +148,7 @@ export function ArticleForm({
     setIsSubmitting(true);
     try {
       await submitArticleWithoutRedirect(title);
+      window.dispatchEvent(new Event("tokenReserved"));
       setGeneratedTitles(title ? [title] : []);
       setShowSuccessDialog(true);
     } catch (error) {

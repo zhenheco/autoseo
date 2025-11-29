@@ -5,9 +5,9 @@ import useSWR from "swr";
 import { formatNumber } from "@/lib/utils";
 
 interface TokenBalance {
-  monthly: number;
-  purchased: number;
   total: number;
+  reserved: number;
+  available: number;
 }
 
 interface TokenBalanceDisplayProps {
@@ -37,20 +37,20 @@ export function TokenBalanceDisplay({
     dedupingInterval: 2000, // 防止重複請求
   });
 
-  // 監聽文章生成完成事件，立即更新餘額
+  // 監聽文章生成相關事件，立即更新餘額
   useEffect(() => {
-    const handleArticleGenerated = () => {
-      // 立即重新驗證餘額
+    const handleBalanceUpdate = () => {
       mutate();
     };
 
-    // 監聽自訂事件
-    window.addEventListener("articleGenerated", handleArticleGenerated);
-    window.addEventListener("articlesUpdated", handleArticleGenerated);
+    window.addEventListener("articleGenerated", handleBalanceUpdate);
+    window.addEventListener("articlesUpdated", handleBalanceUpdate);
+    window.addEventListener("tokenReserved", handleBalanceUpdate);
 
     return () => {
-      window.removeEventListener("articleGenerated", handleArticleGenerated);
-      window.removeEventListener("articlesUpdated", handleArticleGenerated);
+      window.removeEventListener("articleGenerated", handleBalanceUpdate);
+      window.removeEventListener("articlesUpdated", handleBalanceUpdate);
+      window.removeEventListener("tokenReserved", handleBalanceUpdate);
     };
   }, [mutate]);
 
@@ -79,7 +79,7 @@ export function TokenBalanceDisplay({
     );
   }
 
-  const isLowBalance = balance.total < 1000;
+  const isLowBalance = balance.available < 1000;
 
   if (compact) {
     return (
@@ -88,7 +88,7 @@ export function TokenBalanceDisplay({
         <span
           className={`text-sm font-semibold ${isLowBalance ? "text-destructive" : "text-foreground"}`}
         >
-          {formatNumber(balance.total)}
+          {formatNumber(balance.available)}
         </span>
         <a
           href="/dashboard/subscription"
@@ -104,34 +104,28 @@ export function TokenBalanceDisplay({
     <div className="flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2 shadow-sm transition-all duration-300 hover:shadow-md">
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium text-muted-foreground">
-          Credit 餘額:
+          可用餘額:
         </span>
         <span
           className={`text-lg font-bold transition-all duration-500 ease-in-out ${isLowBalance ? "text-destructive" : "text-foreground"}`}
-          key={balance.total}
+          key={balance.available}
         >
           <span className="inline-block transition-transform duration-500 ease-out hover:scale-110">
-            {formatNumber(balance.total)}
+            {formatNumber(balance.available)}
           </span>
         </span>
       </div>
 
-      <div className="flex items-center gap-3 border-l border-border pl-3 text-xs text-muted-foreground">
-        <span className="transition-all duration-300 ease-in-out">
-          月配額:{" "}
-          <span className="font-medium transition-colors duration-300">
-            {formatNumber(balance.monthly)}
-          </span>
-        </span>
-        {balance.purchased > 0 && (
+      {balance.reserved > 0 && (
+        <div className="flex items-center gap-3 border-l border-border pl-3 text-xs text-muted-foreground">
           <span className="transition-all duration-300 ease-in-out">
-            購買:{" "}
-            <span className="font-medium transition-colors duration-300">
-              {formatNumber(balance.purchased)}
+            處理中:{" "}
+            <span className="font-medium text-amber-600 transition-colors duration-300">
+              {formatNumber(balance.reserved)}
             </span>
           </span>
-        )}
-      </div>
+        </div>
+      )}
 
       {isLowBalance && (
         <div className="flex items-center gap-2">

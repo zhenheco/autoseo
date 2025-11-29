@@ -81,6 +81,7 @@ export function QuickArticleForm({
           throw new Error(data.error || data.message || "生成失敗");
         }
 
+        window.dispatchEvent(new Event("tokenReserved"));
         setGeneratedKeyword(keyword.trim());
         setShowSuccessDialog(true);
         setKeyword("");
@@ -116,6 +117,8 @@ export function QuickArticleForm({
         if (!data.success) {
           throw new Error(data.error || "未能建立任何任務");
         }
+
+        window.dispatchEvent(new Event("tokenReserved"));
 
         // 組合顯示訊息
         const newJobs = data.newJobs || 0;
