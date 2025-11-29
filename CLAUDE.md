@@ -28,6 +28,60 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 ---
 
+# 🔑 AI API 配置說明
+
+## Cloudflare AI Gateway（本專案使用）
+
+本專案所有 AI API 呼叫都透過 **Cloudflare AI Gateway** 代理，不直接使用各家 API Key。
+
+### 環境變數配置
+
+```bash
+# AI Gateway 設定（必須）
+CF_AI_GATEWAY_ENABLED=true
+CF_AI_GATEWAY_ACCOUNT_ID=<你的 Cloudflare Account ID>
+CF_AI_GATEWAY_ID=<你的 Gateway ID>
+CF_AI_GATEWAY_TOKEN=<你的 Gateway Token>
+
+# 各 AI 服務的 API Key（透過 Gateway 代理）
+DEEPSEEK_API_KEY=<DeepSeek API Key>
+OPENAI_API_KEY=<OpenAI API Key>
+PERPLEXITY_API_KEY=<Perplexity API Key>
+GEMINI_API_KEY=<Google Gemini API Key>
+```
+
+### Gemini Imagen 圖片生成
+
+**重要**：Gemini Imagen 模型名稱可能會更新，如果遇到 404 錯誤：
+
+```
+models/imagen-3.0-generate-001 is not found for API version v1beta
+```
+
+需要檢查 Google 官方文檔確認最新的模型名稱：
+
+- 官方文檔：https://ai.google.dev/gemini-api/docs/imagen
+- 模型列表：https://ai.google.dev/gemini-api/docs/models
+
+**修改位置**：`src/lib/ai/ai-client.ts` 的 `callGeminiImagenAPI` 函式
+
+### Gateway 未啟用排查
+
+如果日誌顯示 `gateway: false`，檢查：
+
+1. `CF_AI_GATEWAY_ENABLED` 是否設為 `"true"`（字串）
+2. `CF_AI_GATEWAY_ACCOUNT_ID` 是否正確設定
+3. `CF_AI_GATEWAY_ID` 是否正確設定
+
+### Vercel 與 GitHub Actions 環境變數同步
+
+確保以下位置的環境變數一致：
+
+1. **Vercel Dashboard** → Settings → Environment Variables
+2. **GitHub Secrets** → Repository Settings → Secrets and variables → Actions
+
+---
+
 # 🚀 部署前檢查清單（Pre-Deployment Checklist）
 
 **❗ 重要：每次提交前必須執行以下檢查，避免 Vercel 部署失敗**

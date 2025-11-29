@@ -362,7 +362,7 @@ export class AIClient {
 
     const modelName = options.model.includes("flash")
       ? "imagen-3.0-generate-002"
-      : "imagen-3.0-generate-001";
+      : "imagen-3.0-generate-002";
 
     const [width, height] = (options.size || "1024x1024")
       .split("x")

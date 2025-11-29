@@ -74,6 +74,11 @@ jobs:
           echo "R2_ACCOUNT_ID=$(echo -n '${{ secrets.R2_ACCOUNT_ID }}' | tr -d '\n\r')" >> $GITHUB_ENV
           echo "R2_BUCKET_NAME=$(echo -n '${{ secrets.R2_BUCKET_NAME }}' | tr -d '\n\r')" >> $GITHUB_ENV
           echo "USE_MULTI_AGENT_ARCHITECTURE=$(echo -n '${{ secrets.USE_MULTI_AGENT_ARCHITECTURE }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "CF_AI_GATEWAY_ENABLED=$(echo -n '${{ secrets.CF_AI_GATEWAY_ENABLED }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "CF_AI_GATEWAY_ACCOUNT_ID=$(echo -n '${{ secrets.CF_AI_GATEWAY_ACCOUNT_ID }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "CF_AI_GATEWAY_ID=$(echo -n '${{ secrets.CF_AI_GATEWAY_ID }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "CF_AI_GATEWAY_TOKEN=$(echo -n '${{ secrets.CF_AI_GATEWAY_TOKEN }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "GEMINI_API_KEY=$(echo -n '${{ secrets.GEMINI_API_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
 
       - name: 處理單個文章（repository_dispatch）
         if: github.event_name == 'repository_dispatch'
@@ -92,6 +97,11 @@ jobs:
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
           R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
           USE_MULTI_AGENT_ARCHITECTURE: ${{ secrets.USE_MULTI_AGENT_ARCHITECTURE }}
+          CF_AI_GATEWAY_ENABLED: ${{ secrets.CF_AI_GATEWAY_ENABLED }}
+          CF_AI_GATEWAY_ACCOUNT_ID: ${{ secrets.CF_AI_GATEWAY_ACCOUNT_ID }}
+          CF_AI_GATEWAY_ID: ${{ secrets.CF_AI_GATEWAY_ID }}
+          CF_AI_GATEWAY_TOKEN: ${{ secrets.CF_AI_GATEWAY_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           echo "處理文章: ${{ github.event.client_payload.title }}"
           echo "Job ID: ${{ github.event.client_payload.jobId }}"
@@ -130,6 +140,11 @@ jobs:
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
           R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
           USE_MULTI_AGENT_ARCHITECTURE: ${{ secrets.USE_MULTI_AGENT_ARCHITECTURE }}
+          CF_AI_GATEWAY_ENABLED: ${{ secrets.CF_AI_GATEWAY_ENABLED }}
+          CF_AI_GATEWAY_ACCOUNT_ID: ${{ secrets.CF_AI_GATEWAY_ACCOUNT_ID }}
+          CF_AI_GATEWAY_ID: ${{ secrets.CF_AI_GATEWAY_ID }}
+          CF_AI_GATEWAY_TOKEN: ${{ secrets.CF_AI_GATEWAY_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           echo "批次處理待處理的文章..."
           node scripts/process-batch-articles.js
@@ -150,6 +165,11 @@ jobs:
           R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
           R2_BUCKET_NAME: ${{ secrets.R2_BUCKET_NAME }}
           USE_MULTI_AGENT_ARCHITECTURE: ${{ secrets.USE_MULTI_AGENT_ARCHITECTURE }}
+          CF_AI_GATEWAY_ENABLED: ${{ secrets.CF_AI_GATEWAY_ENABLED }}
+          CF_AI_GATEWAY_ACCOUNT_ID: ${{ secrets.CF_AI_GATEWAY_ACCOUNT_ID }}
+          CF_AI_GATEWAY_ID: ${{ secrets.CF_AI_GATEWAY_ID }}
+          CF_AI_GATEWAY_TOKEN: ${{ secrets.CF_AI_GATEWAY_TOKEN }}
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           if [ -n "${{ github.event.inputs.jobId }}" ]; then
             echo "處理指定的 Job: ${{ github.event.inputs.jobId }}"
