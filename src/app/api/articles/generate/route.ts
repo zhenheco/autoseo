@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse, after } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { v4 as uuidv4 } from "uuid";
 import {
@@ -10,7 +10,6 @@ import {
   checkFreeTrialLimit,
   incrementFreeTrialUsage,
 } from "@/lib/quota/free-trial-service";
-import { processArticleJob } from "@/lib/article-processor";
 
 export const maxDuration = 300;
 
@@ -277,17 +276,16 @@ export async function POST(request: NextRequest) {
       await incrementFreeTrialUsage(supabase, billingId, articleJobId);
     }
 
-    // 使用 after() 在回應後立即開始處理
-    // 這樣用戶可以立即看到回應，同時後台開始處理
-    after(async () => {
-      console.log(`[Generate API] 開始後台處理任務: ${articleJobId}`);
-      await processArticleJob(articleJobId);
-    });
+    // 任務已創建（status: pending），由 GitHub Actions 每分鐘執行 process-article-jobs.yml 來處理
+    // 這樣可以避免 Vercel 300 秒 timeout 限制
+    console.log(
+      `[Generate API] 任務已創建: ${articleJobId}，等待 GitHub Actions 處理`,
+    );
 
     return NextResponse.json({
       success: true,
       articleJobId,
-      message: "文章生成已開始，正在後台處理中",
+      message: "文章生成任務已建立，將在背景處理中",
     });
   } catch (error) {
     console.error("Generate article error:", error);
