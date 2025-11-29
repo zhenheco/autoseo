@@ -8,6 +8,22 @@ import {
 import { processFirstPaymentReward } from "@/lib/referral-service";
 import { processAffiliateCommission } from "@/lib/affiliate-service";
 
+interface NewebPayPeriodResult {
+  MerchantOrderNo?: string;
+  PeriodNo?: string;
+  TradeNo?: string;
+  AuthCode?: string;
+  MerOrderNo?: string;
+  MandateNo?: string;
+}
+
+interface NewebPayPeriodCallback {
+  Status?: string;
+  Message?: string;
+  Result?: NewebPayPeriodResult;
+  [key: string]: string | number | NewebPayPeriodResult | undefined;
+}
+
 export interface CreateOnetimeOrderParams {
   companyId: string;
   paymentType: "subscription" | "token_package" | "lifetime";
@@ -715,13 +731,18 @@ export class PaymentService {
   }
 
   // 解密 TradeInfo 格式的定期定額回調
-  decryptTradeInfoForRecurring(tradeInfo: string, tradeSha: string): any {
+  decryptTradeInfoForRecurring(
+    tradeInfo: string,
+    tradeSha: string,
+  ): Record<string, string | number | undefined> {
     return this.newebpay.decryptCallback(tradeInfo, tradeSha);
   }
 
   // 解密 Period 格式的定期定額授權回調
-  decryptPeriodCallback(period: string): any {
-    return this.newebpay.decryptPeriodCallback(period);
+  decryptPeriodCallback(period: string): NewebPayPeriodCallback {
+    return this.newebpay.decryptPeriodCallback(
+      period,
+    ) as NewebPayPeriodCallback;
   }
 
   async handleRecurringCallback(period: string): Promise<{
@@ -739,7 +760,7 @@ export class PaymentService {
 
       // Period 回調的結構: { Status, Message, Result: { MerchantOrderNo, PeriodNo, ... } }
       const status = decryptedData.Status as string;
-      const result = (decryptedData as any).Result;
+      const result = (decryptedData as NewebPayPeriodCallback).Result;
 
       if (!result || !result.MerchantOrderNo) {
         console.error(
