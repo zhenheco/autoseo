@@ -1,21 +1,21 @@
-import { NextResponse } from 'next/server';
-import { ModelSyncService } from '@/lib/model-sync/model-sync-service';
+import { NextResponse } from "next/server";
+import { ModelSyncService } from "@/lib/model-sync/model-sync-service";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
 export async function GET(request: Request) {
-  const authHeader = request.headers.get('authorization');
+  const authHeader = request.headers.get("authorization");
 
   if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
   try {
     const syncService = new ModelSyncService(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY!,
-      process.env.OPENAI_API_KEY!
+      process.env.OPENAI_API_KEY!,
     );
 
     const results = await syncService.syncAllProviders();
@@ -25,7 +25,7 @@ export async function GET(request: Request) {
     const totalUpdated = results.reduce((sum, r) => sum + r.updatedModels, 0);
     const allErrors = results.flatMap((r) => r.errors);
 
-    console.log('Model sync completed:', {
+    console.log("Model sync completed:", {
       newModels: totalNew,
       updatedModels: totalUpdated,
       deprecatedModels: deprecatedCount,
@@ -43,16 +43,17 @@ export async function GET(request: Request) {
       details: results,
       timestamp: new Date().toISOString(),
     });
-  } catch (error: any) {
-    console.error('Model sync failed:', error);
+  } catch (error: unknown) {
+    console.error("Model sync failed:", error);
+    const message = error instanceof Error ? error.message : "Unknown error";
 
     return NextResponse.json(
       {
         success: false,
-        error: error.message,
+        error: message,
         timestamp: new Date().toISOString(),
       },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

@@ -1,6 +1,6 @@
-import { createClient } from '@supabase/supabase-js';
-import { OpenAIModelSync } from './openai-sync';
-import { AnthropicModelSync } from './anthropic-sync';
+import { createClient } from "@supabase/supabase-js";
+import { OpenAIModelSync } from "./openai-sync";
+import { AnthropicModelSync } from "./anthropic-sync";
 
 export interface SyncResult {
   provider: string;
@@ -14,11 +14,7 @@ export class ModelSyncService {
   private openaiSync: OpenAIModelSync;
   private anthropicSync: AnthropicModelSync;
 
-  constructor(
-    supabaseUrl: string,
-    supabaseKey: string,
-    openaiApiKey: string
-  ) {
+  constructor(supabaseUrl: string, supabaseKey: string, openaiApiKey: string) {
     this.supabase = createClient(supabaseUrl, supabaseKey);
     this.openaiSync = new OpenAIModelSync(openaiApiKey);
     this.anthropicSync = new AnthropicModelSync();
@@ -35,7 +31,7 @@ export class ModelSyncService {
 
   async syncOpenAI(): Promise<SyncResult> {
     const result: SyncResult = {
-      provider: 'openai',
+      provider: "openai",
       newModels: 0,
       updatedModels: 0,
       errors: [],
@@ -47,15 +43,15 @@ export class ModelSyncService {
       for (const model of models) {
         try {
           const { data: existing } = await this.supabase
-            .from('ai_models')
-            .select('id')
-            .eq('provider', 'openai')
-            .eq('model_id', model.modelId)
+            .from("ai_models")
+            .select("id")
+            .eq("provider", "openai")
+            .eq("model_id", model.modelId)
             .single();
 
           if (existing) {
             await this.supabase
-              .from('ai_models')
+              .from("ai_models")
               .update({
                 model_name: model.modelName,
                 description: model.description,
@@ -72,11 +68,11 @@ export class ModelSyncService {
                 version: model.version,
                 updated_at: new Date().toISOString(),
               })
-              .eq('id', existing.id);
+              .eq("id", existing.id);
 
             result.updatedModels++;
           } else {
-            await this.supabase.from('ai_models').insert({
+            await this.supabase.from("ai_models").insert({
               provider: model.provider,
               model_id: model.modelId,
               model_name: model.modelName,
@@ -99,12 +95,15 @@ export class ModelSyncService {
 
             result.newModels++;
           }
-        } catch (error: any) {
-          result.errors.push(`Failed to sync ${model.modelId}: ${error.message}`);
+        } catch (error: unknown) {
+          const message =
+            error instanceof Error ? error.message : "Unknown error";
+          result.errors.push(`Failed to sync ${model.modelId}: ${message}`);
         }
       }
-    } catch (error: any) {
-      result.errors.push(`Failed to fetch OpenAI models: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      result.errors.push(`Failed to fetch OpenAI models: ${message}`);
     }
 
     return result;
@@ -112,7 +111,7 @@ export class ModelSyncService {
 
   async syncAnthropic(): Promise<SyncResult> {
     const result: SyncResult = {
-      provider: 'anthropic',
+      provider: "anthropic",
       newModels: 0,
       updatedModels: 0,
       errors: [],
@@ -125,15 +124,15 @@ export class ModelSyncService {
       for (const model of [...models, ...newModels]) {
         try {
           const { data: existing } = await this.supabase
-            .from('ai_models')
-            .select('id')
-            .eq('provider', 'anthropic')
-            .eq('model_id', model.modelId)
+            .from("ai_models")
+            .select("id")
+            .eq("provider", "anthropic")
+            .eq("model_id", model.modelId)
             .single();
 
           if (existing) {
             await this.supabase
-              .from('ai_models')
+              .from("ai_models")
               .update({
                 model_name: model.modelName,
                 description: model.description,
@@ -146,11 +145,11 @@ export class ModelSyncService {
                 version: model.version,
                 updated_at: new Date().toISOString(),
               })
-              .eq('id', existing.id);
+              .eq("id", existing.id);
 
             result.updatedModels++;
           } else {
-            await this.supabase.from('ai_models').insert({
+            await this.supabase.from("ai_models").insert({
               provider: model.provider,
               model_id: model.modelId,
               model_name: model.modelName,
@@ -169,12 +168,15 @@ export class ModelSyncService {
 
             result.newModels++;
           }
-        } catch (error: any) {
-          result.errors.push(`Failed to sync ${model.modelId}: ${error.message}`);
+        } catch (error: unknown) {
+          const message =
+            error instanceof Error ? error.message : "Unknown error";
+          result.errors.push(`Failed to sync ${model.modelId}: ${message}`);
         }
       }
-    } catch (error: any) {
-      result.errors.push(`Failed to fetch Anthropic models: ${error.message}`);
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : "Unknown error";
+      result.errors.push(`Failed to fetch Anthropic models: ${message}`);
     }
 
     return result;
@@ -185,10 +187,10 @@ export class ModelSyncService {
     cutoffDate.setMonth(cutoffDate.getMonth() - 6);
 
     const { data: oldModels } = await this.supabase
-      .from('ai_models')
-      .select('id, model_id')
-      .lt('created_at', cutoffDate.toISOString())
-      .eq('is_deprecated', false);
+      .from("ai_models")
+      .select("id, model_id")
+      .lt("created_at", cutoffDate.toISOString())
+      .eq("is_deprecated", false);
 
     if (!oldModels || oldModels.length === 0) {
       return 0;
@@ -196,20 +198,20 @@ export class ModelSyncService {
 
     const modelsToCheck = oldModels.filter(
       (m) =>
-        m.model_id.includes('preview') ||
+        m.model_id.includes("preview") ||
         m.model_id.match(/\d{4}/) ||
-        m.model_id.includes('0613')
+        m.model_id.includes("0613"),
     );
 
     for (const model of modelsToCheck) {
       await this.supabase
-        .from('ai_models')
+        .from("ai_models")
         .update({
           is_deprecated: true,
           deprecated_at: new Date().toISOString(),
-          tags: ['deprecated'],
+          tags: ["deprecated"],
         })
-        .eq('id', model.id);
+        .eq("id", model.id);
     }
 
     return modelsToCheck.length;

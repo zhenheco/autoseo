@@ -79,7 +79,7 @@ Middleware 需要以下 Supabase 環境變數：
 
    ```
    名稱: NEXT_PUBLIC_APP_URL
-   值: https://seo.zhenhe-dm.com
+   值: https://1wayseo.com
    環境: Production, Preview, Development
    ```
 
@@ -181,7 +181,7 @@ vercel env ls
 
 ```bash
 # 測試首頁
-curl -I https://seo.zhenhe-dm.com/
+curl -I https://1wayseo.com/
 
 # 應該返回 HTTP/2 200
 # 如果還是錯誤，等待幾分鐘讓部署完成

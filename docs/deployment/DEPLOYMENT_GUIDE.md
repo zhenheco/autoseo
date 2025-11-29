@@ -91,7 +91,7 @@ npx wrangler pages deploy .open-next --project-name=auto-pilot-seo
 - [ ] 設定所有環境變數
 - [ ] 執行 `npm run deploy:pages`
 - [ ] 測試 webhook 端點
-- [ ] 設定自訂網域 (seo.zhenhe-dm.com)
+- [ ] 設定自訂網域 (1wayseo.com)
 
 ---
 

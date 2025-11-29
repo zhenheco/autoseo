@@ -7,6 +7,23 @@ import { SupabaseClient } from "@supabase/supabase-js";
 import { marked } from "marked";
 import type { ArticleGenerationResult } from "@/types/agents";
 
+interface WritingWithContent {
+  markdown?: string;
+  html?: string;
+  content?: string;
+}
+
+interface MetaWithTitle {
+  seo?: { title?: string };
+  title?: string;
+}
+
+interface ArticleRecommendation {
+  article_id: string;
+  score: number;
+  reason: string;
+}
+
 export interface PreviousArticle {
   title: string;
   slug: string;
@@ -213,10 +230,11 @@ export class ArticleStorageService {
     }
 
     // 檢查 writing 必須包含內容（markdown, html, 或 content 其中之一）
+    const writingWithContent = result.writing as WritingWithContent;
     const hasContent =
       result.writing!.markdown ||
       result.writing!.html ||
-      (result.writing as any).content;
+      writingWithContent.content;
     if (!hasContent) {
       missingFields.push(
         "writing content (需要 markdown, html 或 content 其中之一)",
@@ -224,7 +242,8 @@ export class ArticleStorageService {
     }
 
     // 檢查 meta 必須包含標題
-    const hasTitle = result.meta!.seo?.title || (result.meta as any).title;
+    const metaWithTitle = result.meta as MetaWithTitle;
+    const hasTitle = result.meta!.seo?.title || metaWithTitle.title;
     if (!hasTitle) {
       missingFields.push(
         "meta title (需要 meta.seo.title 或 meta.title 其中之一)",
@@ -259,18 +278,19 @@ export class ArticleStorageService {
   ): ArticleGenerationResult {
     // 提供 writing 欄位的預設值
     if (result.writing) {
+      const writingContent = result.writing as WritingWithContent;
       // 如果缺少 markdown，從 html 或 content 生成
       if (!result.writing.markdown && result.writing.html) {
         result.writing.markdown = result.writing.html;
-      } else if (!result.writing.markdown && (result.writing as any).content) {
-        result.writing.markdown = (result.writing as any).content;
+      } else if (!result.writing.markdown && writingContent.content) {
+        result.writing.markdown = writingContent.content;
       }
 
       // 如果缺少 html，從 markdown 或 content 生成
       if (!result.writing.html && result.writing.markdown) {
         result.writing.html = result.writing.markdown;
-      } else if (!result.writing.html && (result.writing as any).content) {
-        result.writing.html = (result.writing as any).content;
+      } else if (!result.writing.html && writingContent.content) {
+        result.writing.html = writingContent.content;
       }
 
       // 提供預設的 statistics
@@ -278,7 +298,7 @@ export class ArticleStorageService {
         const content =
           result.writing.markdown ||
           result.writing.html ||
-          (result.writing as any).content ||
+          writingContent.content ||
           "";
         const wordCount = content.split(/\s+/).length;
         const sentenceCount = content.split(/[.!?]+/).length;
@@ -314,8 +334,8 @@ export class ArticleStorageService {
     // 提供 meta 欄位的預設值
     if (result.meta) {
       // 統一標題來源
-      const title =
-        result.meta.seo?.title || (result.meta as any).title || "Untitled";
+      const metaTitle = result.meta as MetaWithTitle;
+      const title = result.meta.seo?.title || metaTitle.title || "Untitled";
 
       // 確保 seo 物件存在
       if (!result.meta.seo) {
@@ -556,7 +576,7 @@ export class ArticleStorageService {
     articleId: string,
     maxRecommendations: number = 5,
     minScore: number = 20.0,
-  ): Promise<any[]> {
+  ): Promise<ArticleRecommendation[]> {
     console.log("[ArticleStorage] 生成推薦:", {
       articleId,
       maxRecommendations,
@@ -587,7 +607,7 @@ export class ArticleStorageService {
    */
   async saveRecommendations(
     sourceArticleId: string,
-    recommendations: any[],
+    recommendations: ArticleRecommendation[],
   ): Promise<void> {
     if (recommendations.length === 0) {
       console.log("[ArticleStorage] 沒有推薦要儲存");
@@ -619,7 +639,7 @@ export class ArticleStorageService {
    */
   async saveArticleWithRecommendations(params: SaveArticleParams): Promise<{
     article: SavedArticle;
-    recommendations: any[];
+    recommendations: ArticleRecommendation[];
   }> {
     // 1. 儲存文章
     const article = await this.saveArticle(params);

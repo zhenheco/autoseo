@@ -17,7 +17,7 @@ echo "========================================"
 echo ""
 
 # 測試 URL
-BASE_URL="${1:-http://seo.zhenhe-dm.com}"
+BASE_URL="${1:-https://1wayseo.com}"
 echo "測試 URL: $BASE_URL"
 echo ""
 

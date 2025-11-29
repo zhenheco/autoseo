@@ -244,7 +244,7 @@ git push origin main
 
 - 部署 ID: `dpl_GahcZrfTUucbzb47zwKJQfNKeUVR`
 - 狀態: READY
-- 生產環境: https://seo.zhenhe-dm.com
+- 生產環境: https://1wayseo.com
 - 健康檢查: HTTP 200, 所有安全 headers 正確
 
 ### 關鍵發現

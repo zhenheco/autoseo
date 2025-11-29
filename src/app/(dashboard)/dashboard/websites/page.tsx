@@ -1,8 +1,11 @@
 import { getUser, getUserPrimaryCompany } from "@/lib/auth";
+import { Database } from "@/types/database.types";
 
 export const dynamic = "force-dynamic";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+
+type WebsiteConfig = Database["public"]["Tables"]["website_configs"]["Row"];
 import {
   Card,
   CardContent,
@@ -85,7 +88,7 @@ export default async function WebsitesPage({
       {/* 網站列表 */}
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {websites && websites.length > 0 ? (
-          websites.map((website: any) => (
+          websites.map((website: WebsiteConfig) => (
             <Card
               key={website.id}
               className="hover:shadow-lg transition-shadow"
@@ -106,7 +109,7 @@ export default async function WebsitesPage({
                     <span className="text-sm text-muted-foreground">狀態</span>
                     <WebsiteStatusToggle
                       websiteId={website.id}
-                      initialStatus={website.is_active}
+                      initialStatus={website.is_active ?? true}
                     />
                   </div>
                   <div className="flex gap-2 pt-2">

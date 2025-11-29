@@ -31,7 +31,7 @@ export class ConclusionAgent extends BaseAgent<
       id: "Indonesian (Bahasa Indonesia)",
     };
 
-    const targetLang = (input as any).targetLanguage || "zh-TW";
+    const targetLang = input.targetLanguage || "zh-TW";
     const languageName = languageNames[targetLang] || languageNames["zh-TW"];
 
     const mainPoints = outline.mainSections.map((s) => s.heading).join(", ");

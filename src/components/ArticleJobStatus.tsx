@@ -45,7 +45,7 @@ export function ArticleJobStatus({ companyId }: ArticleJobStatusProps) {
       {/* 任務列表 */}
       <div className="space-y-2">
         {jobs.map((job) => {
-          const metadata = job.metadata as any;
+          const metadata = job.metadata as { title?: string } | null;
           const title = metadata?.title || job.keywords?.[0] || "Untitled";
 
           return (

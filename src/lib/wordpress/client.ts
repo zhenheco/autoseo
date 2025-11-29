@@ -3,7 +3,7 @@
  * 直接與 WordPress 互動，處理文章發布、分類、標籤等
  */
 
-import { z } from 'zod';
+import { z } from "zod";
 
 // WordPress Post Schema
 const WordPressPostSchema = z.object({
@@ -14,7 +14,7 @@ const WordPressPostSchema = z.object({
   modified: z.string(),
   modified_gmt: z.string(),
   slug: z.string(),
-  status: z.enum(['publish', 'future', 'draft', 'pending', 'private']),
+  status: z.enum(["publish", "future", "draft", "pending", "private"]),
   type: z.string(),
   link: z.string(),
   title: z.object({ rendered: z.string() }),
@@ -22,14 +22,14 @@ const WordPressPostSchema = z.object({
   excerpt: z.object({ rendered: z.string(), protected: z.boolean() }),
   author: z.number(),
   featured_media: z.number(),
-  comment_status: z.enum(['open', 'closed']),
-  ping_status: z.enum(['open', 'closed']),
+  comment_status: z.enum(["open", "closed"]),
+  ping_status: z.enum(["open", "closed"]),
   sticky: z.boolean(),
   template: z.string(),
   format: z.string(),
   meta: z.object({}).passthrough(),
   categories: z.array(z.number()),
-  tags: z.array(z.number())
+  tags: z.array(z.number()),
 });
 
 // WordPress Category/Tag Schema
@@ -40,8 +40,8 @@ const WordPressTaxonomySchema = z.object({
   link: z.string(),
   name: z.string(),
   slug: z.string(),
-  taxonomy: z.enum(['category', 'post_tag']),
-  parent: z.number().optional()
+  taxonomy: z.enum(["category", "post_tag"]),
+  parent: z.number().optional(),
 });
 
 // WordPress Media Schema
@@ -57,7 +57,7 @@ const WordPressMediaSchema = z.object({
   alt_text: z.string(),
   media_type: z.string(),
   mime_type: z.string(),
-  source_url: z.string()
+  source_url: z.string(),
 });
 
 export type WordPressPost = z.infer<typeof WordPressPostSchema>;
@@ -79,11 +79,11 @@ export interface CreatePostData {
   content: string;
   excerpt?: string;
   slug?: string;
-  status?: 'publish' | 'draft' | 'pending';
+  status?: "publish" | "draft" | "pending";
   categories?: number[];
   tags?: number[];
   featured_media?: number;
-  meta?: Record<string, any>;
+  meta?: Record<string, string | number | boolean | null>;
   yoast_meta?: {
     yoast_wpseo_title?: string;
     yoast_wpseo_metadesc?: string;
@@ -104,46 +104,46 @@ export class WordPressClient {
 
   constructor(config: WordPressConfig) {
     this.config = config;
-    this.baseUrl = `${config.url.replace(/\/$/, '')}/wp-json/wp/v2`;
+    this.baseUrl = `${config.url.replace(/\/$/, "")}/wp-json/wp/v2`;
     this.setupAuthentication();
   }
 
   private setupAuthentication() {
     if (this.config.jwtToken) {
       // JWT Authentication for WP REST API 外掛 (最推薦)
-      this.headers['Authorization'] = `Bearer ${this.config.jwtToken}`;
+      this.headers["Authorization"] = `Bearer ${this.config.jwtToken}`;
     } else if (this.config.accessToken) {
       // OAuth 2.0 (推薦)
-      this.headers['Authorization'] = `Bearer ${this.config.accessToken}`;
+      this.headers["Authorization"] = `Bearer ${this.config.accessToken}`;
     } else if (this.config.applicationPassword && this.config.username) {
       // Application Password (安全)
       const auth = Buffer.from(
-        `${this.config.username}:${this.config.applicationPassword}`
-      ).toString('base64');
-      this.headers['Authorization'] = `Basic ${auth}`;
+        `${this.config.username}:${this.config.applicationPassword}`,
+      ).toString("base64");
+      this.headers["Authorization"] = `Basic ${auth}`;
     } else {
       // 不再支援純密碼認證
       throw new Error(
-        'WordPress 認證錯誤：請使用 JWT、OAuth 2.0 或 Application Password。' +
-        '推薦使用 JWT Authentication for WP REST API 外掛。'
+        "WordPress 認證錯誤：請使用 JWT、OAuth 2.0 或 Application Password。" +
+          "推薦使用 JWT Authentication for WP REST API 外掛。",
       );
     }
 
-    this.headers['Content-Type'] = 'application/json';
+    this.headers["Content-Type"] = "application/json";
   }
 
   /**
    * 創建新文章
    */
   async createPost(data: CreatePostData): Promise<WordPressPost> {
-    console.log('[WordPress] 創建新文章:', data.title);
+    console.log("[WordPress] 創建新文章:", data.title);
 
     try {
-      const postData: any = {
+      const postData: Record<string, unknown> = {
         title: data.title,
         content: data.content,
-        status: data.status || 'draft',
-        slug: data.slug
+        status: data.status || "draft",
+        slug: data.slug,
       };
 
       if (data.excerpt) postData.excerpt = data.excerpt;
@@ -155,23 +155,23 @@ export class WordPressClient {
       // Yoast SEO 支援
       if (data.yoast_meta) {
         postData.meta = {
-          ...postData.meta,
-          ...data.yoast_meta
+          ...((postData.meta as Record<string, unknown>) || {}),
+          ...data.yoast_meta,
         };
       }
 
       // Rank Math SEO 支援
       if (data.rank_math_meta) {
         postData.meta = {
-          ...postData.meta,
-          ...data.rank_math_meta
+          ...((postData.meta as Record<string, unknown>) || {}),
+          ...data.rank_math_meta,
         };
       }
 
       const response = await fetch(`${this.baseUrl}/posts`, {
-        method: 'POST',
+        method: "POST",
         headers: this.headers,
-        body: JSON.stringify(postData)
+        body: JSON.stringify(postData),
       });
 
       if (!response.ok) {
@@ -182,11 +182,10 @@ export class WordPressClient {
       const post = await response.json();
       const validated = WordPressPostSchema.parse(post);
 
-      console.log('[WordPress] 文章創建成功:', validated.id);
+      console.log("[WordPress] 文章創建成功:", validated.id);
       return validated;
-
     } catch (error) {
-      console.error('[WordPress] 創建文章錯誤:', error);
+      console.error("[WordPress] 創建文章錯誤:", error);
       throw error;
     }
   }
@@ -194,13 +193,16 @@ export class WordPressClient {
   /**
    * 更新文章
    */
-  async updatePost(id: number, data: Partial<CreatePostData>): Promise<WordPressPost> {
-    console.log('[WordPress] 更新文章:', id);
+  async updatePost(
+    id: number,
+    data: Partial<CreatePostData>,
+  ): Promise<WordPressPost> {
+    console.log("[WordPress] 更新文章:", id);
 
     const response = await fetch(`${this.baseUrl}/posts/${id}`, {
-      method: 'PUT',
+      method: "PUT",
       headers: this.headers,
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     });
 
     if (!response.ok) {
@@ -212,33 +214,36 @@ export class WordPressClient {
     return WordPressPostSchema.parse(post);
   }
 
-  async updateRankMathMeta(postId: number, meta: {
-    rank_math_title?: string;
-    rank_math_description?: string;
-    rank_math_focus_keyword?: string;
-    rank_math_robots?: string[];
-  }): Promise<void> {
-    console.log('[WordPress] 更新 Rank Math 元數據:', postId);
+  async updateRankMathMeta(
+    postId: number,
+    meta: {
+      rank_math_title?: string;
+      rank_math_description?: string;
+      rank_math_focus_keyword?: string;
+      rank_math_robots?: string[];
+    },
+  ): Promise<void> {
+    console.log("[WordPress] 更新 Rank Math 元數據:", postId);
 
     const url = `${this.config.url}/wp-json/rankmath/v1/updateMeta`;
 
     const response = await fetch(url, {
-      method: 'POST',
+      method: "POST",
       headers: this.headers,
       body: JSON.stringify({
         objectID: postId,
-        objectType: 'post',
-        meta
-      })
+        objectType: "post",
+        meta,
+      }),
     });
 
     if (!response.ok) {
       const error = await response.text();
-      console.error('[WordPress] Rank Math 更新失敗:', error);
+      console.error("[WordPress] Rank Math 更新失敗:", error);
       throw new Error(`Rank Math API 錯誤: ${response.status} - ${error}`);
     }
 
-    console.log('[WordPress] Rank Math 元數據更新成功');
+    console.log("[WordPress] Rank Math 元數據更新成功");
   }
 
   /**
@@ -246,26 +251,31 @@ export class WordPressClient {
    */
   async getCategories(): Promise<WordPressTaxonomy[]> {
     const url = `${this.baseUrl}/categories?per_page=100`;
-    console.log('[WordPress] 獲取分類:', url);
+    console.log("[WordPress] 獲取分類:", url);
 
     try {
       const response = await fetch(url, {
-        headers: this.headers
+        headers: this.headers,
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        const friendlyMessage = this.parseWordPressError(errorText, response.status);
-        console.error('[WordPress] 獲取分類失敗:', response.status, errorText);
+        const friendlyMessage = this.parseWordPressError(
+          errorText,
+          response.status,
+        );
+        console.error("[WordPress] 獲取分類失敗:", response.status, errorText);
         throw new Error(friendlyMessage);
       }
 
       const categories = await response.json();
-      console.log('[WordPress] 成功獲取', categories.length, '個分類');
-      return categories.map((cat: any) => WordPressTaxonomySchema.parse(cat));
+      console.log("[WordPress] 成功獲取", categories.length, "個分類");
+      return categories.map((cat: unknown) =>
+        WordPressTaxonomySchema.parse(cat),
+      );
     } catch (error) {
       if (error instanceof Error) {
-        console.error('[WordPress] 分類 API 錯誤:', error.message);
+        console.error("[WordPress] 分類 API 錯誤:", error.message);
       }
       throw error;
     }
@@ -274,16 +284,23 @@ export class WordPressClient {
   /**
    * 創建新分類
    */
-  async createCategory(name: string, slug?: string, parent?: number): Promise<WordPressTaxonomy> {
-    console.log('[WordPress] 創建新分類:', name);
+  async createCategory(
+    name: string,
+    slug?: string,
+    parent?: number,
+  ): Promise<WordPressTaxonomy> {
+    console.log("[WordPress] 創建新分類:", name);
 
-    const data: any = { name, slug: slug || this.slugify(name) };
+    const data: { name: string; slug: string; parent?: number } = {
+      name,
+      slug: slug || this.slugify(name),
+    };
     if (parent) data.parent = parent;
 
     const response = await fetch(`${this.baseUrl}/categories`, {
-      method: 'POST',
+      method: "POST",
       headers: this.headers,
-      body: JSON.stringify(data)
+      body: JSON.stringify(data),
     });
 
     if (!response.ok) {
@@ -300,25 +317,25 @@ export class WordPressClient {
    */
   async getTags(): Promise<WordPressTaxonomy[]> {
     const url = `${this.baseUrl}/tags?per_page=100`;
-    console.log('[WordPress] 獲取標籤:', url);
+    console.log("[WordPress] 獲取標籤:", url);
 
     try {
       const response = await fetch(url, {
-        headers: this.headers
+        headers: this.headers,
       });
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('[WordPress] 獲取標籤失敗:', response.status, errorText);
+        console.error("[WordPress] 獲取標籤失敗:", response.status, errorText);
         throw new Error(`獲取標籤失敗: ${response.status} - ${errorText}`);
       }
 
       const tags = await response.json();
-      console.log('[WordPress] 成功獲取', tags.length, '個標籤');
-      return tags.map((tag: any) => WordPressTaxonomySchema.parse(tag));
+      console.log("[WordPress] 成功獲取", tags.length, "個標籤");
+      return tags.map((tag: unknown) => WordPressTaxonomySchema.parse(tag));
     } catch (error) {
       if (error instanceof Error) {
-        console.error('[WordPress] 標籤 API 錯誤:', error.message);
+        console.error("[WordPress] 標籤 API 錯誤:", error.message);
       }
       throw error;
     }
@@ -328,15 +345,15 @@ export class WordPressClient {
    * 創建新標籤
    */
   async createTag(name: string, slug?: string): Promise<WordPressTaxonomy> {
-    console.log('[WordPress] 創建新標籤:', name);
+    console.log("[WordPress] 創建新標籤:", name);
 
     const response = await fetch(`${this.baseUrl}/tags`, {
-      method: 'POST',
+      method: "POST",
       headers: this.headers,
       body: JSON.stringify({
         name,
-        slug: slug || this.slugify(name)
-      })
+        slug: slug || this.slugify(name),
+      }),
     });
 
     if (!response.ok) {
@@ -355,28 +372,28 @@ export class WordPressClient {
     file: Buffer | Blob,
     filename: string,
     altText?: string,
-    caption?: string
+    caption?: string,
   ): Promise<WordPressMedia> {
-    console.log('[WordPress] 上傳媒體:', filename);
+    console.log("[WordPress] 上傳媒體:", filename);
 
     const formData = new FormData();
 
     if (file instanceof Buffer) {
-      formData.append('file', new Blob([file as any]), filename);
+      formData.append("file", new Blob([file as BlobPart]), filename);
     } else {
-      formData.append('file', file as Blob, filename);
+      formData.append("file", file as Blob, filename);
     }
 
-    if (altText) formData.append('alt_text', altText);
-    if (caption) formData.append('caption', caption);
+    if (altText) formData.append("alt_text", altText);
+    if (caption) formData.append("caption", caption);
 
     const response = await fetch(`${this.baseUrl}/media`, {
-      method: 'POST',
+      method: "POST",
       headers: {
-        'Authorization': this.headers['Authorization']
+        Authorization: this.headers["Authorization"],
         // 不設置 Content-Type，讓瀏覽器自動設置 multipart/form-data
       },
-      body: formData
+      body: formData,
     });
 
     if (!response.ok) {
@@ -394,7 +411,7 @@ export class WordPressClient {
   async uploadMediaFromUrl(
     imageUrl: string,
     filename?: string,
-    altText?: string
+    altText?: string,
   ): Promise<WordPressMedia> {
     try {
       // 下載圖片
@@ -407,9 +424,8 @@ export class WordPressClient {
       const name = filename || this.getFilenameFromUrl(imageUrl);
 
       return await this.uploadMedia(blob, name, altText);
-
     } catch (error) {
-      console.error('[WordPress] 從 URL 上傳圖片錯誤:', error);
+      console.error("[WordPress] 從 URL 上傳圖片錯誤:", error);
       throw error;
     }
   }
@@ -419,21 +435,21 @@ export class WordPressClient {
    */
   async ensureTaxonomies(
     categories: string[],
-    tags: string[]
+    tags: string[],
   ): Promise<{
     categoryIds: number[];
     tagIds: number[];
   }> {
     const [existingCategories, existingTags] = await Promise.all([
       this.getCategories(),
-      this.getTags()
+      this.getTags(),
     ]);
 
     // 處理分類
     const categoryIds: number[] = [];
     for (const catName of categories) {
       const existing = existingCategories.find(
-        c => c.name.toLowerCase() === catName.toLowerCase()
+        (c) => c.name.toLowerCase() === catName.toLowerCase(),
       );
 
       if (existing) {
@@ -448,7 +464,7 @@ export class WordPressClient {
     const tagIds: number[] = [];
     for (const tagName of tags) {
       const existing = existingTags.find(
-        t => t.name.toLowerCase() === tagName.toLowerCase()
+        (t) => t.name.toLowerCase() === tagName.toLowerCase(),
       );
 
       if (existing) {
@@ -478,20 +494,20 @@ export class WordPressClient {
       seoDescription?: string;
       focusKeyword?: string;
     },
-    status: 'publish' | 'draft' = 'publish'
+    status: "publish" | "draft" = "publish",
   ): Promise<{
     post: WordPressPost;
     featuredMediaId?: number;
     categoryIds: number[];
     tagIds: number[];
   }> {
-    console.log('[WordPress] 發布完整文章:', article.title);
+    console.log("[WordPress] 發布完整文章:", article.title);
 
     try {
       // 1. 處理分類和標籤
       const { categoryIds, tagIds } = await this.ensureTaxonomies(
         article.categories || [],
-        article.tags || []
+        article.tags || [],
       );
 
       // 2. 上傳精選圖片（如果有）
@@ -501,11 +517,11 @@ export class WordPressClient {
           const media = await this.uploadMediaFromUrl(
             article.featuredImageUrl,
             undefined,
-            article.title
+            article.title,
           );
           featuredMediaId = media.id;
         } catch (error) {
-          console.error('[WordPress] 上傳精選圖片失敗:', error);
+          console.error("[WordPress] 上傳精選圖片失敗:", error);
         }
       }
 
@@ -522,17 +538,17 @@ export class WordPressClient {
         yoast_meta: {
           yoast_wpseo_title: article.seoTitle,
           yoast_wpseo_metadesc: article.seoDescription,
-          yoast_wpseo_focuskw: article.focusKeyword
+          yoast_wpseo_focuskw: article.focusKeyword,
         },
         rank_math_meta: {
           rank_math_title: article.seoTitle,
           rank_math_description: article.seoDescription,
           rank_math_focus_keyword: article.focusKeyword,
-          rank_math_robots: ['index', 'follow']
-        }
+          rank_math_robots: ["index", "follow"],
+        },
       });
 
-      console.log('[WordPress] 文章發布成功！');
+      console.log("[WordPress] 文章發布成功！");
       console.log(`  - 文章 ID: ${post.id}`);
       console.log(`  - 文章連結: ${post.link}`);
       console.log(`  - 分類: ${categoryIds.length} 個`);
@@ -542,11 +558,10 @@ export class WordPressClient {
         post,
         featuredMediaId,
         categoryIds,
-        tagIds
+        tagIds,
       };
-
     } catch (error) {
-      console.error('[WordPress] 發布文章失敗:', error);
+      console.error("[WordPress] 發布文章失敗:", error);
       throw error;
     }
   }
@@ -559,15 +574,15 @@ export class WordPressClient {
   private parseWordPressError(errorText: string, statusCode: number): string {
     try {
       const errorData = JSON.parse(errorText);
-      const code = errorData.code || '';
-      const message = errorData.message || '';
+      const code = errorData.code || "";
+      const message = errorData.message || "";
 
       // 根據錯誤碼提供中文訊息
       const errorMessages: Record<string, string> = {
-        'incorrect_password': 'WordPress 應用密碼錯誤，請檢查密碼是否正確',
-        'rest_forbidden': 'WordPress 權限不足，請確認使用者有足夠權限',
-        'rest_no_route': 'WordPress REST API 路徑不存在，請確認網址是否正確',
-        'rest_invalid_param': 'WordPress API 參數錯誤',
+        incorrect_password: "WordPress 應用密碼錯誤，請檢查密碼是否正確",
+        rest_forbidden: "WordPress 權限不足，請確認使用者有足夠權限",
+        rest_no_route: "WordPress REST API 路徑不存在，請確認網址是否正確",
+        rest_invalid_param: "WordPress API 參數錯誤",
       };
 
       if (errorMessages[code]) {
@@ -582,20 +597,20 @@ export class WordPressClient {
       // 根據 HTTP 狀態碼提供通用訊息
       switch (statusCode) {
         case 401:
-          return 'WordPress 認證失敗，請檢查使用者名稱和應用密碼';
+          return "WordPress 認證失敗，請檢查使用者名稱和應用密碼";
         case 403:
-          return 'WordPress 權限不足，請確認使用者有足夠權限';
+          return "WordPress 權限不足，請確認使用者有足夠權限";
         case 404:
-          return 'WordPress 網址不正確或 REST API 未啟用';
+          return "WordPress 網址不正確或 REST API 未啟用";
         case 500:
-          return 'WordPress 伺服器錯誤，請稍後再試';
+          return "WordPress 伺服器錯誤，請稍後再試";
         default:
           return message || `WordPress 連線失敗 (錯誤碼: ${statusCode})`;
       }
     } catch {
       // 如果無法解析 JSON，返回通用訊息
       return statusCode === 404
-        ? 'WordPress 網址不正確或 REST API 未啟用'
+        ? "WordPress 網址不正確或 REST API 未啟用"
         : `WordPress 連線失敗 (錯誤碼: ${statusCode})`;
     }
   }
@@ -604,13 +619,13 @@ export class WordPressClient {
     return text
       .toLowerCase()
       .trim()
-      .replace(/[\s\W-]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+      .replace(/[\s\W-]+/g, "-")
+      .replace(/^-+|-+$/g, "");
   }
 
   private getFilenameFromUrl(url: string): string {
-    const parts = url.split('/');
-    return parts[parts.length - 1] || 'image.jpg';
+    const parts = url.split("/");
+    return parts[parts.length - 1] || "image.jpg";
   }
 
   /**
@@ -618,18 +633,21 @@ export class WordPressClient {
    */
   async authenticateWithJWT(
     username: string,
-    password: string
+    password: string,
   ): Promise<{
     token: string;
     user_email: string;
     user_nicename: string;
     user_display_name: string;
   }> {
-    const response = await fetch(`${this.config.url}/wp-json/jwt-auth/v1/token`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    });
+    const response = await fetch(
+      `${this.config.url}/wp-json/jwt-auth/v1/token`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username, password }),
+      },
+    );
 
     if (!response.ok) {
       const error = await response.text();
@@ -643,13 +661,16 @@ export class WordPressClient {
    * 驗證 JWT Token 是否有效
    */
   async validateJWTToken(token: string): Promise<boolean> {
-    const response = await fetch(`${this.config.url}/wp-json/jwt-auth/v1/token/validate`, {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${token}`,
-        'Content-Type': 'application/json'
-      }
-    });
+    const response = await fetch(
+      `${this.config.url}/wp-json/jwt-auth/v1/token/validate`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      },
+    );
 
     return response.ok;
   }
@@ -660,21 +681,21 @@ export class WordPressClient {
   async refreshAccessToken(
     clientId: string,
     clientSecret: string,
-    refreshToken: string
+    refreshToken: string,
   ): Promise<{
     access_token: string;
     refresh_token: string;
     expires_in: number;
   }> {
     const response = await fetch(`${this.config.url}/oauth/token`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
       body: new URLSearchParams({
-        grant_type: 'refresh_token',
+        grant_type: "refresh_token",
         client_id: clientId,
         client_secret: clientSecret,
-        refresh_token: refreshToken
-      })
+        refresh_token: refreshToken,
+      }),
     });
 
     if (!response.ok) {

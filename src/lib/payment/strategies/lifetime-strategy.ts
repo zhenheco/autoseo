@@ -2,110 +2,111 @@
  * 終身方案支付策略
  */
 
-import { BasePaymentStrategy } from './base-payment-strategy'
-import { PaymentContext, PaymentResult } from './payment-strategy.interface'
-import { SubscriptionActivationService } from '../services/subscription-activation-service'
+import { BasePaymentStrategy } from "./base-payment-strategy";
+import { PaymentContext, PaymentResult } from "./payment-strategy.interface";
+import { SubscriptionActivationService } from "../services/subscription-activation-service";
 
 export class LifetimeStrategy extends BasePaymentStrategy {
-  private activationService: SubscriptionActivationService
+  private activationService: SubscriptionActivationService;
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   constructor(supabase: any) {
-    super()
-    this.activationService = new SubscriptionActivationService(supabase)
+    super();
+    this.activationService = new SubscriptionActivationService(supabase);
   }
 
   /**
    * 驗證終身方案支付
    */
   protected async validateSpecific(context: PaymentContext): Promise<boolean> {
-    const { paymentData } = context
+    const { paymentData } = context;
 
     // 驗證是否為終身方案類型
-    if (paymentData.productType !== 'lifetime') {
-      return false
+    if (paymentData.productType !== "lifetime") {
+      return false;
     }
 
     // 驗證金額
-    const expectedAmount = this.getLifetimePrice(paymentData.referralCode)
+    const expectedAmount = this.getLifetimePrice(paymentData.referralCode);
     if (Math.abs(paymentData.Amt - expectedAmount) > 0.01) {
-      console.error('Amount mismatch for lifetime plan:', {
+      console.error("Amount mismatch for lifetime plan:", {
         expected: expectedAmount,
-        actual: paymentData.Amt
-      })
-      return false
+        actual: paymentData.Amt,
+      });
+      return false;
     }
 
-    return true
+    return true;
   }
 
   /**
    * 處理終身方案支付
    */
   async process(context: PaymentContext): Promise<PaymentResult> {
-    const { paymentData, userId } = context
+    const { paymentData, userId } = context;
 
     try {
       // 檢查是否已處理
       if (await this.isTransactionProcessed(context)) {
         return {
           success: false,
-          error: 'Transaction already processed'
-        }
+          error: "Transaction already processed",
+        };
       }
 
       // 檢查是否已有終身方案
       if (await this.hasLifetimeSubscription(context)) {
         return {
           success: false,
-          error: 'User already has lifetime subscription'
-        }
+          error: "User already has lifetime subscription",
+        };
       }
 
       // 創建交易記錄
-      const transaction = await this.createTransaction(context)
+      const transaction = await this.createTransaction(context);
       if (!transaction) {
         return {
           success: false,
-          error: 'Failed to create transaction'
-        }
+          error: "Failed to create transaction",
+        };
       }
 
       // 啟用終身訂閱
       const result = await this.activationService.activateSubscription({
         userId,
-        plan: 'lifetime',
+        plan: "lifetime",
         amount: paymentData.Amt,
         referralCode: paymentData.referralCode,
-        transactionId: transaction.id
-      })
+        transactionId: transaction.id,
+      });
 
       if (!result.success) {
-        await this.updateTransaction(context, transaction.id, 'failed')
+        await this.updateTransaction(context, transaction.id, "failed");
         return {
           success: false,
-          error: result.error
-        }
+          error: result.error,
+        };
       }
 
       // 更新交易狀態
-      await this.updateTransaction(context, transaction.id, 'completed')
+      await this.updateTransaction(context, transaction.id, "completed");
 
       // 授予終身會員特權
-      await this.grantLifetimePrivileges(context)
+      await this.grantLifetimePrivileges(context);
 
       return {
         success: true,
         orderId: paymentData.MerchantOrderNo,
         subscription: result.subscription,
         tokenUsage: result.tokenUsage,
-        transaction
-      }
+        transaction,
+      };
     } catch (error) {
-      console.error('Lifetime payment failed:', error)
+      console.error("Lifetime payment failed:", error);
       return {
         success: false,
-        error: error instanceof Error ? error.message : 'Unknown error'
-      }
+        error: error instanceof Error ? error.message : "Unknown error",
+      };
     }
   }
 
@@ -114,60 +115,64 @@ export class LifetimeStrategy extends BasePaymentStrategy {
    */
   protected async postProcessSpecific(
     context: PaymentContext,
-    result: PaymentResult
+    result: PaymentResult,
   ): Promise<void> {
     if (!result.success || !result.subscription) {
-      return
+      return;
     }
 
     // 發送終身會員歡迎郵件
-    await this.sendLifetimeMemberEmail(context)
+    await this.sendLifetimeMemberEmail(context);
 
     // 授予成就徽章
-    await this.grantAchievementBadge(context)
+    await this.grantAchievementBadge(context);
 
     // 記錄分析事件
-    await this.trackLifetimePurchase(context)
+    await this.trackLifetimePurchase(context);
   }
 
   /**
    * 獲取終身方案價格
    */
   private getLifetimePrice(referralCode?: string): number {
-    const basePrice = 9999
-    const rules = this.getBusinessRules()
+    const basePrice = 9999;
+    const rules = this.getBusinessRules();
 
     // 如果有推薦碼，應用折扣
     if (referralCode) {
-      return Math.floor(basePrice * rules.subscription.lifetimeDiscountRate)
+      return Math.floor(basePrice * rules.subscription.lifetimeDiscountRate);
     }
 
-    return basePrice
+    return basePrice;
   }
 
   /**
    * 檢查是否已有終身訂閱
    */
-  private async hasLifetimeSubscription(context: PaymentContext): Promise<boolean> {
-    const { supabase, userId } = context
+  private async hasLifetimeSubscription(
+    context: PaymentContext,
+  ): Promise<boolean> {
+    const { supabase, userId } = context;
 
     const { data } = await supabase
-      .from('subscriptions')
-      .select('id')
-      .eq('user_id', userId)
-      .eq('plan', 'lifetime')
-      .eq('status', 'active')
-      .single()
+      .from("subscriptions")
+      .select("id")
+      .eq("user_id", userId)
+      .eq("plan", "lifetime")
+      .eq("status", "active")
+      .single();
 
-    return !!data
+    return !!data;
   }
 
   /**
    * 授予終身會員特權
    */
-  private async grantLifetimePrivileges(context: PaymentContext): Promise<void> {
+  private async grantLifetimePrivileges(
+    context: PaymentContext,
+  ): Promise<void> {
     // TODO: 實作終身會員特權功能（需要建立 public.users 和 user_badges 表）
-    console.log('終身會員特權功能尚未實作')
+    console.log("終身會員特權功能尚未實作");
 
     // const { supabase, userId } = context
     //
@@ -201,14 +206,16 @@ export class LifetimeStrategy extends BasePaymentStrategy {
   /**
    * 發送終身會員郵件
    */
-  private async sendLifetimeMemberEmail(context: PaymentContext): Promise<void> {
+  private async sendLifetimeMemberEmail(
+    context: PaymentContext,
+  ): Promise<void> {
     try {
-      console.log('Sending lifetime member welcome email:', {
-        email: context.paymentData.Email
-      })
+      console.log("Sending lifetime member welcome email:", {
+        email: context.paymentData.Email,
+      });
       // 實際的郵件發送邏輯
     } catch (error) {
-      console.error('Failed to send lifetime member email:', error)
+      console.error("Failed to send lifetime member email:", error);
     }
   }
 
@@ -216,16 +223,17 @@ export class LifetimeStrategy extends BasePaymentStrategy {
    * 授予成就徽章
    */
   private async grantAchievementBadge(context: PaymentContext): Promise<void> {
-    const { supabase, userId } = context
+    const { supabase, userId } = context;
 
     try {
-      await supabase.from('achievements').insert({
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      await (supabase as any).from("achievements").insert({
         user_id: userId,
-        achievement_type: 'lifetime_supporter',
-        unlocked_at: new Date().toISOString()
-      })
+        achievement_type: "lifetime_supporter",
+        unlocked_at: new Date().toISOString(),
+      });
     } catch (error) {
-      console.error('Failed to grant achievement badge:', error)
+      console.error("Failed to grant achievement badge:", error);
     }
   }
 
@@ -234,14 +242,14 @@ export class LifetimeStrategy extends BasePaymentStrategy {
    */
   private async trackLifetimePurchase(context: PaymentContext): Promise<void> {
     try {
-      console.log('Tracking lifetime purchase:', {
+      console.log("Tracking lifetime purchase:", {
         userId: context.userId,
         amount: context.paymentData.Amt,
-        referral: !!context.paymentData.referralCode
-      })
+        referral: !!context.paymentData.referralCode,
+      });
       // 實際的分析追蹤邏輯
     } catch (error) {
-      console.error('Failed to track lifetime purchase:', error)
+      console.error("Failed to track lifetime purchase:", error);
     }
   }
 }

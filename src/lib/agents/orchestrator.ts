@@ -1314,7 +1314,7 @@ export class ParallelOrchestrator {
 
   private async ensureAgentConfigExists(
     websiteId: string,
-  ): Promise<any | null> {
+  ): Promise<AgentConfig | null> {
     const supabase = await this.getSupabase();
 
     try {
@@ -1471,7 +1471,14 @@ export class ParallelOrchestrator {
     };
   }
 
-  private async getWordPressConfig(websiteId: string): Promise<any> {
+  private async getWordPressConfig(websiteId: string): Promise<{
+    enabled: boolean;
+    url: string;
+    username: string;
+    applicationPassword: string;
+    accessToken?: string;
+    refreshToken?: string;
+  } | null> {
     const supabase = await this.getSupabase();
     const { data: configs, error } = await supabase
       .from("website_configs")
@@ -1511,7 +1518,7 @@ export class ParallelOrchestrator {
   private async updateJobStatus(
     articleJobId: string,
     status: string,
-    data: any,
+    data: Partial<ArticleGenerationResult> | Record<string, unknown>,
   ): Promise<void> {
     console.log(
       `[Orchestrator] 更新任務狀態: ${articleJobId.substring(0, 8)}... -> ${status}`,
@@ -1539,7 +1546,7 @@ export class ParallelOrchestrator {
     };
 
     // 使用 update 只更新狀態和 metadata，不影響其他欄位
-    const updateData: any = {
+    const updateData: Record<string, unknown> = {
       status,
       metadata: mergedMetadata,
     };
@@ -1789,14 +1796,26 @@ export class ParallelOrchestrator {
   /**
    * 驗證並格式化狀態資料
    */
-  private validateAndFormatStateData(data: any): any {
+  private validateAndFormatStateData(
+    data: Record<string, unknown>,
+  ): Record<string, unknown> {
     if (!data) return {};
 
     const validated = { ...data };
 
     // 確保 multiAgentState 結構正確
     if (validated.multiAgentState) {
-      const multiState = validated.multiAgentState;
+      interface SectionState {
+        markdown?: string;
+        wordCount?: number;
+      }
+      interface MultiAgentState {
+        introduction?: SectionState;
+        sections?: SectionState[];
+        conclusion?: SectionState;
+        qa?: SectionState;
+      }
+      const multiState = validated.multiAgentState as MultiAgentState;
 
       // 驗證 introduction
       if (multiState.introduction && !multiState.introduction.markdown) {
@@ -1807,7 +1826,7 @@ export class ParallelOrchestrator {
       // 驗證 sections
       if (multiState.sections) {
         multiState.sections = multiState.sections.filter(
-          (s: any) => s && s.markdown && s.wordCount !== undefined,
+          (s: SectionState) => s && s.markdown && s.wordCount !== undefined,
         );
       }
 
@@ -1830,8 +1849,9 @@ export class ParallelOrchestrator {
       // 100KB
       console.warn("[Orchestrator] Metadata too large, truncating errors");
       // 移除舊的錯誤以減少大小
-      if (validated.errors && validated.errors.length > 5) {
-        validated.errors = validated.errors.slice(-5);
+      const errors = validated.errors as unknown[];
+      if (errors && errors.length > 5) {
+        validated.errors = errors.slice(-5);
       }
     }
 

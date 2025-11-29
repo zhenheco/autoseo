@@ -508,7 +508,10 @@ export interface AICompletionOptions {
   maxTokens?: number;
   messages?: AIMessage[];
   format?: "text" | "json";
-  responseFormat?: any;
+  responseFormat?: {
+    type: "json_object" | "json_schema";
+    json_schema?: Record<string, unknown>;
+  };
 }
 
 export interface AICompletionResponse {

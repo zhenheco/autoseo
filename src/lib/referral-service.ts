@@ -192,8 +192,7 @@ export async function getReferralStats(
       ? (referralCode.successful_referrals / referralCode.total_clicks) * 100
       : 0;
 
-  const baseUrl =
-    process.env.NEXT_PUBLIC_APP_URL || "https://seo.zhenhe-dm.com";
+  const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://1wayseo.com";
 
   return {
     referralCode: referralCode.code,
