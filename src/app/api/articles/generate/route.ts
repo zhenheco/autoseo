@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { v4 as uuidv4 } from "uuid";
-import { TokenBillingService } from "@/lib/billing/token-billing-service";
+import {
+  TokenBillingService,
+  ESTIMATED_TOKENS_PER_ARTICLE,
+} from "@/lib/billing/token-billing-service";
 import { createSearchRouter } from "@/lib/search/search-router";
 import {
   checkFreeTrialLimit,
   incrementFreeTrialUsage,
 } from "@/lib/quota/free-trial-service";
 
-// Vercel 無伺服器函數最大執行時間：5 分鐘（Hobby 計劃上限）
 export const maxDuration = 300;
-
-const ESTIMATED_TOKENS_PER_ARTICLE = 3000;
 
 export async function POST(request: NextRequest) {
   try {
@@ -148,18 +148,25 @@ export async function POST(request: NextRequest) {
     }
 
     const billingService = new TokenBillingService(supabase);
-    const balance = await billingService.getCurrentBalance(billingId);
+    const articleJobId = uuidv4();
 
-    if (balance.total < ESTIMATED_TOKENS_PER_ARTICLE) {
+    const reservationResult = await billingService.checkAndReserveTokens(
+      billingId,
+      articleJobId,
+      1,
+    );
+
+    if (!reservationResult.success) {
       console.warn(
-        `餘額不足: 當前 ${balance.total} tokens，需要約 ${ESTIMATED_TOKENS_PER_ARTICLE} tokens`,
+        `餘額不足: 可用 ${reservationResult.availableBalance} tokens（已預扣 ${reservationResult.totalReserved}），需要 ${reservationResult.requiredAmount} tokens`,
       );
       return NextResponse.json(
         {
           error: "Insufficient balance",
-          message: `餘額不足：當前 ${balance.total.toLocaleString()} tokens，預估需要 ${ESTIMATED_TOKENS_PER_ARTICLE.toLocaleString()} tokens`,
-          currentBalance: balance.total,
-          estimatedCost: ESTIMATED_TOKENS_PER_ARTICLE,
+          message: `餘額不足：可用 ${reservationResult.availableBalance.toLocaleString()} tokens（已有 ${reservationResult.totalReserved.toLocaleString()} 進行中），預估需要 ${reservationResult.requiredAmount.toLocaleString()} tokens`,
+          availableBalance: reservationResult.availableBalance,
+          reservedBalance: reservationResult.totalReserved,
+          estimatedCost: reservationResult.requiredAmount,
           upgradeUrl: "/dashboard/billing/upgrade",
         },
         { status: 402 },
@@ -193,8 +200,6 @@ export async function POST(request: NextRequest) {
       console.log("用戶選擇不指定網站");
     }
 
-    const articleJobId = uuidv4();
-
     // 建立 SearchRouter 用於競爭對手分析配額檢查
     const searchRouter = createSearchRouter({
       companyId: billingId,
@@ -208,6 +213,7 @@ export async function POST(request: NextRequest) {
         await searchRouter.analyzeCompetitors(competitors);
 
       if (!competitorAnalysisResult.allowed) {
+        await billingService.releaseReservation(articleJobId);
         return NextResponse.json(
           {
             error: "Quota exceeded",
@@ -241,6 +247,7 @@ export async function POST(request: NextRequest) {
 
     if (jobError) {
       console.error("Failed to create article job:", jobError);
+      await billingService.releaseReservation(articleJobId);
       return NextResponse.json(
         { error: "Failed to create article job" },
         { status: 500 },
