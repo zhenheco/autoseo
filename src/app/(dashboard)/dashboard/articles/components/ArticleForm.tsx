@@ -113,7 +113,7 @@ export function ArticleForm({ quotaStatus, websiteId }: ArticleFormProps) {
         const response = await fetch("/api/token-balance");
         if (response.ok) {
           const data = await response.json();
-          setTokenBalance(data.balance?.total || 0);
+          setTokenBalance(data.balance?.available ?? data.balance?.total ?? 0);
         }
       } catch (error) {
         console.error("獲取餘額失敗:", error);
