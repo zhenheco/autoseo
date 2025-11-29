@@ -17,7 +17,6 @@ import {
 } from "lucide-react";
 import { ReferralLinkCard } from "@/components/referrals/ReferralLinkCard";
 import { ReferralHistoryTable } from "@/components/referrals/ReferralHistoryTable";
-import { SetReferrerCard } from "@/components/referrals/SetReferrerCard";
 import { REFERRAL_TOKEN_REWARD } from "@/types/referral.types";
 
 export default async function ReferralsPage() {
@@ -81,16 +80,6 @@ export default async function ReferralsPage() {
     .eq("referred_company_id", membership.company_id)
     .single();
 
-  const { data: hasPaid } = await supabase
-    .from("payment_orders")
-    .select("id")
-    .eq("company_id", membership.company_id)
-    .eq("status", "completed")
-    .limit(1)
-    .single();
-
-  const canSetReferrer = !myReferrer && !hasPaid;
-
   return (
     <div className="container mx-auto p-8 space-y-8">
       <div>
@@ -100,8 +89,6 @@ export default async function ReferralsPage() {
           {REFERRAL_TOKEN_REWARD.toLocaleString()} tokens 獎勵
         </p>
       </div>
-
-      {canSetReferrer && <SetReferrerCard />}
 
       {myReferrer && (
         <Card className="border-primary/20 bg-primary/5">
