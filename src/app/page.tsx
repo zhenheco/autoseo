@@ -76,36 +76,36 @@ const features = [
 
 const lifetimePlans = [
   {
-    name: "基礎版",
-    price: 2999,
+    name: "STARTER",
+    price: 14900,
     monthlyCredits: "50K",
-    features: [
-      "每月 50K Credits",
-      "基本 SEO 分析",
-      "WordPress 整合",
-      "Email 支援",
-    ],
+    description: "適合個人創作者",
   },
   {
-    name: "專業版",
-    price: 5999,
-    monthlyCredits: "150K",
+    name: "PROFESSIONAL",
+    price: 59900,
+    monthlyCredits: "250K",
     popular: true,
-    features: ["每月 150K Credits", "進階 SEO 分析", "多站點管理", "優先支援"],
+    description: "適合專業行銷人員",
   },
   {
-    name: "企業版",
-    price: 9999,
-    monthlyCredits: "500K",
-    features: ["每月 500K Credits", "完整 SEO 套件", "無限站點", "專屬客服"],
+    name: "BUSINESS",
+    price: 149900,
+    monthlyCredits: "750K",
+    description: "適合中型企業",
+  },
+  {
+    name: "AGENCY",
+    price: 299900,
+    monthlyCredits: "2M",
+    description: "適合代理商與大型企業",
   },
 ];
 
 const creditPacks = [
-  { credits: "50K", price: 299 },
-  { credits: "100K", price: 549, popular: true },
-  { credits: "250K", price: 1199 },
-  { credits: "500K", price: 2099 },
+  { credits: "10K", price: 299 },
+  { credits: "50K", price: 1299, popular: true },
+  { credits: "100K", price: 2399 },
 ];
 
 const testimonials = [
@@ -114,19 +114,16 @@ const testimonials = [
     company: "數位行銷公司",
     content:
       "使用 1waySEO 後，我們的內容產出效率提升了 300%，SEO 排名也顯著改善！",
-    avatar: "👨‍💼",
   },
   {
     name: "李總監",
     company: "電商企業",
     content: "這個平台完全改變了我們的內容策略，AI 生成的文章品質超乎想像！",
-    avatar: "👩‍💻",
   },
   {
     name: "王創辦人",
     company: "新創公司",
     content: "自動化功能太好用了，讓我們的內容團隊效率翻倍！",
-    avatar: "👨‍🚀",
   },
 ];
 
@@ -150,13 +147,12 @@ export default function Home() {
               <span>AI 驅動的 SEO 內容平台</span>
             </div>
 
-            <h1 className="mb-6 text-5xl font-bold tracking-tight text-foreground sm:text-6xl lg:text-7xl">
+            <h1 className="mb-6 text-xl font-bold tracking-tight text-foreground">
               讓 AI 為您打造
-              <br />
               <span className="text-primary">完美的 SEO 內容</span>
             </h1>
 
-            <p className="mx-auto mb-10 max-w-3xl text-lg text-muted-foreground leading-relaxed">
+            <p className="mx-auto mb-10 max-w-3xl text-base text-muted-foreground leading-relaxed">
               1waySEO 結合最先進的 AI
               技術，依照關鍵字與搜尋結果自動決定最佳架構，
               <br />
@@ -206,10 +202,10 @@ export default function Home() {
               <Target className="h-4 w-4" />
               <span>完整工作流程</span>
             </div>
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6 text-foreground">
+            <h2 className="text-xl font-bold mb-6 text-foreground">
               從研究到發布，<span className="text-primary">全自動化</span>
             </h2>
-            <p className="text-lg text-muted-foreground max-w-3xl mx-auto leading-relaxed">
+            <p className="text-base text-muted-foreground max-w-3xl mx-auto leading-relaxed">
               依照關鍵字與搜尋結果自動決定最佳的字數及架構，
               <br />9 大核心功能讓您的 SEO 內容策略完全自動化。
             </p>
@@ -227,7 +223,7 @@ export default function Home() {
                     <div className="mb-6 inline-flex h-14 w-14 items-center justify-center rounded-xl bg-primary/10">
                       <Icon className="h-7 w-7 text-primary" />
                     </div>
-                    <h3 className="mb-3 text-xl font-bold text-foreground">
+                    <h3 className="mb-3 text-base font-bold text-foreground">
                       {feature.title}
                     </h3>
                     <p className="text-muted-foreground leading-relaxed text-sm">
@@ -248,10 +244,10 @@ export default function Home() {
               <Infinity className="h-4 w-4" />
               <span>定價方案</span>
             </div>
-            <h2 className="text-4xl sm:text-5xl font-bold mb-6 text-foreground">
+            <h2 className="text-xl font-bold mb-6 text-foreground">
               <span className="text-primary">終身買斷</span>，永久使用
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+            <p className="text-base text-muted-foreground max-w-2xl mx-auto">
               一次付費，每月自動獲得 Credits 配額，無需訂閱費用。
             </p>
           </div>
@@ -265,50 +261,50 @@ export default function Home() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto mb-24">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto mb-24">
             {lifetimePlans.map((plan, index) => (
               <Card
                 key={index}
-                className={`relative border-2 ${plan.popular ? "border-primary shadow-xl scale-105" : "border-border"} bg-card`}
+                className={`relative ${plan.popular ? "bg-primary text-primary-foreground" : "bg-card border border-border"}`}
               >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2">
-                    <span className="bg-primary text-primary-foreground px-4 py-1 rounded-full text-sm font-medium">
-                      最受歡迎
-                    </span>
-                  </div>
-                )}
-                <CardContent className="p-8">
-                  <h3 className="text-2xl font-bold text-foreground mb-2">
-                    {plan.name}
-                  </h3>
-                  <div className="mb-6">
-                    <span className="text-4xl font-bold text-foreground">
+                <CardContent className="p-5">
+                  <div className="mb-3">
+                    <span className="text-xl font-bold">
                       NT${plan.price.toLocaleString()}
                     </span>
-                    <span className="text-muted-foreground ml-2">終身</span>
+                    <span className="text-xs opacity-70 ml-1">終身</span>
                   </div>
-                  <div className="mb-6 p-3 bg-primary/10 rounded-lg">
-                    <span className="text-primary font-medium">
+                  <h3 className="text-base font-bold mb-1">{plan.name}</h3>
+                  <p
+                    className={`text-xs mb-4 ${plan.popular ? "opacity-80" : "text-muted-foreground"}`}
+                  >
+                    {plan.description}
+                  </p>
+                  <ul className="space-y-2 mb-4 text-xs">
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="h-3 w-3 flex-shrink-0" />
                       每月 {plan.monthlyCredits} Credits
-                    </span>
-                  </div>
-                  <ul className="space-y-3 mb-8">
-                    {plan.features.map((feature, i) => (
-                      <li
-                        key={i}
-                        className="flex items-center gap-2 text-sm text-muted-foreground"
-                      >
-                        <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" />
-                        {feature}
-                      </li>
-                    ))}
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="h-3 w-3 flex-shrink-0" />
+                      所有 AI 模型
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="h-3 w-3 flex-shrink-0" />
+                      WordPress 整合
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <CheckCircle2 className="h-3 w-3 flex-shrink-0" />
+                      自動圖片生成
+                    </li>
                   </ul>
                   <Button
                     asChild
-                    className={`w-full ${plan.popular ? "bg-primary hover:bg-primary/90" : "bg-foreground hover:bg-foreground/90"}`}
+                    size="sm"
+                    className={`w-full ${plan.popular ? "bg-white text-primary hover:bg-white/90" : ""}`}
+                    variant={plan.popular ? "secondary" : "outline"}
                   >
-                    <Link href="/login">立即購買</Link>
+                    <Link href="/login">開始使用</Link>
                   </Button>
                 </CardContent>
               </Card>
@@ -321,19 +317,19 @@ export default function Home() {
                 <CreditCard className="h-4 w-4" />
                 <span>Credits 加值包</span>
               </div>
-              <h3 className="text-3xl font-bold mb-4 text-foreground">
+              <h3 className="text-xl font-bold mb-4 text-foreground">
                 需要更多 Credits？
               </h3>
-              <p className="text-muted-foreground">
+              <p className="text-base text-muted-foreground">
                 免費版或終身版用戶皆可購買，直接加值不需升級方案。
               </p>
             </div>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 max-w-3xl mx-auto">
               {creditPacks.map((pack, index) => (
                 <Card
                   key={index}
-                  className={`border-2 ${pack.popular ? "border-primary shadow-lg" : "border-border"} bg-card hover:shadow-lg transition-shadow`}
+                  className={`border ${pack.popular ? "border-primary" : "border-border"} bg-card`}
                 >
                   <CardContent className="p-6 text-center">
                     {pack.popular && (
@@ -341,19 +337,17 @@ export default function Home() {
                         超值
                       </span>
                     )}
-                    <div className="text-3xl font-bold text-primary mb-2">
-                      {pack.credits}
+                    <div className="text-base font-bold text-primary mb-1">
+                      {pack.credits} Credits
                     </div>
-                    <div className="text-muted-foreground text-sm mb-4">
-                      Credits
-                    </div>
-                    <div className="text-2xl font-bold text-foreground mb-4">
-                      NT${pack.price}
+                    <div className="text-base font-bold text-foreground mb-4">
+                      NT${pack.price.toLocaleString()}
                     </div>
                     <Button
                       asChild
+                      size="sm"
                       variant="outline"
-                      className="w-full border-primary/50 text-primary hover:bg-primary/10"
+                      className="w-full"
                     >
                       <Link href="/login">購買</Link>
                     </Button>
@@ -373,10 +367,10 @@ export default function Home() {
               <Users className="h-4 w-4" />
               <span>客戶見證</span>
             </div>
-            <h2 className="text-4xl sm:text-5xl font-bold mb-4 text-foreground">
+            <h2 className="text-xl font-bold mb-4 text-foreground">
               <span className="text-primary">數千家企業</span>的選擇
             </h2>
-            <p className="text-lg text-muted-foreground">
+            <p className="text-base text-muted-foreground">
               看看他們如何使用 1waySEO 改變內容策略
             </p>
           </div>
@@ -392,15 +386,14 @@ export default function Home() {
                       : "opacity-0 absolute inset-12"
                   }`}
                 >
-                  <div className="text-6xl mb-6">{testimonial.avatar}</div>
-                  <p className="text-xl leading-relaxed mb-8 text-foreground/90">
+                  <p className="text-base leading-relaxed mb-8 text-foreground/90">
                     &ldquo;{testimonial.content}&rdquo;
                   </p>
                   <div>
-                    <div className="font-bold text-lg text-foreground">
+                    <div className="font-bold text-base text-foreground">
                       {testimonial.name}
                     </div>
-                    <div className="text-muted-foreground">
+                    <div className="text-sm text-muted-foreground">
                       {testimonial.company}
                     </div>
                   </div>
@@ -427,11 +420,10 @@ export default function Home() {
       <section className="relative py-32">
         <div className="container relative z-10 mx-auto px-4">
           <div className="mx-auto max-w-4xl text-center">
-            <h2 className="text-4xl sm:text-6xl font-bold mb-8 text-foreground">
-              準備好<span className="text-primary">提升您的內容策略</span>
-              了嗎？
+            <h2 className="text-xl font-bold mb-8 text-foreground">
+              準備好<span className="text-primary">提升您的內容策略</span>了嗎？
             </h2>
-            <p className="text-xl text-muted-foreground mb-12 leading-relaxed">
+            <p className="text-base text-muted-foreground mb-12 leading-relaxed">
               立即註冊，免費獲得 10K Credits 開始體驗。
             </p>
             <Button
