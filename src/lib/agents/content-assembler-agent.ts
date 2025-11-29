@@ -175,29 +175,45 @@ export class ContentAssemblerAgent {
       return false;
     }
 
-    const markdownPatterns = ["##", "**", "```", "* ", "- ", "1. "];
-    const hasMarkdown = markdownPatterns.some((p) => html.includes(p));
-    if (hasMarkdown) {
-      console.warn("[Validator] Markdown syntax detected in HTML", {
-        htmlSample: html.substring(0, 200),
-      });
+    // 檢查是否有未轉換的 Markdown 標題（行首的 ## 等）
+    // 排除 code 區塊內的內容
+    const htmlWithoutCode = html.replace(/<code[\s\S]*?<\/code>/gi, "");
+    const htmlWithoutPre = htmlWithoutCode.replace(/<pre[\s\S]*?<\/pre>/gi, "");
+
+    // 只檢查行首的 Markdown 標題語法（這表示真正未轉換）
+    const unprocessedHeadings = /^#{1,6}\s+\S/m.test(htmlWithoutPre);
+    if (unprocessedHeadings) {
+      console.warn("[Validator] Unprocessed Markdown headings detected");
       return false;
     }
 
+    // 檢查結構標籤（放寬條件：只要有任何 HTML 標籤即可）
+    const structuralTags = [
+      "<p>",
+      "<h1>",
+      "<h2>",
+      "<h3>",
+      "<h4>",
+      "<ul>",
+      "<ol>",
+      "<div>",
+      "<section>",
+      "<article>",
+    ];
+    const hasStructure = structuralTags.some((tag) => html.includes(tag));
+    if (!hasStructure) {
+      console.warn("[Validator] No structural HTML tags found");
+      return false;
+    }
+
+    // 放寬比例檢查：只要 HTML 長度合理即可（>50% markdown 長度）
     const ratio = html.length / markdown.length;
-    if (ratio < 1.05) {
-      console.warn("[Validator] HTML not significantly longer than markdown", {
+    if (ratio < 0.5) {
+      console.warn("[Validator] HTML suspiciously short", {
         ratio: ratio.toFixed(2),
         markdownLength: markdown.length,
         htmlLength: html.length,
       });
-      return false;
-    }
-
-    const structuralTags = ["<p>", "<h1>", "<h2>", "<h3>", "<ul>", "<ol>"];
-    const hasStructure = structuralTags.some((tag) => html.includes(tag));
-    if (!hasStructure) {
-      console.warn("[Validator] No structural HTML tags found");
       return false;
     }
 
@@ -209,27 +225,67 @@ export class ContentAssemblerAgent {
       "[ContentAssembler] Attempting basic Markdown to HTML conversion...",
     );
 
-    let html = markdown;
+    // 分割成區塊處理
+    const blocks = markdown.split(/\n\n+/);
+    const htmlBlocks: string[] = [];
 
-    html = html.replace(/^### (.*$)/gim, "<h3>$1</h3>");
-    html = html.replace(/^## (.*$)/gim, "<h2>$1</h2>");
-    html = html.replace(/^# (.*$)/gim, "<h1>$1</h1>");
+    for (const block of blocks) {
+      const trimmed = block.trim();
+      if (!trimmed) continue;
 
-    html = html.replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>");
-    html = html.replace(/\*(.*?)\*/g, "<em>$1</em>");
+      // 處理標題
+      if (trimmed.startsWith("######")) {
+        htmlBlocks.push(`<h6>${trimmed.slice(6).trim()}</h6>`);
+      } else if (trimmed.startsWith("#####")) {
+        htmlBlocks.push(`<h5>${trimmed.slice(5).trim()}</h5>`);
+      } else if (trimmed.startsWith("####")) {
+        htmlBlocks.push(`<h4>${trimmed.slice(4).trim()}</h4>`);
+      } else if (trimmed.startsWith("###")) {
+        htmlBlocks.push(`<h3>${trimmed.slice(3).trim()}</h3>`);
+      } else if (trimmed.startsWith("##")) {
+        htmlBlocks.push(`<h2>${trimmed.slice(2).trim()}</h2>`);
+      } else if (trimmed.startsWith("#")) {
+        htmlBlocks.push(`<h1>${trimmed.slice(1).trim()}</h1>`);
+      }
+      // 處理無序列表
+      else if (/^[-*]\s/.test(trimmed)) {
+        const items = trimmed.split(/\n/).map((line) => {
+          const content = line.replace(/^[-*]\s+/, "");
+          return `<li>${this.inlineMarkdown(content)}</li>`;
+        });
+        htmlBlocks.push(`<ul>${items.join("")}</ul>`);
+      }
+      // 處理有序列表
+      else if (/^\d+\.\s/.test(trimmed)) {
+        const items = trimmed.split(/\n/).map((line) => {
+          const content = line.replace(/^\d+\.\s+/, "");
+          return `<li>${this.inlineMarkdown(content)}</li>`;
+        });
+        htmlBlocks.push(`<ol>${items.join("")}</ol>`);
+      }
+      // 一般段落
+      else {
+        const lines = trimmed
+          .split(/\n/)
+          .map((line) => this.inlineMarkdown(line));
+        htmlBlocks.push(`<p>${lines.join("<br>")}</p>`);
+      }
+    }
 
-    html = html.replace(/^\* (.+)$/gim, "<li>$1</li>");
-    html = html.replace(/(<li>[\s\S]*<\/li>)/gim, "<ul>$1</ul>");
+    return htmlBlocks.join("\n");
+  }
 
-    html = html.replace(/\n\n/g, "</p><p>");
-    html = `<p>${html}</p>`;
-
-    html = html.replace(/<p><h/g, "<h");
-    html = html.replace(/<\/h([1-6])><\/p>/g, "</h$1>");
-    html = html.replace(/<p><ul>/g, "<ul>");
-    html = html.replace(/<\/ul><\/p>/g, "</ul>");
-
-    return html;
+  private inlineMarkdown(text: string): string {
+    let result = text;
+    // 粗體
+    result = result.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    // 斜體
+    result = result.replace(/\*(.+?)\*/g, "<em>$1</em>");
+    // 連結
+    result = result.replace(/\[(.+?)\]\((.+?)\)/g, '<a href="$2">$1</a>');
+    // 行內程式碼
+    result = result.replace(/`(.+?)`/g, "<code>$1</code>");
+    return result;
   }
 
   private calculateStatistics(
