@@ -10,7 +10,12 @@
 /**
  * API Provider 類型
  */
-export type APIProvider = "deepseek" | "openai" | "perplexity" | "gemini";
+export type APIProvider =
+  | "deepseek"
+  | "openai"
+  | "openrouter"
+  | "perplexity"
+  | "gemini";
 
 /**
  * 處理階段類型

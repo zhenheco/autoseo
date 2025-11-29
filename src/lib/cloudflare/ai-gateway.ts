@@ -6,7 +6,8 @@ type GatewayProvider =
   | "mistral"
   | "cohere"
   | "deepseek"
-  | "perplexity-ai";
+  | "perplexity-ai"
+  | "openrouter";
 
 interface GatewayConfig {
   accountId: string;
@@ -79,6 +80,26 @@ export function getPerplexityBaseUrl(): string {
     return getGatewayBaseUrl("perplexity-ai");
   }
   return process.env.PERPLEXITY_API_BASE_URL || "https://api.perplexity.ai";
+}
+
+export function getOpenRouterBaseUrl(): string {
+  if (isGatewayEnabled()) {
+    return getGatewayBaseUrl("openrouter");
+  }
+  return "https://openrouter.ai/api/v1";
+}
+
+export function buildOpenRouterHeaders(apiKey: string): Record<string, string> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${apiKey}`,
+  };
+
+  if (isGatewayEnabled()) {
+    Object.assign(headers, getGatewayHeaders());
+  }
+
+  return headers;
 }
 
 export function buildDeepSeekHeaders(apiKey: string): Record<string, string> {
