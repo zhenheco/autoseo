@@ -230,9 +230,12 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
     input: ImageInput,
   ): Promise<GeneratedImage> {
     const prompt = this.buildFeaturedImagePrompt(input);
+    const featuredModel = input.featuredImageModel || input.model;
+
+    console.log(`[ImageAgent] 🎨 Featured image using model: ${featuredModel}`);
 
     const result = await this.generateImage(prompt, {
-      model: input.model,
+      model: featuredModel,
       quality: input.quality,
       size: input.size,
     });
@@ -297,7 +300,7 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
       altText: `${input.title} - 精選圖片`,
       width,
       height,
-      model: input.model,
+      model: featuredModel,
     };
   }
 
@@ -307,9 +310,14 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
     index: number,
   ): Promise<GeneratedImage> {
     const prompt = this.buildContentImagePrompt(input, section);
+    const contentModel = input.contentImageModel || input.model;
+
+    console.log(
+      `[ImageAgent] 🎨 Content image ${index + 1} using model: ${contentModel}`,
+    );
 
     const result = await this.generateImage(prompt, {
-      model: input.model,
+      model: contentModel,
       quality: input.quality,
       size: input.size,
     });
@@ -382,7 +390,7 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
       suggestedSection: section.heading,
       width,
       height,
-      model: input.model,
+      model: contentModel,
     };
   }
 
@@ -408,14 +416,20 @@ Article Title: "${input.title}"
 
 ${styleGuide}
 
-Requirements:
+CRITICAL - ABSOLUTELY NO TEXT (THIS IS THE MOST IMPORTANT RULE):
+- ZERO text, words, letters, numbers, or characters of ANY language
+- NO Chinese, English, Japanese, Korean, or any other written language
+- NO watermarks, NO labels, NO captions, NO titles within the image
+- If ANY text appears in the image, it will be REJECTED immediately
+- Use ONLY visual symbols, icons, illustrations, and visual metaphors
+
+Other Requirements:
 - Eye-catching and professional
 - Relevant to the article topic
-- CRITICAL: DO NOT include ANY text, words, letters, numbers, or characters of ANY language
-- This is for a ${targetLang} article - create culturally appropriate visuals WITHOUT text
+- This is for a ${targetLang} article - create culturally appropriate visuals
 - Suitable for blog header/social media
 - High visual impact
-- Use ONLY symbols, icons, illustrations, and visual metaphors - absolutely NO text`;
+- Pure visual design ONLY`;
   }
 
   private buildContentImagePrompt(
@@ -439,14 +453,18 @@ ${styleGuide}
 Key points to visualize:
 ${section.keyPoints.join("\n")}
 
-Requirements:
+CRITICAL - ABSOLUTELY NO TEXT (THIS IS THE MOST IMPORTANT RULE):
+- ZERO text, words, letters, numbers, or characters of ANY language
+- NO Chinese, English, Japanese, Korean, or any other written language
+- NO watermarks, NO labels, NO captions, NO titles within the image
+- If ANY text appears in the image, it will be REJECTED immediately
+- Use ONLY visual symbols, icons, illustrations, and visual metaphors
+
+Other Requirements:
 - Clear and informative visual
 - Supports the text content
 - Professional quality
-- ABSOLUTELY NO TEXT of any kind - no words, no letters, no numbers, no characters in ANY language
-- DO NOT render any text labels or captions within the image
-- Use ONLY visual symbols, icons, and illustrations to convey meaning
-- Pure visual design without any written elements`;
+- Pure visual design ONLY`;
   }
 
   private calculateTotalCost(
