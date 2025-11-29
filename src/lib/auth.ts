@@ -1,6 +1,7 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server";
-import { generateReferralCode } from "@/lib/referral";
 import { cookies } from "next/headers";
+
+const REFERRAL_COOKIE_NAME = "ref_code";
 
 /**
  * 生成唯一的公司 slug
@@ -106,59 +107,64 @@ export async function signUp(email: string, password: string) {
   }
   console.log("[註冊] Step 5 完成: 訂閱建立成功");
 
-  // 6. 創建推薦碼
-  let referralCode = generateReferralCode();
+  // 6. 創建推薦碼（使用資料庫函數生成唯一碼）
+  const { data: generatedCode } = await adminClient.rpc(
+    "generate_referral_code",
+  );
 
-  // 確保推薦碼唯一
-  let attempts = 0;
-  while (attempts < 5) {
-    const { data: existing } = await adminClient
-      .from("company_referral_codes")
-      .select("id")
-      .eq("referral_code", referralCode)
-      .single();
+  if (generatedCode) {
+    const { error: referralCodeError } = await adminClient
+      .from("referral_codes")
+      .insert({
+        company_id: company.id,
+        code: generatedCode,
+      });
 
-    if (!existing) break;
-    referralCode = generateReferralCode();
-    attempts++;
+    if (referralCodeError) {
+      console.error("創建推薦碼失敗:", referralCodeError);
+    } else {
+      console.log("[註冊] Step 6 完成: 推薦碼建立成功", generatedCode);
+    }
   }
 
-  const { error: referralCodeError } = await adminClient
-    .from("company_referral_codes")
-    .insert({
-      company_id: company.id,
-      referral_code: referralCode,
-    });
-
-  if (referralCodeError) {
-    console.error("創建推薦碼失敗:", referralCodeError);
-  }
-
-  // 7. 檢查是否有推薦人
+  // 7. 檢查是否有推薦人（從 cookie 或 URL 參數）
   const cookieStore = await cookies();
-  const referrerCode = cookieStore.get("referral_code")?.value;
+  const referrerCode = cookieStore.get(REFERRAL_COOKIE_NAME)?.value;
 
   if (referrerCode) {
     // 查找推薦人
     const { data: referrerData } = await adminClient
-      .from("company_referral_codes")
+      .from("referral_codes")
       .select("company_id")
-      .eq("referral_code", referrerCode)
+      .eq("code", referrerCode.toUpperCase())
       .single();
 
-    if (referrerData) {
+    if (referrerData && referrerData.company_id !== company.id) {
       // 創建推薦關係
-      await adminClient.from("referrals").insert({
-        referrer_company_id: referrerData.company_id,
-        referred_company_id: company.id,
-        referral_code: referrerCode,
-        status: "pending", // 等待首次付款
-      });
+      const { error: referralError } = await adminClient
+        .from("referrals")
+        .insert({
+          referrer_company_id: referrerData.company_id,
+          referred_company_id: company.id,
+          referral_code: referrerCode.toUpperCase(),
+          status: "pending",
+        });
 
-      // 更新推薦人的推薦統計 (使用 RPC 函數來原子性地增加計數)
-      await adminClient.rpc("increment_referral_count", {
-        p_company_id: referrerData.company_id,
-      });
+      if (!referralError) {
+        // 更新推薦碼統計
+        await adminClient.rpc("increment_referral_count", {
+          p_code: referrerCode.toUpperCase(),
+        });
+
+        // 記錄追蹤日誌
+        await adminClient.from("referral_tracking_logs").insert({
+          referral_code: referrerCode.toUpperCase(),
+          event_type: "register",
+          company_id: company.id,
+        });
+
+        console.log("[註冊] Step 7 完成: 推薦關係建立成功");
+      }
     }
   }
 
