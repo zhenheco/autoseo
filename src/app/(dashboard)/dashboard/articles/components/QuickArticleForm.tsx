@@ -1,18 +1,11 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -23,59 +16,6 @@ import {
 } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
-
-const INDUSTRIES = [
-  { value: "tech", label: "科技" },
-  { value: "finance", label: "金融" },
-  { value: "healthcare", label: "醫療" },
-  { value: "education", label: "教育" },
-  { value: "realestate", label: "房地產" },
-  { value: "travel", label: "旅遊" },
-  { value: "food", label: "餐飲" },
-  { value: "ecommerce", label: "電商" },
-  { value: "legal", label: "法律" },
-  { value: "manufacturing", label: "製造業" },
-  { value: "other", label: "其他" },
-];
-
-const REGIONS = [
-  { value: "taiwan", label: "台灣" },
-  { value: "japan", label: "日本" },
-  { value: "usa", label: "美國" },
-  { value: "singapore", label: "新加坡" },
-  { value: "hongkong", label: "香港" },
-  { value: "china", label: "中國" },
-  { value: "korea", label: "韓國" },
-  { value: "global", label: "全球" },
-  { value: "other", label: "其他" },
-];
-
-interface Language {
-  code: string;
-  name: string;
-  flag: string;
-}
-
-const SUPPORTED_LANGUAGES: Language[] = [
-  { code: "zh-TW", name: "繁體中文", flag: "🇹🇼" },
-  { code: "zh-CN", name: "简体中文", flag: "🇨🇳" },
-  { code: "en-US", name: "English", flag: "🇺🇸" },
-  { code: "ja-JP", name: "日本語", flag: "🇯🇵" },
-  { code: "ko-KR", name: "한국어", flag: "🇰🇷" },
-  { code: "vi-VN", name: "Tiếng Việt", flag: "🇻🇳" },
-  { code: "ms-MY", name: "Bahasa Melayu", flag: "🇲🇾" },
-  { code: "th-TH", name: "ไทย", flag: "🇹🇭" },
-  { code: "id-ID", name: "Bahasa Indonesia", flag: "🇮🇩" },
-  { code: "tl-PH", name: "Filipino", flag: "🇵🇭" },
-  { code: "fr-FR", name: "Français", flag: "🇫🇷" },
-  { code: "de-DE", name: "Deutsch", flag: "🇩🇪" },
-  { code: "es-ES", name: "Español", flag: "🇪🇸" },
-  { code: "pt-PT", name: "Português", flag: "🇵🇹" },
-  { code: "it-IT", name: "Italiano", flag: "🇮🇹" },
-  { code: "ru-RU", name: "Русский", flag: "🇷🇺" },
-  { code: "ar-SA", name: "العربية", flag: "🇸🇦" },
-  { code: "hi-IN", name: "हिन्दी", flag: "🇮🇳" },
-];
 
 interface QuotaStatus {
   plan: string;
@@ -89,31 +29,25 @@ interface QuotaStatus {
 interface QuickArticleFormProps {
   quotaStatus: QuotaStatus | null;
   websiteId: string | null;
+  industry: string;
+  region: string;
+  language: string;
 }
 
 export function QuickArticleForm({
   quotaStatus,
   websiteId,
+  industry,
+  region,
+  language,
 }: QuickArticleFormProps) {
   const router = useRouter();
   const [keyword, setKeyword] = useState("");
   const [batchKeywords, setBatchKeywords] = useState("");
   const [mode, setMode] = useState<"single" | "batch">("single");
-  const [industry, setIndustry] = useState("");
-  const [customIndustry, setCustomIndustry] = useState("");
-  const [region, setRegion] = useState("");
-  const [customRegion, setCustomRegion] = useState("");
-  const [language, setLanguage] = useState("zh-TW");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [generatedKeyword, setGeneratedKeyword] = useState("");
-
-  useEffect(() => {
-    const stored = localStorage.getItem("preferred-language");
-    if (stored) {
-      setLanguage(stored);
-    }
-  }, []);
 
   const hasRemainingQuota = quotaStatus
     ? quotaStatus.remaining > 0 || quotaStatus.quota === -1
@@ -134,8 +68,8 @@ export function QuickArticleForm({
             keyword: keyword.trim(),
             title: keyword.trim(),
             mode: "single",
-            industry: industry === "other" ? customIndustry : industry,
-            region: region === "other" ? customRegion : region,
+            industry,
+            region,
             language,
             website_id: websiteId,
           }),
@@ -165,8 +99,8 @@ export function QuickArticleForm({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             keywords,
-            industry: industry === "other" ? customIndustry : industry,
-            region: region === "other" ? customRegion : region,
+            industry,
+            region,
             targetLanguage: language,
             website_id: websiteId,
           }),
@@ -212,77 +146,6 @@ export function QuickArticleForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="space-y-2">
-        <Label htmlFor="industry">產業 *</Label>
-        <Select value={industry} onValueChange={setIndustry} required>
-          <SelectTrigger id="industry">
-            <SelectValue placeholder="請選擇產業" />
-          </SelectTrigger>
-          <SelectContent>
-            {INDUSTRIES.map((ind) => (
-              <SelectItem key={ind.value} value={ind.value}>
-                {ind.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {industry === "other" && (
-          <Input
-            id="customIndustry"
-            value={customIndustry}
-            onChange={(e) => setCustomIndustry(e.target.value)}
-            placeholder="請輸入您的產業"
-            required
-            className="mt-2"
-          />
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="region">目標地區 *</Label>
-        <Select value={region} onValueChange={setRegion} required>
-          <SelectTrigger id="region">
-            <SelectValue placeholder="請選擇目標地區" />
-          </SelectTrigger>
-          <SelectContent>
-            {REGIONS.map((reg) => (
-              <SelectItem key={reg.value} value={reg.value}>
-                {reg.label}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-        {region === "other" && (
-          <Input
-            id="customRegion"
-            value={customRegion}
-            onChange={(e) => setCustomRegion(e.target.value)}
-            placeholder="請輸入您的目標地區"
-            required
-            className="mt-2"
-          />
-        )}
-      </div>
-
-      <div className="space-y-2">
-        <Label htmlFor="language">撰寫語言 *</Label>
-        <Select value={language} onValueChange={setLanguage} required>
-          <SelectTrigger id="language">
-            <SelectValue placeholder="請選擇撰寫語言" />
-          </SelectTrigger>
-          <SelectContent>
-            {SUPPORTED_LANGUAGES.map((lang) => (
-              <SelectItem key={lang.code} value={lang.code}>
-                <div className="flex items-center gap-2">
-                  <span>{lang.flag}</span>
-                  <span>{lang.name}</span>
-                </div>
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
-      </div>
-
       <div className="space-y-3 rounded-lg border p-4 bg-muted/50">
         <Label className="text-base font-medium">生成模式</Label>
         <RadioGroup
