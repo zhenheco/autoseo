@@ -59,6 +59,15 @@ export async function GET(request: NextRequest) {
     const purchased = subscription.purchased_token_balance;
     const total = isFree ? purchased : monthlyQuota + purchased;
 
+    // 取得預扣資訊
+    const billingService = new TokenBillingService(supabase);
+    const reservationInfo =
+      await billingService.getAvailableBalanceWithReservations(
+        membership.company_id,
+      );
+    const reserved = reservationInfo.reserved;
+    const available = total - reserved;
+
     // 取得方案資訊
     let planInfo = null;
     if (subscription.plan_id) {
@@ -76,6 +85,8 @@ export async function GET(request: NextRequest) {
         total,
         monthlyQuota,
         purchased,
+        reserved,
+        available,
       },
       subscription: {
         tier: company?.subscription_tier || "free",
