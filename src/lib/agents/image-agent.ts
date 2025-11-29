@@ -387,6 +387,8 @@ export class ImageAgent extends BaseAgent<ImageInput, ImageOutput> {
   }
 
   private buildFeaturedImagePrompt(input: ImageInput): string {
+    const targetLang = input.targetLanguage || "zh-TW";
+
     const styleGuide = input.brandStyle
       ? `
 Style: ${input.brandStyle.style || "professional, modern"}
@@ -399,17 +401,21 @@ Color scheme: vibrant, eye-catching
 Mood: engaging, informative
 `;
 
-    return `Create a high-quality featured image for an article titled "${input.title}".
+    return `Create a high-quality featured image for an article.
+
+Target Language Context: ${targetLang}
+Article Title: "${input.title}"
 
 ${styleGuide}
 
 Requirements:
 - Eye-catching and professional
 - Relevant to the article topic
-- IMPORTANT: No text, no words, no letters, no Chinese characters - pure visual image only
+- CRITICAL: DO NOT include ANY text, words, letters, numbers, or characters of ANY language
+- This is for a ${targetLang} article - create culturally appropriate visuals WITHOUT text
 - Suitable for blog header/social media
 - High visual impact
-- Use symbols, icons, or illustrations instead of any text`;
+- Use ONLY symbols, icons, illustrations, and visual metaphors - absolutely NO text`;
   }
 
   private buildContentImagePrompt(
@@ -434,11 +440,13 @@ Key points to visualize:
 ${section.keyPoints.join("\n")}
 
 Requirements:
-- Clear and informative
+- Clear and informative visual
 - Supports the text content
 - Professional quality
-- IMPORTANT: No text, no words, no letters, no Chinese characters - pure visual image only
-- Use symbols, icons, or illustrations instead of any text`;
+- ABSOLUTELY NO TEXT of any kind - no words, no letters, no numbers, no characters in ANY language
+- DO NOT render any text labels or captions within the image
+- Use ONLY visual symbols, icons, and illustrations to convey meaning
+- Pure visual design without any written elements`;
   }
 
   private calculateTotalCost(

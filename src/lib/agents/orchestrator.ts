@@ -912,34 +912,30 @@ export class ParallelOrchestrator {
       ),
     ]);
 
-    const sections: SectionOutput[] = [];
-    for (let i = 0; i < outline.mainSections.length; i++) {
-      const section = outline.mainSections[i];
-      const previousSummary: string | undefined =
-        i > 0 ? sections[i - 1].summary : undefined;
-      const sectionImage = imageOutput?.contentImages?.[i] || null;
+    const sections: SectionOutput[] = await Promise.all(
+      outline.mainSections.map((section, i) => {
+        const sectionImage = imageOutput?.contentImages?.[i] || null;
 
-      const sectionOutput = await this.executeWithRetry(
-        async () => {
-          const agent = new SectionAgent(aiConfig, context);
-          return agent.execute({
-            section,
-            previousSummary,
-            sectionImage,
-            brandVoice,
-            targetLanguage,
-            index: i,
-            model: agentConfig.writing_model,
-            temperature: agentConfig.writing_temperature,
-            maxTokens: Math.floor(section.targetWordCount * 2),
-          });
-        },
-        RetryConfigs.SECTION_AGENT,
-        "content_generation",
-      );
-
-      sections.push(sectionOutput);
-    }
+        return this.executeWithRetry(
+          async () => {
+            const agent = new SectionAgent(aiConfig, context);
+            return agent.execute({
+              section,
+              previousSummary: undefined,
+              sectionImage,
+              brandVoice,
+              targetLanguage,
+              index: i,
+              model: agentConfig.writing_model,
+              temperature: agentConfig.writing_temperature,
+              maxTokens: Math.floor(section.targetWordCount * 2),
+            });
+          },
+          RetryConfigs.SECTION_AGENT,
+          "content_generation",
+        );
+      }),
+    );
 
     const assembler = new ContentAssemblerAgent();
     const assembled = await assembler.execute({
@@ -1570,14 +1566,15 @@ export class ParallelOrchestrator {
     if (featuredImage) {
       const featuredImageHtml = `<figure class="wp-block-image size-large">
   <img src="${featuredImage.url}" alt="${featuredImage.altText}" width="${featuredImage.width}" height="${featuredImage.height}" />
-</figure>\n\n`;
+</figure>`;
 
       const firstPTagIndex = modifiedHtml.indexOf("</p>");
       if (firstPTagIndex !== -1) {
         modifiedHtml =
           modifiedHtml.slice(0, firstPTagIndex + 4) +
-          "\n\n" +
+          "\n" +
           featuredImageHtml +
+          "\n" +
           modifiedHtml.slice(firstPTagIndex + 4);
       }
     }
@@ -1634,10 +1631,10 @@ export class ParallelOrchestrator {
         i--
       ) {
         const image = contentImages[i];
-        const imageHtml = `\n\n<figure class="wp-block-image size-large">
+        const imageHtml = `\n<figure class="wp-block-image size-large">
   <img src="${image.url}" alt="${image.altText}" width="${image.width}" height="${image.height}" />
   <figcaption>${image.altText}</figcaption>
-</figure>\n\n`;
+</figure>\n`;
 
         const position = insertPositions[i];
         modifiedHtml =

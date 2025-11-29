@@ -141,15 +141,15 @@ ${this.formatOutline(strategy.outline)}
 # SEO 關鍵字要求
 **關鍵字密度控制**：
 1. 目標字數: ${strategy.targetWordCount} 字
-2. **關鍵字密度目標: ${strategy.keywordDensityTarget}% (1.8-2.2% 之間)**
-3. **主要關鍵字總出現次數: 8-12 次**
-4. 主要關鍵字: ${strategy.outline.mainSections.flatMap((s) => s.keywords).join(", ")}
-5. LSI 關鍵字（語義相關詞）: ${strategy.lsiKeywords.join(", ")}
+2. **主要關鍵字（標題/核心詞）在內文中最多出現 3 次**（不包含文章標題本身）
+3. 主要關鍵字: ${strategy.outline.mainSections.flatMap((s) => s.keywords).join(", ")}
+4. LSI 關鍵字（語義相關詞）: ${strategy.lsiKeywords.join(", ")}
 
 **關鍵字使用原則**：
+- **標題和核心關鍵字在內文中最多出現 3 次**
 - 自然融入文章，避免生硬堆砌
-- 在標題、小標題、開頭段落、結尾段落中適當出現
-- 使用 LSI 關鍵字增加語義豐富度
+- **優先使用 LSI 關鍵字和同義詞來增加語義豐富度**
+- 不要在每個段落都重複提及標題或主要關鍵字
 - 變化關鍵字形式（同義詞、相關詞）
 
 # 內部連結機會
@@ -260,8 +260,8 @@ ${
 # 最終檢查清單
 請確保文章包含：
 ✅ 品牌聲音貫徹全文
-✅ 關鍵字密度在 1.8-2.2% 之間
-✅ 主要關鍵字出現 8-12 次
+✅ 主要關鍵字在內文中最多出現 3 次（不含標題）
+✅ 優先使用 LSI 關鍵字和同義詞
 ✅ 至少 ${strategy.internalLinkingStrategy.minLinks} 個內部連結（如有可用文章）
 ✅ 至少 3 個外部引用連結
 ✅ 每個章節結構完整（引言、主體、小結）

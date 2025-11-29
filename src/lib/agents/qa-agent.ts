@@ -9,6 +9,8 @@ export class QAAgent extends BaseAgent<QAInput, QAOutput> {
   protected async process(input: QAInput): Promise<QAOutput> {
     const { title, outline, brandVoice, count = 5 } = input;
 
+    console.log("[QAAgent] 開始生成 FAQ...");
+
     // Language mapping
     const languageNames: Record<string, string> = {
       "zh-TW": "Traditional Chinese (繁體中文)",
@@ -28,7 +30,9 @@ export class QAAgent extends BaseAgent<QAInput, QAOutput> {
       id: "Indonesian (Bahasa Indonesia)",
     };
 
-    const targetLang = (input as any).targetLanguage || "zh-TW";
+    const targetLang =
+      (input as QAInput & { targetLanguage?: string }).targetLanguage ||
+      "zh-TW";
     const languageName = languageNames[targetLang] || languageNames["zh-TW"];
 
     const mainTopics = outline.mainSections.map((s) => s.heading).join(", ");
@@ -66,34 +70,45 @@ export class QAAgent extends BaseAgent<QAInput, QAOutput> {
   ]
 }`;
 
-    const response = await this.complete(prompt, {
-      model: input.model,
-      temperature: input.temperature || 0.7,
-      maxTokens: input.maxTokens || 1500,
-      format: "json",
-    });
-
     let faqs: Array<{ question: string; answer: string }> = [];
 
     try {
-      const parsed = JSON.parse(response.content);
-      faqs = parsed.faqs || parsed;
-    } catch {
-      const jsonMatch = response.content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        try {
-          const parsed = JSON.parse(jsonMatch[0]);
-          faqs = parsed.faqs || parsed;
-        } catch {
+      const response = await this.complete(prompt, {
+        model: input.model,
+        temperature: input.temperature || 0.7,
+        maxTokens: input.maxTokens || 1500,
+        format: "json",
+      });
+
+      try {
+        const parsed = JSON.parse(response.content);
+        faqs = parsed.faqs || parsed;
+      } catch {
+        const jsonMatch = response.content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          try {
+            const parsed = JSON.parse(jsonMatch[0]);
+            faqs = parsed.faqs || parsed;
+          } catch {
+            console.warn("[QAAgent] JSON 解析失敗，嘗試文字解析...");
+            faqs = this.parseFallbackFAQs(response.content);
+          }
+        } else {
+          console.warn("[QAAgent] 無法找到 JSON，嘗試文字解析...");
           faqs = this.parseFallbackFAQs(response.content);
         }
-      } else {
-        faqs = this.parseFallbackFAQs(response.content);
       }
-    }
 
-    if (!Array.isArray(faqs) || faqs.length === 0) {
-      faqs = this.getFallbackFAQs(title);
+      if (!Array.isArray(faqs) || faqs.length === 0) {
+        console.warn("[QAAgent] FAQ 解析結果為空，使用 fallback...");
+        faqs = this.getFallbackFAQs(title, targetLang);
+      }
+
+      console.log(`[QAAgent] 成功生成 ${faqs.length} 個 FAQ`);
+    } catch (error) {
+      console.error("[QAAgent] FAQ 生成失敗:", error);
+      faqs = this.getFallbackFAQs(title, targetLang);
+      console.log(`[QAAgent] 使用 fallback FAQ: ${faqs.length} 個`);
     }
 
     const markdown = this.formatFAQsAsMarkdown(faqs);
@@ -171,20 +186,57 @@ export class QAAgent extends BaseAgent<QAInput, QAOutput> {
 
   private getFallbackFAQs(
     title: string,
+    targetLang: string = "zh-TW",
   ): Array<{ question: string; answer: string }> {
-    return [
-      {
-        question: `什麼是${title}？`,
-        answer: `${title}是一個重要的主題，涵蓋多個面向。本文將深入探討${title}的核心概念和實際應用。`,
-      },
-      {
-        question: `${title}適合哪些人？`,
-        answer: `${title}適合想要深入了解相關主題的讀者，無論是初學者還是有經驗的從業人員，都能從中獲益。`,
-      },
-      {
-        question: `如何開始學習${title}？`,
-        answer: `建議從基礎概念開始，循序漸進地學習。本文提供了完整的指南，幫助您系統性地掌握${title}。`,
-      },
-    ];
+    // 根據語系返回對應的 fallback FAQ
+    const fallbacksByLang: Record<
+      string,
+      Array<{ question: string; answer: string }>
+    > = {
+      "zh-TW": [
+        {
+          question: `什麼是${title}？`,
+          answer: `${title}是一個重要的主題，涵蓋多個面向。本文將深入探討${title}的核心概念和實際應用。`,
+        },
+        {
+          question: `${title}適合哪些人？`,
+          answer: `${title}適合想要深入了解相關主題的讀者，無論是初學者還是有經驗的從業人員，都能從中獲益。`,
+        },
+        {
+          question: `如何開始學習${title}？`,
+          answer: `建議從基礎概念開始，循序漸進地學習。本文提供了完整的指南，幫助您系統性地掌握${title}。`,
+        },
+      ],
+      "zh-CN": [
+        {
+          question: `什么是${title}？`,
+          answer: `${title}是一个重要的主题，涵盖多个方面。本文将深入探讨${title}的核心概念和实际应用。`,
+        },
+        {
+          question: `${title}适合哪些人？`,
+          answer: `${title}适合想要深入了解相关主题的读者，无论是初学者还是有经验的从业人员，都能从中获益。`,
+        },
+        {
+          question: `如何开始学习${title}？`,
+          answer: `建议从基础概念开始，循序渐进地学习。本文提供了完整的指南，帮助您系统性地掌握${title}。`,
+        },
+      ],
+      en: [
+        {
+          question: `What is ${title}?`,
+          answer: `${title} is an important topic covering multiple aspects. This article explores the core concepts and practical applications of ${title}.`,
+        },
+        {
+          question: `Who is ${title} suitable for?`,
+          answer: `${title} is suitable for readers who want to understand the topic deeply, whether beginners or experienced professionals can benefit from it.`,
+        },
+        {
+          question: `How to get started with ${title}?`,
+          answer: `It's recommended to start with basic concepts and learn progressively. This article provides a complete guide to help you master ${title} systematically.`,
+        },
+      ],
+    };
+
+    return fallbacksByLang[targetLang] || fallbacksByLang["zh-TW"];
   }
 }
