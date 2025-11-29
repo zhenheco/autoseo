@@ -2,6 +2,40 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAPIRouter } from "@/lib/ai/api-router";
 import { createClient } from "@/lib/supabase/server";
 
+async function callGeminiDirectAPI(prompt: string): Promise<string> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY is not set");
+  }
+
+  const modelName = "gemini-2.5-flash";
+  const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+
+  const response = await fetch(geminiUrl, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.8,
+        maxOutputTokens: 500,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(`Gemini API error: ${JSON.stringify(error)}`);
+  }
+
+  const data = await response.json();
+  const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!content) {
+    throw new Error("Invalid Gemini response structure");
+  }
+  return content;
+}
+
 const INDUSTRY_LABELS: Record<string, string> = {
   tech: "科技",
   finance: "金融",
@@ -86,17 +120,32 @@ ${langConfig.instruction}
 請直接輸出 5 個標題，每行一個，不要編號：`;
 
     const router = getAPIRouter();
-    const model = "google/gemini-2.5-flash-preview-05-20";
+    let responseContent: string;
 
-    const response = await router.complete({
-      model,
-      apiProvider: "openrouter",
-      prompt,
-      temperature: 0.8,
-      maxTokens: 500,
-    });
+    try {
+      // 優先使用 OpenRouter 的免費 Gemini 2.0
+      const response = await router.complete({
+        model: "google/gemini-2.0-flash-exp:free",
+        apiProvider: "openrouter",
+        prompt,
+        temperature: 0.8,
+        maxTokens: 500,
+      });
+      responseContent = response.content;
+      console.log(
+        "[preview-titles] ✅ OpenRouter gemini-2.0-flash-exp:free 成功",
+      );
+    } catch (openRouterError) {
+      console.warn(
+        "[preview-titles] ⚠️ OpenRouter 失敗，嘗試 Gemini API:",
+        (openRouterError as Error).message,
+      );
+      // Fallback: 使用 Gemini API 直接呼叫
+      responseContent = await callGeminiDirectAPI(prompt);
+      console.log("[preview-titles] ✅ Gemini API gemini-2.5-flash 成功");
+    }
 
-    const titles = response.content
+    const titles = responseContent
       .split("\n")
       .map((line) => line.trim())
       .filter((line) => line.length > 0 && line.length < 100)
@@ -105,7 +154,7 @@ ${langConfig.instruction}
       .slice(0, 5);
 
     if (titles.length === 0) {
-      console.error("No valid titles generated:", response.content);
+      console.error("No valid titles generated:", responseContent);
       return NextResponse.json(
         { error: "標題生成失敗，請稍後再試" },
         { status: 500 },
