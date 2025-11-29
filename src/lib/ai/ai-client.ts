@@ -360,9 +360,7 @@ export class AIClient {
       throw new Error("GEMINI_API_KEY is not set");
     }
 
-    const modelName = options.model.includes("flash")
-      ? "imagen-3.0-generate-002"
-      : "imagen-3.0-generate-002";
+    const modelName = "gemini-2.5-flash-image";
 
     const [width, height] = (options.size || "1024x1024")
       .split("x")
@@ -371,12 +369,12 @@ export class AIClient {
       width === height ? "1:1" : width > height ? "16:9" : "9:16";
 
     console.log(
-      `[AIClient] 🎨 Calling Gemini Imagen API (model: ${modelName}, aspect: ${aspectRatio}, gateway: ${isGatewayEnabled()})`,
+      `[AIClient] 🎨 Calling Gemini Image API (model: ${modelName}, aspect: ${aspectRatio}, gateway: ${isGatewayEnabled()})`,
     );
 
     const geminiUrl = isGatewayEnabled()
-      ? `${buildGeminiApiUrl(modelName, "predict")}?key=${apiKey}`
-      : `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:predict?key=${apiKey}`;
+      ? `${buildGeminiApiUrl(modelName, "generateContent")}?key=${apiKey}`
+      : `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
     const geminiHeaders = buildGeminiHeaders(apiKey);
 
@@ -384,12 +382,15 @@ export class AIClient {
       method: "POST",
       headers: geminiHeaders,
       body: JSON.stringify({
-        instances: [{ prompt }],
-        parameters: {
-          sampleCount: 1,
-          aspectRatio,
-          outputOptions: {
-            mimeType: "image/jpeg",
+        contents: [
+          {
+            parts: [{ text: prompt }],
+          },
+        ],
+        generationConfig: {
+          responseModalities: ["IMAGE"],
+          imageConfig: {
+            aspectRatio,
           },
         },
       }),
@@ -397,25 +398,24 @@ export class AIClient {
 
     if (!response.ok) {
       const error = await response.json();
-      throw new Error(`Gemini Imagen API error: ${JSON.stringify(error)}`);
+      throw new Error(`Gemini Image API error: ${JSON.stringify(error)}`);
     }
 
     const data = await response.json();
 
-    if (!data.predictions || !data.predictions[0]) {
-      throw new Error("Invalid Gemini Imagen response structure");
+    const inlineData = data.candidates?.[0]?.content?.parts?.[0]?.inlineData;
+    if (!inlineData?.data) {
+      throw new Error(
+        "Invalid Gemini Image response structure: " + JSON.stringify(data),
+      );
     }
 
-    const imageData = data.predictions[0];
-    const base64Data = imageData.bytesBase64Encoded;
+    const base64Data = inlineData.data;
+    const mimeType = inlineData.mimeType || "image/png";
 
-    if (!base64Data) {
-      throw new Error("No image data in Gemini Imagen response");
-    }
-
-    const dataUrl = `data:image/jpeg;base64,${base64Data}`;
+    const dataUrl = `data:${mimeType};base64,${base64Data}`;
     console.log(
-      "[AIClient] ✅ Gemini Imagen generated successfully (base64 length:",
+      "[AIClient] ✅ Gemini Image generated successfully (base64 length:",
       base64Data.length,
       ")",
     );
