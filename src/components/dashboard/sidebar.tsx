@@ -1,13 +1,13 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
   Globe,
   ChevronLeft,
   ChevronRight,
-  Sparkles,
   CreditCard,
   PenSquare,
   FileText,
@@ -58,11 +58,15 @@ export function Sidebar({ userEmail = "user@example.com" }: SidebarProps) {
         <div className="flex h-16 items-center justify-between px-4 border-b border-sidebar-foreground/10">
           {!collapsed && (
             <Link href="/dashboard" className="flex items-center gap-2">
-              <div className="h-8 w-8 rounded-lg bg-primary flex items-center justify-center">
-                <Sparkles className="h-5 w-5 text-primary-foreground" />
-              </div>
+              <Image
+                src="/logo.svg"
+                alt="1waySEO"
+                width={32}
+                height={32}
+                className="rounded-lg"
+              />
               <span className="text-lg font-bold text-sidebar-foreground">
-                Auto Pilot
+                1waySEO
               </span>
             </Link>
           )}
