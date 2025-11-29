@@ -50,28 +50,17 @@ const REGIONS = [
   { value: "other", label: "其他" },
 ];
 
-interface QuotaStatus {
-  plan: string;
-  quota: number;
-  used: number;
-  remaining: number;
-  canUseCompetitors: boolean;
-  month: string;
-}
-
 interface ArticleFormProps {
-  quotaStatus: QuotaStatus | null;
   websiteId: string | null;
 }
 
-export function ArticleForm({ quotaStatus, websiteId }: ArticleFormProps) {
+export function ArticleForm({ websiteId }: ArticleFormProps) {
   const router = useRouter();
   const [industry, setIndustry] = useState("");
   const [customIndustry, setCustomIndustry] = useState("");
   const [region, setRegion] = useState("");
   const [customRegion, setCustomRegion] = useState("");
   const [language, setLanguage] = useState("zh-TW");
-  const [competitors, setCompetitors] = useState<string[]>([""]);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [titleMode, setTitleMode] = useState<"auto" | "preview">("auto");
@@ -125,27 +114,6 @@ export function ArticleForm({ quotaStatus, websiteId }: ArticleFormProps) {
     fetchTokenBalance();
   }, []);
 
-  const canAddCompetitors = quotaStatus?.canUseCompetitors ?? false;
-  const hasRemainingQuota = quotaStatus
-    ? quotaStatus.remaining > 0 || quotaStatus.quota === -1
-    : true;
-
-  const handleAddCompetitor = () => {
-    if (competitors.length < 5) {
-      setCompetitors([...competitors, ""]);
-    }
-  };
-
-  const handleRemoveCompetitor = (index: number) => {
-    setCompetitors(competitors.filter((_, i) => i !== index));
-  };
-
-  const handleCompetitorChange = (index: number, value: string) => {
-    const newCompetitors = [...competitors];
-    newCompetitors[index] = value;
-    setCompetitors(newCompetitors);
-  };
-
   const handlePreviewTitles = async () => {
     setIsLoadingTitles(true);
     try {
@@ -156,7 +124,6 @@ export function ArticleForm({ quotaStatus, websiteId }: ArticleFormProps) {
           industry: industry === "other" ? customIndustry : industry,
           region: region === "other" ? customRegion : region,
           language,
-          competitors: competitors.filter((c) => c.trim() !== ""),
         }),
       });
 
@@ -211,7 +178,6 @@ export function ArticleForm({ quotaStatus, websiteId }: ArticleFormProps) {
         industry: industry === "other" ? customIndustry : industry,
         region: region === "other" ? customRegion : region,
         language,
-        competitors: competitors.filter((c) => c.trim() !== ""),
         ...(title && { title }),
         website_id: websiteId,
       }),
@@ -339,59 +305,6 @@ export function ArticleForm({ quotaStatus, websiteId }: ArticleFormProps) {
           />
         )}
       </div>
-
-      {canAddCompetitors && (
-        <div className="space-y-2">
-          <div className="flex items-center justify-between">
-            <Label>
-              競爭對手網站（選填，最多 5 個）
-              {quotaStatus && quotaStatus.plan !== "free" && (
-                <span className="text-xs text-muted-foreground ml-2">
-                  ⚡ 付費功能
-                </span>
-              )}
-            </Label>
-            {!hasRemainingQuota && (
-              <span className="text-xs text-red-600">配額已用完</span>
-            )}
-          </div>
-          <p className="text-sm text-muted-foreground">
-            輸入競爭對手的網站 URL，系統將使用 AI 深度分析他們的內容策略
-          </p>
-          {competitors.map((competitor, index) => (
-            <div key={index} className="flex gap-2">
-              <Input
-                type="url"
-                value={competitor}
-                onChange={(e) => handleCompetitorChange(index, e.target.value)}
-                placeholder="https://example.com"
-                className="flex-1"
-                disabled={!hasRemainingQuota}
-              />
-              {competitors.length > 1 && (
-                <Button
-                  type="button"
-                  variant="outline"
-                  onClick={() => handleRemoveCompetitor(index)}
-                  disabled={!hasRemainingQuota}
-                >
-                  移除
-                </Button>
-              )}
-            </div>
-          ))}
-          {competitors.length < 5 && hasRemainingQuota && (
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleAddCompetitor}
-              className="w-full mt-2"
-            >
-              + 新增競爭對手
-            </Button>
-          )}
-        </div>
-      )}
 
       <div className="space-y-3 rounded-lg border p-4 bg-muted/50">
         <Label className="text-base font-medium">標題生成模式</Label>

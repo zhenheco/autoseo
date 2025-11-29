@@ -461,6 +461,8 @@ export type Database = {
           purchased_token_balance: number;
           monthly_quota_balance: number;
           monthly_token_quota: number;
+          base_monthly_quota: number | null;
+          purchased_count: number;
           is_lifetime: boolean;
           lifetime_discount: number;
           lifetime_free_articles_used: number;
@@ -480,6 +482,8 @@ export type Database = {
           purchased_token_balance?: number;
           monthly_quota_balance?: number;
           monthly_token_quota: number;
+          base_monthly_quota?: number | null;
+          purchased_count?: number;
           is_lifetime?: boolean;
           lifetime_discount?: number;
           lifetime_free_articles_used?: number;
@@ -499,6 +503,8 @@ export type Database = {
           purchased_token_balance?: number;
           monthly_quota_balance?: number;
           monthly_token_quota?: number;
+          base_monthly_quota?: number | null;
+          purchased_count?: number;
           is_lifetime?: boolean;
           lifetime_discount?: number;
           lifetime_free_articles_used?: number;
