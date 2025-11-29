@@ -340,21 +340,66 @@ export class AIClient {
         }
       }
 
-      // 使用 OpenRouter 處理其他模型（如 dall-e-3）
-      const response = await callOpenRouter({
-        model: options.model,
-        messages: [
-          {
-            role: "user",
-            content: `Generate an image with the following prompt: ${prompt}. Quality: ${options.quality || "standard"}, Size: ${options.size || "1024x1024"}`,
-          },
-        ],
-      });
+      // 處理 nano-banana 模型（使用 Gemini generateContent API）
+      if (options.model.includes("nano-banana")) {
+        return await this.callGeminiImageAPI(prompt, options);
+      }
 
-      return {
-        url: response.choices[0].message.content || "",
-        revisedPrompt: prompt,
-      };
+      // 處理 dall-e-3 模型（使用 OpenAI 官方 API）
+      if (options.model.includes("dall-e")) {
+        const apiKey = process.env.OPENAI_API_KEY;
+        if (!apiKey) {
+          throw new Error("OPENAI_API_KEY is not set");
+        }
+
+        const requestBody: Record<string, unknown> = {
+          model: options.model,
+          prompt: prompt,
+          n: 1,
+          size: options.size || "1024x1024",
+          response_format: "b64_json",
+        };
+
+        if (options.quality) {
+          requestBody.quality = options.quality === "high" ? "hd" : "standard";
+        }
+
+        const response = await fetch(
+          "https://api.openai.com/v1/images/generations",
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${apiKey}`,
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify(requestBody),
+          },
+        );
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(`DALL-E API error: ${JSON.stringify(error)}`);
+        }
+
+        const data = await response.json();
+        const imageData = data.data[0];
+
+        if (imageData.b64_json) {
+          return {
+            url: `data:image/png;base64,${imageData.b64_json}`,
+            revisedPrompt: imageData.revised_prompt || prompt,
+          };
+        } else if (imageData.url) {
+          return {
+            url: imageData.url,
+            revisedPrompt: imageData.revised_prompt || prompt,
+          };
+        }
+
+        throw new Error("No image data in DALL-E response");
+      }
+
+      throw new Error(`Unsupported image model: ${options.model}`);
     } catch (error: any) {
       throw new Error(`Image generation failed: ${error.message}`);
     }
@@ -435,6 +480,104 @@ export class AIClient {
     return {
       url: dataUrl,
       revisedPrompt: prompt,
+    };
+  }
+
+  private async callGeminiImageAPI(
+    prompt: string,
+    options: {
+      model: string;
+      quality?: "low" | "medium" | "high" | "auto";
+      size?: string;
+    },
+  ): Promise<{ url: string; revisedPrompt?: string }> {
+    const apiKey = process.env.GEMINI_API_KEY;
+    if (!apiKey) {
+      throw new Error("GEMINI_API_KEY is not set");
+    }
+
+    const [width, height] = (options.size || "1024x1024")
+      .split("x")
+      .map(Number);
+    let aspectRatio = "1:1";
+    if (width > height) {
+      aspectRatio = width / height >= 1.7 ? "16:9" : "4:3";
+    } else if (height > width) {
+      aspectRatio = height / width >= 1.7 ? "9:16" : "3:4";
+    }
+
+    const imageSize = width >= 2048 || height >= 2048 ? "2K" : "1K";
+
+    const modelName = options.model.includes("pro")
+      ? "gemini-2.0-flash-exp"
+      : "gemini-2.0-flash-exp";
+
+    console.log(
+      `[AIClient] 🎨 Calling Gemini Image API (model: ${modelName}, aspect: ${aspectRatio}, size: ${imageSize})`,
+    );
+
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          contents: [
+            {
+              parts: [{ text: prompt }],
+            },
+          ],
+          generationConfig: {
+            responseModalities: ["TEXT", "IMAGE"],
+          },
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(
+        `Gemini Image API error (${response.status}): ${errorText}`,
+      );
+    }
+
+    const data = await response.json();
+
+    if (!data.candidates || !data.candidates[0]?.content?.parts) {
+      throw new Error("Invalid Gemini Image API response structure");
+    }
+
+    const parts = data.candidates[0].content.parts;
+    let imageData: string | null = null;
+    let mimeType = "image/png";
+    let description = prompt;
+
+    for (const part of parts) {
+      if (part.inlineData) {
+        imageData = part.inlineData.data;
+        mimeType = part.inlineData.mimeType || "image/png";
+      } else if (part.text) {
+        description = part.text;
+      }
+    }
+
+    if (!imageData) {
+      throw new Error("No image data in Gemini response");
+    }
+
+    const dataUrl = `data:${mimeType};base64,${imageData}`;
+
+    console.log(
+      "[AIClient] ✅ Gemini Image generated successfully (base64 length:",
+      imageData.length,
+      ")",
+    );
+
+    return {
+      url: dataUrl,
+      revisedPrompt: description,
     };
   }
 }

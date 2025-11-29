@@ -746,7 +746,9 @@ export class ParallelOrchestrator {
                 },
               });
 
-              console.log("[Orchestrator] ✅ Token 已扣除:", {
+              await tokenBillingService.consumeReservation(input.articleJobId);
+
+              console.log("[Orchestrator] ✅ Token 已扣除，預扣已消耗:", {
                 official: totalTokenUsage.official,
                 charged: totalTokenUsage.charged,
               });
