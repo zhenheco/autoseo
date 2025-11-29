@@ -1,5 +1,9 @@
-import { AIClient } from '@/lib/ai/ai-client';
-import type { AIClientConfig, AICompletionOptions, AICompletionResponse } from '@/types/agents';
+import { AIClient } from "@/lib/ai/ai-client";
+import type {
+  AIClientConfig,
+  AICompletionOptions,
+  AICompletionResponse,
+} from "@/types/agents";
 
 export interface AgentExecutionContext {
   websiteId: string;
@@ -19,10 +23,10 @@ export interface AgentExecutionInfo {
 }
 
 export interface AgentLogEntry {
-  level: 'info' | 'warning' | 'error';
+  level: "info" | "warning" | "error";
   message: string;
   timestamp: Date;
-  data?: any;
+  data?: Record<string, unknown>;
 }
 
 export abstract class BaseAgent<TInput, TOutput> {
@@ -44,20 +48,20 @@ export abstract class BaseAgent<TInput, TOutput> {
     this.logs = [];
     this.totalTokensUsed = { input: 0, output: 0, charged: 0 };
 
-    this.log('info', `${this.agentName} started`, { input });
+    this.log("info", `${this.agentName} started`, { input });
 
     try {
       const result = await this.process(input);
 
       const executionTime = Date.now() - this.startTime;
-      this.log('info', `${this.agentName} completed`, {
+      this.log("info", `${this.agentName} completed`, {
         executionTime,
         tokenUsage: this.totalTokensUsed,
       });
 
       return result;
     } catch (error) {
-      this.log('error', `${this.agentName} failed`, { error });
+      this.log("error", `${this.agentName} failed`, { error });
       throw error;
     }
   }
@@ -66,23 +70,24 @@ export abstract class BaseAgent<TInput, TOutput> {
 
   protected async complete(
     prompt: string | any[],
-    options: AICompletionOptions
+    options: AICompletionOptions,
   ): Promise<AICompletionResponse> {
     try {
       const response = await this.aiClient.complete(prompt, options);
 
       this.totalTokensUsed.input += response.usage.promptTokens;
       this.totalTokensUsed.output += response.usage.completionTokens;
-      this.totalTokensUsed.charged += response.usage.promptTokens + response.usage.completionTokens;
+      this.totalTokensUsed.charged +=
+        response.usage.promptTokens + response.usage.completionTokens;
 
-      this.log('info', 'AI completion successful', {
+      this.log("info", "AI completion successful", {
         model: response.model,
         tokens: response.usage,
       });
 
       return response;
     } catch (error) {
-      this.log('error', 'AI completion failed', { error, options });
+      this.log("error", "AI completion failed", { error, options });
       throw error;
     }
   }
@@ -91,26 +96,30 @@ export abstract class BaseAgent<TInput, TOutput> {
     prompt: string,
     options: {
       model: string;
-      quality?: 'low' | 'medium' | 'high' | 'auto';
+      quality?: "low" | "medium" | "high" | "auto";
       size?: string;
-    }
+    },
   ): Promise<{ url: string; revisedPrompt?: string }> {
     try {
       const result = await this.aiClient.generateImage(prompt, options);
 
-      this.log('info', 'Image generation successful', {
+      this.log("info", "Image generation successful", {
         model: options.model,
         prompt: prompt.substring(0, 100),
       });
 
       return result;
     } catch (error) {
-      this.log('error', 'Image generation failed', { error, options });
+      this.log("error", "Image generation failed", { error, options });
       throw error;
     }
   }
 
-  protected log(level: AgentLogEntry['level'], message: string, data?: any): void {
+  protected log(
+    level: AgentLogEntry["level"],
+    message: string,
+    data?: Record<string, unknown>,
+  ): void {
     const entry: AgentLogEntry = {
       level,
       message,
@@ -119,9 +128,9 @@ export abstract class BaseAgent<TInput, TOutput> {
     };
     this.logs.push(entry);
 
-    if (level === 'error') {
+    if (level === "error") {
       console.error(`[${this.agentName}]`, message, data);
-    } else if (level === 'warning') {
+    } else if (level === "warning") {
       console.warn(`[${this.agentName}]`, message, data);
     } else {
       console.log(`[${this.agentName}]`, message, data);

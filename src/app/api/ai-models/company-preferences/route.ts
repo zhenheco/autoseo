@@ -1,17 +1,20 @@
-import { createClient } from '@/lib/supabase/server';
-import { NextResponse } from 'next/server';
+import { createClient } from "@/lib/supabase/server";
+import { NextResponse } from "next/server";
 
 export async function GET(request: Request) {
   const supabase = await createClient();
   const { searchParams } = new URL(request.url);
-  const companyId = searchParams.get('companyId');
+  const companyId = searchParams.get("companyId");
 
   if (!companyId) {
-    return NextResponse.json({ error: 'Company ID is required' }, { status: 400 });
+    return NextResponse.json(
+      { error: "Company ID is required" },
+      { status: 400 },
+    );
   }
 
   try {
-    const { data, error } = await supabase.rpc('get_company_ai_models', {
+    const { data, error } = await supabase.rpc("get_company_ai_models", {
       company_id_param: companyId,
     });
 
@@ -23,8 +26,9 @@ export async function GET(request: Request) {
       success: true,
       preferences: data?.[0] || null,
     });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }
 
@@ -37,16 +41,16 @@ export async function POST(request: Request) {
 
     if (!companyId || !preferences) {
       return NextResponse.json(
-        { error: 'Company ID and preferences are required' },
-        { status: 400 }
+        { error: "Company ID and preferences are required" },
+        { status: 400 },
       );
     }
 
     const { data, error } = await supabase
-      .from('companies')
+      .from("companies")
       .update({ ai_model_preferences: preferences })
-      .eq('id', companyId)
-      .select('id, ai_model_preferences')
+      .eq("id", companyId)
+      .select("id, ai_model_preferences")
       .single();
 
     if (error) {
@@ -57,7 +61,8 @@ export async function POST(request: Request) {
       success: true,
       company: data,
     });
-  } catch (error: any) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    return NextResponse.json({ error: message }, { status: 500 });
   }
 }

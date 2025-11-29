@@ -25,7 +25,7 @@
 
 Vercel 已配置以下域名別名：
 
-- ✅ https://seo.zhenhe-dm.com
+- ✅ https://1wayseo.com
 - ✅ https://autopilot-seo.vercel.app
 - ✅ https://autopilot-seo-acejou27s-projects.vercel.app
 - ✅ https://autopilot-seo-acejou27-acejou27s-projects.vercel.app
@@ -33,7 +33,7 @@ Vercel 已配置以下域名別名：
 #### 4. HTTP 訪問測試
 
 - **狀態**: ✅ 成功
-- **測試**: `curl -I http://seo.zhenhe-dm.com`
+- **測試**: `curl -I http://1wayseo.com`
 - **結果**: HTTP 200 OK
 - **內容長度**: 29,618 bytes
 
@@ -43,7 +43,7 @@ Vercel 已配置以下域名別名：
 
 - **狀態**: ⏳ 進行中
 - **預計時間**: 數分鐘至數小時
-- **說明**: Vercel 正在為 `seo.zhenhe-dm.com` 生成 SSL 憑證
+- **說明**: Vercel 正在為 `1wayseo.com` 生成 SSL 憑證
 - **驗證方式**: DNS 驗證（已通過）
 - **下一步**: 等待 Vercel 完成 SSL 憑證簽發
 
@@ -51,13 +51,13 @@ Vercel 已配置以下域名別名：
 
 ```bash
 # 使用 Google DNS 查詢（成功）
-nslookup seo.zhenhe-dm.com 8.8.8.8
+nslookup 1wayseo.com 8.8.8.8
 
 # HTTP 訪問（成功）
-curl -I http://seo.zhenhe-dm.com
+curl -I http://1wayseo.com
 
 # HTTPS 訪問（等待 SSL 憑證）
-curl -I https://seo.zhenhe-dm.com
+curl -I https://1wayseo.com
 ```
 
 ## 🔧 待完成步驟
@@ -84,7 +84,7 @@ NEWEBPAY_API_URL=https://ccore.newebpay.com/MPG/mpg_gateway
 GMAIL_USER=your_email@gmail.com
 GMAIL_APP_PASSWORD=your_gmail_app_password
 
-NEXT_PUBLIC_APP_URL=https://seo.zhenhe-dm.com
+NEXT_PUBLIC_APP_URL=https://1wayseo.com
 COMPANY_NAME=Auto Pilot SEO
 
 DEEPSEEK_API_KEY=your_deepseek_api_key_here
@@ -117,12 +117,12 @@ vercel --prod
 
 1. 前往 https://vercel.com/acejou27s-projects/autopilot-seo/settings/domains
 2. 點擊 **Add Domain**
-3. 輸入：`seo.zhenhe-dm.com`
+3. 輸入：`1wayseo.com`
 4. Vercel 會提供 DNS 設定指引
 
 #### DNS 設定（Cloudflare）
 
-前往 Cloudflare Dashboard → zhenhe-dm.com → DNS Records：
+前往 Cloudflare Dashboard → 1wayseo.com → DNS Records：
 
 **選項 A: A Record**
 
@@ -149,21 +149,21 @@ Proxy: OFF (DNS only)
 登入 NewebPay 後台，更新回調 URL：
 
 ```
-https://seo.zhenhe-dm.com/api/payment/recurring/callback
-https://seo.zhenhe-dm.com/api/payment/recurring/notify
+https://1wayseo.com/api/payment/recurring/callback
+https://1wayseo.com/api/payment/recurring/notify
 ```
 
 ### 步驟 5: 驗證功能
 
 ```bash
 # 測試首頁
-curl -I https://seo.zhenhe-dm.com
+curl -I https://1wayseo.com
 
 # 測試 API
-curl https://seo.zhenhe-dm.com/api/ai-models
+curl https://1wayseo.com/api/ai-models
 
 # 測試付款回調端點
-curl -I https://seo.zhenhe-dm.com/api/payment/recurring/callback
+curl -I https://1wayseo.com/api/payment/recurring/callback
 ```
 
 ## 📊 部署比較
@@ -189,7 +189,7 @@ curl -I https://seo.zhenhe-dm.com/api/payment/recurring/callback
 
 - [x] 設定 Vercel 環境變數（15 個）
 - [x] 重新部署
-- [x] 綁定 seo.zhenhe-dm.com
+- [x] 綁定 1wayseo.com
 - [x] 設定 Cloudflare DNS
 - [ ] 等待 SSL 憑證生成（進行中）
 - [ ] 更新 NewebPay webhook URL
@@ -204,16 +204,16 @@ curl -I https://seo.zhenhe-dm.com/api/payment/recurring/callback
 
 ```bash
 # 檢查 DNS 狀態
-dig seo.zhenhe-dm.com +short
+dig 1wayseo.com +short
 
 # 測試 HTTP
-curl -I http://seo.zhenhe-dm.com
+curl -I http://1wayseo.com
 
 # 測試 HTTPS (等待 SSL)
-curl -I https://seo.zhenhe-dm.com
+curl -I https://1wayseo.com
 
 # 查看 Vercel 部署狀態
-pnpm exec vercel inspect seo.zhenhe-dm.com
+pnpm exec vercel inspect 1wayseo.com
 
 # 查看 Vercel 域名列表
 pnpm exec vercel domains ls

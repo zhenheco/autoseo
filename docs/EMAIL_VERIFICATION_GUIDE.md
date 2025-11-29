@@ -30,7 +30,7 @@
 **驗證信 URL 格式**：
 
 ```
-https://seo.zhenhe-dm.com/auth/callback?token_hash=pkce_59779374ce4b1cea59d970e683224c7287fa29d2dd88c63388f2b6fd&type=email
+https://1wayseo.com/auth/callback?token_hash=pkce_59779374ce4b1cea59d970e683224c7287fa29d2dd88c63388f2b6fd&type=email
 ```
 
 ### 根本原因
@@ -359,7 +359,7 @@ vercel ls --scope acejou27s-projects | head -8
 
 #### 4. 生產環境測試
 
-1. 前往 `https://seo.zhenhe-dm.com/zh/register`
+1. 前往 `https://1wayseo.com/zh/register`
 2. 重複本地測試流程
 3. 確認所有功能正常運作
 
@@ -592,7 +592,7 @@ export async function updateSession(request: NextRequest) {
 NEXT_PUBLIC_SUPABASE_URL=https://xxx.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJxxx...
 SUPABASE_SERVICE_ROLE_KEY=eyJxxx...
-NEXT_PUBLIC_APP_URL=https://seo.zhenhe-dm.com
+NEXT_PUBLIC_APP_URL=https://1wayseo.com
 ```
 
 ### B. 常用命令

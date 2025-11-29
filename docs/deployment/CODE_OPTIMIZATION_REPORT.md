@@ -310,11 +310,11 @@ const nextConfig = {
 2. 清理不需要的依賴和檔案
 3. TypeScript 零錯誤
 4. 核心功能全部正常運作
-5. 網站已上線：https://seo.zhenhe-dm.com
+5. 網站已上線：https://1wayseo.com
 
 ### 網站狀態
 
-- **URL**: https://seo.zhenhe-dm.com
+- **URL**: https://1wayseo.com
 - **狀態**: ✅ 上線並運作中
 - **SSL**: ✅ 已配置
 - **DNS**: ✅ 已設定

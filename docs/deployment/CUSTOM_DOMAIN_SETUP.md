@@ -1,6 +1,6 @@
 # 自訂網域設定指南
 
-## 設定 seo.zhenhe-dm.com 到 Cloudflare Workers
+## 設定 1wayseo.com 到 Cloudflare Workers
 
 ### 步驟 1: 登入 Cloudflare Dashboard
 
@@ -16,7 +16,7 @@
 ### 步驟 3: 新增自訂網域
 
 1. 點擊 **Add Custom Domain**
-2. 輸入網域：`seo.zhenhe-dm.com`
+2. 輸入網域：`1wayseo.com`
 3. 點擊 **Add Domain**
 
 ### 步驟 4: 設定 DNS 記錄
@@ -24,7 +24,7 @@
 Cloudflare 會自動為您建立 DNS 記錄：
 
 - **類型**: CNAME 或 A 記錄
-- **名稱**: seo.zhenhe-dm.com
+- **名稱**: 1wayseo.com
 - **目標**: auto-pilot-seo.acejou27.workers.dev
 
 ### 步驟 5: 等待生效
@@ -35,7 +35,7 @@ DNS 記錄通常在 1-5 分鐘內生效，SSL 憑證可能需要額外幾分鐘�
 
 設定完成後，您可以訪問：
 
-- https://seo.zhenhe-dm.com
+- https://1wayseo.com
 
 應該可以正常載入應用程式。
 
@@ -43,7 +43,7 @@ DNS 記錄通常在 1-5 分鐘內生效，SSL 憑證可能需要額外幾分鐘�
 
 設定完成後，NewebPay 的回調 URL 將會是：
 
-- `https://seo.zhenhe-dm.com/api/payment/recurring/callback`
+- `https://1wayseo.com/api/payment/recurring/callback`
 
 這樣就能解決原本的 Cloudflare Tunnel Error 1033 問題！
 
@@ -52,7 +52,7 @@ DNS 記錄通常在 1-5 分鐘內生效，SSL 憑證可能需要額外幾分鐘�
 ### DNS 未生效
 
 - 等待 DNS 傳播完成（通常 1-5 分鐘）
-- 使用 `nslookup seo.zhenhe-dm.com` 檢查 DNS 記錄
+- 使用 `nslookup 1wayseo.com` 檢查 DNS 記錄
 
 ### SSL 憑證錯誤
 
@@ -68,8 +68,8 @@ DNS 記錄通常在 1-5 分鐘內生效，SSL 憑證可能需要額外幾分鐘�
 
 - [ ] 登入 Cloudflare Dashboard
 - [ ] 找到 auto-pilot-seo Worker
-- [ ] 在 Settings > Domains & Routes 新增 seo.zhenhe-dm.com
+- [ ] 在 Settings > Domains & Routes 新增 1wayseo.com
 - [ ] 確認 DNS 記錄已自動建立
 - [ ] 等待 DNS 和 SSL 生效
-- [ ] 訪問 https://seo.zhenhe-dm.com 測試
+- [ ] 訪問 https://1wayseo.com 測試
 - [ ] 測試付款流程確認回調正常

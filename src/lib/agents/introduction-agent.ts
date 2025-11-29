@@ -1,35 +1,40 @@
-import { BaseAgent } from './base-agent';
-import type { IntroductionInput, IntroductionOutput } from '@/types/agents';
+import { BaseAgent } from "./base-agent";
+import type { IntroductionInput, IntroductionOutput } from "@/types/agents";
 
-export class IntroductionAgent extends BaseAgent<IntroductionInput, IntroductionOutput> {
+export class IntroductionAgent extends BaseAgent<
+  IntroductionInput,
+  IntroductionOutput
+> {
   get agentName(): string {
-    return 'IntroductionAgent';
+    return "IntroductionAgent";
   }
 
-  protected async process(input: IntroductionInput): Promise<IntroductionOutput> {
+  protected async process(
+    input: IntroductionInput,
+  ): Promise<IntroductionOutput> {
     const { outline, featuredImage, brandVoice } = input;
 
     // Language mapping
     const languageNames: Record<string, string> = {
-      'zh-TW': 'Traditional Chinese (繁體中文)',
-      'zh-CN': 'Simplified Chinese (简体中文)',
-      'en': 'English',
-      'ja': 'Japanese (日本語)',
-      'ko': 'Korean (한국어)',
-      'es': 'Spanish (Español)',
-      'fr': 'French (Français)',
-      'de': 'German (Deutsch)',
-      'pt': 'Portuguese (Português)',
-      'it': 'Italian (Italiano)',
-      'ru': 'Russian (Русский)',
-      'ar': 'Arabic (العربية)',
-      'th': 'Thai (ไทย)',
-      'vi': 'Vietnamese (Tiếng Việt)',
-      'id': 'Indonesian (Bahasa Indonesia)',
+      "zh-TW": "Traditional Chinese (繁體中文)",
+      "zh-CN": "Simplified Chinese (简体中文)",
+      en: "English",
+      ja: "Japanese (日本語)",
+      ko: "Korean (한국어)",
+      es: "Spanish (Español)",
+      fr: "French (Français)",
+      de: "German (Deutsch)",
+      pt: "Portuguese (Português)",
+      it: "Italian (Italiano)",
+      ru: "Russian (Русский)",
+      ar: "Arabic (العربية)",
+      th: "Thai (ไทย)",
+      vi: "Vietnamese (Tiếng Việt)",
+      id: "Indonesian (Bahasa Indonesia)",
     };
 
-    const targetLang = (input as any).targetLanguage || 'zh-TW';
-    const languageName = languageNames[targetLang] || languageNames['zh-TW'];
+    const targetLang = input.targetLanguage || "zh-TW";
+    const languageName = languageNames[targetLang] || languageNames["zh-TW"];
 
     const prompt = `Write an article introduction based on the following information:
 
@@ -43,8 +48,8 @@ export class IntroductionAgent extends BaseAgent<IntroductionInput, Introduction
 ## Brand Voice
 - Tone: ${brandVoice.tone_of_voice}
 - Target Audience: ${brandVoice.target_audience}
-- Sentence Style: ${brandVoice.sentence_style || 'Clear and concise'}
-- Interactivity: ${brandVoice.interactivity || 'Moderate'}
+- Sentence Style: ${brandVoice.sentence_style || "Clear and concise"}
+- Interactivity: ${brandVoice.interactivity || "Moderate"}
 
 ## Requirements
 1. Word count: 150-250 words
@@ -52,7 +57,7 @@ export class IntroductionAgent extends BaseAgent<IntroductionInput, Introduction
 3. Clearly explain the article topic and reader value
 4. Tone matches brand style
 5. Use Markdown format
-${featuredImage ? `6. Insert featured image at the beginning: ![${featuredImage.altText || 'Article featured image'}](${featuredImage.url})` : ''}
+${featuredImage ? `6. Insert featured image at the beginning: ![${featuredImage.altText || "Article featured image"}](${featuredImage.url})` : ""}
 
 **CRITICAL: Write ALL content in ${languageName}**
 
@@ -67,8 +72,8 @@ Output the introduction content in Markdown directly, without including a title.
 
     let markdown = response.content.trim();
 
-    if (featuredImage && !markdown.includes('![')) {
-      markdown = `![${featuredImage.altText || '文章主圖'}](${featuredImage.url})\n\n${markdown}`;
+    if (featuredImage && !markdown.includes("![")) {
+      markdown = `![${featuredImage.altText || "文章主圖"}](${featuredImage.url})\n\n${markdown}`;
     }
 
     const wordCount = this.countWords(markdown);
@@ -81,16 +86,23 @@ Output the introduction content in Markdown directly, without including a title.
   }
 
   private countWords(text: string): number {
-    const plainText = text.replace(/!\[.*?\]\(.*?\)/g, '').replace(/[#*`]/g, '').trim();
+    const plainText = text
+      .replace(/!\[.*?\]\(.*?\)/g, "")
+      .replace(/[#*`]/g, "")
+      .trim();
 
     // 計算中文字符數
     const chineseChars = (plainText.match(/[\u4e00-\u9fa5]/g) || []).length;
 
     // 計算英文單詞數（排除中文後按空格分詞）
-    const nonChineseText = plainText.replace(/[\u4e00-\u9fa5]/g, '');
-    const englishWords = nonChineseText.trim() ? nonChineseText.trim().split(/\s+/).length : 0;
+    const nonChineseText = plainText.replace(/[\u4e00-\u9fa5]/g, "");
+    const englishWords = nonChineseText.trim()
+      ? nonChineseText.trim().split(/\s+/).length
+      : 0;
 
     // 如果中文字符多，使用中文字符數；否則使用英文單詞數
-    return chineseChars > englishWords ? chineseChars : Math.max(chineseChars + englishWords, 1);
+    return chineseChars > englishWords
+      ? chineseChars
+      : Math.max(chineseChars + englishWords, 1);
   }
 }

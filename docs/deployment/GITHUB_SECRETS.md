@@ -59,7 +59,7 @@ wrangler secret put NEXT_PUBLIC_APP_URL --env production
 
 1. **生產環境部署** (main 分支)
    - 推送到 `main` 分支時自動部署到生產環境
-   - 網址：`https://seo.zhenhe-dm.com`
+   - 網址：`https://1wayseo.com`
 
 2. **預覽環境部署** (develop 分支)
    - 推送到 `develop` 分支時自動部署到預覽環境

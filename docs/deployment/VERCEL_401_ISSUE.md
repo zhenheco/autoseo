@@ -10,29 +10,29 @@ Vercel 啟用了 **Deployment Protection (部署保護)** 功能，這是一個�
 
 ## 影響
 
-- ✅ 自訂域名 `seo.zhenhe-dm.com` 不受影響（DNS 傳播後可正常訪問）
+- ✅ 自訂域名 `1wayseo.com` 不受影響（DNS 傳播後可正常訪問）
 - ❌ Vercel 預設 URL `autopilot-fjjovgu1j-acejou27s-projects.vercel.app` 需要認證
 
 ## 解決方案
 
 ### 選項 1: 等待 DNS 傳播並使用自訂域名（推薦）
 
-由於自訂域名不受部署保護影響，最簡單的方法是等待 DNS 完全傳播，然後使用 `seo.zhenhe-dm.com` 進行測試。
+由於自訂域名不受部署保護影響，最簡單的方法是等待 DNS 完全傳播，然後使用 `1wayseo.com` 進行測試。
 
 **步驟**：
 
 1. 等待 5-30 分鐘讓 DNS 傳播
-2. 測試 `http://seo.zhenhe-dm.com`（HTTP 現在可用）
-3. 等待 SSL 憑證生成後測試 `https://seo.zhenhe-dm.com`
+2. 測試 `http://1wayseo.com`（HTTP 現在可用）
+3. 等待 SSL 憑證生成後測試 `https://1wayseo.com`
 
 **驗證**：
 
 ```bash
 # 檢查 DNS 是否傳播完成
-nslookup seo.zhenhe-dm.com
+nslookup 1wayseo.com
 
 # 測試訪問
-curl -I http://seo.zhenhe-dm.com
+curl -I http://1wayseo.com
 ```
 
 ### 選項 2: 在 Vercel Dashboard 關閉部署保護
@@ -86,9 +86,9 @@ curl -H "Authorization: Bearer YOUR_VERCEL_TOKEN" \
 
 ### 中期（DNS 傳播後）
 
-1. 測試 HTTP 訪問：`http://seo.zhenhe-dm.com`
+1. 測試 HTTP 訪問：`http://1wayseo.com`
 2. 等待 SSL 憑證生成
-3. 測試 HTTPS 訪問：`https://seo.zhenhe-dm.com`
+3. 測試 HTTPS 訪問：`https://1wayseo.com`
 4. 執行完整前端測試
 
 ### 長期（生產環境）
@@ -108,10 +108,10 @@ curl -H "Authorization: Bearer YOUR_VERCEL_TOKEN" \
    sudo nano /etc/hosts
 
    # 加入以下行
-   76.76.21.61 seo.zhenhe-dm.com
+   76.76.21.61 1wayseo.com
 
    # 儲存並測試
-   curl -I http://seo.zhenhe-dm.com
+   curl -I http://1wayseo.com
    ```
 
 3. 測試完成後記得移除 `/etc/hosts` 的修改
@@ -124,7 +124,7 @@ curl -H "Authorization: Bearer YOUR_VERCEL_TOKEN" \
 
 ```bash
 # 等待 DNS 傳播後
-# 開啟 Chrome → http://seo.zhenhe-dm.com
+# 開啟 Chrome → http://1wayseo.com
 # 按 F12 開啟 DevTools
 # 檢查 Console、Network、Elements
 ```
@@ -136,10 +136,10 @@ curl -H "Authorization: Bearer YOUR_VERCEL_TOKEN" \
 sudo nano /etc/hosts
 
 # 加入
-76.76.21.61 seo.zhenhe-dm.com
+76.76.21.61 1wayseo.com
 
 # 測試
-ping seo.zhenhe-dm.com
+ping 1wayseo.com
 
 # 開啟瀏覽器測試
 # 完成後移除此行
@@ -155,7 +155,7 @@ ping seo.zhenhe-dm.com
 **立即執行**：
 
 - ✅ 等待 DNS 自然傳播（5-30 分鐘）
-- ✅ 使用 `http://seo.zhenhe-dm.com` 測試（DNS 傳播後）
+- ✅ 使用 `http://1wayseo.com` 測試（DNS 傳播後）
 - ✅ 在 Vercel Dashboard 檢查 SSL 憑證狀態
 
 **避免**：

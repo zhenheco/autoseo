@@ -2,12 +2,12 @@
 
 ## 目標
 
-將 `seo.zhenhe-dm.com` 指向 Vercel 部署
+將 `1wayseo.com` 指向 Vercel 部署
 
 ## 步驟 1: 登入 Cloudflare Dashboard
 
 1. 前往 [Cloudflare Dashboard](https://dash.cloudflare.com/)
-2. 選擇網域 `zhenhe-dm.com`
+2. 選擇網域 `1wayseo.com`
 3. 點擊左側選單的 **DNS** → **Records**
 
 ## 步驟 2: 新增 DNS 記錄
@@ -50,31 +50,31 @@ DNS 傳播通常需要 **5-30 分鐘**，最多可能需要 48 小時
 ### 使用 dig 查詢
 
 ```bash
-dig seo.zhenhe-dm.com
+dig 1wayseo.com
 ```
 
 應該看到：
 
-- CNAME: `seo.zhenhe-dm.com. 300 IN CNAME cname.vercel-dns.com.`
-- 或 A: `seo.zhenhe-dm.com. 300 IN A 76.76.21.21`
+- CNAME: `1wayseo.com. 300 IN CNAME cname.vercel-dns.com.`
+- 或 A: `1wayseo.com. 300 IN A 76.76.21.21`
 
 ### 使用 nslookup
 
 ```bash
-nslookup seo.zhenhe-dm.com
+nslookup 1wayseo.com
 ```
 
 ### 測試網站
 
 ```bash
-curl -I https://seo.zhenhe-dm.com
+curl -I https://1wayseo.com
 ```
 
 應該返回 HTTP 200 或 307 重定向
 
 ## 步驟 6: Vercel SSL 憑證
 
-DNS 設定完成後，Vercel 會自動為 `seo.zhenhe-dm.com` 建立 SSL 憑證，這通常需要 **幾分鐘到數小時**。
+DNS 設定完成後，Vercel 會自動為 `1wayseo.com` 建立 SSL 憑證，這通常需要 **幾分鐘到數小時**。
 
 你可以在 Vercel Dashboard 查看 SSL 狀態：
 https://vercel.com/acejou27s-projects/autopilot-seo/settings/domains
@@ -125,7 +125,7 @@ curl -X POST "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/dns_recor
 
 DNS 設定完成並傳播後：
 
-1. ✅ 測試 https://seo.zhenhe-dm.com 是否可存取
+1. ✅ 測試 https://1wayseo.com 是否可存取
 2. ✅ 更新 NewebPay webhook URL
 3. ✅ 測試付款回調功能
 4. ✅ 驗證所有功能正常運作

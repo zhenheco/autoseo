@@ -5,7 +5,7 @@
 ✅ **無 bundle 大小限制**（Cloudflare Workers 限制 3MB/10MB）
 ✅ **原生支援 Next.js**（零配置）
 ✅ **支援外部 webhook**（NewebPay 付款回調）
-✅ **可綁定自訂網域** seo.zhenhe-dm.com
+✅ **可綁定自訂網域** 1wayseo.com
 ✅ **免費方案足夠使用**
 ✅ **全球 Edge Network**（效能優異）
 
@@ -60,7 +60,7 @@ NEWEBPAY_HASH_IV=<藍新 Hash IV>
 NEWEBPAY_API_URL=https://ccore.newebpay.com
 GMAIL_USER=<Gmail 帳號>
 GMAIL_APP_PASSWORD=<Gmail App 密碼>
-NEXT_PUBLIC_APP_URL=https://seo.zhenhe-dm.com
+NEXT_PUBLIC_APP_URL=https://1wayseo.com
 COMPANY_NAME=<公司名稱>
 DEEPSEEK_API_KEY=<DeepSeek API Key>
 OPENROUTER_API_KEY=<OpenRouter API Key>
@@ -84,7 +84,7 @@ vercel env add SUPABASE_SERVICE_ROLE_KEY production
 ### 步驟 4：綁定自訂網域
 
 1. 前往 Vercel Dashboard → **Settings** → **Domains**
-2. 新增網域：`seo.zhenhe-dm.com`
+2. 新增網域：`1wayseo.com`
 3. Vercel 會提供 DNS 設定指引：
 
 **A Record 設定**：
@@ -125,7 +125,7 @@ curl https://auto-pilot-seo.vercel.app/api/ai-models
 
 ```bash
 # 確認 webhook endpoint 可訪問
-curl -I https://seo.zhenhe-dm.com/api/payment/recurring/callback
+curl -I https://1wayseo.com/api/payment/recurring/callback
 ```
 
 應返回 `200 OK` 或 `405 Method Not Allowed`（表示端點存在但不接受 GET）
@@ -140,8 +140,8 @@ curl -I https://seo.zhenhe-dm.com/api/payment/recurring/callback
 2. 前往 **商店設定** → **Webhook 設定**
 3. 更新回調 URL 為：
    ```
-   https://seo.zhenhe-dm.com/api/payment/recurring/callback
-   https://seo.zhenhe-dm.com/api/payment/recurring/notify
+   https://1wayseo.com/api/payment/recurring/callback
+   https://1wayseo.com/api/payment/recurring/notify
    ```
 
 ---
@@ -250,7 +250,7 @@ pnpm run lint
 1. 執行 `vercel login` 登入
 2. 執行 `vercel --prod --yes` 部署
 3. 在 Vercel Dashboard 設定環境變數
-4. 綁定 seo.zhenhe-dm.com
+4. 綁定 1wayseo.com
 5. 更新 NewebPay webhook URL
 6. 使用 Chrome DevTools 測試前端功能
 7. 測試付款流程

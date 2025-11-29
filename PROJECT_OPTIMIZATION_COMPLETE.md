@@ -118,7 +118,7 @@ pnpm run build
 #### 部署狀態
 
 - **平台**: Vercel
-- **域名**: https://seo.zhenhe-dm.com
+- **域名**: https://1wayseo.com
 - **SSL**: ✅ 自動生成
 - **狀態**: ✅ 正常運作
 - **部署 ID**: HBKQ7Zs9q1KfqbHZbJ8DB3EZWMRH
@@ -142,23 +142,23 @@ pnpm run build
 
 ```bash
 # 首頁
-curl -I https://seo.zhenhe-dm.com/
+curl -I https://1wayseo.com/
 # HTTP/2 200 ✅
 
 # 隱私權政策
-curl -I https://seo.zhenhe-dm.com/privacy
+curl -I https://1wayseo.com/privacy
 # HTTP/2 200 ✅
 
 # 服務條款
-curl -I https://seo.zhenhe-dm.com/terms
+curl -I https://1wayseo.com/terms
 # HTTP/2 200 ✅
 
 # 忘記密碼
-curl -I https://seo.zhenhe-dm.com/forgot-password
+curl -I https://1wayseo.com/forgot-password
 # HTTP/2 200 ✅
 
 # Favicon
-curl -I https://seo.zhenhe-dm.com/favicon.ico
+curl -I https://1wayseo.com/favicon.ico
 # HTTP/2 200 ✅
 ```
 
@@ -336,7 +336,7 @@ scripts/
 
 ### 🎯 網站狀態
 
-- **URL**: https://seo.zhenhe-dm.com
+- **URL**: https://1wayseo.com
 - **SSL**: ✅ 有效
 - **所有頁面**: ✅ HTTP 200
 - **快取效能**: ✅ 優化

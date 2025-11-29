@@ -166,7 +166,12 @@ export async function updateWebsite(formData: FormData) {
   }
 
   // 準備更新資料
-  const updateData: any = {
+  const updateData: {
+    website_name: string;
+    wordpress_url: string;
+    wp_username: string;
+    wp_app_password?: string;
+  } = {
     website_name: siteName,
     wordpress_url: siteUrl.replace(/\/$/, ""), // 移除尾部斜線
     wp_username: wpUsername,
