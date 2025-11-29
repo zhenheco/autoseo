@@ -519,7 +519,6 @@ export interface AICompletionResponse {
 export interface AIClientConfig {
   // API Keys
   deepseekApiKey?: string;
-  openrouterApiKey?: string;
   openaiApiKey?: string;
   perplexityApiKey?: string;
 

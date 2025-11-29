@@ -9,6 +9,11 @@ import {
   setCachedData,
   type CacheOptions,
 } from "@/lib/cache/perplexity-cache";
+import {
+  isGatewayEnabled,
+  getPerplexityBaseUrl,
+  buildPerplexityHeaders,
+} from "@/lib/cloudflare/ai-gateway";
 
 // Perplexity API 響應 Schema
 const PerplexityResponseSchema = z.object({
@@ -51,7 +56,6 @@ export interface PerplexitySearchOptions {
 
 export class PerplexityClient {
   private apiKey: string;
-  private baseUrl = "https://api.perplexity.ai";
   private companyId?: string;
   private enableCache: boolean;
 
@@ -66,6 +70,14 @@ export class PerplexityClient {
     if (!this.apiKey) {
       console.warn("[Perplexity] API Key 未設置，部分功能可能無法使用");
     }
+  }
+
+  private getBaseUrl(): string {
+    return getPerplexityBaseUrl();
+  }
+
+  private getHeaders(): Record<string, string> {
+    return buildPerplexityHeaders(this.apiKey);
   }
 
   /**
@@ -105,12 +117,16 @@ export class PerplexityClient {
     }
 
     try {
-      const response = await fetch(`${this.baseUrl}/chat/completions`, {
+      const baseUrl = this.getBaseUrl();
+      const headers = this.getHeaders();
+
+      console.log(
+        `[Perplexity] API (gateway: ${isGatewayEnabled()}, url: ${baseUrl})`,
+      );
+
+      const response = await fetch(`${baseUrl}/chat/completions`, {
         method: "POST",
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-          "Content-Type": "application/json",
-        },
+        headers,
         body: JSON.stringify({
           model: options.model || "sonar",
           messages: [
