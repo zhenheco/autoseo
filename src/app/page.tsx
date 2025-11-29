@@ -108,9 +108,13 @@ export default async function Home() {
               <span>AI 驅動的 SEO 內容平台</span>
             </div>
 
-            <h1 className="mb-6 text-3xl md:text-4xl lg:text-5xl font-bold tracking-tight text-foreground">
-              讓 AI 為您打造
-              <span className="text-primary block mt-2">完美的 SEO 內容</span>
+            <h1 className="mb-6 font-bold tracking-tight">
+              <span className="text-foreground text-xl md:text-2xl block">
+                讓 AI 為您打造
+              </span>
+              <span className="text-primary text-4xl md:text-5xl block mt-2">
+                完美的 SEO 內容
+              </span>
             </h1>
 
             <p className="mx-auto mb-6 max-w-3xl text-lg text-muted-foreground leading-relaxed">
@@ -185,8 +189,11 @@ export default async function Home() {
               <Brain className="h-4 w-4" />
               <span>AI 技術</span>
             </div>
-            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-foreground">
-              整合<span className="text-primary">頂尖 AI 模型</span>
+            <h2 className="font-bold mb-4">
+              <span className="text-foreground text-xl md:text-2xl">整合</span>
+              <span className="text-primary text-4xl md:text-5xl">
+                頂尖 AI 模型
+              </span>
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
               根據需求自動選擇最適合的 AI 模型，確保最佳品質
@@ -217,8 +224,13 @@ export default async function Home() {
               <Target className="h-4 w-4" />
               <span>完整工作流程</span>
             </div>
-            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-foreground">
-              從研究到發布，<span className="text-primary">全自動化</span>
+            <h2 className="font-bold mb-4">
+              <span className="text-foreground text-xl md:text-2xl">
+                從研究到發布，
+              </span>
+              <span className="text-primary text-4xl md:text-5xl">
+                全自動化
+              </span>
             </h2>
             <p className="text-muted-foreground max-w-3xl mx-auto">
               9 大核心功能讓您的 SEO 內容策略完全自動化
@@ -258,8 +270,13 @@ export default async function Home() {
               <Infinity className="h-4 w-4" />
               <span>定價方案</span>
             </div>
-            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-foreground">
-              <span className="text-primary">終身買斷</span>，永久使用
+            <h2 className="font-bold mb-4">
+              <span className="text-primary text-4xl md:text-5xl">
+                終身買斷
+              </span>
+              <span className="text-foreground text-xl md:text-2xl">
+                ，永久使用
+              </span>
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto mb-6">
               一次付費，每月自動獲得 Credits 配額，無需訂閱費用
@@ -412,8 +429,11 @@ export default async function Home() {
               <Users className="h-4 w-4" />
               <span>客戶見證</span>
             </div>
-            <h2 className="text-2xl md:text-3xl font-bold mb-4 text-foreground">
-              <span className="text-primary">用戶</span>怎麼說
+            <h2 className="font-bold mb-4">
+              <span className="text-primary text-4xl md:text-5xl">用戶</span>
+              <span className="text-foreground text-xl md:text-2xl">
+                怎麼說
+              </span>
             </h2>
             <p className="text-muted-foreground">
               看看他們如何使用 1waySEO 改變內容策略
@@ -429,8 +449,16 @@ export default async function Home() {
       <section className="relative py-20">
         <div className="container relative z-10 mx-auto px-4">
           <div className="mx-auto max-w-4xl text-center">
-            <h2 className="text-2xl md:text-3xl font-bold mb-6 text-foreground">
-              準備好<span className="text-primary">提升您的內容策略</span>了嗎？
+            <h2 className="font-bold mb-6">
+              <span className="text-foreground text-xl md:text-2xl">
+                準備好
+              </span>
+              <span className="text-primary text-4xl md:text-5xl">
+                提升您的內容策略
+              </span>
+              <span className="text-foreground text-xl md:text-2xl">
+                了嗎？
+              </span>
             </h2>
             <p className="text-muted-foreground mb-8">
               立即註冊，免費獲得 10K Credits 開始體驗
