@@ -20,7 +20,6 @@ import {
 } from "@/components/dashboard/dashboard-layout-client";
 import { LogoutButton } from "@/components/dashboard/logout-button";
 import { TokenBalanceDisplay } from "@/components/billing/TokenBalanceDisplay";
-import { LanguageSelector } from "@/components/common/LanguageSelector";
 import { NewArticleButton } from "@/components/articles/NewArticleButton";
 
 async function performLogout() {
@@ -55,8 +54,6 @@ export default async function DashboardLayout({
                   <NewArticleButton />
 
                   <TokenBalanceDisplay compact />
-
-                  <LanguageSelector />
 
                   <div className="h-6 w-px bg-border" />
 
