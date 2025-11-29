@@ -36,6 +36,8 @@ export interface AgentConfig {
   strategy_model: string;
   writing_model: string;
   image_model: string;
+  featured_image_model?: string; // 精選圖片模型（如 gemini）
+  content_image_model?: string; // 內容圖片模型（如 gpt-image-1-mini）
   research_temperature: number;
   strategy_temperature: number;
   writing_temperature: number;
@@ -255,6 +257,8 @@ export interface ImageInput {
     mood?: string;
   };
   model: string;
+  featuredImageModel?: string; // 精選圖片專用模型
+  contentImageModel?: string; // 內容圖片專用模型
   quality: "low" | "medium" | "high" | "auto";
   size: string;
   targetLanguage?: string;
@@ -667,4 +671,30 @@ export interface KeywordUsage {
   inHeadings: boolean;
   inFirstParagraph: boolean;
   inLastParagraph: boolean;
+}
+
+// Link Enrichment Agent Types
+export interface LinkEnrichmentInput {
+  html: string;
+  internalLinks: InternalLink[];
+  externalReferences: ExternalReference[];
+  targetLanguage?: string;
+}
+
+export interface LinkEnrichmentOutput {
+  html: string;
+  linkStats: {
+    internalLinksInserted: number;
+    externalLinksInserted: number;
+    totalLinksInserted: number;
+  };
+  insertedLinks: {
+    type: "internal" | "external";
+    anchor: string;
+    url: string;
+    position: string;
+  }[];
+  executionInfo: {
+    executionTime: number;
+  };
 }
