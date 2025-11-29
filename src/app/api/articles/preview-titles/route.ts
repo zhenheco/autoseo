@@ -1,19 +1,25 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAPIRouter } from "@/lib/ai/api-router";
 import { createClient } from "@/lib/supabase/server";
+import { getOpenRouterClient } from "@/lib/openrouter/client";
+import {
+  buildGeminiApiUrl,
+  buildGeminiHeaders,
+} from "@/lib/cloudflare/ai-gateway";
 
 async function callGeminiDirectAPI(prompt: string): Promise<string> {
-  const apiKey = process.env.GEMINI_API_KEY;
+  const apiKey =
+    process.env.OPENROUTER_API_KEY || process.env.CF_AI_GATEWAY_TOKEN;
   if (!apiKey) {
-    throw new Error("GEMINI_API_KEY is not set");
+    throw new Error("API Key is not set");
   }
 
   const modelName = "gemini-2.5-flash";
-  const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
+  const geminiUrl = buildGeminiApiUrl(modelName, "generateContent");
+  const headers = buildGeminiHeaders(apiKey);
 
   const response = await fetch(geminiUrl, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers,
     body: JSON.stringify({
       contents: [{ parts: [{ text: prompt }] }],
       generationConfig: {
@@ -119,30 +125,42 @@ ${langConfig.instruction}
 
 請直接輸出 5 個標題，每行一個，不要編號：`;
 
-    const router = getAPIRouter();
+    const openRouterClient = getOpenRouterClient();
     let responseContent: string;
 
     try {
-      // 優先使用 OpenRouter 的免費 Gemini 2.0
-      const response = await router.complete({
-        model: "google/gemini-2.0-flash-exp:free",
-        apiProvider: "openrouter",
+      const response = await openRouterClient.complete({
+        model: "x-ai/grok-4.1-fast:free",
         prompt,
         temperature: 0.8,
-        maxTokens: 500,
+        max_tokens: 500,
       });
       responseContent = response.content;
-      console.log(
-        "[preview-titles] ✅ OpenRouter gemini-2.0-flash-exp:free 成功",
-      );
-    } catch (openRouterError) {
+      console.log("[preview-titles] ✅ Grok 成功");
+    } catch (grokError) {
       console.warn(
-        "[preview-titles] ⚠️ OpenRouter 失敗，嘗試 Gemini API:",
-        (openRouterError as Error).message,
+        "[preview-titles] ⚠️ Grok 失敗:",
+        (grokError as Error).message,
       );
-      // Fallback: 使用 Gemini API 直接呼叫
-      responseContent = await callGeminiDirectAPI(prompt);
-      console.log("[preview-titles] ✅ Gemini API gemini-2.5-flash 成功");
+
+      try {
+        const response = await openRouterClient.complete({
+          model: "google/gemini-2.0-flash-exp:free",
+          prompt,
+          temperature: 0.8,
+          max_tokens: 500,
+        });
+        responseContent = response.content;
+        console.log("[preview-titles] ✅ Gemini OpenRouter 成功");
+      } catch (geminiError) {
+        console.warn(
+          "[preview-titles] ⚠️ Gemini OpenRouter 失敗:",
+          (geminiError as Error).message,
+        );
+
+        responseContent = await callGeminiDirectAPI(prompt);
+        console.log("[preview-titles] ✅ Gemini Direct 成功");
+      }
     }
 
     const titles = responseContent
