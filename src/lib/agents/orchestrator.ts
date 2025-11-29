@@ -1,15 +1,13 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { SupabaseClient } from "@supabase/supabase-js";
-import {
-  ArticleStorageService,
-  ensureMinimumLinks,
-} from "@/lib/services/article-storage";
+import { ArticleStorageService } from "@/lib/services/article-storage";
 import { ResearchAgent } from "./research-agent";
 import { StrategyAgent } from "./strategy-agent";
 import { WritingAgent } from "./writing-agent";
 import { ImageAgent } from "./image-agent";
 import { MetaAgent } from "./meta-agent";
 import { HTMLAgent } from "./html-agent";
+import { LinkEnrichmentAgent } from "./link-enrichment-agent";
 import { CategoryAgent } from "./category-agent";
 import { IntroductionAgent } from "./introduction-agent";
 import { SectionAgent } from "./section-agent";
@@ -448,27 +446,25 @@ export class ParallelOrchestrator {
         );
       }
 
-      const linkResult = ensureMinimumLinks(
-        writingOutput.html,
-        previousArticles.map((a) => ({
-          title: a.title,
-          slug: a.slug,
+      const linkEnrichmentAgent = new LinkEnrichmentAgent({
+        maxInternalLinks: 5,
+        maxExternalLinks: 3,
+      });
+      const linkResult = await linkEnrichmentAgent.execute({
+        html: writingOutput.html,
+        internalLinks: previousArticles.map((a) => ({
           url: a.url,
+          title: a.title,
           keywords: a.keywords,
         })),
-        (strategyOutput.externalReferences || []).map(
-          (r: ExternalReference) => ({
-            url: r.url,
-            title: r.title || "",
-            description: r.description || "",
-            relevantSection: r.relevantSection,
-          }),
-        ),
-        3,
-        2,
-      );
+        externalReferences: strategyOutput.externalReferences || [],
+        targetLanguage,
+      });
       writingOutput.html = linkResult.html;
-      console.log("[Orchestrator] 連結補充結果:", linkResult.stats);
+      console.log(
+        "[Orchestrator] LinkEnrichmentAgent 結果:",
+        linkResult.linkStats,
+      );
 
       await this.updateJobStatus(input.articleJobId, "processing", {
         current_phase: "html_completed",
@@ -837,12 +833,29 @@ export class ParallelOrchestrator {
   ) {
     if (!strategyOutput) throw new Error("Strategy output is required");
 
+    const featuredImageModel =
+      agentConfig.featured_image_model ||
+      agentConfig.image_model ||
+      "gemini-3-pro-image-preview";
+    const contentImageModel =
+      agentConfig.content_image_model ||
+      agentConfig.image_model ||
+      "gpt-image-1-mini";
+
+    console.log("[Orchestrator] 🎨 Image models configuration:", {
+      featuredImageModel,
+      contentImageModel,
+      fallback: agentConfig.image_model,
+    });
+
     const imageAgent = new ImageAgent(aiConfig, context);
     return imageAgent.execute({
       title: strategyOutput.selectedTitle,
       outline: strategyOutput.outline,
       count: agentConfig.image_count,
       model: agentConfig.image_model,
+      featuredImageModel,
+      contentImageModel,
       quality: "medium" as const,
       size: agentConfig.image_size,
     });

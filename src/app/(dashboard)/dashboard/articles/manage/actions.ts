@@ -421,6 +421,37 @@ export async function cancelArticleSchedule(
   return { success: true };
 }
 
+export async function batchDeleteArticles(
+  articleIds: string[],
+): Promise<{ success: boolean; error?: string; deletedCount?: number }> {
+  const user = await getUser();
+  if (!user) return { success: false, error: "未登入" };
+
+  if (articleIds.length === 0) {
+    return { success: false, error: "請選擇要刪除的文章" };
+  }
+
+  const supabase = await createClient();
+
+  await supabase
+    .from("generated_articles")
+    .delete()
+    .in("article_job_id", articleIds);
+
+  const { error, count } = await supabase
+    .from("article_jobs")
+    .delete()
+    .in("id", articleIds);
+
+  if (error) {
+    console.error("Failed to batch delete articles:", error);
+    return { success: false, error: error.message };
+  }
+
+  revalidatePath("/dashboard/articles/manage");
+  return { success: true, deletedCount: count || articleIds.length };
+}
+
 export async function updateArticleContent(
   articleJobId: string,
   title: string,

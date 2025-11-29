@@ -59,17 +59,17 @@ export function ArticleList({ articles }: ArticleListProps) {
     useState<ArticleWithWebsite | null>(null);
   const [isDeleting, setIsDeleting] = useState(false);
 
-  const canSchedule = (status: string) => {
-    return status === "completed" || status === "draft";
+  const canManage = (status: string) => {
+    return (
+      status === "completed" || status === "draft" || status === "scheduled"
+    );
   };
 
   const formatScheduledDate = (dateString: string | null) => {
     if (!dateString) return null;
-    return new Date(dateString).toLocaleString("zh-TW", {
+    return new Date(dateString).toLocaleDateString("zh-TW", {
       month: "2-digit",
       day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
     });
   };
 
@@ -132,7 +132,7 @@ export function ArticleList({ articles }: ArticleListProps) {
                   onClick={() => setPreviewArticleId(article.id)}
                 >
                   <TableCell className="py-2">
-                    {canSchedule(article.status) && (
+                    {canManage(article.status) && (
                       <Checkbox
                         checked={isSelected(article.id)}
                         onCheckedChange={() => toggleSelection(article.id)}
