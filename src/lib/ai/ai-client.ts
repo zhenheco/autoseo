@@ -14,6 +14,26 @@ import type {
   AIMessage,
 } from "@/types/agents";
 
+interface DeepSeekMessage {
+  role: string;
+  content?: string;
+  reasoning_content?: string;
+  reasoning?: string;
+  thinking?: string;
+}
+
+interface DeepSeekResponse {
+  choices: Array<{
+    message: DeepSeekMessage;
+  }>;
+  usage?: {
+    prompt_tokens?: number;
+    completion_tokens?: number;
+    total_tokens?: number;
+  };
+  model: string;
+}
+
 export class AIClient {
   private config: AIClientConfig;
 
@@ -69,10 +89,10 @@ export class AIClient {
         throw new Error(`DeepSeek API error: ${JSON.stringify(error)}`);
       }
 
-      return await response.json();
-    } catch (error: any) {
+      return (await response.json()) as DeepSeekResponse;
+    } catch (error: unknown) {
       clearTimeout(timeoutId);
-      if (error.name === "AbortError") {
+      if (error instanceof Error && error.name === "AbortError") {
         throw new Error(`DeepSeek API timeout after ${timeoutMs / 1000}s`);
       }
       throw error;
@@ -124,17 +144,17 @@ export class AIClient {
         const message = response.choices[0].message;
 
         const content =
-          (message as any).reasoning_content ||
+          message.reasoning_content ||
           message.content ||
-          (message as any).reasoning ||
-          (message as any).thinking ||
+          message.reasoning ||
+          message.thinking ||
           "";
 
         console.log("[AIClient] DeepSeek response extraction:", {
           hasContent: !!message.content,
-          hasReasoningContent: !!(message as any).reasoning_content,
-          hasReasoning: !!(message as any).reasoning,
-          hasThinking: !!(message as any).thinking,
+          hasReasoningContent: !!message.reasoning_content,
+          hasReasoning: !!message.reasoning,
+          hasThinking: !!message.thinking,
           contentLength: content?.length || 0,
         });
 
@@ -149,17 +169,18 @@ export class AIClient {
           },
           model: response.model,
         };
-      } catch (error: any) {
-        lastError = error;
+      } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        lastError = err;
         const isRateLimit =
-          error.message?.includes("rate-limited") ||
-          error.message?.includes("429") ||
-          error.message?.includes("Rate limit");
+          err.message?.includes("rate-limited") ||
+          err.message?.includes("429") ||
+          err.message?.includes("Rate limit");
 
         const isTimeout =
-          error.message?.includes("timeout") ||
-          error.message?.includes("terminated") ||
-          error.name === "AbortError";
+          err.message?.includes("timeout") ||
+          err.message?.includes("terminated") ||
+          err.name === "AbortError";
 
         // 如果 deepseek-reasoner 超時，自動切換到 deepseek-chat
         if (isTimeout && currentModel.includes("reasoner") && attempt === 1) {
@@ -190,7 +211,7 @@ export class AIClient {
           continue;
         }
 
-        throw new Error(`AI completion failed: ${error.message}`);
+        throw new Error(`AI completion failed: ${err.message}`);
       }
     }
 
@@ -352,8 +373,9 @@ export class AIClient {
       }
 
       throw new Error(`Unsupported image model: ${options.model}`);
-    } catch (error: any) {
-      throw new Error(`Image generation failed: ${error.message}`);
+    } catch (error: unknown) {
+      const err = error instanceof Error ? error : new Error(String(error));
+      throw new Error(`Image generation failed: ${err.message}`);
     }
   }
 
