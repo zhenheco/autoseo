@@ -6,8 +6,8 @@
 
 ## 測試 URL
 
-- **HTTP**: http://seo.zhenhe-dm.com （SSL 憑證生成前使用）
-- **HTTPS**: https://seo.zhenhe-dm.com （SSL 憑證生成後使用）
+- **HTTP**: http://1wayseo.com （SSL 憑證生成前使用）
+- **HTTPS**: https://1wayseo.com （SSL 憑證生成後使用）
 - **Vercel 部署 URL**: https://autopilot-fjjovgu1j-acejou27s-projects.vercel.app
 
 ## 測試清單
@@ -112,7 +112,7 @@
 
 ##### Local Storage
 
-- [ ] 查看 Application → Local Storage → http://seo.zhenhe-dm.com
+- [ ] 查看 Application → Local Storage → http://1wayseo.com
 - [ ] 檢查儲存的資料格式正確
 - [ ] 測試清除後重新登入
 
@@ -264,13 +264,13 @@
 
 ```bash
 # 測試首頁
-curl -I http://seo.zhenhe-dm.com
+curl -I http://1wayseo.com
 
 # 測試 API endpoint
-curl http://seo.zhenhe-dm.com/api/ai-models
+curl http://1wayseo.com/api/ai-models
 
 # 測試登入 API（需要實際資料）
-curl -X POST http://seo.zhenhe-dm.com/api/auth/signin \
+curl -X POST http://1wayseo.com/api/auth/signin \
   -H "Content-Type: application/json" \
   -d '{"email":"test@example.com","password":"password"}'
 ```
@@ -283,7 +283,7 @@ curl -X POST http://seo.zhenhe-dm.com/api/auth/signin \
   --headless \
   --disable-gpu \
   --dump-dom \
-  http://seo.zhenhe-dm.com > page.html
+  http://1wayseo.com > page.html
 
 # 擷取截圖
 /Applications/Google\ Chrome.app/Contents/MacOS/Google\ Chrome \
@@ -291,16 +291,16 @@ curl -X POST http://seo.zhenhe-dm.com/api/auth/signin \
   --disable-gpu \
   --screenshot \
   --window-size=1920,1080 \
-  http://seo.zhenhe-dm.com
+  http://1wayseo.com
 ```
 
 ## 測試報告範本
 
 ### 測試結果摘要
 
-**測試日期**: ****\_\_\_\_****
-**測試者**: ****\_\_\_\_****
-**測試 URL**: http://seo.zhenhe-dm.com
+**測試日期**: \***\*\_\_\_\_\*\***
+**測試者**: \***\*\_\_\_\_\*\***
+**測試 URL**: http://1wayseo.com
 
 | 測試項目         | 狀態       | 備註 |
 | ---------------- | ---------- | ---- |
@@ -316,12 +316,12 @@ curl -X POST http://seo.zhenhe-dm.com/api/auth/signin \
 
 ### 發現的問題
 
-1. **問題描述**: ****\_\_****
+1. **問題描述**: \***\*\_\_\*\***
    - **嚴重程度**: 🔴 高 / 🟡 中 / 🟢 低
-   - **重現步驟**: ****\_\_****
-   - **預期行為**: ****\_\_****
-   - **實際行為**: ****\_\_****
-   - **錯誤訊息**: ****\_\_****
+   - **重現步驟**: \***\*\_\_\*\***
+   - **預期行為**: \***\*\_\_\*\***
+   - **實際行為**: \***\*\_\_\*\***
+   - **錯誤訊息**: \***\*\_\_\*\***
 
 ### 建議修正
 

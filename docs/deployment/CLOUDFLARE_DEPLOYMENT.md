@@ -204,7 +204,7 @@ npx wrangler rollback --version-id <version-id> --name auto-pilot-seo
 2. **設定自訂網域**
    - 點擊 "Settings" → "Custom Domains"
    - 點擊 "Add Custom Domain"
-   - 輸入你的網域（如 `seo.zhenhe-dm.com`）
+   - 輸入你的網域（如 `1wayseo.com`）
    - Cloudflare 會自動設定 DNS 記錄和 SSL
 
 3. **等待生效**
@@ -215,7 +215,7 @@ npx wrangler rollback --version-id <version-id> --name auto-pilot-seo
 
 ```bash
 # 新增自訂網域
-npx wrangler domains add seo.zhenhe-dm.com --name auto-pilot-seo
+npx wrangler domains add 1wayseo.com --name auto-pilot-seo
 
 # 驗證網域狀態
 npx wrangler domains list --name auto-pilot-seo
@@ -226,7 +226,7 @@ npx wrangler domains list --name auto-pilot-seo
 ```bash
 # 設定生產環境 URL（使用自訂網域，不是 workers.dev）
 npx wrangler secret put NEXT_PUBLIC_APP_URL --name auto-pilot-seo
-# 輸入: https://seo.zhenhe-dm.com
+# 輸入: https://1wayseo.com
 ```
 
 ### 更新 NewebPay 設定
@@ -235,30 +235,30 @@ npx wrangler secret put NEXT_PUBLIC_APP_URL --name auto-pilot-seo
 
 **定期定額回調**：
 
-- 從：`https://seo.zhenhe-dm.com/api/payment/recurring/callback` (Tunnel - 會失敗)
-- 改為：`https://seo.zhenhe-dm.com/api/payment/recurring/callback` (Workers - 正常)
+- 從：`https://1wayseo.com/api/payment/recurring/callback` (Tunnel - 會失敗)
+- 改為：`https://1wayseo.com/api/payment/recurring/callback` (Workers - 正常)
 
 **一次性付款回調**：
 
-- 從：`https://seo.zhenhe-dm.com/api/payment/onetime/callback` (Tunnel)
-- 改為：`https://seo.zhenhe-dm.com/api/payment/onetime/callback` (Workers)
+- 從：`https://1wayseo.com/api/payment/onetime/callback` (Tunnel)
+- 改為：`https://1wayseo.com/api/payment/onetime/callback` (Workers)
 
 **返回 URL**：
 
-- 成功：`https://seo.zhenhe-dm.com/payment/success`
-- 取消：`https://seo.zhenhe-dm.com/payment/cancel`
+- 成功：`https://1wayseo.com/payment/success`
+- 取消：`https://1wayseo.com/payment/cancel`
 
 ### 驗證自訂網域
 
 ```bash
 # 檢查 DNS
-nslookup seo.zhenhe-dm.com
+nslookup 1wayseo.com
 
 # 測試網站
-curl -I https://seo.zhenhe-dm.com
+curl -I https://1wayseo.com
 
 # 測試回調端點
-curl -X POST https://seo.zhenhe-dm.com/api/payment/recurring/callback \
+curl -X POST https://1wayseo.com/api/payment/recurring/callback \
   -H "Content-Type: application/json" \
   -d '{"test": "true"}'
 ```

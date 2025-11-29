@@ -37,7 +37,7 @@ Cmd+Shift+N (Mac) / Ctrl+Shift+N (Windows)
 
 ### Step 2: 註冊新帳號
 
-1. 前往 https://seo.zhenhe-dm.com/zh/signup
+1. 前往 https://1wayseo.com/zh/signup
 2. 輸入**全新的** email（未使用過的）
 3. 輸入密碼並確認
 4. 提交註冊
@@ -48,7 +48,7 @@ Cmd+Shift+N (Mac) / Ctrl+Shift+N (Windows)
 2. 找到來自 Supabase 的驗證信
 3. **檢查連結格式**：
    ```
-   https://seo.zhenhe-dm.com/auth/confirm?token_hash=pkce_xxx&type=email
+   https://1wayseo.com/auth/confirm?token_hash=pkce_xxx&type=email
    ```
 4. 確認路徑是 `/auth/confirm`（不是 `/auth/callback`）
 
@@ -99,13 +99,13 @@ Status: 404 Not Found
 
 ```bash
 # 測試 1: 檢查路由是否存在
-curl -I "https://seo.zhenhe-dm.com/auth/confirm?token_hash=test&type=email"
+curl -I "https://1wayseo.com/auth/confirm?token_hash=test&type=email"
 
 # 預期結果：HTTP/2 307（表示路由存在）
 # 如果是 404，表示路由未部署
 
 # 測試 2: 測試實際 token
-curl -I "https://seo.zhenhe-dm.com/auth/confirm?token_hash=YOUR_TOKEN&type=email"
+curl -I "https://1wayseo.com/auth/confirm?token_hash=YOUR_TOKEN&type=email"
 
 # 預期結果：
 # - 有效 token: 307 → /zh/dashboard
@@ -208,7 +208,7 @@ git push origin main
 sleep 90
 
 # 6. 測試
-curl -I "https://seo.zhenhe-dm.com/auth/confirm?token_hash=test&type=email"
+curl -I "https://1wayseo.com/auth/confirm?token_hash=test&type=email"
 ```
 
 ---

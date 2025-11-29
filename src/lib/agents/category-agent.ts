@@ -45,7 +45,7 @@ export interface CategoryInput {
   title: string;
   content: string;
   keywords: string[];
-  outline?: any;
+  outline?: { mainSections?: Array<{ heading: string }> };
   existingCategories?: Array<{ name: string; slug: string; count?: number }>;
   existingTags?: Array<{ name: string; slug: string; count?: number }>;
   language?: string;

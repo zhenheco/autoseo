@@ -63,14 +63,14 @@ error sending confirmation email
 3. 設定為您的應用 URL：
 
 ```
-生產環境: https://seo.zhenhe-dm.com
+生產環境: https://1wayseo.com
 開發環境: http://localhost:3168
 ```
 
 4. 設定 **Redirect URLs**（允許的重定向 URL）：
 
 ```
-https://seo.zhenhe-dm.com/**
+https://1wayseo.com/**
 http://localhost:3168/**
 ```
 
@@ -223,7 +223,7 @@ curl -X POST 'https://vdjzeregvyimgzflfalv.supabase.co/auth/v1/signup' \
 - [ ] ✅ Email provider 已啟用
 - [ ] ✅ Confirm email 已開啟
 - [ ] ✅ Email template 已正確配置（使用 `/auth/confirm`）
-- [ ] ✅ Site URL 已設定（`https://seo.zhenhe-dm.com`）
+- [ ] ✅ Site URL 已設定（`https://1wayseo.com`）
 - [ ] ✅ Redirect URLs 已設定
 - [ ] ✅ 生產環境已配置自訂 SMTP（建議）
 - [ ] ✅ 測試帳號可正常收到驗證信

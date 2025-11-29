@@ -9,13 +9,13 @@
 ### 付款回調（Callback）
 
 ```
-https://seo.zhenhe-dm.com/api/payment/recurring/callback
+https://1wayseo.com/api/payment/recurring/callback
 ```
 
 ### 付款通知（Notify）
 
 ```
-https://seo.zhenhe-dm.com/api/payment/recurring/notify
+https://1wayseo.com/api/payment/recurring/notify
 ```
 
 ## 更新步驟
@@ -35,13 +35,13 @@ https://seo.zhenhe-dm.com/api/payment/recurring/notify
 #### 委託回傳網址（Callback URL）
 
 ```
-https://seo.zhenhe-dm.com/api/payment/recurring/callback
+https://1wayseo.com/api/payment/recurring/callback
 ```
 
 #### 通知網址（Notify URL）
 
 ```
-https://seo.zhenhe-dm.com/api/payment/recurring/notify
+https://1wayseo.com/api/payment/recurring/notify
 ```
 
 4. 點擊 **儲存** 或 **更新**
@@ -60,7 +60,7 @@ NewebPay 通常會提供測試工具或發送測試通知。請使用以下方�
 
 ```bash
 # 測試 webhook endpoint 是否可訪問
-curl -I https://seo.zhenhe-dm.com/api/payment/recurring/callback
+curl -I https://1wayseo.com/api/payment/recurring/callback
 
 # 應該返回 HTTP 200 或 405 (Method Not Allowed, 因為只接受 POST)
 ```
@@ -85,7 +85,7 @@ https://vercel.com/acejou27s-projects/autopilot-seo/logs
 
 - ✅ NewebPay 要求 webhook URL 使用 HTTPS
 - ✅ 我們的網站已配置 SSL 憑證（Vercel 自動提供）
-- ✅ 網址：https://seo.zhenhe-dm.com
+- ✅ 網址：https://1wayseo.com
 
 ### IP 白名單（如有需要）
 
@@ -93,7 +93,7 @@ https://vercel.com/acejou27s-projects/autopilot-seo/logs
 
 ```bash
 # 查詢 Vercel 的 IP
-dig seo.zhenhe-dm.com +short
+dig 1wayseo.com +short
 
 # 當前 IP:
 # 76.76.21.22
@@ -118,7 +118,7 @@ NEWEBPAY_API_URL=https://ccore.newebpay.com/MPG/mpg_gateway
 
 | 項目     | 舊 URL（Cloudflare Tunnel）     | 新 URL（Vercel）                | 狀態      |
 | -------- | ------------------------------- | ------------------------------- | --------- |
-| 基礎域名 | seo.zhenhe-dm.com               | seo.zhenhe-dm.com               | ✅ 相同   |
+| 基礎域名 | 1wayseo.com                     | 1wayseo.com                     | ✅ 相同   |
 | 協議     | HTTPS                           | HTTPS                           | ✅ 相同   |
 | Callback | /api/payment/recurring/callback | /api/payment/recurring/callback | ✅ 相同   |
 | Notify   | /api/payment/recurring/notify   | /api/payment/recurring/notify   | ✅ 相同   |
@@ -145,7 +145,7 @@ NEWEBPAY_API_URL=https://ccore.newebpay.com/MPG/mpg_gateway
 **檢查項目**:
 
 1. NewebPay 後台的 URL 是否正確（包含 https://）
-2. URL 是否可以從公網訪問（`curl -I https://seo.zhenhe-dm.com/api/payment/recurring/callback`）
+2. URL 是否可以從公網訪問（`curl -I https://1wayseo.com/api/payment/recurring/callback`）
 3. Vercel 是否正常運行（https://vercel.com/acejou27s-projects/autopilot-seo）
 
 ### 問題 2: Webhook 返回錯誤
@@ -182,10 +182,10 @@ NEWEBPAY_API_URL=https://ccore.newebpay.com/MPG/mpg_gateway
 
 更新完成後，請在此記錄：
 
-**更新日期**: ****\_\_\_\_****
-**更新者**: ****\_\_\_\_****
+**更新日期**: \***\*\_\_\_\_\*\***
+**更新者**: \***\*\_\_\_\_\*\***
 **測試結果**: ⬜ 成功 / ⬜ 失敗
-**備註**: ****\_\_\_\_****
+**備註**: \***\*\_\_\_\_\*\***
 
 ---
 

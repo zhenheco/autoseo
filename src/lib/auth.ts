@@ -1,5 +1,6 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
+import { Database } from "@/types/database.types";
 
 const REFERRAL_COOKIE_NAME = "ref_code";
 
@@ -245,10 +246,10 @@ export async function getUserCompanies(userId: string) {
  * 取得使用者的主要公司（第一個公司）
  */
 export async function getUserPrimaryCompany(userId: string) {
-  const companies = await getUserCompanies(userId);
-  if (!companies || companies.length === 0) return null;
+  const companyMembers = await getUserCompanies(userId);
+  if (!companyMembers || companyMembers.length === 0) return null;
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (companies[0] as any).companies;
+  return (companyMembers[0] as any).companies;
 }
 
 /**
@@ -285,7 +286,7 @@ export async function getCompanyMembers(companyId: string) {
   }
 
   const membersWithUsers = members.map((member) => {
-    const user = users?.find((u: any) => u.id === member.user_id);
+    const user = users?.find((u: { id: string }) => u.id === member.user_id);
     return {
       ...member,
       users: user

@@ -30,7 +30,7 @@
 **測試結果**:
 
 ```bash
-curl -I https://seo.zhenhe-dm.com/favicon.ico
+curl -I https://1wayseo.com/favicon.ico
 # HTTP/2 200 ✅
 ```
 
@@ -56,7 +56,7 @@ curl -I https://seo.zhenhe-dm.com/favicon.ico
 **測試結果**:
 
 ```bash
-curl -I https://seo.zhenhe-dm.com/privacy
+curl -I https://1wayseo.com/privacy
 # HTTP/2 200 ✅
 ```
 
@@ -85,7 +85,7 @@ curl -I https://seo.zhenhe-dm.com/privacy
 **測試結果**:
 
 ```bash
-curl -I https://seo.zhenhe-dm.com/terms
+curl -I https://1wayseo.com/terms
 # HTTP/2 200 ✅
 ```
 
@@ -117,7 +117,7 @@ curl -I https://seo.zhenhe-dm.com/terms
 **測試結果**:
 
 ```bash
-curl -I https://seo.zhenhe-dm.com/forgot-password
+curl -I https://1wayseo.com/forgot-password
 # HTTP/2 200 ✅
 ```
 
@@ -156,7 +156,7 @@ pnpm run build
 pnpm exec vercel --prod --yes
 # ✅ 部署成功
 # Production: https://autopilot-byb63pgro-acejou27s-projects.vercel.app
-# Domain: https://seo.zhenhe-dm.com
+# Domain: https://1wayseo.com
 ```
 
 ## 測試結果
@@ -317,7 +317,7 @@ src/app/
 
 ### 網站狀態
 
-- **URL**: https://seo.zhenhe-dm.com
+- **URL**: https://1wayseo.com
 - **Console 錯誤**: ✅ 零錯誤
 - **404 頁面**: ✅ 已修正
 - **功能完整性**: ✅ 完整

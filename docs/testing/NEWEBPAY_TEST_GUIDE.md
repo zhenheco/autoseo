@@ -11,7 +11,7 @@
 ### 1. Callback Endpoint
 
 ```
-URL: https://seo.zhenhe-dm.com/api/payment/recurring/callback
+URL: https://1wayseo.com/api/payment/recurring/callback
 狀態: ✅ 正常運作
 回應: HTTP 307 (重定向到錯誤頁面，因為沒有有效資料)
 ```
@@ -19,7 +19,7 @@ URL: https://seo.zhenhe-dm.com/api/payment/recurring/callback
 ### 2. Notify Endpoint
 
 ```
-URL: https://seo.zhenhe-dm.com/api/payment/recurring/notify
+URL: https://1wayseo.com/api/payment/recurring/notify
 狀態: ✅ 正常運作
 回應: HTTP 405 (Method Not Allowed，因為需要 POST 請求)
 ```
@@ -28,9 +28,9 @@ URL: https://seo.zhenhe-dm.com/api/payment/recurring/notify
 
 ### 步驟 1: 使用瀏覽器測試付款流程
 
-1. 開啟瀏覽器前往：https://seo.zhenhe-dm.com
+1. 開啟瀏覽器前往：https://1wayseo.com
 2. 登入測試帳號
-3. 前往價格頁面：https://seo.zhenhe-dm.com/pricing
+3. 前往價格頁面：https://1wayseo.com/pricing
 4. 選擇一個訂閱方案
 5. 填寫付款資訊（使用測試卡號）
 
@@ -145,7 +145,7 @@ CVV: 任意 3 碼（如 123）
 
 ```bash
 # 手動測試 webhook
-curl -X POST https://seo.zhenhe-dm.com/api/payment/recurring/callback \
+curl -X POST https://1wayseo.com/api/payment/recurring/callback \
   -H "Content-Type: application/x-www-form-urlencoded" \
   -d "Status=SUCCESS&MerchantID=MS357073141"
 ```
