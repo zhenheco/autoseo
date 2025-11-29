@@ -1,27 +1,42 @@
 /**
  * CategoryAgent - 自動分析文章內容並推薦分類和標籤
- * 使用 DeepSeek API 來降低成本
+ * 使用 DeepSeek API 來降低成本（通過 Cloudflare AI Gateway）
  */
 
-import { z } from 'zod';
+import { z } from "zod";
+import {
+  getDeepSeekBaseUrl,
+  buildDeepSeekHeaders,
+} from "@/lib/cloudflare/ai-gateway";
 
 // 分類和標籤輸出 Schema
 const CategoryOutputSchema = z.object({
-  categories: z.array(z.object({
-    name: z.string().describe('分類名稱'),
-    slug: z.string().describe('分類 URL slug'),
-    confidence: z.number().min(0).max(1).describe('推薦信心度 0-1'),
-    reason: z.string().describe('推薦理由')
-  })).length(1).describe('只有 1 個主要分類'),
+  categories: z
+    .array(
+      z.object({
+        name: z.string().describe("分類名稱"),
+        slug: z.string().describe("分類 URL slug"),
+        confidence: z.number().min(0).max(1).describe("推薦信心度 0-1"),
+        reason: z.string().describe("推薦理由"),
+      }),
+    )
+    .length(1)
+    .describe("只有 1 個主要分類"),
 
-  tags: z.array(z.object({
-    name: z.string().describe('標籤名稱'),
-    slug: z.string().describe('標籤 URL slug'),
-    relevance: z.number().min(0).max(1).describe('相關性分數 0-1')
-  })).min(5).max(10).describe('推薦的標籤（5-10個）'),
+  tags: z
+    .array(
+      z.object({
+        name: z.string().describe("標籤名稱"),
+        slug: z.string().describe("標籤 URL slug"),
+        relevance: z.number().min(0).max(1).describe("相關性分數 0-1"),
+      }),
+    )
+    .min(5)
+    .max(10)
+    .describe("推薦的標籤（5-10個）"),
 
-  primaryCategory: z.string().describe('主要分類名稱'),
-  focusKeywords: z.array(z.string()).describe('文章焦點關鍵字')
+  primaryCategory: z.string().describe("主要分類名稱"),
+  focusKeywords: z.array(z.string()).describe("文章焦點關鍵字"),
 });
 
 export type CategoryOutput = z.infer<typeof CategoryOutputSchema>;
@@ -40,7 +55,7 @@ export class CategoryAgent {
   private model: string;
 
   constructor(model?: string) {
-    this.model = model || 'deepseek-chat';
+    this.model = model || "deepseek-chat";
   }
 
   private async callDeepSeekAPI(params: {
@@ -53,23 +68,23 @@ export class CategoryAgent {
     const apiKey = process.env.DEEPSEEK_API_KEY;
 
     if (!apiKey) {
-      throw new Error('DEEPSEEK_API_KEY is not set');
+      throw new Error("DEEPSEEK_API_KEY is not set");
     }
 
-    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
+    const response = await fetch(
+      `${getDeepSeekBaseUrl()}/v1/chat/completions`,
+      {
+        method: "POST",
+        headers: buildDeepSeekHeaders(apiKey),
+        body: JSON.stringify({
+          model: params.model,
+          messages: params.messages,
+          temperature: params.temperature ?? 0.7,
+          max_tokens: params.max_tokens,
+          response_format: params.response_format,
+        }),
       },
-      body: JSON.stringify({
-        model: params.model,
-        messages: params.messages,
-        temperature: params.temperature ?? 0.7,
-        max_tokens: params.max_tokens,
-        response_format: params.response_format,
-      }),
-    });
+    );
 
     if (!response.ok) {
       const error = await response.json();
@@ -80,8 +95,8 @@ export class CategoryAgent {
   }
 
   async generateCategories(input: CategoryInput): Promise<CategoryOutput> {
-    console.log('[CategoryAgent] 開始分析文章分類和標籤...');
-    console.log('[CategoryAgent] 使用模型:', this.model);
+    console.log("[CategoryAgent] 開始分析文章分類和標籤...");
+    console.log("[CategoryAgent] 使用模型:", this.model);
 
     try {
       const systemPrompt = this.buildSystemPrompt(input);
@@ -90,33 +105,35 @@ export class CategoryAgent {
       const response = await this.callDeepSeekAPI({
         model: this.model,
         messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
+          { role: "system", content: systemPrompt },
+          { role: "user", content: userPrompt },
         ],
         max_tokens: 2000,
         response_format: {
-          type: 'json_object'
-        }
+          type: "json_object",
+        },
       });
 
       const content = response.choices[0]?.message?.content;
       if (!content) {
-        throw new Error('No response from model');
+        throw new Error("No response from model");
       }
 
       const parsed = JSON.parse(content);
 
       // 檢查並修正 AI 回傳的格式（如果是字串陣列，轉換為物件陣列）
       if (Array.isArray(parsed.categories) && parsed.categories.length > 0) {
-        if (typeof parsed.categories[0] === 'string') {
+        if (typeof parsed.categories[0] === "string") {
           // 只保留第一個分類（WordPress 只能有 1 個主要分類）
           const categoryName = parsed.categories[0];
-          parsed.categories = [{
-            name: categoryName,
-            slug: this.slugify(categoryName),
-            confidence: 0.9,
-            reason: '主要分類'
-          }];
+          parsed.categories = [
+            {
+              name: categoryName,
+              slug: this.slugify(categoryName),
+              confidence: 0.9,
+              reason: "主要分類",
+            },
+          ];
         } else if (parsed.categories.length > 1) {
           // 如果 AI 回傳多個分類物件，只保留第一個
           parsed.categories = [parsed.categories[0]];
@@ -124,38 +141,39 @@ export class CategoryAgent {
       }
 
       if (Array.isArray(parsed.tags) && parsed.tags.length > 0) {
-        if (typeof parsed.tags[0] === 'string') {
-          parsed.tags = parsed.tags.slice(0, 10).map((name: string, index: number) => ({
-            name,
-            slug: this.slugify(name),
-            relevance: 1 - (index * 0.05)
-          }));
+        if (typeof parsed.tags[0] === "string") {
+          parsed.tags = parsed.tags
+            .slice(0, 10)
+            .map((name: string, index: number) => ({
+              name,
+              slug: this.slugify(name),
+              relevance: 1 - index * 0.05,
+            }));
         }
       }
 
       const validated = CategoryOutputSchema.parse(parsed);
 
-      console.log('[CategoryAgent] 成功生成分類和標籤');
+      console.log("[CategoryAgent] 成功生成分類和標籤");
       console.log(`  - 主要分類: ${validated.primaryCategory}`);
       console.log(`  - 分類數量: ${validated.categories.length}`);
       console.log(`  - 標籤數量: ${validated.tags.length}`);
 
       return validated;
-
     } catch (error) {
-      console.error('[CategoryAgent] 錯誤:', error);
+      console.error("[CategoryAgent] 錯誤:", error);
       // 返回預設值
       return this.getDefaultOutput(input);
     }
   }
 
   private buildSystemPrompt(input: CategoryInput): string {
-    const lang = input.language === 'zh-TW' ? '繁體中文' : 'English';
+    const lang = input.language === "zh-TW" ? "繁體中文" : "English";
     const existingCategoryCount = input.existingCategories?.length || 0;
     const maxCategories = 10;
     const canCreateNew = existingCategoryCount < maxCategories;
 
-    let categoryInstruction = '';
+    let categoryInstruction = "";
     if (canCreateNew) {
       categoryInstruction = `
 5a. 優先使用現有分類
@@ -215,7 +233,7 @@ export class CategoryAgent {
 
 標題：${input.title}
 
-關鍵字：${input.keywords.join(', ')}
+關鍵字：${input.keywords.join(", ")}
 
 內容摘要：
 ${input.content.substring(0, 2000)}...`;
@@ -223,16 +241,16 @@ ${input.content.substring(0, 2000)}...`;
     // 添加現有分類和標籤資訊
     if (input.existingCategories && input.existingCategories.length > 0) {
       prompt += `\n\n現有分類（優先考慮使用）：\n`;
-      input.existingCategories.forEach(cat => {
-        prompt += `- ${cat.name} (${cat.slug})${cat.count ? ` [已有 ${cat.count} 篇文章]` : ''}\n`;
+      input.existingCategories.forEach((cat) => {
+        prompt += `- ${cat.name} (${cat.slug})${cat.count ? ` [已有 ${cat.count} 篇文章]` : ""}\n`;
       });
     }
 
     if (input.existingTags && input.existingTags.length > 0) {
       prompt += `\n現有標籤（可參考）：\n`;
       const topTags = input.existingTags.slice(0, 20);
-      topTags.forEach(tag => {
-        prompt += `- ${tag.name} (${tag.slug})${tag.count ? ` [使用 ${tag.count} 次]` : ''}\n`;
+      topTags.forEach((tag) => {
+        prompt += `- ${tag.name} (${tag.slug})${tag.count ? ` [使用 ${tag.count} 次]` : ""}\n`;
       });
     }
 
@@ -243,7 +261,7 @@ ${input.content.substring(0, 2000)}...`;
 
   private getDefaultOutput(input: CategoryInput): CategoryOutput {
     // 基於關鍵字生成預設分類和標籤
-    const primaryKeyword = input.keywords[0] || 'general';
+    const primaryKeyword = input.keywords[0] || "general";
 
     return {
       categories: [
@@ -251,31 +269,32 @@ ${input.content.substring(0, 2000)}...`;
           name: this.titleCase(primaryKeyword),
           slug: this.slugify(primaryKeyword),
           confidence: 0.5,
-          reason: '基於主要關鍵字'
-        }
+          reason: "基於主要關鍵字",
+        },
       ],
       tags: input.keywords.slice(0, 5).map((kw, index) => ({
         name: kw,
         slug: this.slugify(kw),
-        relevance: 1 - (index * 0.1)
+        relevance: 1 - index * 0.1,
       })),
       primaryCategory: this.titleCase(primaryKeyword),
-      focusKeywords: input.keywords.slice(0, 3)
+      focusKeywords: input.keywords.slice(0, 3),
     };
   }
 
   private titleCase(str: string): string {
-    return str.split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
-      .join(' ');
+    return str
+      .split(" ")
+      .map((word) => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
   }
 
   private slugify(str: string): string {
     return str
       .toLowerCase()
       .trim()
-      .replace(/[\s\W-]+/g, '-')
-      .replace(/^-+|-+$/g, '');
+      .replace(/[\s\W-]+/g, "-")
+      .replace(/^-+|-+$/g, "");
   }
 
   /**
@@ -283,7 +302,11 @@ ${input.content.substring(0, 2000)}...`;
    */
   async matchExistingCategories(
     content: string,
-    existingCategories: Array<{ id: string; name: string; description?: string }>
+    existingCategories: Array<{
+      id: string;
+      name: string;
+      description?: string;
+    }>,
   ): Promise<string[]> {
     if (existingCategories.length === 0) {
       return [];
@@ -295,32 +318,35 @@ ${input.content.substring(0, 2000)}...`;
 ${content.substring(0, 1000)}
 
 可選分類：
-${existingCategories.map(cat => `- ${cat.name}${cat.description ? `: ${cat.description}` : ''}`).join('\n')}
+${existingCategories.map((cat) => `- ${cat.name}${cat.description ? `: ${cat.description}` : ""}`).join("\n")}
 
 只返回選中的分類ID，用逗號分隔。`;
 
     try {
       const response = await this.callDeepSeekAPI({
         model: this.model,
-        messages: [
-          { role: 'user', content: prompt }
-        ],
-        max_tokens: 100
+        messages: [{ role: "user", content: prompt }],
+        max_tokens: 100,
       });
 
-      const result = response.choices[0]?.message?.content || '';
-      const categoryNames = result.split(',').map((s: string) => s.trim()).filter(Boolean);
+      const result = response.choices[0]?.message?.content || "";
+      const categoryNames = result
+        .split(",")
+        .map((s: string) => s.trim())
+        .filter(Boolean);
 
       return existingCategories
-        .filter(cat => categoryNames.some((name: string) =>
-          cat.name.toLowerCase().includes(name.toLowerCase()) ||
-          name.toLowerCase().includes(cat.name.toLowerCase())
-        ))
-        .map(cat => cat.id)
+        .filter((cat) =>
+          categoryNames.some(
+            (name: string) =>
+              cat.name.toLowerCase().includes(name.toLowerCase()) ||
+              name.toLowerCase().includes(cat.name.toLowerCase()),
+          ),
+        )
+        .map((cat) => cat.id)
         .slice(0, 2);
-
     } catch (error) {
-      console.error('[CategoryAgent] 匹配分類錯誤:', error);
+      console.error("[CategoryAgent] 匹配分類錯誤:", error);
       return [];
     }
   }

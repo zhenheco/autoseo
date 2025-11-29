@@ -1,17 +1,22 @@
 /**
  * DeepSeek Official API Client
  *
- * 支援 DeepSeek 官方 API 的客戶端
+ * 支援 DeepSeek 官方 API 的客戶端（通過 Cloudflare AI Gateway）
  * API 文件: https://api-docs.deepseek.com/
  */
 
+import {
+  getDeepSeekBaseUrl,
+  buildDeepSeekHeaders,
+} from "@/lib/cloudflare/ai-gateway";
+
 export interface DeepSeekMessage {
-  role: 'system' | 'user' | 'assistant';
+  role: "system" | "user" | "assistant";
   content: string;
 }
 
 export interface DeepSeekCompletionOptions {
-  model: 'deepseek-reasoner' | 'deepseek-chat';
+  model: "deepseek-reasoner" | "deepseek-chat";
   messages: DeepSeekMessage[];
   temperature?: number;
   max_tokens?: number;
@@ -21,7 +26,7 @@ export interface DeepSeekCompletionOptions {
   stop?: string | string[];
   stream?: boolean;
   response_format?: {
-    type: 'text' | 'json_object';
+    type: "text" | "json_object";
   };
 }
 
@@ -36,15 +41,15 @@ export interface DeepSeekUsage {
 export interface DeepSeekChoice {
   index: number;
   message: {
-    role: 'assistant';
+    role: "assistant";
     content: string;
   };
-  finish_reason: 'stop' | 'length' | 'content_filter' | null;
+  finish_reason: "stop" | "length" | "content_filter" | null;
 }
 
 export interface DeepSeekCompletionResponse {
   id: string;
-  object: 'chat.completion';
+  object: "chat.completion";
   created: number;
   model: string;
   choices: DeepSeekChoice[];
@@ -82,15 +87,17 @@ export class DeepSeekClient {
   private defaultMaxTokens: number;
 
   constructor(config: DeepSeekClientConfig = {}) {
-    this.apiKey = config.apiKey || process.env.DEEPSEEK_API_KEY || '';
-    this.baseURL = config.baseURL || 'https://api.deepseek.com';
-    this.timeout = config.timeout || 120000; // 120 秒
+    this.apiKey = config.apiKey || process.env.DEEPSEEK_API_KEY || "";
+    this.baseURL = config.baseURL || getDeepSeekBaseUrl();
+    this.timeout = config.timeout || 120000;
     this.maxRetries = config.maxRetries || 3;
     this.defaultTemperature = config.defaultTemperature || 0.7;
     this.defaultMaxTokens = config.defaultMaxTokens || 16000;
 
     if (!this.apiKey) {
-      console.warn('[DeepSeekClient] ⚠️ API Key 未設定，請設定 DEEPSEEK_API_KEY 環境變數');
+      console.warn(
+        "[DeepSeekClient] ⚠️ API Key 未設定，請設定 DEEPSEEK_API_KEY 環境變數",
+      );
     }
   }
 
@@ -104,9 +111,11 @@ export class DeepSeekClient {
   /**
    * 聊天完成 API（主要方法）
    */
-  async chat(options: DeepSeekCompletionOptions): Promise<DeepSeekCompletionResponse> {
+  async chat(
+    options: DeepSeekCompletionOptions,
+  ): Promise<DeepSeekCompletionResponse> {
     if (!this.isConfigured()) {
-      throw new Error('DeepSeek API Key 未設定');
+      throw new Error("DeepSeek API Key 未設定");
     }
 
     const requestBody = {
@@ -123,45 +132,45 @@ export class DeepSeekClient {
     };
 
     // 移除 undefined 值
-    Object.keys(requestBody).forEach(key => {
+    Object.keys(requestBody).forEach((key) => {
       if (requestBody[key as keyof typeof requestBody] === undefined) {
         delete requestBody[key as keyof typeof requestBody];
       }
     });
 
-    return this.makeRequest('/v1/chat/completions', requestBody);
+    return this.makeRequest("/v1/chat/completions", requestBody);
   }
 
   /**
    * 簡化的完成方法（相容 OpenAI 風格）
    */
   async complete(params: {
-    model: 'deepseek-reasoner' | 'deepseek-chat';
+    model: "deepseek-reasoner" | "deepseek-chat";
     prompt: string | DeepSeekMessage[];
     temperature?: number;
     max_tokens?: number;
-    responseFormat?: 'text' | 'json';
+    responseFormat?: "text" | "json";
   }): Promise<{
     content: string;
     usage: DeepSeekUsage;
     model: string;
   }> {
-    const messages = typeof params.prompt === 'string'
-      ? [{ role: 'user' as const, content: params.prompt }]
-      : params.prompt;
+    const messages =
+      typeof params.prompt === "string"
+        ? [{ role: "user" as const, content: params.prompt }]
+        : params.prompt;
 
     const response = await this.chat({
       model: params.model,
       messages,
       temperature: params.temperature,
       max_tokens: params.max_tokens,
-      response_format: params.responseFormat === 'json'
-        ? { type: 'json_object' }
-        : undefined,
+      response_format:
+        params.responseFormat === "json" ? { type: "json_object" } : undefined,
     });
 
     return {
-      content: response.choices[0]?.message.content || '',
+      content: response.choices[0]?.message.content || "",
       usage: response.usage,
       model: response.model,
     };
@@ -172,7 +181,7 @@ export class DeepSeekClient {
    */
   private async makeRequest(
     endpoint: string,
-    body: Record<string, unknown>
+    body: Record<string, unknown>,
   ): Promise<DeepSeekCompletionResponse> {
     const url = `${this.baseURL}${endpoint}`;
     let lastError: Error | null = null;
@@ -183,11 +192,8 @@ export class DeepSeekClient {
         const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
         const response = await fetch(url, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${this.apiKey}`,
-            'Content-Type': 'application/json',
-          },
+          method: "POST",
+          headers: buildDeepSeekHeaders(this.apiKey),
           body: JSON.stringify(body),
           signal: controller.signal,
         });
@@ -196,16 +202,18 @@ export class DeepSeekClient {
 
         // 處理 HTTP 錯誤
         if (!response.ok) {
-          const errorData = await response.json() as DeepSeekError;
+          const errorData = (await response.json()) as DeepSeekError;
           const error = new Error(
-            `DeepSeek API Error [${response.status}]: ${errorData.error?.message || response.statusText}`
+            `DeepSeek API Error [${response.status}]: ${errorData.error?.message || response.statusText}`,
           );
 
           // Rate limit 錯誤，使用指數退避重試
           if (response.status === 429) {
             if (attempt < this.maxRetries) {
               const delay = Math.min(1000 * Math.pow(2, attempt), 60000);
-              console.log(`[DeepSeekClient] ⏳ Rate limit，${delay}ms 後重試 (${attempt}/${this.maxRetries})`);
+              console.log(
+                `[DeepSeekClient] ⏳ Rate limit，${delay}ms 後重試 (${attempt}/${this.maxRetries})`,
+              );
               await this.sleep(delay);
               continue;
             }
@@ -214,7 +222,9 @@ export class DeepSeekClient {
           // 服務器錯誤（5xx），重試
           if (response.status >= 500 && attempt < this.maxRetries) {
             const delay = 2000 * attempt;
-            console.log(`[DeepSeekClient] ⚠️ 伺服器錯誤，${delay}ms 後重試 (${attempt}/${this.maxRetries})`);
+            console.log(
+              `[DeepSeekClient] ⚠️ 伺服器錯誤，${delay}ms 後重試 (${attempt}/${this.maxRetries})`,
+            );
             await this.sleep(delay);
             continue;
           }
@@ -222,7 +232,7 @@ export class DeepSeekClient {
           throw error;
         }
 
-        const data = await response.json() as DeepSeekCompletionResponse;
+        const data = (await response.json()) as DeepSeekCompletionResponse;
 
         // 記錄成功請求（僅在重試後）
         if (attempt > 1) {
@@ -230,12 +240,11 @@ export class DeepSeekClient {
         }
 
         return data;
-
       } catch (error: unknown) {
         lastError = error as Error;
 
         // Timeout 錯誤
-        if (error instanceof Error && error.name === 'AbortError') {
+        if (error instanceof Error && error.name === "AbortError") {
           console.log(`[DeepSeekClient] ⏱️ 請求超時 (${this.timeout}ms)`);
           if (attempt < this.maxRetries) {
             await this.sleep(2000 * attempt);
@@ -244,7 +253,7 @@ export class DeepSeekClient {
         }
 
         // 網路錯誤
-        if (error instanceof TypeError && error.message.includes('fetch')) {
+        if (error instanceof TypeError && error.message.includes("fetch")) {
           console.log(`[DeepSeekClient] 🌐 網路錯誤: ${error.message}`);
           if (attempt < this.maxRetries) {
             await this.sleep(2000 * attempt);
@@ -258,7 +267,7 @@ export class DeepSeekClient {
     }
 
     throw new Error(
-      `DeepSeek API 請求失敗（已重試 ${this.maxRetries} 次）: ${lastError?.message || 'Unknown error'}`
+      `DeepSeek API 請求失敗（已重試 ${this.maxRetries} 次）: ${lastError?.message || "Unknown error"}`,
     );
   }
 
@@ -266,21 +275,25 @@ export class DeepSeekClient {
    * Sleep 工具函數
    */
   private sleep(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
+    return new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   /**
    * 驗證模型 ID 是否有效
    */
-  static isValidModel(modelId: string): modelId is 'deepseek-reasoner' | 'deepseek-chat' {
-    return modelId === 'deepseek-reasoner' || modelId === 'deepseek-chat';
+  static isValidModel(
+    modelId: string,
+  ): modelId is "deepseek-reasoner" | "deepseek-chat" {
+    return modelId === "deepseek-reasoner" || modelId === "deepseek-chat";
   }
 
   /**
    * 根據處理階段推薦模型
    */
-  static recommendModel(tier: 'complex' | 'simple'): 'deepseek-reasoner' | 'deepseek-chat' {
-    return tier === 'complex' ? 'deepseek-reasoner' : 'deepseek-chat';
+  static recommendModel(
+    tier: "complex" | "simple",
+  ): "deepseek-reasoner" | "deepseek-chat" {
+    return tier === "complex" ? "deepseek-reasoner" : "deepseek-chat";
   }
 }
 
@@ -289,7 +302,9 @@ export class DeepSeekClient {
  */
 let globalClient: DeepSeekClient | null = null;
 
-export function getDeepSeekClient(config?: DeepSeekClientConfig): DeepSeekClient {
+export function getDeepSeekClient(
+  config?: DeepSeekClientConfig,
+): DeepSeekClient {
   if (!globalClient) {
     globalClient = new DeepSeekClient(config);
   }
