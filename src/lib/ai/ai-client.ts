@@ -34,9 +34,9 @@ export class AIClient {
       throw new Error("DEEPSEEK_API_KEY is not set");
     }
 
-    // 為 deepseek-reasoner 設定較長的超時時間（120 秒）
-    // 為 deepseek-chat 設定標準超時時間（60 秒）
-    const timeoutMs = params.model === "deepseek-reasoner" ? 120000 : 60000;
+    // 為 deepseek-reasoner 設定較長的超時時間（180 秒）
+    // 為 deepseek-chat 設定標準超時時間（120 秒）
+    const timeoutMs = params.model === "deepseek-reasoner" ? 180000 : 120000;
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
@@ -167,6 +167,16 @@ export class AIClient {
             `[AIClient] ⚠️ ${currentModel} timeout, switching to deepseek-chat`,
           );
           currentModel = "deepseek-chat";
+          continue;
+        }
+
+        // 如果 timeout 且還有重試次數，等待後重試
+        if (isTimeout && attempt < maxRetries) {
+          const delay = 3000;
+          console.log(
+            `[AIClient] ⚠️ Timeout, retrying in ${delay}ms (attempt ${attempt}/${maxRetries})`,
+          );
+          await new Promise((resolve) => setTimeout(resolve, delay));
           continue;
         }
 
