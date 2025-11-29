@@ -11,6 +11,8 @@ import {
   CreditCard,
   PenSquare,
   FileText,
+  Handshake,
+  Settings,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -36,6 +38,16 @@ const navItems = [
     title: "訂閱方案",
     href: "/dashboard/subscription",
     icon: CreditCard,
+  },
+  {
+    title: "聯盟夥伴",
+    href: "/dashboard/affiliate",
+    icon: Handshake,
+  },
+  {
+    title: "設定",
+    href: "/dashboard/settings",
+    icon: Settings,
   },
 ];
 

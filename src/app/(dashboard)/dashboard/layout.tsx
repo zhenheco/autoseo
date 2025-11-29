@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "@/lib/auth";
-import { User, Settings, Bell } from "lucide-react";
+import { User, Settings, Bell, Gift } from "lucide-react";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import {
   DashboardLayoutClient,
@@ -52,6 +52,13 @@ export default async function DashboardLayout({
 
                 <div className="flex items-center gap-3">
                   <NewArticleButton />
+
+                  <Link href="/dashboard/referrals">
+                    <Button variant="ghost" size="sm" className="gap-2">
+                      <Gift className="h-4 w-4" />
+                      <span className="hidden sm:inline">好友推薦</span>
+                    </Button>
+                  </Link>
 
                   <TokenBalanceDisplay compact />
 
