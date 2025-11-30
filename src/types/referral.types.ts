@@ -232,7 +232,37 @@ export const AFFILIATE_TIERS: AffiliateTier[] = [
   },
 ];
 
+export const COMMISSION_RATE = 20;
+export const LOCK_PERIOD_DAYS = 30;
 export const COMMISSION_LOCK_DAYS = 30;
 export const MIN_WITHDRAWAL_AMOUNT = 1000;
 export const RESIDENT_TAX_RATE = 10;
 export const NON_RESIDENT_TAX_RATE = 20;
+
+export const BANK_CODES = {
+  "004": "台灣銀行",
+  "005": "土地銀行",
+  "006": "合作金庫",
+  "007": "第一銀行",
+  "008": "華南銀行",
+  "009": "彰化銀行",
+  "011": "上海商銀",
+  "012": "台北富邦",
+  "013": "國泰世華",
+  "017": "兆豐銀行",
+  "021": "花旗銀行",
+  "050": "台灣企銀",
+  "103": "臺灣新光商銀",
+  "108": "陽信銀行",
+  "147": "三信商銀",
+  "803": "聯邦銀行",
+  "805": "遠東銀行",
+  "806": "元大銀行",
+  "807": "永豐銀行",
+  "808": "玉山銀行",
+  "809": "凱基銀行",
+  "812": "台新銀行",
+  "822": "中國信託",
+} as const;
+
+export type BankCode = keyof typeof BANK_CODES;
