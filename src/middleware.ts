@@ -4,7 +4,19 @@ import { updateSession } from "@/lib/supabase/middleware";
 export const runtime = "nodejs";
 
 export async function middleware(request: NextRequest) {
-  const response = await updateSession(request);
+  // 跳過 debug 路由，讓診斷端點可以直接執行
+  if (request.nextUrl.pathname.startsWith("/api/debug")) {
+    return NextResponse.next();
+  }
+
+  let response: NextResponse;
+  try {
+    response = await updateSession(request);
+  } catch (error) {
+    console.error("[Middleware Error]:", error);
+    // 如果 updateSession 失敗，返回基本 response
+    response = NextResponse.next({ request });
+  }
 
   // 基礎安全 Headers
   response.headers.set("X-Frame-Options", "SAMEORIGIN");
