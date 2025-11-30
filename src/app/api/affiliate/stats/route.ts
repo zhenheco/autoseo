@@ -45,33 +45,28 @@ export async function GET() {
 
     const { data: referrals } = await supabase
       .from("referrals")
-      .select("status, first_payment_at, lifetime_value, last_payment_at")
-      .eq("referrer_company_id", companyMember.company_id)
-      .eq("reward_type", "commission");
+      .select("status, first_payment_at")
+      .eq("referrer_company_id", companyMember.company_id);
 
     const totalReferrals = referrals?.length || 0;
     const paidReferrals =
       referrals?.filter(
-        (r) => r.status === "qualified" || r.status === "rewarded",
+        (r) => r.status === "completed" || r.status === "rewarded",
       ).length || 0;
     const conversionRate =
       totalReferrals > 0 ? (paidReferrals / totalReferrals) * 100 : 0;
-    const totalValue =
-      referrals?.reduce((sum, r) => sum + (r.lifetime_value || 0), 0) || 0;
-    const averageOrderValue =
-      paidReferrals > 0 ? totalValue / paidReferrals : 0;
 
     const lastPaymentDate = referrals
-      ?.filter((r) => r.last_payment_at)
+      ?.filter((r) => r.first_payment_at)
       .sort((a, b) => {
-        const dateA = a.last_payment_at
-          ? new Date(a.last_payment_at).getTime()
+        const dateA = a.first_payment_at
+          ? new Date(a.first_payment_at).getTime()
           : 0;
-        const dateB = b.last_payment_at
-          ? new Date(b.last_payment_at).getTime()
+        const dateB = b.first_payment_at
+          ? new Date(b.first_payment_at).getTime()
           : 0;
         return dateB - dateA;
-      })[0]?.last_payment_at;
+      })[0]?.first_payment_at;
 
     return NextResponse.json({
       totalReferrals,
@@ -82,7 +77,6 @@ export async function GET() {
       withdrawnCommission: stats.withdrawnCommission,
       lifetimeCommission: stats.lifetimeCommission,
       conversionRate: Math.round(conversionRate * 100) / 100,
-      averageOrderValue: Math.round(averageOrderValue),
       lastPaymentDate: lastPaymentDate || null,
       affiliate_code: referralCode?.referral_code || "",
       status: affiliate.status,

@@ -184,11 +184,11 @@ export async function processAffiliateCommission(
 
   const { data: referral } = await supabase
     .from("referrals")
-    .select("*, referral_codes!inner(company_id)")
+    .select("*")
     .eq("id", referralId)
     .single();
 
-  if (!referral || referral.reward_type !== "commission") {
+  if (!referral) {
     return { success: false };
   }
 
@@ -244,17 +244,6 @@ export async function processAffiliateCommission(
       lifetime_commission: affiliate.lifetime_commission + netCommission,
     })
     .eq("id", affiliate.id);
-
-  await supabase
-    .from("referrals")
-    .update({
-      total_payments: referral.total_payments + 1,
-      lifetime_value: referral.lifetime_value + paymentAmount,
-      total_commission_generated:
-        referral.total_commission_generated + netCommission,
-      last_payment_at: new Date().toISOString(),
-    })
-    .eq("id", referralId);
 
   await supabase.rpc("update_affiliate_tier", { p_affiliate_id: affiliate.id });
 

@@ -227,7 +227,7 @@ export async function processFirstPaymentReward(
 
   const { data: referral } = await supabase
     .from("referrals")
-    .select("*, referral_codes!inner(company_id)")
+    .select("*")
     .eq("referred_company_id", referredCompanyId)
     .eq("status", "pending")
     .single();
@@ -252,10 +252,8 @@ export async function processFirstPaymentReward(
   const { error: updateError } = await supabase
     .from("referrals")
     .update({
-      status: "qualified",
+      status: "completed",
       first_payment_at: new Date().toISOString(),
-      first_payment_amount: paymentAmount,
-      reward_type: rewardType,
     })
     .eq("id", referral.id);
 
@@ -334,7 +332,7 @@ async function processTokenReward(
     .from("referrals")
     .update({
       status: "rewarded",
-      tokens_rewarded: tokenAmount * 2,
+      rewarded_at: new Date().toISOString(),
     })
     .eq("id", referralId);
 }
@@ -343,14 +341,13 @@ export async function getMyReferrer(companyId: string): Promise<{
   hasReferrer: boolean;
   referrerCode?: string;
   status?: string;
-  rewardType?: string;
   tokensReceived?: number;
 } | null> {
   const supabase = createAdminClient();
 
   const { data } = await supabase
     .from("referrals")
-    .select("referral_code, status, reward_type")
+    .select("referral_code, status")
     .eq("referred_company_id", companyId)
     .single();
 
@@ -359,7 +356,7 @@ export async function getMyReferrer(companyId: string): Promise<{
   }
 
   let tokensReceived = 0;
-  if (data.status === "rewarded" && data.reward_type === "tokens") {
+  if (data.status === "rewarded") {
     const { data: reward } = await supabase
       .from("referral_rewards")
       .select("referred_tokens")
@@ -374,7 +371,6 @@ export async function getMyReferrer(companyId: string): Promise<{
     hasReferrer: true,
     referrerCode: data.referral_code,
     status: data.status,
-    rewardType: data.reward_type,
     tokensReceived,
   };
 }
