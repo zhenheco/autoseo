@@ -27,7 +27,7 @@ export function ReferralHistoryTable({ referrals }: ReferralHistoryTableProps) {
             已獎勵
           </Badge>
         );
-      case "completed":
+      case "qualified":
         return (
           <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/20 dark:text-blue-400">
             <Gift className="h-3 w-3 mr-1" />
@@ -92,7 +92,7 @@ export function ReferralHistoryTable({ referrals }: ReferralHistoryTableProps) {
                 {referral.referred_company_id.slice(0, 8)}...
               </TableCell>
               <TableCell className="text-sm text-muted-foreground">
-                {formatDate(referral.referred_at)}
+                {formatDate(referral.registered_at)}
               </TableCell>
               <TableCell className="text-sm text-muted-foreground">
                 {formatDate(referral.first_payment_at)}

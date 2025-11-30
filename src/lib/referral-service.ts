@@ -261,7 +261,7 @@ export async function processFirstPaymentReward(
   const { error: updateError } = await supabase
     .from("referrals")
     .update({
-      status: "completed",
+      status: "qualified",
       first_payment_at: new Date().toISOString(),
     })
     .eq("id", referral.id);

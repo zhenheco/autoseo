@@ -252,7 +252,7 @@ export class ReferralService {
     await this.supabase
       .from("referrals")
       .update({
-        status: "completed",
+        status: "qualified",
         first_payment_at: new Date().toISOString(),
       })
       .eq("id", referral.id);
@@ -271,9 +271,11 @@ export class ReferralService {
   > {
     const { data, error } = await this.supabase
       .from("referrals")
-      .select("id, referred_company_id, status, referred_at, first_payment_at")
+      .select(
+        "id, referred_company_id, status, registered_at, first_payment_at",
+      )
       .eq("referrer_company_id", companyId)
-      .order("referred_at", { ascending: false });
+      .order("registered_at", { ascending: false });
 
     if (error) {
       console.error("[ReferralService] 查詢推薦列表失敗:", error);
@@ -284,7 +286,7 @@ export class ReferralService {
       id: r.id,
       referredCompanyId: r.referred_company_id,
       status: r.status,
-      referredAt: r.referred_at || "",
+      referredAt: r.registered_at || "",
       firstPaymentAt: r.first_payment_at,
     }));
   }

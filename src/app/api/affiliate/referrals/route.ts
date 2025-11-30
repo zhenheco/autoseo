@@ -64,7 +64,7 @@ export async function GET(request: NextRequest) {
     const formattedData = referrals?.map((ref) => ({
       id: ref.id,
       company_name: `客戶 #${ref.referred_company_id.slice(0, 8)}`,
-      registered_at: ref.referred_at,
+      registered_at: ref.registered_at,
       first_payment_at: ref.first_payment_at,
       is_active: ref.first_payment_at !== null,
       status: ref.status,

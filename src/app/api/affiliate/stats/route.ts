@@ -51,7 +51,7 @@ export async function GET() {
     const totalReferrals = referrals?.length || 0;
     const paidReferrals =
       referrals?.filter(
-        (r) => r.status === "completed" || r.status === "rewarded",
+        (r) => r.status === "qualified" || r.status === "rewarded",
       ).length || 0;
     const conversionRate =
       totalReferrals > 0 ? (paidReferrals / totalReferrals) * 100 : 0;
