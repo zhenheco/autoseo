@@ -18,7 +18,7 @@ interface ReferralHistoryTableProps {
 }
 
 export function ReferralHistoryTable({ referrals }: ReferralHistoryTableProps) {
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string | null) => {
     switch (status) {
       case "rewarded":
         return (
@@ -42,7 +42,7 @@ export function ReferralHistoryTable({ referrals }: ReferralHistoryTableProps) {
           </Badge>
         );
       default:
-        return <Badge variant="secondary">{status}</Badge>;
+        return <Badge variant="secondary">{status ?? "-"}</Badge>;
     }
   };
 
