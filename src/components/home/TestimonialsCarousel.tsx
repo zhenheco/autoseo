@@ -66,10 +66,10 @@ export function TestimonialsCarousel() {
                 <div className="font-bold text-sm text-slate-900 dark:text-white">
                   {testimonial.name}
                 </div>
-                <div className="text-xs text-slate-500 mb-2">
+                <div className="text-xs text-slate-600 dark:text-slate-500 mb-2">
                   {testimonial.company}
                 </div>
-                <p className="text-sm text-slate-400 leading-relaxed">
+                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                   &ldquo;{testimonial.content}&rdquo;
                 </p>
               </div>

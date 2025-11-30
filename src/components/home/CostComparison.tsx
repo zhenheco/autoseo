@@ -66,7 +66,7 @@ export function CostComparison() {
               ？
             </span>
           </h2>
-          <p className="text-slate-400 max-w-2xl mx-auto">
+          <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
             比傳統方式省下 90% 以上的成本和時間
           </p>
         </div>
@@ -86,7 +86,7 @@ export function CostComparison() {
                     <div className="text-sm font-medium text-slate-900 dark:text-white">
                       {item.category}
                     </div>
-                    <div className="text-sm text-slate-500 line-through text-center">
+                    <div className="text-sm text-slate-600 dark:text-slate-500 line-through text-center">
                       {item.traditional}
                     </div>
                     <div className="text-right">
@@ -127,7 +127,7 @@ export function CostComparison() {
                 ))}
                 <div className="grid grid-cols-3 gap-4 items-center pt-4 border-t border-white/10">
                   <div />
-                  <div className="text-center text-sm text-slate-500">
+                  <div className="text-center text-sm text-slate-600 dark:text-slate-500">
                     傳統方式
                   </div>
                   <GradientText
