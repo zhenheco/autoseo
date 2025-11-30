@@ -227,6 +227,49 @@ export class AIClient {
     return prompt;
   }
 
+  private sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  private async tryGenerateWithRetries(
+    prompt: string,
+    options: {
+      model: string;
+      quality?: "low" | "medium" | "high" | "auto";
+      size?: string;
+    },
+    maxRetries: number,
+  ): Promise<{
+    success: boolean;
+    data?: { url: string; revisedPrompt?: string };
+    error?: Error;
+  }> {
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(
+          `[AIClient] 🎨 Image attempt ${attempt}/${maxRetries} with ${options.model}`,
+        );
+        const result = await this.generateImageWithModel(prompt, options);
+        return { success: true, data: result };
+      } catch (error) {
+        lastError = error as Error;
+        console.warn(
+          `[AIClient] ⚠️ Attempt ${attempt} failed: ${lastError.message}`,
+        );
+
+        if (attempt < maxRetries) {
+          const delay = 2000 * attempt;
+          console.log(`[AIClient] ⏳ Waiting ${delay}ms before retry...`);
+          await this.sleep(delay);
+        }
+      }
+    }
+
+    return { success: false, error: lastError! };
+  }
+
   async generateImage(
     prompt: string,
     options: {
@@ -235,148 +278,195 @@ export class AIClient {
       size?: string;
     },
   ): Promise<{ url: string; revisedPrompt?: string }> {
-    try {
-      if (
-        options.model.includes("gemini-imagen") ||
-        options.model.includes("imagen-3")
-      ) {
-        return await this.callGeminiImagenAPI(prompt, options);
-      }
+    const MAX_RETRIES = 3;
+    const FALLBACK_MODEL = "gpt-image-1-mini";
 
-      if (
-        options.model.includes("gpt-image-1") ||
-        options.model.includes("chatgpt-image")
-      ) {
-        const apiKey = process.env.OPENAI_API_KEY;
-        if (!apiKey) {
-          throw new Error("OPENAI_API_KEY is not set");
-        }
-
-        // 直接使用指定的模型（支援 gpt-image-1-mini, gpt-image-1 等）
-        const requestBody: Record<string, unknown> = {
-          model: options.model,
-          prompt: prompt,
-          n: 1,
-          size: options.size || "1024x1024",
-        };
-
-        // 加入 quality 參數（支援 standard, hd, medium 等）
-        if (options.quality) {
-          requestBody.quality = options.quality;
-        }
-
-        const openaiBaseUrl = getOpenAIBaseUrl();
-        const openaiHeaders = buildOpenAIHeaders(apiKey);
-
-        const response = await fetch(`${openaiBaseUrl}/v1/images/generations`, {
-          method: "POST",
-          headers: openaiHeaders,
-          body: JSON.stringify(requestBody),
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(`OpenAI API error: ${JSON.stringify(error)}`);
-        }
-
-        const data = await response.json();
-
-        if (!data.data || !data.data[0]) {
-          throw new Error("Invalid OpenAI image response structure");
-        }
-
-        const imageData = data.data[0];
-
-        if (imageData.b64_json) {
-          const base64Data = imageData.b64_json;
-          const dataUrl = `data:image/png;base64,${base64Data}`;
-
-          console.log(
-            "[AIClient] Generated image from b64_json (base64 length:",
-            base64Data.length,
-            ")",
-          );
-
-          return {
-            url: dataUrl,
-            revisedPrompt: imageData.revised_prompt || prompt,
-          };
-        } else if (imageData.url) {
-          console.log("[AIClient] Generated image from URL:", imageData.url);
-
-          return {
-            url: imageData.url,
-            revisedPrompt: imageData.revised_prompt || prompt,
-          };
-        } else {
-          throw new Error("No image URL or b64_json in OpenAI response");
-        }
-      }
-
-      // 處理 Gemini 3 Pro Image Preview / nano-banana 模型（使用 Gemini generateContent API）
-      if (
-        options.model.includes("gemini-3-pro-image-preview") ||
-        options.model.includes("nano-banana")
-      ) {
-        return await this.callGeminiImageAPI(prompt, options);
-      }
-
-      // 處理 dall-e-3 模型（使用 OpenAI 官方 API）
-      if (options.model.includes("dall-e")) {
-        const apiKey = process.env.OPENAI_API_KEY;
-        if (!apiKey) {
-          throw new Error("OPENAI_API_KEY is not set");
-        }
-
-        const requestBody: Record<string, unknown> = {
-          model: options.model,
-          prompt: prompt,
-          n: 1,
-          size: options.size || "1024x1024",
-          response_format: "b64_json",
-        };
-
-        if (options.quality) {
-          requestBody.quality = options.quality === "high" ? "hd" : "standard";
-        }
-
-        const dalleBaseUrl = getOpenAIBaseUrl();
-        const dalleHeaders = buildOpenAIHeaders(apiKey);
-
-        const response = await fetch(`${dalleBaseUrl}/v1/images/generations`, {
-          method: "POST",
-          headers: dalleHeaders,
-          body: JSON.stringify(requestBody),
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(`DALL-E API error: ${JSON.stringify(error)}`);
-        }
-
-        const data = await response.json();
-        const imageData = data.data[0];
-
-        if (imageData.b64_json) {
-          return {
-            url: `data:image/png;base64,${imageData.b64_json}`,
-            revisedPrompt: imageData.revised_prompt || prompt,
-          };
-        } else if (imageData.url) {
-          return {
-            url: imageData.url,
-            revisedPrompt: imageData.revised_prompt || prompt,
-          };
-        }
-
-        throw new Error("No image data in DALL-E response");
-      }
-
-      throw new Error(`Unsupported image model: ${options.model}`);
-    } catch (error: unknown) {
-      const err = error instanceof Error ? error : new Error(String(error));
-      throw new Error(`Image generation failed: ${err.message}`);
+    // 第一階段：嘗試主要模型（最多 3 次）
+    const primaryResult = await this.tryGenerateWithRetries(
+      prompt,
+      options,
+      MAX_RETRIES,
+    );
+    if (primaryResult.success && primaryResult.data) {
+      return primaryResult.data;
     }
+
+    // 第二階段：主要模型失敗，切換到 fallback 模型（也重試 3 次）
+    if (options.model !== FALLBACK_MODEL) {
+      console.warn(
+        `[AIClient] ⚠️ ${options.model} failed ${MAX_RETRIES}x, switching to ${FALLBACK_MODEL}`,
+      );
+      const fallbackResult = await this.tryGenerateWithRetries(
+        prompt,
+        { ...options, model: FALLBACK_MODEL },
+        MAX_RETRIES,
+      );
+      if (fallbackResult.success && fallbackResult.data) {
+        console.log(`[AIClient] ✅ Fallback to ${FALLBACK_MODEL} succeeded`);
+        return fallbackResult.data;
+      }
+    }
+
+    throw primaryResult.error || new Error("Image generation failed");
+  }
+
+  private async generateImageWithModel(
+    prompt: string,
+    options: {
+      model: string;
+      quality?: "low" | "medium" | "high" | "auto";
+      size?: string;
+    },
+  ): Promise<{ url: string; revisedPrompt?: string }> {
+    if (
+      options.model.includes("gemini-imagen") ||
+      options.model.includes("imagen-3") ||
+      options.model.includes("gemini-2.5-flash-image")
+    ) {
+      return await this.callGeminiImagenAPI(prompt, options);
+    }
+
+    if (
+      options.model.includes("gpt-image-1") ||
+      options.model.includes("chatgpt-image")
+    ) {
+      const apiKey = process.env.OPENAI_API_KEY;
+      if (!apiKey) {
+        throw new Error("OPENAI_API_KEY is not set");
+      }
+
+      // 直接使用指定的模型（支援 gpt-image-1-mini, gpt-image-1 等）
+      const requestBody: Record<string, unknown> = {
+        model: options.model,
+        prompt: prompt,
+        n: 1,
+        size: options.size || "1024x1024",
+      };
+
+      // 加入 quality 參數（支援 standard, hd, medium 等）
+      if (options.quality) {
+        requestBody.quality = options.quality;
+      }
+
+      const openaiBaseUrl = getOpenAIBaseUrl();
+      const openaiHeaders = buildOpenAIHeaders(apiKey);
+
+      const response = await fetch(`${openaiBaseUrl}/v1/images/generations`, {
+        method: "POST",
+        headers: openaiHeaders,
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(`OpenAI API error: ${JSON.stringify(error)}`);
+      }
+
+      const data = await response.json();
+
+      if (!data.data || !data.data[0]) {
+        throw new Error("Invalid OpenAI image response structure");
+      }
+
+      const imageData = data.data[0];
+
+      if (imageData.b64_json) {
+        const base64Data = imageData.b64_json;
+        const dataUrl = `data:image/png;base64,${base64Data}`;
+
+        console.log(
+          "[AIClient] Generated image from b64_json (base64 length:",
+          base64Data.length,
+          ")",
+        );
+
+        return {
+          url: dataUrl,
+          revisedPrompt: imageData.revised_prompt || prompt,
+        };
+      } else if (imageData.url) {
+        console.log("[AIClient] Generated image from URL:", imageData.url);
+
+        return {
+          url: imageData.url,
+          revisedPrompt: imageData.revised_prompt || prompt,
+        };
+      } else {
+        throw new Error("No image URL or b64_json in OpenAI response");
+      }
+    }
+
+    // 處理 Gemini 3 Pro Image Preview / nano-banana 模型（使用 Gemini generateContent API）
+    if (
+      options.model.includes("gemini-3-pro-image-preview") ||
+      options.model.includes("nano-banana")
+    ) {
+      return await this.callGeminiImageAPI(prompt, options);
+    }
+
+    // 處理 dall-e-3 模型（使用 OpenAI 官方 API）
+    if (options.model.includes("dall-e")) {
+      const apiKey = process.env.OPENAI_API_KEY;
+      if (!apiKey) {
+        throw new Error("OPENAI_API_KEY is not set");
+      }
+
+      const requestBody: Record<string, unknown> = {
+        model: options.model,
+        prompt: prompt,
+        n: 1,
+        size: options.size || "1024x1024",
+        response_format: "b64_json",
+      };
+
+      if (options.quality) {
+        requestBody.quality = options.quality === "high" ? "hd" : "standard";
+      }
+
+      const dalleBaseUrl = getOpenAIBaseUrl();
+      const dalleHeaders = buildOpenAIHeaders(apiKey);
+
+      const response = await fetch(`${dalleBaseUrl}/v1/images/generations`, {
+        method: "POST",
+        headers: dalleHeaders,
+        body: JSON.stringify(requestBody),
+      });
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(`DALL-E API error: ${JSON.stringify(error)}`);
+      }
+
+      const data = await response.json();
+      const imageData = data.data[0];
+
+      if (imageData.b64_json) {
+        return {
+          url: `data:image/png;base64,${imageData.b64_json}`,
+          revisedPrompt: imageData.revised_prompt || prompt,
+        };
+      } else if (imageData.url) {
+        return {
+          url: imageData.url,
+          revisedPrompt: imageData.revised_prompt || prompt,
+        };
+      }
+
+      throw new Error("No image data in DALL-E response");
+    }
+
+    throw new Error(`Unsupported image model: ${options.model}`);
+  }
+
+  private mapGeminiImageModel(model: string): string {
+    const modelMap: Record<string, string> = {
+      "gemini-3-pro-image-preview": "gemini-3-pro-image-preview",
+      "gemini-imagen-flash": "gemini-2.5-flash-image",
+      "gemini-imagen": "gemini-2.5-flash-image",
+      "imagen-3": "gemini-2.5-flash-image",
+      "gemini-2.5-flash-image": "gemini-2.5-flash-image",
+    };
+    return modelMap[model] || model;
   }
 
   private async callGeminiImagenAPI(
@@ -392,7 +482,7 @@ export class AIClient {
       throw new Error("GEMINI_API_KEY is not set");
     }
 
-    const modelName = "gemini-2.5-flash-image";
+    const modelName = this.mapGeminiImageModel(options.model);
 
     const [width, height] = (options.size || "1024x1024")
       .split("x")
@@ -401,7 +491,7 @@ export class AIClient {
       width === height ? "1:1" : width > height ? "16:9" : "9:16";
 
     console.log(
-      `[AIClient] 🎨 Calling Gemini Image API (model: ${modelName}, aspect: ${aspectRatio}, gateway: ${isGatewayEnabled()})`,
+      `[AIClient] 🎨 Calling Gemini Image API (model: ${modelName}, requested: ${options.model}, aspect: ${aspectRatio}, gateway: ${isGatewayEnabled()})`,
     );
 
     const geminiUrl = isGatewayEnabled()
@@ -434,6 +524,11 @@ export class AIClient {
     }
 
     const data = await response.json();
+
+    const finishReason = data.candidates?.[0]?.finishReason;
+    if (finishReason === "NO_IMAGE") {
+      throw new Error(`[NO_IMAGE] Gemini refused to generate image for prompt`);
+    }
 
     const inlineData = data.candidates?.[0]?.content?.parts?.[0]?.inlineData;
     if (!inlineData?.data) {
@@ -518,6 +613,11 @@ export class AIClient {
     }
 
     const data = await response.json();
+
+    const finishReason = data.candidates?.[0]?.finishReason;
+    if (finishReason === "NO_IMAGE") {
+      throw new Error(`[NO_IMAGE] Gemini refused to generate image for prompt`);
+    }
 
     if (!data.candidates || !data.candidates[0]?.content?.parts) {
       throw new Error("Invalid Gemini Image API response structure");
