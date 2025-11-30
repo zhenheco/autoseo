@@ -1,86 +1,254 @@
-'use client'
+"use client";
 
-import React from 'react'
-import { cn } from "@/lib/utils"
+import React from "react";
+import { cn } from "@/lib/utils";
 
 export function BackgroundGradientMesh({ className }: { className?: string }) {
   return (
     <div className={cn("absolute inset-0 -z-10 overflow-hidden", className)}>
       <div className="gradient-mesh absolute inset-0 opacity-30" />
     </div>
-  )
+  );
 }
 
-export function BackgroundGrid({ className }: { className?: string }) {
+export function BackgroundGrid({
+  className,
+  variant = "dark",
+}: {
+  className?: string;
+  variant?: "dark" | "light";
+}) {
+  const gridColor =
+    variant === "dark"
+      ? "rgba(255, 255, 255, 0.03)"
+      : "rgba(59, 130, 246, 0.05)";
+
   return (
     <div className={cn("absolute inset-0 -z-10", className)}>
-      <div className="absolute inset-0" style={{
-        backgroundImage: `
-          linear-gradient(rgba(255, 255, 255, 0.03) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255, 255, 255, 0.03) 1px, transparent 1px)
+      <div
+        className="absolute inset-0"
+        style={{
+          backgroundImage: `
+          linear-gradient(${gridColor} 1px, transparent 1px),
+          linear-gradient(90deg, ${gridColor} 1px, transparent 1px)
         `,
-        backgroundSize: '50px 50px'
-      }} />
+          backgroundSize: "50px 50px",
+        }}
+      />
     </div>
-  )
+  );
 }
 
 export function BackgroundSpotlight({ className }: { className?: string }) {
   return (
     <div className={cn("absolute inset-0 -z-10 overflow-hidden", className)}>
-      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-primary/20 blur-3xl" />
+      <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-tech-blue-500/20 blur-3xl" />
     </div>
-  )
+  );
+}
+
+export function GlowSpotlight({
+  className,
+  position = "top",
+}: {
+  className?: string;
+  position?: "top" | "center" | "bottom";
+}) {
+  const positionClasses = {
+    top: "top-0 left-1/2 -translate-x-1/2 -translate-y-1/2",
+    center: "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
+    bottom: "bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2",
+  };
+
+  return (
+    <div
+      className={cn(
+        "absolute inset-0 -z-10 overflow-hidden pointer-events-none",
+        className,
+      )}
+    >
+      <div
+        className={cn(
+          "absolute w-[600px] h-[400px] rounded-full blur-3xl",
+          positionClasses[position],
+        )}
+        style={{
+          background:
+            "radial-gradient(ellipse 80% 50% at 50% 50%, rgba(59, 130, 246, 0.3) 0%, transparent 70%)",
+        }}
+      />
+    </div>
+  );
+}
+
+export function HeroGlow({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        "absolute inset-0 -z-10 overflow-hidden pointer-events-none",
+        className,
+      )}
+    >
+      <div
+        className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px]"
+        style={{
+          background:
+            "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(59, 130, 246, 0.3) 0%, transparent 70%)",
+        }}
+      />
+    </div>
+  );
+}
+
+export function FloatingOrbs({ className }: { className?: string }) {
+  return (
+    <div
+      className={cn(
+        "absolute inset-0 -z-10 overflow-hidden pointer-events-none",
+        className,
+      )}
+    >
+      <div
+        className="absolute top-20 left-[10%] w-64 h-64 rounded-full animate-float-orb"
+        style={{
+          background:
+            "radial-gradient(circle at 30% 30%, rgba(59, 130, 246, 0.4) 0%, rgba(59, 130, 246, 0.1) 50%, transparent 70%)",
+          filter: "blur(40px)",
+        }}
+      />
+      <div
+        className="absolute top-40 right-[15%] w-80 h-80 rounded-full animate-float-orb"
+        style={{
+          background:
+            "radial-gradient(circle at 30% 30%, rgba(139, 92, 246, 0.3) 0%, rgba(139, 92, 246, 0.1) 50%, transparent 70%)",
+          filter: "blur(50px)",
+          animationDelay: "2s",
+        }}
+      />
+      <div
+        className="absolute bottom-20 left-[30%] w-72 h-72 rounded-full animate-float-orb"
+        style={{
+          background:
+            "radial-gradient(circle at 30% 30%, rgba(59, 130, 246, 0.35) 0%, rgba(59, 130, 246, 0.1) 50%, transparent 70%)",
+          filter: "blur(45px)",
+          animationDelay: "4s",
+        }}
+      />
+    </div>
+  );
 }
 
 export function FloatingShapes() {
   return (
     <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
-      <div className="absolute top-20 left-10 w-64 h-64 rounded-full bg-gradient-purple-blue opacity-10 blur-3xl animate-float" />
-      <div className="absolute top-40 right-20 w-80 h-80 rounded-full bg-gradient-blue-cyan opacity-10 blur-3xl animate-float" style={{ animationDelay: '1.5s' }} />
-      <div className="absolute bottom-20 left-1/3 w-72 h-72 rounded-full bg-gradient-purple-pink opacity-10 blur-3xl animate-float" style={{ animationDelay: '3s' }} />
+      <div className="absolute top-20 left-10 w-64 h-64 rounded-full bg-tech-blue-500/10 blur-3xl animate-float" />
+      <div
+        className="absolute top-40 right-20 w-80 h-80 rounded-full bg-tech-blue-400/10 blur-3xl animate-float"
+        style={{ animationDelay: "1.5s" }}
+      />
+      <div
+        className="absolute bottom-20 left-1/3 w-72 h-72 rounded-full bg-purple-500/10 blur-3xl animate-float"
+        style={{ animationDelay: "3s" }}
+      />
 
-      <svg className="absolute top-1/4 left-1/4 w-16 h-16 text-primary/20 animate-float" viewBox="0 0 200 200" fill="currentColor">
+      <svg
+        className="absolute top-1/4 left-1/4 w-16 h-16 text-tech-blue-500/20 animate-float"
+        viewBox="0 0 200 200"
+        fill="currentColor"
+      >
         <polygon points="100,10 40,198 190,78 10,78 160,198" />
       </svg>
 
-      <svg className="absolute top-1/2 right-1/4 w-20 h-20 text-secondary/20 animate-float" style={{ animationDelay: '2s' }} viewBox="0 0 200 200" fill="currentColor">
+      <svg
+        className="absolute top-1/2 right-1/4 w-20 h-20 text-purple-500/20 animate-float"
+        style={{ animationDelay: "2s" }}
+        viewBox="0 0 200 200"
+        fill="currentColor"
+      >
         <circle cx="100" cy="100" r="80" />
       </svg>
 
-      <svg className="absolute bottom-1/4 right-1/3 w-14 h-14 text-primary/20 animate-float" style={{ animationDelay: '4s' }} viewBox="0 0 200 200" fill="currentColor">
+      <svg
+        className="absolute bottom-1/4 right-1/3 w-14 h-14 text-tech-blue-500/20 animate-float"
+        style={{ animationDelay: "4s" }}
+        viewBox="0 0 200 200"
+        fill="currentColor"
+      >
         <rect x="50" y="50" width="100" height="100" rx="10" />
       </svg>
     </div>
-  )
+  );
 }
 
-export function ParticleField({ count = 30 }: { count?: number }) {
-  const [particles] = React.useState(() => Array.from({ length: count }, (_, i) => ({
-    id: i,
-    size: Math.random() * 4 + 2,
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    duration: Math.random() * 10 + 10,
-    delay: Math.random() * 5
-  })))
+export function ParticleField({
+  count = 30,
+  variant = "blue",
+}: {
+  count?: number;
+  variant?: "blue" | "mixed";
+}) {
+  const [particles] = React.useState(() =>
+    Array.from({ length: count }, (_, i) => ({
+      id: i,
+      size: Math.random() * 4 + 2,
+      x: Math.random() * 100,
+      y: Math.random() * 100,
+      duration: Math.random() * 10 + 10,
+      delay: Math.random() * 5,
+      isPurple: variant === "mixed" && Math.random() > 0.7,
+    })),
+  );
 
   return (
     <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
       {particles.map((particle) => (
         <div
           key={particle.id}
-          className="absolute rounded-full bg-primary/30 animate-float"
+          className={cn(
+            "absolute rounded-full animate-float",
+            particle.isPurple ? "bg-purple-500/30" : "bg-tech-blue-500/30",
+          )}
           style={{
             width: `${particle.size}px`,
             height: `${particle.size}px`,
             left: `${particle.x}%`,
             top: `${particle.y}%`,
             animationDuration: `${particle.duration}s`,
-            animationDelay: `${particle.delay}s`
+            animationDelay: `${particle.delay}s`,
           }}
         />
       ))}
     </div>
-  )
+  );
+}
+
+export function DarkSectionBackground({
+  className,
+  withGrid = true,
+  withGlow = true,
+}: {
+  className?: string;
+  withGrid?: boolean;
+  withGlow?: boolean;
+}) {
+  return (
+    <div className={cn("absolute inset-0 -z-10 bg-dark-section", className)}>
+      {withGrid && <BackgroundGrid variant="dark" />}
+      {withGlow && <HeroGlow />}
+    </div>
+  );
+}
+
+export function LightSectionBackground({
+  className,
+  withGrid = true,
+}: {
+  className?: string;
+  withGrid?: boolean;
+}) {
+  return (
+    <div className={cn("absolute inset-0 -z-10 bg-light-section", className)}>
+      {withGrid && <BackgroundGrid variant="light" />}
+    </div>
+  );
 }
