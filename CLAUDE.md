@@ -28,6 +28,54 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 ---
 
+# 📝 文章生成架構（重要！）
+
+**Vercel 有 300 秒超時限制，所以正確的架構是：**
+
+## 架構流程
+
+```
+用戶點擊「生成文章」
+       ↓
+Vercel API (/api/articles/generate)
+  └── 只創建 job（status: pending），立即返回
+       ↓
+GitHub Actions (process-article-jobs.yml)
+  └── 每 2 分鐘執行一次
+  └── 使用 scripts/process-jobs.ts 處理
+  └── 無時間限制（timeout-minutes: 60）
+       ↓
+文章生成完成，更新資料庫
+```
+
+## 關鍵檔案
+
+| 檔案                                         | 用途                                 |
+| -------------------------------------------- | ------------------------------------ |
+| `.github/workflows/process-article-jobs.yml` | GitHub Actions 定時任務（每 2 分鐘） |
+| `scripts/process-jobs.ts`                    | 實際處理文章生成的腳本               |
+| `/src/app/api/articles/generate/route.ts`    | 創建 job（**只創建，不處理**）       |
+| `/src/lib/agents/orchestrator.ts`            | 文章生成編排器                       |
+
+## ⚠️ 絕對禁止
+
+**絕對不要在 Vercel API 中直接執行 `orchestrator.execute()`！**
+
+這會導致：
+
+1. Vercel 300 秒超時
+2. 文章生成中斷
+3. 用戶體驗極差
+
+## 重試機制
+
+`scripts/process-jobs.ts` 會自動重試卡住的任務：
+
+- 查詢條件：`started_at.is.null` 或 `started_at.lt.${3分鐘前}`
+- 如果任務執行超過 3 分鐘無更新，會被重新處理
+
+---
+
 # 🔑 AI API 配置說明
 
 ## Cloudflare AI Gateway（本專案使用）
