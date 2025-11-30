@@ -41,13 +41,13 @@ const features = [
 
 export function CostComparison() {
   return (
-    <section className="relative py-20 bg-slate-100 dark:bg-indigo-950">
+    <section className="relative py-20 bg-white dark:bg-indigo-950">
       <BackgroundGrid variant="dark" />
       <CyberGlow position="center" color="cyan" />
 
       <div className="container relative z-10 mx-auto px-4">
         <div className="text-center mb-12">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white dark:bg-transparent dark:glass shadow-sm dark:shadow-none border border-slate-200 dark:border-transparent px-4 py-2 text-sm font-medium text-cyber-cyan-600 dark:text-cyber-cyan-400">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white dark:bg-transparent dark:glass shadow-md dark:shadow-none border border-slate-200 dark:border-transparent px-4 py-2 text-sm font-medium text-cyber-cyan-600 dark:text-cyber-cyan-400">
             <Zap className="h-4 w-4" />
             <span>成本對比</span>
           </div>
@@ -72,7 +72,7 @@ export function CostComparison() {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
-          <Card className="bg-white dark:bg-transparent dark:glass shadow-sm dark:shadow-none border-slate-200 dark:border-white/10 hover:border-cyber-cyan-500/50 transition-all duration-300">
+          <Card className="bg-white dark:bg-transparent dark:glass shadow-md dark:shadow-none border-slate-200 dark:border-white/10 hover:border-cyber-cyan-500/50 transition-all duration-300">
             <CardContent className="p-6">
               <h3 className="text-lg font-bold mb-6 text-center text-slate-900 dark:text-white">
                 成本對比
@@ -103,7 +103,7 @@ export function CostComparison() {
             </CardContent>
           </Card>
 
-          <Card className="bg-white dark:bg-transparent dark:glass shadow-sm dark:shadow-none border-slate-200 dark:border-cyber-cyan-500/30 hover:border-cyber-cyan-500/50 transition-all duration-300">
+          <Card className="bg-white dark:bg-transparent dark:glass shadow-md dark:shadow-none border-slate-200 dark:border-cyber-cyan-500/30 hover:border-cyber-cyan-500/50 transition-all duration-300">
             <CardContent className="p-6">
               <h3 className="text-lg font-bold mb-6 text-center text-slate-900 dark:text-white">
                 功能對比：傳統方式 vs 1WaySEO
