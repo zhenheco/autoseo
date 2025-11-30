@@ -890,8 +890,8 @@ export type Database = {
           referrer_company_id: string;
           referred_company_id: string;
           referral_code: string;
-          status: "pending" | "completed" | "rewarded";
-          referred_at: string;
+          status: "pending" | "qualified" | "rewarded";
+          registered_at: string;
           first_payment_at: string | null;
           rewarded_at: string | null;
           created_at: string;
@@ -901,8 +901,8 @@ export type Database = {
           referrer_company_id: string;
           referred_company_id: string;
           referral_code: string;
-          status?: "pending" | "completed" | "rewarded";
-          referred_at?: string;
+          status?: "pending" | "qualified" | "rewarded";
+          registered_at?: string;
           first_payment_at?: string | null;
           rewarded_at?: string | null;
           created_at?: string;
@@ -912,8 +912,8 @@ export type Database = {
           referrer_company_id?: string;
           referred_company_id?: string;
           referral_code?: string;
-          status?: "pending" | "completed" | "rewarded";
-          referred_at?: string;
+          status?: "pending" | "qualified" | "rewarded";
+          registered_at?: string;
           first_payment_at?: string | null;
           rewarded_at?: string | null;
           created_at?: string;
