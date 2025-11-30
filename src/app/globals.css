@@ -30,20 +30,51 @@
 
 @layer base {
   :root {
-    --gradient-coral-orange: linear-gradient(135deg, oklch(65.69% 0.196 26.32) 0%, oklch(69.63% 0.181 44.16) 100%);
-    --gradient-blue-cyan: linear-gradient(135deg, oklch(60% 0.2 250) 0%, oklch(85% 0.1 200) 100%);
-    --gradient-purple-pink: linear-gradient(135deg, oklch(60% 0.2 300) 0%, oklch(65% 0.2 350) 100%);
-    --gradient-mesh: radial-gradient(at 40% 20%, color-mix(in oklch, oklch(65.69% 0.196 26.32), transparent 85%) 0px, transparent 50%),
-                     radial-gradient(at 80% 0%, color-mix(in oklch, oklch(60% 0.2 250), transparent 85%) 0px, transparent 50%),
-                     radial-gradient(at 0% 50%, color-mix(in oklch, oklch(60% 0.2 300), transparent 85%) 0px, transparent 50%);
+    /* 深色區塊背景 */
+    --dark-bg: #0a0f1a;
+    --dark-bg-secondary: #111827;
+    --dark-bg-tertiary: #1e293b;
 
+    /* 淺色區塊背景 */
+    --light-bg: #f8fafc;
+    --light-bg-secondary: #f1f5f9;
+
+    /* 深色區塊文字 */
+    --text-dark-primary: #e5e7eb;
+    --text-dark-secondary: #9ca3af;
+
+    /* 淺色區塊文字 */
+    --text-light-primary: #1f2937;
+    --text-light-secondary: #6b7280;
+
+    /* 科技藍漸層 */
+    --gradient-blue-purple: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
+    --gradient-blue-cyan: linear-gradient(135deg, #3B82F6 0%, #06B6D4 100%);
+    --gradient-purple-pink: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+
+    /* Hero 背景漸層 */
+    --gradient-hero: linear-gradient(180deg, #0a0f1a 0%, #111827 100%);
+
+    /* 頂部光暈 */
+    --gradient-glow-top: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(59, 130, 246, 0.3) 0%, transparent 70%);
+    --gradient-glow-center: radial-gradient(ellipse 60% 40% at 50% 50%, rgba(59, 130, 246, 0.2) 0%, transparent 70%);
+
+    /* 網格背景 */
+    --gradient-mesh: radial-gradient(at 40% 20%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+                     radial-gradient(at 80% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
+                     radial-gradient(at 0% 50%, rgba(6, 182, 212, 0.15) 0px, transparent 50%);
+
+    /* 陰影 */
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     --shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.08);
     --shadow-md: 0 4px 16px 0 rgba(0, 0, 0, 0.12);
     --shadow-lg: 0 8px 24px 0 rgba(0, 0, 0, 0.16);
     --shadow-xl: 0 16px 48px 0 rgba(0, 0, 0, 0.20);
-    --shadow-glow: 0 0 24px rgba(255, 97, 47, 0.3);
-    --shadow-glow-sm: 0 0 12px rgba(255, 97, 47, 0.2);
+
+    /* 發光效果（科技藍） */
+    --shadow-glow: 0 0 40px rgba(59, 130, 246, 0.4);
+    --shadow-glow-sm: 0 0 20px rgba(59, 130, 246, 0.25);
+    --shadow-glow-subtle: 0 0 12px rgba(59, 130, 246, 0.15);
   }
 
   .dark {
@@ -53,9 +84,9 @@
     --color-card-foreground: oklch(92.41% 0.003 286.27);
     --color-popover: oklch(18.96% 0.011 286.08);
     --color-popover-foreground: oklch(92.41% 0.003 286.27);
-    --color-primary: oklch(72.18% 0.212 292.37);
+    --color-primary: oklch(65.59% 0.228 262.89);
     --color-primary-foreground: oklch(100% 0 0);
-    --color-secondary: oklch(66.35% 0.193 254.42);
+    --color-secondary: oklch(62.59% 0.228 292.37);
     --color-secondary-foreground: oklch(100% 0 0);
     --color-muted: oklch(22.31% 0.011 286.14);
     --color-muted-foreground: oklch(67.23% 0.006 286.67);
@@ -65,25 +96,25 @@
     --color-destructive-foreground: oklch(98.04% 0 0);
     --color-border: oklch(28.24% 0.011 286.12);
     --color-input: oklch(30.53% 0.011 286.12);
-    --color-ring: oklch(72.18% 0.212 292.37);
+    --color-ring: oklch(65.59% 0.228 262.89);
     --color-success: oklch(60% 0.15 154.63);
     --color-warning: oklch(68.63% 0.19 56.75);
     --color-danger: oklch(62.77% 0.226 27.33);
 
-    --gradient-purple-blue: linear-gradient(135deg, oklch(72.18% 0.212 292.37) 0%, oklch(66.35% 0.193 254.42) 100%);
-    --gradient-blue-cyan: linear-gradient(135deg, oklch(66.35% 0.193 254.42) 0%, oklch(66.35% 0.193 191) 100%);
-    --gradient-purple-pink: linear-gradient(135deg, oklch(65% 0.2 300) 0%, oklch(72% 0.2 340) 100%);
-    --gradient-mesh: radial-gradient(at 40% 20%, color-mix(in oklch, oklch(72.18% 0.212 292.37), transparent 70%) 0px, transparent 50%),
-                     radial-gradient(at 80% 0%, color-mix(in oklch, oklch(66.35% 0.193 254.42), transparent 70%) 0px, transparent 50%),
-                     radial-gradient(at 0% 50%, color-mix(in oklch, oklch(65% 0.2 300), transparent 70%) 0px, transparent 50%);
+    --gradient-blue-purple: linear-gradient(135deg, #60A5FA 0%, #A78BFA 100%);
+    --gradient-blue-cyan: linear-gradient(135deg, #60A5FA 0%, #22D3EE 100%);
+    --gradient-purple-pink: linear-gradient(135deg, #A78BFA 0%, #F472B6 100%);
+    --gradient-mesh: radial-gradient(at 40% 20%, rgba(96, 165, 250, 0.2) 0px, transparent 50%),
+                     radial-gradient(at 80% 0%, rgba(167, 139, 250, 0.2) 0px, transparent 50%),
+                     radial-gradient(at 0% 50%, rgba(34, 211, 238, 0.2) 0px, transparent 50%);
 
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
     --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.6), 0 2px 4px -1px rgba(0, 0, 0, 0.5);
     --shadow-md: 0 10px 15px -3px rgba(0, 0, 0, 0.7), 0 4px 6px -2px rgba(0, 0, 0, 0.5);
     --shadow-lg: 0 20px 25px -5px rgba(0, 0, 0, 0.8), 0 10px 10px -5px rgba(0, 0, 0, 0.6);
     --shadow-xl: 0 25px 50px -12px rgba(0, 0, 0, 0.9);
-    --shadow-glow: 0 0 60px rgba(169, 103, 239, 0.6);
-    --shadow-glow-sm: 0 0 30px rgba(169, 103, 239, 0.4);
+    --shadow-glow: 0 0 60px rgba(59, 130, 246, 0.5);
+    --shadow-glow-sm: 0 0 30px rgba(59, 130, 246, 0.3);
   }
 }
 
@@ -160,6 +191,37 @@
 }
 
 @layer utilities {
+  /* 深色玻璃態效果 */
+  .glass-dark {
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(59, 130, 246, 0.2);
+  }
+
+  .glass-dark-strong {
+    background: rgba(15, 23, 42, 0.9);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+  }
+
+  /* 淺色玻璃態效果 */
+  .glass-light {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(59, 130, 246, 0.15);
+  }
+
+  .glass-light-strong {
+    background: rgba(255, 255, 255, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(59, 130, 246, 0.25);
+  }
+
+  /* 舊版玻璃態（向後兼容） */
   .glass-effect {
     background: rgba(255, 255, 255, 0.03);
     backdrop-filter: blur(20px);
@@ -177,6 +239,84 @@
   .glass-effect-hover:hover {
     background: rgba(255, 255, 255, 0.1);
     border-color: rgba(255, 255, 255, 0.2);
+  }
+
+  /* 發光效果 */
+  .glow-blue {
+    box-shadow: 0 0 40px rgba(59, 130, 246, 0.4);
+  }
+
+  .glow-blue-subtle {
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.25);
+  }
+
+  .glow-blue-strong {
+    box-shadow: 0 0 60px rgba(59, 130, 246, 0.5);
+  }
+
+  .glow-purple {
+    box-shadow: 0 0 40px rgba(139, 92, 246, 0.4);
+  }
+
+  /* Hover 發光邊框 */
+  .hover-glow-border {
+    transition: all 0.3s ease;
+  }
+
+  .hover-glow-border:hover {
+    border-color: rgba(59, 130, 246, 0.5);
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.2);
+  }
+
+  /* 深色區塊背景 */
+  .bg-dark-section {
+    background: var(--dark-bg);
+  }
+
+  .bg-dark-section-secondary {
+    background: var(--dark-bg-secondary);
+  }
+
+  /* 淺色區塊背景 */
+  .bg-light-section {
+    background: var(--light-bg);
+  }
+
+  .bg-light-section-secondary {
+    background: var(--light-bg-secondary);
+  }
+
+  /* Hero 背景 */
+  .bg-hero {
+    background: var(--gradient-hero);
+  }
+
+  /* 光暈效果 */
+  .glow-top {
+    position: relative;
+  }
+
+  .glow-top::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 60%;
+    background: var(--gradient-glow-top);
+    pointer-events: none;
+  }
+
+  .glow-center::after {
+    content: '';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100%;
+    height: 100%;
+    background: var(--gradient-glow-center);
+    pointer-events: none;
   }
 
   .card-hover-lift {
@@ -197,8 +337,8 @@
     transform: perspective(1000px) rotateX(2deg) rotateY(5deg) translateZ(10px);
   }
 
-  .gradient-purple-blue {
-    background: var(--gradient-purple-blue);
+  .gradient-blue-purple {
+    background: var(--gradient-blue-purple);
   }
 
   .gradient-blue-cyan {
@@ -213,8 +353,16 @@
     background: var(--gradient-mesh);
   }
 
+  /* 漸層文字效果 */
   .gradient-text {
-    background: var(--gradient-purple-blue);
+    background: var(--gradient-blue-purple);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .gradient-text-blue {
+    background: linear-gradient(135deg, #3B82F6 0%, #60A5FA 100%);
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
@@ -222,16 +370,34 @@
 
   .gradient-text-animated {
     background: linear-gradient(90deg,
-      hsl(263, 90%, 65%),
-      hsl(217, 91%, 60%),
-      hsl(191, 91%, 60%),
-      hsl(263, 90%, 65%)
+      #3B82F6,
+      #8B5CF6,
+      #06B6D4,
+      #3B82F6
     );
     background-size: 300% 100%;
     -webkit-background-clip: text;
     -webkit-text-fill-color: transparent;
     background-clip: text;
     animation: gradient-shift 8s ease infinite;
+  }
+
+  /* 深色區塊文字 - 高對比度 */
+  .text-text-dark-primary {
+    color: #f1f5f9 !important;
+  }
+
+  .text-text-dark-secondary {
+    color: #cbd5e1 !important;
+  }
+
+  /* 淺色區塊文字 */
+  .text-text-light-primary {
+    color: #0f172a !important;
+  }
+
+  .text-text-light-secondary {
+    color: #475569 !important;
   }
 
   .smooth-transition {
@@ -301,10 +467,19 @@
 
   @keyframes pulse-glow {
     0%, 100% {
-      box-shadow: 0 0 20px rgba(105, 62, 224, 0.4);
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
     }
     50% {
-      box-shadow: 0 0 40px rgba(105, 62, 224, 0.8);
+      box-shadow: 0 0 40px rgba(59, 130, 246, 0.7);
+    }
+  }
+
+  @keyframes pulse-glow-slow {
+    0%, 100% {
+      box-shadow: 0 0 30px rgba(59, 130, 246, 0.3);
+    }
+    50% {
+      box-shadow: 0 0 50px rgba(59, 130, 246, 0.5);
     }
   }
 
@@ -317,6 +492,50 @@
     }
   }
 
+  @keyframes float-orb {
+    0%, 100% {
+      transform: translate(0, 0) scale(1);
+    }
+    25% {
+      transform: translate(10px, -15px) scale(1.05);
+    }
+    50% {
+      transform: translate(-5px, -25px) scale(1);
+    }
+    75% {
+      transform: translate(-15px, -10px) scale(0.95);
+    }
+  }
+
+  @keyframes count-up {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* 脈動發光動畫 */
+  .animate-pulse-glow {
+    animation: pulse-glow 3s ease-in-out infinite;
+  }
+
+  .animate-pulse-glow-slow {
+    animation: pulse-glow-slow 4s ease-in-out infinite;
+  }
+
+  .animate-float-orb {
+    animation: float-orb 8s ease-in-out infinite;
+  }
+
+  .animate-count-up {
+    animation: count-up 0.6s ease-out;
+  }
+
+  /* 浮動光暈球 */
   .blob-gradient {
     position: absolute;
     border-radius: 50%;
@@ -325,15 +544,36 @@
     mix-blend-mode: normal;
   }
 
-  .blob-purple {
-    background: hsl(263, 90%, 65%);
+  .blob-blue {
+    background: #3B82F6;
   }
 
-  .blob-blue {
-    background: hsl(217, 91%, 60%);
+  .blob-purple {
+    background: #8B5CF6;
   }
 
   .blob-cyan {
-    background: hsl(191, 91%, 60%);
+    background: #06B6D4;
+  }
+
+  /* 網格背景 */
+  .grid-pattern {
+    background-image:
+      linear-gradient(rgba(59, 130, 246, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59, 130, 246, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+
+  .grid-pattern-dark {
+    background-image:
+      linear-gradient(rgba(59, 130, 246, 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(59, 130, 246, 0.08) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+
+  /* 分隔光暈線 */
+  .glow-line {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.5), transparent);
   }
 }
