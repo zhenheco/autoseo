@@ -8,10 +8,7 @@ const Alert = React.forwardRef<
   <div
     ref={ref}
     role="alert"
-    className={cn(
-      "relative w-full rounded-lg border border-white/10 bg-slate-800/50 p-4 text-slate-300 [&>svg]:text-slate-400",
-      className,
-    )}
+    className={cn("relative w-full rounded-lg border p-4", className)}
     {...props}
   />
 ));
@@ -23,10 +20,7 @@ const AlertTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h5
     ref={ref}
-    className={cn(
-      "mb-1 font-medium leading-none tracking-tight text-white",
-      className,
-    )}
+    className={cn("mb-1 font-medium leading-none tracking-tight", className)}
     {...props}
   />
 ));

@@ -46,7 +46,9 @@ async function ArticleListContent({
 
   if (error) {
     return (
-      <div className="text-center py-8 text-slate-400">載入失敗: {error}</div>
+      <div className="text-center py-8 text-muted-foreground">
+        載入失敗: {error}
+      </div>
     );
   }
 
@@ -71,7 +73,9 @@ export default async function ArticleManagePage({ searchParams }: PageProps) {
     <div className="container mx-auto p-6 max-w-[1600px]">
       <Suspense
         fallback={
-          <div className="text-center py-8 text-slate-400">載入中...</div>
+          <div className="text-center py-8 text-muted-foreground">
+            載入中...
+          </div>
         }
       >
         <ArticleListContent filter={filter} />

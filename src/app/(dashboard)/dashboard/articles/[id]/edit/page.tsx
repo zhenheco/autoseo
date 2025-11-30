@@ -18,7 +18,7 @@ export default function ArticleEditRedirect({
 
   return (
     <div className="flex items-center justify-center min-h-screen">
-      <p className="text-slate-400">重新導向到文章管理頁面...</p>
+      <p className="text-muted-foreground">重新導向到文章管理頁面...</p>
     </div>
   );
 }

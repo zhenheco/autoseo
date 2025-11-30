@@ -79,10 +79,10 @@ export default async function DashboardPage() {
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-white">
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
             儀表版
           </h1>
-          <p className="text-slate-400 mt-1">歡迎回來，{user.email}</p>
+          <p className="text-muted-foreground mt-1">歡迎回來，{user.email}</p>
         </div>
       </div>
 
@@ -91,19 +91,20 @@ export default async function DashboardPage() {
           title="總文章數"
           value={articlesCount.toString()}
           icon={FileText}
-          iconBgColor="bg-cyber-violet-500/20"
-          iconColor="text-cyber-violet-400"
+          iconBgColor="bg-primary/10"
+          iconColor="text-primary"
         />
         <StatCard
           title="網站數量"
           value={websitesCount.toString()}
           icon={Globe}
-          iconBgColor="bg-cyber-cyan-500/20"
-          iconColor="text-cyber-cyan-400"
+          iconBgColor="bg-success/10"
+          iconColor="text-success"
         />
         <TokenBalanceCard />
       </div>
 
+      {/* 免費用戶升級提示 */}
       {subscriptionTier === "free" && (
         <div className="mt-6">
           <UpgradePromptCard
@@ -113,17 +114,17 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm rounded-xl">
+      <Card className="border-border/30 bg-muted/30 backdrop-blur-sm rounded-xl opacity-60">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-white flex items-center gap-2">
+          <CardTitle className="text-2xl font-bold text-muted-foreground flex items-center gap-2">
             🚧 7 天流量趨勢
           </CardTitle>
-          <CardDescription className="text-base text-slate-500">
+          <CardDescription className="text-base text-muted-foreground">
             此功能正在開發中
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] flex items-center justify-center text-slate-500 bg-slate-800/30 rounded-xl border border-dashed border-slate-600">
+          <div className="h-[300px] flex items-center justify-center text-muted-foreground bg-muted/20 rounded-xl border border-dashed border-muted-foreground/30">
             <div className="text-center space-y-2">
               <p className="text-lg font-semibold">🚧 待開發</p>
               <p className="text-sm">近一週的網站訪問數據圖表即將推出</p>
