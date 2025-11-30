@@ -214,10 +214,10 @@ export default async function Home() {
                 return (
                   <div
                     key={index}
-                    className="bg-white dark:bg-transparent dark:glass shadow-md dark:shadow-none border border-slate-200 dark:border-white/10 rounded-xl p-6 text-center hover:border-cyber-violet-500/50 transition-all duration-300"
+                    className="bg-white dark:bg-transparent dark:glass shadow-lg dark:shadow-none border border-slate-200 dark:border-white/10 rounded-xl p-6 text-center hover:border-cyber-violet-500/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300"
                   >
-                    <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-cyber-violet-500/20 mb-4">
-                      <Icon className="h-6 w-6 text-cyber-cyan-400" />
+                    <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-gradient-to-br from-cyber-cyan-500/20 to-cyber-violet-500/20 dark:bg-cyber-violet-500/20 mb-4 ring-2 ring-cyber-violet-500/20">
+                      <Icon className="h-6 w-6 text-cyber-violet-600 dark:text-cyber-cyan-400" />
                     </div>
                     <GradientText
                       as="span"
@@ -547,7 +547,7 @@ export default async function Home() {
                       }`}
                     >
                       {isPopular && (
-                        <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-cyber-cyan-400 text-slate-900 px-3 py-1 rounded-full text-xs font-medium">
+                        <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-cyber-cyan-500 to-cyber-violet-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
                           超值
                         </span>
                       )}
@@ -566,7 +566,7 @@ export default async function Home() {
                           asChild
                           size="sm"
                           variant="outline"
-                          className="w-full border-cyber-violet-500/50 text-cyber-violet-400 hover:bg-cyber-violet-500/10 hover:border-cyber-violet-400"
+                          className="w-full border-cyber-violet-500 text-cyber-violet-600 dark:text-cyber-violet-400 hover:bg-cyber-violet-500/10 hover:border-cyber-violet-400"
                         >
                           <Link href="/login">購買</Link>
                         </Button>
