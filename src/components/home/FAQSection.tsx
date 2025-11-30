@@ -43,12 +43,12 @@ export function FAQSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <section className="relative py-20 bg-slate-100 dark:bg-gradient-to-b dark:from-slate-900 dark:to-indigo-950">
+    <section className="relative py-20 bg-white dark:bg-gradient-to-b dark:from-slate-900 dark:to-indigo-950">
       <BackgroundGrid variant="dark" />
 
       <div className="container relative z-10 mx-auto px-4">
         <div className="text-center mb-12">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white dark:bg-transparent dark:glass shadow-sm dark:shadow-none border border-slate-200 dark:border-transparent px-4 py-2 text-sm font-medium text-cyber-violet-600 dark:text-cyber-violet-400">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white dark:bg-transparent dark:glass shadow-md dark:shadow-none border border-slate-200 dark:border-transparent px-4 py-2 text-sm font-medium text-cyber-violet-600 dark:text-cyber-violet-400">
             <HelpCircle className="h-4 w-4" />
             <span>常見問題</span>
           </div>
@@ -70,7 +70,7 @@ export function FAQSection() {
           {faqs.map((faq, index) => (
             <Card
               key={index}
-              className={`cursor-pointer transition-all duration-300 bg-white dark:bg-transparent dark:glass shadow-sm dark:shadow-none ${
+              className={`cursor-pointer transition-all duration-300 bg-white dark:bg-transparent dark:glass shadow-md dark:shadow-none ${
                 openIndex === index
                   ? "border-cyber-violet-400/50"
                   : "border-slate-200 dark:border-white/10 hover:border-cyber-violet-500/30"
