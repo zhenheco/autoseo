@@ -1,128 +1,134 @@
-'use client'
+"use client";
 
-import { useEffect, useRef, useState, Suspense } from 'react'
-import { useSearchParams, useRouter } from 'next/navigation'
-import { Loader2 } from 'lucide-react'
+import { useEffect, useRef, useState, Suspense } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { Loader2 } from "lucide-react";
 
 function AuthorizingContent() {
-  const searchParams = useSearchParams()
-  const router = useRouter()
-  const formRef = useRef<HTMLFormElement>(null)
-  const [status, setStatus] = useState<'loading' | 'submitting' | 'error'>('loading')
-  const [errorMessage, setErrorMessage] = useState<string>('')
-  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined)
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const formRef = useRef<HTMLFormElement>(null);
+  const [status, setStatus] = useState<"loading" | "submitting" | "error">(
+    "loading",
+  );
+  const [errorMessage, setErrorMessage] = useState<string>("");
+  const timeoutRef = useRef<NodeJS.Timeout | undefined>(undefined);
 
   useEffect(() => {
-    const paymentForm = searchParams.get('paymentForm')
+    const paymentForm = searchParams.get("paymentForm");
 
     if (!paymentForm) {
       setTimeout(() => {
-        setStatus('error')
-        setErrorMessage('缺少付款表單資料')
-      }, 0)
+        setStatus("error");
+        setErrorMessage("缺少付款表單資料");
+      }, 0);
       setTimeout(() => {
-        router.push('/dashboard/subscription')
-      }, 3000)
-      return
+        router.push("/dashboard/subscription");
+      }, 3000);
+      return;
     }
 
     timeoutRef.current = setTimeout(() => {
-      if (status !== 'submitting') {
-        setStatus('error')
-        setErrorMessage('連接金流服務超時，請重試')
+      if (status !== "submitting") {
+        setStatus("error");
+        setErrorMessage("連接金流服務超時，請重試");
       }
-    }, 5000)
+    }, 5000);
 
     try {
-      const formData = JSON.parse(decodeURIComponent(paymentForm))
+      const formData = JSON.parse(decodeURIComponent(paymentForm));
 
       if (formRef.current && formData.apiUrl) {
-        formRef.current.action = formData.apiUrl
+        formRef.current.action = formData.apiUrl;
 
         setTimeout(() => {
-          setStatus('submitting')
-        }, 0)
+          setStatus("submitting");
+        }, 0);
 
         if (formData.postData && formData.merchantId) {
-          const merchantInput = document.createElement('input')
-          merchantInput.type = 'hidden'
-          merchantInput.name = 'MerchantID_'
-          merchantInput.value = formData.merchantId
-          formRef.current.appendChild(merchantInput)
+          const merchantInput = document.createElement("input");
+          merchantInput.type = "hidden";
+          merchantInput.name = "MerchantID_";
+          merchantInput.value = formData.merchantId;
+          formRef.current.appendChild(merchantInput);
 
-          const postDataInput = document.createElement('input')
-          postDataInput.type = 'hidden'
-          postDataInput.name = 'PostData_'
-          postDataInput.value = formData.postData
-          formRef.current.appendChild(postDataInput)
-        } else if (formData.tradeInfo && formData.tradeSha && formData.merchantId) {
-          const merchantInput = document.createElement('input')
-          merchantInput.type = 'hidden'
-          merchantInput.name = 'MerchantID'
-          merchantInput.value = formData.merchantId
-          formRef.current.appendChild(merchantInput)
+          const postDataInput = document.createElement("input");
+          postDataInput.type = "hidden";
+          postDataInput.name = "PostData_";
+          postDataInput.value = formData.postData;
+          formRef.current.appendChild(postDataInput);
+        } else if (
+          formData.tradeInfo &&
+          formData.tradeSha &&
+          formData.merchantId
+        ) {
+          const merchantInput = document.createElement("input");
+          merchantInput.type = "hidden";
+          merchantInput.name = "MerchantID";
+          merchantInput.value = formData.merchantId;
+          formRef.current.appendChild(merchantInput);
 
-          const tradeInfoInput = document.createElement('input')
-          tradeInfoInput.type = 'hidden'
-          tradeInfoInput.name = 'TradeInfo'
-          tradeInfoInput.value = formData.tradeInfo
-          formRef.current.appendChild(tradeInfoInput)
+          const tradeInfoInput = document.createElement("input");
+          tradeInfoInput.type = "hidden";
+          tradeInfoInput.name = "TradeInfo";
+          tradeInfoInput.value = formData.tradeInfo;
+          formRef.current.appendChild(tradeInfoInput);
 
-          const tradeShaInput = document.createElement('input')
-          tradeShaInput.type = 'hidden'
-          tradeShaInput.name = 'TradeSha'
-          tradeShaInput.value = formData.tradeSha
-          formRef.current.appendChild(tradeShaInput)
+          const tradeShaInput = document.createElement("input");
+          tradeShaInput.type = "hidden";
+          tradeShaInput.name = "TradeSha";
+          tradeShaInput.value = formData.tradeSha;
+          formRef.current.appendChild(tradeShaInput);
 
-          const versionInput = document.createElement('input')
-          versionInput.type = 'hidden'
-          versionInput.name = 'Version'
-          versionInput.value = formData.version || '2.0'
-          formRef.current.appendChild(versionInput)
+          const versionInput = document.createElement("input");
+          versionInput.type = "hidden";
+          versionInput.name = "Version";
+          versionInput.value = formData.version || "2.0";
+          formRef.current.appendChild(versionInput);
         } else {
-          throw new Error('缺少必要的付款表單欄位')
+          throw new Error("缺少必要的付款表單欄位");
         }
 
         setTimeout(() => {
           try {
-            formRef.current?.submit()
+            formRef.current?.submit();
             if (timeoutRef.current) {
-              clearTimeout(timeoutRef.current)
+              clearTimeout(timeoutRef.current);
             }
           } catch (submitError) {
-            console.error('[Authorizing] 提交表單失敗:', submitError)
-            setStatus('error')
-            setErrorMessage('提交失敗，請檢查瀏覽器設定')
+            console.error("[Authorizing] 提交表單失敗:", submitError);
+            setStatus("error");
+            setErrorMessage("提交失敗，請檢查瀏覽器設定");
           }
-        }, 500)
+        }, 500);
       }
     } catch (error) {
-      console.error('[Authorizing] 解析付款表單失敗:', error)
+      console.error("[Authorizing] 解析付款表單失敗:", error);
       setTimeout(() => {
-        setStatus('error')
-        setErrorMessage('付款表單資料格式錯誤')
-      }, 0)
+        setStatus("error");
+        setErrorMessage("付款表單資料格式錯誤");
+      }, 0);
       setTimeout(() => {
-        router.push('/dashboard/subscription')
-      }, 3000)
+        router.push("/dashboard/subscription");
+      }, 3000);
     }
 
     return () => {
       if (timeoutRef.current) {
-        clearTimeout(timeoutRef.current)
+        clearTimeout(timeoutRef.current);
       }
-    }
-  }, [searchParams, router, status])
+    };
+  }, [searchParams, router, status]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-xl">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-900 to-indigo-950">
+      <div className="w-full max-w-md rounded-lg bg-slate-800/50 backdrop-blur-sm border border-white/10 p-8 shadow-xl">
         <div className="flex flex-col items-center space-y-6">
-          {status === 'error' ? (
+          {status === "error" ? (
             <>
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-500/20">
                 <svg
-                  className="h-8 w-8 text-red-600"
+                  className="h-8 w-8 text-red-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -136,18 +142,18 @@ function AuthorizingContent() {
                 </svg>
               </div>
               <div className="text-center">
-                <h2 className="text-2xl font-bold text-gray-900">處理失敗</h2>
-                <p className="mt-2 text-gray-600">{errorMessage}</p>
+                <h2 className="text-2xl font-bold text-white">處理失敗</h2>
+                <p className="mt-2 text-slate-400">{errorMessage}</p>
                 <div className="mt-6 flex gap-4 justify-center">
                   <button
                     onClick={() => window.location.reload()}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                    className="px-4 py-2 bg-cyber-violet-500 text-white rounded-md hover:bg-cyber-violet-600 transition-colors"
                   >
                     重新嘗試
                   </button>
                   <button
-                    onClick={() => router.push('/dashboard/billing')}
-                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
+                    onClick={() => router.push("/dashboard/billing")}
+                    className="px-4 py-2 bg-slate-700 text-slate-300 rounded-md hover:bg-slate-600 transition-colors"
                   >
                     返回計費中心
                   </button>
@@ -156,28 +162,34 @@ function AuthorizingContent() {
             </>
           ) : (
             <>
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-cyber-cyan-500/20">
+                <Loader2 className="h-8 w-8 animate-spin text-cyber-cyan-400" />
               </div>
 
               <div className="text-center">
-                <h2 className="text-2xl font-bold text-gray-900">正在前往授權頁面</h2>
-                <p className="mt-2 text-gray-600">
-                  {status === 'loading' ? '正在準備付款資料...' : '正在連接藍新金流...'}
+                <h2 className="text-2xl font-bold text-white">
+                  正在前往授權頁面
+                </h2>
+                <p className="mt-2 text-slate-400">
+                  {status === "loading"
+                    ? "正在準備付款資料..."
+                    : "正在連接藍新金流..."}
                 </p>
-                <p className="mt-4 text-sm text-gray-500">請稍候，不要關閉此頁面</p>
+                <p className="mt-4 text-sm text-slate-500">
+                  請稍候，不要關閉此頁面
+                </p>
               </div>
 
-              <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-700">
                 <div
-                  className="h-full animate-pulse bg-gradient-to-r from-blue-500 to-indigo-500"
-                  style={{ width: '75%' }}
+                  className="h-full animate-pulse bg-gradient-to-r from-cyber-cyan-500 to-cyber-violet-500"
+                  style={{ width: "75%" }}
                 />
               </div>
 
-              <div className="flex items-center space-x-2 text-sm text-gray-500">
+              <div className="flex items-center space-x-2 text-sm text-slate-500">
                 <svg
-                  className="h-5 w-5 text-gray-400"
+                  className="h-5 w-5 text-slate-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -196,28 +208,23 @@ function AuthorizingContent() {
         </div>
       </div>
 
-      <form
-        ref={formRef}
-        method="post"
-        action=""
-        style={{ display: 'none' }}
-      />
+      <form ref={formRef} method="post" action="" style={{ display: "none" }} />
     </div>
-  )
+  );
 }
 
 export default function AuthorizingPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-          <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-xl">
+        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-900 to-indigo-950">
+          <div className="w-full max-w-md rounded-lg bg-slate-800/50 backdrop-blur-sm border border-white/10 p-8 shadow-xl">
             <div className="flex flex-col items-center space-y-6">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-cyber-cyan-500/20">
+                <Loader2 className="h-8 w-8 animate-spin text-cyber-cyan-400" />
               </div>
               <div className="text-center">
-                <h2 className="text-2xl font-bold text-gray-900">載入中...</h2>
+                <h2 className="text-2xl font-bold text-white">載入中...</h2>
               </div>
             </div>
           </div>
@@ -226,5 +233,5 @@ export default function AuthorizingPage() {
     >
       <AuthorizingContent />
     </Suspense>
-  )
+  );
 }

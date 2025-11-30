@@ -56,10 +56,10 @@ export default async function ArticleDetailPage({
     <div className="container mx-auto p-8 max-w-4xl">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">
+          <h1 className="text-3xl font-bold text-white">
             {article.article_title || "未命名文章"}
           </h1>
-          <p className="text-muted-foreground mt-2">
+          <p className="text-slate-400 mt-2">
             網站: {article.website_configs?.site_name || "未指定"}
           </p>
         </div>
@@ -78,22 +78,22 @@ export default async function ArticleDetailPage({
 
       <div className="grid gap-6">
         {/* 文章資訊 */}
-        <Card>
+        <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle>文章資訊</CardTitle>
+            <CardTitle className="text-white">文章資訊</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">狀態</span>
+              <span className="text-slate-400">狀態</span>
               <span
                 className={`text-sm px-3 py-1 rounded-full ${
                   article.status === "published"
-                    ? "bg-green-100 text-green-700"
+                    ? "bg-emerald-500/20 text-emerald-400"
                     : article.status === "failed"
-                      ? "bg-red-100 text-red-700"
+                      ? "bg-red-500/20 text-red-400"
                       : article.status === "processing"
-                        ? "bg-blue-100 text-blue-700"
-                        : "bg-gray-100 text-gray-700"
+                        ? "bg-cyber-cyan-500/20 text-cyber-cyan-400"
+                        : "bg-slate-700 text-slate-300"
                 }`}
               >
                 {article.status === "published" && "已發布"}
@@ -105,8 +105,8 @@ export default async function ArticleDetailPage({
             </div>
 
             <div className="flex justify-between">
-              <span className="text-muted-foreground">輸入方式</span>
-              <span>
+              <span className="text-slate-400">輸入方式</span>
+              <span className="text-white">
                 {article.input_type === "keyword" && "關鍵字"}
                 {article.input_type === "url" && "URL"}
                 {article.input_type === "batch" && "批量"}
@@ -115,8 +115,8 @@ export default async function ArticleDetailPage({
 
             {article.input_content && (
               <div className="flex justify-between">
-                <span className="text-muted-foreground">輸入內容</span>
-                <span className="text-sm">
+                <span className="text-slate-400">輸入內容</span>
+                <span className="text-sm text-white">
                   {article.input_content.keyword &&
                     article.input_content.keyword}
                   {article.input_content.url && (
@@ -124,7 +124,7 @@ export default async function ArticleDetailPage({
                       href={article.input_content.url}
                       target="_blank"
                       rel="noopener noreferrer"
-                      className="text-primary hover:underline"
+                      className="text-cyber-violet-400 hover:underline"
                     >
                       {article.input_content.url}
                     </a>
@@ -134,16 +134,16 @@ export default async function ArticleDetailPage({
             )}
 
             <div className="flex justify-between">
-              <span className="text-muted-foreground">建立時間</span>
-              <span className="text-sm">
+              <span className="text-slate-400">建立時間</span>
+              <span className="text-sm text-white">
                 {new Date(article.created_at).toLocaleString("zh-TW")}
               </span>
             </div>
 
             {article.published_at && (
               <div className="flex justify-between">
-                <span className="text-muted-foreground">發布時間</span>
-                <span className="text-sm">
+                <span className="text-slate-400">發布時間</span>
+                <span className="text-sm text-white">
                   {new Date(article.published_at).toLocaleString("zh-TW")}
                 </span>
               </div>
@@ -151,8 +151,8 @@ export default async function ArticleDetailPage({
 
             {article.wp_post_id && (
               <div className="flex justify-between">
-                <span className="text-muted-foreground">WordPress ID</span>
-                <span className="text-sm">{article.wp_post_id}</span>
+                <span className="text-slate-400">WordPress ID</span>
+                <span className="text-sm text-white">{article.wp_post_id}</span>
               </div>
             )}
           </CardContent>
@@ -160,21 +160,23 @@ export default async function ArticleDetailPage({
 
         {/* 文章內容 */}
         {article.generated_content && (
-          <Card>
+          <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle>生成內容</CardTitle>
-              <CardDescription>AI 生成的文章內容預覽</CardDescription>
+              <CardTitle className="text-white">生成內容</CardTitle>
+              <CardDescription className="text-slate-400">
+                AI 生成的文章內容預覽
+              </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="prose max-w-none">
+              <div className="prose prose-invert max-w-none">
                 {article.generated_content.title && (
-                  <h2 className="text-2xl font-bold mb-4">
+                  <h2 className="text-2xl font-bold mb-4 text-white">
                     {article.generated_content.title}
                   </h2>
                 )}
                 {article.generated_content.content && (
                   <div
-                    className="text-sm leading-relaxed whitespace-pre-wrap"
+                    className="text-sm leading-relaxed whitespace-pre-wrap text-slate-300"
                     dangerouslySetInnerHTML={{
                       __html: article.generated_content.content,
                     }}
@@ -187,14 +189,12 @@ export default async function ArticleDetailPage({
 
         {/* 錯誤訊息 */}
         {article.error_message && (
-          <Card className="border-destructive">
+          <Card className="border-red-500/30 bg-red-900/20">
             <CardHeader>
-              <CardTitle className="text-destructive">錯誤訊息</CardTitle>
+              <CardTitle className="text-red-400">錯誤訊息</CardTitle>
             </CardHeader>
             <CardContent>
-              <p className="text-sm text-destructive">
-                {article.error_message}
-              </p>
+              <p className="text-sm text-red-400">{article.error_message}</p>
             </CardContent>
           </Card>
         )}

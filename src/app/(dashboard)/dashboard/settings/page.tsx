@@ -23,7 +23,7 @@ export default async function SettingsPage({
   if (!company) {
     return (
       <div className="container mx-auto p-8">
-        <p className="text-muted-foreground">您尚未加入任何公司</p>
+        <p className="text-slate-400">您尚未加入任何公司</p>
       </div>
     );
   }

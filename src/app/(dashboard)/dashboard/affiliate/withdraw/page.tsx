@@ -106,8 +106,8 @@ export default function AffiliateWithdrawPage() {
       {/* 標題 */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">申請提領</h1>
-          <p className="text-gray-600">將您的佣金提領到銀行帳戶</p>
+          <h1 className="text-3xl font-bold text-white">申請提領</h1>
+          <p className="text-slate-400">將您的佣金提領到銀行帳戶</p>
         </div>
         <Link href="/dashboard/affiliate">
           <Button variant="outline">返回</Button>
@@ -115,13 +115,11 @@ export default function AffiliateWithdrawPage() {
       </div>
 
       {/* 可提領餘額 */}
-      <Card className="border-green-200 bg-green-50">
+      <Card className="border-emerald-500/30 bg-emerald-500/10">
         <CardContent className="pt-6">
           <div className="flex items-center justify-between">
-            <span className="text-lg font-medium text-green-900">
-              可提領佣金
-            </span>
-            <span className="text-3xl font-bold text-green-600">
+            <span className="text-lg font-medium text-white">可提領佣金</span>
+            <span className="text-3xl font-bold text-emerald-400">
               NT$ {availableCommission.toLocaleString()}
             </span>
           </div>
@@ -129,26 +127,26 @@ export default function AffiliateWithdrawPage() {
       </Card>
 
       {error && (
-        <Card className="border-red-200 bg-red-50">
+        <Card className="border-red-500/30 bg-red-900/20">
           <CardContent className="pt-6">
-            <p className="text-red-800">{error}</p>
+            <p className="text-red-400">{error}</p>
           </CardContent>
         </Card>
       )}
 
       {/* 提領表單 */}
       <form onSubmit={handleSubmit} className="space-y-6">
-        <Card>
+        <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle>提領金額</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-white">提領金額</CardTitle>
+            <CardDescription className="text-slate-400">
               最低提領金額 NT${MIN_WITHDRAWAL_AMOUNT}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                提領金額 (TWD) <span className="text-red-500">*</span>
+              <label className="block text-sm font-medium text-slate-300">
+                提領金額 (TWD) <span className="text-red-400">*</span>
               </label>
               <input
                 type="number"
@@ -160,36 +158,34 @@ export default function AffiliateWithdrawPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, amount: e.target.value })
                 }
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border border-white/10 bg-slate-700/50 px-3 py-2 text-white placeholder:text-slate-500 focus:border-cyber-violet-500 focus:outline-none focus:ring-cyber-violet-500"
                 placeholder={`${MIN_WITHDRAWAL_AMOUNT}`}
               />
             </div>
 
             {/* 提領試算 */}
             {amount >= MIN_WITHDRAWAL_AMOUNT && (
-              <div className="rounded-md bg-blue-50 p-4 space-y-2">
-                <h4 className="font-medium text-blue-900">提領試算</h4>
+              <div className="rounded-md bg-cyber-violet-500/10 border border-cyber-violet-500/30 p-4 space-y-2">
+                <h4 className="font-medium text-white">提領試算</h4>
                 <div className="space-y-1 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-blue-800">提領金額：</span>
-                    <span className="font-semibold">
+                    <span className="text-slate-300">提領金額：</span>
+                    <span className="font-semibold text-white">
                       NT$ {amount.toLocaleString()}
                     </span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-blue-800">
+                    <span className="text-slate-300">
                       扣繳稅額 ({taxRate}%)：
                     </span>
-                    <span className="text-red-600">
+                    <span className="text-red-400">
                       -NT$ {calculateTax(amount).toLocaleString()}
                     </span>
                   </div>
-                  <div className="border-t border-blue-200 pt-1 mt-1"></div>
+                  <div className="border-t border-cyber-violet-500/30 pt-1 mt-1"></div>
                   <div className="flex justify-between">
-                    <span className="font-semibold text-blue-900">
-                      實際入帳：
-                    </span>
-                    <span className="text-lg font-bold text-green-600">
+                    <span className="font-semibold text-white">實際入帳：</span>
+                    <span className="text-lg font-bold text-emerald-400">
                       NT$ {calculateNetAmount(amount).toLocaleString()}
                     </span>
                   </div>
@@ -199,17 +195,17 @@ export default function AffiliateWithdrawPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
           <CardHeader>
-            <CardTitle>銀行帳戶資訊</CardTitle>
-            <CardDescription>
+            <CardTitle className="text-white">銀行帳戶資訊</CardTitle>
+            <CardDescription className="text-slate-400">
               請填寫正確的銀行帳戶，戶名需與身份證相符
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                銀行代碼 <span className="text-red-500">*</span>
+              <label className="block text-sm font-medium text-slate-300">
+                銀行代碼 <span className="text-red-400">*</span>
               </label>
               <select
                 required
@@ -217,11 +213,13 @@ export default function AffiliateWithdrawPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, bank_code: e.target.value })
                 }
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border border-white/10 bg-slate-700/50 px-3 py-2 text-white focus:border-cyber-violet-500 focus:outline-none focus:ring-cyber-violet-500"
               >
-                <option value="">請選擇銀行</option>
+                <option value="" className="bg-slate-800">
+                  請選擇銀行
+                </option>
                 {Object.entries(BANK_CODES).map(([code, name]) => (
-                  <option key={code} value={code}>
+                  <option key={code} value={code} className="bg-slate-800">
                     {code} - {name}
                   </option>
                 ))}
@@ -229,7 +227,7 @@ export default function AffiliateWithdrawPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-slate-300">
                 分行名稱
               </label>
               <input
@@ -238,14 +236,14 @@ export default function AffiliateWithdrawPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, bank_branch: e.target.value })
                 }
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border border-white/10 bg-slate-700/50 px-3 py-2 text-white placeholder:text-slate-500 focus:border-cyber-violet-500 focus:outline-none focus:ring-cyber-violet-500"
                 placeholder="例如：台北分行（選填）"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                銀行帳號 <span className="text-red-500">*</span>
+              <label className="block text-sm font-medium text-slate-300">
+                銀行帳號 <span className="text-red-400">*</span>
               </label>
               <input
                 type="text"
@@ -254,14 +252,14 @@ export default function AffiliateWithdrawPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, bank_account: e.target.value })
                 }
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border border-white/10 bg-slate-700/50 px-3 py-2 text-white placeholder:text-slate-500 focus:border-cyber-violet-500 focus:outline-none focus:ring-cyber-violet-500"
                 placeholder="請輸入完整帳號"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">
-                戶名 <span className="text-red-500">*</span>
+              <label className="block text-sm font-medium text-slate-300">
+                戶名 <span className="text-red-400">*</span>
               </label>
               <input
                 type="text"
@@ -273,17 +271,17 @@ export default function AffiliateWithdrawPage() {
                     bank_account_name: e.target.value,
                   })
                 }
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border border-white/10 bg-slate-700/50 px-3 py-2 text-white placeholder:text-slate-500 focus:border-cyber-violet-500 focus:outline-none focus:ring-cyber-violet-500"
                 placeholder="需與身份證姓名相符"
               />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-yellow-200 bg-yellow-50">
+        <Card className="border-amber-500/30 bg-amber-500/10">
           <CardContent className="pt-6">
-            <h4 className="font-medium text-yellow-900 mb-2">注意事項</h4>
-            <ul className="list-disc list-inside space-y-1 text-sm text-yellow-800">
+            <h4 className="font-medium text-white mb-2">注意事項</h4>
+            <ul className="list-disc list-inside space-y-1 text-sm text-slate-300">
               <li>所有提領申請統一於每月 25 號撥款</li>
               <li>請在每月 20 號前提交申請，以便趕上當月撥款</li>
               <li>扣繳稅額會在年度報稅時計入可扣抵稅額</li>
