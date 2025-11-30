@@ -2,11 +2,11 @@ export interface ReferralCode {
   id: string;
   company_id: string;
   code: string;
-  referral_code: string;
-  total_referrals: number;
-  successful_referrals: number;
-  total_clicks: number;
-  created_at: string;
+  referral_code?: string;
+  total_clicks: number | null;
+  total_referrals: number | null;
+  successful_referrals: number | null;
+  created_at: string | null;
 }
 
 export interface Referral {
@@ -51,18 +51,18 @@ export interface Affiliate {
   bank_branch: string | null;
   bank_account: string | null;
   bank_account_name: string | null;
-  is_resident: boolean;
-  tax_rate: number;
-  current_tier: number;
-  qualified_referrals: number;
-  commission_rate: number;
-  pending_commission: number;
-  available_commission: number;
-  withdrawn_commission: number;
-  lifetime_commission: number;
-  status: "active" | "inactive" | "suspended" | "terminated";
-  created_at: string;
-  updated_at: string;
+  is_resident: boolean | null;
+  tax_rate: number | null;
+  current_tier: number | null;
+  qualified_referrals: number | null;
+  commission_rate: number | null;
+  pending_commission: number | null;
+  available_commission: number | null;
+  withdrawn_commission: number | null;
+  lifetime_commission: number | null;
+  status: "active" | "inactive" | "suspended" | "terminated" | null;
+  created_at: string | null;
+  updated_at: string | null;
 }
 
 export interface AffiliateCommission {
@@ -78,12 +78,12 @@ export interface AffiliateCommission {
   tax_rate: number;
   tax_amount: number;
   net_commission: number;
-  earned_at: string;
+  earned_at: string | null;
   unlock_at: string;
-  status: "locked" | "available" | "withdrawn" | "cancelled";
+  status: "locked" | "available" | "withdrawn" | "cancelled" | null;
   withdrawal_id: string | null;
   withdrawn_at: string | null;
-  created_at: string;
+  created_at: string | null;
 }
 
 export interface AffiliateWithdrawal {
@@ -103,15 +103,16 @@ export interface AffiliateWithdrawal {
     | "processing"
     | "completed"
     | "rejected"
-    | "cancelled";
+    | "cancelled"
+    | null;
   reviewed_by: string | null;
   reviewed_at: string | null;
   rejection_reason: string | null;
   admin_notes: string | null;
   processed_at: string | null;
   completed_at: string | null;
-  commission_ids: string[] | null;
-  created_at: string;
+  commission_ids: unknown[] | null;
+  created_at: string | null;
 }
 
 export interface ReferralTokenReward {
@@ -149,7 +150,7 @@ export interface AffiliateTierHistory {
   new_rate: number;
   qualified_referrals: number;
   trigger_reason: string;
-  created_at: string;
+  created_at: string | null;
 }
 
 export interface ReferralStats {
