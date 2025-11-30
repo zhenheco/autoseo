@@ -39,11 +39,19 @@ export default async function ReferralsPage() {
     redirect("/dashboard");
   }
 
-  const { data: referralCode } = await supabase
-    .from("company_referral_codes")
+  let { data: referralCode } = await supabase
+    .from("referral_codes")
     .select("*")
     .eq("company_id", membership.company_id)
     .single();
+
+  if (!referralCode) {
+    const { generateReferralCode } = await import("@/lib/referral-service");
+    const newCode = await generateReferralCode(membership.company_id);
+    if (newCode) {
+      referralCode = { ...newCode, code: newCode.referral_code };
+    }
+  }
 
   const { data: referrals } = await supabase
     .from("referrals")
@@ -66,7 +74,7 @@ export default async function ReferralsPage() {
     .limit(20);
 
   const { data: tokenRewards } = await supabase
-    .from("referral_rewards")
+    .from("referral_token_rewards")
     .select("referrer_tokens")
     .eq("referrer_company_id", membership.company_id)
     .not("referrer_credited_at", "is", null);
@@ -116,9 +124,7 @@ export default async function ReferralsPage() {
         </Card>
       )}
 
-      {referralCode && (
-        <ReferralLinkCard referralCode={referralCode.referral_code} />
-      )}
+      {referralCode && <ReferralLinkCard referralCode={referralCode.code} />}
 
       <div className="grid gap-6 md:grid-cols-4">
         <Card>
@@ -128,7 +134,7 @@ export default async function ReferralsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {referralCode?.total_referrals || 0}
+              {referralCode?.total_clicks || 0}
             </div>
             <p className="text-xs text-muted-foreground">累計點擊次數</p>
           </CardContent>

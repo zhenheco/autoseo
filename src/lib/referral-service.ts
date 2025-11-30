@@ -13,13 +13,16 @@ export async function generateReferralCode(
   const supabase = createAdminClient();
 
   const { data: existing } = await supabase
-    .from("company_referral_codes")
+    .from("referral_codes")
     .select("*")
     .eq("company_id", companyId)
     .single();
 
   if (existing) {
-    return existing as ReferralCode;
+    return {
+      ...existing,
+      referral_code: existing.code,
+    } as ReferralCode;
   }
 
   const { data, error } = await supabase.rpc("generate_referral_code");
@@ -30,10 +33,10 @@ export async function generateReferralCode(
   }
 
   const { data: newCode, error: insertError } = await supabase
-    .from("company_referral_codes")
+    .from("referral_codes")
     .insert({
       company_id: companyId,
-      referral_code: data,
+      code: data,
     })
     .select()
     .single();
@@ -43,7 +46,10 @@ export async function generateReferralCode(
     return null;
   }
 
-  return newCode as ReferralCode;
+  return {
+    ...newCode,
+    referral_code: newCode.code,
+  } as ReferralCode;
 }
 
 export async function getReferralCode(
@@ -52,7 +58,7 @@ export async function getReferralCode(
   const supabase = createAdminClient();
 
   const { data, error } = await supabase
-    .from("company_referral_codes")
+    .from("referral_codes")
     .select("*")
     .eq("company_id", companyId)
     .single();
@@ -61,7 +67,10 @@ export async function getReferralCode(
     return null;
   }
 
-  return data as ReferralCode;
+  return {
+    ...data,
+    referral_code: data.code,
+  } as ReferralCode;
 }
 
 export async function validateReferralCode(
@@ -70,9 +79,9 @@ export async function validateReferralCode(
   const supabase = createAdminClient();
 
   const { data, error } = await supabase
-    .from("company_referral_codes")
+    .from("referral_codes")
     .select("company_id")
-    .eq("referral_code", code.toUpperCase())
+    .eq("code", code.toUpperCase())
     .single();
 
   if (error || !data) {
@@ -169,7 +178,7 @@ export async function getReferralStats(
   const supabase = createAdminClient();
 
   const { data: referralCode } = await supabase
-    .from("company_referral_codes")
+    .from("referral_codes")
     .select("*")
     .eq("company_id", companyId)
     .single();
@@ -179,7 +188,7 @@ export async function getReferralStats(
   }
 
   const { data: tokenRewards } = await supabase
-    .from("referral_rewards")
+    .from("referral_token_rewards")
     .select("referrer_tokens")
     .eq("referrer_company_id", companyId)
     .not("referrer_credited_at", "is", null);
@@ -195,9 +204,9 @@ export async function getReferralStats(
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://1wayseo.com";
 
   return {
-    referralCode: referralCode.referral_code,
-    referralUrl: `${baseUrl}/r/${referralCode.referral_code}`,
-    totalClicks: referralCode.total_referrals,
+    referralCode: referralCode.code,
+    referralUrl: `${baseUrl}/r/${referralCode.code}`,
+    totalClicks: referralCode.total_clicks || 0,
     totalReferrals: referralCode.total_referrals,
     successfulReferrals: referralCode.successful_referrals,
     conversionRate: Math.round(conversionRate * 100) / 100,
@@ -289,7 +298,7 @@ async function processTokenReward(
   const tokenAmount = 10000;
 
   const { data: existingReward } = await supabase
-    .from("referral_rewards")
+    .from("referral_token_rewards")
     .select("id")
     .eq("referral_id", referralId)
     .single();
@@ -298,7 +307,7 @@ async function processTokenReward(
     return;
   }
 
-  await supabase.from("referral_rewards").insert({
+  await supabase.from("referral_token_rewards").insert({
     referral_id: referralId,
     referrer_company_id: referrerCompanyId,
     referrer_tokens: tokenAmount,
@@ -313,7 +322,7 @@ async function processTokenReward(
   });
 
   await supabase
-    .from("referral_rewards")
+    .from("referral_token_rewards")
     .update({ referrer_credited_at: new Date().toISOString() })
     .eq("referral_id", referralId);
 
@@ -324,7 +333,7 @@ async function processTokenReward(
   });
 
   await supabase
-    .from("referral_rewards")
+    .from("referral_token_rewards")
     .update({ referred_credited_at: new Date().toISOString() })
     .eq("referral_id", referralId);
 
@@ -358,7 +367,7 @@ export async function getMyReferrer(companyId: string): Promise<{
   let tokensReceived = 0;
   if (data.status === "rewarded") {
     const { data: reward } = await supabase
-      .from("referral_rewards")
+      .from("referral_token_rewards")
       .select("referred_tokens")
       .eq("referred_company_id", companyId)
       .not("referred_credited_at", "is", null)
