@@ -788,6 +788,102 @@ export type Database = {
           },
         ];
       };
+      referral_codes: {
+        Row: {
+          id: string;
+          company_id: string;
+          code: string;
+          total_referrals: number;
+          successful_referrals: number;
+          total_clicks: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          code: string;
+          total_referrals?: number;
+          successful_referrals?: number;
+          total_clicks?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          code?: string;
+          total_referrals?: number;
+          successful_referrals?: number;
+          total_clicks?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "referral_codes_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: true;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      referral_token_rewards: {
+        Row: {
+          id: string;
+          referral_id: string;
+          referrer_company_id: string;
+          referrer_tokens: number;
+          referrer_credited_at: string | null;
+          referred_company_id: string;
+          referred_tokens: number;
+          referred_credited_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          referral_id: string;
+          referrer_company_id: string;
+          referrer_tokens?: number;
+          referrer_credited_at?: string | null;
+          referred_company_id: string;
+          referred_tokens?: number;
+          referred_credited_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          referral_id?: string;
+          referrer_company_id?: string;
+          referrer_tokens?: number;
+          referrer_credited_at?: string | null;
+          referred_company_id?: string;
+          referred_tokens?: number;
+          referred_credited_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "referral_token_rewards_referral_id_fkey";
+            columns: ["referral_id"];
+            isOneToOne: true;
+            referencedRelation: "referrals";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "referral_token_rewards_referrer_company_id_fkey";
+            columns: ["referrer_company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "referral_token_rewards_referred_company_id_fkey";
+            columns: ["referred_company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       referrals: {
         Row: {
           id: string;

@@ -67,15 +67,15 @@ export async function GET(request: Request) {
           const affiliateRef = cookieStore.get("affiliate_ref")?.value;
 
           if (affiliateRef) {
-            const { data: referralCode } = await adminClient
-              .from("company_referral_codes")
+            const { data: referrerCode } = await adminClient
+              .from("referral_codes")
               .select("company_id")
               .eq("code", affiliateRef)
               .single();
 
-            if (referralCode) {
-              await adminClient.from("affiliate_referrals").insert({
-                referrer_company_id: referralCode.company_id,
+            if (referrerCode) {
+              await adminClient.from("referrals").insert({
+                referrer_company_id: referrerCode.company_id,
                 referred_company_id: company.id,
                 referral_code: affiliateRef,
                 status: "pending",
@@ -85,10 +85,9 @@ export async function GET(request: Request) {
 
           try {
             const newReferralCode = generateReferralCode();
-            await adminClient.from("company_referral_codes").insert({
+            await adminClient.from("referral_codes").insert({
               company_id: company.id,
               code: newReferralCode,
-              is_active: true,
             });
           } catch (e) {
             console.error("[OAuth] 建立推薦碼失敗:", e);

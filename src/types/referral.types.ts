@@ -1,10 +1,11 @@
 export interface ReferralCode {
   id: string;
   company_id: string;
+  code: string;
   referral_code: string;
   total_referrals: number;
   successful_referrals: number;
-  total_rewards_tokens: number;
+  total_clicks: number;
   created_at: string;
 }
 
