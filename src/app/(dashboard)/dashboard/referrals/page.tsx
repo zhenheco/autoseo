@@ -62,7 +62,7 @@ export default async function ReferralsPage() {
     referrals?.filter((r) => r.status === "pending").length || 0;
   const qualifiedReferrals =
     referrals?.filter(
-      (r) => r.status === "completed" || r.status === "rewarded",
+      (r) => r.status === "qualified" || r.status === "rewarded",
     ).length || 0;
   const totalReferrals = referrals?.length || 0;
 
