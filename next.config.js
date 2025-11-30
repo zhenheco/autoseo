@@ -36,7 +36,9 @@ const nextConfig = {
           },
           {
             key: "Access-Control-Allow-Origin",
-            value: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3168",
+            value: (
+              process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3168"
+            ).trim(),
           },
           {
             key: "Access-Control-Allow-Methods",
