@@ -130,26 +130,28 @@ export async function getAffiliateStats(
 
   const effectiveTiers = tiers && tiers.length > 0 ? tiers : AFFILIATE_TIERS;
 
+  const currentTierLevel = affiliate.current_tier ?? 1;
+  const qualifiedReferrals = affiliate.qualified_referrals ?? 0;
+
   const currentTier =
-    effectiveTiers.find((t) => t.tier_level === affiliate.current_tier) ||
+    effectiveTiers.find((t) => t.tier_level === currentTierLevel) ||
     effectiveTiers[0];
   const nextTier =
-    effectiveTiers.find((t) => t.tier_level === affiliate.current_tier + 1) ||
-    null;
+    effectiveTiers.find((t) => t.tier_level === currentTierLevel + 1) || null;
 
   const referralsToNextTier = nextTier
-    ? Math.max(0, nextTier.min_referrals - affiliate.qualified_referrals)
+    ? Math.max(0, nextTier.min_referrals - qualifiedReferrals)
     : 0;
 
   return {
     currentTier: currentTier as AffiliateTier,
-    qualifiedReferrals: affiliate.qualified_referrals,
+    qualifiedReferrals,
     nextTier: nextTier as AffiliateTier | null,
     referralsToNextTier,
-    pendingCommission: affiliate.pending_commission,
-    availableCommission: affiliate.available_commission,
-    withdrawnCommission: affiliate.withdrawn_commission,
-    lifetimeCommission: affiliate.lifetime_commission,
+    pendingCommission: affiliate.pending_commission ?? 0,
+    availableCommission: affiliate.available_commission ?? 0,
+    withdrawnCommission: affiliate.withdrawn_commission ?? 0,
+    lifetimeCommission: affiliate.lifetime_commission ?? 0,
   };
 }
 
@@ -203,9 +205,15 @@ export async function processAffiliateCommission(
     return { success: false };
   }
 
-  const commissionRate = affiliate.commission_rate / 100;
+  const affiliateCommissionRate = affiliate.commission_rate ?? 15;
+  const affiliateTaxRate = affiliate.tax_rate ?? 10;
+  const affiliateCurrentTier = affiliate.current_tier ?? 1;
+  const affiliatePendingCommission = affiliate.pending_commission ?? 0;
+  const affiliateLifetimeCommission = affiliate.lifetime_commission ?? 0;
+
+  const commissionRate = affiliateCommissionRate / 100;
   const grossCommission = paymentAmount * commissionRate;
-  const taxRate = affiliate.tax_rate / 100;
+  const taxRate = affiliateTaxRate / 100;
   const taxAmount = grossCommission * taxRate;
   const netCommission = grossCommission - taxAmount;
 
@@ -221,10 +229,10 @@ export async function processAffiliateCommission(
       payment_order_id: paymentOrderId || null,
       order_amount: paymentAmount,
       order_type: orderType,
-      tier_level: affiliate.current_tier,
-      commission_rate: affiliate.commission_rate,
+      tier_level: affiliateCurrentTier,
+      commission_rate: affiliateCommissionRate,
       commission_amount: grossCommission,
-      tax_rate: affiliate.tax_rate,
+      tax_rate: affiliateTaxRate,
       tax_amount: taxAmount,
       net_commission: netCommission,
       earned_at: earnedAt.toISOString(),
@@ -240,8 +248,8 @@ export async function processAffiliateCommission(
   await supabase
     .from("affiliates")
     .update({
-      pending_commission: affiliate.pending_commission + netCommission,
-      lifetime_commission: affiliate.lifetime_commission + netCommission,
+      pending_commission: affiliatePendingCommission + netCommission,
+      lifetime_commission: affiliateLifetimeCommission + netCommission,
     })
     .eq("id", affiliate.id);
 

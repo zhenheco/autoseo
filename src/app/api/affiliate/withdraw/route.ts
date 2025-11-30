@@ -61,7 +61,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const availableCommission = affiliate.available_commission;
+    const availableCommission = affiliate.available_commission ?? 0;
 
     if (amount > availableCommission) {
       return NextResponse.json(
@@ -73,7 +73,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const taxRate = affiliate.tax_rate;
+    const taxRate = affiliate.tax_rate ?? 10;
     const taxAmount = amount * (taxRate / 100);
     const netAmount = amount - taxAmount;
 
@@ -138,7 +138,8 @@ export async function POST(request: NextRequest) {
         .from("affiliates")
         .update({
           available_commission: availableCommission - amount,
-          withdrawn_commission: affiliate.withdrawn_commission + netAmount,
+          withdrawn_commission:
+            (affiliate.withdrawn_commission ?? 0) + netAmount,
         })
         .eq("id", affiliate.id);
     }
