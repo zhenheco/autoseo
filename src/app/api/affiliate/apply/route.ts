@@ -83,8 +83,6 @@ export async function POST(request: NextRequest) {
       const errorMessages: Record<string, string> = {
         already_affiliate: "您已經是聯盟夥伴了",
         account_blocked: "您的帳號已被停權",
-        no_subscription: "您需要有效的訂閱才能申請",
-        paid_plan_required: "請先升級至付費方案才能申請成為聯盟夥伴",
         creation_failed: "申請失敗，請稍後再試",
       };
       return NextResponse.json(

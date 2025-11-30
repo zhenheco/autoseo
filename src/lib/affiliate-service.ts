@@ -47,27 +47,6 @@ export async function applyForAffiliate(
     }
   }
 
-  const { data: subscription } = await supabase
-    .from("company_subscriptions")
-    .select("plan_id")
-    .eq("company_id", companyId)
-    .eq("status", "active")
-    .single();
-
-  if (!subscription) {
-    return { success: false, error: "no_subscription" };
-  }
-
-  const { data: plan } = await supabase
-    .from("subscription_plans")
-    .select("slug")
-    .eq("id", subscription.plan_id)
-    .single();
-
-  if (!plan || plan.slug === "free") {
-    return { success: false, error: "paid_plan_required" };
-  }
-
   const taxRate = form.is_resident ? 10 : 20;
 
   const { data: tierData } = await supabase

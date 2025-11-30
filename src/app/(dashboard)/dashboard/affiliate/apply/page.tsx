@@ -57,13 +57,12 @@ export default function AffiliateApplyPage() {
         </p>
       </div>
 
-      <div className="mb-6 rounded-md bg-amber-50 border border-amber-200 p-4">
-        <p className="text-sm text-amber-800">
-          <strong>申請資格：</strong>需購買 Starter 方案或更高級訂閱方案。
-          詳細規範請參閱{" "}
+      <div className="mb-6 rounded-md bg-blue-50 border border-blue-200 p-4">
+        <p className="text-sm text-blue-800">
+          <strong>申請資格：</strong>所有已註冊用戶皆可申請。詳細規範請參閱{" "}
           <Link
             href="/dashboard/affiliate/terms"
-            className="font-medium underline hover:text-amber-900"
+            className="font-medium underline hover:text-blue-900"
           >
             聯盟行銷計畫服務條款
           </Link>
