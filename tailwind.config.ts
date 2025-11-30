@@ -1,11 +1,12 @@
-import type { Config } from "tailwindcss"
+import type { Config } from "tailwindcss";
+import tailwindcssAnimate from "tailwindcss-animate";
 
 const config: Config = {
   darkMode: "class",
   content: [
-    './src/pages/**/*.{ts,tsx}',
-    './src/components/**/*.{ts,tsx}',
-    './src/app/**/*.{ts,tsx}',
+    "./src/pages/**/*.{ts,tsx}",
+    "./src/components/**/*.{ts,tsx}",
+    "./src/app/**/*.{ts,tsx}",
   ],
   prefix: "",
   theme: {
@@ -54,6 +55,23 @@ const config: Config = {
         success: "hsl(var(--success))",
         warning: "hsl(var(--warning))",
         danger: "hsl(var(--danger))",
+        "dark-section": "var(--dark-bg)",
+        "dark-section-secondary": "var(--dark-bg-secondary)",
+        "light-section": "var(--light-bg)",
+        "light-section-secondary": "var(--light-bg-secondary)",
+        "tech-blue": {
+          50: "#eff6ff",
+          100: "#dbeafe",
+          200: "#bfdbfe",
+          300: "#93c5fd",
+          400: "#60a5fa",
+          500: "#3b82f6",
+          600: "#2563eb",
+          700: "#1d4ed8",
+          800: "#1e40af",
+          900: "#1e3a8a",
+          950: "#172554",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -88,9 +106,23 @@ const config: Config = {
           from: { opacity: "0", transform: "scale(0.95)" },
           to: { opacity: "1", transform: "scale(1)" },
         },
-        "shimmer": {
+        shimmer: {
           "0%": { backgroundPosition: "-1000px 0" },
           "100%": { backgroundPosition: "1000px 0" },
+        },
+        "pulse-glow": {
+          "0%, 100%": { boxShadow: "0 0 20px rgba(59, 130, 246, 0.4)" },
+          "50%": { boxShadow: "0 0 40px rgba(59, 130, 246, 0.7)" },
+        },
+        "pulse-glow-slow": {
+          "0%, 100%": { boxShadow: "0 0 30px rgba(59, 130, 246, 0.3)" },
+          "50%": { boxShadow: "0 0 50px rgba(59, 130, 246, 0.5)" },
+        },
+        "float-orb": {
+          "0%, 100%": { transform: "translate(0, 0) scale(1)" },
+          "25%": { transform: "translate(10px, -15px) scale(1.05)" },
+          "50%": { transform: "translate(-5px, -25px) scale(1)" },
+          "75%": { transform: "translate(-15px, -10px) scale(0.95)" },
         },
       },
       animation: {
@@ -99,11 +131,14 @@ const config: Config = {
         "slide-in": "slide-in 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
         "fade-in": "fade-in 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
         "scale-in": "scale-in 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-        "shimmer": "shimmer 2s linear infinite",
+        shimmer: "shimmer 2s linear infinite",
+        "pulse-glow": "pulse-glow 3s ease-in-out infinite",
+        "pulse-glow-slow": "pulse-glow-slow 4s ease-in-out infinite",
+        "float-orb": "float-orb 8s ease-in-out infinite",
       },
     },
   },
-  plugins: [require("tailwindcss-animate")],
-}
+  plugins: [tailwindcssAnimate],
+};
 
-export default config
+export default config;

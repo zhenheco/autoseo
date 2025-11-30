@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { CheckCircle2, X, Zap } from "lucide-react";
+import { BackgroundGrid } from "@/components/ui/background-effects";
 
 const comparisons = [
   {
@@ -39,40 +40,54 @@ const features = [
 
 export function CostComparison() {
   return (
-    <section className="py-20 bg-muted/30">
-      <div className="container mx-auto px-4">
+    <section className="relative py-20 bg-light-section">
+      <BackgroundGrid variant="light" />
+
+      <div className="container relative z-10 mx-auto px-4">
         <div className="text-center mb-12">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-green-100 dark:bg-green-950/30 px-4 py-2 text-sm font-medium text-green-700 dark:text-green-400">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-green-100 px-4 py-2 text-sm font-medium text-green-700">
             <Zap className="h-4 w-4" />
             <span>成本對比</span>
           </div>
-          <h2 className="text-2xl md:text-3xl font-bold mb-4 text-foreground">
-            為什麼選擇 <span className="text-primary">1waySEO</span>？
+          <h2 className="font-bold mb-4">
+            <span className="text-text-light-primary text-xl md:text-2xl">
+              為什麼選擇
+            </span>
+            <span className="text-tech-blue-600 text-4xl md:text-5xl ml-2">
+              1waySEO
+            </span>
+            <span className="text-text-light-primary text-xl md:text-2xl">
+              ？
+            </span>
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-text-light-secondary max-w-2xl mx-auto">
             比傳統方式省下 90% 以上的成本和時間
           </p>
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
-          <Card className="border-2 border-border">
+          <Card className="glass-light border-tech-blue-200/50 hover:border-tech-blue-400 transition-all duration-300">
             <CardContent className="p-6">
-              <h3 className="text-lg font-bold mb-6 text-center">成本對比</h3>
+              <h3 className="text-lg font-bold mb-6 text-center text-text-light-primary">
+                成本對比
+              </h3>
               <div className="space-y-4">
                 {comparisons.map((item, index) => (
                   <div
                     key={index}
-                    className="grid grid-cols-3 gap-2 items-center p-3 rounded-lg bg-muted/50"
+                    className="grid grid-cols-3 gap-2 items-center p-3 rounded-lg bg-white/50 hover:bg-white/80 transition-colors"
                   >
-                    <div className="text-sm font-medium">{item.category}</div>
-                    <div className="text-sm text-muted-foreground line-through text-center">
+                    <div className="text-sm font-medium text-text-light-primary">
+                      {item.category}
+                    </div>
+                    <div className="text-sm text-text-light-secondary line-through text-center">
                       {item.traditional}
                     </div>
                     <div className="text-right">
-                      <span className="text-sm font-bold text-primary">
+                      <span className="text-sm font-bold text-tech-blue-600">
                         {item.ours}
                       </span>
-                      <span className="block text-xs text-green-600 dark:text-green-400">
+                      <span className="block text-xs text-green-600">
                         {item.savings}
                       </span>
                     </div>
@@ -82,18 +97,20 @@ export function CostComparison() {
             </CardContent>
           </Card>
 
-          <Card className="border-2 border-primary">
+          <Card className="glass-light border-tech-blue-400 shadow-lg hover:shadow-xl transition-all duration-300">
             <CardContent className="p-6">
-              <h3 className="text-lg font-bold mb-6 text-center">
+              <h3 className="text-lg font-bold mb-6 text-center text-text-light-primary">
                 功能對比：傳統方式 vs 1waySEO
               </h3>
               <div className="space-y-3">
                 {features.map((feature, index) => (
                   <div
                     key={index}
-                    className="grid grid-cols-3 gap-4 items-center p-2"
+                    className="grid grid-cols-3 gap-4 items-center p-2 rounded-lg hover:bg-white/50 transition-colors"
                   >
-                    <div className="text-sm">{feature.name}</div>
+                    <div className="text-sm text-text-light-primary">
+                      {feature.name}
+                    </div>
                     <div className="flex justify-center">
                       <X className="h-5 w-5 text-red-500" />
                     </div>
@@ -102,12 +119,12 @@ export function CostComparison() {
                     </div>
                   </div>
                 ))}
-                <div className="grid grid-cols-3 gap-4 items-center pt-4 border-t">
+                <div className="grid grid-cols-3 gap-4 items-center pt-4 border-t border-tech-blue-200/50">
                   <div />
-                  <div className="text-center text-sm text-muted-foreground">
+                  <div className="text-center text-sm text-text-light-secondary">
                     傳統方式
                   </div>
-                  <div className="text-center text-sm font-bold text-primary">
+                  <div className="text-center text-sm font-bold text-tech-blue-600">
                     1waySEO
                   </div>
                 </div>

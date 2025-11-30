@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChevronDown, HelpCircle } from "lucide-react";
+import { BackgroundGrid } from "@/components/ui/background-effects";
 
 const faqs = [
   {
@@ -41,17 +42,21 @@ export function FAQSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
-    <section className="py-20">
-      <div className="container mx-auto px-4">
+    <section className="relative py-20 bg-dark-section">
+      <BackgroundGrid variant="dark" />
+
+      <div className="container relative z-10 mx-auto px-4">
         <div className="text-center mb-12">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-medium text-primary">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full glass-dark px-4 py-2 text-sm font-medium text-tech-blue-400">
             <HelpCircle className="h-4 w-4" />
             <span>常見問題</span>
           </div>
-          <h2 className="text-2xl md:text-3xl font-bold mb-4 text-foreground">
-            還有疑問嗎？
+          <h2 className="font-bold mb-4">
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-tech-blue-400 to-purple-400 text-4xl md:text-5xl">
+              還有疑問嗎？
+            </span>
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-text-dark-secondary max-w-2xl mx-auto">
             以下是用戶最常詢問的問題
           </p>
         </div>
@@ -60,27 +65,35 @@ export function FAQSection() {
           {faqs.map((faq, index) => (
             <Card
               key={index}
-              className={`cursor-pointer transition-all ${
-                openIndex === index ? "border-primary" : "border-border"
+              className={`cursor-pointer transition-all duration-300 glass-dark ${
+                openIndex === index
+                  ? "border-tech-blue-400 glow-blue-subtle"
+                  : "border-tech-blue-500/20 hover:border-tech-blue-500/50"
               }`}
               onClick={() => setOpenIndex(openIndex === index ? null : index)}
             >
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
-                  <h3 className="font-medium text-foreground">
+                  <h3 className="font-medium text-text-dark-primary">
                     {faq.question}
                   </h3>
                   <ChevronDown
-                    className={`h-5 w-5 text-muted-foreground transition-transform ${
+                    className={`h-5 w-5 text-tech-blue-400 transition-transform duration-300 ${
                       openIndex === index ? "rotate-180" : ""
                     }`}
                   />
                 </div>
-                {openIndex === index && (
-                  <p className="mt-3 text-sm text-muted-foreground leading-relaxed">
+                <div
+                  className={`overflow-hidden transition-all duration-300 ${
+                    openIndex === index
+                      ? "max-h-48 opacity-100 mt-3"
+                      : "max-h-0 opacity-0"
+                  }`}
+                >
+                  <p className="text-sm text-text-dark-secondary leading-relaxed">
                     {faq.answer}
                   </p>
-                )}
+                </div>
               </CardContent>
             </Card>
           ))}
