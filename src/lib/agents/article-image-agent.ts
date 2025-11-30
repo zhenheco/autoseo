@@ -1,0 +1,257 @@
+import { BaseAgent } from "./base-agent";
+import type {
+  ArticleImageInput,
+  ArticleImageOutput,
+  GeneratedImage,
+  Outline,
+} from "@/types/agents";
+import {
+  SupabaseStorageClient,
+  getSupabaseStorageConfig,
+} from "@/lib/storage/supabase-storage-client";
+import {
+  processBase64Image,
+  formatFileSize,
+  calculateCompressionRatio,
+} from "@/lib/image-processor";
+
+const DEFAULT_MODEL = "gpt-image-1-mini";
+
+const IMAGE_PRICING: Record<string, Record<string, number>> = {
+  "gpt-image-1-mini": { "1024x1024": 0.015, "1792x1024": 0.03 },
+  "gemini-2.5-flash-image": { "1024x1024": 0.01 },
+  "dall-e-3": { "1024x1024": 0.04, "1024x1792": 0.08 },
+};
+
+export class ArticleImageAgent extends BaseAgent<
+  ArticleImageInput,
+  ArticleImageOutput
+> {
+  get agentName(): string {
+    return "ArticleImageAgent";
+  }
+
+  protected async process(
+    input: ArticleImageInput,
+  ): Promise<ArticleImageOutput> {
+    const model = input.model || DEFAULT_MODEL;
+    const images: GeneratedImage[] = [];
+    const failedIndices: number[] = [];
+
+    const sectionsNeedingImages = input.outline.mainSections.length;
+    console.log(
+      `[ArticleImageAgent] 🎨 Generating ${sectionsNeedingImages} content images with model: ${model}`,
+    );
+
+    for (let i = 0; i < sectionsNeedingImages; i++) {
+      const section = input.outline.mainSections[i];
+      try {
+        const image = await this.generateContentImageWithRetry(
+          input,
+          section,
+          i,
+          model,
+          3,
+        );
+        images.push(image);
+        console.log(
+          `[ArticleImageAgent] ✅ Content image ${i + 1}/${sectionsNeedingImages} generated`,
+        );
+      } catch (error) {
+        const err = error as Error;
+        console.warn(
+          `[ArticleImageAgent] ⚠️ Content image ${i + 1} failed: ${err.message}`,
+        );
+        failedIndices.push(i + 1);
+      }
+    }
+
+    if (failedIndices.length > 0) {
+      console.warn(
+        `[ArticleImageAgent] ⚠️ Failed images (positions): ${failedIndices.join(", ")}`,
+      );
+    }
+
+    const totalCost = this.calculateTotalCost(images.length, model, input.size);
+
+    return {
+      images,
+      executionInfo: {
+        model,
+        totalImages: images.length,
+        executionTime: this.startTime ? Date.now() - this.startTime : 0,
+        totalCost,
+      },
+    };
+  }
+
+  private async generateContentImageWithRetry(
+    input: ArticleImageInput,
+    section: Outline["mainSections"][0],
+    index: number,
+    model: string,
+    maxRetries: number,
+  ): Promise<GeneratedImage> {
+    let lastError: Error | null = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(
+          `[ArticleImageAgent] 🎨 Content image ${index + 1} (attempt ${attempt}/${maxRetries})...`,
+        );
+        const image = await this.generateContentImage(
+          input,
+          section,
+          index,
+          model,
+        );
+        return image;
+      } catch (error) {
+        lastError = error as Error;
+        console.warn(
+          `[ArticleImageAgent] ⚠️ Attempt ${attempt} failed: ${lastError.message}`,
+        );
+
+        if (attempt < maxRetries) {
+          const delays = [5000, 10000, 20000];
+          const delay = delays[attempt - 1] || 20000;
+          console.log(`[ArticleImageAgent] ⏳ Retrying in ${delay}ms...`);
+          await this.sleep(delay);
+        }
+      }
+    }
+
+    throw new Error(
+      `Content image ${index + 1} failed after ${maxRetries} attempts: ${lastError?.message}`,
+    );
+  }
+
+  private sleep(ms: number): Promise<void> {
+    return new Promise((resolve) => setTimeout(resolve, ms));
+  }
+
+  private async generateContentImage(
+    input: ArticleImageInput,
+    section: Outline["mainSections"][0],
+    index: number,
+    model: string,
+  ): Promise<GeneratedImage> {
+    const prompt = this.buildPrompt(input, section);
+
+    const result = await this.generateImage(prompt, {
+      model,
+      quality: input.quality,
+      size: input.size,
+    });
+
+    let finalUrl = result.url;
+
+    console.log(
+      `[ArticleImageAgent] 📦 Processing content image ${index + 1}...`,
+    );
+
+    const processed = await processBase64Image(result.url, {
+      format: "jpeg",
+      quality: 85,
+      maxWidth: 1920,
+      maxHeight: 1920,
+    });
+
+    const originalSize = Buffer.from(result.url.split(",")[1], "base64").length;
+    const compressionRatio = calculateCompressionRatio(
+      originalSize,
+      processed.size,
+    );
+
+    console.log(
+      `[ArticleImageAgent] ✅ Compressed: ${formatFileSize(originalSize)} → ${formatFileSize(processed.size)} (${compressionRatio}% reduction)`,
+    );
+
+    const timestamp = Date.now();
+    const filename = `article-content-${index + 1}-${timestamp}.jpg`;
+    const base64Data = processed.buffer.toString("base64");
+
+    const supabaseConfig = getSupabaseStorageConfig();
+    if (supabaseConfig) {
+      try {
+        console.log(
+          `[ArticleImageAgent] 🔄 Uploading content image ${index + 1}...`,
+        );
+        const supabaseClient = new SupabaseStorageClient(supabaseConfig);
+        const uploaded = await supabaseClient.uploadImage(
+          base64Data,
+          filename,
+          "image/jpeg",
+        );
+        finalUrl = uploaded.url;
+        console.log(
+          `[ArticleImageAgent] ☁️ Upload successful (image ${index + 1}): ${uploaded.path}`,
+        );
+      } catch (error) {
+        const err = error as Error;
+        console.warn(
+          `[ArticleImageAgent] ⚠️ Upload failed (image ${index + 1}):`,
+          err.message,
+        );
+      }
+    }
+
+    const [width, height] = input.size.split("x").map(Number);
+
+    return {
+      url: finalUrl,
+      prompt,
+      altText: `${section.heading} - 說明圖片`,
+      suggestedSection: section.heading,
+      width,
+      height,
+      model,
+    };
+  }
+
+  private buildPrompt(
+    input: ArticleImageInput,
+    section: Outline["mainSections"][0],
+  ): string {
+    const styleGuide = input.brandStyle
+      ? `
+Style: ${input.brandStyle.style || "professional, modern"}
+Color scheme: ${input.brandStyle.colorScheme?.join(", ") || "clear, informative"}
+`
+      : `
+Style: professional, modern, clean
+Color scheme: clear, informative
+`;
+
+    return `Create an illustration for the section "${section.heading}" in an article about "${input.title}".
+
+${styleGuide}
+
+Key points to visualize:
+${section.keyPoints.join("\n")}
+
+CRITICAL - ABSOLUTELY NO TEXT (THIS IS THE MOST IMPORTANT RULE):
+- ZERO text, words, letters, numbers, or characters of ANY language
+- NO Chinese, English, Japanese, Korean, or any other written language
+- NO watermarks, NO labels, NO captions, NO titles within the image
+- If ANY text appears in the image, it will be REJECTED immediately
+- Use ONLY visual symbols, icons, illustrations, and visual metaphors
+
+Other Requirements:
+- Clear and informative visual
+- Supports the text content
+- Professional quality
+- Pure visual design ONLY`;
+  }
+
+  private calculateTotalCost(
+    imageCount: number,
+    model: string,
+    size: string,
+  ): number {
+    const pricing = IMAGE_PRICING[model];
+    if (!pricing) return 0;
+    const pricePerImage = pricing[size] || pricing["1024x1024"] || 0;
+    return imageCount * pricePerImage;
+  }
+}
