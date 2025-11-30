@@ -1,9 +1,15 @@
-'use client'
+"use client";
 
-import { useEffect, useState } from 'react'
-import Link from 'next/link'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import {
   Table,
   TableBody,
@@ -11,87 +17,95 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table'
+} from "@/components/ui/table";
 
 interface Referral {
-  id: string
-  company_name: string
-  registered_at: string
-  first_payment_at: string | null
-  first_payment_amount: number | null
-  total_payments: number
-  lifetime_value: number
-  total_commission_generated: number
-  is_active: boolean
-  last_payment_at: string | null
-  cancelled_at: string | null
+  id: string;
+  company_name: string;
+  registered_at: string;
+  first_payment_at: string | null;
+  first_payment_amount: number | null;
+  total_payments: number;
+  lifetime_value: number;
+  total_commission_generated: number;
+  is_active: boolean;
+  last_payment_at: string | null;
+  cancelled_at: string | null;
 }
 
 export default function AffiliateReferralsPage() {
-  const [loading, setLoading] = useState(true)
-  const [referrals, setReferrals] = useState<Referral[]>([])
-  const [page, setPage] = useState(1)
-  const [totalPages, setTotalPages] = useState(1)
-  const [filter, setFilter] = useState<'all' | 'active' | 'inactive'>('all')
+  const [loading, setLoading] = useState(true);
+  const [referrals, setReferrals] = useState<Referral[]>([]);
+  const [page, setPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [filter, setFilter] = useState<"all" | "active" | "inactive">("all");
 
   useEffect(() => {
-    fetchReferrals()
-  }, [page, filter])
+    fetchReferrals();
+  }, [page, filter]);
 
   const fetchReferrals = async () => {
     try {
-      setLoading(true)
+      setLoading(true);
       const response = await fetch(
-        `/api/affiliate/referrals?page=${page}&limit=10&status=${filter}`
-      )
+        `/api/affiliate/referrals?page=${page}&limit=10&status=${filter}`,
+      );
 
       if (!response.ok) {
-        throw new Error('載入失敗')
+        throw new Error("載入失敗");
       }
 
-      const data = await response.json()
-      setReferrals(data.data)
-      setTotalPages(data.pagination.totalPages)
+      const data = await response.json();
+      setReferrals(data.data);
+      setTotalPages(data.pagination.totalPages);
     } catch (error) {
-      console.error('載入推薦列表失敗:', error)
+      console.error("載入推薦列表失敗:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const formatDate = (dateString: string | null) => {
-    if (!dateString) return '-'
-    return new Date(dateString).toLocaleDateString('zh-TW')
-  }
+    if (!dateString) return "-";
+    return new Date(dateString).toLocaleDateString("zh-TW");
+  };
 
   const getStatusBadge = (referral: Referral) => {
     if (referral.cancelled_at) {
-      return <span className="rounded-full bg-red-100 px-2 py-1 text-xs text-red-800">已取消</span>
+      return (
+        <span className="rounded-full bg-red-500/20 px-2 py-1 text-xs text-red-400">
+          已取消
+        </span>
+      );
     }
     if (!referral.first_payment_at) {
       return (
-        <span className="rounded-full bg-yellow-100 px-2 py-1 text-xs text-yellow-800">
+        <span className="rounded-full bg-amber-500/20 px-2 py-1 text-xs text-amber-400">
           待轉換
         </span>
-      )
+      );
     }
     if (referral.is_active) {
       return (
-        <span className="rounded-full bg-green-100 px-2 py-1 text-xs text-green-800">活躍</span>
-      )
+        <span className="rounded-full bg-emerald-500/20 px-2 py-1 text-xs text-emerald-400">
+          活躍
+        </span>
+      );
     }
     return (
-      <span className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-800">不活躍</span>
-    )
-  }
+      <span className="rounded-full bg-slate-700 px-2 py-1 text-xs text-slate-400">
+        不活躍
+      </span>
+    );
+  };
 
   return (
     <div className="container mx-auto space-y-6 p-6">
       {/* 標題 */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">推薦客戶</h1>
-          <p className="text-gray-600">查看您推薦的客戶及其狀態</p>
+          <h1 className="text-3xl font-bold text-white">推薦客戶</h1>
+          <p className="text-slate-400">查看您推薦的客戶及其狀態</p>
         </div>
         <Link href="/dashboard/affiliate">
           <Button variant="outline">返回儀表板</Button>
@@ -99,35 +113,35 @@ export default function AffiliateReferralsPage() {
       </div>
 
       {/* 篩選器 */}
-      <Card>
+      <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle>篩選</CardTitle>
+          <CardTitle className="text-white">篩選</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-2">
             <Button
-              variant={filter === 'all' ? 'default' : 'outline'}
+              variant={filter === "all" ? "default" : "outline"}
               onClick={() => {
-                setFilter('all')
-                setPage(1)
+                setFilter("all");
+                setPage(1);
               }}
             >
               全部
             </Button>
             <Button
-              variant={filter === 'active' ? 'default' : 'outline'}
+              variant={filter === "active" ? "default" : "outline"}
               onClick={() => {
-                setFilter('active')
-                setPage(1)
+                setFilter("active");
+                setPage(1);
               }}
             >
               活躍中
             </Button>
             <Button
-              variant={filter === 'inactive' ? 'default' : 'outline'}
+              variant={filter === "inactive" ? "default" : "outline"}
               onClick={() => {
-                setFilter('inactive')
-                setPage(1)
+                setFilter("inactive");
+                setPage(1);
               }}
             >
               不活躍
@@ -137,16 +151,18 @@ export default function AffiliateReferralsPage() {
       </Card>
 
       {/* 列表 */}
-      <Card>
+      <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
         <CardHeader>
-          <CardTitle>推薦列表</CardTitle>
-          <CardDescription>共 {referrals.length} 筆記錄</CardDescription>
+          <CardTitle className="text-white">推薦列表</CardTitle>
+          <CardDescription className="text-slate-400">
+            共 {referrals.length} 筆記錄
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="py-8 text-center text-gray-500">載入中...</div>
+            <div className="py-8 text-center text-slate-400">載入中...</div>
           ) : referrals.length === 0 ? (
-            <div className="py-8 text-center text-gray-500">尚無推薦客戶</div>
+            <div className="py-8 text-center text-slate-400">尚無推薦客戶</div>
           ) : (
             <>
               <div className="overflow-x-auto">
@@ -166,20 +182,29 @@ export default function AffiliateReferralsPage() {
                   <TableBody>
                     {referrals.map((referral) => (
                       <TableRow key={referral.id}>
-                        <TableCell className="font-medium">{referral.company_name}</TableCell>
-                        <TableCell>{formatDate(referral.registered_at)}</TableCell>
-                        <TableCell>{formatDate(referral.first_payment_at)}</TableCell>
+                        <TableCell className="font-medium text-white">
+                          {referral.company_name}
+                        </TableCell>
+                        <TableCell>
+                          {formatDate(referral.registered_at)}
+                        </TableCell>
+                        <TableCell>
+                          {formatDate(referral.first_payment_at)}
+                        </TableCell>
                         <TableCell className="text-right">
                           {referral.first_payment_amount
                             ? `NT$ ${referral.first_payment_amount.toLocaleString()}`
-                            : '-'}
+                            : "-"}
                         </TableCell>
-                        <TableCell className="text-right">{referral.total_payments}</TableCell>
+                        <TableCell className="text-right">
+                          {referral.total_payments}
+                        </TableCell>
                         <TableCell className="text-right">
                           NT$ {referral.lifetime_value.toLocaleString()}
                         </TableCell>
-                        <TableCell className="text-right text-green-600 font-semibold">
-                          NT$ {referral.total_commission_generated.toLocaleString()}
+                        <TableCell className="text-right text-emerald-400 font-semibold">
+                          NT${" "}
+                          {referral.total_commission_generated.toLocaleString()}
                         </TableCell>
                         <TableCell>{getStatusBadge(referral)}</TableCell>
                       </TableRow>
@@ -198,7 +223,7 @@ export default function AffiliateReferralsPage() {
                   >
                     上一頁
                   </Button>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-slate-400">
                     第 {page} / {totalPages} 頁
                   </span>
                   <Button
@@ -215,5 +240,5 @@ export default function AffiliateReferralsPage() {
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }

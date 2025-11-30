@@ -87,6 +87,13 @@ const config: Config = {
           500: "#ec4899",
           600: "#db2777",
         },
+        sidebar: {
+          DEFAULT: "#0f172a",
+          foreground: "#e2e8f0",
+          muted: "#334155",
+          accent: "#1e293b",
+          border: "#1e293b",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

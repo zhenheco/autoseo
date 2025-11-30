@@ -99,13 +99,24 @@ export function CyberGlow({
   color = "violet",
 }: {
   className?: string;
-  position?: "top" | "center" | "bottom";
+  position?:
+    | "top"
+    | "center"
+    | "bottom"
+    | "top-left"
+    | "top-right"
+    | "bottom-left"
+    | "bottom-right";
   color?: "cyan" | "violet" | "magenta" | "mixed";
 }) {
   const positionClasses = {
     top: "top-0 left-1/2 -translate-x-1/2 -translate-y-1/2",
     center: "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
     bottom: "bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2",
+    "top-left": "top-0 left-0 -translate-x-1/2 -translate-y-1/2",
+    "top-right": "top-0 right-0 translate-x-1/2 -translate-y-1/2",
+    "bottom-left": "bottom-0 left-0 -translate-x-1/2 translate-y-1/2",
+    "bottom-right": "bottom-0 right-0 translate-x-1/2 translate-y-1/2",
   };
 
   const colorStyles = {
