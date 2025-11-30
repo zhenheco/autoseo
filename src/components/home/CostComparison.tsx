@@ -41,18 +41,20 @@ const features = [
 
 export function CostComparison() {
   return (
-    <section className="relative py-20 bg-indigo-950">
+    <section className="relative py-20 bg-slate-100 dark:bg-indigo-950">
       <BackgroundGrid variant="dark" />
       <CyberGlow position="center" color="cyan" />
 
       <div className="container relative z-10 mx-auto px-4">
         <div className="text-center mb-12">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-sm font-medium text-cyber-cyan-400">
+          <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white dark:bg-transparent dark:glass shadow-sm dark:shadow-none border border-slate-200 dark:border-transparent px-4 py-2 text-sm font-medium text-cyber-cyan-600 dark:text-cyber-cyan-400">
             <Zap className="h-4 w-4" />
             <span>成本對比</span>
           </div>
           <h2 className="font-bold mb-4">
-            <span className="text-white text-xl md:text-2xl">為什麼選擇</span>
+            <span className="text-slate-900 dark:text-white text-xl md:text-2xl">
+              為什麼選擇
+            </span>
             <GradientText
               as="span"
               gradient="cyan-violet-magenta"
@@ -60,7 +62,9 @@ export function CostComparison() {
             >
               1WaySEO
             </GradientText>
-            <span className="text-white text-xl md:text-2xl">？</span>
+            <span className="text-slate-900 dark:text-white text-xl md:text-2xl">
+              ？
+            </span>
           </h2>
           <p className="text-slate-400 max-w-2xl mx-auto">
             比傳統方式省下 90% 以上的成本和時間
@@ -68,18 +72,18 @@ export function CostComparison() {
         </div>
 
         <div className="grid lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
-          <Card className="glass border-white/10 hover:border-cyber-cyan-500/50 transition-all duration-300 bg-transparent">
+          <Card className="bg-white dark:bg-transparent dark:glass shadow-sm dark:shadow-none border-slate-200 dark:border-white/10 hover:border-cyber-cyan-500/50 transition-all duration-300">
             <CardContent className="p-6">
-              <h3 className="text-lg font-bold mb-6 text-center text-white">
+              <h3 className="text-lg font-bold mb-6 text-center text-slate-900 dark:text-white">
                 成本對比
               </h3>
               <div className="space-y-4">
                 {comparisons.map((item, index) => (
                   <div
                     key={index}
-                    className="grid grid-cols-3 gap-2 items-center p-3 rounded-lg bg-slate-800/50 hover:bg-slate-800/80 transition-colors"
+                    className="grid grid-cols-3 gap-2 items-center p-3 rounded-lg bg-slate-100 dark:bg-slate-800/50 hover:bg-slate-200 dark:hover:bg-slate-800/80 transition-colors"
                   >
-                    <div className="text-sm font-medium text-white">
+                    <div className="text-sm font-medium text-slate-900 dark:text-white">
                       {item.category}
                     </div>
                     <div className="text-sm text-slate-500 line-through text-center">
@@ -99,18 +103,20 @@ export function CostComparison() {
             </CardContent>
           </Card>
 
-          <Card className="glass border-cyber-cyan-500/30 hover:border-cyber-cyan-500/50 transition-all duration-300 bg-transparent">
+          <Card className="bg-white dark:bg-transparent dark:glass shadow-sm dark:shadow-none border-slate-200 dark:border-cyber-cyan-500/30 hover:border-cyber-cyan-500/50 transition-all duration-300">
             <CardContent className="p-6">
-              <h3 className="text-lg font-bold mb-6 text-center text-white">
+              <h3 className="text-lg font-bold mb-6 text-center text-slate-900 dark:text-white">
                 功能對比：傳統方式 vs 1WaySEO
               </h3>
               <div className="space-y-3">
                 {features.map((feature, index) => (
                   <div
                     key={index}
-                    className="grid grid-cols-3 gap-4 items-center p-2 rounded-lg hover:bg-slate-800/50 transition-colors"
+                    className="grid grid-cols-3 gap-4 items-center p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800/50 transition-colors"
                   >
-                    <div className="text-sm text-white">{feature.name}</div>
+                    <div className="text-sm text-slate-900 dark:text-white">
+                      {feature.name}
+                    </div>
                     <div className="flex justify-center">
                       <X className="h-5 w-5 text-red-400" />
                     </div>

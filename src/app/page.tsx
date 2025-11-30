@@ -140,7 +140,7 @@ export default async function Home() {
       <Navbar />
       <main className="relative min-h-screen overflow-hidden">
         {/* Hero Section - Cyberpunk Dark */}
-        <section className="relative py-16 sm:py-24 bg-slate-50 dark:bg-slate-900">
+        <section className="relative py-16 sm:py-24 bg-slate-100 dark:bg-slate-900">
           <AuroraBackground />
           <CyberGlow position="top" color="mixed" />
           <BackgroundGrid variant="dark" />
@@ -148,7 +148,7 @@ export default async function Home() {
 
           <div className="container relative z-10 mx-auto px-4">
             <div className="mx-auto max-w-5xl text-center">
-              <div className="mb-6 inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-sm font-medium text-cyber-cyan-400">
+              <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-white dark:bg-transparent dark:glass shadow-sm dark:shadow-none border border-slate-200 dark:border-transparent px-4 py-2 text-sm font-medium text-cyber-cyan-600 dark:text-cyber-cyan-400">
                 <Zap className="h-4 w-4" />
                 <span>AI 驅動的 SEO 內容平台</span>
               </div>
@@ -165,7 +165,7 @@ export default async function Home() {
                 </ShimmerText>
               </h1>
 
-              <p className="mx-auto mb-8 max-w-3xl text-lg text-slate-300 leading-relaxed">
+              <p className="mx-auto mb-8 max-w-3xl text-lg text-slate-600 dark:text-slate-300 leading-relaxed">
                 1WaySEO 結合 GPT、Claude、Gemini 等最先進 AI 技術，
                 <br className="hidden md:block" />
                 從關鍵字研究到文章發布，全自動化 SEO 內容生產流程。
@@ -206,7 +206,7 @@ export default async function Home() {
         </section>
 
         {/* Stats Bar - Indigo Gradient */}
-        <section className="relative py-12 bg-gradient-to-b from-slate-50 to-indigo-100 dark:from-slate-900 dark:to-indigo-950">
+        <section className="relative py-12 bg-slate-100 dark:bg-gradient-to-b dark:from-slate-900 dark:to-indigo-950">
           <div className="container relative z-10 mx-auto px-4">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
               {stats.map((stat, index) => {
@@ -214,7 +214,7 @@ export default async function Home() {
                 return (
                   <div
                     key={index}
-                    className="glass rounded-xl p-6 text-center hover:border-cyber-violet-500/50 transition-all duration-300"
+                    className="bg-white dark:bg-transparent dark:glass shadow-sm dark:shadow-none border border-slate-200 dark:border-white/10 rounded-xl p-6 text-center hover:border-cyber-violet-500/50 transition-all duration-300"
                   >
                     <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-cyber-violet-500/20 mb-4">
                       <Icon className="h-6 w-6 text-cyber-cyan-400" />
@@ -243,13 +243,13 @@ export default async function Home() {
         <CostComparison />
 
         {/* AI Technology Section - Dark Slate */}
-        <section className="relative py-20 bg-slate-50 dark:bg-slate-900">
+        <section className="relative py-20 bg-slate-100 dark:bg-slate-900">
           <FloatingOrbs />
           <BackgroundGrid variant="dark" />
 
           <div className="container relative z-10 mx-auto px-4">
             <div className="text-center mb-12">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-sm font-medium text-cyber-cyan-400">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white dark:bg-transparent dark:glass shadow-sm dark:shadow-none border border-slate-200 dark:border-transparent px-4 py-2 text-sm font-medium text-cyber-cyan-600 dark:text-cyber-cyan-400">
                 <Brain className="h-4 w-4" />
                 <span>AI 技術</span>
               </div>
@@ -274,7 +274,7 @@ export default async function Home() {
               {aiModels.map((model, index) => (
                 <Card
                   key={index}
-                  className="glass border-cyber-violet-500/20 text-center hover:border-cyber-violet-500/50 transition-all duration-300 bg-transparent"
+                  className="bg-white dark:bg-transparent dark:glass shadow-sm dark:shadow-none border-slate-200 dark:border-cyber-violet-500/20 text-center hover:border-cyber-violet-500/50 transition-all duration-300"
                 >
                   <CardContent className="p-6">
                     <GradientText
@@ -297,14 +297,14 @@ export default async function Home() {
         {/* Features Section - Indigo Gradient */}
         <section
           id="features"
-          className="relative py-20 bg-gradient-to-b from-slate-50 to-indigo-100 dark:from-slate-900 dark:to-indigo-950"
+          className="relative py-20 bg-slate-100 dark:bg-gradient-to-b dark:from-slate-900 dark:to-indigo-950"
         >
           <BackgroundGrid variant="dark" />
           <CyberGlow position="center" color="violet" />
 
           <div className="container relative z-10 mx-auto px-4">
             <div className="text-center mb-16">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-sm font-medium text-cyber-cyan-400">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white dark:bg-transparent dark:glass shadow-sm dark:shadow-none border border-slate-200 dark:border-transparent px-4 py-2 text-sm font-medium text-cyber-cyan-600 dark:text-cyber-cyan-400">
                 <Target className="h-4 w-4" />
                 <span>完整工作流程</span>
               </div>
@@ -331,13 +331,13 @@ export default async function Home() {
                 return (
                   <Card
                     key={index}
-                    className="glass border-white/10 hover:border-cyber-violet-500/50 hover:-translate-y-2 transition-all duration-300 bg-transparent"
+                    className="bg-white dark:bg-transparent dark:glass shadow-sm dark:shadow-none border-slate-200 dark:border-white/10 hover:border-cyber-violet-500/50 hover:-translate-y-2 transition-all duration-300"
                   >
                     <CardContent className="p-6">
                       <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-cyber-cyan-500 to-cyber-violet-500">
                         <Icon className="h-6 w-6 text-white" />
                       </div>
-                      <h3 className="mb-2 text-lg font-bold text-white">
+                      <h3 className="mb-2 text-lg font-bold text-slate-900 dark:text-white">
                         {feature.title}
                       </h3>
                       <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
@@ -352,11 +352,11 @@ export default async function Home() {
         </section>
 
         {/* Testimonials Section - Dark Slate */}
-        <section className="relative py-20 bg-slate-50 dark:bg-slate-900">
+        <section className="relative py-20 bg-slate-100 dark:bg-slate-900">
           <BackgroundGrid variant="dark" />
           <div className="container relative z-10 mx-auto px-4">
             <div className="text-center mb-12">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-sm font-medium text-cyber-cyan-400">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white dark:bg-transparent dark:glass shadow-sm dark:shadow-none border border-slate-200 dark:border-transparent px-4 py-2 text-sm font-medium text-cyber-cyan-600 dark:text-cyber-cyan-400">
                 <Users className="h-4 w-4" />
                 <span>客戶見證</span>
               </div>
@@ -384,14 +384,14 @@ export default async function Home() {
         {/* Pricing Section - Indigo Gradient */}
         <section
           id="pricing"
-          className="relative py-20 bg-gradient-to-b from-indigo-100 to-slate-50 dark:from-indigo-950 dark:to-slate-900"
+          className="relative py-20 bg-slate-100 dark:bg-gradient-to-b dark:from-indigo-950 dark:to-slate-900"
         >
           <BackgroundGrid variant="dark" />
           <CyberGlow position="top" color="magenta" />
 
           <div className="container relative z-10 mx-auto px-4">
             <div className="text-center mb-12">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-sm font-medium text-cyber-magenta-400">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white dark:bg-transparent dark:glass shadow-sm dark:shadow-none border border-slate-200 dark:border-transparent px-4 py-2 text-sm font-medium text-cyber-magenta-600 dark:text-cyber-magenta-400">
                 <Infinity className="h-4 w-4" />
                 <span>定價方案</span>
               </div>
@@ -410,9 +410,9 @@ export default async function Home() {
               <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto mb-6">
                 一次付費，每月自動獲得 Credits 配額，無需訂閱費用
               </p>
-              <div className="inline-flex items-center gap-3 rounded-full glass border-cyber-cyan-500/30 px-6 py-3">
-                <CheckCircle2 className="h-5 w-5 text-cyber-cyan-400" />
-                <span className="text-cyber-cyan-400 font-medium">
+              <div className="inline-flex items-center gap-3 rounded-full bg-white dark:bg-transparent dark:glass shadow-sm dark:shadow-none border border-slate-200 dark:border-cyber-cyan-500/30 px-6 py-3">
+                <CheckCircle2 className="h-5 w-5 text-cyber-cyan-600 dark:text-cyber-cyan-400" />
+                <span className="text-cyber-cyan-600 dark:text-cyber-cyan-400 font-medium">
                   免費方案：註冊即送 10K Credits（一次性）
                 </span>
               </div>
@@ -428,14 +428,14 @@ export default async function Home() {
                 return (
                   <Card
                     key={plan.id}
-                    className={`relative flex flex-col h-full transition-all duration-300 bg-transparent ${
+                    className={`relative flex flex-col h-full transition-all duration-300 ${
                       isPopular
                         ? "bg-gradient-to-b from-cyber-violet-600 to-cyber-magenta-600 text-white border-cyber-violet-500 shadow-lg scale-105 glow-button"
-                        : "glass border-white/10 hover:border-cyber-violet-500/50"
+                        : "bg-white dark:bg-transparent dark:glass shadow-sm dark:shadow-none border-slate-200 dark:border-white/10 hover:border-cyber-violet-500/50"
                     }`}
                   >
                     {isPopular && (
-                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-cyber-cyan-400 text-slate-900 px-3 py-1 rounded-full text-xs font-bold">
+                      <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-400 text-slate-900 px-3 py-1 rounded-full text-xs font-bold shadow-lg">
                         最熱門
                       </div>
                     )}
@@ -468,7 +468,7 @@ export default async function Home() {
                       </div>
                       <div className="flex-1">
                         <ul
-                          className={`space-y-2 text-sm mb-4 ${isPopular ? "text-slate-900 dark:text-white" : "text-slate-300"}`}
+                          className={`space-y-2 text-sm mb-4 ${isPopular ? "text-slate-900 dark:text-white" : "text-slate-700 dark:text-slate-300"}`}
                         >
                           <li className="flex items-center gap-2">
                             <CheckCircle2
@@ -507,7 +507,7 @@ export default async function Home() {
                         size="sm"
                         className={`w-full mt-auto ${
                           isPopular
-                            ? "bg-white text-cyber-violet-600 hover:bg-white/90"
+                            ? "bg-white text-cyber-violet-600 hover:bg-slate-50 shadow-lg border border-white/50 font-bold"
                             : "bg-gradient-to-r from-cyber-violet-600 to-cyber-magenta-600 text-white hover:from-cyber-violet-500 hover:to-cyber-magenta-500"
                         }`}
                       >
@@ -521,7 +521,7 @@ export default async function Home() {
 
             <div className="max-w-4xl mx-auto">
               <div className="text-center mb-8">
-                <div className="mb-4 inline-flex items-center gap-2 rounded-full glass border-cyber-cyan-500/30 px-4 py-2 text-sm font-medium text-cyber-cyan-400">
+                <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white dark:bg-transparent dark:glass shadow-sm dark:shadow-none border border-slate-200 dark:border-cyber-cyan-500/30 px-4 py-2 text-sm font-medium text-cyber-cyan-600 dark:text-cyber-cyan-400">
                   <CreditCard className="h-4 w-4" />
                   <span>Credits 加值包</span>
                 </div>
@@ -540,10 +540,10 @@ export default async function Home() {
                   return (
                     <Card
                       key={pkg.id}
-                      className={`relative glass bg-transparent ${
+                      className={`relative bg-white dark:bg-transparent dark:glass shadow-sm dark:shadow-none ${
                         isPopular
                           ? "border-cyber-cyan-400/50"
-                          : "border-white/10"
+                          : "border-slate-200 dark:border-white/10"
                       }`}
                     >
                       {isPopular && (
@@ -583,7 +583,7 @@ export default async function Home() {
         <FAQSection />
 
         {/* Final CTA Section - Slate with Glow */}
-        <section className="relative py-20 bg-slate-50 dark:bg-slate-900 overflow-hidden">
+        <section className="relative py-20 bg-slate-100 dark:bg-slate-900 overflow-hidden">
           <AuroraBackground showRadialGradient={false} />
           <CyberGlow position="center" color="mixed" />
           <FloatingOrbs />
