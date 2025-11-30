@@ -1,5 +1,5 @@
-import * as React from 'react'
-import { cn } from '@/lib/utils'
+import * as React from "react";
+import { cn } from "@/lib/utils";
 
 const Alert = React.forwardRef<
   HTMLDivElement,
@@ -9,13 +9,13 @@ const Alert = React.forwardRef<
     ref={ref}
     role="alert"
     className={cn(
-      'relative w-full rounded-lg border p-4',
-      className
+      "relative w-full rounded-lg border border-white/10 bg-slate-800/50 p-4 text-slate-300 [&>svg]:text-slate-400",
+      className,
     )}
     {...props}
   />
-))
-Alert.displayName = 'Alert'
+));
+Alert.displayName = "Alert";
 
 const AlertTitle = React.forwardRef<
   HTMLParagraphElement,
@@ -23,11 +23,14 @@ const AlertTitle = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <h5
     ref={ref}
-    className={cn('mb-1 font-medium leading-none tracking-tight', className)}
+    className={cn(
+      "mb-1 font-medium leading-none tracking-tight text-white",
+      className,
+    )}
     {...props}
   />
-))
-AlertTitle.displayName = 'AlertTitle'
+));
+AlertTitle.displayName = "AlertTitle";
 
 const AlertDescription = React.forwardRef<
   HTMLParagraphElement,
@@ -35,10 +38,10 @@ const AlertDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn('text-sm [&_p]:leading-relaxed', className)}
+    className={cn("text-sm [&_p]:leading-relaxed", className)}
     {...props}
   />
-))
-AlertDescription.displayName = 'AlertDescription'
+));
+AlertDescription.displayName = "AlertDescription";
 
-export { Alert, AlertTitle, AlertDescription }
+export { Alert, AlertTitle, AlertDescription };
