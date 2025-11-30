@@ -70,7 +70,8 @@
       "WebFetch(domain:linear.app)",
       "WebFetch(domain:www.hover.dev)",
       "Skill(shadcn-ui)",
-      "WebFetch(domain:ui.aceternity.com)"
+      "WebFetch(domain:ui.aceternity.com)",
+      "Bash(pnpm run build:*)"
     ],
     "deny": [],
     "ask": []
