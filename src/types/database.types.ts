@@ -891,10 +891,17 @@ export type Database = {
           referred_company_id: string;
           referral_code: string;
           status: "pending" | "qualified" | "rewarded";
-          registered_at: string;
+          registered_at: string | null;
           first_payment_at: string | null;
-          rewarded_at: string | null;
-          created_at: string;
+          first_payment_amount: number | null;
+          reward_type: string | null;
+          tokens_rewarded: number | null;
+          total_payments: number | null;
+          lifetime_value: number | null;
+          total_commission_generated: number | null;
+          last_payment_at: string | null;
+          created_at: string | null;
+          updated_at: string | null;
         };
         Insert: {
           id?: string;
@@ -902,10 +909,17 @@ export type Database = {
           referred_company_id: string;
           referral_code: string;
           status?: "pending" | "qualified" | "rewarded";
-          registered_at?: string;
+          registered_at?: string | null;
           first_payment_at?: string | null;
-          rewarded_at?: string | null;
-          created_at?: string;
+          first_payment_amount?: number | null;
+          reward_type?: string | null;
+          tokens_rewarded?: number | null;
+          total_payments?: number | null;
+          lifetime_value?: number | null;
+          total_commission_generated?: number | null;
+          last_payment_at?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
         };
         Update: {
           id?: string;
@@ -913,10 +927,17 @@ export type Database = {
           referred_company_id?: string;
           referral_code?: string;
           status?: "pending" | "qualified" | "rewarded";
-          registered_at?: string;
+          registered_at?: string | null;
           first_payment_at?: string | null;
-          rewarded_at?: string | null;
-          created_at?: string;
+          first_payment_amount?: number | null;
+          reward_type?: string | null;
+          tokens_rewarded?: number | null;
+          total_payments?: number | null;
+          lifetime_value?: number | null;
+          total_commission_generated?: number | null;
+          last_payment_at?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
         };
         Relationships: [
           {
