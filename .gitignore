@@ -54,3 +54,4 @@ supabase/.env
 .open-next/
 .dev.vars
 .wrangler/
+note.md
