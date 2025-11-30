@@ -9,7 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
-import { CheckCircle2, Clock, Coins, Gift } from "lucide-react";
+import { CheckCircle2, Clock, Gift } from "lucide-react";
 import { REFERRAL_TOKEN_REWARD } from "@/types/referral.types";
 import type { Referral } from "@/types/referral.types";
 
@@ -18,7 +18,7 @@ interface ReferralHistoryTableProps {
 }
 
 export function ReferralHistoryTable({ referrals }: ReferralHistoryTableProps) {
-  const getStatusBadge = (status: string, rewardType: string | null) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case "rewarded":
         return (
@@ -27,14 +27,10 @@ export function ReferralHistoryTable({ referrals }: ReferralHistoryTableProps) {
             已獎勵
           </Badge>
         );
-      case "qualified":
+      case "completed":
         return (
           <Badge className="bg-blue-100 text-blue-700 hover:bg-blue-200 dark:bg-blue-900/20 dark:text-blue-400">
-            {rewardType === "commission" ? (
-              <Coins className="h-3 w-3 mr-1" />
-            ) : (
-              <Gift className="h-3 w-3 mr-1" />
-            )}
+            <Gift className="h-3 w-3 mr-1" />
             已付款
           </Badge>
         );
@@ -66,7 +62,7 @@ export function ReferralHistoryTable({ referrals }: ReferralHistoryTableProps) {
       return <span className="text-muted-foreground">-</span>;
     }
 
-    if (referral.reward_type === "tokens") {
+    if (referral.status === "rewarded") {
       return (
         <span className="font-semibold text-green-600">
           +{REFERRAL_TOKEN_REWARD.toLocaleString()} tokens
@@ -74,15 +70,7 @@ export function ReferralHistoryTable({ referrals }: ReferralHistoryTableProps) {
       );
     }
 
-    if (referral.reward_type === "commission") {
-      return (
-        <span className="font-semibold text-blue-600">
-          佣金 NT${referral.total_commission_generated?.toLocaleString() || 0}
-        </span>
-      );
-    }
-
-    return <span className="text-muted-foreground">-</span>;
+    return <span className="text-muted-foreground">處理中</span>;
   };
 
   return (
@@ -91,7 +79,7 @@ export function ReferralHistoryTable({ referrals }: ReferralHistoryTableProps) {
         <TableHeader>
           <TableRow>
             <TableHead>推薦對象</TableHead>
-            <TableHead>註冊時間</TableHead>
+            <TableHead>推薦時間</TableHead>
             <TableHead>首次付款</TableHead>
             <TableHead>狀態</TableHead>
             <TableHead className="text-right">獎勵</TableHead>
@@ -104,14 +92,12 @@ export function ReferralHistoryTable({ referrals }: ReferralHistoryTableProps) {
                 {referral.referred_company_id.slice(0, 8)}...
               </TableCell>
               <TableCell className="text-sm text-muted-foreground">
-                {formatDate(referral.registered_at)}
+                {formatDate(referral.referred_at)}
               </TableCell>
               <TableCell className="text-sm text-muted-foreground">
                 {formatDate(referral.first_payment_at)}
               </TableCell>
-              <TableCell>
-                {getStatusBadge(referral.status, referral.reward_type)}
-              </TableCell>
+              <TableCell>{getStatusBadge(referral.status)}</TableCell>
               <TableCell className="text-right">
                 {getRewardDisplay(referral)}
               </TableCell>

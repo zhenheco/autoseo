@@ -1,10 +1,10 @@
 export interface ReferralCode {
   id: string;
   company_id: string;
-  code: string;
-  total_clicks: number;
+  referral_code: string;
   total_referrals: number;
   successful_referrals: number;
+  total_rewards_tokens: number;
   created_at: string;
 }
 
@@ -13,18 +13,11 @@ export interface Referral {
   referrer_company_id: string;
   referred_company_id: string;
   referral_code: string;
-  status: "pending" | "qualified" | "rewarded";
-  registered_at: string;
+  status: "pending" | "completed" | "rewarded";
+  referred_at: string;
   first_payment_at: string | null;
-  first_payment_amount: number | null;
-  reward_type: "tokens" | "commission" | null;
-  tokens_rewarded: number;
-  total_payments: number;
-  lifetime_value: number;
-  total_commission_generated: number;
-  last_payment_at: string | null;
+  rewarded_at: string | null;
   created_at: string;
-  updated_at: string;
 }
 
 export interface AffiliateTier {

@@ -74,8 +74,8 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      code: referralCode.code,
-      url: `${process.env.NEXT_PUBLIC_APP_URL}/r/${referralCode.code}`,
+      code: referralCode.referral_code,
+      url: `${process.env.NEXT_PUBLIC_APP_URL}/r/${referralCode.referral_code}`,
     });
   } catch (error) {
     console.error("API:referrals POST error:", error);
