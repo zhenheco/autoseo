@@ -1,9 +1,5 @@
-const path = require("path");
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  output: "standalone",
-  outputFileTracingRoot: path.join(__dirname),
   typescript: {
     ignoreBuildErrors: false,
   },
@@ -80,7 +76,6 @@ const nextConfig = {
       "@radix-ui/react-icons",
     ],
   },
-  turbopack: {},
   webpack: (config, { isServer }) => {
     if (isServer) {
       config.externals.push({
