@@ -73,27 +73,27 @@ export default function AffiliateReferralsPage() {
   const getStatusBadge = (referral: Referral) => {
     if (referral.cancelled_at) {
       return (
-        <span className="rounded-full bg-red-500/20 px-2 py-1 text-xs text-red-400">
+        <span className="rounded-full bg-red-100 px-2 py-1 text-xs text-red-800">
           已取消
         </span>
       );
     }
     if (!referral.first_payment_at) {
       return (
-        <span className="rounded-full bg-amber-500/20 px-2 py-1 text-xs text-amber-400">
+        <span className="rounded-full bg-yellow-100 px-2 py-1 text-xs text-yellow-800">
           待轉換
         </span>
       );
     }
     if (referral.is_active) {
       return (
-        <span className="rounded-full bg-emerald-500/20 px-2 py-1 text-xs text-emerald-400">
+        <span className="rounded-full bg-green-100 px-2 py-1 text-xs text-green-800">
           活躍
         </span>
       );
     }
     return (
-      <span className="rounded-full bg-slate-700 px-2 py-1 text-xs text-slate-400">
+      <span className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-800">
         不活躍
       </span>
     );
@@ -104,8 +104,8 @@ export default function AffiliateReferralsPage() {
       {/* 標題 */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">推薦客戶</h1>
-          <p className="text-slate-400">查看您推薦的客戶及其狀態</p>
+          <h1 className="text-3xl font-bold">推薦客戶</h1>
+          <p className="text-gray-600">查看您推薦的客戶及其狀態</p>
         </div>
         <Link href="/dashboard/affiliate">
           <Button variant="outline">返回儀表板</Button>
@@ -113,9 +113,9 @@ export default function AffiliateReferralsPage() {
       </div>
 
       {/* 篩選器 */}
-      <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-white">篩選</CardTitle>
+          <CardTitle>篩選</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-2">
@@ -151,18 +151,16 @@ export default function AffiliateReferralsPage() {
       </Card>
 
       {/* 列表 */}
-      <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-white">推薦列表</CardTitle>
-          <CardDescription className="text-slate-400">
-            共 {referrals.length} 筆記錄
-          </CardDescription>
+          <CardTitle>推薦列表</CardTitle>
+          <CardDescription>共 {referrals.length} 筆記錄</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="py-8 text-center text-slate-400">載入中...</div>
+            <div className="py-8 text-center text-gray-500">載入中...</div>
           ) : referrals.length === 0 ? (
-            <div className="py-8 text-center text-slate-400">尚無推薦客戶</div>
+            <div className="py-8 text-center text-gray-500">尚無推薦客戶</div>
           ) : (
             <>
               <div className="overflow-x-auto">
@@ -182,7 +180,7 @@ export default function AffiliateReferralsPage() {
                   <TableBody>
                     {referrals.map((referral) => (
                       <TableRow key={referral.id}>
-                        <TableCell className="font-medium text-white">
+                        <TableCell className="font-medium">
                           {referral.company_name}
                         </TableCell>
                         <TableCell>
@@ -202,7 +200,7 @@ export default function AffiliateReferralsPage() {
                         <TableCell className="text-right">
                           NT$ {referral.lifetime_value.toLocaleString()}
                         </TableCell>
-                        <TableCell className="text-right text-emerald-400 font-semibold">
+                        <TableCell className="text-right text-green-600 font-semibold">
                           NT${" "}
                           {referral.total_commission_generated.toLocaleString()}
                         </TableCell>
@@ -223,7 +221,7 @@ export default function AffiliateReferralsPage() {
                   >
                     上一頁
                   </Button>
-                  <span className="text-sm text-slate-400">
+                  <span className="text-sm text-gray-600">
                     第 {page} / {totalPages} 頁
                   </span>
                   <Button

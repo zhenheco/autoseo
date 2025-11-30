@@ -88,16 +88,10 @@ export default function AffiliateCommissionsPage() {
 
   const getStatusBadge = (status: Commission["status"]) => {
     const statusMap = {
-      locked: { label: "鎖定中", className: "bg-amber-500/20 text-amber-400" },
-      available: {
-        label: "可提領",
-        className: "bg-emerald-500/20 text-emerald-400",
-      },
-      withdrawn: {
-        label: "已提領",
-        className: "bg-cyber-cyan-500/20 text-cyber-cyan-400",
-      },
-      cancelled: { label: "已取消", className: "bg-red-500/20 text-red-400" },
+      locked: { label: "鎖定中", className: "bg-orange-100 text-orange-800" },
+      available: { label: "可提領", className: "bg-green-100 text-green-800" },
+      withdrawn: { label: "已提領", className: "bg-blue-100 text-blue-800" },
+      cancelled: { label: "已取消", className: "bg-red-100 text-red-800" },
     };
 
     const { label, className } = statusMap[status];
@@ -124,8 +118,8 @@ export default function AffiliateCommissionsPage() {
       {/* 標題 */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">佣金明細</h1>
-          <p className="text-slate-400">查看您的所有佣金記錄</p>
+          <h1 className="text-3xl font-bold">佣金明細</h1>
+          <p className="text-gray-600">查看您的所有佣金記錄</p>
         </div>
         <Link href="/dashboard/affiliate">
           <Button variant="outline">返回儀表板</Button>
@@ -134,26 +128,22 @@ export default function AffiliateCommissionsPage() {
 
       {/* 摘要卡片 */}
       <div className="grid gap-4 md:grid-cols-3">
-        <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
+        <Card>
           <CardHeader className="pb-2">
-            <CardDescription className="text-slate-400">
-              鎖定中佣金
-            </CardDescription>
-            <CardTitle className="text-2xl text-amber-400">
+            <CardDescription>鎖定中佣金</CardDescription>
+            <CardTitle className="text-2xl text-orange-600">
               NT$ {summary.total_locked.toLocaleString()}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-slate-500">30天後可提領</p>
+            <p className="text-sm text-gray-500">30天後可提領</p>
           </CardContent>
         </Card>
 
-        <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
+        <Card>
           <CardHeader className="pb-2">
-            <CardDescription className="text-slate-400">
-              可提領佣金
-            </CardDescription>
-            <CardTitle className="text-2xl text-emerald-400">
+            <CardDescription>可提領佣金</CardDescription>
+            <CardTitle className="text-2xl text-green-600">
               NT$ {summary.total_available.toLocaleString()}
             </CardTitle>
           </CardHeader>
@@ -166,25 +156,23 @@ export default function AffiliateCommissionsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
+        <Card>
           <CardHeader className="pb-2">
-            <CardDescription className="text-slate-400">
-              已提領佣金
-            </CardDescription>
-            <CardTitle className="text-2xl text-cyber-cyan-400">
+            <CardDescription>已提領佣金</CardDescription>
+            <CardTitle className="text-2xl text-blue-600">
               NT$ {summary.total_withdrawn.toLocaleString()}
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-slate-500">歷史總計</p>
+            <p className="text-sm text-gray-500">歷史總計</p>
           </CardContent>
         </Card>
       </div>
 
       {/* 篩選器 */}
-      <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-white">篩選</CardTitle>
+          <CardTitle>篩選</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="flex gap-2">
@@ -229,18 +217,16 @@ export default function AffiliateCommissionsPage() {
       </Card>
 
       {/* 列表 */}
-      <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-white">佣金記錄</CardTitle>
-          <CardDescription className="text-slate-400">
-            共 {commissions.length} 筆記錄
-          </CardDescription>
+          <CardTitle>佣金記錄</CardTitle>
+          <CardDescription>共 {commissions.length} 筆記錄</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="py-8 text-center text-slate-400">載入中...</div>
+            <div className="py-8 text-center text-gray-500">載入中...</div>
           ) : commissions.length === 0 ? (
-            <div className="py-8 text-center text-slate-400">尚無佣金記錄</div>
+            <div className="py-8 text-center text-gray-500">尚無佣金記錄</div>
           ) : (
             <>
               <div className="overflow-x-auto">
@@ -260,7 +246,7 @@ export default function AffiliateCommissionsPage() {
                   <TableBody>
                     {commissions.map((comm) => (
                       <TableRow key={comm.id}>
-                        <TableCell className="font-medium text-white">
+                        <TableCell className="font-medium">
                           {comm.company_name}
                         </TableCell>
                         <TableCell className="text-right">
@@ -269,16 +255,16 @@ export default function AffiliateCommissionsPage() {
                         <TableCell className="text-right">
                           NT$ {comm.commission_amount.toLocaleString()}
                         </TableCell>
-                        <TableCell className="text-right text-red-400">
+                        <TableCell className="text-right text-red-600">
                           -NT$ {comm.tax_amount.toLocaleString()}
                         </TableCell>
-                        <TableCell className="text-right font-semibold text-emerald-400">
+                        <TableCell className="text-right font-semibold text-green-600">
                           NT$ {comm.net_commission.toLocaleString()}
                         </TableCell>
                         <TableCell>{formatDate(comm.earned_at)}</TableCell>
                         <TableCell>
                           {comm.status === "locked" ? (
-                            <span className="text-sm text-slate-400">
+                            <span className="text-sm text-gray-600">
                               {getDaysUntilUnlock(comm.unlock_at)}
                             </span>
                           ) : (
@@ -302,7 +288,7 @@ export default function AffiliateCommissionsPage() {
                   >
                     上一頁
                   </Button>
-                  <span className="text-sm text-slate-400">
+                  <span className="text-sm text-gray-600">
                     第 {page} / {totalPages} 頁
                   </span>
                   <Button

@@ -6,15 +6,7 @@ import {
   HeroGlow,
   FloatingOrbs,
   ParticleField,
-  AuroraBackground,
-  CyberGlow,
 } from "@/components/ui/background-effects";
-import { ShimmerText, GradientText } from "@/components/ui/shimmer-text";
-import {
-  GlowButton,
-  GlowButtonLink,
-  GlassCard,
-} from "@/components/ui/glow-button";
 import {
   Sparkles,
   Zap,
@@ -136,63 +128,61 @@ export default async function Home() {
 
   return (
     <main className="relative min-h-screen overflow-hidden">
-      {/* Hero Section - Cyberpunk Dark */}
-      <section className="relative py-16 sm:py-24 bg-slate-900">
-        <AuroraBackground />
-        <CyberGlow position="top" color="mixed" />
+      {/* Hero Section - Dark */}
+      <section className="relative py-16 sm:py-24 bg-dark-section">
+        <HeroGlow />
         <BackgroundGrid variant="dark" />
         <ParticleField count={20} variant="mixed" />
 
         <div className="container relative z-10 mx-auto px-4">
           <div className="mx-auto max-w-5xl text-center">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-sm font-medium text-cyber-cyan-400">
+            <div className="mb-6 inline-flex items-center gap-2 rounded-full glass-dark px-4 py-2 text-sm font-medium text-tech-blue-400">
               <Zap className="h-4 w-4" />
               <span>AI 驅動的 SEO 內容平台</span>
             </div>
 
             <h1 className="mb-6 font-bold tracking-tight">
-              <span className="text-white text-xl md:text-2xl block">
+              <span className="text-text-dark-primary text-xl md:text-2xl block">
                 讓 AI 為您打造
               </span>
-              <ShimmerText
-                as="span"
-                className="text-4xl md:text-6xl block mt-2 font-extrabold"
-              >
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-tech-blue-400 to-purple-400 text-4xl md:text-6xl block mt-2">
                 完美的 SEO 內容
-              </ShimmerText>
+              </span>
             </h1>
 
-            <p className="mx-auto mb-8 max-w-3xl text-lg text-slate-300 leading-relaxed">
-              1WaySEO 結合 GPT、Claude、Gemini 等最先進 AI 技術，
+            <p className="mx-auto mb-8 max-w-3xl text-lg text-text-dark-secondary leading-relaxed">
+              1waySEO 結合 GPT、Claude、Gemini 等最先進 AI 技術，
               <br className="hidden md:block" />
               從關鍵字研究到文章發布，全自動化 SEO 內容生產流程。
             </p>
 
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
-              <GlowButtonLink
-                href="/login"
+              <Button
+                asChild
                 size="lg"
-                variant="primary"
-                glowColor="violet"
-                className="w-full sm:w-auto text-lg px-8 py-6 gap-2"
+                className="w-full sm:w-auto glow-blue text-lg px-8 py-6 bg-tech-blue-600 hover:bg-tech-blue-500 text-white"
               >
-                <Rocket className="h-5 w-5" />
-                免費開始
-                <ArrowRight className="h-5 w-5" />
-              </GlowButtonLink>
+                <Link href="/login" className="gap-2">
+                  <Rocket className="h-5 w-5" />
+                  免費開始
+                  <ArrowRight className="h-5 w-5" />
+                </Link>
+              </Button>
             </div>
 
-            <div className="flex flex-wrap justify-center gap-6 text-sm text-slate-400">
+            <div className="flex flex-wrap justify-center gap-6 text-sm text-text-dark-secondary">
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-cyber-cyan-400" />
-                <span className="text-white font-medium">免費 10K Credits</span>
+                <CheckCircle2 className="h-4 w-4 text-tech-blue-400" />
+                <span className="text-text-dark-primary font-medium">
+                  免費 10K Credits
+                </span>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-cyber-cyan-400" />
+                <CheckCircle2 className="h-4 w-4 text-tech-blue-400" />
                 <span>無需信用卡</span>
               </div>
               <div className="flex items-center gap-2">
-                <CheckCircle2 className="h-4 w-4 text-cyber-cyan-400" />
+                <CheckCircle2 className="h-4 w-4 text-tech-blue-400" />
                 <span>可生成 2-3 篇文章</span>
               </div>
             </div>
@@ -200,8 +190,8 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Stats Bar - Indigo Gradient */}
-      <section className="relative py-12 bg-gradient-to-b from-slate-900 to-indigo-950">
+      {/* Stats Bar - Dark (continues from Hero) */}
+      <section className="relative py-12 bg-dark-section-secondary">
         <div className="container relative z-10 mx-auto px-4">
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl mx-auto">
             {stats.map((stat, index) => {
@@ -209,22 +199,18 @@ export default async function Home() {
               return (
                 <div
                   key={index}
-                  className="glass rounded-xl p-6 text-center hover:border-cyber-violet-500/50 transition-all duration-300"
+                  className="glass-dark rounded-xl p-6 text-center hover:glow-blue-subtle transition-all duration-300"
                 >
-                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-cyber-violet-500/20 mb-4">
-                    <Icon className="h-6 w-6 text-cyber-cyan-400" />
+                  <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-tech-blue-500/20 mb-4">
+                    <Icon className="h-6 w-6 text-tech-blue-400" />
                   </div>
-                  <GradientText
-                    as="span"
-                    gradient="cyan-violet-magenta"
-                    className="text-3xl md:text-4xl font-bold block"
-                  >
+                  <div className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-tech-blue-400 to-purple-400">
                     {stat.value}
                     {stat.suffix && stat.suffix !== "分鐘" && (
                       <span className="text-2xl">{stat.suffix}</span>
                     )}
-                  </GradientText>
-                  <div className="text-slate-400 text-sm mt-1">
+                  </div>
+                  <div className="text-text-dark-secondary text-sm mt-1">
                     {stat.label}
                   </div>
                 </div>
@@ -237,28 +223,26 @@ export default async function Home() {
       {/* Cost Comparison - Light */}
       <CostComparison />
 
-      {/* AI Technology Section - Dark Slate */}
-      <section className="relative py-20 bg-slate-900">
+      {/* AI Technology Section - Dark */}
+      <section className="relative py-20 bg-dark-section">
         <FloatingOrbs />
         <BackgroundGrid variant="dark" />
 
         <div className="container relative z-10 mx-auto px-4">
           <div className="text-center mb-12">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-sm font-medium text-cyber-cyan-400">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full glass-dark px-4 py-2 text-sm font-medium text-tech-blue-400">
               <Brain className="h-4 w-4" />
               <span>AI 技術</span>
             </div>
             <h2 className="font-bold mb-4">
-              <span className="text-white text-xl md:text-2xl">整合</span>
-              <GradientText
-                as="span"
-                gradient="cyan-violet-magenta"
-                className="text-4xl md:text-5xl ml-2"
-              >
+              <span className="text-text-dark-primary text-xl md:text-2xl">
+                整合
+              </span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-tech-blue-400 to-purple-400 text-4xl md:text-5xl ml-2">
                 頂尖 AI 模型
-              </GradientText>
+              </span>
             </h2>
-            <p className="text-slate-400 max-w-2xl mx-auto">
+            <p className="text-text-dark-secondary max-w-2xl mx-auto">
               根據需求自動選擇最適合的 AI 模型，確保最佳品質
             </p>
           </div>
@@ -267,17 +251,13 @@ export default async function Home() {
             {aiModels.map((model, index) => (
               <Card
                 key={index}
-                className="glass border-cyber-violet-500/20 text-center hover:border-cyber-violet-500/50 transition-all duration-300 bg-transparent"
+                className="glass-dark border-tech-blue-500/20 text-center hover:border-tech-blue-500/50 hover:glow-blue-subtle transition-all duration-300"
               >
                 <CardContent className="p-6">
-                  <GradientText
-                    as="span"
-                    gradient="cyan-violet"
-                    className="text-lg font-bold block mb-1"
-                  >
+                  <div className="text-lg font-bold text-transparent bg-clip-text bg-gradient-to-r from-tech-blue-400 to-purple-400 mb-1">
                     {model.name}
-                  </GradientText>
-                  <div className="text-xs text-slate-400">
+                  </div>
+                  <div className="text-xs text-text-dark-secondary">
                     {model.description}
                   </div>
                 </CardContent>
@@ -287,33 +267,25 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Features Section - Indigo Gradient */}
-      <section
-        id="features"
-        className="relative py-20 bg-gradient-to-b from-slate-900 to-indigo-950"
-      >
-        <BackgroundGrid variant="dark" />
-        <CyberGlow position="center" color="violet" />
+      {/* Features Section - Light */}
+      <section id="features" className="relative py-20 bg-light-section">
+        <BackgroundGrid variant="light" />
 
         <div className="container relative z-10 mx-auto px-4">
           <div className="text-center mb-16">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-sm font-medium text-cyber-cyan-400">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-tech-blue-100 px-4 py-2 text-sm font-medium text-tech-blue-700">
               <Target className="h-4 w-4" />
               <span>完整工作流程</span>
             </div>
             <h2 className="font-bold mb-4">
-              <span className="text-white text-xl md:text-2xl">
+              <span className="text-text-light-primary text-xl md:text-2xl">
                 從研究到發布，
               </span>
-              <GradientText
-                as="span"
-                gradient="cyan-violet-magenta"
-                className="text-4xl md:text-5xl"
-              >
+              <span className="text-tech-blue-600 text-4xl md:text-5xl">
                 全自動化
-              </GradientText>
+              </span>
             </h2>
-            <p className="text-slate-400 max-w-3xl mx-auto">
+            <p className="text-text-light-secondary max-w-3xl mx-auto">
               9 大核心功能讓您的 SEO 內容策略完全自動化
             </p>
           </div>
@@ -324,16 +296,16 @@ export default async function Home() {
               return (
                 <Card
                   key={index}
-                  className="glass border-white/10 hover:border-cyber-violet-500/50 hover:-translate-y-2 transition-all duration-300 bg-transparent"
+                  className="glass-light border-tech-blue-200/50 hover:border-tech-blue-400 hover:shadow-lg hover:-translate-y-1 transition-all duration-300 bg-white/80"
                 >
                   <CardContent className="p-6">
-                    <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-cyber-cyan-500 to-cyber-violet-500">
+                    <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-tech-blue-500 to-purple-500">
                       <Icon className="h-6 w-6 text-white" />
                     </div>
-                    <h3 className="mb-2 text-lg font-bold text-white">
+                    <h3 className="mb-2 text-lg font-bold text-text-light-primary">
                       {feature.title}
                     </h3>
-                    <p className="text-slate-400 text-sm leading-relaxed">
+                    <p className="text-text-light-secondary text-sm leading-relaxed">
                       {feature.description}
                     </p>
                   </CardContent>
@@ -344,29 +316,25 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Testimonials Section - Dark Slate */}
-      <section className="relative py-20 bg-slate-900">
+      {/* Testimonials Section - Dark */}
+      <section className="relative py-20 bg-dark-section">
         <BackgroundGrid variant="dark" />
         <div className="container relative z-10 mx-auto px-4">
           <div className="text-center mb-12">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-sm font-medium text-cyber-cyan-400">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full glass-dark px-4 py-2 text-sm font-medium text-tech-blue-400">
               <Users className="h-4 w-4" />
               <span>客戶見證</span>
             </div>
             <h2 className="font-bold mb-4">
-              <GradientText
-                as="span"
-                gradient="cyan-violet-magenta"
-                className="text-4xl md:text-5xl"
-              >
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-tech-blue-400 to-purple-400 text-4xl md:text-5xl">
                 用戶
-              </GradientText>
-              <span className="text-white text-xl md:text-2xl ml-2">
+              </span>
+              <span className="text-text-dark-primary text-xl md:text-2xl ml-2">
                 怎麼說
               </span>
             </h2>
-            <p className="text-slate-400">
-              看看他們如何使用 1WaySEO 改變內容策略
+            <p className="text-text-dark-secondary">
+              看看他們如何使用 1waySEO 改變內容策略
             </p>
           </div>
 
@@ -374,38 +342,30 @@ export default async function Home() {
         </div>
       </section>
 
-      {/* Pricing Section - Indigo Gradient */}
-      <section
-        id="pricing"
-        className="relative py-20 bg-gradient-to-b from-indigo-950 to-slate-900"
-      >
-        <BackgroundGrid variant="dark" />
-        <CyberGlow position="top" color="magenta" />
+      {/* Pricing Section - Light */}
+      <section id="pricing" className="relative py-20 bg-light-section">
+        <BackgroundGrid variant="light" />
 
         <div className="container relative z-10 mx-auto px-4">
           <div className="text-center mb-12">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full glass px-4 py-2 text-sm font-medium text-cyber-magenta-400">
+            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-tech-blue-100 px-4 py-2 text-sm font-medium text-tech-blue-700">
               <Infinity className="h-4 w-4" />
               <span>定價方案</span>
             </div>
             <h2 className="font-bold mb-4">
-              <GradientText
-                as="span"
-                gradient="violet-magenta"
-                className="text-4xl md:text-5xl"
-              >
+              <span className="text-tech-blue-600 text-4xl md:text-5xl">
                 終身買斷
-              </GradientText>
-              <span className="text-white text-xl md:text-2xl ml-2">
+              </span>
+              <span className="text-text-light-primary text-xl md:text-2xl ml-2">
                 ，永久使用
               </span>
             </h2>
-            <p className="text-slate-400 max-w-2xl mx-auto mb-6">
+            <p className="text-text-light-secondary max-w-2xl mx-auto mb-6">
               一次付費，每月自動獲得 Credits 配額，無需訂閱費用
             </p>
-            <div className="inline-flex items-center gap-3 rounded-full glass border-cyber-cyan-500/30 px-6 py-3">
-              <CheckCircle2 className="h-5 w-5 text-cyber-cyan-400" />
-              <span className="text-cyber-cyan-400 font-medium">
+            <div className="inline-flex items-center gap-3 rounded-full bg-green-50 border border-green-200 px-6 py-3">
+              <CheckCircle2 className="h-5 w-5 text-green-600" />
+              <span className="text-green-800 font-medium">
                 免費方案：註冊即送 10K Credits（一次性）
               </span>
             </div>
@@ -421,39 +381,39 @@ export default async function Home() {
               return (
                 <Card
                   key={plan.id}
-                  className={`relative flex flex-col h-full transition-all duration-300 bg-transparent ${
+                  className={`relative flex flex-col h-full transition-all duration-300 ${
                     isPopular
-                      ? "bg-gradient-to-b from-cyber-violet-600 to-cyber-magenta-600 text-white border-cyber-violet-500 shadow-lg scale-105 glow-button"
-                      : "glass border-white/10 hover:border-cyber-violet-500/50"
+                      ? "bg-gradient-to-b from-tech-blue-600 to-tech-blue-700 text-white border-tech-blue-500 shadow-lg scale-105"
+                      : "bg-white border-2 border-slate-200 hover:border-tech-blue-400 shadow-md"
                   }`}
                 >
                   {isPopular && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-cyber-cyan-400 text-slate-900 px-3 py-1 rounded-full text-xs font-bold">
+                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-400 text-yellow-900 px-3 py-1 rounded-full text-xs font-bold">
                       最熱門
                     </div>
                   )}
                   <CardContent className="p-5 flex flex-col h-full">
                     <div className="mb-2">
                       <h3
-                        className={`text-lg font-bold ${isPopular ? "text-white" : "text-white"}`}
+                        className={`text-lg font-bold ${isPopular ? "text-white" : "text-slate-900"}`}
                       >
                         {plan.name}
                       </h3>
                     </div>
                     <div className="mb-4">
                       <div
-                        className={`text-sm line-through ${isPopular ? "text-white/60" : "text-slate-500"}`}
+                        className={`text-sm line-through ${isPopular ? "text-white/60" : "text-slate-400"}`}
                       >
                         NT${originalPrice.toLocaleString()}
                       </div>
                       <div className="flex items-baseline gap-1">
                         <span
-                          className={`text-2xl font-bold ${isPopular ? "text-white" : "text-white"}`}
+                          className={`text-2xl font-bold ${isPopular ? "text-white" : "text-slate-900"}`}
                         >
                           NT${plan.lifetime_price?.toLocaleString()}
                         </span>
                         <span
-                          className={`text-xs ${isPopular ? "text-white/70" : "text-slate-400"}`}
+                          className={`text-xs ${isPopular ? "text-white/70" : "text-slate-500"}`}
                         >
                           終身
                         </span>
@@ -461,35 +421,35 @@ export default async function Home() {
                     </div>
                     <div className="flex-1">
                       <ul
-                        className={`space-y-2 text-sm mb-4 ${isPopular ? "text-white" : "text-slate-300"}`}
+                        className={`space-y-2 text-sm mb-4 ${isPopular ? "text-white" : "text-slate-700"}`}
                       >
                         <li className="flex items-center gap-2">
                           <CheckCircle2
-                            className={`h-4 w-4 flex-shrink-0 ${isPopular ? "text-white" : "text-cyber-cyan-400"}`}
+                            className={`h-4 w-4 flex-shrink-0 ${isPopular ? "text-white" : "text-tech-blue-500"}`}
                           />
                           每月 {plan.base_tokens?.toLocaleString()} Credits
                         </li>
                         <li className="flex items-center gap-2">
                           <CheckCircle2
-                            className={`h-4 w-4 flex-shrink-0 ${isPopular ? "text-white" : "text-cyber-cyan-400"}`}
+                            className={`h-4 w-4 flex-shrink-0 ${isPopular ? "text-white" : "text-tech-blue-500"}`}
                           />
                           所有 AI 模型
                         </li>
                         <li className="flex items-center gap-2">
                           <CheckCircle2
-                            className={`h-4 w-4 flex-shrink-0 ${isPopular ? "text-white" : "text-cyber-cyan-400"}`}
+                            className={`h-4 w-4 flex-shrink-0 ${isPopular ? "text-white" : "text-tech-blue-500"}`}
                           />
                           WordPress 整合
                         </li>
                         <li className="flex items-center gap-2">
                           <CheckCircle2
-                            className={`h-4 w-4 flex-shrink-0 ${isPopular ? "text-white" : "text-cyber-cyan-400"}`}
+                            className={`h-4 w-4 flex-shrink-0 ${isPopular ? "text-white" : "text-tech-blue-500"}`}
                           />
                           自動圖片生成
                         </li>
                         <li className="flex items-center gap-2">
                           <CheckCircle2
-                            className={`h-4 w-4 flex-shrink-0 ${isPopular ? "text-white" : "text-cyber-cyan-400"}`}
+                            className={`h-4 w-4 flex-shrink-0 ${isPopular ? "text-white" : "text-tech-blue-500"}`}
                           />
                           排程發布
                         </li>
@@ -500,8 +460,8 @@ export default async function Home() {
                       size="sm"
                       className={`w-full mt-auto ${
                         isPopular
-                          ? "bg-white text-cyber-violet-600 hover:bg-white/90"
-                          : "bg-gradient-to-r from-cyber-violet-600 to-cyber-magenta-600 text-white hover:from-cyber-violet-500 hover:to-cyber-magenta-500"
+                          ? "bg-white text-tech-blue-600 hover:bg-white/90"
+                          : "bg-tech-blue-600 text-white hover:bg-tech-blue-700"
                       }`}
                     >
                       <Link href="/login">開始使用</Link>
@@ -514,14 +474,14 @@ export default async function Home() {
 
           <div className="max-w-4xl mx-auto">
             <div className="text-center mb-8">
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full glass border-cyber-cyan-500/30 px-4 py-2 text-sm font-medium text-cyber-cyan-400">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-amber-100 px-4 py-2 text-sm font-medium text-amber-700">
                 <CreditCard className="h-4 w-4" />
                 <span>Credits 加值包</span>
               </div>
-              <h3 className="text-xl font-bold mb-2 text-white">
+              <h3 className="text-xl font-bold mb-2 text-text-light-primary">
                 需要更多 Credits？
               </h3>
-              <p className="text-sm text-slate-400">
+              <p className="text-sm text-text-light-secondary">
                 免費版或終身版用戶皆可購買，直接加值不需升級方案。購買的 Credits
                 永不過期！
               </p>
@@ -533,31 +493,29 @@ export default async function Home() {
                 return (
                   <Card
                     key={pkg.id}
-                    className={`relative glass bg-transparent ${
-                      isPopular ? "border-cyber-cyan-400/50" : "border-white/10"
+                    className={`relative glass-light ${
+                      isPopular
+                        ? "border-amber-400 shadow-md"
+                        : "border-tech-blue-200/50"
                     }`}
                   >
                     {isPopular && (
-                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-cyber-cyan-400 text-slate-900 px-3 py-1 rounded-full text-xs font-medium">
+                      <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-amber-400 text-amber-900 px-3 py-1 rounded-full text-xs font-medium">
                         超值
                       </span>
                     )}
                     <CardContent className="p-6 text-center">
-                      <GradientText
-                        as="span"
-                        gradient="cyan-violet"
-                        className="text-lg font-bold block mb-1"
-                      >
+                      <div className="text-lg font-bold text-tech-blue-600 mb-1">
                         {pkg.tokens?.toLocaleString()} Credits
-                      </GradientText>
-                      <div className="text-xl font-bold text-white mb-4">
+                      </div>
+                      <div className="text-xl font-bold text-text-light-primary mb-4">
                         NT${pkg.price?.toLocaleString()}
                       </div>
                       <Button
                         asChild
                         size="sm"
                         variant="outline"
-                        className="w-full border-cyber-violet-500/50 text-cyber-violet-400 hover:bg-cyber-violet-500/10 hover:border-cyber-violet-400"
+                        className="w-full border-tech-blue-300 text-tech-blue-600 hover:bg-tech-blue-50"
                       >
                         <Link href="/login">購買</Link>
                       </Button>
@@ -573,58 +531,61 @@ export default async function Home() {
       {/* FAQ Section - Dark */}
       <FAQSection />
 
-      {/* Final CTA Section - Slate with Glow */}
-      <section className="relative py-20 bg-slate-900 overflow-hidden">
-        <AuroraBackground showRadialGradient={false} />
-        <CyberGlow position="center" color="mixed" />
+      {/* Final CTA Section - Dark Gradient */}
+      <section className="relative py-20 bg-dark-section overflow-hidden">
+        <HeroGlow />
         <FloatingOrbs />
 
         <div className="container relative z-10 mx-auto px-4">
           <div className="mx-auto max-w-4xl text-center">
             <h2 className="font-bold mb-6">
-              <span className="text-white text-xl md:text-2xl">準備好</span>
-              <ShimmerText as="span" className="text-4xl md:text-5xl mx-2">
+              <span className="text-text-dark-primary text-xl md:text-2xl">
+                準備好
+              </span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-tech-blue-400 to-purple-400 text-4xl md:text-5xl mx-2">
                 提升您的內容策略
-              </ShimmerText>
-              <span className="text-white text-xl md:text-2xl">了嗎？</span>
+              </span>
+              <span className="text-text-dark-primary text-xl md:text-2xl">
+                了嗎？
+              </span>
             </h2>
-            <p className="text-slate-400 mb-8">
+            <p className="text-text-dark-secondary mb-8">
               立即註冊，免費獲得 10K Credits 開始體驗
             </p>
-            <GlowButtonLink
-              href="/login"
+            <Button
+              asChild
               size="lg"
-              variant="primary"
-              glowColor="mixed"
-              className="text-lg px-10 py-7 gap-2 group"
+              className="glow-blue animate-pulse-glow-slow bg-tech-blue-600 hover:bg-tech-blue-500 text-white group text-lg px-10 py-7"
             >
-              <Rocket className="h-5 w-5" />
-              免費開始使用
-              <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
-            </GlowButtonLink>
+              <Link href="/login" className="gap-2">
+                <Rocket className="h-5 w-5" />
+                免費開始使用
+                <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              </Link>
+            </Button>
           </div>
         </div>
       </section>
 
-      {/* Footer - Darkest Slate */}
-      <footer className="relative py-8 bg-slate-950">
-        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-cyber-violet-500/50 to-transparent" />
+      {/* Footer - Darkest */}
+      <footer className="relative py-8 bg-[#050810]">
+        <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-tech-blue-500/50 to-transparent" />
 
         <div className="container mx-auto px-4">
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-            <div className="text-slate-500 text-sm">
-              © 2024 1WaySEO. All rights reserved.
+            <div className="text-text-dark-secondary text-sm">
+              © 2024 1waySEO. All rights reserved.
             </div>
-            <div className="flex gap-6 text-sm text-slate-500">
+            <div className="flex gap-6 text-sm text-text-dark-secondary">
               <Link
                 href="/terms"
-                className="hover:text-cyber-cyan-400 transition-colors"
+                className="hover:text-tech-blue-400 transition-colors"
               >
                 服務條款
               </Link>
               <Link
                 href="/privacy"
-                className="hover:text-cyber-cyan-400 transition-colors"
+                className="hover:text-tech-blue-400 transition-colors"
               >
                 隱私政策
               </Link>

@@ -86,18 +86,16 @@ export default async function GettingStartedPage() {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-gradient-to-b from-background to-background/80">
       <div className="container mx-auto px-4 py-8 md:px-6 lg:px-8 max-w-5xl">
         <div className="mb-12 space-y-4">
           <div className="flex items-center gap-3">
-            <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-cyber-violet-500/20 to-cyber-magenta-500/10 flex items-center justify-center">
-              <Sparkles className="h-7 w-7 text-cyber-violet-400" />
+            <div className="h-14 w-14 rounded-xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center">
+              <Sparkles className="h-7 w-7 text-primary" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold tracking-tight text-white">
-                快速開始
-              </h1>
-              <p className="text-slate-400 mt-2 text-lg">
+              <h1 className="text-4xl font-bold tracking-tight">快速開始</h1>
+              <p className="text-muted-foreground/80 mt-2 text-lg">
                 一步步引導您完成平台設定
               </p>
             </div>
@@ -105,7 +103,7 @@ export default async function GettingStartedPage() {
         </div>
 
         <div className="space-y-6 relative">
-          <div className="absolute left-7 top-16 bottom-16 w-0.5 bg-gradient-to-b from-white/10 via-white/10 to-transparent hidden md:block" />
+          <div className="absolute left-7 top-16 bottom-16 w-0.5 bg-gradient-to-b from-border via-border to-transparent hidden md:block" />
 
           {steps.map((step, index) => {
             const IconComponent = step.icon;
@@ -113,7 +111,7 @@ export default async function GettingStartedPage() {
             return (
               <Card
                 key={step.id}
-                className="group relative border-white/10 bg-slate-800/50 backdrop-blur-sm hover:border-cyber-violet-500/30 transition-all duration-300 hover:shadow-lg hover:shadow-cyber-violet-500/10"
+                className="group relative border-muted/40 bg-card/50 backdrop-blur-sm hover:border-primary/20 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5"
               >
                 <CardHeader className="pb-4">
                   <div className="flex items-start gap-5">
@@ -124,19 +122,17 @@ export default async function GettingStartedPage() {
                       <div className="absolute -top-2 -right-2">
                         <Badge
                           variant="secondary"
-                          className="h-6 w-6 rounded-full p-0 flex items-center justify-center bg-slate-900 border border-white/10"
+                          className="h-6 w-6 rounded-full p-0 flex items-center justify-center bg-background border border-border"
                         >
-                          <span className="text-xs font-bold text-white">
-                            {step.id}
-                          </span>
+                          <span className="text-xs font-bold">{step.id}</span>
                         </Badge>
                       </div>
                     </div>
                     <div className="flex-1 min-w-0">
-                      <CardTitle className="text-2xl font-bold mb-2 text-white">
+                      <CardTitle className="text-2xl font-bold mb-2">
                         {step.title}
                       </CardTitle>
-                      <CardDescription className="text-base text-slate-400">
+                      <CardDescription className="text-base">
                         {step.description}
                       </CardDescription>
                     </div>
@@ -147,10 +143,10 @@ export default async function GettingStartedPage() {
                   <ul className="space-y-3 mb-6">
                     {step.details.map((detail, i) => (
                       <li key={i} className="flex items-start gap-3 group/item">
-                        <div className="h-6 w-6 rounded-full bg-slate-700/50 flex items-center justify-center shrink-0 mt-0.5 group-hover/item:bg-cyber-violet-500/20 transition-colors">
-                          <div className="h-1.5 w-1.5 rounded-full bg-slate-500 group-hover/item:bg-cyber-violet-400 transition-colors" />
+                        <div className="h-6 w-6 rounded-full bg-muted/50 flex items-center justify-center shrink-0 mt-0.5 group-hover/item:bg-primary/10 transition-colors">
+                          <div className="h-1.5 w-1.5 rounded-full bg-muted-foreground/40 group-hover/item:bg-primary transition-colors" />
                         </div>
-                        <span className="text-sm text-slate-400 group-hover/item:text-slate-300 transition-colors">
+                        <span className="text-sm text-muted-foreground/80 group-hover/item:text-foreground/80 transition-colors">
                           {detail}
                         </span>
                       </li>
@@ -171,11 +167,11 @@ export default async function GettingStartedPage() {
           })}
         </div>
 
-        <div className="mt-12 p-8 bg-gradient-to-br from-slate-800/50 to-slate-800/20 rounded-2xl border border-white/10 backdrop-blur-sm">
+        <div className="mt-12 p-8 bg-gradient-to-br from-muted/50 to-muted/20 rounded-2xl border border-border/50 backdrop-blur-sm">
           <div className="flex items-start gap-4 mb-6">
-            <div className="h-10 w-10 rounded-lg bg-cyber-violet-500/20 flex items-center justify-center shrink-0">
+            <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
               <svg
-                className="h-5 w-5 text-cyber-violet-400"
+                className="h-5 w-5 text-primary"
                 fill="none"
                 viewBox="0 0 24 24"
                 stroke="currentColor"
@@ -189,17 +185,15 @@ export default async function GettingStartedPage() {
               </svg>
             </div>
             <div className="flex-1">
-              <h3 className="text-lg font-semibold mb-2 text-white">
-                需要協助？
-              </h3>
-              <p className="text-sm text-slate-400 mb-6">
+              <h3 className="text-lg font-semibold mb-2">需要協助？</h3>
+              <p className="text-sm text-muted-foreground/80 mb-6">
                 如果在設定過程中遇到任何問題，請參考我們的文檔或聯繫客服團隊。
               </p>
               <div className="flex flex-wrap gap-3">
                 <Button
                   variant="outline"
                   size="sm"
-                  className="bg-slate-900/50 border-white/10 text-slate-300 hover:text-white hover:bg-white/5"
+                  className="bg-background/50"
                 >
                   <svg
                     className="h-4 w-4 mr-2"
@@ -219,7 +213,7 @@ export default async function GettingStartedPage() {
                 <Button
                   variant="outline"
                   size="sm"
-                  className="bg-slate-900/50 border-white/10 text-slate-300 hover:text-white hover:bg-white/5"
+                  className="bg-background/50"
                 >
                   <svg
                     className="h-4 w-4 mr-2"
@@ -243,10 +237,7 @@ export default async function GettingStartedPage() {
 
         <div className="mt-8 text-center">
           <Link href="/dashboard">
-            <Button
-              variant="ghost"
-              className="group/back text-slate-400 hover:text-white"
-            >
+            <Button variant="ghost" className="group/back">
               <svg
                 className="h-4 w-4 mr-2 group-hover/back:-translate-x-0.5 transition-transform"
                 fill="none"

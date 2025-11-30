@@ -55,41 +55,35 @@ export default async function AIModelsPage() {
   return (
     <div className="container mx-auto p-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white">AI 模型設定</h1>
-        <p className="text-slate-400 mt-2">配置各個 Agent 使用的 AI 模型</p>
+        <h1 className="text-3xl font-bold">AI 模型設定</h1>
+        <p className="text-muted-foreground mt-2">
+          配置各個 Agent 使用的 AI 模型
+        </p>
       </div>
 
       <div className="grid gap-6">
-        <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-white">Research Agent</CardTitle>
-            <CardDescription className="text-slate-400">
-              負責關鍵字研究和內容分析
-            </CardDescription>
+            <CardTitle>Research Agent</CardTitle>
+            <CardDescription>負責關鍵字研究和內容分析</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-slate-300">
-                  當前模型
-                </span>
-                <span className="text-sm text-cyber-cyan-400">
+                <span className="text-sm font-medium">當前模型</span>
+                <span className="text-sm text-muted-foreground">
                   {config?.research_model || "perplexity-sonar"}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-slate-300">
-                  Temperature
-                </span>
-                <span className="text-sm text-slate-400">
+                <span className="text-sm font-medium">Temperature</span>
+                <span className="text-sm text-muted-foreground">
                   {config?.research_temperature || 0.3}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-slate-300">
-                  Max Tokens
-                </span>
-                <span className="text-sm text-slate-400">
+                <span className="text-sm font-medium">Max Tokens</span>
+                <span className="text-sm text-muted-foreground">
                   {config?.research_max_tokens || 2000}
                 </span>
               </div>
@@ -97,36 +91,28 @@ export default async function AIModelsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-white">Strategy Agent</CardTitle>
-            <CardDescription className="text-slate-400">
-              負責內容策略規劃
-            </CardDescription>
+            <CardTitle>Strategy Agent</CardTitle>
+            <CardDescription>負責內容策略規劃</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-slate-300">
-                  當前模型
-                </span>
-                <span className="text-sm text-cyber-cyan-400">
+                <span className="text-sm font-medium">當前模型</span>
+                <span className="text-sm text-muted-foreground">
                   {config?.strategy_model || "gpt-4"}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-slate-300">
-                  Temperature
-                </span>
-                <span className="text-sm text-slate-400">
+                <span className="text-sm font-medium">Temperature</span>
+                <span className="text-sm text-muted-foreground">
                   {config?.strategy_temperature || 0.7}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-slate-300">
-                  Max Tokens
-                </span>
-                <span className="text-sm text-slate-400">
+                <span className="text-sm font-medium">Max Tokens</span>
+                <span className="text-sm text-muted-foreground">
                   {config?.strategy_max_tokens || 3000}
                 </span>
               </div>
@@ -134,36 +120,28 @@ export default async function AIModelsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-white">Writing Agent</CardTitle>
-            <CardDescription className="text-slate-400">
-              負責文章撰寫
-            </CardDescription>
+            <CardTitle>Writing Agent</CardTitle>
+            <CardDescription>負責文章撰寫</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-slate-300">
-                  當前模型
-                </span>
-                <span className="text-sm text-cyber-cyan-400">
+                <span className="text-sm font-medium">當前模型</span>
+                <span className="text-sm text-muted-foreground">
                   {config?.writing_model || "gpt-4"}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-slate-300">
-                  Temperature
-                </span>
-                <span className="text-sm text-slate-400">
+                <span className="text-sm font-medium">Temperature</span>
+                <span className="text-sm text-muted-foreground">
                   {config?.writing_temperature || 0.7}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-slate-300">
-                  Max Tokens
-                </span>
-                <span className="text-sm text-slate-400">
+                <span className="text-sm font-medium">Max Tokens</span>
+                <span className="text-sm text-muted-foreground">
                   {config?.writing_max_tokens || 4000}
                 </span>
               </div>
@@ -171,36 +149,28 @@ export default async function AIModelsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-white">Meta Agent</CardTitle>
-            <CardDescription className="text-slate-400">
-              負責 SEO 元數據生成
-            </CardDescription>
+            <CardTitle>Meta Agent</CardTitle>
+            <CardDescription>負責 SEO 元數據生成</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-slate-300">
-                  當前模型
-                </span>
-                <span className="text-sm text-cyber-cyan-400">
+                <span className="text-sm font-medium">當前模型</span>
+                <span className="text-sm text-muted-foreground">
                   {config?.meta_model || "deepseek-chat"}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-slate-300">
-                  Temperature
-                </span>
-                <span className="text-sm text-slate-400">
+                <span className="text-sm font-medium">Temperature</span>
+                <span className="text-sm text-muted-foreground">
                   {config?.meta_temperature || 0.5}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-slate-300">
-                  Max Tokens
-                </span>
-                <span className="text-sm text-slate-400">
+                <span className="text-sm font-medium">Max Tokens</span>
+                <span className="text-sm text-muted-foreground">
                   {config?.meta_max_tokens || 500}
                 </span>
               </div>
@@ -208,40 +178,34 @@ export default async function AIModelsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-white">Image Agent</CardTitle>
-            <CardDescription className="text-slate-400">
-              負責圖片生成
-            </CardDescription>
+            <CardTitle>Image Agent</CardTitle>
+            <CardDescription>負責圖片生成</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-slate-300">
-                  當前模型
-                </span>
-                <span className="text-sm text-cyber-cyan-400">
+                <span className="text-sm font-medium">當前模型</span>
+                <span className="text-sm text-muted-foreground">
                   {config?.image_model || "dall-e-3"}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-slate-300">畫質</span>
-                <span className="text-sm text-slate-400">
+                <span className="text-sm font-medium">畫質</span>
+                <span className="text-sm text-muted-foreground">
                   {config?.image_quality || "standard"}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-slate-300">尺寸</span>
-                <span className="text-sm text-slate-400">
+                <span className="text-sm font-medium">尺寸</span>
+                <span className="text-sm text-muted-foreground">
                   {config?.image_size || "1024x1024"}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium text-slate-300">
-                  生成數量
-                </span>
-                <span className="text-sm text-slate-400">
+                <span className="text-sm font-medium">生成數量</span>
+                <span className="text-sm text-muted-foreground">
                   {config?.image_count || 3}
                 </span>
               </div>
@@ -249,35 +213,31 @@ export default async function AIModelsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
+        <Card>
           <CardHeader>
-            <CardTitle className="text-white">可用的 AI 模型</CardTitle>
-            <CardDescription className="text-slate-400">
-              系統中可用的所有 AI 模型
-            </CardDescription>
+            <CardTitle>可用的 AI 模型</CardTitle>
+            <CardDescription>系統中可用的所有 AI 模型</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div>
-                <h3 className="text-sm font-medium mb-2 text-white">
-                  文字模型
-                </h3>
+                <h3 className="text-sm font-medium mb-2">文字模型</h3>
                 <div className="space-y-2">
                   {textModels.map((model) => (
                     <div
                       key={model.id}
-                      className="flex justify-between items-center p-2 border border-white/10 rounded bg-slate-700/50"
+                      className="flex justify-between items-center p-2 border rounded"
                     >
                       <div>
-                        <div className="text-sm font-medium text-white">
+                        <div className="text-sm font-medium">
                           {model.model_name}
                         </div>
-                        <div className="text-xs text-slate-400">
+                        <div className="text-xs text-muted-foreground">
                           {model.model_id}
                         </div>
                       </div>
                       {model.is_featured && (
-                        <span className="text-xs px-2 py-1 bg-cyber-violet-500/20 text-cyber-violet-400 rounded">
+                        <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
                           推薦
                         </span>
                       )}
@@ -288,25 +248,23 @@ export default async function AIModelsPage() {
 
               {imageModels.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-medium mb-2 text-white">
-                    圖片模型
-                  </h3>
+                  <h3 className="text-sm font-medium mb-2">圖片模型</h3>
                   <div className="space-y-2">
                     {imageModels.map((model) => (
                       <div
                         key={model.id}
-                        className="flex justify-between items-center p-2 border border-white/10 rounded bg-slate-700/50"
+                        className="flex justify-between items-center p-2 border rounded"
                       >
                         <div>
-                          <div className="text-sm font-medium text-white">
+                          <div className="text-sm font-medium">
                             {model.model_name}
                           </div>
-                          <div className="text-xs text-slate-400">
+                          <div className="text-xs text-muted-foreground">
                             {model.model_id}
                           </div>
                         </div>
                         {model.is_featured && (
-                          <span className="text-xs px-2 py-1 bg-cyber-violet-500/20 text-cyber-violet-400 rounded">
+                          <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
                             推薦
                           </span>
                         )}
@@ -319,9 +277,9 @@ export default async function AIModelsPage() {
           </CardContent>
         </Card>
 
-        <Card className="border-amber-500/30 bg-amber-500/10">
+        <Card className="border-yellow-200 bg-yellow-50">
           <CardContent className="pt-6">
-            <p className="text-sm text-amber-400">
+            <p className="text-sm text-yellow-800">
               ⚠️ 注意：AI
               模型設定需要透過資料庫直接修改。未來版本將提供圖形界面編輯功能。
             </p>

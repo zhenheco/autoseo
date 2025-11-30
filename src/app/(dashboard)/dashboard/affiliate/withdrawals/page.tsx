@@ -75,25 +75,16 @@ export default function AffiliateWithdrawalsPage() {
 
   const getStatusBadge = (status: Withdrawal["status"]) => {
     const statusMap = {
-      pending: { label: "待審核", className: "bg-amber-500/20 text-amber-400" },
-      reviewing: {
-        label: "審核中",
-        className: "bg-cyber-cyan-500/20 text-cyber-cyan-400",
-      },
-      approved: {
-        label: "已核准",
-        className: "bg-emerald-500/20 text-emerald-400",
-      },
+      pending: { label: "待審核", className: "bg-yellow-100 text-yellow-800" },
+      reviewing: { label: "審核中", className: "bg-blue-100 text-blue-800" },
+      approved: { label: "已核准", className: "bg-green-100 text-green-800" },
       processing: {
         label: "處理中",
-        className: "bg-cyber-violet-500/20 text-cyber-violet-400",
+        className: "bg-purple-100 text-purple-800",
       },
-      completed: {
-        label: "已完成",
-        className: "bg-emerald-500/20 text-emerald-400",
-      },
-      rejected: { label: "已拒絕", className: "bg-red-500/20 text-red-400" },
-      cancelled: { label: "已取消", className: "bg-slate-700 text-slate-400" },
+      completed: { label: "已完成", className: "bg-green-100 text-green-800" },
+      rejected: { label: "已拒絕", className: "bg-red-100 text-red-800" },
+      cancelled: { label: "已取消", className: "bg-gray-100 text-gray-800" },
     };
 
     const { label, className } = statusMap[status];
@@ -109,8 +100,8 @@ export default function AffiliateWithdrawalsPage() {
       {/* 標題 */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-white">提領記錄</h1>
-          <p className="text-slate-400">查看所有提領申請的狀態</p>
+          <h1 className="text-3xl font-bold">提領記錄</h1>
+          <p className="text-gray-600">查看所有提領申請的狀態</p>
         </div>
         <div className="flex gap-2">
           <Link href="/dashboard/affiliate/withdraw">
@@ -123,19 +114,17 @@ export default function AffiliateWithdrawalsPage() {
       </div>
 
       {/* 列表 */}
-      <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-white">提領申請列表</CardTitle>
-          <CardDescription className="text-slate-400">
-            共 {withdrawals.length} 筆記錄
-          </CardDescription>
+          <CardTitle>提領申請列表</CardTitle>
+          <CardDescription>共 {withdrawals.length} 筆記錄</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="py-8 text-center text-slate-400">載入中...</div>
+            <div className="py-8 text-center text-gray-500">載入中...</div>
           ) : withdrawals.length === 0 ? (
             <div className="py-8 text-center">
-              <p className="text-slate-400 mb-4">尚無提領記錄</p>
+              <p className="text-gray-500 mb-4">尚無提領記錄</p>
               <Link href="/dashboard/affiliate/withdraw">
                 <Button>立即申請提領</Button>
               </Link>
@@ -161,10 +150,10 @@ export default function AffiliateWithdrawalsPage() {
                       <TableCell className="text-right">
                         NT$ {withdrawal.withdrawal_amount.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-right text-red-400">
+                      <TableCell className="text-right text-red-600">
                         -NT$ {withdrawal.tax_amount.toLocaleString()}
                       </TableCell>
-                      <TableCell className="text-right font-semibold text-emerald-400">
+                      <TableCell className="text-right font-semibold text-green-600">
                         NT$ {withdrawal.net_amount.toLocaleString()}
                       </TableCell>
                       <TableCell>{getStatusBadge(withdrawal.status)}</TableCell>
@@ -184,38 +173,28 @@ export default function AffiliateWithdrawalsPage() {
       </Card>
 
       {/* 說明 */}
-      <Card className="border-cyber-violet-500/30 bg-cyber-violet-500/10">
+      <Card className="border-blue-200 bg-blue-50">
         <CardContent className="pt-6">
-          <h4 className="font-medium text-white mb-2">提領流程說明</h4>
-          <div className="space-y-2 text-sm text-slate-300">
+          <h4 className="font-medium text-blue-900 mb-2">提領流程說明</h4>
+          <div className="space-y-2 text-sm text-blue-800">
             <div className="flex items-start gap-2">
-              <span className="font-semibold min-w-24 text-white">
-                待審核：
-              </span>
+              <span className="font-semibold min-w-24">待審核：</span>
               <span>系統已收到您的提領申請</span>
             </div>
             <div className="flex items-start gap-2">
-              <span className="font-semibold min-w-24 text-white">
-                審核中：
-              </span>
+              <span className="font-semibold min-w-24">審核中：</span>
               <span>管理員正在審核您的申請和證件</span>
             </div>
             <div className="flex items-start gap-2">
-              <span className="font-semibold min-w-24 text-white">
-                已核准：
-              </span>
+              <span className="font-semibold min-w-24">已核准：</span>
               <span>申請已核准，等待撥款</span>
             </div>
             <div className="flex items-start gap-2">
-              <span className="font-semibold min-w-24 text-white">
-                處理中：
-              </span>
+              <span className="font-semibold min-w-24">處理中：</span>
               <span>正在進行銀行轉帳</span>
             </div>
             <div className="flex items-start gap-2">
-              <span className="font-semibold min-w-24 text-white">
-                已完成：
-              </span>
+              <span className="font-semibold min-w-24">已完成：</span>
               <span>款項已撥付到您的銀行帳戶</span>
             </div>
           </div>

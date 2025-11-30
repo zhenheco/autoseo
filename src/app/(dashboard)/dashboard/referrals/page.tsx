@@ -91,17 +91,17 @@ export default async function ReferralsPage() {
   return (
     <div className="container mx-auto p-8 space-y-8">
       <div>
-        <h1 className="text-3xl font-bold text-white">好友推薦計畫</h1>
-        <p className="text-slate-400 mt-2">
+        <h1 className="text-3xl font-bold">好友推薦計畫</h1>
+        <p className="text-muted-foreground mt-2">
           分享您的推薦連結，朋友註冊並付款後，雙方都將獲得{" "}
           {REFERRAL_TOKEN_REWARD.toLocaleString()} tokens 獎勵
         </p>
       </div>
 
       {myReferrer && (
-        <Card className="border-cyber-violet-500/30 bg-cyber-violet-500/5">
+        <Card className="border-primary/20 bg-primary/5">
           <CardHeader>
-            <CardTitle className="text-lg text-white">您的推薦人</CardTitle>
+            <CardTitle className="text-lg">您的推薦人</CardTitle>
           </CardHeader>
           <CardContent>
             <p className="text-sm">
@@ -110,12 +110,12 @@ export default async function ReferralsPage() {
                 {myReferrer.referral_code}
               </span>
               {myReferrer.status === "pending" && (
-                <span className="ml-2 text-amber-400">
+                <span className="ml-2 text-orange-600">
                   （首次付款後雙方獲得獎勵）
                 </span>
               )}
               {myReferrer.status === "rewarded" && (
-                <span className="ml-2 text-emerald-400">
+                <span className="ml-2 text-green-600">
                   ✓ 已獲得 {REFERRAL_TOKEN_REWARD.toLocaleString()} tokens
                 </span>
               )}
@@ -127,84 +127,70 @@ export default async function ReferralsPage() {
       {referralCode && <ReferralLinkCard referralCode={referralCode.code} />}
 
       <div className="grid gap-6 md:grid-cols-4">
-        <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-300">
-              連結點擊
-            </CardTitle>
-            <MousePointerClick className="h-4 w-4 text-slate-400" />
+            <CardTitle className="text-sm font-medium">連結點擊</CardTitle>
+            <MousePointerClick className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">
+            <div className="text-2xl font-bold">
               {referralCode?.total_clicks || 0}
             </div>
-            <p className="text-xs text-slate-500">累計點擊次數</p>
+            <p className="text-xs text-muted-foreground">累計點擊次數</p>
           </CardContent>
         </Card>
 
-        <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-300">
-              總推薦數
-            </CardTitle>
-            <Users className="h-4 w-4 text-slate-400" />
+            <CardTitle className="text-sm font-medium">總推薦數</CardTitle>
+            <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-white">
-              {totalReferrals}
-            </div>
-            <p className="text-xs text-slate-500">累計推薦朋友數</p>
+            <div className="text-2xl font-bold">{totalReferrals}</div>
+            <p className="text-xs text-muted-foreground">累計推薦朋友數</p>
           </CardContent>
         </Card>
 
-        <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-300">
-              成功推薦
-            </CardTitle>
-            <TrendingUp className="h-4 w-4 text-emerald-400" />
+            <CardTitle className="text-sm font-medium">成功推薦</CardTitle>
+            <TrendingUp className="h-4 w-4 text-green-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-400">
+            <div className="text-2xl font-bold text-green-600">
               {qualifiedReferrals}
             </div>
-            <p className="text-xs text-slate-500">已付款並獲得獎勵</p>
+            <p className="text-xs text-muted-foreground">已付款並獲得獎勵</p>
           </CardContent>
         </Card>
 
-        <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
+        <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium text-slate-300">
-              累計獎勵
-            </CardTitle>
-            <Gift className="h-4 w-4 text-cyber-violet-400" />
+            <CardTitle className="text-sm font-medium">累計獎勵</CardTitle>
+            <Gift className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-cyber-violet-400">
+            <div className="text-2xl font-bold text-primary">
               {totalRewardTokens.toLocaleString()}
             </div>
-            <p className="text-xs text-slate-500">tokens 獎勵總額</p>
+            <p className="text-xs text-muted-foreground">tokens 獎勵總額</p>
           </CardContent>
         </Card>
       </div>
 
-      <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-white">推薦記錄</CardTitle>
-          <CardDescription className="text-slate-400">
-            查看您的推薦朋友和獎勵狀態
-          </CardDescription>
+          <CardTitle>推薦記錄</CardTitle>
+          <CardDescription>查看您的推薦朋友和獎勵狀態</CardDescription>
         </CardHeader>
         <CardContent>
           {referralHistory && referralHistory.length > 0 ? (
             <ReferralHistoryTable referrals={referralHistory} />
           ) : (
             <div className="text-center py-12">
-              <Users className="mx-auto h-12 w-12 text-slate-500" />
-              <h3 className="mt-4 text-lg font-semibold text-white">
-                還沒有推薦記錄
-              </h3>
-              <p className="text-sm text-slate-400 mt-2">
+              <Users className="mx-auto h-12 w-12 text-muted-foreground/50" />
+              <h3 className="mt-4 text-lg font-semibold">還沒有推薦記錄</h3>
+              <p className="text-sm text-muted-foreground mt-2">
                 分享您的推薦連結，開始賺取獎勵吧！
               </p>
             </div>
@@ -212,42 +198,42 @@ export default async function ReferralsPage() {
         </CardContent>
       </Card>
 
-      <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-white">獎勵規則</CardTitle>
+          <CardTitle>獎勵規則</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-cyber-violet-500/20 flex items-center justify-center text-cyber-violet-400 font-bold">
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
               1
             </div>
             <div>
-              <h4 className="font-semibold text-white">分享推薦連結</h4>
-              <p className="text-sm text-slate-400">
+              <h4 className="font-semibold">分享推薦連結</h4>
+              <p className="text-sm text-muted-foreground">
                 複製您的專屬推薦連結，分享給朋友
               </p>
             </div>
           </div>
           <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-cyber-violet-500/20 flex items-center justify-center text-cyber-violet-400 font-bold">
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center text-primary font-bold">
               2
             </div>
             <div>
-              <h4 className="font-semibold text-white">朋友註冊帳號</h4>
-              <p className="text-sm text-slate-400">
+              <h4 className="font-semibold">朋友註冊帳號</h4>
+              <p className="text-sm text-muted-foreground">
                 朋友通過您的連結註冊，系統會自動記錄推薦關係
               </p>
             </div>
           </div>
           <div className="flex items-start gap-3">
-            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-emerald-500/20 flex items-center justify-center text-emerald-400 font-bold">
+            <div className="flex-shrink-0 w-8 h-8 rounded-full bg-green-500/10 flex items-center justify-center text-green-600 font-bold">
               3
             </div>
             <div>
-              <h4 className="font-semibold text-white">雙方獲得獎勵</h4>
-              <p className="text-sm text-slate-400">
+              <h4 className="font-semibold">雙方獲得獎勵</h4>
+              <p className="text-sm text-muted-foreground">
                 朋友完成首次付款後，您和朋友都將獲得{" "}
-                <span className="font-bold text-cyber-violet-400">
+                <span className="font-bold text-primary">
                   {REFERRAL_TOKEN_REWARD.toLocaleString()} tokens
                 </span>{" "}
                 獎勵

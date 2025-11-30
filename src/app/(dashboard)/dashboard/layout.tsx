@@ -41,12 +41,12 @@ export default async function DashboardLayout({
 
   return (
     <DashboardLayoutClient>
-      <div className="h-screen overflow-hidden bg-gradient-to-br from-slate-900 via-slate-900 to-indigo-950">
+      <div className="h-screen overflow-hidden bg-background">
         <Sidebar userEmail={user.email} />
 
         <MainContent>
           <div className="h-screen flex flex-col overflow-hidden">
-            <header className="flex-shrink-0 z-30 h-16 border-b border-white/10 bg-slate-900/80 backdrop-blur-xl">
+            <header className="flex-shrink-0 z-30 h-16 border-b border-border bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60">
               <div className="flex h-full items-center justify-between px-6">
                 <div className="flex items-center gap-4 flex-1"></div>
 
@@ -54,11 +54,7 @@ export default async function DashboardLayout({
                   <NewArticleButton />
 
                   <Link href="/dashboard/referrals">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="gap-2 text-slate-300 hover:text-white hover:bg-white/5"
-                    >
+                    <Button variant="ghost" size="sm" className="gap-2">
                       <Gift className="h-4 w-4" />
                       <span className="hidden sm:inline">好友推薦</span>
                     </Button>
@@ -66,39 +62,36 @@ export default async function DashboardLayout({
 
                   <TokenBalanceDisplay compact />
 
-                  <div className="h-6 w-px bg-white/10" />
+                  <div className="h-6 w-px bg-border" />
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button
                         variant="ghost"
-                        className="relative h-9 w-9 rounded-full ring-2 ring-cyber-violet-500/30 hover:ring-cyber-violet-500/50 transition-all"
+                        className="relative h-9 w-9 rounded-full ring-2 ring-primary/20 hover:ring-primary/40 transition-all"
                       >
                         <Avatar className="h-9 w-9">
                           <AvatarImage src="" alt="User avatar" />
-                          <AvatarFallback className="bg-gradient-to-br from-cyber-violet-500 to-cyber-magenta-500 text-white">
+                          <AvatarFallback className="bg-gradient-to-br from-primary to-primary/70 text-primary-foreground">
                             <User className="h-4 w-4" />
                           </AvatarFallback>
                         </Avatar>
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent
-                      className="w-56 bg-slate-800 border-white/10"
+                      className="w-56"
                       align="end"
                       forceMount
                     >
                       <DropdownMenuLabel className="font-normal">
                         <div className="flex flex-col space-y-1">
-                          <p className="text-sm font-medium leading-none text-white">
+                          <p className="text-sm font-medium leading-none">
                             {user.email}
                           </p>
                         </div>
                       </DropdownMenuLabel>
-                      <DropdownMenuSeparator className="bg-white/10" />
-                      <DropdownMenuItem
-                        asChild
-                        className="text-slate-300 hover:text-white focus:text-white focus:bg-white/5"
-                      >
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem asChild>
                         <Link
                           href="/dashboard/settings"
                           className="cursor-pointer"
@@ -107,7 +100,7 @@ export default async function DashboardLayout({
                           <span>設定</span>
                         </Link>
                       </DropdownMenuItem>
-                      <DropdownMenuSeparator className="bg-white/10" />
+                      <DropdownMenuSeparator />
                       <form action={performLogout} id="logout-form">
                         <LogoutButton />
                       </form>
