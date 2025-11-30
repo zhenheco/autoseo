@@ -310,6 +310,7 @@ export async function scheduleArticlesForPublish(
       id,
       status,
       generated_articles (
+        id,
         title
       )
     `,
@@ -349,9 +350,17 @@ export async function scheduleArticlesForPublish(
     }
 
     const generatedArticle = article.generated_articles as
-      | { title: string }[]
+      | { id: string; title: string }[]
       | null;
+    const generatedArticleId = generatedArticle?.[0]?.id;
     const title = generatedArticle?.[0]?.title || null;
+
+    if (generatedArticleId) {
+      await supabase
+        .from("generated_articles")
+        .update({ website_id: websiteId })
+        .eq("id", generatedArticleId);
+    }
 
     scheduledArticles.push({
       articleId: article.id,
