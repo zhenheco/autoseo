@@ -21,6 +21,7 @@ import {
 import { LogoutButton } from "@/components/dashboard/logout-button";
 import { TokenBalanceDisplay } from "@/components/billing/TokenBalanceDisplay";
 import { NewArticleButton } from "@/components/articles/NewArticleButton";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 async function performLogout() {
   "use server";
@@ -61,6 +62,8 @@ export default async function DashboardLayout({
                   </Link>
 
                   <TokenBalanceDisplay compact />
+
+                  <ThemeToggle />
 
                   <div className="h-6 w-px bg-border" />
 

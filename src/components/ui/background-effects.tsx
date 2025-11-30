@@ -1,12 +1,148 @@
 "use client";
 
 import React from "react";
+import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
 export function BackgroundGradientMesh({ className }: { className?: string }) {
   return (
     <div className={cn("absolute inset-0 -z-10 overflow-hidden", className)}>
       <div className="gradient-mesh absolute inset-0 opacity-30" />
+    </div>
+  );
+}
+
+export function AnimatedGradientBackground({
+  className,
+  children,
+  containerClassName,
+}: {
+  className?: string;
+  children?: React.ReactNode;
+  containerClassName?: string;
+}) {
+  return (
+    <div className={cn("relative overflow-hidden", containerClassName)}>
+      <motion.div
+        className={cn(
+          "absolute inset-0 -z-10",
+          "bg-gradient-to-br from-slate-900 via-indigo-950 to-slate-900",
+          "animated-gradient-bg",
+          className,
+        )}
+        animate={{
+          backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"],
+        }}
+        transition={{
+          duration: 20,
+          repeat: Infinity,
+          ease: "linear",
+        }}
+      />
+      {children}
+    </div>
+  );
+}
+
+export function AuroraBackground({
+  className,
+  showRadialGradient = true,
+}: {
+  className?: string;
+  showRadialGradient?: boolean;
+}) {
+  return (
+    <div
+      className={cn(
+        "absolute inset-0 -z-10 overflow-hidden pointer-events-none hidden dark:block",
+        className,
+      )}
+    >
+      <div
+        className={cn(
+          "absolute inset-0",
+          "bg-gradient-to-b from-slate-900 via-indigo-950/50 to-slate-900",
+        )}
+      />
+      <motion.div
+        className="absolute inset-0"
+        style={{
+          backgroundImage:
+            "linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(139, 92, 246, 0.15) 50%, rgba(236, 72, 153, 0.15) 100%)",
+        }}
+        animate={{
+          opacity: [0.3, 0.5, 0.3],
+          scale: [1, 1.05, 1],
+        }}
+        transition={{
+          duration: 8,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+      />
+      {showRadialGradient && (
+        <div
+          className="absolute inset-0"
+          style={{
+            background:
+              "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(139, 92, 246, 0.3) 0%, transparent 60%)",
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+export function CyberGlow({
+  className,
+  position = "top",
+  color = "violet",
+}: {
+  className?: string;
+  position?: "top" | "center" | "bottom";
+  color?: "cyan" | "violet" | "magenta" | "mixed";
+}) {
+  const positionClasses = {
+    top: "top-0 left-1/2 -translate-x-1/2 -translate-y-1/2",
+    center: "top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2",
+    bottom: "bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2",
+  };
+
+  const colorStyles = {
+    cyan: "radial-gradient(ellipse 80% 50% at 50% 50%, rgba(6, 182, 212, 0.4) 0%, transparent 70%)",
+    violet:
+      "radial-gradient(ellipse 80% 50% at 50% 50%, rgba(139, 92, 246, 0.4) 0%, transparent 70%)",
+    magenta:
+      "radial-gradient(ellipse 80% 50% at 50% 50%, rgba(236, 72, 153, 0.4) 0%, transparent 70%)",
+    mixed:
+      "radial-gradient(ellipse 80% 50% at 50% 50%, rgba(6, 182, 212, 0.3) 0%, rgba(139, 92, 246, 0.2) 40%, transparent 70%)",
+  };
+
+  return (
+    <div
+      className={cn(
+        "absolute inset-0 -z-10 overflow-hidden pointer-events-none hidden dark:block",
+        className,
+      )}
+    >
+      <motion.div
+        className={cn(
+          "absolute w-[800px] h-[500px] rounded-full blur-3xl",
+          positionClasses[position],
+        )}
+        style={{
+          background: colorStyles[color],
+        }}
+        animate={{
+          opacity: [0.5, 0.8, 0.5],
+          scale: [1, 1.1, 1],
+        }}
+        transition={{
+          duration: 6,
+          repeat: Infinity,
+          ease: "easeInOut",
+        }}
+      />
     </div>
   );
 }
@@ -74,7 +210,7 @@ export function GlowSpotlight({
         )}
         style={{
           background:
-            "radial-gradient(ellipse 80% 50% at 50% 50%, rgba(59, 130, 246, 0.3) 0%, transparent 70%)",
+            "radial-gradient(ellipse 80% 50% at 50% 50%, rgba(139, 92, 246, 0.35) 0%, rgba(6, 182, 212, 0.15) 50%, transparent 70%)",
         }}
       />
     </div>
@@ -85,7 +221,7 @@ export function HeroGlow({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "absolute inset-0 -z-10 overflow-hidden pointer-events-none",
+        "absolute inset-0 -z-10 overflow-hidden pointer-events-none hidden dark:block",
         className,
       )}
     >
@@ -93,7 +229,7 @@ export function HeroGlow({ className }: { className?: string }) {
         className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-[600px]"
         style={{
           background:
-            "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(59, 130, 246, 0.3) 0%, transparent 70%)",
+            "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(139, 92, 246, 0.35) 0%, rgba(6, 182, 212, 0.15) 40%, transparent 70%)",
         }}
       />
     </div>
@@ -104,34 +240,64 @@ export function FloatingOrbs({ className }: { className?: string }) {
   return (
     <div
       className={cn(
-        "absolute inset-0 -z-10 overflow-hidden pointer-events-none",
+        "absolute inset-0 -z-10 overflow-hidden pointer-events-none hidden dark:block",
         className,
       )}
     >
-      <div
-        className="absolute top-20 left-[10%] w-64 h-64 rounded-full animate-float-orb"
+      <motion.div
+        className="absolute top-20 left-[10%] w-64 h-64 rounded-full"
         style={{
           background:
-            "radial-gradient(circle at 30% 30%, rgba(59, 130, 246, 0.4) 0%, rgba(59, 130, 246, 0.1) 50%, transparent 70%)",
+            "radial-gradient(circle at 30% 30%, rgba(6, 182, 212, 0.4) 0%, rgba(6, 182, 212, 0.1) 50%, transparent 70%)",
           filter: "blur(40px)",
         }}
-      />
-      <div
-        className="absolute top-40 right-[15%] w-80 h-80 rounded-full animate-float-orb"
-        style={{
-          background:
-            "radial-gradient(circle at 30% 30%, rgba(139, 92, 246, 0.3) 0%, rgba(139, 92, 246, 0.1) 50%, transparent 70%)",
-          filter: "blur(50px)",
-          animationDelay: "2s",
+        animate={{
+          x: [0, 20, -10, 0],
+          y: [0, -30, -15, 0],
+          scale: [1, 1.1, 0.95, 1],
+        }}
+        transition={{
+          duration: 12,
+          repeat: Infinity,
+          ease: "easeInOut",
         }}
       />
-      <div
-        className="absolute bottom-20 left-[30%] w-72 h-72 rounded-full animate-float-orb"
+      <motion.div
+        className="absolute top-40 right-[15%] w-80 h-80 rounded-full"
         style={{
           background:
-            "radial-gradient(circle at 30% 30%, rgba(59, 130, 246, 0.35) 0%, rgba(59, 130, 246, 0.1) 50%, transparent 70%)",
+            "radial-gradient(circle at 30% 30%, rgba(139, 92, 246, 0.35) 0%, rgba(139, 92, 246, 0.1) 50%, transparent 70%)",
+          filter: "blur(50px)",
+        }}
+        animate={{
+          x: [0, -25, 15, 0],
+          y: [0, 20, -20, 0],
+          scale: [1, 0.9, 1.05, 1],
+        }}
+        transition={{
+          duration: 15,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: 2,
+        }}
+      />
+      <motion.div
+        className="absolute bottom-20 left-[30%] w-72 h-72 rounded-full"
+        style={{
+          background:
+            "radial-gradient(circle at 30% 30%, rgba(236, 72, 153, 0.3) 0%, rgba(236, 72, 153, 0.1) 50%, transparent 70%)",
           filter: "blur(45px)",
-          animationDelay: "4s",
+        }}
+        animate={{
+          x: [0, 15, -20, 0],
+          y: [0, -25, 10, 0],
+          scale: [1, 1.05, 0.9, 1],
+        }}
+        transition={{
+          duration: 18,
+          repeat: Infinity,
+          ease: "easeInOut",
+          delay: 4,
         }}
       />
     </div>
@@ -200,7 +366,7 @@ export function ParticleField({
   );
 
   return (
-    <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none">
+    <div className="absolute inset-0 -z-10 overflow-hidden pointer-events-none hidden dark:block">
       {particles.map((particle) => (
         <div
           key={particle.id}

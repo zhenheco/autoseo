@@ -84,7 +84,7 @@ export default function AffiliateWithdrawalsPage() {
       },
       completed: { label: "已完成", className: "bg-green-100 text-green-800" },
       rejected: { label: "已拒絕", className: "bg-red-100 text-red-800" },
-      cancelled: { label: "已取消", className: "bg-gray-100 text-gray-800" },
+      cancelled: { label: "已取消", className: "bg-muted text-foreground" },
     };
 
     const { label, className } = statusMap[status];
@@ -101,7 +101,7 @@ export default function AffiliateWithdrawalsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">提領記錄</h1>
-          <p className="text-gray-600">查看所有提領申請的狀態</p>
+          <p className="text-muted-foreground">查看所有提領申請的狀態</p>
         </div>
         <div className="flex gap-2">
           <Link href="/dashboard/affiliate/withdraw">
@@ -121,10 +121,12 @@ export default function AffiliateWithdrawalsPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="py-8 text-center text-gray-500">載入中...</div>
+            <div className="py-8 text-center text-muted-foreground">
+              載入中...
+            </div>
           ) : withdrawals.length === 0 ? (
             <div className="py-8 text-center">
-              <p className="text-gray-500 mb-4">尚無提領記錄</p>
+              <p className="text-muted-foreground mb-4">尚無提領記錄</p>
               <Link href="/dashboard/affiliate/withdraw">
                 <Button>立即申請提領</Button>
               </Link>

@@ -22,7 +22,7 @@ export default function TaxNoticePage() {
           </Button>
         </Link>
         <h1 className="text-3xl font-bold mb-2">聯盟行銷夥伴稅務須知</h1>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           本文件說明加入本平台聯盟行銷計畫的稅務相關規定，請仔細閱讀。
         </p>
       </div>
@@ -46,7 +46,7 @@ export default function TaxNoticePage() {
         <CardContent className="space-y-6">
           <div>
             <h3 className="font-semibold text-lg mb-3">1. 佣金所得類型</h3>
-            <p className="text-gray-700">
+            <p className="text-foreground">
               聯盟行銷佣金屬於「<strong>其他所得</strong>」（所得稅法第 14 條第
               1 項第 10 類），需併入個人綜合所得稅申報。
             </p>
@@ -54,7 +54,7 @@ export default function TaxNoticePage() {
 
           <div>
             <h3 className="font-semibold text-lg mb-3">2. 扣繳義務</h3>
-            <p className="text-gray-700 mb-4">
+            <p className="text-foreground mb-4">
               根據「各類所得扣繳率標準」規定：
             </p>
 
@@ -63,7 +63,7 @@ export default function TaxNoticePage() {
                 <h4 className="font-semibold mb-2 text-blue-900">
                   📌 境內居住者（台灣居民）
                 </h4>
-                <ul className="space-y-2 text-gray-700">
+                <ul className="space-y-2 text-foreground">
                   <li>
                     <strong>年度累計佣金 ≤ NT$20,000</strong>
                     ：免扣繳，但仍需申報所得
@@ -80,7 +80,7 @@ export default function TaxNoticePage() {
                 <h4 className="font-semibold mb-2 text-orange-900">
                   📌 非境內居住者（外國人/僑胞）
                 </h4>
-                <ul className="space-y-2 text-gray-700">
+                <ul className="space-y-2 text-foreground">
                   <li>
                     無論金額大小，一律扣繳{" "}
                     <strong className="text-orange-600">20%</strong>
@@ -89,11 +89,11 @@ export default function TaxNoticePage() {
                 </ul>
               </div>
 
-              <div className="bg-gray-50 p-4 rounded-lg border">
-                <p className="text-sm text-gray-700">
+              <div className="bg-muted p-4 rounded-lg border">
+                <p className="text-sm text-foreground">
                   <strong>境內居住者定義：</strong>
                 </p>
-                <ul className="list-disc list-inside text-sm text-gray-600 mt-2 space-y-1">
+                <ul className="list-disc list-inside text-sm text-muted-foreground mt-2 space-y-1">
                   <li>在台灣有戶籍，且於一課稅年度內在台居住滿 183 天以上</li>
                   <li>或在台灣設有戶籍，並經常居住在台灣</li>
                 </ul>
@@ -114,7 +114,7 @@ export default function TaxNoticePage() {
         <CardContent className="space-y-6">
           <div>
             <h3 className="font-semibold text-lg mb-3">什麼是扣繳憑單？</h3>
-            <p className="text-gray-700">
+            <p className="text-foreground">
               扣繳憑單是證明您已預先繳納部分所得稅的文件，報稅時可抵扣應繳稅額。
             </p>
           </div>
@@ -122,18 +122,18 @@ export default function TaxNoticePage() {
           <div>
             <h3 className="font-semibold text-lg mb-3">我們的處理方式</h3>
             <div className="grid md:grid-cols-2 gap-4">
-              <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-start gap-3 p-4 bg-muted rounded-lg">
                 <Calendar className="h-5 w-5 text-blue-600 mt-0.5" />
                 <div>
                   <p className="font-semibold mb-1">發放時間</p>
-                  <p className="text-sm text-gray-600">每年 1 月底前</p>
+                  <p className="text-sm text-muted-foreground">每年 1 月底前</p>
                 </div>
               </div>
-              <div className="flex items-start gap-3 p-4 bg-gray-50 rounded-lg">
+              <div className="flex items-start gap-3 p-4 bg-muted rounded-lg">
                 <CreditCard className="h-5 w-5 text-blue-600 mt-0.5" />
                 <div>
                   <p className="font-semibold mb-1">發放條件</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted-foreground">
                     年度累計佣金超過 NT$20,000
                   </p>
                 </div>
@@ -143,7 +143,7 @@ export default function TaxNoticePage() {
 
           <div>
             <h3 className="font-semibold text-lg mb-3">報稅流程</h3>
-            <ol className="list-decimal list-inside space-y-2 text-gray-700">
+            <ol className="list-decimal list-inside space-y-2 text-foreground">
               <li>5 月報稅季時，使用自然人憑證或健保卡線上報稅</li>
               <li>系統會自動帶入我們申報的所得資料</li>
               <li>確認資料無誤後送出申報</li>
@@ -174,7 +174,7 @@ export default function TaxNoticePage() {
           <div className="overflow-x-auto">
             <table className="w-full border-collapse">
               <thead>
-                <tr className="bg-gray-100">
+                <tr className="bg-muted">
                   <th className="border p-2 text-left">課稅所得級距</th>
                   <th className="border p-2 text-left">稅率</th>
                   <th className="border p-2 text-left">累進差額</th>
@@ -212,7 +212,7 @@ export default function TaxNoticePage() {
 
           <div className="bg-blue-50 p-4 rounded-lg">
             <h4 className="font-semibold mb-2">💡 計算範例</h4>
-            <div className="space-y-2 text-sm text-gray-700">
+            <div className="space-y-2 text-sm text-foreground">
               <p>
                 假設您年度佣金收入為 <strong>NT$100,000</strong>，其他收入為{" "}
                 <strong>NT$500,000</strong>
@@ -236,7 +236,7 @@ export default function TaxNoticePage() {
           <CardTitle>四、注意事項</CardTitle>
         </CardHeader>
         <CardContent>
-          <ul className="space-y-3 text-gray-700">
+          <ul className="space-y-3 text-foreground">
             <li className="flex items-start gap-2">
               <span className="text-blue-600 mt-1">•</span>
               <span>
@@ -310,7 +310,7 @@ export default function TaxNoticePage() {
         </CardContent>
       </Card>
 
-      <div className="mt-8 text-center text-sm text-gray-500">
+      <div className="mt-8 text-center text-sm text-muted-foreground">
         <p>本文件僅供參考，實際稅務處理請以國稅局規定為準</p>
         <p className="mt-2">最後更新：2025 年 1 月</p>
       </div>

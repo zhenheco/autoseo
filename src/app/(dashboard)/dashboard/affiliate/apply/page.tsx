@@ -51,7 +51,7 @@ export default function AffiliateApplyPage() {
     <div className="container mx-auto max-w-2xl p-6">
       <div className="mb-6">
         <h1 className="text-3xl font-bold">申請成為聯盟夥伴</h1>
-        <p className="mt-2 text-gray-600">
+        <p className="mt-2 text-muted-foreground">
           加入我們的聯盟計畫，推薦新客戶即可獲得 15%~30% 佣金（依推薦人數分級）
         </p>
       </div>
@@ -77,7 +77,7 @@ export default function AffiliateApplyPage() {
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-foreground">
             真實姓名 <span className="text-red-500">*</span>
           </label>
           <input
@@ -87,13 +87,13 @@ export default function AffiliateApplyPage() {
             onChange={(e) =>
               setFormData({ ...formData, full_name: e.target.value })
             }
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-border px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
             placeholder="請填寫與身份證相符的姓名"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-foreground">
             身份證字號/統一編號 <span className="text-red-500">*</span>
           </label>
           <input
@@ -106,16 +106,16 @@ export default function AffiliateApplyPage() {
                 id_number: e.target.value.toUpperCase(),
               })
             }
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-border px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
             placeholder="A123456789 或 12345678"
           />
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-muted-foreground">
             個人：身份證字號，公司：統一編號
           </p>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-foreground">
             聯絡電話 <span className="text-red-500">*</span>
           </label>
           <input
@@ -125,13 +125,13 @@ export default function AffiliateApplyPage() {
             onChange={(e) =>
               setFormData({ ...formData, phone: e.target.value })
             }
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-border px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
             placeholder="0912345678"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-foreground">
             Email <span className="text-red-500">*</span>
           </label>
           <input
@@ -141,13 +141,13 @@ export default function AffiliateApplyPage() {
             onChange={(e) =>
               setFormData({ ...formData, email: e.target.value })
             }
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-border px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
             placeholder="your@email.com"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-foreground">
             地址 <span className="text-red-500">*</span>
           </label>
           <textarea
@@ -157,13 +157,13 @@ export default function AffiliateApplyPage() {
               setFormData({ ...formData, address: e.target.value })
             }
             rows={3}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-border px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
             placeholder="請填寫完整地址"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-foreground">
             稅務身份
           </label>
           <div className="mt-2 space-y-2">
@@ -211,7 +211,7 @@ export default function AffiliateApplyPage() {
               }
               className="mr-2 mt-1"
             />
-            <span className="text-sm text-gray-700">
+            <span className="text-sm text-foreground">
               我已閱讀並同意
               <Link
                 href="/dashboard/affiliate/tax-notice"
@@ -237,14 +237,14 @@ export default function AffiliateApplyPage() {
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:bg-gray-400"
+            className="flex-1 rounded-md bg-primary px-4 py-2 text-primary-foreground hover:bg-primary/90 disabled:bg-muted disabled:text-muted-foreground"
           >
             {loading ? "處理中..." : "提交申請"}
           </button>
           <button
             type="button"
             onClick={() => router.back()}
-            className="rounded-md border border-gray-300 px-4 py-2 hover:bg-gray-50"
+            className="rounded-md border border-border px-4 py-2 hover:bg-muted"
           >
             取消
           </button>
