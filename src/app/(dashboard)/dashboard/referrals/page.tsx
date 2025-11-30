@@ -40,7 +40,7 @@ export default async function ReferralsPage() {
   }
 
   const { data: referralCode } = await supabase
-    .from("referral_codes")
+    .from("company_referral_codes")
     .select("*")
     .eq("company_id", membership.company_id)
     .single();
@@ -66,7 +66,7 @@ export default async function ReferralsPage() {
     .limit(20);
 
   const { data: tokenRewards } = await supabase
-    .from("referral_token_rewards")
+    .from("referral_rewards")
     .select("referrer_tokens")
     .eq("referrer_company_id", membership.company_id)
     .not("referrer_credited_at", "is", null);
@@ -117,7 +117,9 @@ export default async function ReferralsPage() {
         </Card>
       )}
 
-      {referralCode && <ReferralLinkCard referralCode={referralCode.code} />}
+      {referralCode && (
+        <ReferralLinkCard referralCode={referralCode.referral_code} />
+      )}
 
       <div className="grid gap-6 md:grid-cols-4">
         <Card>
@@ -127,7 +129,7 @@ export default async function ReferralsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold">
-              {referralCode?.total_clicks || 0}
+              {referralCode?.total_referrals || 0}
             </div>
             <p className="text-xs text-muted-foreground">累計點擊次數</p>
           </CardContent>
