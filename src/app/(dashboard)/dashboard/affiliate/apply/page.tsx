@@ -38,8 +38,7 @@ export default function AffiliateApplyPage() {
         throw new Error(data.message || "申請失敗");
       }
 
-      // 申請成功，跳轉到儀表板
-      alert(`申請成功！您的推薦碼：${data.affiliate_code}`);
+      alert("申請成功！");
       router.push("/dashboard/affiliate");
     } catch (err) {
       setError(err instanceof Error ? err.message : "未知錯誤");

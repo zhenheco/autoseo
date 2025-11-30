@@ -19,7 +19,6 @@ import {
   Users,
   TrendingUp,
   Award,
-  ArrowRight,
   Copy,
   Check,
   Info,
@@ -419,32 +418,6 @@ export default function AffiliateDashboardPage() {
                 NT$ {stats?.averageOrderValue || 0}
               </span>
             </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>快速連結</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Link href="/dashboard/affiliate/referrals">
-              <Button variant="outline" className="w-full justify-between">
-                查看推薦客戶
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-            <Link href="/dashboard/affiliate/commissions">
-              <Button variant="outline" className="w-full justify-between">
-                查看佣金明細
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
-            <Link href="/dashboard/affiliate/settings">
-              <Button variant="outline" className="w-full justify-between">
-                更新銀行帳戶
-                <ArrowRight className="h-4 w-4" />
-              </Button>
-            </Link>
           </CardContent>
         </Card>
       </div>
