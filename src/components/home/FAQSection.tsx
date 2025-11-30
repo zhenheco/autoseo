@@ -61,7 +61,7 @@ export function FAQSection() {
               還有疑問嗎？
             </GradientText>
           </h2>
-          <p className="text-slate-400 max-w-2xl mx-auto">
+          <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
             以下是用戶最常詢問的問題
           </p>
         </div>
@@ -95,7 +95,7 @@ export function FAQSection() {
                       : "max-h-0 opacity-0"
                   }`}
                 >
-                  <p className="text-sm text-slate-400 leading-relaxed">
+                  <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
                     {faq.answer}
                   </p>
                 </div>

@@ -185,7 +185,7 @@ export default async function Home() {
                 </GlowButtonLink>
               </div>
 
-              <div className="flex flex-wrap justify-center gap-6 text-sm text-slate-500 dark:text-slate-400">
+              <div className="flex flex-wrap justify-center gap-6 text-sm text-slate-600 dark:text-slate-400">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="h-4 w-4 text-cyber-cyan-400" />
                   <span className="text-slate-900 dark:text-white font-medium">
@@ -229,7 +229,7 @@ export default async function Home() {
                         <span className="text-2xl">{stat.suffix}</span>
                       )}
                     </GradientText>
-                    <div className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+                    <div className="text-slate-600 dark:text-slate-400 text-sm mt-1">
                       {stat.label}
                     </div>
                   </div>
@@ -265,7 +265,7 @@ export default async function Home() {
                   頂尖 AI 模型
                 </GradientText>
               </h2>
-              <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto">
+              <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
                 根據需求自動選擇最適合的 AI 模型，確保最佳品質
               </p>
             </div>
@@ -284,7 +284,7 @@ export default async function Home() {
                     >
                       {model.name}
                     </GradientText>
-                    <div className="text-xs text-slate-500 dark:text-slate-400">
+                    <div className="text-xs text-slate-600 dark:text-slate-400">
                       {model.description}
                     </div>
                   </CardContent>
@@ -320,7 +320,7 @@ export default async function Home() {
                   全自動化
                 </GradientText>
               </h2>
-              <p className="text-slate-500 dark:text-slate-400 max-w-3xl mx-auto">
+              <p className="text-slate-600 dark:text-slate-400 max-w-3xl mx-auto">
                 9 大核心功能讓您的 SEO 內容策略完全自動化
               </p>
             </div>
@@ -340,7 +340,7 @@ export default async function Home() {
                       <h3 className="mb-2 text-lg font-bold text-slate-900 dark:text-white">
                         {feature.title}
                       </h3>
-                      <p className="text-slate-500 dark:text-slate-400 text-sm leading-relaxed">
+                      <p className="text-slate-600 dark:text-slate-400 text-sm leading-relaxed">
                         {feature.description}
                       </p>
                     </CardContent>
@@ -372,7 +372,7 @@ export default async function Home() {
                   怎麼說
                 </span>
               </h2>
-              <p className="text-slate-500 dark:text-slate-400">
+              <p className="text-slate-600 dark:text-slate-400">
                 看看他們如何使用 1WaySEO 改變內容策略
               </p>
             </div>
@@ -407,7 +407,7 @@ export default async function Home() {
                   ，永久使用
                 </span>
               </h2>
-              <p className="text-slate-500 dark:text-slate-400 max-w-2xl mx-auto mb-6">
+              <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-6">
                 一次付費，每月自動獲得 Credits 配額，無需訂閱費用
               </p>
               <div className="inline-flex items-center gap-3 rounded-full bg-white dark:bg-transparent dark:glass shadow-md dark:shadow-none border border-slate-200 dark:border-cyber-cyan-500/30 px-6 py-3">
@@ -460,7 +460,7 @@ export default async function Home() {
                             NT${plan.lifetime_price?.toLocaleString()}
                           </span>
                           <span
-                            className={`text-xs ${isPopular ? "text-white/70" : "text-slate-400"}`}
+                            className={`text-xs ${isPopular ? "text-white/70" : "text-slate-600 dark:text-slate-400"}`}
                           >
                             終身
                           </span>
@@ -528,7 +528,7 @@ export default async function Home() {
                 <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">
                   需要更多 Credits？
                 </h3>
-                <p className="text-sm text-slate-500 dark:text-slate-400">
+                <p className="text-sm text-slate-600 dark:text-slate-400">
                   免費版或終身版用戶皆可購買，直接加值不需升級方案。購買的
                   Credits 永不過期！
                 </p>
@@ -601,7 +601,7 @@ export default async function Home() {
                   了嗎？
                 </span>
               </h2>
-              <p className="text-slate-500 dark:text-slate-400 mb-8">
+              <p className="text-slate-600 dark:text-slate-400 mb-8">
                 立即註冊，免費獲得 10K Credits 開始體驗
               </p>
               <GlowButtonLink
@@ -625,10 +625,10 @@ export default async function Home() {
 
           <div className="container mx-auto px-4">
             <div className="flex flex-col md:flex-row justify-between items-center gap-4">
-              <div className="text-slate-600 dark:text-slate-500 text-sm">
+              <div className="text-slate-700 dark:text-slate-500 text-sm">
                 © 2024 1WaySEO. All rights reserved.
               </div>
-              <div className="flex gap-6 text-sm text-slate-500 dark:text-slate-400">
+              <div className="flex gap-6 text-sm text-slate-600 dark:text-slate-400">
                 <Link
                   href="/terms"
                   className="hover:text-cyber-cyan-400 transition-colors"
