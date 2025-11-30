@@ -109,7 +109,7 @@ async function getWebsiteArticleJobs(
     )
     .eq("website_id", websiteId)
     .eq("company_id", companyId)
-    .in("status", ["pending", "processing"])
+    .in("status", ["pending", "processing", "scheduled"])
     .order("created_at", { ascending: false });
 
   if (error) {

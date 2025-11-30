@@ -115,10 +115,10 @@ export async function signUp(email: string, password: string) {
 
   if (generatedCode) {
     const { error: referralCodeError } = await adminClient
-      .from("referral_codes")
+      .from("company_referral_codes")
       .insert({
         company_id: company.id,
-        code: generatedCode,
+        referral_code: generatedCode,
       });
 
     if (referralCodeError) {
@@ -135,9 +135,9 @@ export async function signUp(email: string, password: string) {
   if (referrerCode) {
     // 查找推薦人
     const { data: referrerData } = await adminClient
-      .from("referral_codes")
+      .from("company_referral_codes")
       .select("company_id")
-      .eq("code", referrerCode.toUpperCase())
+      .eq("referral_code", referrerCode.toUpperCase())
       .single();
 
     if (referrerData && referrerData.company_id !== company.id) {
