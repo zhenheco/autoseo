@@ -11,8 +11,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { BANK_CODES } from "@/types/affiliate.types";
-import { MIN_WITHDRAWAL_AMOUNT } from "@/types/referral.types";
+import { BANK_CODES, MIN_WITHDRAWAL_AMOUNT } from "@/types/referral.types";
 
 export default function AffiliateWithdrawPage() {
   const router = useRouter();
