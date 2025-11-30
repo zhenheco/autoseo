@@ -60,6 +60,15 @@ ${fullHtml}
       );
     }
 
+    try {
+      fullHtml = await this.addStyledBoxes(fullHtml);
+    } catch (error) {
+      console.warn(
+        "[HTMLAgent] ⚠️ Failed to add styled boxes, continuing...",
+        error,
+      );
+    }
+
     const linkCount = await this.countLinks(fullHtml);
 
     let finalHtml = fullHtml;
@@ -320,6 +329,107 @@ ${fullHtml}
     });
 
     return body.innerHTML;
+  }
+
+  private async addStyledBoxes(html: string): Promise<string> {
+    const { parseHTML } = await import("linkedom");
+    const { document } = parseHTML(html);
+    const body = document.body;
+
+    if (!body) {
+      console.warn("[HTMLAgent] ⚠️ No body element found for styled boxes");
+      return html;
+    }
+
+    const boxStyle =
+      "background-color: #FFF8E7; border-radius: 8px; padding: 20px 24px; margin: 24px 0; border-left: 4px solid #E6B800;";
+
+    this.wrapFAQSection(body, document, boxStyle);
+    this.wrapIntroductionSummary(body, document, boxStyle);
+
+    console.log("[HTMLAgent] ✅ Styled boxes added");
+
+    return body.innerHTML;
+  }
+
+  private wrapFAQSection(
+    body: Element,
+    document: Document,
+    boxStyle: string,
+  ): void {
+    const faqPatterns = [
+      "常見問題",
+      "faq",
+      "q&a",
+      "問與答",
+      "frequently asked questions",
+    ];
+
+    const faqHeadings = Array.from(body.querySelectorAll("h2, h3")).filter(
+      (h) => {
+        const text = (h.textContent || "").toLowerCase();
+        return faqPatterns.some((pattern) => text.includes(pattern));
+      },
+    );
+
+    for (const faqHeading of faqHeadings) {
+      if (faqHeading.parentElement?.classList.contains("styled-faq-box")) {
+        continue;
+      }
+
+      const elementsToWrap: Element[] = [faqHeading];
+      let sibling = faqHeading.nextElementSibling;
+
+      while (sibling && !["H1", "H2"].includes(sibling.tagName)) {
+        elementsToWrap.push(sibling);
+        sibling = sibling.nextElementSibling;
+      }
+
+      const wrapper = document.createElement("div");
+      wrapper.setAttribute("style", boxStyle);
+      wrapper.setAttribute("class", "styled-faq-box");
+
+      faqHeading.parentNode?.insertBefore(wrapper, faqHeading);
+      elementsToWrap.forEach((el) => wrapper.appendChild(el));
+
+      console.log("[HTMLAgent] ✅ FAQ section wrapped with styled box");
+    }
+  }
+
+  private wrapIntroductionSummary(
+    body: Element,
+    document: Document,
+    boxStyle: string,
+  ): void {
+    const h1 = body.querySelector("h1");
+    if (!h1) return;
+
+    let firstParagraph = h1.nextElementSibling;
+
+    while (
+      firstParagraph &&
+      (firstParagraph.tagName === "FIGURE" ||
+        firstParagraph.querySelector?.("img"))
+    ) {
+      firstParagraph = firstParagraph.nextElementSibling;
+    }
+
+    if (
+      firstParagraph &&
+      firstParagraph.tagName === "P" &&
+      !firstParagraph.parentElement?.classList.contains("styled-summary-box")
+    ) {
+      const wrapper = document.createElement("div");
+      wrapper.setAttribute("style", boxStyle);
+      wrapper.setAttribute("class", "styled-summary-box");
+
+      firstParagraph.parentNode?.insertBefore(wrapper, firstParagraph);
+      wrapper.appendChild(firstParagraph);
+
+      console.log(
+        "[HTMLAgent] ✅ Introduction summary wrapped with styled box",
+      );
+    }
   }
 
   private findSections(
