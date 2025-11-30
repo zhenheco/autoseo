@@ -1,27 +1,27 @@
 @import "tailwindcss";
 
 @theme {
-  /* 主色調：科技藍 #3B82F6 */
-  --color-background: oklch(100% 0 0);
-  --color-foreground: oklch(9.61% 0.006 285.82);
-  --color-card: oklch(100% 0 0);
-  --color-card-foreground: oklch(9.61% 0.006 285.82);
-  --color-popover: oklch(100% 0 0);
-  --color-popover-foreground: oklch(9.61% 0.006 285.82);
-  --color-primary: oklch(60.59% 0.228 262.89);
+  /* 主色調：科技藍 #3B82F6 - 深色主題優先 */
+  --color-background: oklch(12.02% 0.011 285.88);
+  --color-foreground: oklch(92.41% 0.003 286.27);
+  --color-card: oklch(16.07% 0.011 286.07);
+  --color-card-foreground: oklch(92.41% 0.003 286.27);
+  --color-popover: oklch(18.96% 0.011 286.08);
+  --color-popover-foreground: oklch(92.41% 0.003 286.27);
+  --color-primary: oklch(65.59% 0.228 262.89);
   --color-primary-foreground: oklch(100% 0 0);
-  --color-secondary: oklch(58.59% 0.228 292.37);
+  --color-secondary: oklch(62.59% 0.228 292.37);
   --color-secondary-foreground: oklch(100% 0 0);
-  --color-muted: oklch(96.11% 0.014 264.53);
-  --color-muted-foreground: oklch(55.32% 0.02 262.11);
-  --color-accent: oklch(96.11% 0.014 264.53);
-  --color-accent-foreground: oklch(9.61% 0.006 285.82);
-  --color-destructive: oklch(62.77% 0.226 27.33);
+  --color-muted: oklch(22.31% 0.011 286.14);
+  --color-muted-foreground: oklch(75% 0.006 286.67);
+  --color-accent: oklch(26.21% 0.011 286.13);
+  --color-accent-foreground: oklch(92.41% 0.003 286.27);
+  --color-destructive: oklch(55.01% 0.227 27.33);
   --color-destructive-foreground: oklch(98.04% 0 0);
-  --color-border: oklch(91.2% 0.01 264.66);
-  --color-input: oklch(91.2% 0.01 264.66);
-  --color-ring: oklch(60.59% 0.228 262.89);
-  --color-success: oklch(51.98% 0.14 154.63);
+  --color-border: oklch(28.24% 0.011 286.12);
+  --color-input: oklch(30.53% 0.011 286.12);
+  --color-ring: oklch(65.59% 0.228 262.89);
+  --color-success: oklch(60% 0.15 154.63);
   --color-warning: oklch(68.63% 0.19 56.75);
   --color-danger: oklch(62.77% 0.226 27.33);
 

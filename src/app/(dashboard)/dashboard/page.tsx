@@ -115,7 +115,7 @@ export default async function DashboardPage() {
 
       <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm rounded-xl">
         <CardHeader>
-          <CardTitle className="text-2xl font-bold text-slate-400 flex items-center gap-2">
+          <CardTitle className="text-2xl font-bold text-white flex items-center gap-2">
             🚧 7 天流量趨勢
           </CardTitle>
           <CardDescription className="text-base text-slate-500">

@@ -110,12 +110,12 @@ export default async function ReferralsPage() {
                 {myReferrer.referral_code}
               </span>
               {myReferrer.status === "pending" && (
-                <span className="ml-2 text-orange-600">
+                <span className="ml-2 text-amber-400">
                   （首次付款後雙方獲得獎勵）
                 </span>
               )}
               {myReferrer.status === "rewarded" && (
-                <span className="ml-2 text-green-600">
+                <span className="ml-2 text-emerald-400">
                   ✓ 已獲得 {REFERRAL_TOKEN_REWARD.toLocaleString()} tokens
                 </span>
               )}
