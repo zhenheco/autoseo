@@ -38,8 +38,8 @@ export async function GET() {
     }
 
     const { data: referralCode } = await supabase
-      .from("referral_codes")
-      .select("code, total_clicks")
+      .from("company_referral_codes")
+      .select("referral_code, total_referrals")
       .eq("company_id", companyMember.company_id)
       .single();
 
@@ -84,7 +84,7 @@ export async function GET() {
       conversionRate: Math.round(conversionRate * 100) / 100,
       averageOrderValue: Math.round(averageOrderValue),
       lastPaymentDate: lastPaymentDate || null,
-      affiliate_code: referralCode?.code || "",
+      affiliate_code: referralCode?.referral_code || "",
       status: affiliate.status,
       currentTier: stats.currentTier,
       nextTier: stats.nextTier,

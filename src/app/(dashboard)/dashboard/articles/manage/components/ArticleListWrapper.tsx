@@ -20,13 +20,18 @@ function PageHeader({ filters }: { filters?: ReactNode }) {
   return (
     <div className="mb-4 flex items-center gap-4">
       <h1 className="text-2xl font-bold whitespace-nowrap">文章管理</h1>
-      <div className="w-[180px]">
-        <WebsiteSelector
-          value={websiteId}
-          onChange={setWebsiteId}
-          placeholder="選擇發布網站"
-          disabled={isScheduling}
-        />
+      <div className="flex items-center gap-2">
+        <div className="w-[180px]">
+          <WebsiteSelector
+            value={websiteId}
+            onChange={setWebsiteId}
+            placeholder="選擇發布網站"
+            disabled={isScheduling}
+          />
+        </div>
+        <span className="text-orange-500 text-sm whitespace-nowrap">
+          (選擇目標網站)
+        </span>
       </div>
       <div className="flex-1" />
       {filters}

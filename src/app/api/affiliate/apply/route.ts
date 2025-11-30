@@ -97,14 +97,14 @@ export async function POST(request: NextRequest) {
     }
 
     const { data: referralCode } = await supabase
-      .from("referral_codes")
-      .select("code")
+      .from("company_referral_codes")
+      .select("referral_code")
       .eq("company_id", companyMember.company_id)
       .single();
 
     return NextResponse.json({
       success: true,
-      affiliate_code: referralCode?.code || "",
+      affiliate_code: referralCode?.referral_code || "",
       message: "申請成功！您已成為聯盟夥伴",
     });
   } catch (error) {
