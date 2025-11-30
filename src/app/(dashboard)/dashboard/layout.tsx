@@ -12,7 +12,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "@/lib/auth";
-import { User, Settings, Bell, Gift } from "lucide-react";
+import { User, Settings, Gift } from "lucide-react";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import {
   DashboardLayoutClient,
@@ -63,15 +63,6 @@ export default async function DashboardLayout({
                   <TokenBalanceDisplay compact />
 
                   <div className="h-6 w-px bg-border" />
-
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    className="h-9 w-9 relative hover:bg-accent"
-                  >
-                    <Bell className="h-5 w-5 text-foreground/70" />
-                    <span className="absolute top-1.5 right-1.5 h-2 w-2 bg-primary rounded-full" />
-                  </Button>
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
