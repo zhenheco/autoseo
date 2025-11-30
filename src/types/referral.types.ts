@@ -14,7 +14,7 @@ export interface Referral {
   referrer_company_id: string;
   referred_company_id: string;
   referral_code: string;
-  status: "pending" | "qualified" | "rewarded";
+  status: "pending" | "qualified" | "rewarded" | null;
   registered_at: string | null;
   first_payment_at: string | null;
   first_payment_amount: number | null;
@@ -36,7 +36,7 @@ export interface AffiliateTier {
   min_referrals: number;
   max_referrals: number | null;
   commission_rate: number;
-  created_at: string;
+  created_at: string | null;
 }
 
 export interface Affiliate {
@@ -124,7 +124,7 @@ export interface ReferralTokenReward {
   referred_company_id: string;
   referred_tokens: number;
   referred_credited_at: string | null;
-  created_at: string;
+  created_at: string | null;
 }
 
 export interface ReferralTrackingLog {
@@ -138,7 +138,7 @@ export interface ReferralTrackingLog {
   landing_page: string | null;
   company_id: string | null;
   metadata: Record<string, unknown> | null;
-  created_at: string;
+  created_at: string | null;
 }
 
 export interface AffiliateTierHistory {
