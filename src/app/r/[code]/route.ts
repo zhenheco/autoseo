@@ -4,7 +4,7 @@ import {
   recordReferralClick,
 } from "@/lib/referral-service";
 
-const REFERRAL_COOKIE_NAME = "ref_code";
+const REFERRAL_COOKIE_NAME = "affiliate_ref";
 const REFERRAL_COOKIE_MAX_AGE = 30 * 24 * 60 * 60;
 
 export async function GET(

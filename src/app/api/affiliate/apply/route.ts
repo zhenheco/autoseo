@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { applyForAffiliate } from "@/lib/affiliate-service";
+import { generateReferralCode } from "@/lib/referral-service";
 import type { AffiliateApplyForm } from "@/types/referral.types";
 
 export async function POST(request: NextRequest) {
@@ -94,15 +95,10 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: referralCode } = await supabase
-      .from("referral_codes")
-      .select("code")
-      .eq("company_id", companyMember.company_id)
-      .single();
+    await generateReferralCode(companyMember.company_id);
 
     return NextResponse.json({
       success: true,
-      affiliate_code: referralCode?.code || "",
       message: "申請成功！您已成為聯盟夥伴",
     });
   } catch (error) {
