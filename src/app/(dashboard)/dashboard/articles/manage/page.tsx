@@ -8,6 +8,7 @@ import { getArticles } from "./actions";
 import { ArticleListWrapper } from "./components/ArticleListWrapper";
 import { ArticleFilters } from "./components/ArticleFilters";
 import { ArticlePreview } from "./components/ArticlePreview";
+import { AutoRefreshWrapper } from "./components/AutoRefreshWrapper";
 
 export const dynamic = "force-dynamic";
 
@@ -70,16 +71,18 @@ export default async function ArticleManagePage({ searchParams }: PageProps) {
     (params.filter as "all" | "unpublished" | "published") || "all";
 
   return (
-    <div className="container mx-auto p-6 max-w-[1600px]">
-      <Suspense
-        fallback={
-          <div className="text-center py-8 text-muted-foreground">
-            載入中...
-          </div>
-        }
-      >
-        <ArticleListContent filter={filter} />
-      </Suspense>
-    </div>
+    <AutoRefreshWrapper intervalMs={5 * 60 * 1000}>
+      <div className="container mx-auto p-6 max-w-[1600px]">
+        <Suspense
+          fallback={
+            <div className="text-center py-8 text-muted-foreground">
+              載入中...
+            </div>
+          }
+        >
+          <ArticleListContent filter={filter} />
+        </Suspense>
+      </div>
+    </AutoRefreshWrapper>
   );
 }
