@@ -72,6 +72,21 @@ const config: Config = {
           900: "#1e3a8a",
           950: "#172554",
         },
+        "cyber-cyan": {
+          400: "#22d3ee",
+          500: "#06b6d4",
+          600: "#0891b2",
+        },
+        "cyber-violet": {
+          400: "#a78bfa",
+          500: "#8b5cf6",
+          600: "#7c3aed",
+        },
+        "cyber-magenta": {
+          400: "#f472b6",
+          500: "#ec4899",
+          600: "#db2777",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",

@@ -93,7 +93,7 @@ export default async function ArticleDetailPage({
                       ? "bg-red-100 text-red-700"
                       : article.status === "processing"
                         ? "bg-blue-100 text-blue-700"
-                        : "bg-gray-100 text-gray-700"
+                        : "bg-muted text-foreground"
                 }`}
               >
                 {article.status === "published" && "已發布"}

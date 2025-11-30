@@ -142,8 +142,8 @@ function AuthorizingContent() {
                 </svg>
               </div>
               <div className="text-center">
-                <h2 className="text-2xl font-bold text-gray-900">處理失敗</h2>
-                <p className="mt-2 text-gray-600">{errorMessage}</p>
+                <h2 className="text-2xl font-bold text-foreground">處理失敗</h2>
+                <p className="mt-2 text-muted-foreground">{errorMessage}</p>
                 <div className="mt-6 flex gap-4 justify-center">
                   <button
                     onClick={() => window.location.reload()}
@@ -153,7 +153,7 @@ function AuthorizingContent() {
                   </button>
                   <button
                     onClick={() => router.push("/dashboard/billing")}
-                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
+                    className="px-4 py-2 bg-muted text-foreground rounded-md hover:bg-muted transition-colors"
                   >
                     返回計費中心
                   </button>
@@ -167,29 +167,29 @@ function AuthorizingContent() {
               </div>
 
               <div className="text-center">
-                <h2 className="text-2xl font-bold text-gray-900">
+                <h2 className="text-2xl font-bold text-foreground">
                   正在前往授權頁面
                 </h2>
-                <p className="mt-2 text-gray-600">
+                <p className="mt-2 text-muted-foreground">
                   {status === "loading"
                     ? "正在準備付款資料..."
                     : "正在連接藍新金流..."}
                 </p>
-                <p className="mt-4 text-sm text-gray-500">
+                <p className="mt-4 text-sm text-muted-foreground">
                   請稍候，不要關閉此頁面
                 </p>
               </div>
 
-              <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
                 <div
                   className="h-full animate-pulse bg-gradient-to-r from-blue-500 to-indigo-500"
                   style={{ width: "75%" }}
                 />
               </div>
 
-              <div className="flex items-center space-x-2 text-sm text-gray-500">
+              <div className="flex items-center space-x-2 text-sm text-muted-foreground">
                 <svg
-                  className="h-5 w-5 text-gray-400"
+                  className="h-5 w-5 text-muted-foreground"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -224,7 +224,9 @@ export default function AuthorizingPage() {
                 <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
               </div>
               <div className="text-center">
-                <h2 className="text-2xl font-bold text-gray-900">載入中...</h2>
+                <h2 className="text-2xl font-bold text-foreground">
+                  載入中...
+                </h2>
               </div>
             </div>
           </div>

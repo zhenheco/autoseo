@@ -119,7 +119,7 @@ export default function AffiliateCommissionsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">佣金明細</h1>
-          <p className="text-gray-600">查看您的所有佣金記錄</p>
+          <p className="text-muted-foreground">查看您的所有佣金記錄</p>
         </div>
         <Link href="/dashboard/affiliate">
           <Button variant="outline">返回儀表板</Button>
@@ -136,7 +136,7 @@ export default function AffiliateCommissionsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-gray-500">30天後可提領</p>
+            <p className="text-sm text-muted-foreground">30天後可提領</p>
           </CardContent>
         </Card>
 
@@ -164,7 +164,7 @@ export default function AffiliateCommissionsPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-gray-500">歷史總計</p>
+            <p className="text-sm text-muted-foreground">歷史總計</p>
           </CardContent>
         </Card>
       </div>
@@ -224,9 +224,13 @@ export default function AffiliateCommissionsPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="py-8 text-center text-gray-500">載入中...</div>
+            <div className="py-8 text-center text-muted-foreground">
+              載入中...
+            </div>
           ) : commissions.length === 0 ? (
-            <div className="py-8 text-center text-gray-500">尚無佣金記錄</div>
+            <div className="py-8 text-center text-muted-foreground">
+              尚無佣金記錄
+            </div>
           ) : (
             <>
               <div className="overflow-x-auto">
@@ -264,7 +268,7 @@ export default function AffiliateCommissionsPage() {
                         <TableCell>{formatDate(comm.earned_at)}</TableCell>
                         <TableCell>
                           {comm.status === "locked" ? (
-                            <span className="text-sm text-gray-600">
+                            <span className="text-sm text-muted-foreground">
                               {getDaysUntilUnlock(comm.unlock_at)}
                             </span>
                           ) : (
@@ -288,7 +292,7 @@ export default function AffiliateCommissionsPage() {
                   >
                     上一頁
                   </Button>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-muted-foreground">
                     第 {page} / {totalPages} 頁
                   </span>
                   <Button

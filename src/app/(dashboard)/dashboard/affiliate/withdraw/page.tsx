@@ -107,7 +107,7 @@ export default function AffiliateWithdrawPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">申請提領</h1>
-          <p className="text-gray-600">將您的佣金提領到銀行帳戶</p>
+          <p className="text-muted-foreground">將您的佣金提領到銀行帳戶</p>
         </div>
         <Link href="/dashboard/affiliate">
           <Button variant="outline">返回</Button>
@@ -147,7 +147,7 @@ export default function AffiliateWithdrawPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-foreground">
                 提領金額 (TWD) <span className="text-red-500">*</span>
               </label>
               <input
@@ -160,7 +160,7 @@ export default function AffiliateWithdrawPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, amount: e.target.value })
                 }
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border border-border px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
                 placeholder={`${MIN_WITHDRAWAL_AMOUNT}`}
               />
             </div>
@@ -208,7 +208,7 @@ export default function AffiliateWithdrawPage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-foreground">
                 銀行代碼 <span className="text-red-500">*</span>
               </label>
               <select
@@ -217,7 +217,7 @@ export default function AffiliateWithdrawPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, bank_code: e.target.value })
                 }
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border border-border px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
               >
                 <option value="">請選擇銀行</option>
                 {Object.entries(BANK_CODES).map(([code, name]) => (
@@ -229,7 +229,7 @@ export default function AffiliateWithdrawPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-foreground">
                 分行名稱
               </label>
               <input
@@ -238,13 +238,13 @@ export default function AffiliateWithdrawPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, bank_branch: e.target.value })
                 }
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border border-border px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
                 placeholder="例如：台北分行（選填）"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-foreground">
                 銀行帳號 <span className="text-red-500">*</span>
               </label>
               <input
@@ -254,13 +254,13 @@ export default function AffiliateWithdrawPage() {
                 onChange={(e) =>
                   setFormData({ ...formData, bank_account: e.target.value })
                 }
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border border-border px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
                 placeholder="請輸入完整帳號"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700">
+              <label className="block text-sm font-medium text-foreground">
                 戶名 <span className="text-red-500">*</span>
               </label>
               <input
@@ -273,7 +273,7 @@ export default function AffiliateWithdrawPage() {
                     bank_account_name: e.target.value,
                   })
                 }
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+                className="mt-1 block w-full rounded-md border border-border px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
                 placeholder="需與身份證姓名相符"
               />
             </div>

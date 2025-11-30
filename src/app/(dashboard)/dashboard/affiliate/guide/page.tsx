@@ -21,7 +21,9 @@ export default function AffiliateGuidePage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">聯盟夥伴須知</h1>
-          <p className="text-gray-600">佣金規則、鎖定期、提領規範說明</p>
+          <p className="text-muted-foreground">
+            佣金規則、鎖定期、提領規範說明
+          </p>
         </div>
         <Link href="/dashboard/affiliate">
           <Button variant="outline">返回儀表板</Button>
@@ -78,10 +80,10 @@ export default function AffiliateGuidePage() {
                   {tier.tier_level === 3 && "🥇"}
                   {tier.tier_level === 4 && "💎"}
                 </div>
-                <div className="font-semibold text-gray-900">
+                <div className="font-semibold text-foreground">
                   {tier.tier_name}
                 </div>
-                <div className="text-xs text-gray-500 mb-2">
+                <div className="text-xs text-muted-foreground mb-2">
                   {tier.max_referrals === null
                     ? `${tier.min_referrals}+ 人`
                     : `${tier.min_referrals}-${tier.max_referrals} 人`}
@@ -113,14 +115,14 @@ export default function AffiliateGuidePage() {
           <CardDescription>保護機制確保交易穩定性</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="bg-gray-50 rounded-lg p-4">
+          <div className="bg-muted rounded-lg p-4">
             <div className="flex items-center gap-4">
               <div className="text-4xl font-bold text-blue-600">
                 {COMMISSION_LOCK_DAYS}
               </div>
               <div>
                 <div className="font-semibold">天鎖定期</div>
-                <div className="text-sm text-gray-600">
+                <div className="text-sm text-muted-foreground">
                   佣金產生後需等待 {COMMISSION_LOCK_DAYS} 天才能提領
                 </div>
               </div>
@@ -173,14 +175,16 @@ export default function AffiliateGuidePage() {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid md:grid-cols-2 gap-4">
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="text-sm text-gray-500 mb-1">最低提領金額</div>
+            <div className="p-4 bg-muted rounded-lg">
+              <div className="text-sm text-muted-foreground mb-1">
+                最低提領金額
+              </div>
               <div className="text-2xl font-bold">
                 NT$ {MIN_WITHDRAWAL_AMOUNT.toLocaleString()}
               </div>
             </div>
-            <div className="p-4 bg-gray-50 rounded-lg">
-              <div className="text-sm text-gray-500 mb-1">撥款日期</div>
+            <div className="p-4 bg-muted rounded-lg">
+              <div className="text-sm text-muted-foreground mb-1">撥款日期</div>
               <div className="text-2xl font-bold">每月 25 號</div>
             </div>
           </div>
@@ -194,7 +198,7 @@ export default function AffiliateGuidePage() {
                 </span>
                 <div>
                   <div className="font-medium">確認可提領金額</div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-muted-foreground">
                     在儀表板查看「可提領佣金」金額，需達到最低提領門檻
                   </div>
                 </div>
@@ -205,7 +209,7 @@ export default function AffiliateGuidePage() {
                 </span>
                 <div>
                   <div className="font-medium">填寫銀行資訊</div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-muted-foreground">
                     提供正確的銀行帳戶資訊，戶名需與身份證相符
                   </div>
                 </div>
@@ -216,7 +220,7 @@ export default function AffiliateGuidePage() {
                 </span>
                 <div>
                   <div className="font-medium">提交申請</div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-muted-foreground">
                     確認金額與銀行資訊後提交提領申請
                   </div>
                 </div>
@@ -227,7 +231,7 @@ export default function AffiliateGuidePage() {
                 </span>
                 <div>
                   <div className="font-medium">等待審核與撥款</div>
-                  <div className="text-sm text-gray-600">
+                  <div className="text-sm text-muted-foreground">
                     統一於每月 25 號撥款至您的銀行帳戶
                   </div>
                 </div>
@@ -274,7 +278,7 @@ export default function AffiliateGuidePage() {
 
           <div className="space-y-2">
             <h4 className="font-semibold">計佣範圍</h4>
-            <ul className="text-sm text-gray-700 space-y-1">
+            <ul className="text-sm text-foreground space-y-1">
               <li>✅ 首次訂閱付款</li>
               <li>✅ 月費/年費續約</li>
               <li>✅ 方案升級</li>
@@ -298,7 +302,7 @@ export default function AffiliateGuidePage() {
               <h4 className="font-semibold mb-2">
                 Q: 我要如何查看目前的佣金狀態？
               </h4>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 A: 請到「
                 <Link
                   href="/dashboard/affiliate/commissions"
@@ -314,7 +318,7 @@ export default function AffiliateGuidePage() {
               <h4 className="font-semibold mb-2">
                 Q: 為什麼我的佣金顯示「鎖定中」？
               </h4>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 A: 佣金產生後需要 {COMMISSION_LOCK_DAYS} 天的鎖定期。
                 這是為了確保交易穩定，避免退款造成的問題。
                 鎖定期結束後，佣金會自動變為「可提領」狀態。
@@ -323,7 +327,7 @@ export default function AffiliateGuidePage() {
 
             <div className="border-b pb-4">
               <h4 className="font-semibold mb-2">Q: 提領後多久會收到款項？</h4>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 A: 所有提領申請統一於每月 25 號撥款。請在每月 20 號前提交申請，
                 以便趕上當月撥款。您可以在「
                 <Link
@@ -338,7 +342,7 @@ export default function AffiliateGuidePage() {
 
             <div className="border-b pb-4">
               <h4 className="font-semibold mb-2">Q: 如何升級佣金等級？</h4>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 A: 等級是根據您的有效推薦客戶數量自動計算的。
                 當您的有效推薦達到下一等級的門檻時，系統會自動升級，
                 新的佣金比例會應用於之後的所有交易。
@@ -349,7 +353,7 @@ export default function AffiliateGuidePage() {
               <h4 className="font-semibold mb-2">
                 Q: 推薦客戶退款會怎麼處理？
               </h4>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted-foreground">
                 A: 如果推薦客戶在鎖定期內退款，相關佣金會被取消。
                 如果已經提領的佣金因退款需要扣回，會從您的下次提領中扣除。
               </p>
