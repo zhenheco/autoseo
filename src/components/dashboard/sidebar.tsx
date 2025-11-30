@@ -56,23 +56,23 @@ export function Sidebar({ userEmail = "user@example.com" }: SidebarProps) {
   return (
     <aside
       className={cn(
-        "fixed left-0 top-0 z-40 h-screen transition-all duration-300 bg-slate-900 border-r border-white/10",
+        "fixed left-0 top-0 z-40 h-screen transition-all duration-300 bg-sidebar border-r border-sidebar-foreground/10",
         collapsed ? "w-20" : "w-48",
       )}
     >
       <div className="flex h-full flex-col">
-        <div className="flex h-16 items-center justify-between px-4 border-b border-white/10">
+        <div className="flex h-16 items-center justify-between px-4 border-b border-sidebar-foreground/10">
           {!collapsed && (
             <Link href="/dashboard" className="flex items-center gap-2">
               <Image
                 src="/logo.svg"
-                alt="1WaySEO"
+                alt="1waySEO"
                 width={32}
                 height={32}
                 className="rounded-lg"
               />
-              <span className="text-lg font-bold bg-gradient-to-r from-cyber-cyan-400 to-cyber-violet-400 bg-clip-text text-transparent">
-                1WaySEO
+              <span className="text-lg font-bold text-sidebar-foreground">
+                1waySEO
               </span>
             </Link>
           )}
@@ -80,7 +80,7 @@ export function Sidebar({ userEmail = "user@example.com" }: SidebarProps) {
             variant="ghost"
             size="icon"
             onClick={() => setCollapsed(!collapsed)}
-            className="h-8 w-8 text-slate-400 hover:text-white hover:bg-white/5"
+            className="h-8 w-8 text-sidebar-foreground hover:bg-sidebar-foreground/10"
           >
             {collapsed ? (
               <ChevronRight className="h-4 w-4" />
@@ -101,14 +101,14 @@ export function Sidebar({ userEmail = "user@example.com" }: SidebarProps) {
                 href={item.href}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all relative",
-                  "hover:bg-white/5",
+                  "hover:bg-sidebar-foreground/10",
                   isActive
-                    ? "bg-cyber-violet-500/10 text-cyber-violet-400"
-                    : "text-slate-400 hover:text-white",
+                    ? "bg-sidebar-foreground/10 text-primary"
+                    : "text-sidebar-foreground/70 hover:text-sidebar-foreground",
                 )}
               >
                 {isActive && (
-                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-gradient-to-b from-cyber-cyan-500 to-cyber-violet-500 rounded-r" />
+                  <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r" />
                 )}
                 <Icon className="h-5 w-5 shrink-0" />
                 {!collapsed && <span>{item.title}</span>}
@@ -117,22 +117,22 @@ export function Sidebar({ userEmail = "user@example.com" }: SidebarProps) {
           })}
         </nav>
 
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t border-sidebar-foreground/10">
           <div
             className={cn(
               "flex items-center gap-3",
               collapsed && "justify-center",
             )}
           >
-            <Avatar className="h-9 w-9 ring-2 ring-cyber-violet-500/30">
+            <Avatar className="h-9 w-9 ring-2 ring-primary/20">
               <AvatarImage src="" alt="User" />
-              <AvatarFallback className="bg-gradient-to-br from-cyber-violet-500 to-cyber-magenta-500 text-white text-sm">
+              <AvatarFallback className="bg-primary text-primary-foreground text-sm">
                 U
               </AvatarFallback>
             </Avatar>
             {!collapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-300 truncate">
+                <p className="text-sm font-medium text-sidebar-foreground truncate">
                   {userEmail}
                 </p>
               </div>

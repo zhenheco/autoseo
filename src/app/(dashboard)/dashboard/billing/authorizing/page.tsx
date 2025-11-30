@@ -121,14 +121,14 @@ function AuthorizingContent() {
   }, [searchParams, router, status]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-900 to-indigo-950">
-      <div className="w-full max-w-md rounded-lg bg-slate-800/50 backdrop-blur-sm border border-white/10 p-8 shadow-xl">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+      <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-xl">
         <div className="flex flex-col items-center space-y-6">
           {status === "error" ? (
             <>
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-500/20">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
                 <svg
-                  className="h-8 w-8 text-red-400"
+                  className="h-8 w-8 text-red-600"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -142,18 +142,18 @@ function AuthorizingContent() {
                 </svg>
               </div>
               <div className="text-center">
-                <h2 className="text-2xl font-bold text-white">處理失敗</h2>
-                <p className="mt-2 text-slate-400">{errorMessage}</p>
+                <h2 className="text-2xl font-bold text-gray-900">處理失敗</h2>
+                <p className="mt-2 text-gray-600">{errorMessage}</p>
                 <div className="mt-6 flex gap-4 justify-center">
                   <button
                     onClick={() => window.location.reload()}
-                    className="px-4 py-2 bg-cyber-violet-500 text-white rounded-md hover:bg-cyber-violet-600 transition-colors"
+                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                   >
                     重新嘗試
                   </button>
                   <button
                     onClick={() => router.push("/dashboard/billing")}
-                    className="px-4 py-2 bg-slate-700 text-slate-300 rounded-md hover:bg-slate-600 transition-colors"
+                    className="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300 transition-colors"
                   >
                     返回計費中心
                   </button>
@@ -162,34 +162,34 @@ function AuthorizingContent() {
             </>
           ) : (
             <>
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-cyber-cyan-500/20">
-                <Loader2 className="h-8 w-8 animate-spin text-cyber-cyan-400" />
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
               </div>
 
               <div className="text-center">
-                <h2 className="text-2xl font-bold text-white">
+                <h2 className="text-2xl font-bold text-gray-900">
                   正在前往授權頁面
                 </h2>
-                <p className="mt-2 text-slate-400">
+                <p className="mt-2 text-gray-600">
                   {status === "loading"
                     ? "正在準備付款資料..."
                     : "正在連接藍新金流..."}
                 </p>
-                <p className="mt-4 text-sm text-slate-500">
+                <p className="mt-4 text-sm text-gray-500">
                   請稍候，不要關閉此頁面
                 </p>
               </div>
 
-              <div className="h-2 w-full overflow-hidden rounded-full bg-slate-700">
+              <div className="h-2 w-full overflow-hidden rounded-full bg-gray-200">
                 <div
-                  className="h-full animate-pulse bg-gradient-to-r from-cyber-cyan-500 to-cyber-violet-500"
+                  className="h-full animate-pulse bg-gradient-to-r from-blue-500 to-indigo-500"
                   style={{ width: "75%" }}
                 />
               </div>
 
-              <div className="flex items-center space-x-2 text-sm text-slate-500">
+              <div className="flex items-center space-x-2 text-sm text-gray-500">
                 <svg
-                  className="h-5 w-5 text-slate-400"
+                  className="h-5 w-5 text-gray-400"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -217,14 +217,14 @@ export default function AuthorizingPage() {
   return (
     <Suspense
       fallback={
-        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-slate-900 to-indigo-950">
-          <div className="w-full max-w-md rounded-lg bg-slate-800/50 backdrop-blur-sm border border-white/10 p-8 shadow-xl">
+        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
+          <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-xl">
             <div className="flex flex-col items-center space-y-6">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-cyber-cyan-500/20">
-                <Loader2 className="h-8 w-8 animate-spin text-cyber-cyan-400" />
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
+                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
               </div>
               <div className="text-center">
-                <h2 className="text-2xl font-bold text-white">載入中...</h2>
+                <h2 className="text-2xl font-bold text-gray-900">載入中...</h2>
               </div>
             </div>
           </div>

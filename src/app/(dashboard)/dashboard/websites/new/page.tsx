@@ -39,23 +39,23 @@ export default async function NewWebsitePage({
   return (
     <div className="container mx-auto p-8 max-w-2xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white">新增 WordPress 網站</h1>
-        <p className="text-slate-400 mt-2">
+        <h1 className="text-3xl font-bold">新增 WordPress 網站</h1>
+        <p className="text-muted-foreground mt-2">
           連接您的 WordPress 網站以開始自動發布文章
         </p>
       </div>
 
       {/* 錯誤訊息顯示 */}
       {params.error && (
-        <div className="mb-6 rounded-md bg-red-500/15 border border-red-500/30 p-4 text-sm text-red-400">
+        <div className="mb-6 rounded-md bg-destructive/15 p-4 text-sm text-destructive">
           {params.error}
         </div>
       )}
 
-      <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
+      <Card>
         <CardHeader>
-          <CardTitle className="text-white">網站資訊</CardTitle>
-          <CardDescription className="text-slate-400">
+          <CardTitle>網站資訊</CardTitle>
+          <CardDescription>
             請輸入您的 WordPress 網站資訊。您需要使用 WordPress
             應用密碼進行驗證。
           </CardDescription>
@@ -65,64 +65,52 @@ export default async function NewWebsitePage({
             <input type="hidden" name="companyId" value={company.id} />
 
             <div className="space-y-2">
-              <Label htmlFor="site-name" className="text-slate-300">
-                網站名稱
-              </Label>
+              <Label htmlFor="site-name">網站名稱</Label>
               <Input
                 id="site-name"
                 name="siteName"
                 placeholder="我的部落格"
                 required
-                className="bg-slate-700/50 border-white/10 text-white placeholder:text-slate-500"
               />
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted-foreground">
                 為您的網站取一個容易辨識的名稱
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="site-url" className="text-slate-300">
-                網站 URL
-              </Label>
+              <Label htmlFor="site-url">網站 URL</Label>
               <Input
                 id="site-url"
                 name="siteUrl"
                 type="url"
                 placeholder="https://your-blog.com"
                 required
-                className="bg-slate-700/50 border-white/10 text-white placeholder:text-slate-500"
               />
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted-foreground">
                 您的 WordPress 網站完整網址（包含 https://）
               </p>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="wp-username" className="text-slate-300">
-                WordPress 使用者名稱
-              </Label>
+              <Label htmlFor="wp-username">WordPress 使用者名稱</Label>
               <Input
                 id="wp-username"
                 name="wpUsername"
                 placeholder="admin"
                 required
-                className="bg-slate-700/50 border-white/10 text-white placeholder:text-slate-500"
               />
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="wp-password" className="text-slate-300">
-                WordPress 應用密碼
-              </Label>
+              <Label htmlFor="wp-password">WordPress 應用密碼</Label>
               <Input
                 id="wp-password"
                 name="wpPassword"
                 type="password"
                 placeholder="xxxx xxxx xxxx xxxx xxxx xxxx"
                 required
-                className="bg-slate-700/50 border-white/10 text-white placeholder:text-slate-500"
               />
-              <p className="text-xs text-slate-500">
+              <p className="text-xs text-muted-foreground">
                 請至 WordPress 後台 → 使用者 → 個人資料 → 應用程式密碼
                 建立新的應用密碼
               </p>
