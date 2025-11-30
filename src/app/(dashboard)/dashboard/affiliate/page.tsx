@@ -139,10 +139,10 @@ export default function AffiliateDashboardPage() {
     return (
       <div className="container mx-auto p-6">
         <div className="animate-pulse space-y-4">
-          <div className="h-8 w-64 rounded bg-gray-200"></div>
+          <div className="h-8 w-64 rounded bg-muted"></div>
           <div className="grid gap-4 md:grid-cols-4">
             {[1, 2, 3, 4].map((i) => (
-              <div key={i} className="h-32 rounded-lg bg-gray-200"></div>
+              <div key={i} className="h-32 rounded-lg bg-muted"></div>
             ))}
           </div>
         </div>
@@ -166,7 +166,7 @@ export default function AffiliateDashboardPage() {
     <div className="container mx-auto space-y-6 p-6">
       <div>
         <h1 className="text-3xl font-bold">聯盟夥伴儀表板</h1>
-        <p className="text-gray-600">追蹤您的推薦成效和佣金收入</p>
+        <p className="text-muted-foreground">追蹤您的推薦成效和佣金收入</p>
       </div>
 
       <Alert>
@@ -257,7 +257,7 @@ export default function AffiliateDashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-gray-500">30天後可提領</p>
+            <p className="text-sm text-muted-foreground">30天後可提領</p>
           </CardContent>
         </Card>
 
@@ -285,7 +285,7 @@ export default function AffiliateDashboardPage() {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <p className="text-sm text-gray-500">所有佣金總計</p>
+            <p className="text-sm text-muted-foreground">所有佣金總計</p>
           </CardContent>
         </Card>
       </div>
@@ -301,7 +301,7 @@ export default function AffiliateDashboardPage() {
           {affiliateCode ? (
             <>
               <div>
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-foreground">
                   推薦碼
                 </label>
                 <div className="mt-1 flex gap-2">
@@ -309,7 +309,7 @@ export default function AffiliateDashboardPage() {
                     type="text"
                     readOnly
                     value={affiliateCode}
-                    className="flex-1 rounded-md border border-gray-300 px-3 py-2 bg-gray-50 font-mono"
+                    className="flex-1 rounded-md border border-border px-3 py-2 bg-muted font-mono"
                   />
                   <Button
                     onClick={() => copyToClipboard(affiliateCode)}
@@ -329,7 +329,7 @@ export default function AffiliateDashboardPage() {
               </div>
 
               <div>
-                <label className="text-sm font-medium text-gray-700">
+                <label className="text-sm font-medium text-foreground">
                   完整連結
                 </label>
                 <div className="mt-1 flex gap-2">
@@ -337,7 +337,7 @@ export default function AffiliateDashboardPage() {
                     type="text"
                     readOnly
                     value={getReferralLink()}
-                    className="flex-1 rounded-md border border-gray-300 px-3 py-2 bg-gray-50 font-mono text-sm"
+                    className="flex-1 rounded-md border border-border px-3 py-2 bg-muted font-mono text-sm"
                   />
                   <Button
                     onClick={() => copyToClipboard(getReferralLink())}
@@ -395,25 +395,25 @@ export default function AffiliateDashboardPage() {
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-gray-600">總推薦人數</span>
+              <span className="text-muted-foreground">總推薦人數</span>
               <span className="font-semibold">
                 {stats?.totalReferrals || 0} 人
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">已付款推薦</span>
+              <span className="text-muted-foreground">已付款推薦</span>
               <span className="font-semibold text-green-600">
                 {stats?.activeReferrals || 0} 人
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">轉換率</span>
+              <span className="text-muted-foreground">轉換率</span>
               <span className="font-semibold">
                 {stats?.conversionRate || 0}%
               </span>
             </div>
             <div className="flex justify-between">
-              <span className="text-gray-600">平均訂單價值</span>
+              <span className="text-muted-foreground">平均訂單價值</span>
               <span className="font-semibold">
                 NT$ {stats?.averageOrderValue || 0}
               </span>
@@ -445,7 +445,7 @@ export default function AffiliateDashboardPage() {
               {[1, 2, 3].map((i) => (
                 <div
                   key={i}
-                  className="h-16 animate-pulse rounded-lg bg-gray-100"
+                  className="h-16 animate-pulse rounded-lg bg-muted"
                 ></div>
               ))}
             </div>
@@ -454,7 +454,7 @@ export default function AffiliateDashboardPage() {
               {recentReferrals.map((referral) => (
                 <div
                   key={referral.id}
-                  className="flex items-center justify-between rounded-lg border p-4 hover:bg-gray-50"
+                  className="flex items-center justify-between rounded-lg border p-4 hover:bg-muted"
                 >
                   <div className="flex-1">
                     <div className="flex items-center gap-2">
@@ -477,7 +477,7 @@ export default function AffiliateDashboardPage() {
                         </Badge>
                       )}
                     </div>
-                    <div className="mt-1 flex gap-4 text-sm text-gray-600">
+                    <div className="mt-1 flex gap-4 text-sm text-muted-foreground">
                       <span>
                         註冊：
                         {new Date(referral.registered_at).toLocaleDateString(
@@ -495,13 +495,15 @@ export default function AffiliateDashboardPage() {
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="text-sm text-gray-600">累計訂單</p>
+                    <p className="text-sm text-muted-foreground">累計訂單</p>
                     <p className="font-semibold">
                       {referral.total_payments} 筆
                     </p>
                   </div>
                   <div className="ml-4 text-right">
-                    <p className="text-sm text-gray-600">生命週期價值</p>
+                    <p className="text-sm text-muted-foreground">
+                      生命週期價值
+                    </p>
                     <p className="font-semibold text-green-600">
                       NT$ {referral.lifetime_value?.toLocaleString() || 0}
                     </p>
@@ -510,10 +512,10 @@ export default function AffiliateDashboardPage() {
               ))}
             </div>
           ) : (
-            <div className="rounded-lg bg-gray-50 p-8 text-center">
-              <Users className="mx-auto h-12 w-12 text-gray-400" />
-              <p className="mt-4 text-gray-600">尚無推薦客戶</p>
-              <p className="mt-2 text-sm text-gray-500">
+            <div className="rounded-lg bg-muted p-8 text-center">
+              <Users className="mx-auto h-12 w-12 text-muted-foreground" />
+              <p className="mt-4 text-muted-foreground">尚無推薦客戶</p>
+              <p className="mt-2 text-sm text-muted-foreground">
                 分享您的推薦連結開始賺取佣金
               </p>
             </div>
@@ -522,7 +524,7 @@ export default function AffiliateDashboardPage() {
       </Card>
 
       {stats?.lastPaymentDate && (
-        <p className="text-center text-sm text-gray-500">
+        <p className="text-center text-sm text-muted-foreground">
           最後一次佣金產生時間：
           {new Date(stats.lastPaymentDate).toLocaleString("zh-TW")}
         </p>

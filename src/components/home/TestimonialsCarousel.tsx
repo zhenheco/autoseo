@@ -56,20 +56,20 @@ export function TestimonialsCarousel() {
         {testimonials.map((testimonial, index) => (
           <Card
             key={index}
-            className="glass-dark border-tech-blue-500/20 p-5 hover:border-tech-blue-500/50 hover:glow-blue-subtle transition-all duration-300"
+            className="glass border-white/10 p-5 hover:border-cyber-violet-500/50 transition-all duration-300 bg-transparent"
           >
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-tech-blue-500 to-purple-500 flex items-center justify-center ring-2 ring-tech-blue-400/30">
+              <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gradient-to-br from-cyber-cyan-500 to-cyber-violet-500 flex items-center justify-center ring-2 ring-cyber-violet-400/30">
                 <User className="h-5 w-5 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="font-bold text-sm text-text-dark-primary">
+                <div className="font-bold text-sm text-white">
                   {testimonial.name}
                 </div>
-                <div className="text-xs text-text-dark-secondary mb-2">
+                <div className="text-xs text-slate-500 mb-2">
                   {testimonial.company}
                 </div>
-                <p className="text-sm text-text-dark-secondary leading-relaxed">
+                <p className="text-sm text-slate-400 leading-relaxed">
                   &ldquo;{testimonial.content}&rdquo;
                 </p>
               </div>

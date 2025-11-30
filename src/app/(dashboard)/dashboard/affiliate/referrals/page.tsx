@@ -93,7 +93,7 @@ export default function AffiliateReferralsPage() {
       );
     }
     return (
-      <span className="rounded-full bg-gray-100 px-2 py-1 text-xs text-gray-800">
+      <span className="rounded-full bg-muted px-2 py-1 text-xs text-foreground">
         不活躍
       </span>
     );
@@ -105,7 +105,7 @@ export default function AffiliateReferralsPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">推薦客戶</h1>
-          <p className="text-gray-600">查看您推薦的客戶及其狀態</p>
+          <p className="text-muted-foreground">查看您推薦的客戶及其狀態</p>
         </div>
         <Link href="/dashboard/affiliate">
           <Button variant="outline">返回儀表板</Button>
@@ -158,9 +158,13 @@ export default function AffiliateReferralsPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="py-8 text-center text-gray-500">載入中...</div>
+            <div className="py-8 text-center text-muted-foreground">
+              載入中...
+            </div>
           ) : referrals.length === 0 ? (
-            <div className="py-8 text-center text-gray-500">尚無推薦客戶</div>
+            <div className="py-8 text-center text-muted-foreground">
+              尚無推薦客戶
+            </div>
           ) : (
             <>
               <div className="overflow-x-auto">
@@ -221,7 +225,7 @@ export default function AffiliateReferralsPage() {
                   >
                     上一頁
                   </Button>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-sm text-muted-foreground">
                     第 {page} / {totalPages} 頁
                   </span>
                   <Button

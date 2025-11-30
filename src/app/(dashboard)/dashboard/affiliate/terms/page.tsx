@@ -22,7 +22,7 @@ export default function TermsPage() {
           </Button>
         </Link>
         <h1 className="text-3xl font-bold mb-2">聯盟行銷計畫服務條款</h1>
-        <p className="text-gray-600">
+        <p className="text-muted-foreground">
           本條款規範聯盟夥伴與本平台之間的權利義務關係，請仔細閱讀。
         </p>
       </div>
@@ -40,7 +40,7 @@ export default function TermsPage() {
         <CardHeader>
           <CardTitle>一、定義與說明</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3 text-gray-700">
+        <CardContent className="space-y-3 text-foreground">
           <div>
             <p className="font-semibold mb-1">1.1 聯盟夥伴（Affiliate）</p>
             <p className="text-sm pl-4">
@@ -81,28 +81,36 @@ export default function TermsPage() {
             <h4 className="font-semibold mb-2 text-blue-900">
               2.1 分級佣金比例
             </h4>
-            <p className="text-sm text-gray-700 mb-3">
+            <p className="text-sm text-foreground mb-3">
               佣金比例依據您的有效推薦客戶數量分級計算：
             </p>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
               <div className="bg-white p-2 rounded border text-center">
-                <div className="text-xs text-gray-500">銅牌 (0-5 人)</div>
+                <div className="text-xs text-muted-foreground">
+                  銅牌 (0-5 人)
+                </div>
                 <div className="text-lg font-bold text-blue-600">15%</div>
               </div>
               <div className="bg-white p-2 rounded border text-center">
-                <div className="text-xs text-gray-500">銀牌 (6-15 人)</div>
+                <div className="text-xs text-muted-foreground">
+                  銀牌 (6-15 人)
+                </div>
                 <div className="text-lg font-bold text-blue-600">20%</div>
               </div>
               <div className="bg-white p-2 rounded border text-center">
-                <div className="text-xs text-gray-500">金牌 (16-30 人)</div>
+                <div className="text-xs text-muted-foreground">
+                  金牌 (16-30 人)
+                </div>
                 <div className="text-lg font-bold text-blue-600">25%</div>
               </div>
               <div className="bg-white p-2 rounded border text-center">
-                <div className="text-xs text-gray-500">白金 (31+ 人)</div>
+                <div className="text-xs text-muted-foreground">
+                  白金 (31+ 人)
+                </div>
                 <div className="text-lg font-bold text-blue-600">30%</div>
               </div>
             </div>
-            <ul className="space-y-1 text-sm text-gray-700">
+            <ul className="space-y-1 text-sm text-foreground">
               <li>
                 • 計算基準：推薦客戶的<strong>所有付費金額</strong>（訂閱 +
                 Credit 包）
@@ -115,7 +123,7 @@ export default function TermsPage() {
 
           <div>
             <h4 className="font-semibold mb-2">2.2 終身佣金制度</h4>
-            <p className="text-sm text-gray-700 mb-2">
+            <p className="text-sm text-foreground mb-2">
               只要推薦客戶持續訂閱，聯盟夥伴即可持續獲得佣金，但有以下限制：
             </p>
             <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
@@ -125,7 +133,7 @@ export default function TermsPage() {
                   不活躍終止條件
                 </p>
               </div>
-              <p className="text-sm text-gray-700">
+              <p className="text-sm text-foreground">
                 若聯盟夥伴連續 <strong>3 個月</strong>{" "}
                 沒有新的付費客戶，該夥伴帳號將被標記為「不活躍」，
                 並停止所有佣金發放（包括既有客戶的續訂佣金）。
@@ -135,7 +143,7 @@ export default function TermsPage() {
 
           <div>
             <h4 className="font-semibold mb-2">2.3 鎖定期與提領</h4>
-            <ul className="space-y-2 text-sm text-gray-700">
+            <ul className="space-y-2 text-sm text-foreground">
               <li className="flex items-start gap-2">
                 <CheckCircle2 className="h-4 w-4 text-green-600 mt-0.5" />
                 <span>
@@ -175,7 +183,7 @@ export default function TermsPage() {
         <CardContent className="space-y-4">
           <div>
             <h4 className="font-semibold mb-2">3.1 Cookie 追蹤期限</h4>
-            <p className="text-sm text-gray-700">
+            <p className="text-sm text-foreground">
               當潛在客戶點擊推薦連結後，系統會記錄 <strong>30 天</strong>。
               若該客戶在 30 天內註冊並訂閱，該推薦將歸屬於聯盟夥伴。
             </p>
@@ -183,7 +191,7 @@ export default function TermsPage() {
 
           <div>
             <h4 className="font-semibold mb-2">3.2 首次點擊優先</h4>
-            <p className="text-sm text-gray-700">
+            <p className="text-sm text-foreground">
               若客戶點擊多個不同聯盟夥伴的推薦連結，以
               <strong>第一次點擊</strong>為準。
             </p>
@@ -194,7 +202,7 @@ export default function TermsPage() {
             <div className="bg-red-50 p-4 rounded-lg border border-red-200">
               <div className="flex items-start gap-2">
                 <XCircle className="h-5 w-5 text-red-600 mt-0.5" />
-                <div className="text-sm text-gray-700">
+                <div className="text-sm text-foreground">
                   <p className="font-semibold text-red-900 mb-1">
                     嚴格禁止自我推薦
                   </p>
@@ -223,7 +231,7 @@ export default function TermsPage() {
                   ✅ 允許的推廣方式
                 </h4>
               </div>
-              <ul className="space-y-2 text-sm text-gray-700">
+              <ul className="space-y-2 text-sm text-foreground">
                 <li>• 個人部落格、網站文章</li>
                 <li>• 社群媒體貼文（Facebook、X、LinkedIn 等）</li>
                 <li>• YouTube 影片介紹與評測</li>
@@ -240,7 +248,7 @@ export default function TermsPage() {
                   ❌ 禁止的推廣方式
                 </h4>
               </div>
-              <ul className="space-y-2 text-sm text-gray-700">
+              <ul className="space-y-2 text-sm text-foreground">
                 <li>• 垃圾郵件（Spam）</li>
                 <li>• 購買付費搜尋廣告使用品牌關鍵字</li>
                 <li>• 虛假或誤導性內容</li>
@@ -262,7 +270,7 @@ export default function TermsPage() {
         <CardContent className="space-y-4">
           <div>
             <h4 className="font-semibold mb-2">5.1 權利</h4>
-            <ul className="space-y-1 text-sm text-gray-700 pl-4">
+            <ul className="space-y-1 text-sm text-foreground pl-4">
               <li>• 獲得專屬推薦連結與推廣素材</li>
               <li>• 即時查看推薦統計與佣金明細</li>
               <li>• 定期領取合法賺取的佣金</li>
@@ -272,7 +280,7 @@ export default function TermsPage() {
 
           <div>
             <h4 className="font-semibold mb-2">5.2 義務</h4>
-            <ul className="space-y-1 text-sm text-gray-700 pl-4">
+            <ul className="space-y-1 text-sm text-foreground pl-4">
               <li>• 遵守本服務條款及相關法律規定</li>
               <li>• 提供真實、正確的個人資料與稅務資訊</li>
               <li>• 不得進行任何欺詐、作弊或違規推廣行為</li>
@@ -288,7 +296,7 @@ export default function TermsPage() {
         <CardHeader>
           <CardTitle>六、違規處理</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3 text-sm text-gray-700">
+        <CardContent className="space-y-3 text-sm text-foreground">
           <p>本平台保留以下權利：</p>
           <ul className="space-y-2 pl-4">
             <li>
@@ -315,7 +323,7 @@ export default function TermsPage() {
         <CardHeader>
           <CardTitle>七、條款變更與終止</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3 text-sm text-gray-700">
+        <CardContent className="space-y-3 text-sm text-foreground">
           <div>
             <h4 className="font-semibold mb-2">7.1 條款變更</h4>
             <p>
@@ -342,7 +350,7 @@ export default function TermsPage() {
         <CardHeader>
           <CardTitle>八、其他條款</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3 text-sm text-gray-700">
+        <CardContent className="space-y-3 text-sm text-foreground">
           <div>
             <h4 className="font-semibold mb-1">8.1 適用法律</h4>
             <p>本條款適用中華民國法律。</p>
@@ -376,7 +384,7 @@ export default function TermsPage() {
         <CardHeader>
           <CardTitle>九、聯絡我們</CardTitle>
         </CardHeader>
-        <CardContent className="text-sm text-gray-700">
+        <CardContent className="text-sm text-foreground">
           <p className="mb-2">如對本條款有任何疑問，請聯絡我們：</p>
           <ul className="space-y-1 pl-4">
             <li>• Email: service@1wayseo.com</li>
@@ -385,7 +393,7 @@ export default function TermsPage() {
         </CardContent>
       </Card>
 
-      <div className="mt-8 text-center text-sm text-gray-500">
+      <div className="mt-8 text-center text-sm text-muted-foreground">
         <p>感謝您加入我們的聯盟行銷計畫！</p>
         <p className="mt-2">本條款最後更新：2025 年 1 月 6 日</p>
       </div>
