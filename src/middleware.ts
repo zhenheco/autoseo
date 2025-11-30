@@ -15,7 +15,7 @@ export async function middleware(request: NextRequest) {
   // 權限政策 - 限制瀏覽器功能
   response.headers.set(
     "Permissions-Policy",
-    "camera=(), microphone=(), geolocation=(), interest-cohort=()",
+    "camera=(), microphone=(), geolocation=()",
   );
 
   // Cross-Origin Headers

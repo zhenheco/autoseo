@@ -39,8 +39,7 @@ export async function GET(request: NextRequest) {
     let query = supabase
       .from("referrals")
       .select("*", { count: "exact" })
-      .eq("referrer_company_id", companyMember.company_id)
-      .eq("reward_type", "commission");
+      .eq("referrer_company_id", companyMember.company_id);
 
     if (status === "active") {
       query = query.not("first_payment_at", "is", null);
@@ -55,9 +54,7 @@ export async function GET(request: NextRequest) {
       data: referrals,
       error,
       count,
-    } = await query
-      .order("registered_at", { ascending: false })
-      .range(from, to);
+    } = await query.order("created_at", { ascending: false }).range(from, to);
 
     if (error) {
       console.error("查詢推薦列表失敗:", error);
@@ -67,14 +64,9 @@ export async function GET(request: NextRequest) {
     const formattedData = referrals?.map((ref) => ({
       id: ref.id,
       company_name: `客戶 #${ref.referred_company_id.slice(0, 8)}`,
-      registered_at: ref.registered_at,
+      registered_at: ref.referred_at,
       first_payment_at: ref.first_payment_at,
-      first_payment_amount: ref.first_payment_amount,
-      total_payments: ref.total_payments,
-      lifetime_value: ref.lifetime_value,
-      total_commission_generated: ref.total_commission_generated,
       is_active: ref.first_payment_at !== null,
-      last_payment_at: ref.last_payment_at,
       status: ref.status,
     }));
 

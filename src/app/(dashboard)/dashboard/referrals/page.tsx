@@ -47,14 +47,14 @@ export default async function ReferralsPage() {
 
   const { data: referrals } = await supabase
     .from("referrals")
-    .select("status, reward_type")
+    .select("status")
     .eq("referrer_company_id", membership.company_id);
 
   const pendingReferrals =
     referrals?.filter((r) => r.status === "pending").length || 0;
   const qualifiedReferrals =
     referrals?.filter(
-      (r) => r.status === "qualified" || r.status === "rewarded",
+      (r) => r.status === "completed" || r.status === "rewarded",
     ).length || 0;
   const totalReferrals = referrals?.length || 0;
 
@@ -76,7 +76,7 @@ export default async function ReferralsPage() {
 
   const { data: myReferrer } = await supabase
     .from("referrals")
-    .select("referral_code, status, reward_type")
+    .select("referral_code, status")
     .eq("referred_company_id", membership.company_id)
     .single();
 
@@ -106,12 +106,11 @@ export default async function ReferralsPage() {
                   （首次付款後雙方獲得獎勵）
                 </span>
               )}
-              {myReferrer.status === "rewarded" &&
-                myReferrer.reward_type === "tokens" && (
-                  <span className="ml-2 text-green-600">
-                    ✓ 已獲得 {REFERRAL_TOKEN_REWARD.toLocaleString()} tokens
-                  </span>
-                )}
+              {myReferrer.status === "rewarded" && (
+                <span className="ml-2 text-green-600">
+                  ✓ 已獲得 {REFERRAL_TOKEN_REWARD.toLocaleString()} tokens
+                </span>
+              )}
             </p>
           </CardContent>
         </Card>
