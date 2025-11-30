@@ -158,24 +158,28 @@ export default async function WebsiteDetailPage({
 
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)]">
-      <div className="p-4 border-b">
+      <div className="p-4 border-b border-white/10">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-4">
             <Link href="/dashboard/websites">
-              <Button variant="ghost" size="sm">
+              <Button
+                variant="ghost"
+                size="sm"
+                className="text-slate-300 hover:text-white"
+              >
                 <ArrowLeft className="mr-2 h-4 w-4" />
                 返回網站列表
               </Button>
             </Link>
             <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-bold">
+              <h1 className="text-2xl font-bold text-white">
                 {website.site_name || website.website_name}
               </h1>
               <a
                 href={website.site_url || website.wordpress_url}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1"
+                className="text-sm text-slate-400 hover:text-cyber-violet-400 flex items-center gap-1"
               >
                 {website.site_url || website.wordpress_url}
                 <ExternalLink className="h-3 w-3" />
@@ -188,43 +192,45 @@ export default async function WebsiteDetailPage({
         </div>
 
         <div className="grid gap-4 md:grid-cols-4 mt-4">
-          <Card>
+          <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
             <CardContent className="flex items-center gap-3 p-4">
-              <FileText className="h-8 w-8 text-blue-600" />
+              <FileText className="h-8 w-8 text-cyber-cyan-400" />
               <div>
-                <p className="text-2xl font-bold">{totalArticles}</p>
-                <p className="text-sm text-muted-foreground">總文章數</p>
+                <p className="text-2xl font-bold text-white">{totalArticles}</p>
+                <p className="text-sm text-slate-400">總文章數</p>
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
             <CardContent className="flex items-center gap-3 p-4">
-              <Clock className="h-8 w-8 text-orange-600" />
+              <Clock className="h-8 w-8 text-amber-400" />
               <div>
-                <p className="text-2xl font-bold">
+                <p className="text-2xl font-bold text-white">
                   {pendingCount + jobs.length}
                 </p>
-                <p className="text-sm text-muted-foreground">待發佈</p>
+                <p className="text-sm text-slate-400">待發佈</p>
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
             <CardContent className="flex items-center gap-3 p-4">
-              <ExternalLink className="h-8 w-8 text-green-600" />
+              <ExternalLink className="h-8 w-8 text-emerald-400" />
               <div>
-                <p className="text-2xl font-bold">{publishedCount}</p>
-                <p className="text-sm text-muted-foreground">已發佈</p>
+                <p className="text-2xl font-bold text-white">
+                  {publishedCount}
+                </p>
+                <p className="text-sm text-slate-400">已發佈</p>
               </div>
             </CardContent>
           </Card>
-          <Card>
+          <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
             <CardContent className="flex items-center gap-3 p-4">
-              <FileText className="h-8 w-8 text-purple-600" />
+              <FileText className="h-8 w-8 text-cyber-violet-400" />
               <div>
-                <p className="text-2xl font-bold">
+                <p className="text-2xl font-bold text-white">
                   {totalWords.toLocaleString()}
                 </p>
-                <p className="text-sm text-muted-foreground">總字數</p>
+                <p className="text-sm text-slate-400">總字數</p>
               </div>
             </CardContent>
           </Card>

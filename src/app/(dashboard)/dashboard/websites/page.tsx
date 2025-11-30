@@ -63,10 +63,8 @@ export default async function WebsitesPage({
     <div className="container mx-auto p-8">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">網站管理</h1>
-          <p className="text-muted-foreground mt-2">
-            管理您的 WordPress 網站設定
-          </p>
+          <h1 className="text-3xl font-bold text-white">網站管理</h1>
+          <p className="text-slate-400 mt-2">管理您的 WordPress 網站設定</p>
         </div>
         <Link href="/dashboard/websites/new">
           <Button>新增網站</Button>
@@ -91,14 +89,14 @@ export default async function WebsitesPage({
           websites.map((website: WebsiteConfig) => (
             <Card
               key={website.id}
-              className="hover:shadow-lg transition-shadow"
+              className="border-white/10 bg-slate-800/50 backdrop-blur-sm hover:border-cyber-violet-500/30 transition-all"
             >
               <Link href={`/dashboard/websites/${website.id}`}>
                 <CardHeader className="cursor-pointer">
-                  <CardTitle className="text-lg">
+                  <CardTitle className="text-lg text-white">
                     {website.website_name}
                   </CardTitle>
-                  <CardDescription className="break-all">
+                  <CardDescription className="break-all text-slate-400">
                     {website.wordpress_url}
                   </CardDescription>
                 </CardHeader>
@@ -106,7 +104,7 @@ export default async function WebsitesPage({
               <CardContent>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">狀態</span>
+                    <span className="text-sm text-slate-400">狀態</span>
                     <WebsiteStatusToggle
                       websiteId={website.id}
                       initialStatus={website.is_active ?? true}
@@ -148,9 +146,9 @@ export default async function WebsitesPage({
           ))
         ) : (
           <div className="col-span-full">
-            <Card>
+            <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <p className="text-muted-foreground mb-4">尚未新增任何網站</p>
+                <p className="text-slate-400 mb-4">尚未新增任何網站</p>
                 <Link href="/dashboard/websites/new">
                   <Button>新增第一個網站</Button>
                 </Link>

@@ -19,7 +19,7 @@ export default async function ArticlesPage({ searchParams }: PageProps) {
   return (
     <div className="container mx-auto p-6 max-w-6xl">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">生成新文章</h1>
+        <h1 className="text-3xl font-bold text-white">生成新文章</h1>
       </div>
 
       {freeTrialStatus && !freeTrialStatus.isUnlimited && (
@@ -31,9 +31,9 @@ export default async function ArticlesPage({ searchParams }: PageProps) {
         />
       )}
 
-      <Card>
+      <Card className="border-white/10 bg-slate-800/50 backdrop-blur-sm">
         <CardHeader className="pb-4">
-          <CardTitle>📝 文章設定</CardTitle>
+          <CardTitle className="text-white">📝 文章設定</CardTitle>
         </CardHeader>
         <CardContent>
           <ArticleFormTabs

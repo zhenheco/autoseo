@@ -50,18 +50,19 @@ export default function AffiliateApplyPage() {
   return (
     <div className="container mx-auto max-w-2xl p-6">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold">申請成為聯盟夥伴</h1>
-        <p className="mt-2 text-gray-600">
+        <h1 className="text-3xl font-bold text-white">申請成為聯盟夥伴</h1>
+        <p className="mt-2 text-slate-400">
           加入我們的聯盟計畫，推薦新客戶即可獲得 15%~30% 佣金（依推薦人數分級）
         </p>
       </div>
 
-      <div className="mb-6 rounded-md bg-blue-50 border border-blue-200 p-4">
-        <p className="text-sm text-blue-800">
-          <strong>申請資格：</strong>所有已註冊用戶皆可申請。詳細規範請參閱{" "}
+      <div className="mb-6 rounded-md bg-cyber-violet-500/10 border border-cyber-violet-500/30 p-4">
+        <p className="text-sm text-slate-300">
+          <strong className="text-white">申請資格：</strong>
+          所有已註冊用戶皆可申請。詳細規範請參閱{" "}
           <Link
             href="/dashboard/affiliate/terms"
-            className="font-medium underline hover:text-blue-900"
+            className="font-medium underline text-cyber-violet-400 hover:text-cyber-violet-300"
           >
             聯盟行銷計畫服務條款
           </Link>
@@ -70,15 +71,15 @@ export default function AffiliateApplyPage() {
       </div>
 
       {error && (
-        <div className="mb-4 rounded-md bg-red-50 p-4 text-red-800">
+        <div className="mb-4 rounded-md bg-red-500/15 border border-red-500/30 p-4 text-red-400">
           <p>{error}</p>
         </div>
       )}
 
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            真實姓名 <span className="text-red-500">*</span>
+          <label className="block text-sm font-medium text-slate-300">
+            真實姓名 <span className="text-red-400">*</span>
           </label>
           <input
             type="text"
@@ -87,14 +88,14 @@ export default function AffiliateApplyPage() {
             onChange={(e) =>
               setFormData({ ...formData, full_name: e.target.value })
             }
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-white/10 bg-slate-700/50 px-3 py-2 text-white placeholder:text-slate-500 focus:border-cyber-violet-500 focus:outline-none focus:ring-cyber-violet-500"
             placeholder="請填寫與身份證相符的姓名"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            身份證字號/統一編號 <span className="text-red-500">*</span>
+          <label className="block text-sm font-medium text-slate-300">
+            身份證字號/統一編號 <span className="text-red-400">*</span>
           </label>
           <input
             type="text"
@@ -106,17 +107,17 @@ export default function AffiliateApplyPage() {
                 id_number: e.target.value.toUpperCase(),
               })
             }
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-white/10 bg-slate-700/50 px-3 py-2 text-white placeholder:text-slate-500 focus:border-cyber-violet-500 focus:outline-none focus:ring-cyber-violet-500"
             placeholder="A123456789 或 12345678"
           />
-          <p className="mt-1 text-sm text-gray-500">
+          <p className="mt-1 text-sm text-slate-500">
             個人：身份證字號，公司：統一編號
           </p>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            聯絡電話 <span className="text-red-500">*</span>
+          <label className="block text-sm font-medium text-slate-300">
+            聯絡電話 <span className="text-red-400">*</span>
           </label>
           <input
             type="tel"
@@ -125,14 +126,14 @@ export default function AffiliateApplyPage() {
             onChange={(e) =>
               setFormData({ ...formData, phone: e.target.value })
             }
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-white/10 bg-slate-700/50 px-3 py-2 text-white placeholder:text-slate-500 focus:border-cyber-violet-500 focus:outline-none focus:ring-cyber-violet-500"
             placeholder="0912345678"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            Email <span className="text-red-500">*</span>
+          <label className="block text-sm font-medium text-slate-300">
+            Email <span className="text-red-400">*</span>
           </label>
           <input
             type="email"
@@ -141,14 +142,14 @@ export default function AffiliateApplyPage() {
             onChange={(e) =>
               setFormData({ ...formData, email: e.target.value })
             }
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-white/10 bg-slate-700/50 px-3 py-2 text-white placeholder:text-slate-500 focus:border-cyber-violet-500 focus:outline-none focus:ring-cyber-violet-500"
             placeholder="your@email.com"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">
-            地址 <span className="text-red-500">*</span>
+          <label className="block text-sm font-medium text-slate-300">
+            地址 <span className="text-red-400">*</span>
           </label>
           <textarea
             required
@@ -157,17 +158,17 @@ export default function AffiliateApplyPage() {
               setFormData({ ...formData, address: e.target.value })
             }
             rows={3}
-            className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-blue-500 focus:outline-none focus:ring-blue-500"
+            className="mt-1 block w-full rounded-md border border-white/10 bg-slate-700/50 px-3 py-2 text-white placeholder:text-slate-500 focus:border-cyber-violet-500 focus:outline-none focus:ring-cyber-violet-500"
             placeholder="請填寫完整地址"
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700">
+          <label className="block text-sm font-medium text-slate-300">
             稅務身份
           </label>
           <div className="mt-2 space-y-2">
-            <label className="flex items-center">
+            <label className="flex items-center text-slate-300">
               <input
                 type="radio"
                 checked={formData.is_resident}
@@ -176,7 +177,7 @@ export default function AffiliateApplyPage() {
               />
               <span>境內居住者（扣繳 10%）</span>
             </label>
-            <label className="flex items-center">
+            <label className="flex items-center text-slate-300">
               <input
                 type="radio"
                 checked={!formData.is_resident}
@@ -190,9 +191,9 @@ export default function AffiliateApplyPage() {
           </div>
         </div>
 
-        <div className="rounded-md bg-blue-50 p-4">
-          <h3 className="font-medium text-blue-900">佣金規則</h3>
-          <ul className="mt-2 space-y-1 text-sm text-blue-800">
+        <div className="rounded-md bg-cyber-violet-500/10 border border-cyber-violet-500/30 p-4">
+          <h3 className="font-medium text-white">佣金規則</h3>
+          <ul className="mt-2 space-y-1 text-sm text-slate-300">
             <li>• 佣金比例：15%~30%（依推薦人數分級：銅牌 15% → 白金 30%）</li>
             <li>• 鎖定期：30 天</li>
             <li>• 最低提領：NT$1,000</li>
@@ -211,12 +212,12 @@ export default function AffiliateApplyPage() {
               }
               className="mr-2 mt-1"
             />
-            <span className="text-sm text-gray-700">
+            <span className="text-sm text-slate-300">
               我已閱讀並同意
               <Link
                 href="/dashboard/affiliate/tax-notice"
                 target="_blank"
-                className="text-blue-600 hover:underline mx-1"
+                className="text-cyber-violet-400 hover:underline mx-1"
               >
                 聯盟行銷夥伴稅務須知
               </Link>
@@ -224,11 +225,11 @@ export default function AffiliateApplyPage() {
               <Link
                 href="/dashboard/affiliate/terms"
                 target="_blank"
-                className="text-blue-600 hover:underline mx-1"
+                className="text-cyber-violet-400 hover:underline mx-1"
               >
                 服務條款
               </Link>
-              <span className="text-red-500">*</span>
+              <span className="text-red-400">*</span>
             </span>
           </label>
         </div>
@@ -237,14 +238,14 @@ export default function AffiliateApplyPage() {
           <button
             type="submit"
             disabled={loading}
-            className="flex-1 rounded-md bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:bg-gray-400"
+            className="flex-1 rounded-md bg-primary px-4 py-2 text-white hover:bg-primary/90 disabled:bg-slate-600"
           >
             {loading ? "處理中..." : "提交申請"}
           </button>
           <button
             type="button"
             onClick={() => router.back()}
-            className="rounded-md border border-gray-300 px-4 py-2 hover:bg-gray-50"
+            className="rounded-md border border-white/10 px-4 py-2 text-slate-300 hover:bg-white/5"
           >
             取消
           </button>
