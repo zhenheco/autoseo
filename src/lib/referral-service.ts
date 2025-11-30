@@ -263,6 +263,7 @@ export async function processFirstPaymentReward(
     .update({
       status: "qualified",
       first_payment_at: new Date().toISOString(),
+      reward_type: rewardType,
     })
     .eq("id", referral.id);
 
