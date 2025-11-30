@@ -414,7 +414,7 @@ export async function setReferralCode(
     .from("payment_orders")
     .select("id")
     .eq("company_id", companyId)
-    .eq("status", "completed")
+    .eq("status", "success")
     .limit(1)
     .single();
 
