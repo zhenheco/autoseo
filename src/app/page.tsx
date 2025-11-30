@@ -508,7 +508,7 @@ export default async function Home() {
                         className={`w-full mt-auto ${
                           isPopular
                             ? "bg-white text-cyber-violet-600 hover:bg-slate-50 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700 shadow-lg border border-white/50 dark:border-slate-600 font-bold"
-                            : "bg-gradient-to-r from-cyber-violet-600 to-cyber-magenta-600 text-white hover:from-cyber-violet-500 hover:to-cyber-magenta-500"
+                            : "bg-cyber-violet-600 text-white hover:bg-cyber-violet-500 dark:bg-gradient-to-r dark:from-cyber-violet-600 dark:to-cyber-magenta-600 dark:hover:from-cyber-violet-500 dark:hover:to-cyber-magenta-500"
                         }`}
                       >
                         <Link href="/login">開始使用</Link>
@@ -547,7 +547,7 @@ export default async function Home() {
                       }`}
                     >
                       {isPopular && (
-                        <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-cyber-cyan-500 to-cyber-violet-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                        <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-cyber-violet-600 dark:bg-gradient-to-r dark:from-cyber-cyan-500 dark:to-cyber-violet-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
                           超值
                         </span>
                       )}
