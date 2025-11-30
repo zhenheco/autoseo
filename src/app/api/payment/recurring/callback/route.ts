@@ -305,8 +305,14 @@ async function handleCallback(request: NextRequest) {
                 const commissionResult = await calculateAndCreateCommission({
                   supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
                   supabaseServiceKey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-                  paymentOrder: paymentOrder as any,
-                  mandateId: periodNo,
+                  paymentOrder: paymentOrder as {
+                    id: string;
+                    company_id: string;
+                    order_type: string;
+                    payment_type: "subscription" | "token_package" | "lifetime";
+                    amount: number;
+                    paid_at: string;
+                  },
                 });
 
                 if (commissionResult.success) {
