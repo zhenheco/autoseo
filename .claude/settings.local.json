@@ -71,7 +71,10 @@
       "WebFetch(domain:www.hover.dev)",
       "Skill(shadcn-ui)",
       "WebFetch(domain:ui.aceternity.com)",
-      "Bash(pnpm run build:*)"
+      "Bash(pnpm run build:*)",
+      "Bash(gh auth status:*)",
+      "mcp__github__get_me",
+      "Bash(gh api /user)"
     ],
     "deny": [],
     "ask": []

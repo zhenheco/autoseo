@@ -288,9 +288,12 @@ export async function POST(request: NextRequest) {
     if (newJobIds.length > 0) {
       try {
         const githubToken = process.env.GITHUB_TOKEN;
-        if (githubToken) {
+        const githubOwner = process.env.GITHUB_REPO_OWNER;
+        const githubRepo = process.env.GITHUB_REPO_NAME;
+
+        if (githubToken && githubOwner && githubRepo) {
           const response = await fetch(
-            "https://api.github.com/repos/acejou27/Auto-pilot-SEO/dispatches",
+            `https://api.github.com/repos/${githubOwner}/${githubRepo}/dispatches`,
             {
               method: "POST",
               headers: {
@@ -322,7 +325,7 @@ export async function POST(request: NextRequest) {
           }
         } else {
           console.log(
-            "[Batch] ⚠️  GITHUB_TOKEN not configured, workflow will run on schedule",
+            "[Batch] ⚠️  GitHub configuration incomplete (GITHUB_TOKEN, GITHUB_REPO_OWNER, or GITHUB_REPO_NAME missing), workflow will run on schedule",
           );
         }
       } catch (dispatchError) {
