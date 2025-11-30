@@ -5,6 +5,8 @@ import { ResearchAgent } from "./research-agent";
 import { StrategyAgent } from "./strategy-agent";
 import { WritingAgent } from "./writing-agent";
 import { ImageAgent } from "./image-agent";
+import { FeaturedImageAgent } from "./featured-image-agent";
+import { ArticleImageAgent } from "./article-image-agent";
 import { MetaAgent } from "./meta-agent";
 import { HTMLAgent } from "./html-agent";
 import { LinkEnrichmentAgent } from "./link-enrichment-agent";
@@ -834,31 +836,49 @@ export class ParallelOrchestrator {
     if (!strategyOutput) throw new Error("Strategy output is required");
 
     const featuredImageModel =
-      agentConfig.featured_image_model ||
-      agentConfig.image_model ||
-      "gemini-3-pro-image-preview";
+      agentConfig.featured_image_model || "gemini-2.5-flash-image";
     const contentImageModel =
-      agentConfig.content_image_model ||
-      agentConfig.image_model ||
-      "gpt-image-1-mini";
+      agentConfig.content_image_model || "gpt-image-1-mini";
 
     console.log("[Orchestrator] 🎨 Image models configuration:", {
       featuredImageModel,
       contentImageModel,
-      fallback: agentConfig.image_model,
+      usingSplitAgents: true,
     });
 
-    const imageAgent = new ImageAgent(aiConfig, context);
-    return imageAgent.execute({
-      title: strategyOutput.selectedTitle,
-      outline: strategyOutput.outline,
-      count: agentConfig.image_count,
-      model: agentConfig.image_model,
-      featuredImageModel,
-      contentImageModel,
-      quality: "medium" as const,
-      size: agentConfig.image_size,
-    });
+    const featuredImageAgent = new FeaturedImageAgent(aiConfig, context);
+    const articleImageAgent = new ArticleImageAgent(aiConfig, context);
+
+    const [featuredResult, contentResult] = await Promise.all([
+      featuredImageAgent.execute({
+        title: strategyOutput.selectedTitle,
+        model: featuredImageModel,
+        quality: "medium" as const,
+        size: agentConfig.image_size,
+      }),
+      articleImageAgent.execute({
+        title: strategyOutput.selectedTitle,
+        outline: strategyOutput.outline,
+        model: contentImageModel,
+        quality: "medium" as const,
+        size: agentConfig.image_size,
+      }),
+    ]);
+
+    return {
+      featuredImage: featuredResult.image,
+      contentImages: contentResult.images,
+      executionInfo: {
+        model: `featured:${featuredImageModel}, content:${contentImageModel}`,
+        totalImages: 1 + contentResult.images.length,
+        executionTime:
+          featuredResult.executionInfo.executionTime +
+          contentResult.executionInfo.executionTime,
+        totalCost:
+          featuredResult.executionInfo.cost +
+          contentResult.executionInfo.totalCost,
+      },
+    };
   }
 
   private async executeContentGeneration(

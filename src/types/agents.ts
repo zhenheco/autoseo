@@ -286,6 +286,52 @@ export interface ImageOutput {
   };
 }
 
+export interface FeaturedImageInput {
+  title: string;
+  brandStyle?: {
+    colorScheme?: string[];
+    style?: string;
+    mood?: string;
+  };
+  model: string;
+  quality: "low" | "medium" | "high" | "auto";
+  size: string;
+  targetLanguage?: string;
+}
+
+export interface FeaturedImageOutput {
+  image: GeneratedImage;
+  executionInfo: {
+    model: string;
+    executionTime: number;
+    cost: number;
+  };
+}
+
+export interface ArticleImageInput {
+  title: string;
+  outline: Outline;
+  brandStyle?: {
+    colorScheme?: string[];
+    style?: string;
+    mood?: string;
+  };
+  model: string;
+  quality: "low" | "medium" | "high" | "auto";
+  size: string;
+  targetLanguage?: string;
+}
+
+export interface ArticleImageOutput {
+  images: GeneratedImage[];
+  executionInfo: {
+    model: string;
+    totalImages: number;
+    executionTime: number;
+    totalCost: number;
+  };
+}
+
 // Meta Agent Types
 export interface MetaInput {
   content: WritingOutput;
