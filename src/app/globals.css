@@ -30,51 +30,55 @@
 
 @layer base {
   :root {
-    /* 深色區塊背景 */
-    --dark-bg: #0a0f1a;
-    --dark-bg-secondary: #111827;
+    /* 深色區塊背景（新配色系統） */
+    --dark-bg: #0f172a;
+    --dark-bg-secondary: #1e1b4b;
     --dark-bg-tertiary: #1e293b;
+    --dark-bg-elevated: #1e293b;
+    --dark-bg-footer: #020617;
 
-    /* 淺色區塊背景 */
-    --light-bg: #f8fafc;
-    --light-bg-secondary: #f1f5f9;
+    /* 文字色（高對比必須） */
+    --text-heading: #ffffff;
+    --text-body: #cbd5e1;
+    --text-muted: #94a3b8;
 
-    /* 深色區塊文字 */
-    --text-dark-primary: #e5e7eb;
-    --text-dark-secondary: #9ca3af;
+    /* 強調色（Cyan → Violet → Magenta） */
+    --color-cyan: #06b6d4;
+    --color-violet: #8b5cf6;
+    --color-magenta: #ec4899;
 
-    /* 淺色區塊文字 */
-    --text-light-primary: #1f2937;
-    --text-light-secondary: #6b7280;
-
-    /* 科技藍漸層 */
-    --gradient-blue-purple: linear-gradient(135deg, #3B82F6 0%, #8B5CF6 100%);
-    --gradient-blue-cyan: linear-gradient(135deg, #3B82F6 0%, #06B6D4 100%);
-    --gradient-purple-pink: linear-gradient(135deg, #8B5CF6 0%, #EC4899 100%);
+    /* 主要漸層（Cyberpunk-lite） */
+    --gradient-primary: linear-gradient(135deg, #06b6d4 0%, #8b5cf6 50%, #ec4899 100%);
+    --gradient-accent: linear-gradient(135deg, #8b5cf6 0%, #ec4899 100%);
+    --gradient-cta: linear-gradient(135deg, #7c3aed 0%, #db2777 100%);
 
     /* Hero 背景漸層 */
-    --gradient-hero: linear-gradient(180deg, #0a0f1a 0%, #111827 100%);
+    --gradient-hero: linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%);
 
-    /* 頂部光暈 */
-    --gradient-glow-top: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(59, 130, 246, 0.3) 0%, transparent 70%);
-    --gradient-glow-center: radial-gradient(ellipse 60% 40% at 50% 50%, rgba(59, 130, 246, 0.2) 0%, transparent 70%);
+    /* 區塊過渡漸層 */
+    --gradient-section-1: linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%);
+    --gradient-section-2: linear-gradient(180deg, #1e1b4b 0%, #0f172a 100%);
+
+    /* 頂部光暈（紫色為主） */
+    --gradient-glow-top: radial-gradient(ellipse 80% 50% at 50% 0%, rgba(139, 92, 246, 0.3) 0%, transparent 70%);
+    --gradient-glow-center: radial-gradient(ellipse 60% 40% at 50% 50%, rgba(139, 92, 246, 0.2) 0%, transparent 70%);
 
     /* 網格背景 */
-    --gradient-mesh: radial-gradient(at 40% 20%, rgba(59, 130, 246, 0.15) 0px, transparent 50%),
+    --gradient-mesh: radial-gradient(at 40% 20%, rgba(6, 182, 212, 0.15) 0px, transparent 50%),
                      radial-gradient(at 80% 0%, rgba(139, 92, 246, 0.15) 0px, transparent 50%),
-                     radial-gradient(at 0% 50%, rgba(6, 182, 212, 0.15) 0px, transparent 50%);
+                     radial-gradient(at 0% 50%, rgba(236, 72, 153, 0.15) 0px, transparent 50%);
 
     /* 陰影 */
-    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-    --shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.08);
-    --shadow-md: 0 4px 16px 0 rgba(0, 0, 0, 0.12);
-    --shadow-lg: 0 8px 24px 0 rgba(0, 0, 0, 0.16);
-    --shadow-xl: 0 16px 48px 0 rgba(0, 0, 0, 0.20);
+    --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.3);
+    --shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.4);
+    --shadow-md: 0 4px 16px 0 rgba(0, 0, 0, 0.5);
+    --shadow-lg: 0 8px 24px 0 rgba(0, 0, 0, 0.6);
+    --shadow-xl: 0 16px 48px 0 rgba(0, 0, 0, 0.7);
 
-    /* 發光效果（科技藍） */
-    --shadow-glow: 0 0 40px rgba(59, 130, 246, 0.4);
-    --shadow-glow-sm: 0 0 20px rgba(59, 130, 246, 0.25);
-    --shadow-glow-subtle: 0 0 12px rgba(59, 130, 246, 0.15);
+    /* 發光效果（紫色為主） */
+    --shadow-glow: 0 0 40px rgba(139, 92, 246, 0.4);
+    --shadow-glow-sm: 0 0 20px rgba(139, 92, 246, 0.25);
+    --shadow-glow-subtle: 0 0 12px rgba(139, 92, 246, 0.15);
   }
 
   .dark {
@@ -574,6 +578,121 @@
   /* 分隔光暈線 */
   .glow-line {
     height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.5), transparent);
+    background: linear-gradient(90deg, transparent, rgba(139, 92, 246, 0.5), transparent);
+  }
+
+  /* ===== 新設計系統：微妙優雅動畫 ===== */
+
+  /* 漸層背景動畫 - 極緩慢移動（20s 週期） */
+  @keyframes gradient-bg-shift {
+    0%, 100% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+  }
+
+  .animated-gradient-bg {
+    background: linear-gradient(-45deg, #0f172a, #1e1b4b, #312e81, #1e1b4b);
+    background-size: 400% 400%;
+    animation: gradient-bg-shift 20s ease infinite;
+  }
+
+  /* 漸層文字動畫 - 緩慢閃爍（8s 週期） */
+  @keyframes text-shimmer {
+    0% { background-position: -200% center; }
+    100% { background-position: 200% center; }
+  }
+
+  .shimmer-text {
+    background: linear-gradient(90deg, #06b6d4, #8b5cf6, #ec4899, #06b6d4);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: text-shimmer 8s linear infinite;
+  }
+
+  /* CTA 按鈕脈動發光（微妙版 - 4s 週期） */
+  @keyframes glow-pulse {
+    0%, 100% { box-shadow: 0 0 15px rgba(139, 92, 246, 0.3); }
+    50% { box-shadow: 0 0 25px rgba(139, 92, 246, 0.5); }
+  }
+
+  .glow-button {
+    animation: glow-pulse 4s ease-in-out infinite;
+  }
+
+  /* 卡片懸浮效果 */
+  .card-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+
+  .card-hover:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 20px 40px rgba(139, 92, 246, 0.15);
+    border-color: rgba(139, 92, 246, 0.5);
+  }
+
+  /* 玻璃態效果（新版） */
+  .glass {
+    background: rgba(15, 23, 42, 0.8);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .glass-navbar {
+    background: rgba(15, 23, 42, 0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  /* 新漸層文字效果 */
+  .gradient-text-cyber {
+    background: linear-gradient(135deg, #06b6d4, #8b5cf6, #ec4899);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  /* 發光效果（紫色為主） */
+  .glow-violet {
+    box-shadow: 0 0 40px rgba(139, 92, 246, 0.4);
+  }
+
+  .glow-violet-subtle {
+    box-shadow: 0 0 20px rgba(139, 92, 246, 0.25);
+  }
+
+  /* 區塊背景 */
+  .bg-section-1 {
+    background: var(--gradient-section-1);
+  }
+
+  .bg-section-2 {
+    background: var(--gradient-section-2);
+  }
+
+  /* 新文字色 */
+  .text-heading {
+    color: var(--text-heading) !important;
+  }
+
+  .text-body {
+    color: var(--text-body) !important;
+  }
+
+  .text-muted-custom {
+    color: var(--text-muted) !important;
+  }
+
+  /* 響應式動畫優化 */
+  @media (prefers-reduced-motion: reduce) {
+    .animated-gradient-bg,
+    .shimmer-text,
+    .glow-button,
+    .card-hover {
+      animation: none;
+      transition: none;
+    }
   }
 }
