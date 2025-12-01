@@ -105,32 +105,10 @@ export async function checkPagePermission(
 
 /**
  * 檢查用戶是否可以訪問網站連接功能
- * 免費方案不允許連接網站
+ * 開放給所有註冊用戶
  */
 export async function canAccessWebsitesFeature(): Promise<boolean> {
-  const user = await getUser();
-  if (!user) return false;
-
-  const supabase = await createClient();
-
-  const { data: memberships } = await supabase
-    .from("company_members")
-    .select("company_id, status")
-    .eq("user_id", user.id);
-
-  if (!memberships || memberships.length === 0) return false;
-
-  const activeMembership = memberships.find((m) => m.status === "active");
-  const membership = activeMembership || memberships[0];
-
-  const { data: companies } = await supabase
-    .from("companies")
-    .select("subscription_tier")
-    .eq("id", membership.company_id);
-
-  if (!companies || companies.length === 0) return false;
-
-  return companies[0].subscription_tier !== "free";
+  return true;
 }
 
 /**
