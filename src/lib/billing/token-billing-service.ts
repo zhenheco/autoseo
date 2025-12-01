@@ -8,6 +8,7 @@ import {
   DeductionInProgressError,
   DatabaseError,
 } from "./errors";
+import { invalidateBalanceCache } from "@/lib/cache";
 
 export interface BilledCompletionResult {
   response: AICompletionResponse;
@@ -522,6 +523,12 @@ export class TokenBillingService {
         recordId: data.record_id,
         metadata,
       });
+
+      // 失效餘額快取
+      await invalidateBalanceCache(companyId);
+      console.log(
+        `[TokenBillingService] Balance cache invalidated for company: ${companyId}`,
+      );
     }
 
     return {

@@ -1,5 +1,10 @@
 import { BaseAgent } from "./base-agent";
-import type { WritingInput, WritingOutput } from "@/types/agents";
+import type {
+  WritingInput,
+  WritingOutput,
+  BrandVoice,
+  CompetitorAnalysisOutput,
+} from "@/types/agents";
 import { marked } from "marked";
 
 // 配置 marked 全局選項（使用推薦的 marked.use() 方式）
@@ -121,160 +126,62 @@ export class WritingAgent extends BaseAgent<WritingInput, WritingOutput> {
   }
 
   private async generateArticle(input: WritingInput): Promise<string> {
-    const { strategy, brandVoice, previousArticles } = input;
+    const { strategy, brandVoice, previousArticles, competitorAnalysis } =
+      input;
 
-    const prompt = `你是一位專業的 SEO 內容作家，請根據以下策略撰寫完整的文章。直接輸出 Markdown 格式的文章內容，不要使用程式碼區塊包裹。
+    const personaSection = this.buildPersonaFromVoice(brandVoice);
+    const competitorSection = this.buildCompetitorContext(competitorAnalysis);
+    const voiceExamplesSection = this.buildVoiceExamples(brandVoice);
 
-# 文章標題
-${strategy.selectedTitle}
+    const prompt = `${personaSection}
 
-# 品牌聲音配置
-**請在整篇文章中貫徹以下品牌聲音設定**：
-- 語調: ${brandVoice.tone_of_voice}（請在用詞、語氣、表達方式上體現此語調）
-- 目標受眾: ${brandVoice.target_audience}（內容深度和表達方式要符合此受眾）
-- 句子風格: ${brandVoice.sentence_style || "清晰簡潔"}（控制句子長度和複雜度）
-- 互動性: ${brandVoice.interactivity || "中等"}（適當使用問句、呼籲行動等互動元素）
+# 你的任務
+為「${strategy.selectedTitle}」撰寫一篇完整的文章。
+
+${competitorSection}
+
+${voiceExamplesSection}
 
 # 文章大綱
 ${this.formatOutline(strategy.outline)}
 
-# SEO 關鍵字要求
-**關鍵字密度控制**：
-1. 目標字數: ${strategy.targetWordCount} 字
-2. **主要關鍵字（標題/核心詞）在內文中最多出現 3 次**（不包含文章標題本身）
-3. 主要關鍵字: ${strategy.outline.mainSections.flatMap((s) => s.keywords).join(", ")}
-4. LSI 關鍵字（語義相關詞）: ${strategy.lsiKeywords.join(", ")}
+# 目標規格
+- 目標字數: ${strategy.targetWordCount} 字
+- 主要關鍵字: ${strategy.outline.mainSections.flatMap((s) => s.keywords).join(", ")}
+- LSI 關鍵字: ${strategy.lsiKeywords.join(", ")}
 
-**關鍵字使用原則**：
-- **標題和核心關鍵字在內文中最多出現 3 次**
-- 自然融入文章，避免生硬堆砌
-- **優先使用 LSI 關鍵字和同義詞來增加語義豐富度**
-- 不要在每個段落都重複提及標題或主要關鍵字
-- 變化關鍵字形式（同義詞、相關詞）
-
-# 內部連結機會
+# 內部連結資源
 ${
   previousArticles.length > 0
     ? previousArticles
         .map(
-          (a) => `
-- [${a.title}](${a.url})
-  關鍵字: ${a.keywords.join(", ")}
-  摘要: ${a.excerpt}
-`,
+          (a) => `- [${a.title}](${a.url}) - ${a.excerpt.substring(0, 80)}...`,
         )
         .join("\n")
     : "（暫無內部文章可連結）"
 }
 
-**內部連結要求**：
-- 至少融入 ${strategy.internalLinkingStrategy.minLinks} 個內部連結
-- 使用自然的錨文本（避免「點擊這裡」等通用文字）
-- 在內容相關的段落中加入連結
-- 範例：根據[先前文章標題](/article-url)的分析，我們可以看出...
-
-# 外部引用來源（權威性來源）
+# 外部引用來源
 ${
   strategy.externalReferences && strategy.externalReferences.length > 0
     ? strategy.externalReferences
-        .map(
-          (ref) => `
-- 來源: ${ref.title || ref.domain}
-  URL: ${ref.url}
-  摘要: ${ref.snippet || "權威來源"}
-`,
-        )
+        .map((ref) => `- [${ref.title || ref.domain}](${ref.url})`)
         .join("\n")
-    : ""
+    : "（請根據內容需求自行引用權威來源）"
 }
 
-**🔴 外部連結要求（重要）**：
-- **每篇文章必須包含至少 3-5 個外部引用連結**
-- 外部連結必須來自權威來源（官方網站、知名媒體、研究機構等）
-- 使用自然的引用方式融入文章
-- 在引用數據、統計、研究結果、專家觀點時加入外部連結
-- 範例：
-  * 根據[Forbes 報導](https://forbes.com/...)，市場趨勢顯示...
-  * [麻省理工學院的研究](https://mit.edu/...)指出...
-  * 根據[官方文件](https://docs.example.com/)說明...
-- **確保每個外部連結都有明確的來源標示和上下文**
+# 格式要求
+- Markdown 格式，直接從 ## 導言 開始（不重複標題）
+- H2 (##) 為主要章節，H3 (###) 為子章節
+- 適當使用清單、表格增加可讀性
+- 禁止使用程式碼區塊（\`\`\`）
+- 禁止生成 FAQ 段落（FAQ 由專門的 Agent 處理）
 
-# 章節結構要求
-**每個主要章節應包含**：
-1. **章節引言**（50-100 字）：簡要說明本章節要討論什麼
-2. **主體內容**：
-   - 使用 H3 子標題組織內容
-   - 適當使用清單、表格、引言區塊
-   - 每個段落 3-5 句話
-   - 融入關鍵字和相關概念
-3. **實例或案例**：提供具體例子幫助理解
-4. **小結或過渡**：總結要點並引導到下一章節
+# 連結要求
+- 內部連結: 至少 ${strategy.internalLinkingStrategy.minLinks} 個，自然融入相關段落
+- 外部連結: 至少 3 個權威來源，在引用數據或觀點時加入
 
-# 撰寫指南
-1. **格式規範**：
-   - 使用 Markdown 格式
-   - **不要在文章開頭重複標題**：文章標題已經在 WordPress 自動顯示，直接從第一個章節（## 導言）開始
-   - 每個主要章節使用 H2 (##)
-   - 每個子章節使用 H3 (###)
-
-2. **內容品質**：
-   - 確保內容原創、有價值、有深度
-   - 提供實用的資訊和建議
-   - 使用具體例子和數據支持觀點
-   - 避免空泛的陳述
-
-3. **可讀性優化**：
-   - 使用編號清單、項目符號增加可讀性
-   - 適當使用表格整理資訊
-   - 段落之間保持適當間隔
-   - 使用過渡句連接段落
-
-4. **SEO 優化**：
-   - 在適當位置自然融入關鍵字
-   - 使用語義相關的 LSI 關鍵字
-   - 內外部連結分佈均勻
-   - 標題結構清晰（H2 → H3）
-
-5. **絕對禁止使用程式碼區塊**：
-   - ❌ 不要使用 \`\`\`markdown、\`\`\`json、\`\`\`javascript 等程式碼區塊
-   - ❌ 不要使用單個反引號 \` 包裹的行內程式碼
-   - ✅ 如需展示範例，使用引言區塊 (>) 或格式化文字
-   - ✅ 如需展示步驟，使用編號清單或項目符號
-
-6. **連結要求（必須遵守）**：
-   - **內部連結**（至少 ${strategy.internalLinkingStrategy.minLinks} 個）：
-     - 格式：[文章標題](文章URL)
-     - 範例：[SEO 入門指南](/seo-beginners-guide)
-     - 插入位置：在相關段落的自然語境中
-   - **外部連結**（至少 3 個）：
-     - 格式：[來源名稱](外部URL)
-     - 範例：[Google Search Central](https://developers.google.com/search)
-     - 必須是權威來源
-   - ⚠️ 如果沒有包含足夠連結，文章將被退回！
-
-7. **禁止生成 FAQ 段落**：
-   - ❌ 不要在文章中加入「常見問題」、「常見問題解決」、「FAQ」等章節
-   - ❌ 不要在文章中生成 Q&A 格式內容
-   - ✅ FAQ 會由專門的 QA Agent 在文章最後獨立生成
-
-# 最終檢查清單
-請確保文章包含：
-✅ 品牌聲音貫徹全文
-✅ 主要關鍵字在內文中最多出現 3 次（不含標題）
-✅ 優先使用 LSI 關鍵字和同義詞
-✅ 至少 ${strategy.internalLinkingStrategy.minLinks} 個內部連結（如有可用文章）
-✅ 至少 3 個外部引用連結
-✅ 每個章節結構完整（引言、主體、小結）
-✅ 無程式碼區塊
-✅ Markdown 格式正確
-❌ 不包含 FAQ/常見問題段落
-
-請撰寫完整的文章（Markdown 格式），確保包含實際可點擊的內外部連結。
-**重要**：
-1. 直接輸出 Markdown 文字，不要使用程式碼區塊包裹（不要使用 \`\`\`markdown）
-2. 直接從 ## 導言 開始，不要重複標題
-3. **務必包含至少 3 個外部引用連結**
-4. **不要生成任何 FAQ 或常見問題段落**`;
+請撰寫完整的文章，直接輸出 Markdown 文字。`;
 
     const response = await this.complete(prompt, {
       model: input.model,
@@ -282,7 +189,6 @@ ${
       maxTokens: input.maxTokens,
     });
 
-    // 移除可能存在的程式碼區塊包裹
     let content = response.content.trim();
     if (content.startsWith("```markdown")) {
       content = content.replace(/^```markdown\n/, "").replace(/\n```$/, "");
@@ -291,6 +197,104 @@ ${
     }
 
     return content;
+  }
+
+  private buildPersonaFromVoice(brandVoice: BrandVoice): string {
+    const brandName = brandVoice.brand_name || "專業品牌";
+    const writingStyle = brandVoice.writing_style;
+    const brandIntegration = brandVoice.brand_integration;
+
+    let styleDescription = "";
+    if (writingStyle) {
+      const styleMap: Record<string, string> = {
+        short_punchy: "短句有力，節奏明快，像在和朋友聊天但帶著專業感",
+        conversational: "對話式語調，親切自然，像在咖啡廳和讀者交流",
+        academic: "嚴謹專業，邏輯清晰，適合需要深度分析的主題",
+        storytelling: "敘事風格，用故事和案例帶動讀者，增加代入感",
+        mixed: "靈活切換，根據內容需求調整節奏和語調",
+      };
+      styleDescription = styleMap[writingStyle.sentence_style] || "";
+    }
+
+    let interactionGuide = "";
+    if (writingStyle?.use_questions) {
+      interactionGuide = "適時拋出問題引導讀者思考，但不要過度使用";
+    }
+
+    return `# 你的寫作人格
+
+你現在扮演「${brandName}」的資深內容編輯。
+
+## 你的聲音特質
+- 語調: ${brandVoice.tone_of_voice}
+- 目標讀者: ${brandVoice.target_audience}
+${styleDescription ? `- 寫作風格: ${styleDescription}` : ""}
+${interactionGuide ? `- 互動方式: ${interactionGuide}` : ""}
+
+## 品牌整合原則
+${brandIntegration?.value_first ? "- 永遠先提供價值，再自然帶入品牌" : ""}
+${brandIntegration?.max_brand_mentions ? `- 品牌提及控制在 ${brandIntegration.max_brand_mentions} 次以內` : ""}
+
+## 你的寫作哲學
+- 每個句子都要有存在的理由
+- 用具體案例和數據說話，避免空泛陳述
+- 讀者的時間很寶貴，直接給他們需要的資訊`;
+  }
+
+  private buildCompetitorContext(
+    competitorAnalysis?: CompetitorAnalysisOutput,
+  ): string {
+    if (!competitorAnalysis) {
+      return "";
+    }
+
+    const {
+      differentiationStrategy,
+      contentRecommendations,
+      seoOpportunities,
+    } = competitorAnalysis;
+
+    return `# 競爭對手分析（你剛做完的研究）
+
+## 我們的差異化策略
+- 獨特角度: ${differentiationStrategy.contentAngle}
+- 價值增強: ${differentiationStrategy.valueEnhancement}
+- 用戶體驗: ${differentiationStrategy.userExperience}
+
+## 內容建議
+**必須涵蓋的要點**:
+${contentRecommendations.mustInclude.map((item) => `- ${item}`).join("\n")}
+
+**可深入發展的領域**:
+${contentRecommendations.focusAreas.map((item) => `- ${item}`).join("\n")}
+
+**競爭對手已覆蓋（可簡化）**:
+${contentRecommendations.canSkip.map((item) => `- ${item}`).join("\n")}
+
+## SEO 機會
+- 可補充的關鍵字: ${seoOpportunities.keywordGaps.join(", ")}
+- 結構優化建議: ${seoOpportunities.structureOptimization}`;
+  }
+
+  private buildVoiceExamples(brandVoice: BrandVoice): string {
+    const examples = brandVoice.voice_examples;
+    if (!examples || examples.good_examples.length === 0) {
+      return "";
+    }
+
+    let section = `# 品牌聲音範例
+
+## ✅ 我們的聲音（學習這種風格）
+${examples.good_examples.map((ex) => `> ${ex}`).join("\n\n")}`;
+
+    if (examples.bad_examples && examples.bad_examples.length > 0) {
+      section += `
+
+## ❌ 避免這種聲音
+${examples.bad_examples.map((ex) => `> ${ex}`).join("\n\n")}`;
+    }
+
+    return section;
   }
 
   private formatOutline(outline: WritingInput["strategy"]["outline"]): string {

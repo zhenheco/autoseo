@@ -8,6 +8,30 @@ export interface BrandVoice {
   keywords: string[];
   sentence_style?: string;
   interactivity?: string;
+
+  brand_name?: string;
+
+  voice_examples?: {
+    good_examples: string[];
+    bad_examples?: string[];
+  };
+
+  writing_style?: {
+    sentence_style:
+      | "short_punchy"
+      | "conversational"
+      | "academic"
+      | "storytelling"
+      | "mixed";
+    interactivity_level: "low" | "medium" | "high";
+    use_questions: boolean;
+    examples_preference: "minimal" | "moderate" | "extensive";
+  };
+
+  brand_integration?: {
+    max_brand_mentions: number;
+    value_first: boolean;
+  };
 }
 
 export interface WorkflowSettings {
@@ -208,6 +232,7 @@ export interface WritingInput {
   strategy: StrategyOutput;
   brandVoice: BrandVoice;
   previousArticles: PreviousArticle[];
+  competitorAnalysis?: CompetitorAnalysisOutput;
   model: string;
   temperature: number;
   maxTokens: number;
@@ -722,7 +747,7 @@ export interface KeywordUsage {
   inLastParagraph: boolean;
 }
 
-// Link Enrichment Agent Types
+// Link Enrichment Agent Types (deprecated - use LinkProcessorAgent)
 export interface LinkEnrichmentInput {
   html: string;
   internalLinks: InternalLink[];
@@ -745,5 +770,84 @@ export interface LinkEnrichmentOutput {
   }[];
   executionInfo: {
     executionTime: number;
+  };
+}
+
+// Link Processor Agent Types (unified link processing with semantic scoring)
+export interface LinkProcessorConfig {
+  maxInternalLinks: number;
+  maxExternalLinks: number;
+  maxLinksPerUrl: number;
+  minDistanceBetweenLinks: number;
+  minSemanticScore: number;
+}
+
+export interface LinkProcessorInput {
+  html: string;
+  internalLinks: InternalLink[];
+  externalReferences: ExternalReference[];
+  targetLanguage?: string;
+}
+
+export interface LinkInsertionStats {
+  internalLinksInserted: number;
+  externalLinksInserted: number;
+  totalLinksInserted: number;
+  semanticScoreAverage: number;
+  rejectedLowScore: number;
+}
+
+export interface InsertedLinkDetail {
+  type: "internal" | "external";
+  anchor: string;
+  url: string;
+  position: string;
+  section: string;
+  semanticScore: number;
+}
+
+export interface LinkProcessorOutput {
+  html: string;
+  linkStats: LinkInsertionStats;
+  insertedLinks: InsertedLinkDetail[];
+  executionInfo: {
+    executionTime: number;
+  };
+}
+
+// Competitor Analysis Agent Types
+export interface CompetitorAnalysisInput {
+  serpData: ResearchOutput;
+  primaryKeyword: string;
+  targetLanguage: string;
+}
+
+export interface CompetitorAnalysisOutput {
+  competitorAnalysis: {
+    topSiteFeatures: string;
+    contentLength: string;
+    titlePatterns: string;
+    contentStructure: string;
+    missingAngles: string[];
+  };
+  differentiationStrategy: {
+    contentAngle: string;
+    valueEnhancement: string;
+    userExperience: string;
+  };
+  seoOpportunities: {
+    keywordGaps: string[];
+    structureOptimization: string;
+    eatImprovement: string;
+  };
+  contentRecommendations: {
+    mustInclude: string[];
+    canSkip: string[];
+    focusAreas: string[];
+  };
+  executionInfo: {
+    model: string;
+    executionTime: number;
+    tokenUsage: { input: number; output: number };
   };
 }
