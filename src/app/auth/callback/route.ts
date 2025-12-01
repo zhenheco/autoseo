@@ -53,9 +53,15 @@ export async function GET(request: Request) {
             status: "active",
           });
 
+          const { data: freePlan } = await adminClient
+            .from("subscription_plans")
+            .select("id")
+            .eq("name", "FREE")
+            .single();
+
           await adminClient.from("company_subscriptions").insert({
             company_id: company.id,
-            plan_id: null,
+            plan_id: freePlan?.id || null,
             status: "active",
             monthly_token_quota: 0,
             monthly_quota_balance: 0,
