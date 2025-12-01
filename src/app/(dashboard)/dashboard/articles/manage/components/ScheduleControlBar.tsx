@@ -41,6 +41,7 @@ export function ScheduleControlBar({
   const {
     selectedArticleIds,
     selectAll,
+    clearSelection,
     websiteId,
     setWebsiteId,
     articlesPerDay,
@@ -152,6 +153,7 @@ export function ScheduleControlBar({
 
       if (result.success) {
         toast.success(`已刪除 ${result.deletedCount} 篇文章`);
+        clearSelection();
         router.refresh();
       } else {
         toast.error(result.error || "刪除失敗");
@@ -163,7 +165,7 @@ export function ScheduleControlBar({
       setIsDeleting(false);
       setDeleteDialogOpen(false);
     }
-  }, [selectedCount, selectedArticleIds, router]);
+  }, [selectedCount, selectedArticleIds, clearSelection, router]);
 
   if (schedulableArticleIds.length === 0) {
     return null;
