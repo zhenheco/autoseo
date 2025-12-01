@@ -547,7 +547,7 @@ export default async function Home() {
                       }`}
                     >
                       {isPopular && (
-                        <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-cyber-violet-600 dark:bg-gradient-to-r dark:from-cyber-cyan-500 dark:to-cyber-violet-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                        <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-400 text-slate-900 px-3 py-1 rounded-full text-xs font-bold shadow-lg">
                           超值
                         </span>
                       )}
