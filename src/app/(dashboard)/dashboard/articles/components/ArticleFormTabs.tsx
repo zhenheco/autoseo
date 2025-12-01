@@ -15,6 +15,14 @@ import { QuickArticleForm } from "./QuickArticleForm";
 import { ArticleForm } from "./ArticleForm";
 import { WebsiteSelector } from "@/components/articles/WebsiteSelector";
 
+const STORAGE_KEYS = {
+  LANGUAGE: "preferred-language",
+  INDUSTRY: "preferred-industry",
+  CUSTOM_INDUSTRY: "preferred-custom-industry",
+  REGION: "preferred-region",
+  CUSTOM_REGION: "preferred-custom-region",
+};
+
 const INDUSTRIES = [
   { value: "tech", label: "科技" },
   { value: "finance", label: "金融" },
@@ -96,11 +104,64 @@ export function ArticleFormTabs({
   const [language, setLanguage] = useState("zh-TW");
 
   useEffect(() => {
-    const stored = localStorage.getItem("preferred-language");
-    if (stored) {
-      setTimeout(() => setLanguage(stored), 0);
+    const storedLanguage = localStorage.getItem(STORAGE_KEYS.LANGUAGE);
+    if (storedLanguage) {
+      setTimeout(() => setLanguage(storedLanguage), 0);
+    }
+
+    const storedIndustry = localStorage.getItem(STORAGE_KEYS.INDUSTRY);
+    if (storedIndustry) {
+      setTimeout(() => setIndustry(storedIndustry), 0);
+    }
+
+    const storedCustomIndustry = localStorage.getItem(
+      STORAGE_KEYS.CUSTOM_INDUSTRY,
+    );
+    if (storedCustomIndustry) {
+      setTimeout(() => setCustomIndustry(storedCustomIndustry), 0);
+    }
+
+    const storedRegion = localStorage.getItem(STORAGE_KEYS.REGION);
+    if (storedRegion) {
+      setTimeout(() => setRegion(storedRegion), 0);
+    }
+
+    const storedCustomRegion = localStorage.getItem(STORAGE_KEYS.CUSTOM_REGION);
+    if (storedCustomRegion) {
+      setTimeout(() => setCustomRegion(storedCustomRegion), 0);
     }
   }, []);
+
+  const handleIndustryChange = (value: string) => {
+    setIndustry(value);
+    localStorage.setItem(STORAGE_KEYS.INDUSTRY, value);
+    if (value !== "other") {
+      localStorage.removeItem(STORAGE_KEYS.CUSTOM_INDUSTRY);
+    }
+  };
+
+  const handleCustomIndustryChange = (value: string) => {
+    setCustomIndustry(value);
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_INDUSTRY, value);
+  };
+
+  const handleRegionChange = (value: string) => {
+    setRegion(value);
+    localStorage.setItem(STORAGE_KEYS.REGION, value);
+    if (value !== "other") {
+      localStorage.removeItem(STORAGE_KEYS.CUSTOM_REGION);
+    }
+  };
+
+  const handleCustomRegionChange = (value: string) => {
+    setCustomRegion(value);
+    localStorage.setItem(STORAGE_KEYS.CUSTOM_REGION, value);
+  };
+
+  const handleLanguageChange = (value: string) => {
+    setLanguage(value);
+    localStorage.setItem(STORAGE_KEYS.LANGUAGE, value);
+  };
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -124,7 +185,7 @@ export function ArticleFormTabs({
 
         <div className="space-y-2">
           <Label htmlFor="industry">產業 *</Label>
-          <Select value={industry} onValueChange={setIndustry}>
+          <Select value={industry} onValueChange={handleIndustryChange}>
             <SelectTrigger id="industry">
               <SelectValue placeholder="請選擇產業" />
             </SelectTrigger>
@@ -140,7 +201,7 @@ export function ArticleFormTabs({
             <Input
               id="customIndustry"
               value={customIndustry}
-              onChange={(e) => setCustomIndustry(e.target.value)}
+              onChange={(e) => handleCustomIndustryChange(e.target.value)}
               placeholder="請輸入您的產業"
               className="mt-2"
             />
@@ -149,7 +210,7 @@ export function ArticleFormTabs({
 
         <div className="space-y-2">
           <Label htmlFor="region">目標地區 *</Label>
-          <Select value={region} onValueChange={setRegion}>
+          <Select value={region} onValueChange={handleRegionChange}>
             <SelectTrigger id="region">
               <SelectValue placeholder="請選擇目標地區" />
             </SelectTrigger>
@@ -165,7 +226,7 @@ export function ArticleFormTabs({
             <Input
               id="customRegion"
               value={customRegion}
-              onChange={(e) => setCustomRegion(e.target.value)}
+              onChange={(e) => handleCustomRegionChange(e.target.value)}
               placeholder="請輸入您的目標地區"
               className="mt-2"
             />
@@ -174,7 +235,7 @@ export function ArticleFormTabs({
 
         <div className="space-y-2">
           <Label htmlFor="language">撰寫語言 *</Label>
-          <Select value={language} onValueChange={setLanguage}>
+          <Select value={language} onValueChange={handleLanguageChange}>
             <SelectTrigger id="language">
               <SelectValue placeholder="請選擇撰寫語言" />
             </SelectTrigger>
