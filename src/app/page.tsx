@@ -140,7 +140,7 @@ export default async function Home() {
       <Navbar />
       <main className="relative min-h-screen overflow-hidden">
         {/* Hero Section - Cyberpunk Dark */}
-        <section className="relative py-16 sm:py-24 bg-white dark:bg-slate-900">
+        <section className="relative py-16 sm:py-24 bg-white dark:bg-slate-800">
           <AuroraBackground />
           <CyberGlow position="top" color="mixed" />
           <BackgroundGrid variant="dark" />
@@ -243,7 +243,7 @@ export default async function Home() {
         <CostComparison />
 
         {/* AI Technology Section - Dark Slate */}
-        <section className="relative py-20 bg-white dark:bg-slate-900">
+        <section className="relative py-20 bg-white dark:bg-slate-800">
           <FloatingOrbs />
           <BackgroundGrid variant="dark" />
 
@@ -334,8 +334,8 @@ export default async function Home() {
                     className="bg-white dark:bg-transparent dark:glass shadow-md dark:shadow-none border-slate-200 dark:border-white/10 hover:border-cyber-violet-500/50 hover:-translate-y-2 transition-all duration-300"
                   >
                     <CardContent className="p-6">
-                      <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-cyber-cyan-500 to-cyber-violet-500">
-                        <Icon className="h-6 w-6 text-white" />
+                      <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-cyber-cyan-500 to-cyber-violet-500 shadow-lg shadow-cyber-violet-500/25">
+                        <Icon className="h-6 w-6 text-white drop-shadow-sm" />
                       </div>
                       <h3 className="mb-2 text-lg font-bold text-slate-900 dark:text-white">
                         {feature.title}
@@ -352,7 +352,7 @@ export default async function Home() {
         </section>
 
         {/* Testimonials Section - Dark Slate */}
-        <section className="relative py-20 bg-white dark:bg-slate-900">
+        <section className="relative py-20 bg-white dark:bg-slate-800">
           <BackgroundGrid variant="dark" />
           <div className="container relative z-10 mx-auto px-4">
             <div className="text-center mb-12">
@@ -507,7 +507,7 @@ export default async function Home() {
                         size="sm"
                         className={`w-full mt-auto ${
                           isPopular
-                            ? "bg-white text-cyber-violet-600 hover:bg-slate-50 dark:bg-slate-800 dark:text-white dark:hover:bg-slate-700 shadow-lg border border-white/50 dark:border-slate-600 font-bold"
+                            ? "bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 shadow-lg font-bold"
                             : "bg-cyber-violet-600 text-white hover:bg-cyber-violet-500 dark:bg-gradient-to-r dark:from-cyber-violet-600 dark:to-cyber-magenta-600 dark:hover:from-cyber-violet-500 dark:hover:to-cyber-magenta-500"
                         }`}
                       >
@@ -583,7 +583,7 @@ export default async function Home() {
         <FAQSection />
 
         {/* Final CTA Section - Slate with Glow */}
-        <section className="relative py-20 bg-white dark:bg-slate-900 overflow-hidden">
+        <section className="relative py-20 bg-white dark:bg-slate-800 overflow-hidden">
           <AuroraBackground showRadialGradient={false} />
           <CyberGlow position="center" color="mixed" />
           <FloatingOrbs />
