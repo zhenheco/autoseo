@@ -334,7 +334,7 @@ export default async function Home() {
                     className="bg-white dark:bg-transparent dark:glass shadow-md dark:shadow-none border-slate-200 dark:border-white/10 hover:border-cyber-violet-500/50 hover:-translate-y-2 transition-all duration-300"
                   >
                     <CardContent className="p-6">
-                      <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-cyber-cyan-600 to-cyber-violet-600 shadow-lg shadow-cyber-violet-500/25">
+                      <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-cyber-cyan-700 to-cyber-violet-700 shadow-lg shadow-cyber-violet-500/25">
                         <Icon className="h-6 w-6 text-white drop-shadow-sm" />
                       </div>
                       <h3 className="mb-2 text-lg font-bold text-slate-900 dark:text-white">
