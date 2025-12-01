@@ -37,14 +37,14 @@ const ROLE_PERMISSIONS: Record<UserRole, RolePermissions> = {
   writer: {
     canAccessDashboard: false,
     canAccessArticles: true,
-    canAccessWebsites: false,
+    canAccessWebsites: true,
     canAccessSubscription: false,
     canAccessSettings: false,
   },
   viewer: {
     canAccessDashboard: false,
     canAccessArticles: true,
-    canAccessWebsites: false,
+    canAccessWebsites: true,
     canAccessSubscription: false,
     canAccessSettings: false,
   },
@@ -100,13 +100,6 @@ export async function checkPagePermission(
 
   if (!permissions[page]) {
     redirect("/dashboard/unauthorized");
-  }
-
-  if (page === "canAccessWebsites") {
-    const hasWebsiteAccess = await canAccessWebsitesFeature();
-    if (!hasWebsiteAccess) {
-      redirect("/dashboard/unauthorized?reason=free-plan");
-    }
   }
 }
 
