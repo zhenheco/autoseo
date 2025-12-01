@@ -114,6 +114,7 @@ export function ArticleForm({
       for (const title of selectedTitles) {
         await submitArticleWithoutRedirect(title);
       }
+      window.dispatchEvent(new Event("tokenReserved"));
       setGeneratedTitles([...selectedTitles]);
       setShowSuccessDialog(true);
     } catch (error) {
@@ -166,6 +167,7 @@ export function ArticleForm({
         await submitArticleWithoutRedirect();
         generatedList.push(`文章 ${i + 1}`);
       }
+      window.dispatchEvent(new Event("tokenReserved"));
       setGeneratedTitles(generatedList);
       setShowSuccessDialog(true);
     } catch (error) {

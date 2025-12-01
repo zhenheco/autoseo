@@ -237,19 +237,36 @@ export async function deleteArticle(articleJobId: string) {
 
   const supabase = await createClient();
 
+  const { data: membership } = await supabase
+    .from("company_members")
+    .select("company_id")
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .single();
+
+  if (!membership) {
+    return { success: false, error: "無權限" };
+  }
+
   await supabase
     .from("generated_articles")
     .delete()
-    .eq("article_job_id", articleJobId);
+    .eq("article_job_id", articleJobId)
+    .eq("company_id", membership.company_id);
 
-  const { error } = await supabase
+  const { error, count } = await supabase
     .from("article_jobs")
     .delete()
-    .eq("id", articleJobId);
+    .eq("id", articleJobId)
+    .eq("company_id", membership.company_id);
 
   if (error) {
     console.error("Failed to delete article:", error);
     return { success: false, error: error.message };
+  }
+
+  if (count === 0) {
+    return { success: false, error: "找不到文章或無權刪除" };
   }
 
   revalidatePath("/dashboard/articles/manage");
@@ -442,23 +459,40 @@ export async function batchDeleteArticles(
 
   const supabase = await createClient();
 
+  const { data: membership } = await supabase
+    .from("company_members")
+    .select("company_id")
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .single();
+
+  if (!membership) {
+    return { success: false, error: "無權限" };
+  }
+
   await supabase
     .from("generated_articles")
     .delete()
-    .in("article_job_id", articleIds);
+    .in("article_job_id", articleIds)
+    .eq("company_id", membership.company_id);
 
   const { error, count } = await supabase
     .from("article_jobs")
     .delete()
-    .in("id", articleIds);
+    .in("id", articleIds)
+    .eq("company_id", membership.company_id);
 
   if (error) {
     console.error("Failed to batch delete articles:", error);
     return { success: false, error: error.message };
   }
 
+  if (count === 0) {
+    return { success: false, error: "找不到文章或無權刪除" };
+  }
+
   revalidatePath("/dashboard/articles/manage");
-  return { success: true, deletedCount: count || articleIds.length };
+  return { success: true, deletedCount: count ?? 0 };
 }
 
 export async function updateArticleContent(
