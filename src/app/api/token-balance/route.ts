@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { TokenBillingService } from "@/lib/billing/token-billing-service";
 import { getSafeErrorMessage, logError } from "@/lib/utils/error-handler";
+import { getCachedBalance, setCachedBalance } from "@/lib/cache";
 
 /**
  * GET /api/token-balance
@@ -29,6 +30,29 @@ export async function GET(request: NextRequest) {
     if (!membership) {
       return NextResponse.json({ error: "找不到公司" }, { status: 404 });
     }
+
+    const companyId = membership.company_id;
+
+    // 嘗試從 Redis 快取讀取
+    const cached = await getCachedBalance(companyId);
+    if (cached) {
+      console.log("[token-balance] 🚀 Cache HIT for company:", companyId);
+      return NextResponse.json({
+        balance: {
+          total: cached.total,
+          monthlyQuota: cached.monthlyQuota,
+          purchased: cached.purchased,
+          reserved: cached.reserved,
+          available: cached.available,
+        },
+        subscription: cached.subscription,
+        plan: cached.plan,
+        cached: true,
+        cachedAt: cached.cachedAt,
+      });
+    }
+
+    console.log("[token-balance] 📊 Cache MISS for company:", companyId);
 
     // 取得公司訂閱資訊
     const { data: company } = await supabase
@@ -80,7 +104,7 @@ export async function GET(request: NextRequest) {
       planInfo = plan;
     }
 
-    return NextResponse.json({
+    const response = {
       balance: {
         total,
         monthlyQuota,
@@ -95,7 +119,23 @@ export async function GET(request: NextRequest) {
         currentPeriodEnd: isFree ? null : subscription.current_period_end,
       },
       plan: planInfo,
+    };
+
+    // 設置 Redis 快取（20 秒 TTL）
+    await setCachedBalance(companyId, {
+      total,
+      monthlyQuota,
+      purchased,
+      reserved,
+      available,
+      subscription: {
+        tier: company?.subscription_tier || "free",
+        monthlyTokenQuota: subscription.monthly_token_quota,
+      },
+      plan: planInfo ? { name: planInfo.name, slug: planInfo.slug } : null,
     });
+
+    return NextResponse.json(response);
   } catch (error) {
     logError("API:token-balance", error);
     return NextResponse.json(
