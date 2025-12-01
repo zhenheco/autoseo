@@ -60,6 +60,21 @@ ${previousSummary ? `## Previous Section Summary\n${previousSummary}\n\nEnsure s
 ${sectionImage ? `7. Insert image at appropriate position: ![${sectionImage.altText || section.heading}](${sectionImage.url})` : ""}
 8. Provide a brief summary at the end (for connecting to next section)
 
+## Writing Style (Important!)
+1. Present 2-3 different viewpoints or sources on key topics
+2. Compare and contrast different perspectives where relevant
+3. Provide your analysis and conclusions: use phrases like "In my analysis..." or "From a practical standpoint..." or "Based on experience..."
+4. Give actionable recommendations to readers
+
+Example structure:
+- "According to [Source A]... However, [Source B] suggests..."
+- "My analysis: Based on the evidence, I believe... For [audience], I recommend..."
+
+Avoid:
+- Simply listing information without analysis
+- Missing "I think", "I recommend", "In conclusion" type expressions
+- Purely copying data without adding personal insights
+
 **CRITICAL: Write ALL content in ${languageName}**
 
 ## Output Format (JSON)
