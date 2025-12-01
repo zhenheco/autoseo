@@ -1,7 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { getQuotaStatus, getFreeTrialStatus } from "./actions";
+import { getQuotaStatus } from "./actions";
 import { ArticleFormTabs } from "./components/ArticleFormTabs";
-import { FreeTrialBanner } from "@/components/articles/FreeTrialBanner";
 
 export const dynamic = "force-dynamic";
 
@@ -10,10 +9,7 @@ interface PageProps {
 }
 
 export default async function ArticlesPage({ searchParams }: PageProps) {
-  const [quotaStatus, freeTrialStatus] = await Promise.all([
-    getQuotaStatus(),
-    getFreeTrialStatus(),
-  ]);
+  const quotaStatus = await getQuotaStatus();
   const { website: websiteId } = await searchParams;
 
   return (
@@ -21,15 +17,6 @@ export default async function ArticlesPage({ searchParams }: PageProps) {
       <div className="mb-6">
         <h1 className="text-3xl font-bold">生成新文章</h1>
       </div>
-
-      {freeTrialStatus && !freeTrialStatus.isUnlimited && (
-        <FreeTrialBanner
-          used={freeTrialStatus.used}
-          limit={freeTrialStatus.limit}
-          remaining={freeTrialStatus.remaining}
-          isUnlimited={freeTrialStatus.isUnlimited}
-        />
-      )}
 
       <Card>
         <CardHeader className="pb-4">
