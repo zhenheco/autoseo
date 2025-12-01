@@ -4,10 +4,6 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getCompanyQuotaStatus } from "@/lib/quota/quota-service";
-import {
-  FreeTrialService,
-  FreeTrialStatus,
-} from "@/lib/quota/free-trial-service";
 
 export async function createArticle(formData: FormData) {
   const industry = formData.get("industry") as string;
@@ -90,43 +86,4 @@ export async function getQuotaStatus() {
   }
 
   return await getCompanyQuotaStatus(member.company_id);
-}
-
-export async function getFreeTrialStatus(): Promise<FreeTrialStatus | null> {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) {
-    return null;
-  }
-
-  const { data: member } = await supabase
-    .from("company_members")
-    .select("company_id")
-    .eq("user_id", user.id)
-    .single();
-
-  const companyId = member?.company_id || user.id;
-
-  const { data: company } = await supabase
-    .from("companies")
-    .select("subscription_tier")
-    .eq("id", companyId)
-    .single();
-
-  if (!company || company.subscription_tier !== "free") {
-    return {
-      canGenerate: true,
-      used: 0,
-      limit: -1,
-      remaining: -1,
-      isUnlimited: true,
-    };
-  }
-
-  const service = new FreeTrialService(supabase);
-  return service.checkFreeTrialLimit(companyId);
 }
