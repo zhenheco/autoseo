@@ -9,7 +9,6 @@ import { FeaturedImageAgent } from "./featured-image-agent";
 import { ArticleImageAgent } from "./article-image-agent";
 import { MetaAgent } from "./meta-agent";
 import { HTMLAgent } from "./html-agent";
-import { LinkProcessorAgent } from "./link-processor-agent";
 import { CompetitorAnalysisAgent } from "./competitor-analysis-agent";
 import { CategoryAgent } from "./category-agent";
 import { IntroductionAgent } from "./introduction-agent";
@@ -471,8 +470,12 @@ export class ParallelOrchestrator {
       const htmlAgent = new HTMLAgent(aiConfig, context);
       const htmlOutput = await htmlAgent.execute({
         html: writingOutput.html,
-        internalLinks: [],
-        externalReferences: [],
+        internalLinks: previousArticles.map((a) => ({
+          url: a.url,
+          title: a.title,
+          keywords: a.keywords,
+        })),
+        externalReferences: strategyOutput.externalReferences || [],
       });
 
       writingOutput.html = htmlOutput.html;
@@ -484,29 +487,6 @@ export class ParallelOrchestrator {
           imageOutput.contentImages,
         );
       }
-
-      const linkProcessorAgent = new LinkProcessorAgent({
-        maxInternalLinks: 5,
-        maxExternalLinks: 3,
-        maxLinksPerUrl: 2,
-        minDistanceBetweenLinks: 500,
-        minSemanticScore: 0.6,
-      });
-      const linkResult = await linkProcessorAgent.execute({
-        html: writingOutput.html,
-        internalLinks: previousArticles.map((a) => ({
-          url: a.url,
-          title: a.title,
-          keywords: a.keywords,
-        })),
-        externalReferences: strategyOutput.externalReferences || [],
-        targetLanguage,
-      });
-      writingOutput.html = linkResult.html;
-      console.log(
-        "[Orchestrator] LinkProcessorAgent 結果:",
-        linkResult.linkStats,
-      );
 
       await this.updateJobStatus(input.articleJobId, "processing", {
         current_phase: "html_completed",

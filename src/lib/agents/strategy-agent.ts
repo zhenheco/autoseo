@@ -45,17 +45,38 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
   }
 
   private async generateTitleOptions(input: StrategyInput): Promise<string[]> {
-    const prompt = `你是 SEO 專家。為文章標題「${input.researchData.title}」生成 3 個標題。
+    const competitorTitles =
+      input.researchData.competitorAnalysis
+        ?.map((c) => c.title)
+        .filter((t) => t && t.length > 0)
+        .slice(0, 5) || [];
 
-## 推理步驟
-1. 分析標題意圖和目標受眾
-2. 考慮 SEO 最佳實踐（包含關鍵字、適當長度）
-3. 評估標題吸引力和點擊率潛力
+    const perplexityTitles =
+      input.researchData.externalReferences
+        ?.map((r) => r.title)
+        .filter((t) => t && t.length > 0)
+        .slice(0, 5) || [];
+
+    const allTitles = [...competitorTitles, ...perplexityTitles].slice(0, 10);
+
+    const prompt = `你是 SEO 專家。分析 Perplexity 搜尋結果和競爭對手標題後，為「${input.researchData.title}」生成 3 個最佳標題。
+
+## 目標關鍵字
+${input.researchData.title}
+
+## 搜尋結果和競爭對手標題（分析這些標題的模式）
+${allTitles.length > 0 ? allTitles.map((t, i) => `${i + 1}. ${t}`).join("\n") : "無搜尋資料"}
+
+## 分析步驟
+1. 觀察搜尋結果標題的共同模式（數字開頭？問句式？年份？）
+2. 找出尚未被覆蓋的角度或差異化機會
+3. 決定最佳標題策略，兼顧 SEO 和吸引力
 
 ## 要求
-- 包含關鍵字「${input.researchData.title}」
 - 50-60 字元
-- 使用數字或問句提升吸引力
+- 關鍵字放在前面
+- **禁止使用**：「完整指南」「全攻略」「入門到精通」「一次搞懂」等泛用模板詞
+- 生成 3 個不同風格的標題（例如：數字型、問句型、利益型）
 
 ## 輸出格式
 請在推理後，輸出以下 JSON 格式：
@@ -139,10 +160,11 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
   }
 
   private getFallbackTitles(title: string): string[] {
+    const year = new Date().getFullYear();
     return [
-      `${title}完整指南：從入門到精通`,
-      `2025 最新${title}教學：實用技巧大公開`,
-      `${title}全攻略：專家推薦的 10 個關鍵重點`,
+      `${title}：${year}年最新實用技巧`,
+      `${title}怎麼做？專家分享 5 個關鍵步驟`,
+      `${title}必知重點：避開常見錯誤`,
     ];
   }
 
