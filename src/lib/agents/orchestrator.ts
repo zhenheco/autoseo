@@ -9,7 +9,8 @@ import { FeaturedImageAgent } from "./featured-image-agent";
 import { ArticleImageAgent } from "./article-image-agent";
 import { MetaAgent } from "./meta-agent";
 import { HTMLAgent } from "./html-agent";
-import { LinkEnrichmentAgent } from "./link-enrichment-agent";
+import { LinkProcessorAgent } from "./link-processor-agent";
+import { CompetitorAnalysisAgent } from "./competitor-analysis-agent";
 import { CategoryAgent } from "./category-agent";
 import { IntroductionAgent } from "./introduction-agent";
 import { SectionAgent } from "./section-agent";
@@ -33,6 +34,7 @@ import type {
   GeneratedImage,
   SectionOutput,
   ExternalReference,
+  CompetitorAnalysisOutput,
 } from "@/types/agents";
 import type { AIModel } from "@/types/ai-models";
 import { AgentExecutionContext } from "./base-agent";
@@ -258,7 +260,44 @@ export class ParallelOrchestrator {
         result.strategy = strategyOutput;
       }
 
-      // === 階段 2: Content Generation (寫作+圖片) ===
+      // === 階段 2.5: 競爭對手分析（Persona-Driven 寫作準備） ===
+      let competitorAnalysis: CompetitorAnalysisOutput | undefined;
+      if (researchOutput && currentPhase === "strategy_completed") {
+        try {
+          console.log(
+            "[Orchestrator] 🔍 Starting Competitor Analysis for Persona-Driven writing",
+          );
+          const competitorAgent = new CompetitorAnalysisAgent(
+            aiConfig,
+            context,
+          );
+          competitorAnalysis = await competitorAgent.execute({
+            serpData: researchOutput,
+            primaryKeyword: input.title,
+            targetLanguage: targetLanguage,
+            model: agentConfig.strategy_model,
+            temperature: 0.3,
+            maxTokens: 2000,
+          });
+          console.log("[Orchestrator] ✅ Competitor analysis completed", {
+            differentiationAngle:
+              competitorAnalysis.differentiationStrategy.contentAngle.substring(
+                0,
+                50,
+              ) + "...",
+            mustIncludeCount:
+              competitorAnalysis.contentRecommendations.mustInclude.length,
+          });
+        } catch (competitorError) {
+          console.warn(
+            "[Orchestrator] ⚠️ Competitor analysis failed, continuing without it:",
+            competitorError,
+          );
+          competitorAnalysis = undefined;
+        }
+      }
+
+      // === 階段 3: Content Generation (寫作+圖片) ===
       // 如果 currentPhase === 'strategy_completed'，執行 Phase 3 然後返回
       let writingOutput: ArticleGenerationResult["writing"];
       let imageOutput: ArticleGenerationResult["image"];
@@ -321,6 +360,7 @@ export class ParallelOrchestrator {
                 agentConfig,
                 aiConfig,
                 context,
+                competitorAnalysis,
               ),
               imageOutput ||
                 this.executeImageAgent(
@@ -343,6 +383,7 @@ export class ParallelOrchestrator {
               agentConfig,
               aiConfig,
               context,
+              competitorAnalysis,
             ),
             this.executeImageAgent(
               strategyOutput,
@@ -430,12 +471,8 @@ export class ParallelOrchestrator {
       const htmlAgent = new HTMLAgent(aiConfig, context);
       const htmlOutput = await htmlAgent.execute({
         html: writingOutput.html,
-        internalLinks: previousArticles.map((article) => ({
-          url: article.url,
-          title: article.title,
-          keywords: article.keywords,
-        })),
-        externalReferences: strategyOutput.externalReferences || [],
+        internalLinks: [],
+        externalReferences: [],
       });
 
       writingOutput.html = htmlOutput.html;
@@ -448,11 +485,14 @@ export class ParallelOrchestrator {
         );
       }
 
-      const linkEnrichmentAgent = new LinkEnrichmentAgent({
+      const linkProcessorAgent = new LinkProcessorAgent({
         maxInternalLinks: 5,
         maxExternalLinks: 3,
+        maxLinksPerUrl: 2,
+        minDistanceBetweenLinks: 500,
+        minSemanticScore: 0.6,
       });
-      const linkResult = await linkEnrichmentAgent.execute({
+      const linkResult = await linkProcessorAgent.execute({
         html: writingOutput.html,
         internalLinks: previousArticles.map((a) => ({
           url: a.url,
@@ -464,7 +504,7 @@ export class ParallelOrchestrator {
       });
       writingOutput.html = linkResult.html;
       console.log(
-        "[Orchestrator] LinkEnrichmentAgent 結果:",
+        "[Orchestrator] LinkProcessorAgent 結果:",
         linkResult.linkStats,
       );
 
@@ -813,6 +853,7 @@ export class ParallelOrchestrator {
     agentConfig: AgentConfig,
     aiConfig: AIClientConfig,
     context: AgentExecutionContext,
+    competitorAnalysis?: CompetitorAnalysisOutput,
   ) {
     if (!strategyOutput) throw new Error("Strategy output is required");
 
@@ -821,6 +862,7 @@ export class ParallelOrchestrator {
       strategy: strategyOutput,
       brandVoice,
       previousArticles,
+      competitorAnalysis,
       model: agentConfig.writing_model,
       temperature: agentConfig.writing_temperature,
       maxTokens: agentConfig.writing_max_tokens,
@@ -1090,6 +1132,16 @@ export class ParallelOrchestrator {
       tone_of_voice: "專業、友善、易懂",
       target_audience: "一般網路使用者",
       keywords: [],
+      writing_style: {
+        sentence_style: "mixed",
+        interactivity_level: "medium",
+        use_questions: true,
+        examples_preference: "moderate",
+      },
+      brand_integration: {
+        max_brand_mentions: 3,
+        value_first: true,
+      },
     };
 
     if (!websiteId || websiteId === "null") {
@@ -1116,6 +1168,10 @@ export class ParallelOrchestrator {
       writing_style?: string;
       sentence_style?: string;
       interactivity?: string;
+      voice_examples?: {
+        good_examples?: string[];
+        bad_examples?: string[];
+      };
     };
     console.log("[Orchestrator] 使用 website brand_voice", bv);
     return {
@@ -1126,6 +1182,25 @@ export class ParallelOrchestrator {
       keywords: [],
       sentence_style: bv.sentence_style || bv.writing_style || "清晰簡潔",
       interactivity: bv.interactivity || "適度互動",
+      brand_name: bv.brand_name,
+      voice_examples: bv.voice_examples?.good_examples
+        ? {
+            good_examples: bv.voice_examples.good_examples,
+            bad_examples: bv.voice_examples.bad_examples,
+          }
+        : undefined,
+      writing_style: {
+        sentence_style:
+          (bv.sentence_style as BrandVoice["writing_style"])?.sentence_style ||
+          "mixed",
+        interactivity_level: "medium",
+        use_questions: true,
+        examples_preference: "moderate",
+      },
+      brand_integration: {
+        max_brand_mentions: 3,
+        value_first: true,
+      },
     };
   }
 
@@ -1591,6 +1666,10 @@ export class ParallelOrchestrator {
       console.error(`[Orchestrator] ❌ 更新狀態失敗:`, error);
       throw error;
     }
+
+    // 失效文章狀態快取
+    const { invalidateArticleStatusCache } = await import("@/lib/cache");
+    await invalidateArticleStatusCache(articleJobId);
 
     console.log(`[Orchestrator] ✅ 狀態已更新:`, result);
   }
