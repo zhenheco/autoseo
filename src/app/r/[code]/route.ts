@@ -40,7 +40,7 @@ export async function GET(
   });
 
   const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "https://1wayseo.com";
-  const redirectUrl = new URL("/zh/login", baseUrl);
+  const redirectUrl = new URL("/login", baseUrl);
   redirectUrl.searchParams.set("ref", code.toUpperCase());
 
   const response = NextResponse.redirect(redirectUrl);
