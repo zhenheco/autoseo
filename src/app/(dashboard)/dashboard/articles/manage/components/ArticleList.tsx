@@ -21,7 +21,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { Globe, CalendarClock } from "lucide-react";
+import { Globe, CalendarClock, Trash2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { ArticleWithWebsite, deleteArticle } from "../actions";
 import { useScheduleContext } from "./ScheduleContext";
 
@@ -47,6 +50,7 @@ const statusConfig: Record<
 };
 
 export function ArticleList({ articles }: ArticleListProps) {
+  const router = useRouter();
   const {
     toggleSelection,
     isSelected,
@@ -78,8 +82,11 @@ export function ArticleList({ articles }: ArticleListProps) {
     setIsDeleting(true);
     try {
       const result = await deleteArticle(selectedArticle.id);
-      if (!result.success) {
-        console.error("Delete failed:", result.error);
+      if (result.success) {
+        toast.success("文章已刪除");
+        router.refresh();
+      } else {
+        toast.error(result.error || "刪除失敗");
       }
     } finally {
       setIsDeleting(false);
@@ -115,12 +122,13 @@ export function ArticleList({ articles }: ArticleListProps) {
               <TableHead className="w-[100px]">目標網站</TableHead>
               <TableHead className="w-[80px]">狀態</TableHead>
               <TableHead className="w-[90px]">建立時間</TableHead>
+              <TableHead className="w-[60px]">操作</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {articles.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
+                <TableCell colSpan={6} className="h-24 text-center">
                   尚無文章
                 </TableCell>
               </TableRow>
@@ -174,6 +182,20 @@ export function ArticleList({ articles }: ArticleListProps) {
                   </TableCell>
                   <TableCell className="py-2 text-xs text-muted-foreground">
                     {formatDate(article.created_at)}
+                  </TableCell>
+                  <TableCell className="py-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedArticle(article);
+                        setDeleteDialogOpen(true);
+                      }}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
                   </TableCell>
                 </TableRow>
               ))
