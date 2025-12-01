@@ -59,7 +59,7 @@ export async function GET(request: Request) {
             status: "active",
             monthly_token_quota: 0,
             monthly_quota_balance: 0,
-            purchased_token_balance: 1000,
+            purchased_token_balance: 10000,
             is_lifetime: false,
           });
 

@@ -334,7 +334,7 @@ export default async function Home() {
                     className="bg-white dark:bg-transparent dark:glass shadow-md dark:shadow-none border-slate-200 dark:border-white/10 hover:border-cyber-violet-500/50 hover:-translate-y-2 transition-all duration-300"
                   >
                     <CardContent className="p-6">
-                      <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-cyber-cyan-500 to-cyber-violet-500 shadow-lg shadow-cyber-violet-500/25">
+                      <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-cyber-cyan-600 to-cyber-violet-600 shadow-lg shadow-cyber-violet-500/25">
                         <Icon className="h-6 w-6 text-white drop-shadow-sm" />
                       </div>
                       <h3 className="mb-2 text-lg font-bold text-slate-900 dark:text-white">
@@ -505,11 +505,7 @@ export default async function Home() {
                       <Button
                         asChild
                         size="sm"
-                        className={`w-full mt-auto ${
-                          isPopular
-                            ? "bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-800 dark:hover:bg-slate-700 shadow-lg font-bold"
-                            : "bg-cyber-violet-600 text-white hover:bg-cyber-violet-500 dark:bg-gradient-to-r dark:from-cyber-violet-600 dark:to-cyber-magenta-600 dark:hover:from-cyber-violet-500 dark:hover:to-cyber-magenta-500"
-                        }`}
+                        className="w-full mt-auto bg-slate-900 text-white hover:bg-slate-800 dark:bg-gradient-to-r dark:from-cyber-violet-600 dark:to-cyber-magenta-600 dark:hover:from-cyber-violet-500 dark:hover:to-cyber-magenta-500 shadow-lg font-bold"
                       >
                         <Link href="/login">開始使用</Link>
                       </Button>

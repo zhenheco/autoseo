@@ -22,7 +22,7 @@ export function Navbar() {
           </Link>
           <Link
             href="/signup"
-            className="rounded-lg bg-cyber-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-cyber-violet-700 transition-colors"
+            className="rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 dark:bg-gradient-to-r dark:from-cyber-violet-600 dark:to-cyber-magenta-600 dark:hover:from-cyber-violet-500 dark:hover:to-cyber-magenta-500 shadow-md transition-colors"
           >
             免費開始
           </Link>
