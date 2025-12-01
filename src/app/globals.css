@@ -46,12 +46,12 @@
     /* 淺色模式漸層 */
     --gradient-primary-light: linear-gradient(135deg, #0891b2 0%, #7c3aed 50%, #db2777 100%);
 
-    /* 深色區塊背景（新配色系統） */
-    --dark-bg: #0f172a;
-    --dark-bg-secondary: #1e1b4b;
-    --dark-bg-tertiary: #1e293b;
-    --dark-bg-elevated: #1e293b;
-    --dark-bg-footer: #020617;
+    /* 深色區塊背景（調淡 20-30%） */
+    --dark-bg: #1e293b;
+    --dark-bg-secondary: #334155;
+    --dark-bg-tertiary: #475569;
+    --dark-bg-elevated: #334155;
+    --dark-bg-footer: #0f172a;
 
     /* 文字色（高對比必須） */
     --text-heading: #ffffff;
