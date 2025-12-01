@@ -174,15 +174,35 @@ export async function DELETE(
       return NextResponse.json({ error: "Forbidden" }, { status: 403 });
     }
 
-    const { error } = await supabase
+    const { data: article } = await supabase
       .from("generated_articles")
-      .delete()
+      .select("article_job_id")
       .eq("id", id)
-      .eq("company_id", membership.company_id);
+      .eq("company_id", membership.company_id)
+      .single();
 
-    if (error) {
-      console.error("Error deleting article:", error);
-      return NextResponse.json({ error: error.message }, { status: 500 });
+    if (article?.article_job_id) {
+      const { error } = await supabase
+        .from("article_jobs")
+        .delete()
+        .eq("id", article.article_job_id)
+        .eq("company_id", membership.company_id);
+
+      if (error) {
+        console.error("Error deleting article_job:", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
+    } else {
+      const { error } = await supabase
+        .from("generated_articles")
+        .delete()
+        .eq("id", id)
+        .eq("company_id", membership.company_id);
+
+      if (error) {
+        console.error("Error deleting article:", error);
+        return NextResponse.json({ error: error.message }, { status: 500 });
+      }
     }
 
     return NextResponse.json({ success: true });

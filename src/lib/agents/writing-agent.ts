@@ -91,6 +91,9 @@ export class WritingAgent extends BaseAgent<WritingInput, WritingOutput> {
       );
     }
 
+    // 移除所有 H1 標題（文章內容不應包含 H1，H1 由頁面標題處理）
+    html = html.replace(/<h1[^>]*>[\s\S]*?<\/h1>/gi, "");
+
     // 為表格添加樣式類別
     const styledHtml = this.addTableStyles(html);
 
@@ -150,26 +153,6 @@ ${this.formatOutline(strategy.outline)}
 - 主要關鍵字: ${strategy.outline.mainSections.flatMap((s) => s.keywords).join(", ")}
 - LSI 關鍵字: ${strategy.lsiKeywords.join(", ")}
 
-# 內部連結資源
-${
-  previousArticles.length > 0
-    ? previousArticles
-        .map(
-          (a) => `- [${a.title}](${a.url}) - ${a.excerpt.substring(0, 80)}...`,
-        )
-        .join("\n")
-    : "（暫無內部文章可連結）"
-}
-
-# 外部引用來源
-${
-  strategy.externalReferences && strategy.externalReferences.length > 0
-    ? strategy.externalReferences
-        .map((ref) => `- [${ref.title || ref.domain}](${ref.url})`)
-        .join("\n")
-    : "（請根據內容需求自行引用權威來源）"
-}
-
 # 格式要求
 - Markdown 格式，直接從 ## 導言 開始（不重複標題）
 - H2 (##) 為主要章節，H3 (###) 為子章節
@@ -177,9 +160,31 @@ ${
 - 禁止使用程式碼區塊（\`\`\`）
 - 禁止生成 FAQ 段落（FAQ 由專門的 Agent 處理）
 
-# 連結要求
-- 內部連結: 至少 ${strategy.internalLinkingStrategy.minLinks} 個，自然融入相關段落
-- 外部連結: 至少 3 個權威來源，在引用數據或觀點時加入
+# 觀點融合與分析要求（重要！）
+
+## 寫作結構（每個 H2 段落）
+1. **多方觀點呈現**：引用 2-3 個不同來源或角度
+   - 使用：「根據 [來源] 的研究...」「專家 [姓名] 認為...」「業界普遍認為...」
+2. **觀點對比**：指出不同觀點的差異或爭議
+   - 使用：「相較之下...」「另一方面...」「不過也有人認為...」
+3. **作者分析**：綜合觀點後給出你的結論與判斷
+   - 使用：「綜合以上分析，我認為...」「從實務角度來看...」「根據我的經驗...」
+4. **具體建議**：給讀者可執行的行動建議
+
+## 禁止的寫法
+- ❌ 只列資訊沒有分析
+- ❌ 所有段落都是相同的結構
+- ❌ 缺少「我認為」「建議」「綜合分析」等觀點表達
+- ❌ 純粹複述資料沒有加入個人見解
+
+## 範例寫法
+「關於 X 的做法，業界有不同看法。A 方認為應該...，B 方則主張...。
+
+**我的分析**：綜合實務經驗和研究數據，我認為 [結論]。對於 [特定讀者類型]，我建議 [具體建議]。」
+
+# 引用要求
+- 在引用數據或觀點時，使用「根據研究顯示...」「專家指出...」等表述
+- 連結會在後處理階段自動插入，撰寫時專注於內容品質
 
 請撰寫完整的文章，直接輸出 Markdown 文字。`;
 
