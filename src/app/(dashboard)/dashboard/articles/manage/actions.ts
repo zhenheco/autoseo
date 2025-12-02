@@ -464,23 +464,33 @@ export async function batchDeleteArticles(
     return { success: false, error: "無權限" };
   }
 
+  console.log("[batchDeleteArticles] Deleting articles:", {
+    articleIds,
+    companyId: membership.company_id,
+  });
+
   const { error, count } = await supabase
     .from("article_jobs")
-    .delete()
+    .delete({ count: "exact" })
     .in("id", articleIds)
     .eq("company_id", membership.company_id);
 
+  console.log("[batchDeleteArticles] Delete result:", { error, count });
+
   if (error) {
-    console.error("Failed to batch delete articles:", error);
+    console.error("[batchDeleteArticles] Failed to delete:", error);
     return { success: false, error: error.message };
   }
 
-  if (count === 0) {
+  if (count !== null && count === 0) {
+    console.warn(
+      "[batchDeleteArticles] No articles deleted - possibly wrong company or already deleted",
+    );
     return { success: false, error: "找不到文章或無權刪除" };
   }
 
   revalidatePath("/dashboard/articles/manage");
-  return { success: true, deletedCount: count ?? 0 };
+  return { success: true, deletedCount: count ?? articleIds.length };
 }
 
 export async function updateArticleContent(
