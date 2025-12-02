@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getCachedArticleStatus, setCachedArticleStatus } from "@/lib/cache";
 
 interface Params {
   params: Promise<{
@@ -79,19 +78,6 @@ export async function GET(request: NextRequest, { params }: Params) {
       );
     }
 
-    // 嘗試從 Redis 快取讀取
-    const cached = await getCachedArticleStatus(jobId);
-    if (cached) {
-      console.log("[article-status] 🚀 Cache HIT for job:", jobId);
-      return NextResponse.json({
-        ...cached,
-        cached: true,
-        cachedAt: cached.cachedAt,
-      });
-    }
-
-    console.log("[article-status] 📊 Cache MISS for job:", jobId);
-
     // 查詢任務狀態（確保只能查詢自己公司的任務）
     const { data: job, error } = await supabase
       .from("article_jobs")
@@ -104,16 +90,6 @@ export async function GET(request: NextRequest, { params }: Params) {
       console.error("Failed to fetch job status:", error);
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
-
-    // 設置 Redis 快取
-    await setCachedArticleStatus(jobId, {
-      id: job.id,
-      status: job.status,
-      progress: job.progress || 0,
-      current_step: job.current_step,
-      error_message: job.error_message,
-      result_url: job.result_url,
-    });
 
     return NextResponse.json(job);
   } catch (error) {
