@@ -875,7 +875,12 @@ export interface ContentContext {
 
 // Special Block Types
 export interface SpecialBlock {
-  type: "expert_tip" | "local_advantage" | "expert_warning";
+  type:
+    | "expert_tip"
+    | "tip_block"
+    | "local_advantage"
+    | "expert_warning"
+    | "warning_block";
   content: string;
 }
 

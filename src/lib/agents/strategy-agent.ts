@@ -726,18 +726,18 @@ ${gaps
   },
   "mainSections": [
     {
-      "heading": "基礎概念與準備工作",
-      "subheadings": ["核心定義解析", "必備工具清單"],
-      "keyPoints": ["關鍵概念一", "實用技巧二"],
+      "heading": "[根據主題自行創作獨特且具體的標題]",
+      "subheadings": ["[根據該段落內容創作小標題]", "[另一個具體小標題]"],
+      "keyPoints": ["[該段落的關鍵重點]", "[另一個關鍵重點]"],
       "targetWordCount": 500,
-      "keywords": ["相關關鍵字A", "相關關鍵字B"]
+      "keywords": ["[與該段落相關的關鍵字]"]
     },
     {
-      "heading": "實戰操作步驟詳解",
-      "subheadings": ["第一步驟說明", "第二步驟說明"],
-      "keyPoints": ["操作要點一", "注意事項二"],
+      "heading": "[另一個獨特且具體的標題，不可與上一個重複]",
+      "subheadings": ["[具體小標題]", "[具體小標題]"],
+      "keyPoints": ["[關鍵重點]", "[關鍵重點]"],
       "targetWordCount": 500,
-      "keywords": ["操作關鍵字"]
+      "keywords": ["[相關關鍵字]"]
     }
   ],
   "conclusion": {
@@ -758,9 +758,18 @@ ${gaps
 - ❌ 禁止使用「標題1」「子標題1」「常見問題1」等編號佔位符
 - ✅ 必須輸出具體、有意義的完整內容
 
+**🚫 禁止使用的 H2 標題（這些太過通用，缺乏獨特性）**：
+- ❌ 基礎概念與準備工作
+- ❌ 核心功能與實用技巧
+- ❌ 實戰操作步驟詳解
+- ❌ 進階應用與最佳實踐
+- ❌ 基礎概念與環境設定
+- ❌ 常見問題與解決方案
+- ❌ 總結與未來展望
+
 **規則：**
 1. mainSections 2-4 個
-2. 每個 section 標題要獨特，避免重複
+2. 每個 section 標題要獨特，必須根據「${input.title}」主題創作具體標題
 3. 直接輸出 JSON，不要用 \`\`\`json 包裹
 4. 確保 JSON 格式正確
 
@@ -1220,18 +1229,26 @@ ${gaps
       },
       mainSections: [
         {
-          heading: "基礎概念與環境設定",
-          subheadings: ["核心概念解析", "環境準備與配置"],
-          keyPoints: ["基本定義與原理", "必要工具與資源", "初始設定步驟"],
+          heading: `${keyTopic}的核心原理與運作機制`,
+          subheadings: [`${keyTopic}的定義與特性`, `${keyTopic}的應用場景`],
+          keyPoints: [
+            `${keyTopic}的基本原理`,
+            `${keyTopic}的優勢分析`,
+            `${keyTopic}的適用情境`,
+          ],
           targetWordCount: sectionWordCount,
-          keywords: [keyTopic, "基礎", "入門", "設定"],
+          keywords: [keyTopic, "原理", "機制", "應用"],
         },
         {
-          heading: "核心功能與實用技巧",
-          subheadings: ["主要功能介紹", "進階使用技巧"],
-          keyPoints: ["關鍵功能說明", "實用操作方法", "效率提升技巧"],
+          heading: `如何有效運用${keyTopic}達成目標`,
+          subheadings: [`${keyTopic}的操作步驟`, `${keyTopic}的進階技法`],
+          keyPoints: [
+            `${keyTopic}的實踐方法`,
+            `${keyTopic}的注意事項`,
+            `${keyTopic}的效果優化`,
+          ],
           targetWordCount: sectionWordCount,
-          keywords: [keyTopic, "功能", "技巧", "方法"],
+          keywords: [keyTopic, "方法", "步驟", "實踐"],
         },
       ],
       conclusion: {
