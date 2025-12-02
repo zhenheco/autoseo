@@ -175,9 +175,12 @@ export class ParallelOrchestrator {
       ]);
 
       const targetLanguage =
-        input.targetLanguage || websiteSettings.language || "zh-TW";
-      const targetRegion = websiteSettings.region || "台灣";
-      const targetIndustry = websiteSettings.industry;
+        input.targetLanguage ||
+        input.language ||
+        websiteSettings.language ||
+        "zh-TW";
+      const targetRegion = input.region || websiteSettings.region || "台灣";
+      const targetIndustry = input.industry || websiteSettings.industry;
 
       console.log("[Orchestrator] 🌐 Website Settings:", {
         language: targetLanguage,
@@ -1829,7 +1832,6 @@ export class ParallelOrchestrator {
         const image = contentImages[i];
         const imageHtml = `\n<figure class="wp-block-image size-large">
   <img src="${image.url}" alt="${image.altText}" width="${image.width}" height="${image.height}" />
-  <figcaption>${image.altText}</figcaption>
 </figure>\n`;
 
         const position = insertPositions[i];
@@ -1919,16 +1921,32 @@ export class ParallelOrchestrator {
     retryableErrors: readonly string[],
   ): boolean {
     const err = error as Error & { code?: string; type?: string };
+    const message = err.message?.toLowerCase() || "";
 
-    if (err.code && retryableErrors.includes(err.code)) {
+    // 1. 檢查錯誤碼（大小寫不敏感）
+    if (
+      err.code &&
+      retryableErrors.some((e) => e.toLowerCase() === err.code?.toLowerCase())
+    ) {
       return true;
     }
 
-    const message = err.message.toLowerCase();
+    // 2. 檢查錯誤訊息（部分匹配）
     for (const retryableType of retryableErrors) {
       if (message.includes(retryableType.toLowerCase())) {
         return true;
       }
+    }
+
+    // 3. 通用網路錯誤檢測
+    if (
+      message.includes("network") ||
+      message.includes("fetch") ||
+      message.includes("timeout") ||
+      message.includes("econnreset") ||
+      message.includes("socket")
+    ) {
+      return true;
     }
 
     return false;

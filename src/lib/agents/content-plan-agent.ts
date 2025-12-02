@@ -93,7 +93,7 @@ ${specialBlockGuidance}
 2. **contentStrategy**: 內容策略（primaryAngle, userPainPoints, valueProposition, differentiationPoints, toneGuidance）
 3. **detailedOutline**: 詳細大綱
    - introduction: 引言計劃
-   - mainSections: 3 個主要區塊，每個包含 h2Title, subheadings, writingInstructions, researchInsights, targetWordCount, keyPoints, 以及選擇性的 specialBlock
+   - mainSections: 2-4 個主要區塊，每個包含 h2Title, subheadings, writingInstructions, researchInsights, targetWordCount, keyPoints, 以及選擇性的 specialBlock
    - faq: FAQ 計劃（h2Title, questions 陣列，每個問題包含 question 和 answerGuidelines）
    - conclusion: 結論計劃
 4. **seoOptimization**: SEO 優化建議
@@ -103,12 +103,33 @@ ${specialBlockGuidance}
 ## 語言
 所有內容必須使用 ${targetLang === "zh-TW" ? "繁體中文" : targetLang === "zh-CN" ? "简体中文" : "English"}
 
+## H2 結構指導原則（重要！）
+現有大綱僅供參考，你可以根據以下原則調整：
+
+1. **避免公式化結構**：不要使用固定模板如「基礎概念」→「進階應用」→「常見問題」
+2. **根據內容特性決定結構**：
+   - 教學類：可用步驟流程（第一步→第二步→...）
+   - 比較類：可用對比結構（A vs B、優缺點分析）
+   - 問題解決類：可用痛點→解決方案結構
+   - 概念介紹類：可用 What→Why→How 結構
+3. **H2 標題要具體**：避免泛泛的「基礎概念」「進階應用」，改用具體描述如「5 分鐘學會核心操作」「3 個常見錯誤及解決方法」
+4. **彈性調整**：mainSections 可以是 2-4 個，根據內容深度決定
+5. **subheadings 要有邏輯**：子標題之間要有明確的邏輯關係，不是隨意堆砌
+
+## 禁止使用的公式化 H2
+- ❌「基礎概念與準備工作」
+- ❌「進階應用與最佳實踐」
+- ❌「常見問題解決」（FAQ 已單獨處理）
+- ❌「總結與展望」
+
 ## 重要規則
-1. mainSections 必須恰好 3 個
+1. mainSections 數量：2-4 個（根據內容需求彈性調整）
 2. 每個 section 的 writingInstructions 要具體、可執行
 3. specialBlock 根據文章主題選擇性使用（參考上方特殊區塊建議）
 4. FAQ 問題數量為 6-8 個
 5. 所有內容必須與標題主題直接相關
+6. H2 標題必須原創，不要照抄現有大綱
+7. **FAQ 區塊必須存在**：文章結構最後一定要有獨立的 FAQ H2 區塊（在 conclusion 之前）
 
 請直接輸出 JSON，不要用 \`\`\`json 包裹：`;
   }
@@ -274,7 +295,11 @@ ${specialBlockGuidance}
     }
 
     const mainSections = outline.mainSections;
-    if (!Array.isArray(mainSections) || mainSections.length < 2) {
+    if (
+      !Array.isArray(mainSections) ||
+      mainSections.length < 2 ||
+      mainSections.length > 4
+    ) {
       return false;
     }
 

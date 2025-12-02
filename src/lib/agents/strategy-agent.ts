@@ -9,8 +9,8 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
   protected async process(input: StrategyInput): Promise<StrategyOutput> {
     const titleOptions = await this.generateTitleOptions(input);
 
-    const selectedTitle =
-      input.title || (await this.selectBestTitle(titleOptions, input));
+    // 完全由 AI 生成標題，用戶輸入的關鍵字只作為主題參考
+    const selectedTitle = await this.selectBestTitle(titleOptions, input);
 
     const outline = await this.generateOutline(input, selectedTitle);
 
@@ -45,61 +45,61 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
   }
 
   private async generateTitleOptions(input: StrategyInput): Promise<string[]> {
-    const competitorTitles =
-      input.researchData.competitorAnalysis
-        ?.map((c) => c.title)
-        .filter((t) => t && t.length > 0)
-        .slice(0, 5) || [];
-
-    const perplexityTitles =
-      input.researchData.externalReferences
-        ?.map((r) => r.title)
-        .filter((t) => t && t.length > 0)
-        .slice(0, 5) || [];
-
-    const allTitles = [...competitorTitles, ...perplexityTitles].slice(0, 10);
+    // 從 ResearchAgent 獲取策略建議和內容缺口
+    const recommendedStrategy = input.researchData.recommendedStrategy || "";
+    const contentGaps = input.researchData.contentGaps || [];
+    const searchIntent = input.researchData.searchIntent || "informational";
 
     const targetLang = input.targetLanguage || "zh-TW";
     const titleLengthRange = this.getTitleLengthRange(targetLang);
 
-    const prompt = `你是一位精通國際市場的 SEO 專家。根據搜尋結果，為「${input.researchData.title}」生成 3 個最佳標題。
+    const prompt = `你是一位精通國際市場的 SEO 專家。根據研究分析結果，為主題「${input.researchData.title}」生成 3 個原創標題。
 
-## 目標關鍵字
+## 主題關鍵字（僅作為主題參考，不要直接複製）
 ${input.researchData.title}
 
-## 搜尋結果和競爭對手標題（分析這些標題的模式）
-${allTitles.length > 0 ? allTitles.map((t, i) => `${i + 1}. ${t}`).join("\n") : "無搜尋資料"}
+## 研究分析結果
+### 建議策略
+${recommendedStrategy || "提供專業、實用的內容"}
 
-## 分析步驟
-1. 觀察搜尋結果標題的共同模式（數字開頭？問句式？年份？）
-2. 找出尚未被覆蓋的角度或差異化機會
-3. 決定最佳標題策略，兼顧 SEO 和吸引力
+### 內容缺口（可填補的機會）
+${
+  contentGaps.length > 0
+    ? contentGaps
+        .slice(0, 3)
+        .map((g, i) => `${i + 1}. ${g}`)
+        .join("\n")
+    : "無特定缺口"
+}
+
+### 搜尋意圖
+${searchIntent}
+
+## 標題生成原則
+1. **原創性**：標題必須是全新創作，不要直接使用關鍵字作為標題
+2. **差異化**：利用內容缺口創造獨特角度
+3. **吸引力**：根據搜尋意圖設計能引起共鳴的標題
+4. **SEO 友善**：自然融入核心概念，但不要生硬堆砌
 
 ## 標題長度要求
 - ${titleLengthRange.min}-${titleLengthRange.max} ${targetLang.startsWith("zh") ? "字" : "characters"}
-- 關鍵字放在前面
 
-## 禁止使用的詞彙和模式
+## 禁止使用
+- **直接複製關鍵字**：標題 ≠ 關鍵字，必須重新創作
 - **泛用模板詞**：「完整指南」「全攻略」「入門到精通」「一次搞懂」「懶人包」「超詳細」
-- **年份**：2024、2025 等（除非有特殊時效性需求）
+- **年份**：2024、2025 等
 - **過度誇大**：「史上最全」「終極」「無敵」
+- **佔位符**：<標題>、[標題1]、{第一個標題} 等
 
 ## 要求
-- 生成 3 個不同風格的標題（例如：數字型、問句型、利益型）
+- 生成 3 個不同風格的標題（例如：問句型、數字型、利益型）
 - 標題要能引起目標讀者的共鳴
-- 專注於 SEO 效果和點擊吸引力
+- 每個標題必須是完整、可直接使用的句子
 
-## 輸出格式
-請在推理後，輸出以下 JSON 格式：
+## 輸出格式（只輸出 JSON，不要其他文字）
 {
-  "reasoning_summary": "簡要說明選擇這些標題的原因",
-  "titles": ["完整的第一個標題文字", "完整的第二個標題文字", "完整的第三個標題文字"]
-}
-
-**重要**：
-- 直接輸出完整的標題文字
-- 禁止輸出佔位符如 <標題>、[標題1]、{第一個標題} 等
-- 每個標題必須是可直接使用的完整句子`;
+  "titles": ["完整的第一個標題", "完整的第二個標題", "完整的第三個標題"]
+}`;
 
     try {
       const response = await this.complete(prompt, {
