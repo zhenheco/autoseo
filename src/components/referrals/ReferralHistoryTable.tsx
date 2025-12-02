@@ -88,8 +88,8 @@ export function ReferralHistoryTable({ referrals }: ReferralHistoryTableProps) {
         <TableBody>
           {referrals.map((referral) => (
             <TableRow key={referral.id}>
-              <TableCell className="font-medium font-mono text-sm">
-                {referral.referred_company_id.slice(0, 8)}...
+              <TableCell className="font-medium text-sm">
+                {referral.referred_email || "-"}
               </TableCell>
               <TableCell className="text-sm text-muted-foreground">
                 {formatDate(referral.registered_at)}
