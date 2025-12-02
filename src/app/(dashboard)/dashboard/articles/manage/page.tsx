@@ -72,7 +72,7 @@ export default async function ArticleManagePage({ searchParams }: PageProps) {
 
   return (
     <AutoRefreshWrapper intervalMs={5 * 60 * 1000}>
-      <div className="container mx-auto p-6 max-w-[1600px]">
+      <div className="container mx-auto px-4 py-4 max-w-[1600px]">
         <Suspense
           fallback={
             <div className="text-center py-8 text-muted-foreground">
