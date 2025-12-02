@@ -144,8 +144,8 @@ export class AIClient {
         const message = response.choices[0].message;
 
         const content =
-          message.reasoning_content ||
           message.content ||
+          message.reasoning_content ||
           message.reasoning ||
           message.thinking ||
           "";

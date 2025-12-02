@@ -37,48 +37,50 @@ ${contentContext.industryContext ? `**Industry Context**: ${contentContext.indus
       return "";
     }
 
-    const brand = brandName || "專家";
+    const brand = brandName || "";
 
     switch (specialBlock.type) {
       case "expert_tip":
+      case "tip_block":
         return `
 ## Special Block Requirement
-Include a "💡 ${brand} 專家提示" block in this section.
+Include a "小提醒" block in this section.
 - Content hint: ${specialBlock.content}
-- Format: Use a blockquote with emoji
+- Format: Use a blockquote
 - Length: 50-80 words
 - Place it after explaining a key concept or technique
 
 Example format:
-> 💡 **${brand} 專家提示**
+> **${brand ? brand + " " : ""}小提醒**
 >
 > [Your practical tip here, 50-80 words]`;
 
       case "local_advantage":
         return `
 ## Special Block Requirement
-Include a "🏆 本地優勢" block in this section.
+Include a "本地優勢" block in this section.
 - Content hint: ${specialBlock.content}
-- Format: Use a blockquote with emoji
+- Format: Use a blockquote
 - Length: 80-120 words
 - Highlight regional/local advantages
 
 Example format:
-> 🏆 **本地優勢**
+> **本地優勢**
 >
 > [Your local advantage description here, 80-120 words]`;
 
       case "expert_warning":
+      case "warning_block":
         return `
 ## Special Block Requirement
-Include a "⚠️ 專家警告" block in this section.
+Include a "注意事項" block in this section.
 - Content hint: ${specialBlock.content}
-- Format: Use a blockquote with emoji
+- Format: Use a blockquote
 - Length: 50-80 words
 - Highlight important warnings or common mistakes
 
 Example format:
-> ⚠️ **專家警告**
+> **注意事項**
 >
 > [Your warning or caution here, 50-80 words]`;
 
