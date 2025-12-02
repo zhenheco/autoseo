@@ -341,9 +341,12 @@ export class ParallelOrchestrator {
             });
 
             // 構建 ContentContext 供 writing agents 使用
+            // 優先使用 ContentPlan 的 optimizedTitle，否則 fallback 到 strategyOutput.selectedTitle
             contentContext = {
               primaryKeyword: researchOutput.title,
-              selectedTitle: strategyOutput.selectedTitle,
+              selectedTitle:
+                contentPlan.optimizedTitle?.primary ||
+                strategyOutput.selectedTitle,
               searchIntent: researchOutput.searchIntent,
               targetAudience: brandVoice.target_audience,
               topicKeywords: strategyOutput.keywords.slice(0, 10),
