@@ -1,4 +1,10 @@
-## ADDED Requirements
+# article-generation Specification
+
+## Purpose
+
+TBD - created by archiving change restructure-pipeline-n8n-stability. Update Purpose after archive.
+
+## Requirements
 
 ### Requirement: Linear Pipeline Execution
 
@@ -255,8 +261,6 @@ LinkEnrichmentAgent SHALL 輸出 Markdown 格式，由 HTMLAgent 統一轉換為
 
 - **WHEN** 目標語言為其他語言
 - **THEN** 使用單詞數（以空格分隔）計算字數
-
-## MODIFIED Requirements
 
 ### Requirement: Image Generation Configuration
 
