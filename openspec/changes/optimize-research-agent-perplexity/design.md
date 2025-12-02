@@ -1,16 +1,17 @@
 ## Context
 
-ResearchAgent 負責執行深度研究，包括：
+文章生成系統涉及多個 Agent 協作：
 
-1. 分析標題（`analyzeTitle`）
-2. 取得外部引用（`fetchExternalReferences`）
-3. 執行深度研究（`performDeepResearch`）
+1. **ResearchAgent**：執行深度研究（分析標題、取得外部引用、執行深度研究）
+2. **StrategyAgent**：制定文章策略和生成標題
+3. **ArticleStorage**：儲存文章，負責 Markdown 到 HTML 轉換
 
-目前 Perplexity API 呼叫策略導致：
+目前系統存在三個主要問題：
 
-- 成本過高（每篇文章 4 次 API 呼叫）
-- 對商業/服務類主題無法找到「權威」來源
-- 用戶看到的錯誤訊息：「無法找到符合要求的 5 個最權威和最新的外部來源」
+1. **Perplexity API 成本過高**：每篇文章 4 次 API 呼叫
+2. **外部來源搜尋失敗**：對商業/服務類主題無法找到「權威」來源
+3. **標題模板化**：使用固定模板生成標題，缺乏個性化
+4. **HTML 轉換失敗**：文章 Markdown 內容未正確轉換為 HTML
 
 ## Goals / Non-Goals
 
@@ -20,12 +21,15 @@ ResearchAgent 負責執行深度研究，包括：
 - 接受 Perplexity 返回的任何相關來源（不限制類型）
 - 保持研究數據品質（trends、FAQ、authority data）
 - 整合用戶 n8n 工作流程的成功模式
+- 標題由 AI 根據研究結果自動生成，不使用模板
+- 確保 Markdown 正確轉換為 HTML
 
 **Non-Goals:**
 
 - 不改變 `analyzeTitle()` 的 AI 分析邏輯
 - 不改變 HTMLAgent 的連結插入邏輯
 - 不改變 Perplexity 客戶端的快取機制
+- 不改變文章內容的生成邏輯
 
 ## Decisions
 
@@ -151,6 +155,83 @@ for (const citation of result.citations) {
 }
 ```
 
+### Decision 5: 移除標題模板，改用 AI 分析生成
+
+**What:** 移除 `StrategyAgent.getFallbackTitles()` 的模板邏輯，改用 AI 根據研究結果生成標題。
+
+**Why:**
+
+- 模板化標題過於公式化（如「{keyword}：2025年最新實用技巧」）
+- 無法反映文章的實際內容和價值
+- 用戶希望標題更自然、更有針對性
+
+**How:**
+
+```typescript
+// 舊的模板邏輯
+private getFallbackTitles(title: string): string[] {
+  const year = new Date().getFullYear();
+  return [
+    `${title}：${year}年最新實用技巧`,
+    `${title}怎麼做？專家分享 5 個關鍵步驟`,
+    `${title}必知重點：避開常見錯誤`,
+  ];
+}
+
+// 新的 AI 生成邏輯
+private async generateTitlesFromResearch(
+  keyword: string,
+  researchData: ResearchData
+): Promise<string[]> {
+  const prompt = `
+根據以下研究資料，為關鍵字「${keyword}」生成 3 個吸引人的文章標題：
+
+研究資料摘要：
+${researchData.trends?.content || ''}
+${researchData.userQuestions?.content || ''}
+
+要求：
+1. 標題應反映文章的核心價值
+2. 自然且吸引讀者點擊
+3. 包含關鍵字但不生硬
+4. 避免過於模板化的表達方式
+`;
+  // AI 生成標題
+}
+```
+
+### Decision 6: 修復 HTML 轉換邏輯
+
+**What:** 調查並修復 `article-storage.ts` 中 Markdown 到 HTML 轉換失敗的問題。
+
+**Why:**
+
+- 資料庫顯示 `html_content` 為空但 `markdown_content` 有資料
+- 用戶在編輯器中看到空白內容
+- 這是一個阻斷用戶使用的關鍵問題
+
+**How:**
+
+1. 檢查 `saveArticle()` 中的 `marked.parse()` 呼叫
+2. 增加錯誤處理和日誌
+3. 確保 fallback 邏輯正確執行
+
+```typescript
+// 增加錯誤處理
+try {
+  const htmlContent = await marked.parse(markdownContent);
+  if (!htmlContent || htmlContent.length === 0) {
+    console.error("[ArticleStorage] HTML conversion returned empty result");
+    // Fallback: 將 Markdown 直接作為 HTML
+    return `<pre>${markdownContent}</pre>`;
+  }
+  return htmlContent;
+} catch (error) {
+  console.error("[ArticleStorage] HTML conversion failed:", error);
+  throw error;
+}
+```
+
 ## Risks / Trade-offs
 
 | Risk                           | Mitigation                                                    |
@@ -158,6 +239,8 @@ for (const citation of result.citations) {
 | 合併查詢可能降低資料細緻度     | 使用結構化 prompt 確保涵蓋所有面向                            |
 | 接受任何來源可能包含低品質網站 | 保留 `categorizeUrl()` 進行基本分類，HTMLAgent 可選擇是否使用 |
 | Perplexity API 格式變更        | 保留 fallback 邏輯處理純字串 citations                        |
+| AI 生成標題品質不穩定          | 保留人工審核機制，用戶可在發布前修改標題                      |
+| HTML 轉換 fallback 格式較差    | 優先修復根本原因，fallback 僅作為最後防線                     |
 
 ## Migration Plan
 
@@ -165,9 +248,13 @@ for (const citation of result.citations) {
 2. 新增 `executeUnifiedResearch()` 方法
 3. 棄用 `performDeepResearch()` 和 `fetchExternalReferences()`（保留但標記 deprecated）
 4. 更新 `ExternalReference` 類型定義
-5. 測試確認輸出格式相容現有 HTMLAgent
+5. 修改 `StrategyAgent` 標題生成邏輯
+6. 修復 `article-storage.ts` HTML 轉換
+7. 測試確認輸出格式相容現有 HTMLAgent
 
 ## Open Questions
 
 - [ ] 是否需要保留舊方法作為 fallback？
 - [ ] 合併查詢的 max_tokens 應設為多少？（建議 4000-5000）
+- [x] 標題生成應在哪個階段執行？（Answer: StrategyAgent）
+- [ ] HTML 轉換失敗的根本原因是什麼？需要進一步調查

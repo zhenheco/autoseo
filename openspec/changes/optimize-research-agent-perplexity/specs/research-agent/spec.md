@@ -105,3 +105,79 @@ The system SHALL provide fallback external references when Perplexity returns no
 **Reason**: The previous requirement to prioritize Wikipedia, official docs, and academic sources fails for commercial/service topics where such sources don't exist.
 
 **Migration**: The new "Flexible External Reference Acceptance" requirement replaces this with a more practical approach that accepts any relevant sources.
+
+---
+
+# strategy-agent Spec Delta
+
+## MODIFIED Requirements
+
+### Requirement: AI-Generated Titles Based on Research
+
+StrategyAgent SHALL generate article titles using AI analysis of research data instead of using template-based fallback titles.
+
+#### Scenario: Generate titles from research data
+
+- **WHEN** StrategyAgent needs to generate article titles
+- **AND** ResearchAgent has provided research data (trends, user questions, authority data)
+- **THEN** StrategyAgent SHALL use AI to analyze the research data
+- **AND** generate 3-5 unique, natural titles that reflect the article's value
+- **AND** SHALL NOT use template patterns like "{keyword}：{year}年最新實用技巧"
+
+#### Scenario: Title generation without research data
+
+- **WHEN** ResearchAgent fails to provide research data
+- **THEN** StrategyAgent SHALL use AI to generate titles based on keyword analysis alone
+- **AND** SHALL still avoid template-based patterns
+
+### Requirement: Title Quality Criteria
+
+Generated titles SHALL meet the following quality criteria:
+
+#### Scenario: Natural language titles
+
+- **WHEN** generating article titles
+- **THEN** titles SHALL use natural, conversational language
+- **AND** SHALL include the target keyword without being forced
+- **AND** SHALL reflect the core value proposition of the article
+- **AND** SHALL be compelling enough to attract reader clicks
+
+## REMOVED Requirements
+
+### Requirement: Template-Based Fallback Titles
+
+**Reason**: Template titles like "{keyword}：{year}年最新實用技巧" are too formulaic and don't reflect actual article content.
+
+**Migration**: The new "AI-Generated Titles Based on Research" requirement replaces this with AI-powered title generation.
+
+---
+
+# article-storage Spec Delta
+
+## MODIFIED Requirements
+
+### Requirement: Robust HTML Conversion
+
+ArticleStorage SHALL ensure Markdown content is always converted to valid HTML with proper error handling.
+
+#### Scenario: Successful HTML conversion
+
+- **WHEN** saving article content with Markdown
+- **THEN** the system SHALL convert Markdown to HTML using marked.parse()
+- **AND** SHALL verify the HTML output is non-empty
+- **AND** SHALL store both markdown_content and html_content
+
+#### Scenario: HTML conversion failure handling
+
+- **WHEN** marked.parse() returns empty or null result
+- **THEN** the system SHALL log an error with full details
+- **AND** SHALL attempt fallback conversion
+- **AND** SHALL NOT store empty html_content
+
+#### Scenario: Conversion error logging
+
+- **WHEN** any error occurs during HTML conversion
+- **THEN** the system SHALL log the error with:
+  - Input markdown length
+  - Error message and stack trace
+  - Article ID and title for debugging
