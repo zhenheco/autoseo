@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   Table,
   TableBody,
@@ -11,21 +10,8 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
-import { Globe, CalendarClock, Trash2 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { ArticleWithWebsite, deleteArticle } from "../actions";
+import { Globe, CalendarClock } from "lucide-react";
+import { ArticleWithWebsite } from "../actions";
 import { useScheduleContext } from "./ScheduleContext";
 
 interface ArticleListProps {
@@ -50,7 +36,6 @@ const statusConfig: Record<
 };
 
 export function ArticleList({ articles }: ArticleListProps) {
-  const router = useRouter();
   const {
     toggleSelection,
     isSelected,
@@ -58,10 +43,6 @@ export function ArticleList({ articles }: ArticleListProps) {
     previewArticleId,
     setPreviewArticleId,
   } = useScheduleContext();
-  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [selectedArticle, setSelectedArticle] =
-    useState<ArticleWithWebsite | null>(null);
-  const [isDeleting, setIsDeleting] = useState(false);
 
   const canManage = (status: string) => {
     return (
@@ -75,24 +56,6 @@ export function ArticleList({ articles }: ArticleListProps) {
       month: "2-digit",
       day: "2-digit",
     });
-  };
-
-  const handleDelete = async () => {
-    if (!selectedArticle) return;
-    setIsDeleting(true);
-    try {
-      const result = await deleteArticle(selectedArticle.id);
-      if (result.success) {
-        toast.success("文章已刪除");
-        router.refresh();
-      } else {
-        toast.error(result.error || "刪除失敗");
-      }
-    } finally {
-      setIsDeleting(false);
-      setDeleteDialogOpen(false);
-      setSelectedArticle(null);
-    }
   };
 
   const getStatusBadge = (status: string) => {
@@ -112,122 +75,80 @@ export function ArticleList({ articles }: ArticleListProps) {
   };
 
   return (
-    <>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
+    <div className="rounded-md border">
+      <Table>
+        <TableHeader>
+          <TableRow>
+            <TableHead className="w-[32px] px-2"></TableHead>
+            <TableHead className="px-2">標題</TableHead>
+            <TableHead className="w-[90px] px-2">目標網站</TableHead>
+            <TableHead className="w-[70px] px-2">狀態</TableHead>
+            <TableHead className="w-[85px] px-2">建立時間</TableHead>
+          </TableRow>
+        </TableHeader>
+        <TableBody>
+          {articles.length === 0 ? (
             <TableRow>
-              <TableHead className="w-[40px]"></TableHead>
-              <TableHead>標題</TableHead>
-              <TableHead className="w-[100px]">目標網站</TableHead>
-              <TableHead className="w-[80px]">狀態</TableHead>
-              <TableHead className="w-[90px]">建立時間</TableHead>
-              <TableHead className="w-[60px]">操作</TableHead>
+              <TableCell colSpan={5} className="h-24 text-center">
+                尚無文章
+              </TableCell>
             </TableRow>
-          </TableHeader>
-          <TableBody>
-            {articles.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={6} className="h-24 text-center">
-                  尚無文章
+          ) : (
+            articles.map((article) => (
+              <TableRow
+                key={article.id}
+                className={`cursor-pointer transition-colors ${previewArticleId === article.id ? "bg-muted" : "hover:bg-muted/50"}`}
+                onClick={() => setPreviewArticleId(article.id)}
+              >
+                <TableCell className="py-2 px-2">
+                  {canManage(article.status) && (
+                    <Checkbox
+                      checked={isSelected(article.id)}
+                      onCheckedChange={() => toggleSelection(article.id)}
+                      disabled={isScheduling}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  )}
+                </TableCell>
+                <TableCell className="py-2 px-2 text-sm font-medium">
+                  {article.generated_articles?.[0]?.title ||
+                    article.keywords?.join(", ") ||
+                    "未命名"}
+                </TableCell>
+                <TableCell className="py-2 px-2">
+                  {article.website_configs ? (
+                    <div className="flex items-center gap-1">
+                      <Globe className="h-3 w-3" />
+                      <span className="text-xs">
+                        {article.website_configs.website_name}
+                      </span>
+                    </div>
+                  ) : (
+                    <span className="text-muted-foreground text-xs">
+                      未指定
+                    </span>
+                  )}
+                </TableCell>
+                <TableCell className="py-2 px-2">
+                  <div className="flex flex-col gap-0.5">
+                    {getStatusBadge(article.status)}
+                    {article.status === "scheduled" &&
+                      article.scheduled_publish_at && (
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <CalendarClock className="h-3 w-3" />
+                          {formatScheduledDate(article.scheduled_publish_at)}
+                        </span>
+                      )}
+                  </div>
+                </TableCell>
+                <TableCell className="py-2 px-2 text-xs text-muted-foreground">
+                  {formatDate(article.created_at)}
                 </TableCell>
               </TableRow>
-            ) : (
-              articles.map((article) => (
-                <TableRow
-                  key={article.id}
-                  className={`cursor-pointer transition-colors ${previewArticleId === article.id ? "bg-muted" : "hover:bg-muted/50"}`}
-                  onClick={() => setPreviewArticleId(article.id)}
-                >
-                  <TableCell className="py-2">
-                    {canManage(article.status) && (
-                      <Checkbox
-                        checked={isSelected(article.id)}
-                        onCheckedChange={() => toggleSelection(article.id)}
-                        disabled={isScheduling}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    )}
-                  </TableCell>
-                  <TableCell className="py-2 text-sm font-medium">
-                    {article.generated_articles?.[0]?.title ||
-                      article.keywords?.join(", ") ||
-                      "未命名"}
-                  </TableCell>
-                  <TableCell className="py-2">
-                    {article.website_configs ? (
-                      <div className="flex items-center gap-1">
-                        <Globe className="h-3 w-3" />
-                        <span className="text-xs">
-                          {article.website_configs.website_name}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground text-xs">
-                        未指定
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell className="py-2">
-                    <div className="flex flex-col gap-0.5">
-                      {getStatusBadge(article.status)}
-                      {article.status === "scheduled" &&
-                        article.scheduled_publish_at && (
-                          <span className="text-xs text-muted-foreground flex items-center gap-1">
-                            <CalendarClock className="h-3 w-3" />
-                            {formatScheduledDate(article.scheduled_publish_at)}
-                          </span>
-                        )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-2 text-xs text-muted-foreground">
-                    {formatDate(article.created_at)}
-                  </TableCell>
-                  <TableCell className="py-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedArticle(article);
-                        setDeleteDialogOpen(true);
-                      }}
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>確定要刪除這篇文章嗎？</AlertDialogTitle>
-            <AlertDialogDescription>
-              此操作無法復原。文章「
-              {selectedArticle?.generated_articles?.[0]?.title ||
-                selectedArticle?.keywords?.join(", ") ||
-                "未命名"}
-              」將被永久刪除。
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>取消</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleDelete}
-              disabled={isDeleting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isDeleting ? "刪除中..." : "刪除"}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </>
+            ))
+          )}
+        </TableBody>
+      </Table>
+    </div>
   );
 }

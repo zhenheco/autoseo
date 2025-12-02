@@ -18,10 +18,10 @@ function PageHeader({ filters }: { filters?: ReactNode }) {
   const { websiteId, setWebsiteId, isScheduling } = useScheduleContext();
 
   return (
-    <div className="mb-4 flex items-center gap-4">
-      <h1 className="text-2xl font-bold whitespace-nowrap">文章管理</h1>
+    <div className="mb-4 flex items-center gap-3">
+      <h1 className="text-xl font-bold whitespace-nowrap">文章管理</h1>
       <div className="flex items-center gap-2">
-        <div className="w-[180px]">
+        <div className="w-[160px]">
           <WebsiteSelector
             value={websiteId}
             onChange={setWebsiteId}
@@ -29,7 +29,7 @@ function PageHeader({ filters }: { filters?: ReactNode }) {
             disabled={isScheduling}
           />
         </div>
-        <span className="text-orange-500 text-sm whitespace-nowrap">
+        <span className="text-orange-500 text-xs whitespace-nowrap">
           (選擇目標網站)
         </span>
       </div>
@@ -53,12 +53,12 @@ export function ArticleListWrapper({
   return (
     <ScheduleProvider>
       <PageHeader filters={filters} />
-      <div className="flex gap-4 h-[calc(100vh-180px)]">
-        <div className="w-2/5 min-w-0 overflow-y-auto">
+      <div className="flex gap-3 h-[calc(100vh-160px)]">
+        <div className="w-[45%] min-w-0 overflow-y-auto">
           <ScheduleControlBar schedulableArticleIds={schedulableArticleIds} />
           <ArticleList articles={articles} />
         </div>
-        <div className="w-3/5 shrink-0 overflow-hidden flex flex-col">
+        <div className="w-[55%] shrink-0 overflow-hidden flex flex-col">
           {children}
         </div>
       </div>

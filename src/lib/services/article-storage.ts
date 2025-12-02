@@ -286,11 +286,13 @@ export class ArticleStorageService {
         result.writing.markdown = writingContent.content;
       }
 
-      // 如果缺少 html，從 markdown 或 content 生成
-      if (!result.writing.html && result.writing.markdown) {
-        result.writing.html = result.writing.markdown;
-      } else if (!result.writing.html && writingContent.content) {
-        result.writing.html = writingContent.content;
+      // html 的轉換在 saveArticle 中統一處理，這裡只做 markdown 的填充
+      // 如果缺少 html，標記為需要從 markdown 轉換
+      if (
+        !result.writing.html &&
+        (result.writing.markdown || writingContent.content)
+      ) {
+        result.writing.html = ""; // 標記為空，讓 saveArticle 進行轉換
       }
 
       // 提供預設的 statistics
@@ -399,19 +401,48 @@ export class ArticleStorageService {
     // 為缺失的欄位提供預設值
     result = this.normalizeResult(result);
 
-    // 驗證並修復 HTML 內容
-    if (!this.isValidHTML(result.writing!.html)) {
+    // 驗證並修復 HTML 內容（確保 Markdown 轉換為 HTML）
+    const hasMarkdownContent =
+      result.writing!.markdown && result.writing!.markdown.trim().length > 0;
+    const needsHtmlConversion =
+      !result.writing!.html ||
+      result.writing!.html.trim() === "" ||
+      !this.isValidHTML(result.writing!.html);
+
+    if (needsHtmlConversion && hasMarkdownContent) {
+      console.log("[ArticleStorage] 🔄 Converting Markdown to HTML...", {
+        markdownLength: result.writing!.markdown.length,
+        currentHtmlLength: result.writing!.html?.length || 0,
+      });
+
+      try {
+        const convertedHtml = await this.convertMarkdownToHTML(
+          result.writing!.markdown,
+        );
+
+        if (this.isValidHTML(convertedHtml)) {
+          result.writing!.html = convertedHtml;
+          console.log(
+            "[ArticleStorage] ✅ Markdown to HTML conversion successful",
+          );
+        } else {
+          console.error("[ArticleStorage] ❌ Converted HTML is still invalid");
+        }
+      } catch (error) {
+        console.error("[ArticleStorage] ❌ HTML conversion error:", error);
+      }
+    } else if (!this.isValidHTML(result.writing!.html)) {
       console.error(
         "[ArticleStorage] ⚠️  Invalid HTML detected, attempting to fix...",
         {
           htmlSample: result.writing!.html.substring(0, 200),
-          markdownSample: result.writing!.markdown.substring(0, 200),
+          markdownSample: result.writing!.markdown?.substring(0, 200) || "N/A",
         },
       );
 
       try {
         const fixedHtml = await this.convertMarkdownToHTML(
-          result.writing!.markdown,
+          result.writing!.markdown || result.writing!.html,
         );
 
         if (this.isValidHTML(fixedHtml)) {
