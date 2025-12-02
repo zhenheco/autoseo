@@ -1,5 +1,9 @@
 import { BaseAgent } from "./base-agent";
-import type { IntroductionInput, IntroductionOutput } from "@/types/agents";
+import type {
+  IntroductionInput,
+  IntroductionOutput,
+  ContentContext,
+} from "@/types/agents";
 
 export class IntroductionAgent extends BaseAgent<
   IntroductionInput,
@@ -9,12 +13,30 @@ export class IntroductionAgent extends BaseAgent<
     return "IntroductionAgent";
   }
 
+  private buildTopicAlignmentSection(contentContext?: ContentContext): string {
+    if (!contentContext) {
+      return "";
+    }
+
+    return `## ⚠️ CRITICAL: Topic Alignment Requirement
+
+**Article Title**: ${contentContext.selectedTitle}
+**PRIMARY KEYWORD**: ${contentContext.primaryKeyword}
+**Search Intent**: ${contentContext.searchIntent}
+**Target Audience**: ${contentContext.targetAudience}
+
+**You MUST ensure the introduction directly addresses "${contentContext.primaryKeyword}".**
+**The opening hook and context must be relevant to the main topic.**
+**Do NOT include any content that is unrelated to "${contentContext.primaryKeyword}".**
+
+---`;
+  }
+
   protected async process(
     input: IntroductionInput,
   ): Promise<IntroductionOutput> {
-    const { outline, featuredImage, brandVoice } = input;
+    const { outline, featuredImage, brandVoice, contentContext } = input;
 
-    // Language mapping
     const languageNames: Record<string, string> = {
       "zh-TW": "Traditional Chinese (繁體中文)",
       "zh-CN": "Simplified Chinese (简体中文)",
@@ -36,7 +58,12 @@ export class IntroductionAgent extends BaseAgent<
     const targetLang = input.targetLanguage || "zh-TW";
     const languageName = languageNames[targetLang] || languageNames["zh-TW"];
 
-    const prompt = `Write an article introduction based on the following information:
+    const topicAlignmentSection =
+      this.buildTopicAlignmentSection(contentContext);
+
+    const prompt = `${topicAlignmentSection}
+
+Write an article introduction based on the following information:
 
 **Target Language: ${languageName}** (ALL content MUST be written in this language)
 

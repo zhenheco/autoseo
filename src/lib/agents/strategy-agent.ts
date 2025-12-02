@@ -59,7 +59,10 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
 
     const allTitles = [...competitorTitles, ...perplexityTitles].slice(0, 10);
 
-    const prompt = `你是 SEO 專家。分析 Perplexity 搜尋結果和競爭對手標題後，為「${input.researchData.title}」生成 3 個最佳標題。
+    const targetLang = input.targetLanguage || "zh-TW";
+    const titleLengthRange = this.getTitleLengthRange(targetLang);
+
+    const prompt = `你是一位精通國際市場的 SEO 專家。根據搜尋結果，為「${input.researchData.title}」生成 3 個最佳標題。
 
 ## 目標關鍵字
 ${input.researchData.title}
@@ -72,11 +75,19 @@ ${allTitles.length > 0 ? allTitles.map((t, i) => `${i + 1}. ${t}`).join("\n") : 
 2. 找出尚未被覆蓋的角度或差異化機會
 3. 決定最佳標題策略，兼顧 SEO 和吸引力
 
-## 要求
-- 50-60 字元
+## 標題長度要求
+- ${titleLengthRange.min}-${titleLengthRange.max} ${targetLang.startsWith("zh") ? "字" : "characters"}
 - 關鍵字放在前面
-- **禁止使用**：「完整指南」「全攻略」「入門到精通」「一次搞懂」等泛用模板詞
+
+## 禁止使用的詞彙和模式
+- **泛用模板詞**：「完整指南」「全攻略」「入門到精通」「一次搞懂」「懶人包」「超詳細」
+- **年份**：2024、2025 等（除非有特殊時效性需求）
+- **過度誇大**：「史上最全」「終極」「無敵」
+
+## 要求
 - 生成 3 個不同風格的標題（例如：數字型、問句型、利益型）
+- 標題要能引起目標讀者的共鳴
+- 專注於 SEO 效果和點擊吸引力
 
 ## 輸出格式
 請在推理後，輸出以下 JSON 格式：
@@ -86,14 +97,14 @@ ${allTitles.length > 0 ? allTitles.map((t, i) => `${i + 1}. ${t}`).join("\n") : 
 }
 
 **重要**：
-- 直接輸出完整的標題文字，例如「2024年無人機考照完整攻略」
+- 直接輸出完整的標題文字
 - 禁止輸出佔位符如 <標題>、[標題1]、{第一個標題} 等
 - 每個標題必須是可直接使用的完整句子`;
 
     try {
       const response = await this.complete(prompt, {
         model: input.model,
-        temperature: input.temperature || 0.3,
+        temperature: input.temperature || 0.6,
         maxTokens: Math.min(input.maxTokens || 64000, 1000),
         format: "json",
       });
@@ -254,50 +265,60 @@ ${allTitles.length > 0 ? allTitles.map((t, i) => `${i + 1}. ${t}`).join("\n") : 
     return titleOptions[bestIndex];
   }
 
+  private getTitleLengthRange(targetLang: string): {
+    min: number;
+    max: number;
+  } {
+    if (targetLang.startsWith("zh")) {
+      return { min: 20, max: 35 };
+    }
+    return { min: 50, max: 60 };
+  }
+
   private scoreTitleSEO(title: string, input: StrategyInput): number {
     let score = 0;
     const keyword = input.researchData.title.toLowerCase();
 
+    // 關鍵字匹配 (35分)
     if (
       title
         .toLowerCase()
         .includes(keyword.substring(0, Math.min(keyword.length, 10)))
     ) {
-      score += 30;
+      score += 35;
     }
 
+    // 標題長度 (25分)
+    const targetLang = input.targetLanguage || "zh-TW";
+    const { min, max } = this.getTitleLengthRange(targetLang);
+    const length = title.length;
+
+    if (length >= min && length <= max) {
+      score += 25;
+    } else if (length >= min - 5 && length <= max + 10) {
+      score += 15;
+    }
+
+    // Power Words (20分)
+    const powerWords = ["最新", "專業", "實用", "必學", "精選", "秘訣", "技巧"];
+    for (const word of powerWords) {
+      if (title.includes(word)) {
+        score += 20;
+        break;
+      }
+    }
+
+    // 數字使用 (20分)
     if (/\d+/.test(title)) {
       score += 20;
     }
 
-    const length = title.length;
-    if (length >= 30 && length <= 60) {
-      score += 25;
-    } else if (length >= 20 && length <= 70) {
-      score += 15;
-    }
+    score = Math.min(score, 100);
 
-    const powerWords = [
-      "完整",
-      "最新",
-      "專業",
-      "實用",
-      "必學",
-      "精選",
-      "攻略",
-      "秘訣",
-      "技巧",
-      "指南",
-    ];
-    for (const word of powerWords) {
-      if (title.includes(word)) {
-        score += 5;
-      }
-    }
-
-    if (title.includes("？") || title.includes("?")) {
-      score += 10;
-    }
+    console.log("[StrategyAgent] Title SEO score:", {
+      title: title.substring(0, 30) + "...",
+      score,
+    });
 
     return score;
   }
