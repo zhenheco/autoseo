@@ -1647,10 +1647,6 @@ export class ParallelOrchestrator {
       throw error;
     }
 
-    // 失效文章狀態快取
-    const { invalidateArticleStatusCache } = await import("@/lib/cache");
-    await invalidateArticleStatusCache(articleJobId);
-
     console.log(`[Orchestrator] ✅ 狀態已更新:`, result);
   }
 
