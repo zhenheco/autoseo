@@ -177,21 +177,112 @@ ${allTitles.length > 0 ? allTitles.map((t, i) => `${i + 1}. ${t}`).join("\n") : 
         );
       }
 
-      console.warn("[StrategyAgent] Invalid title format, using fallback");
+      console.warn(
+        "[StrategyAgent] Invalid title format, trying research-based generation",
+      );
+      if (input.researchData.deepResearch) {
+        return await this.generateTitlesFromResearch(
+          input.researchData.title,
+          input.researchData.deepResearch,
+          input.model,
+        );
+      }
       return this.getFallbackTitles(input.researchData.title);
     } catch (error) {
       console.error("[StrategyAgent] Title generation failed:", error);
+      if (input.researchData.deepResearch) {
+        return await this.generateTitlesFromResearch(
+          input.researchData.title,
+          input.researchData.deepResearch,
+          input.model,
+        );
+      }
       return this.getFallbackTitles(input.researchData.title);
     }
   }
 
   private getFallbackTitles(title: string): string[] {
-    const year = new Date().getFullYear();
     return [
-      `${title}：${year}年最新實用技巧`,
-      `${title}怎麼做？專家分享 5 個關鍵步驟`,
-      `${title}必知重點：避開常見錯誤`,
+      `${title}完整解析：從入門到應用`,
+      `${title}實戰經驗分享：真實案例與技巧`,
+      `深入了解${title}：專業觀點與實用建議`,
     ];
+  }
+
+  private async generateTitlesFromResearch(
+    keyword: string,
+    researchData: {
+      trends?: { content: string };
+      userQuestions?: { content: string };
+    },
+    model: string,
+  ): Promise<string[]> {
+    const trendsContent = researchData.trends?.content || "";
+    const questionsContent = researchData.userQuestions?.content || "";
+
+    if (!trendsContent && !questionsContent) {
+      return this.getFallbackTitles(keyword);
+    }
+
+    const prompt = `根據以下研究資料，為關鍵字「${keyword}」生成 3 個吸引人的文章標題。
+
+## 研究資料
+### 最新趨勢
+${trendsContent.substring(0, 500) || "無趨勢資料"}
+
+### 用戶常見問題
+${questionsContent.substring(0, 500) || "無問題資料"}
+
+## 標題生成要求
+1. 標題應反映文章的核心價值和研究發現
+2. 使用自然語言，避免公式化表達
+3. 包含關鍵字但不生硬
+4. 吸引目標讀者點擊
+5. 長度控制在 20-40 個中文字
+
+## 禁止使用
+- 年份（如 2024、2025）
+- 模板詞彙（如「完整指南」「全攻略」「懶人包」）
+- 過度誇張的詞彙
+
+## 輸出格式
+直接輸出 JSON 陣列：
+["標題一", "標題二", "標題三"]`;
+
+    try {
+      const response = await this.complete(prompt, {
+        model,
+        temperature: 0.7,
+        maxTokens: 500,
+        format: "json",
+      });
+
+      if (!response.content) {
+        return this.getFallbackTitles(keyword);
+      }
+
+      const content = response.content.trim();
+      const arrayMatch = content.match(/\[[\s\S]*?\]/);
+
+      if (arrayMatch) {
+        const parsed = JSON.parse(arrayMatch[0]);
+        if (Array.isArray(parsed) && parsed.length >= 3) {
+          return parsed
+            .slice(0, 3)
+            .filter(
+              (t: unknown): t is string =>
+                typeof t === "string" &&
+                t.length >= 10 &&
+                !this.containsPlaceholder(t),
+            );
+        }
+      }
+
+      return this.getFallbackTitles(keyword);
+    } catch (error) {
+      console.warn("[StrategyAgent] AI 標題生成失敗，使用 fallback:", error);
+      return this.getFallbackTitles(keyword);
+    }
   }
 
   private containsPlaceholder(text: string): boolean {

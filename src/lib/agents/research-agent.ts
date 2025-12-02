@@ -14,17 +14,20 @@ interface DeepResearchQueryResult {
   executionTime: number;
 }
 
+interface UnifiedResearchResult {
+  deepResearch: DeepResearchResult;
+  externalReferences: ExternalReference[];
+}
+
 export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
   get agentName(): string {
     return "ResearchAgent";
   }
 
   protected async process(input: ResearchInput): Promise<ResearchOutput> {
-    const analysis = await this.analyzeTitle(input);
-
-    const [externalReferences, deepResearch] = await Promise.all([
-      this.fetchExternalReferences(input.title),
-      this.performDeepResearch(input.title, input.region),
+    const [analysis, unifiedResearch] = await Promise.all([
+      this.analyzeTitle(input),
+      this.executeUnifiedResearch(input.title, input.region),
     ]);
 
     return {
@@ -37,104 +40,201 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
       competitorAnalysis: analysis.competitorAnalysis,
       recommendedStrategy: analysis.recommendedStrategy,
       relatedKeywords: analysis.relatedKeywords,
-      externalReferences,
-      deepResearch,
+      externalReferences: unifiedResearch.externalReferences,
+      deepResearch: unifiedResearch.deepResearch,
       executionInfo: this.getExecutionInfo(input.model),
     };
   }
 
-  private async performDeepResearch(
+  private async executeUnifiedResearch(
     keyword: string,
     region?: string,
-  ): Promise<DeepResearchResult | undefined> {
+  ): Promise<UnifiedResearchResult> {
+    const startTime = Date.now();
     try {
       const perplexity = getPerplexityClient();
       const regionStr = region || "Taiwan";
       const currentYear = new Date().getFullYear();
       const nextYear = currentYear + 1;
 
-      console.log("[ResearchAgent] 開始深度研究:", keyword, regionStr);
+      console.log("[ResearchAgent] 執行統一研究查詢:", keyword, regionStr);
 
-      const [trendsResult, userQuestionsResult, authorityDataResult] =
-        await Promise.all([
-          this.executeDeepResearchQuery(
-            perplexity,
-            `${keyword} ${regionStr} ${currentYear} ${nextYear} 最新趨勢 專家見解`,
-            "trends",
-          ),
-          this.executeDeepResearchQuery(
-            perplexity,
-            `${keyword} 常見問題 解決方案 FAQ 用戶體驗`,
-            "userQuestions",
-          ),
-          this.executeDeepResearchQuery(
-            perplexity,
-            `${keyword} ${regionStr} 官方來源 權威數據 統計資料`,
-            "authorityData",
-          ),
-        ]);
+      const query = `請針對「${keyword}」${regionStr !== "Taiwan" ? `（${regionStr}地區）` : ""} 進行綜合研究，提供以下資訊：
 
-      const deepResearch: DeepResearchResult = {};
+1. **最新趨勢**（${currentYear}-${nextYear}）：
+   - 行業動態、專家見解、發展方向
+   - 最新技術或方法
 
-      if (trendsResult) {
-        deepResearch.trends = trendsResult;
-      }
-      if (userQuestionsResult) {
-        deepResearch.userQuestions = userQuestionsResult;
-      }
-      if (authorityDataResult) {
-        deepResearch.authorityData = authorityDataResult;
-      }
+2. **常見問題與解決方案**：
+   - 用戶常見疑問、FAQ
+   - 實際使用體驗和建議
 
-      if (Object.keys(deepResearch).length === 0) {
-        console.warn("[ResearchAgent] 所有深度研究查詢失敗");
-        return undefined;
-      }
+3. **權威數據與統計**：
+   - 相關數據、市場資訊、實用統計
+   - 成功案例或效果數據
 
-      console.log("[ResearchAgent] 深度研究完成:", {
-        hasTrends: !!deepResearch.trends,
-        hasUserQuestions: !!deepResearch.userQuestions,
-        hasAuthorityData: !!deepResearch.authorityData,
-      });
+4. **實用參考來源**：
+   - 請提供 5-8 個最相關、最實用的來源網址
+   - 可以是：服務商網站、產業部落格、新聞報導、教學文章、官方文檔
+   - 不需要限制為學術或官方來源，實用性優先
 
-      return deepResearch;
-    } catch (error) {
-      console.warn("[ResearchAgent] 深度研究整體失敗，繼續流程:", error);
-      return undefined;
-    }
-  }
-
-  private async executeDeepResearchQuery(
-    perplexity: ReturnType<typeof getPerplexityClient>,
-    query: string,
-    queryType: string,
-  ): Promise<DeepResearchQueryResult | null> {
-    const startTime = Date.now();
-    try {
-      console.log(`[ResearchAgent] 執行 ${queryType} 查詢:`, query);
+請在回答中自然引用來源，確保資訊的可追溯性。`;
 
       const result = await perplexity.search(query, {
         return_citations: true,
-        max_tokens: 2000,
+        max_tokens: 4500,
       });
 
       const executionTime = Date.now() - startTime;
 
-      console.log(`[ResearchAgent] ${queryType} 查詢完成:`, {
+      console.log("[ResearchAgent] 統一研究查詢完成:", {
         contentLength: result.content?.length || 0,
         citationsCount: result.citations?.length || 0,
         executionTime,
       });
 
-      return {
-        content: result.content || "",
-        citations: result.citations || [],
+      const deepResearch = this.parseUnifiedContent(
+        result.content || "",
+        result.citations || [],
         executionTime,
-      };
+      );
+
+      const externalReferences = this.extractReferencesFromCitations(
+        keyword,
+        result.citations || [],
+      );
+
+      return { deepResearch, externalReferences };
     } catch (error) {
-      console.warn(`[ResearchAgent] ${queryType} 查詢失敗:`, error);
-      return null;
+      console.warn("[ResearchAgent] 統一研究查詢失敗:", error);
+      return {
+        deepResearch: {},
+        externalReferences: this.getDefaultExternalReferences(keyword),
+      };
     }
+  }
+
+  private parseUnifiedContent(
+    content: string,
+    citations: string[],
+    executionTime: number,
+  ): DeepResearchResult {
+    const result: DeepResearchResult = {};
+
+    const trendsMatch = content.match(
+      /(?:最新趨勢|趨勢|Trends?)[\s\S]*?(?=(?:常見問題|FAQ|權威數據|$))/i,
+    );
+    if (trendsMatch) {
+      result.trends = {
+        content: trendsMatch[0].trim(),
+        citations: citations.slice(0, 3),
+        executionTime: Math.floor(executionTime / 3),
+      };
+    }
+
+    const faqMatch = content.match(
+      /(?:常見問題|FAQ|用戶.*?疑問)[\s\S]*?(?=(?:權威數據|統計|實用參考|$))/i,
+    );
+    if (faqMatch) {
+      result.userQuestions = {
+        content: faqMatch[0].trim(),
+        citations: citations.slice(1, 4),
+        executionTime: Math.floor(executionTime / 3),
+      };
+    }
+
+    const dataMatch = content.match(
+      /(?:權威數據|統計|數據|市場資訊)[\s\S]*?(?=(?:實用參考|來源|$))/i,
+    );
+    if (dataMatch) {
+      result.authorityData = {
+        content: dataMatch[0].trim(),
+        citations: citations.slice(2, 5),
+        executionTime: Math.floor(executionTime / 3),
+      };
+    }
+
+    if (Object.keys(result).length === 0 && content.length > 100) {
+      result.trends = {
+        content: content.substring(0, Math.floor(content.length / 2)),
+        citations: citations.slice(0, 3),
+        executionTime: Math.floor(executionTime / 2),
+      };
+      result.userQuestions = {
+        content: content.substring(Math.floor(content.length / 2)),
+        citations: citations.slice(3),
+        executionTime: Math.floor(executionTime / 2),
+      };
+    }
+
+    return result;
+  }
+
+  private extractReferencesFromCitations(
+    title: string,
+    citations: string[],
+  ): ExternalReference[] {
+    if (!citations || citations.length === 0) {
+      console.warn("[ResearchAgent] 無 citations，使用預設來源");
+      return this.getDefaultExternalReferences(title);
+    }
+
+    const references: ExternalReference[] = [];
+
+    for (let i = 0; i < Math.min(citations.length, 8); i++) {
+      const url = citations[i];
+      if (!url || typeof url !== "string") continue;
+
+      try {
+        const type = this.categorizeUrl(url);
+        const domain = new URL(url).hostname;
+
+        references.push({
+          url,
+          title: this.extractTitleFromUrl(url),
+          type,
+          domain,
+          description: `關於「${title}」的參考來源`,
+        });
+      } catch {
+        console.warn("[ResearchAgent] 無效的 URL:", url);
+      }
+    }
+
+    if (references.length === 0) {
+      return this.getDefaultExternalReferences(title);
+    }
+
+    console.log("[ResearchAgent] 成功提取", references.length, "個外部引用");
+    return references;
+  }
+
+  /**
+   * @deprecated 使用 executeUnifiedResearch() 替代，已合併為單一 API 呼叫
+   */
+  private async performDeepResearch(
+    keyword: string,
+    region?: string,
+  ): Promise<DeepResearchResult | undefined> {
+    console.warn(
+      "[ResearchAgent] performDeepResearch 已棄用，請使用 executeUnifiedResearch",
+    );
+    const result = await this.executeUnifiedResearch(keyword, region);
+    return result.deepResearch;
+  }
+
+  /**
+   * @deprecated 使用 executeUnifiedResearch() 替代
+   */
+  private async executeDeepResearchQuery(
+    perplexity: ReturnType<typeof getPerplexityClient>,
+    query: string,
+    queryType: string,
+  ): Promise<DeepResearchQueryResult | null> {
+    console.warn(
+      "[ResearchAgent] executeDeepResearchQuery 已棄用，請使用 executeUnifiedResearch",
+    );
+    return null;
   }
 
   private async analyzeTitle(
@@ -359,94 +459,87 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
     };
   }
 
+  /**
+   * @deprecated 使用 executeUnifiedResearch() 替代，外部來源已整合到統一查詢中
+   */
   private async fetchExternalReferences(
     title: string,
   ): Promise<ExternalReference[]> {
-    try {
-      const perplexity = getPerplexityClient();
-
-      const query = `找出關於「${title}」最權威和最新的 5 個外部來源，要求必須包含實際可訪問的 URL。
-
-請按以下優先順序尋找：
-1. Wikipedia 或百科全書
-2. 官方文檔或官網
-3. 學術研究或報告
-4. 知名新聞網站或媒體
-5. 權威部落格或產業網站
-
-對於每個來源，請明確列出完整的 URL 連結。`;
-
-      console.log("[ResearchAgent] 開始 Perplexity 搜尋:", title);
-
-      const result = await perplexity.search(query, {
-        return_citations: true,
-        max_tokens: 3000,
-      });
-
-      console.log("[ResearchAgent] Perplexity 回應:", {
-        contentLength: result.content?.length || 0,
-        citationsCount: result.citations?.length || 0,
-        citations: result.citations,
-      });
-
-      const references: ExternalReference[] = [];
-
-      if (result.citations && result.citations.length > 0) {
-        console.log(
-          "[ResearchAgent] 處理 Perplexity citations:",
-          result.citations,
-        );
-
-        for (let i = 0; i < Math.min(result.citations.length, 5); i++) {
-          const url = result.citations[i];
-          const type = this.categorizeUrl(url);
-
-          references.push({
-            url,
-            title: this.extractTitleFromUrl(url),
-            type,
-            description: `關於「${title}」的權威來源`,
-          });
-        }
-      }
-
-      if (references.length === 0) {
-        console.warn(
-          "[ResearchAgent] 無法從 Perplexity 獲取引用，使用預設來源",
-        );
-        return this.getDefaultExternalReferences(title);
-      }
-
-      console.log("[ResearchAgent] 成功獲取", references.length, "個外部引用");
-      return references;
-    } catch (error) {
-      console.error("[ResearchAgent] 獲取外部引用錯誤:", error);
-      return this.getDefaultExternalReferences(title);
-    }
+    console.warn(
+      "[ResearchAgent] fetchExternalReferences 已棄用，請使用 executeUnifiedResearch",
+    );
+    const result = await this.executeUnifiedResearch(title);
+    return result.externalReferences;
   }
 
   private categorizeUrl(url: string): ExternalReference["type"] {
     const lowerUrl = url.toLowerCase();
 
     if (lowerUrl.includes("wikipedia.org")) return "wikipedia";
+
     if (
       lowerUrl.includes("github.com") ||
       lowerUrl.includes("docs.") ||
-      lowerUrl.includes("/docs/")
+      lowerUrl.includes("/docs/") ||
+      lowerUrl.includes("developer.") ||
+      lowerUrl.includes("/api/")
     )
       return "official_docs";
+
     if (
       lowerUrl.includes("arxiv.org") ||
       lowerUrl.includes("scholar.google") ||
-      lowerUrl.includes(".edu")
+      lowerUrl.includes(".edu") ||
+      lowerUrl.includes("researchgate") ||
+      lowerUrl.includes("academia.edu")
     )
       return "research";
+
     if (
       lowerUrl.includes("techcrunch.com") ||
       lowerUrl.includes("wired.com") ||
-      lowerUrl.includes("news")
+      lowerUrl.includes("news") ||
+      lowerUrl.includes("cnn.com") ||
+      lowerUrl.includes("bbc.com") ||
+      lowerUrl.includes("reuters.com") ||
+      lowerUrl.includes("udn.com") ||
+      lowerUrl.includes("ltn.com.tw") ||
+      lowerUrl.includes("ettoday")
     )
       return "news";
+
+    if (
+      lowerUrl.includes("tutorial") ||
+      lowerUrl.includes("howto") ||
+      lowerUrl.includes("guide") ||
+      lowerUrl.includes("learn") ||
+      lowerUrl.includes("course") ||
+      lowerUrl.includes("教學") ||
+      lowerUrl.includes("指南")
+    )
+      return "tutorial";
+
+    if (
+      lowerUrl.includes("industry") ||
+      lowerUrl.includes("trade") ||
+      lowerUrl.includes("association") ||
+      lowerUrl.includes("chamber") ||
+      lowerUrl.includes("公會") ||
+      lowerUrl.includes("協會")
+    )
+      return "industry";
+
+    if (
+      lowerUrl.includes("service") ||
+      lowerUrl.includes("agency") ||
+      lowerUrl.includes("studio") ||
+      lowerUrl.includes("company") ||
+      lowerUrl.includes("corp") ||
+      lowerUrl.includes(".com.tw") ||
+      lowerUrl.includes("shop") ||
+      lowerUrl.includes("store")
+    )
+      return "service";
 
     return "blog";
   }

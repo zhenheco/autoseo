@@ -717,7 +717,87 @@ export class ArticleStorageService {
    * 將 Markdown 轉換為 HTML
    */
   private async convertMarkdownToHTML(markdown: string): Promise<string> {
-    return await marked.parse(markdown);
+    if (!markdown || markdown.trim().length === 0) {
+      console.error(
+        "[ArticleStorage] convertMarkdownToHTML: 輸入 Markdown 為空",
+      );
+      return "";
+    }
+
+    console.log("[ArticleStorage] 開始 Markdown 轉換:", {
+      inputLength: markdown.length,
+      preview: markdown.substring(0, 100),
+    });
+
+    try {
+      const htmlResult = await marked.parse(markdown);
+
+      if (!htmlResult || htmlResult.trim().length === 0) {
+        console.error("[ArticleStorage] marked.parse 返回空結果", {
+          inputLength: markdown.length,
+          outputLength: 0,
+        });
+        return this.fallbackMarkdownToHtml(markdown);
+      }
+
+      console.log("[ArticleStorage] Markdown 轉換成功:", {
+        inputLength: markdown.length,
+        outputLength: htmlResult.length,
+      });
+
+      return htmlResult;
+    } catch (error) {
+      console.error("[ArticleStorage] marked.parse 錯誤:", {
+        error: error instanceof Error ? error.message : String(error),
+        inputLength: markdown.length,
+      });
+      return this.fallbackMarkdownToHtml(markdown);
+    }
+  }
+
+  /**
+   * Fallback: 簡易 Markdown 轉 HTML（當 marked 失敗時使用）
+   */
+  private fallbackMarkdownToHtml(markdown: string): string {
+    console.warn("[ArticleStorage] 使用 fallback Markdown 轉換");
+
+    let html = markdown;
+
+    html = html.replace(/^### (.+)$/gm, "<h3>$1</h3>");
+    html = html.replace(/^## (.+)$/gm, "<h2>$1</h2>");
+    html = html.replace(/^# (.+)$/gm, "<h1>$1</h1>");
+
+    html = html.replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>");
+    html = html.replace(/\*(.+?)\*/g, "<em>$1</em>");
+
+    html = html.replace(/^\- (.+)$/gm, "<li>$1</li>");
+    html = html.replace(/(<li>.*<\/li>\n?)+/g, "<ul>$&</ul>");
+
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2">$1</a>');
+
+    const paragraphs = html.split(/\n\n+/);
+    html = paragraphs
+      .map((p) => {
+        const trimmed = p.trim();
+        if (
+          trimmed.startsWith("<h") ||
+          trimmed.startsWith("<ul") ||
+          trimmed.startsWith("<ol") ||
+          trimmed.startsWith("<li") ||
+          trimmed.startsWith("<figure")
+        ) {
+          return trimmed;
+        }
+        return `<p>${trimmed}</p>`;
+      })
+      .join("\n\n");
+
+    console.log("[ArticleStorage] Fallback 轉換完成:", {
+      inputLength: markdown.length,
+      outputLength: html.length,
+    });
+
+    return html;
   }
 
   /**

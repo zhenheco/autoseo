@@ -420,7 +420,15 @@ export interface ExternalReference {
   title: string;
   domain?: string;
   snippet?: string;
-  type: "wikipedia" | "official_docs" | "research" | "news" | "blog";
+  type:
+    | "wikipedia"
+    | "official_docs"
+    | "research"
+    | "news"
+    | "blog"
+    | "service"
+    | "industry"
+    | "tutorial";
   relevantSection?: string;
   description: string;
 }
