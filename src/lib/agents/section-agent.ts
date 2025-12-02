@@ -1,15 +1,107 @@
 import { BaseAgent } from "./base-agent";
-import type { SectionInput, SectionOutput } from "@/types/agents";
+import type {
+  SectionInput,
+  SectionOutput,
+  ContentContext,
+  SpecialBlock,
+} from "@/types/agents";
 
 export class SectionAgent extends BaseAgent<SectionInput, SectionOutput> {
+  private buildTopicAlignmentSection(contentContext?: ContentContext): string {
+    if (!contentContext) {
+      return "";
+    }
+
+    return `## ⚠️ CRITICAL: Topic Alignment Requirement
+
+**Article Title**: ${contentContext.selectedTitle}
+**PRIMARY KEYWORD**: ${contentContext.primaryKeyword}
+**Search Intent**: ${contentContext.searchIntent}
+**Target Audience**: ${contentContext.targetAudience}
+**Topic Keywords**: ${contentContext.topicKeywords.slice(0, 5).join(", ")}
+${contentContext.regionContext ? `**Region Context**: ${contentContext.regionContext}` : ""}
+${contentContext.industryContext ? `**Industry Context**: ${contentContext.industryContext}` : ""}
+
+**You MUST ensure ALL content is DIRECTLY relevant to the topic "${contentContext.primaryKeyword}".**
+**Do NOT include any content that is unrelated to the main topic.**
+**Every paragraph, example, and explanation must connect back to "${contentContext.primaryKeyword}".**
+
+---`;
+  }
+
+  private buildSpecialBlockSection(
+    specialBlock?: SpecialBlock,
+    brandName?: string,
+  ): string {
+    if (!specialBlock) {
+      return "";
+    }
+
+    const brand = brandName || "專家";
+
+    switch (specialBlock.type) {
+      case "expert_tip":
+        return `
+## Special Block Requirement
+Include a "💡 ${brand} 專家提示" block in this section.
+- Content hint: ${specialBlock.content}
+- Format: Use a blockquote with emoji
+- Length: 50-80 words
+- Place it after explaining a key concept or technique
+
+Example format:
+> 💡 **${brand} 專家提示**
+>
+> [Your practical tip here, 50-80 words]`;
+
+      case "local_advantage":
+        return `
+## Special Block Requirement
+Include a "🏆 本地優勢" block in this section.
+- Content hint: ${specialBlock.content}
+- Format: Use a blockquote with emoji
+- Length: 80-120 words
+- Highlight regional/local advantages
+
+Example format:
+> 🏆 **本地優勢**
+>
+> [Your local advantage description here, 80-120 words]`;
+
+      case "expert_warning":
+        return `
+## Special Block Requirement
+Include a "⚠️ 專家警告" block in this section.
+- Content hint: ${specialBlock.content}
+- Format: Use a blockquote with emoji
+- Length: 50-80 words
+- Highlight important warnings or common mistakes
+
+Example format:
+> ⚠️ **專家警告**
+>
+> [Your warning or caution here, 50-80 words]`;
+
+      default:
+        return "";
+    }
+  }
+
   get agentName(): string {
     return "SectionAgent";
   }
 
   protected async process(input: SectionInput): Promise<SectionOutput> {
-    const { section, previousSummary, sectionImage, brandVoice, index } = input;
+    const {
+      section,
+      previousSummary,
+      sectionImage,
+      brandVoice,
+      index,
+      contentContext,
+      specialBlock,
+    } = input;
 
-    // Language mapping
     const languageNames: Record<string, string> = {
       "zh-TW": "Traditional Chinese (繁體中文)",
       "zh-CN": "Simplified Chinese (简体中文)",
@@ -31,7 +123,16 @@ export class SectionAgent extends BaseAgent<SectionInput, SectionOutput> {
     const targetLang = input.targetLanguage || "zh-TW";
     const languageName = languageNames[targetLang] || languageNames["zh-TW"];
 
-    const prompt = `Write an article section based on the following information:
+    const topicAlignmentSection =
+      this.buildTopicAlignmentSection(contentContext);
+    const specialBlockSection = this.buildSpecialBlockSection(
+      specialBlock,
+      contentContext?.brandName,
+    );
+
+    const prompt = `${topicAlignmentSection}
+
+Write an article section based on the following information:
 
 **Target Language: ${languageName}** (ALL content MUST be written in this language)
 
@@ -59,6 +160,7 @@ ${previousSummary ? `## Previous Section Summary\n${previousSummary}\n\nEnsure s
 6. Naturally integrate related keywords
 ${sectionImage ? `7. Insert image at appropriate position: ![${sectionImage.altText || section.heading}](${sectionImage.url})` : ""}
 8. Provide a brief summary at the end (for connecting to next section)
+${specialBlockSection}
 
 ## Writing Style (Important!)
 1. Present 2-3 different viewpoints or sources on key topics
