@@ -1,4 +1,4 @@
-import { marked } from 'marked';
+import { marked } from "marked";
 import type {
   WritingAgentOutput,
   ContentAssemblerOutput,
@@ -7,8 +7,8 @@ import type {
   ReadabilityMetrics,
   KeywordUsage,
   InternalLink,
-  Outline
-} from '@/types/agents';
+  Outline,
+} from "@/types/agents";
 
 interface AdapterStrategyInput {
   selectedTitle: string;
@@ -32,29 +32,42 @@ export class MultiAgentOutputAdapter {
     strategyOutput: AdapterStrategyInput;
     focusKeyword: string;
   }): WritingAgentOutput {
-    const { assemblerOutput, strategyOutput, focusKeyword } = input;
+    const { assemblerOutput, focusKeyword } = input;
+
+    // 防禦性檢查：確保 assemblerOutput 存在
+    if (!assemblerOutput) {
+      console.error("[OutputAdapter] ❌ assemblerOutput is null/undefined");
+      return this.buildEmptyOutput();
+    }
 
     let html = assemblerOutput.html;
-    const markdown = assemblerOutput.markdown;
+    const markdown = assemblerOutput.markdown || "";
 
     if (!this.validateHTML(html)) {
-      console.warn('[OutputAdapter] ⚠️  HTML validation failed, attempting re-conversion...');
+      console.warn(
+        "[OutputAdapter] ⚠️  HTML validation failed, attempting re-conversion...",
+      );
 
-      try {
-        html = marked.parse(markdown) as string;
+      // 如果 markdown 存在，嘗試重新轉換
+      if (typeof markdown === "string" && markdown.trim().length > 0) {
+        try {
+          html = marked.parse(markdown) as string;
 
-        if (!this.validateHTML(html)) {
-          console.error('[OutputAdapter] ❌ Re-conversion failed validation, using original HTML anyway');
-          html = assemblerOutput.html;
-        } else {
-          console.log('[OutputAdapter] ✅ Re-conversion successful');
+          if (!this.validateHTML(html)) {
+            console.error("[OutputAdapter] ❌ Re-conversion failed validation");
+            html = `<div class="content-fallback">${marked.parse(markdown)}</div>`;
+          } else {
+            console.log("[OutputAdapter] ✅ Re-conversion successful");
+          }
+        } catch (error) {
+          console.error("[OutputAdapter] ❌ Re-conversion error:", error);
+          html = `<div class="content-error">${markdown}</div>`;
         }
-      } catch (error) {
-        console.error('[OutputAdapter] ❌ Re-conversion error:', error);
-        html = assemblerOutput.html;
+      } else {
+        html = '<div class="content-empty"></div>';
       }
     } else {
-      console.log('[OutputAdapter] ✅ HTML validation passed');
+      console.log("[OutputAdapter] ✅ HTML validation passed");
     }
 
     return {
@@ -73,25 +86,67 @@ export class MultiAgentOutputAdapter {
     };
   }
 
+  private buildEmptyOutput(): WritingAgentOutput {
+    return {
+      markdown: "",
+      html: '<div class="content-empty"></div>',
+      statistics: { totalWords: 0, totalParagraphs: 0, totalSections: 0 },
+      readability: {
+        fleschReadingEase: 0,
+        fleschKincaidGrade: 0,
+        gunningFog: 0,
+        averageSentenceLength: 0,
+        averageWordLength: 0,
+      },
+      keywordUsage: {
+        keyword: "",
+        count: 0,
+        density: 0,
+        positions: [],
+        inTitle: false,
+        inHeadings: false,
+        inFirstParagraph: false,
+        inLastParagraph: false,
+      },
+      internalLinks: [],
+    };
+  }
+
   /**
-   * 驗證 HTML 有效性
+   * 驗證 HTML 有效性（Type Guard 模式）
    */
-  private validateHTML(html: string): boolean {
-    if (!html || html.trim().length === 0) {
-      console.warn('[OutputAdapter] Validation failed: Empty HTML');
-      return false;
-    }
-
-    if (!html.includes('<') || !html.includes('>')) {
-      console.warn('[OutputAdapter] Validation failed: No HTML tags found');
-      return false;
-    }
-
-    const markdownPatterns = ['##', '**', '```'];
-    if (markdownPatterns.some(p => html.includes(p))) {
-      console.warn('[OutputAdapter] Validation failed: Markdown syntax detected', {
-        sample: html.substring(0, 200)
+  private validateHTML(html: unknown): html is string {
+    // Step 1: 類型檢查
+    if (typeof html !== "string") {
+      console.warn("[OutputAdapter] Validation failed: html is not a string", {
+        type: typeof html,
+        value:
+          html === null ? "null" : html === undefined ? "undefined" : "other",
       });
+      return false;
+    }
+
+    // Step 2: 空值檢查
+    if (html.trim().length === 0) {
+      console.warn("[OutputAdapter] Validation failed: Empty HTML");
+      return false;
+    }
+
+    // Step 3: 基本標籤檢查
+    if (!html.includes("<") || !html.includes(">")) {
+      console.warn("[OutputAdapter] Validation failed: No HTML tags found");
+      return false;
+    }
+
+    // Step 4: 殘留 Markdown 檢查
+    const markdownPatterns = ["## ", "** ", "```"];
+    if (markdownPatterns.some((p) => html.includes(p))) {
+      console.warn(
+        "[OutputAdapter] Validation failed: Markdown syntax detected",
+        {
+          sample: html.substring(0, 200),
+        },
+      );
       return false;
     }
 
@@ -103,20 +158,20 @@ export class MultiAgentOutputAdapter {
    */
   private calculateReadability(markdown: string): ReadabilityMetrics {
     const text = markdown
-      .replace(/^#{1,6}\s+/gm, '')
-      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-      .replace(/[*_~`]/g, '')
-      .replace(/!\[([^\]]*)\]\([^)]+\)/g, '')
-      .replace(/^[-*+]\s+/gm, '')
-      .replace(/^\d+\.\s+/gm, '')
-      .replace(/^>\s+/gm, '')
-      .replace(/```[\s\S]*?```/g, '')
-      .replace(/`[^`]+`/g, '')
-      .replace(/\n{2,}/g, '\n')
+      .replace(/^#{1,6}\s+/gm, "")
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, "$1")
+      .replace(/[*_~`]/g, "")
+      .replace(/!\[([^\]]*)\]\([^)]+\)/g, "")
+      .replace(/^[-*+]\s+/gm, "")
+      .replace(/^\d+\.\s+/gm, "")
+      .replace(/^>\s+/gm, "")
+      .replace(/```[\s\S]*?```/g, "")
+      .replace(/`[^`]+`/g, "")
+      .replace(/\n{2,}/g, "\n")
       .trim();
 
-    const sentences = text.split(/[.!?]+/).filter(s => s.trim().length > 0);
-    const words = text.split(/\s+/).filter(w => w.length > 0);
+    const sentences = text.split(/[.!?]+/).filter((s) => s.trim().length > 0);
+    const words = text.split(/\s+/).filter((w) => w.length > 0);
     const syllables = words.reduce((count, word) => {
       return count + this.countSyllables(word);
     }, 0);
@@ -130,26 +185,34 @@ export class MultiAgentOutputAdapter {
       0,
       Math.min(
         100,
-        206.835 - 1.015 * (wordCount / sentenceCount) - 84.6 * (syllableCount / wordCount)
-      )
+        206.835 -
+          1.015 * (wordCount / sentenceCount) -
+          84.6 * (syllableCount / wordCount),
+      ),
     );
 
     // Flesch-Kincaid Grade Level
     const fleschKincaidGrade = Math.max(
       0,
-      0.39 * (wordCount / sentenceCount) + 11.8 * (syllableCount / wordCount) - 15.59
+      0.39 * (wordCount / sentenceCount) +
+        11.8 * (syllableCount / wordCount) -
+        15.59,
     );
 
     // Gunning Fog Index
-    const complexWords = words.filter(word => this.countSyllables(word) >= 3).length;
-    const gunningFog = 0.4 * ((wordCount / sentenceCount) + 100 * (complexWords / wordCount));
+    const complexWords = words.filter(
+      (word) => this.countSyllables(word) >= 3,
+    ).length;
+    const gunningFog =
+      0.4 * (wordCount / sentenceCount + 100 * (complexWords / wordCount));
 
     return {
       fleschReadingEase: Math.round(fleschScore),
       fleschKincaidGrade: Math.round(fleschKincaidGrade * 10) / 10,
       gunningFog: Math.round(gunningFog * 10) / 10,
       averageSentenceLength: Math.round(wordCount / sentenceCount),
-      averageWordLength: Math.round((text.length - words.length + 1) / wordCount * 10) / 10,
+      averageWordLength:
+        Math.round(((text.length - words.length + 1) / wordCount) * 10) / 10,
     };
   }
 
@@ -159,7 +222,7 @@ export class MultiAgentOutputAdapter {
   private countSyllables(word: string): number {
     word = word.toLowerCase();
     let count = 0;
-    const vowels = 'aeiouy';
+    const vowels = "aeiouy";
     let previousWasVowel = false;
 
     for (let i = 0; i < word.length; i++) {
@@ -171,10 +234,14 @@ export class MultiAgentOutputAdapter {
     }
 
     // 調整規則
-    if (word.endsWith('e')) {
+    if (word.endsWith("e")) {
       count--;
     }
-    if (word.endsWith('le') && word.length > 2 && !vowels.includes(word[word.length - 3])) {
+    if (
+      word.endsWith("le") &&
+      word.length > 2 &&
+      !vowels.includes(word[word.length - 3])
+    ) {
       count++;
     }
     if (count === 0) {
@@ -187,17 +254,23 @@ export class MultiAgentOutputAdapter {
   /**
    * 分析關鍵字使用情況
    */
-  private analyzeKeywordUsage(markdown: string, focusKeyword: string): KeywordUsage {
+  private analyzeKeywordUsage(
+    markdown: string,
+    focusKeyword: string,
+  ): KeywordUsage {
     const text = markdown.toLowerCase();
     const keyword = focusKeyword.toLowerCase();
 
     // 計算關鍵字出現次數
-    const regex = new RegExp(`\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'gi');
+    const regex = new RegExp(
+      `\\b${keyword.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`,
+      "gi",
+    );
     const matches = text.match(regex) || [];
     const count = matches.length;
 
     // 計算總字數
-    const words = text.split(/\s+/).filter(w => w.length > 0);
+    const words = text.split(/\s+/).filter((w) => w.length > 0);
     const totalWords = words.length;
 
     // 計算密度
@@ -207,26 +280,34 @@ export class MultiAgentOutputAdapter {
     const positions: string[] = [];
 
     // 檢查標題
-    const titleRegex = new RegExp(`^#\\s+.*${keyword}.*$`, 'mi');
+    const titleRegex = new RegExp(`^#\\s+.*${keyword}.*$`, "mi");
     if (titleRegex.test(markdown)) {
-      positions.push('title');
+      positions.push("title");
     }
 
     // 檢查副標題
-    const headingRegex = new RegExp(`^##\\s+.*${keyword}.*$`, 'gmi');
+    const headingRegex = new RegExp(`^##\\s+.*${keyword}.*$`, "gmi");
     if (headingRegex.test(markdown)) {
-      positions.push('headings');
+      positions.push("headings");
     }
 
     // 檢查第一段
-    const paragraphs = markdown.split('\n\n').filter(p => p.trim() && !p.startsWith('#'));
-    if (paragraphs.length > 0 && paragraphs[0].toLowerCase().includes(keyword)) {
-      positions.push('firstParagraph');
+    const paragraphs = markdown
+      .split("\n\n")
+      .filter((p) => p.trim() && !p.startsWith("#"));
+    if (
+      paragraphs.length > 0 &&
+      paragraphs[0].toLowerCase().includes(keyword)
+    ) {
+      positions.push("firstParagraph");
     }
 
     // 檢查最後一段
-    if (paragraphs.length > 0 && paragraphs[paragraphs.length - 1].toLowerCase().includes(keyword)) {
-      positions.push('lastParagraph');
+    if (
+      paragraphs.length > 0 &&
+      paragraphs[paragraphs.length - 1].toLowerCase().includes(keyword)
+    ) {
+      positions.push("lastParagraph");
     }
 
     return {
@@ -234,10 +315,10 @@ export class MultiAgentOutputAdapter {
       count,
       density: Math.round(density * 100) / 100,
       positions,
-      inTitle: positions.includes('title'),
-      inHeadings: positions.includes('headings'),
-      inFirstParagraph: positions.includes('firstParagraph'),
-      inLastParagraph: positions.includes('lastParagraph'),
+      inTitle: positions.includes("title"),
+      inHeadings: positions.includes("headings"),
+      inFirstParagraph: positions.includes("firstParagraph"),
+      inLastParagraph: positions.includes("lastParagraph"),
     };
   }
 
@@ -256,14 +337,20 @@ export class MultiAgentOutputAdapter {
       const anchor = match[2];
 
       // Extract title attribute separately
-      const fullTag = html.substring(html.lastIndexOf('<a', linkRegex.lastIndex - 1), linkRegex.lastIndex);
+      const fullTag = html.substring(
+        html.lastIndexOf("<a", linkRegex.lastIndex - 1),
+        linkRegex.lastIndex,
+      );
       const titleMatch = fullTag.match(/title=["']([^"']+)["']/);
-      const title = titleMatch ? titleMatch[1] : '';
+      const title = titleMatch ? titleMatch[1] : "";
 
       // 判斷是否為內部連結（以 / 或 # 開頭，或不包含 http(s)://）
-      const isInternal = url.startsWith('/') ||
-                        url.startsWith('#') ||
-                        (!url.startsWith('http://') && !url.startsWith('https://') && !url.startsWith('//'));
+      const isInternal =
+        url.startsWith("/") ||
+        url.startsWith("#") ||
+        (!url.startsWith("http://") &&
+          !url.startsWith("https://") &&
+          !url.startsWith("//"));
 
       if (isInternal) {
         links.push({

@@ -199,6 +199,8 @@ ${specialBlockGuidance}
   ): ContentPlanOutput {
     try {
       let cleanContent = content.trim();
+
+      // Step 1: 移除 markdown 包裹
       if (cleanContent.startsWith("```json")) {
         cleanContent = cleanContent
           .replace(/^```json\s*\n?/, "")
@@ -209,18 +211,45 @@ ${specialBlockGuidance}
           .replace(/\n?```$/, "");
       }
 
-      const parsed = JSON.parse(cleanContent);
-
-      if (this.validateContentPlan(parsed)) {
-        return parsed;
+      // Step 2: 嘗試直接解析（最理想情況）
+      try {
+        const parsed = JSON.parse(cleanContent);
+        if (this.validateContentPlan(parsed)) {
+          console.log("[ContentPlanAgent] ✅ Direct JSON parse succeeded");
+          return parsed;
+        }
+      } catch {
+        // 繼續嘗試其他方法
       }
 
-      console.warn(
-        "[ContentPlanAgent] Parsed content failed validation, using fallback",
+      // Step 3: 使用正則提取最外層 JSON 物件（處理思考過程前綴，如 DeepSeek Reasoner 的「首先，用户要求...」）
+      const jsonMatch = cleanContent.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          const parsed = JSON.parse(jsonMatch[0]);
+          if (this.validateContentPlan(parsed)) {
+            console.log(
+              "[ContentPlanAgent] ✅ Regex JSON extraction succeeded",
+            );
+            return parsed;
+          }
+        } catch (e) {
+          console.warn(
+            "[ContentPlanAgent] ⚠️ Regex extraction found JSON but parse failed:",
+            e,
+          );
+        }
+      }
+
+      // Step 4: Fallback - 記錄原始內容以便除錯
+      console.warn("[ContentPlanAgent] ❌ All parsing attempts failed");
+      console.debug(
+        "[ContentPlanAgent] Original content (first 500 chars):",
+        cleanContent.substring(0, 500),
       );
       return this.buildFallbackContentPlan(input);
     } catch (error) {
-      console.error("[ContentPlanAgent] Failed to parse response:", error);
+      console.error("[ContentPlanAgent] Unexpected error:", error);
       return this.buildFallbackContentPlan(input);
     }
   }
