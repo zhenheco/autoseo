@@ -688,6 +688,52 @@ Please output the complete JSON that conforms to the above schema in ${languageN
   }
 
   /**
+   * 建構競品排除清單（Plan C: 競品差異化）
+   */
+  private buildCompetitorExclusionList(
+    researchData: StrategyInput["researchData"],
+  ): string {
+    const exclusions: string[] = [];
+
+    // 從競品分析中提取標題
+    if (researchData.competitorAnalysis?.length > 0) {
+      const competitorTitles = researchData.competitorAnalysis
+        .slice(0, 5)
+        .map((c) => c.title)
+        .filter(Boolean);
+      if (competitorTitles.length > 0) {
+        exclusions.push(...competitorTitles);
+      }
+    }
+
+    // 從結構模式中提取常見 H2
+    if (researchData.topRankingFeatures?.structurePatterns?.length > 0) {
+      exclusions.push(
+        ...researchData.topRankingFeatures.structurePatterns.slice(0, 5),
+      );
+    }
+
+    // 從常見主題中提取
+    if (researchData.topRankingFeatures?.commonTopics?.length > 0) {
+      exclusions.push(
+        ...researchData.topRankingFeatures.commonTopics.slice(0, 3),
+      );
+    }
+
+    if (exclusions.length === 0) {
+      return "";
+    }
+
+    // 去重並限制數量
+    const uniqueExclusions = [...new Set(exclusions)].slice(0, 10);
+
+    return `**🚫 競品已使用的標題/結構（禁止相似）**：
+${uniqueExclusions.map((e) => `- ❌ ${e}`).join("\n")}
+
+你的標題必須與以上完全不同，提供獨特視角。`;
+  }
+
+  /**
    * 建構大綱生成 Prompt（簡化版，更容易生成有效 JSON）
    */
   private buildOutlinePrompt(
@@ -758,20 +804,25 @@ ${gaps
 - ❌ 禁止使用「標題1」「子標題1」「常見問題1」等編號佔位符
 - ✅ 必須輸出具體、有意義的完整內容
 
-**🚫 禁止使用的 H2 標題（這些太過通用，缺乏獨特性）**：
-- ❌ 基礎概念與準備工作
-- ❌ 核心功能與實用技巧
-- ❌ 實戰操作步驟詳解
-- ❌ 進階應用與最佳實踐
-- ❌ 基礎概念與環境設定
-- ❌ 常見問題與解決方案
-- ❌ 總結與未來展望
+**🚫 禁止的標題模式（太通用、缺乏獨特性）**：
+- ❌ 「認識 XXX」「了解 XXX」「什麼是 XXX」開頭
+- ❌ 「XXX 的基礎/核心/入門/概念」
+- ❌ 「如何有效/正確/輕鬆 XXX」
+- ❌ 「XXX 實戰/實務/應用」
+- ❌ 「XXX 技巧/方法/步驟」
+- ❌ 「進階 XXX」「XXX 進階應用」
+- ❌ 「常見問題」「總結與展望」「結論」
+- ❌ 任何以「的」結尾的標題
+- ❌ 包含「完整」「全面」「詳解」「攻略」「指南」的標題
+
+${this.buildCompetitorExclusionList(input.researchData)}
 
 **規則：**
 1. mainSections 2-4 個
-2. 每個 section 標題要獨特，必須根據「${input.title}」主題創作具體標題
-3. 直接輸出 JSON，不要用 \`\`\`json 包裹
-4. 確保 JSON 格式正確
+2. 標題必須具體、吸引人、與主題「${input.title}」直接相關
+3. 標題要有獨特角度，避免與競品雷同
+4. 直接輸出 JSON，不要用 \`\`\`json 包裹
+5. 確保 JSON 格式正確
 
 現在請直接輸出 JSON：`;
   }
