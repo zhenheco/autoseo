@@ -87,6 +87,11 @@ const statusConfig: Record<
     color: "text-yellow-500 bg-yellow-50",
     icon: FileText,
   },
+  completed: {
+    label: "未發佈",
+    color: "text-yellow-500 bg-yellow-50",
+    icon: FileText,
+  },
   reviewed: {
     label: "未發佈",
     color: "text-yellow-500 bg-yellow-50",
