@@ -1,5 +1,9 @@
 import { BaseAgent } from "./base-agent";
-import type { ConclusionInput, ConclusionOutput } from "@/types/agents";
+import type {
+  ConclusionInput,
+  ConclusionOutput,
+  ContentContext,
+} from "@/types/agents";
 
 export class ConclusionAgent extends BaseAgent<
   ConclusionInput,
@@ -9,10 +13,26 @@ export class ConclusionAgent extends BaseAgent<
     return "ConclusionAgent";
   }
 
-  protected async process(input: ConclusionInput): Promise<ConclusionOutput> {
-    const { outline, brandVoice } = input;
+  private buildTopicAlignmentSection(contentContext?: ContentContext): string {
+    if (!contentContext) {
+      return "";
+    }
 
-    // Language mapping
+    return `## ⚠️ CRITICAL: Topic Alignment Requirement
+
+**Article Title**: ${contentContext.selectedTitle}
+**PRIMARY KEYWORD**: ${contentContext.primaryKeyword}
+**Target Audience**: ${contentContext.targetAudience}
+
+**The conclusion MUST summarize the core value related to "${contentContext.primaryKeyword}".**
+**Do NOT include any content that is unrelated to the main topic.**
+
+---`;
+  }
+
+  protected async process(input: ConclusionInput): Promise<ConclusionOutput> {
+    const { outline, brandVoice, contentContext } = input;
+
     const languageNames: Record<string, string> = {
       "zh-TW": "Traditional Chinese (繁體中文)",
       "zh-CN": "Simplified Chinese (简体中文)",
@@ -35,8 +55,12 @@ export class ConclusionAgent extends BaseAgent<
     const languageName = languageNames[targetLang] || languageNames["zh-TW"];
 
     const mainPoints = outline.mainSections.map((s) => s.heading).join(", ");
+    const topicAlignmentSection =
+      this.buildTopicAlignmentSection(contentContext);
 
-    const prompt = `Write an article conclusion based on the following information:
+    const prompt = `${topicAlignmentSection}
+
+Write an article conclusion based on the following information:
 
 **Target Language: ${languageName}** (ALL content MUST be written in this language)
 

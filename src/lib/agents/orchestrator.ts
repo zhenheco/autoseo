@@ -11,6 +11,7 @@ import { MetaAgent } from "./meta-agent";
 import { HTMLAgent } from "./html-agent";
 import { CompetitorAnalysisAgent } from "./competitor-analysis-agent";
 import { CategoryAgent } from "./category-agent";
+import { ContentPlanAgent } from "./content-plan-agent";
 import { IntroductionAgent } from "./introduction-agent";
 import { SectionAgent } from "./section-agent";
 import { ConclusionAgent } from "./conclusion-agent";
@@ -35,6 +36,8 @@ import type {
   SectionOutput,
   ExternalReference,
   CompetitorAnalysisOutput,
+  ContentPlanOutput,
+  ContentContext,
 } from "@/types/agents";
 import type { AIModel } from "@/types/ai-models";
 import { AgentExecutionContext } from "./base-agent";
@@ -278,6 +281,9 @@ export class ParallelOrchestrator {
 
       // === 階段 2.5: 競爭對手分析（Persona-Driven 寫作準備） ===
       let competitorAnalysis: CompetitorAnalysisOutput | undefined;
+      let contentPlan: ContentPlanOutput | undefined;
+      let contentContext: ContentContext | undefined;
+
       if (researchOutput && currentPhase === "strategy_completed") {
         try {
           console.log(
@@ -310,6 +316,63 @@ export class ParallelOrchestrator {
             competitorError,
           );
           competitorAnalysis = undefined;
+        }
+
+        // === 階段 2.6: ContentPlanAgent（詳細內容計畫） ===
+        if (strategyOutput && researchOutput) {
+          try {
+            console.log("[Orchestrator] 📋 Starting ContentPlanAgent");
+            const contentPlanAgent = new ContentPlanAgent(aiConfig, context);
+            contentPlan = await contentPlanAgent.execute({
+              strategy: strategyOutput,
+              research: researchOutput,
+              competitorAnalysis,
+              brandVoice,
+              targetLanguage,
+              model: agentConfig.strategy_model,
+              temperature: 0.4,
+              maxTokens: 8000,
+            });
+            console.log("[Orchestrator] ✅ ContentPlan completed", {
+              optimizedTitle: contentPlan.optimizedTitle.primary,
+              mainSectionsCount:
+                contentPlan.detailedOutline.mainSections.length,
+              faqCount: contentPlan.detailedOutline.faq.questions.length,
+            });
+
+            // 構建 ContentContext 供 writing agents 使用
+            contentContext = {
+              primaryKeyword: researchOutput.title,
+              selectedTitle: strategyOutput.selectedTitle,
+              searchIntent: researchOutput.searchIntent,
+              targetAudience: brandVoice.target_audience,
+              topicKeywords: strategyOutput.keywords.slice(0, 10),
+              regionContext: targetRegion,
+              industryContext: targetIndustry || undefined,
+              brandName: brandVoice.brand_name,
+              toneGuidance: contentPlan.contentStrategy.toneGuidance,
+            };
+            console.log("[Orchestrator] ✅ ContentContext built", {
+              primaryKeyword: contentContext.primaryKeyword,
+              topicKeywordsCount: contentContext.topicKeywords.length,
+            });
+          } catch (contentPlanError) {
+            console.warn(
+              "[Orchestrator] ⚠️ ContentPlan failed, using fallback context:",
+              contentPlanError,
+            );
+            // 即使 ContentPlan 失敗，也構建基本的 ContentContext
+            contentContext = {
+              primaryKeyword: researchOutput.title,
+              selectedTitle: strategyOutput.selectedTitle,
+              searchIntent: researchOutput.searchIntent,
+              targetAudience: brandVoice.target_audience,
+              topicKeywords: strategyOutput.keywords.slice(0, 10),
+              regionContext: targetRegion,
+              industryContext: targetIndustry || undefined,
+              brandName: brandVoice.brand_name,
+            };
+          }
         }
       }
 
@@ -353,6 +416,8 @@ export class ParallelOrchestrator {
               aiConfig,
               context,
               targetLanguage,
+              contentContext,
+              contentPlan,
             );
 
             console.log(
@@ -931,10 +996,17 @@ export class ParallelOrchestrator {
     aiConfig: AIClientConfig,
     context: AgentExecutionContext,
     targetLanguage: string = "zh-TW",
+    contentContext?: ContentContext,
+    contentPlan?: ContentPlanOutput,
   ) {
     if (!strategyOutput) throw new Error("Strategy output is required");
 
     const { outline, selectedTitle } = strategyOutput;
+
+    // 從 contentPlan 取得 specialBlocks（如果有的話）
+    const sectionSpecialBlocks =
+      contentPlan?.detailedOutline.mainSections.map((s) => s.specialBlock) ||
+      [];
 
     const [introduction, conclusion, qa] = await Promise.all([
       this.executeWithRetry(
@@ -945,6 +1017,7 @@ export class ParallelOrchestrator {
             featuredImage: imageOutput?.featuredImage || null,
             brandVoice,
             targetLanguage,
+            contentContext,
             model: agentConfig.writing_model,
             temperature: agentConfig.writing_temperature,
             maxTokens: 500,
@@ -960,6 +1033,7 @@ export class ParallelOrchestrator {
             outline,
             brandVoice,
             targetLanguage,
+            contentContext,
             model: agentConfig.writing_model,
             temperature: agentConfig.writing_temperature,
             maxTokens: 400,
@@ -976,7 +1050,8 @@ export class ParallelOrchestrator {
             outline,
             brandVoice,
             targetLanguage,
-            count: 3,
+            contentContext,
+            count: contentPlan?.detailedOutline.faq.questions.length || 3,
             model: agentConfig.writing_model,
             temperature: agentConfig.writing_temperature,
             maxTokens: 1000,
@@ -990,6 +1065,7 @@ export class ParallelOrchestrator {
     const sections: SectionOutput[] = await Promise.all(
       outline.mainSections.map((section, i) => {
         const sectionImage = imageOutput?.contentImages?.[i] || null;
+        const specialBlock = sectionSpecialBlocks[i];
 
         return this.executeWithRetry(
           async () => {
@@ -1000,6 +1076,8 @@ export class ParallelOrchestrator {
               sectionImage,
               brandVoice,
               targetLanguage,
+              contentContext,
+              specialBlock,
               index: i,
               model: agentConfig.writing_model,
               temperature: agentConfig.writing_temperature,

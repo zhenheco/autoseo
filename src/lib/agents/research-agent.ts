@@ -4,8 +4,15 @@ import type {
   ResearchOutput,
   SERPResult,
   ExternalReference,
+  DeepResearchResult,
 } from "@/types/agents";
 import { getPerplexityClient } from "@/lib/perplexity/client";
+
+interface DeepResearchQueryResult {
+  content: string;
+  citations: string[];
+  executionTime: number;
+}
 
 export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
   get agentName(): string {
@@ -15,7 +22,10 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
   protected async process(input: ResearchInput): Promise<ResearchOutput> {
     const analysis = await this.analyzeTitle(input);
 
-    const externalReferences = await this.fetchExternalReferences(input.title);
+    const [externalReferences, deepResearch] = await Promise.all([
+      this.fetchExternalReferences(input.title),
+      this.performDeepResearch(input.title, input.region),
+    ]);
 
     return {
       title: input.title,
@@ -28,8 +38,103 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
       recommendedStrategy: analysis.recommendedStrategy,
       relatedKeywords: analysis.relatedKeywords,
       externalReferences,
+      deepResearch,
       executionInfo: this.getExecutionInfo(input.model),
     };
+  }
+
+  private async performDeepResearch(
+    keyword: string,
+    region?: string,
+  ): Promise<DeepResearchResult | undefined> {
+    try {
+      const perplexity = getPerplexityClient();
+      const regionStr = region || "Taiwan";
+      const currentYear = new Date().getFullYear();
+      const nextYear = currentYear + 1;
+
+      console.log("[ResearchAgent] 開始深度研究:", keyword, regionStr);
+
+      const [trendsResult, userQuestionsResult, authorityDataResult] =
+        await Promise.all([
+          this.executeDeepResearchQuery(
+            perplexity,
+            `${keyword} ${regionStr} ${currentYear} ${nextYear} 最新趨勢 專家見解`,
+            "trends",
+          ),
+          this.executeDeepResearchQuery(
+            perplexity,
+            `${keyword} 常見問題 解決方案 FAQ 用戶體驗`,
+            "userQuestions",
+          ),
+          this.executeDeepResearchQuery(
+            perplexity,
+            `${keyword} ${regionStr} 官方來源 權威數據 統計資料`,
+            "authorityData",
+          ),
+        ]);
+
+      const deepResearch: DeepResearchResult = {};
+
+      if (trendsResult) {
+        deepResearch.trends = trendsResult;
+      }
+      if (userQuestionsResult) {
+        deepResearch.userQuestions = userQuestionsResult;
+      }
+      if (authorityDataResult) {
+        deepResearch.authorityData = authorityDataResult;
+      }
+
+      if (Object.keys(deepResearch).length === 0) {
+        console.warn("[ResearchAgent] 所有深度研究查詢失敗");
+        return undefined;
+      }
+
+      console.log("[ResearchAgent] 深度研究完成:", {
+        hasTrends: !!deepResearch.trends,
+        hasUserQuestions: !!deepResearch.userQuestions,
+        hasAuthorityData: !!deepResearch.authorityData,
+      });
+
+      return deepResearch;
+    } catch (error) {
+      console.warn("[ResearchAgent] 深度研究整體失敗，繼續流程:", error);
+      return undefined;
+    }
+  }
+
+  private async executeDeepResearchQuery(
+    perplexity: ReturnType<typeof getPerplexityClient>,
+    query: string,
+    queryType: string,
+  ): Promise<DeepResearchQueryResult | null> {
+    const startTime = Date.now();
+    try {
+      console.log(`[ResearchAgent] 執行 ${queryType} 查詢:`, query);
+
+      const result = await perplexity.search(query, {
+        return_citations: true,
+        max_tokens: 2000,
+      });
+
+      const executionTime = Date.now() - startTime;
+
+      console.log(`[ResearchAgent] ${queryType} 查詢完成:`, {
+        contentLength: result.content?.length || 0,
+        citationsCount: result.citations?.length || 0,
+        executionTime,
+      });
+
+      return {
+        content: result.content || "",
+        citations: result.citations || [],
+        executionTime,
+      };
+    } catch (error) {
+      console.warn(`[ResearchAgent] ${queryType} 查詢失敗:`, error);
+      return null;
+    }
   }
 
   private async analyzeTitle(

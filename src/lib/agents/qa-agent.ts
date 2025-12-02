@@ -1,13 +1,32 @@
 import { BaseAgent } from "./base-agent";
-import type { QAInput, QAOutput } from "@/types/agents";
+import type { QAInput, QAOutput, ContentContext } from "@/types/agents";
 
 export class QAAgent extends BaseAgent<QAInput, QAOutput> {
   get agentName(): string {
     return "QAAgent";
   }
 
+  private buildTopicAlignmentSection(contentContext?: ContentContext): string {
+    if (!contentContext) {
+      return "";
+    }
+
+    return `## ⚠️ CRITICAL: Topic Alignment Requirement
+
+**Article Title**: ${contentContext.selectedTitle}
+**PRIMARY KEYWORD**: ${contentContext.primaryKeyword}
+**Search Intent**: ${contentContext.searchIntent}
+**Target Audience**: ${contentContext.targetAudience}
+
+**All FAQ questions and answers MUST be DIRECTLY relevant to "${contentContext.primaryKeyword}".**
+**Do NOT include any questions that are unrelated to the main topic.**
+**Every question should address a real concern about "${contentContext.primaryKeyword}".**
+
+---`;
+  }
+
   protected async process(input: QAInput): Promise<QAOutput> {
-    const { title, outline, brandVoice, count = 5 } = input;
+    const { title, outline, brandVoice, count = 5, contentContext } = input;
 
     console.log("[QAAgent] 開始生成 FAQ...");
 
@@ -36,8 +55,12 @@ export class QAAgent extends BaseAgent<QAInput, QAOutput> {
     const languageName = languageNames[targetLang] || languageNames["zh-TW"];
 
     const mainTopics = outline.mainSections.map((s) => s.heading).join(", ");
+    const topicAlignmentSection =
+      this.buildTopicAlignmentSection(contentContext);
 
-    const prompt = `Generate frequently asked questions (FAQ) for the article "${title}".
+    const prompt = `${topicAlignmentSection}
+
+Generate frequently asked questions (FAQ) for the article "${title}".
 
 **Target Language: ${languageName}** (ALL content MUST be written in this language)
 

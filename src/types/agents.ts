@@ -137,6 +137,23 @@ export interface ResearchOutput {
   recommendedStrategy: string;
   relatedKeywords: string[];
   externalReferences?: ExternalReference[];
+  deepResearch?: {
+    trends?: {
+      content: string;
+      citations: string[];
+      executionTime: number;
+    };
+    userQuestions?: {
+      content: string;
+      citations: string[];
+      executionTime: number;
+    };
+    authorityData?: {
+      content: string;
+      citations: string[];
+      executionTime: number;
+    };
+  };
   executionInfo: {
     model?: string;
     executionTime: number;
@@ -615,6 +632,7 @@ export interface IntroductionInput {
   model: string;
   temperature?: number;
   maxTokens?: number;
+  contentContext?: ContentContext;
 }
 
 export interface IntroductionOutput {
@@ -637,6 +655,8 @@ export interface SectionInput {
   model: string;
   temperature?: number;
   maxTokens?: number;
+  contentContext?: ContentContext;
+  specialBlock?: SpecialBlock;
 }
 
 export interface SectionOutput {
@@ -657,6 +677,7 @@ export interface ConclusionInput {
   model: string;
   temperature?: number;
   maxTokens?: number;
+  contentContext?: ContentContext;
 }
 
 export interface ConclusionOutput {
@@ -678,6 +699,7 @@ export interface QAInput {
   model: string;
   temperature?: number;
   maxTokens?: number;
+  contentContext?: ContentContext;
 }
 
 export interface QAOutput {
@@ -812,6 +834,125 @@ export interface LinkProcessorOutput {
   insertedLinks: InsertedLinkDetail[];
   executionInfo: {
     executionTime: number;
+  };
+}
+
+// Deep Research Types (Perplexity Integration)
+export interface DeepResearchQueryResult {
+  content: string;
+  citations: string[];
+  executionTime: number;
+}
+
+export interface DeepResearchResult {
+  trends?: DeepResearchQueryResult;
+  userQuestions?: DeepResearchQueryResult;
+  authorityData?: DeepResearchQueryResult;
+}
+
+// Content Context Types (for topic alignment)
+export interface ContentContext {
+  primaryKeyword: string;
+  selectedTitle: string;
+  searchIntent: string;
+  targetAudience: string;
+  topicKeywords: string[];
+  regionContext?: string;
+  industryContext?: string;
+  brandName?: string;
+  toneGuidance?: string;
+}
+
+// Special Block Types
+export interface SpecialBlock {
+  type: "expert_tip" | "local_advantage" | "expert_warning";
+  content: string;
+}
+
+// Content Plan Agent Types
+export interface ContentPlanInput {
+  strategy: StrategyOutput;
+  research: ResearchOutput;
+  competitorAnalysis?: CompetitorAnalysisOutput;
+  brandVoice: BrandVoice;
+  targetLanguage?: string;
+  model: string;
+  temperature?: number;
+  maxTokens?: number;
+}
+
+export interface SectionPlan {
+  h2Title: string;
+  subheadings: string[];
+  writingInstructions: string;
+  researchInsights: string[];
+  targetWordCount: number;
+  specialBlock?: SpecialBlock;
+  keyPoints: string[];
+}
+
+export interface FAQPlan {
+  h2Title: string;
+  questions: {
+    question: string;
+    answerGuidelines: string;
+  }[];
+  targetWordCount: number;
+}
+
+export interface ContentPlanOutput {
+  optimizedTitle: {
+    primary: string;
+    alternatives: string[];
+    reasoning: string;
+  };
+  contentStrategy: {
+    primaryAngle: string;
+    userPainPoints: string[];
+    valueProposition: string;
+    differentiationPoints: string[];
+    toneGuidance: string;
+  };
+  detailedOutline: {
+    introduction: {
+      hook: string;
+      context: string;
+      thesis: string;
+      targetWordCount: number;
+    };
+    mainSections: SectionPlan[];
+    faq: FAQPlan;
+    conclusion: {
+      summary: string;
+      callToAction: string;
+      targetWordCount: number;
+    };
+  };
+  seoOptimization: {
+    primaryKeyword: string;
+    secondaryKeywords: string[];
+    lsiKeywords: string[];
+    keywordPlacement: {
+      title: boolean;
+      h2Headings: boolean;
+      firstParagraph: boolean;
+      conclusion: boolean;
+    };
+  };
+  localization: {
+    region: string;
+    culturalNotes: string[];
+    localExamples: string[];
+  };
+  researchInsights: {
+    trendTopics: string[];
+    userConcerns: string[];
+    authorityPoints: string[];
+  };
+  executionInfo: {
+    model: string;
+    totalTokens: number;
+    latencyMs: number;
   };
 }
 
