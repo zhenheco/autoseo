@@ -137,6 +137,13 @@ export interface ResearchOutput {
   recommendedStrategy: string;
   relatedKeywords: string[];
   externalReferences?: ExternalReference[];
+  referenceMapping?: {
+    url: string;
+    title: string;
+    type: ExternalReference["type"];
+    suggestedSections: string[];
+    relevanceScore: number;
+  }[];
   deepResearch?: {
     trends?: {
       content: string;
@@ -431,6 +438,7 @@ export interface ExternalReference {
     | "tutorial";
   relevantSection?: string;
   description: string;
+  relevance_score?: number;
 }
 
 export interface InternalLink {
@@ -1006,4 +1014,63 @@ export interface CompetitorAnalysisOutput {
     executionTime: number;
     tokenUsage: { input: number; output: number };
   };
+}
+
+// Unified Strategy Agent Types (Linear Pipeline)
+export interface UnifiedStrategyInput {
+  research: ResearchOutput;
+  competitorAnalysis?: CompetitorAnalysisOutput;
+  brandVoice?: BrandVoice;
+  targetWordCount: number;
+  targetLanguage?: string;
+  model: string;
+  temperature?: number;
+  maxTokens?: number;
+}
+
+export interface UnifiedStrategyOutput {
+  strategy: StrategyOutput;
+  contentPlan: ContentPlanOutput;
+}
+
+// Unified Writing Agent Types (Linear Pipeline)
+export interface UnifiedWritingInput {
+  strategy: StrategyOutput;
+  contentPlan?: ContentPlanOutput;
+  brandVoice: BrandVoice;
+  imageOutput?: ImageOutput;
+  targetLanguage?: string;
+  primaryKeyword: string;
+  industry?: string;
+  region?: string;
+  model: string;
+  temperature?: number;
+  maxTokens?: number;
+}
+
+// Quality Gate Agent Types (Linear Pipeline)
+export interface QualityGateInput {
+  writing: WritingOutput;
+  meta?: MetaOutput;
+  strategy?: StrategyOutput;
+  primaryKeyword: string;
+  targetWordCount: number;
+  targetLanguage: string;
+  qualityThreshold?: number;
+}
+
+export interface QualityCheckItem {
+  name: string;
+  passed: boolean;
+  score: number;
+  message: string;
+  severity: "error" | "warning" | "info";
+}
+
+export interface QualityCheckResult {
+  passed: boolean;
+  score: number;
+  checks: QualityCheckItem[];
+  suggestions: string[];
+  blockers: string[];
 }

@@ -8,7 +8,7 @@ import { ImageAgent } from "./image-agent";
 import { FeaturedImageAgent } from "./featured-image-agent";
 import { ArticleImageAgent } from "./article-image-agent";
 import { MetaAgent } from "./meta-agent";
-import { HTMLAgent } from "./html-agent";
+import { LinkProcessorAgent } from "./link-processor-agent";
 import { CompetitorAnalysisAgent } from "./competitor-analysis-agent";
 import { CategoryAgent } from "./category-agent";
 import { ContentPlanAgent } from "./content-plan-agent";
@@ -555,8 +555,8 @@ export class ParallelOrchestrator {
         meta: metaOutput,
       });
 
-      const htmlAgent = new HTMLAgent(aiConfig, context);
-      const htmlOutput = await htmlAgent.execute({
+      const linkProcessor = new LinkProcessorAgent();
+      const htmlOutput = await linkProcessor.execute({
         html: writingOutput.html,
         internalLinks: previousArticles.map((a) => ({
           url: a.url,
@@ -564,6 +564,7 @@ export class ParallelOrchestrator {
           keywords: a.keywords,
         })),
         externalReferences: strategyOutput.externalReferences || [],
+        targetLanguage: input.region?.startsWith("zh") ? "zh-TW" : "en",
       });
 
       writingOutput.html = htmlOutput.html;
