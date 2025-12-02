@@ -142,52 +142,64 @@ ${fullHtml}
 
     const linkedKeywords = new Set<string>();
 
-    for (const link of internalLinks) {
+    const sortedLinks = [...internalLinks].sort((a, b) => {
+      const maxLenA = Math.max(...(a.keywords?.map((k) => k.length) || [0]));
+      const maxLenB = Math.max(...(b.keywords?.map((k) => k.length) || [0]));
+      return maxLenB - maxLenA;
+    });
+
+    for (const link of sortedLinks) {
       if (linkedKeywords.size >= internalLinks.length) break;
       if (!link.keywords) continue;
 
-      for (const keyword of link.keywords) {
-        if (linkedKeywords.has(keyword)) continue;
+      const sortedKeywords = [...link.keywords].sort(
+        (a, b) => b.length - a.length,
+      );
 
-        const regex = new RegExp(`\\b${this.escapeRegex(keyword)}\\b`, "i");
+      for (const keyword of sortedKeywords) {
+        if (linkedKeywords.has(keyword)) continue;
+        if (keyword.length < 2) continue;
 
         for (const textNode of textNodes) {
           const element = textNode as unknown as HTMLElement;
           const text = element.textContent || "";
-          const match = text.match(regex);
 
-          if (match) {
-            const matchText = match[0];
-            const beforeText = text.substring(0, match.index);
-            const afterText = text.substring(
-              (match.index || 0) + matchText.length,
-            );
+          const index = text.indexOf(keyword);
+          if (index === -1) continue;
 
-            const element2 = textNode as unknown as HTMLElement;
-            const parent = element2.parentElement;
-            if (!parent) continue;
+          const beforeText = text.substring(0, index);
+          const afterText = text.substring(index + keyword.length);
 
-            const anchor = document.createElement("a");
-            anchor.href = link.url;
-            anchor.textContent = matchText;
-            anchor.setAttribute("rel", "internal");
+          const element2 = textNode as unknown as HTMLElement;
+          const parent = element2.parentElement;
+          if (!parent) continue;
 
-            const beforeNode = document.createTextNode(beforeText);
-            const afterNode = document.createTextNode(afterText);
+          const anchor = document.createElement("a");
+          anchor.href = link.url;
+          anchor.textContent = keyword;
+          anchor.setAttribute("rel", "internal");
 
-            parent.replaceChild(afterNode, textNode);
-            parent.insertBefore(anchor, afterNode);
-            parent.insertBefore(beforeNode, anchor);
+          const beforeNode = document.createTextNode(beforeText);
+          const afterNode = document.createTextNode(afterText);
 
-            linkedKeywords.add(keyword);
-            break;
-          }
+          parent.replaceChild(afterNode, textNode);
+          parent.insertBefore(anchor, afterNode);
+          parent.insertBefore(beforeNode, anchor);
+
+          linkedKeywords.add(keyword);
+          console.log(
+            `[HTMLAgent] ✅ Inserted internal link for "${keyword}" → ${link.url}`,
+          );
+          break;
         }
 
         if (linkedKeywords.has(keyword)) break;
       }
     }
 
+    console.log(
+      `[HTMLAgent] Internal links inserted: ${linkedKeywords.size}/${internalLinks.length}`,
+    );
     return body.innerHTML;
   }
 
@@ -242,47 +254,51 @@ ${fullHtml}
       }
 
       let linked = false;
-      for (const keyword of keywords) {
-        if (linked) break;
+      const sortedKeywords = [...keywords].sort((a, b) => b.length - a.length);
 
-        const regex = new RegExp(`\\b${this.escapeRegex(keyword)}\\b`, "i");
+      for (const keyword of sortedKeywords) {
+        if (linked) break;
+        if (keyword.length < 2) continue;
 
         for (const textNode of textNodes) {
           const element = textNode as unknown as HTMLElement;
           const text = element.textContent || "";
-          const match = text.match(regex);
 
-          if (match) {
-            const matchText = match[0];
-            const beforeText = text.substring(0, match.index);
-            const afterText = text.substring(
-              (match.index || 0) + matchText.length,
-            );
+          const index = text.indexOf(keyword);
+          if (index === -1) continue;
 
-            const element2 = textNode as unknown as HTMLElement;
-            const parent = element2.parentElement;
-            if (!parent) continue;
+          const beforeText = text.substring(0, index);
+          const afterText = text.substring(index + keyword.length);
 
-            const anchor = document.createElement("a");
-            anchor.href = ref.url;
-            anchor.textContent = matchText;
-            anchor.setAttribute("target", "_blank");
-            anchor.setAttribute("rel", "noopener noreferrer external");
+          const element2 = textNode as unknown as HTMLElement;
+          const parent = element2.parentElement;
+          if (!parent) continue;
 
-            const beforeNode = document.createTextNode(beforeText);
-            const afterNode = document.createTextNode(afterText);
+          const anchor = document.createElement("a");
+          anchor.href = ref.url;
+          anchor.textContent = keyword;
+          anchor.setAttribute("target", "_blank");
+          anchor.setAttribute("rel", "noopener noreferrer external");
 
-            parent.replaceChild(afterNode, textNode);
-            parent.insertBefore(anchor, afterNode);
-            parent.insertBefore(beforeNode, anchor);
+          const beforeNode = document.createTextNode(beforeText);
+          const afterNode = document.createTextNode(afterText);
 
-            linked = true;
-            break;
-          }
+          parent.replaceChild(afterNode, textNode);
+          parent.insertBefore(anchor, afterNode);
+          parent.insertBefore(beforeNode, anchor);
+
+          console.log(
+            `[HTMLAgent] ✅ Inserted external link for "${keyword}" → ${ref.url}`,
+          );
+          linked = true;
+          break;
         }
       }
     }
 
+    console.log(
+      `[HTMLAgent] External references processed: ${externalRefs.length}`,
+    );
     return body.innerHTML;
   }
 
@@ -467,10 +483,6 @@ ${fullHtml}
 
     // 增加到最多 10 個關鍵字
     return keywords.slice(0, 10);
-  }
-
-  private escapeRegex(text: string): string {
-    return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   }
 
   private slugify(text: string): string {
