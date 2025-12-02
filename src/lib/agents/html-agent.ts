@@ -330,6 +330,35 @@ ${fullHtml}
         const id = this.slugify(text);
         heading.id = id;
       }
+      // 增加 H2 標題的上方間距
+      if (heading.tagName === "H2") {
+        heading.setAttribute("style", "margin-top: 2.5em; margin-bottom: 1em;");
+      }
+      // H3 標題間距
+      if (heading.tagName === "H3") {
+        heading.setAttribute(
+          "style",
+          "margin-top: 1.8em; margin-bottom: 0.8em;",
+        );
+      }
+    });
+
+    // 增加段落間距
+    const paragraphs = body.querySelectorAll("p");
+    paragraphs.forEach((p) => {
+      if (!p.getAttribute("style")?.includes("margin")) {
+        p.setAttribute("style", "margin-bottom: 1.2em; line-height: 1.8;");
+      }
+    });
+
+    // 增加列表間距
+    const lists = body.querySelectorAll("ul, ol");
+    lists.forEach((list) => {
+      list.setAttribute("style", "margin-bottom: 1.5em; padding-left: 1.5em;");
+      const items = list.querySelectorAll("li");
+      items.forEach((li) => {
+        li.setAttribute("style", "margin-bottom: 0.6em; line-height: 1.7;");
+      });
     });
 
     const tables = body.querySelectorAll("table");
@@ -348,8 +377,32 @@ ${fullHtml}
   }
 
   private async addStyledBoxes(html: string): Promise<string> {
+    if (!html || html.trim() === "") {
+      console.warn("[HTMLAgent] ⚠️ Empty HTML for styled boxes");
+      return html;
+    }
+
+    let fullHtml = html;
+    if (!fullHtml.includes("<html>") && !fullHtml.includes("<!DOCTYPE")) {
+      fullHtml = `<!DOCTYPE html>
+<html lang="zh-TW">
+<head><meta charset="UTF-8"></head>
+<body>
+${fullHtml}
+</body>
+</html>`;
+    }
+
     const { parseHTML } = await import("linkedom");
-    const { document } = parseHTML(html);
+    const { document } = parseHTML(fullHtml);
+
+    if (!document || !document.documentElement) {
+      console.warn(
+        "[HTMLAgent] ⚠️ documentElement is null, skipping styled boxes",
+      );
+      return html;
+    }
+
     const body = document.body;
 
     if (!body) {

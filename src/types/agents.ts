@@ -550,6 +550,8 @@ export interface ArticleGenerationInput {
   targetLanguage?: string;
   wordCount?: number;
   imageCount?: number;
+  industry?: string | null;
+  language?: string;
 }
 
 export interface ArticleGenerationResult {

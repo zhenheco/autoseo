@@ -174,7 +174,7 @@ export default async function ArticleDetailPage({
                 )}
                 {article.generated_content.content && (
                   <div
-                    className="text-sm leading-relaxed whitespace-pre-wrap"
+                    className="prose prose-lg max-w-none prose-p:leading-[1.8] prose-p:my-5 prose-h2:mt-10 prose-h2:mb-4 prose-h3:mt-7 prose-h3:mb-3 prose-li:my-2 prose-li:leading-[1.7] prose-ul:my-6 prose-ol:my-6 prose-img:my-8"
                     dangerouslySetInnerHTML={{
                       __html: article.generated_content.content,
                     }}
