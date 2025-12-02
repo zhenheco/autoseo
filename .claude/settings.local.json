@@ -74,7 +74,12 @@
       "Bash(pnpm run build:*)",
       "Bash(gh auth status:*)",
       "mcp__github__get_me",
-      "Bash(gh api /user)"
+      "Bash(gh api /user)",
+      "WebFetch(domain:www.cw.com.tw)",
+      "WebFetch(domain:vocus.cc)",
+      "WebFetch(domain:zh.moegirl.org.cn)",
+      "Bash(git ls-tree:*)",
+      "Bash(git grep:*)"
     ],
     "deny": [],
     "ask": []

@@ -82,10 +82,13 @@ ${allTitles.length > 0 ? allTitles.map((t, i) => `${i + 1}. ${t}`).join("\n") : 
 請在推理後，輸出以下 JSON 格式：
 {
   "reasoning_summary": "簡要說明選擇這些標題的原因",
-  "titles": ["<你生成的第一個標題>", "<你生成的第二個標題>", "<你生成的第三個標題>"]
+  "titles": ["完整的第一個標題文字", "完整的第二個標題文字", "完整的第三個標題文字"]
 }
 
-注意：不要使用「標題1」「標題2」等作為實際標題，請生成具體、有意義的文章標題。`;
+**重要**：
+- 直接輸出完整的標題文字，例如「2024年無人機考照完整攻略」
+- 禁止輸出佔位符如 <標題>、[標題1]、{第一個標題} 等
+- 每個標題必須是可直接使用的完整句子`;
 
     try {
       const response = await this.complete(prompt, {
@@ -112,10 +115,14 @@ ${allTitles.length > 0 ? allTitles.map((t, i) => `${i + 1}. ${t}`).join("\n") : 
         try {
           const parsed = JSON.parse(arrayMatch[0]);
           if (Array.isArray(parsed) && parsed.length >= 3) {
+            const validTitles = this.filterValidTitles(
+              parsed.slice(0, 3),
+              input.researchData.title,
+            );
             console.log(
               "[StrategyAgent] Successfully parsed titles from array match",
             );
-            return parsed.slice(0, 3);
+            return validTitles;
           }
         } catch (e) {
           console.warn("[StrategyAgent] Failed to parse array match:", e);
@@ -125,24 +132,32 @@ ${allTitles.length > 0 ? allTitles.map((t, i) => `${i + 1}. ${t}`).join("\n") : 
       try {
         const parsed = JSON.parse(content);
         if (Array.isArray(parsed) && parsed.length >= 3) {
+          const validTitles = this.filterValidTitles(
+            parsed.slice(0, 3),
+            input.researchData.title,
+          );
           console.log(
             "[StrategyAgent] Successfully parsed titles from full content",
           );
-          return parsed.slice(0, 3);
+          return validTitles;
         }
         if (
           parsed.titles &&
           Array.isArray(parsed.titles) &&
           parsed.titles.length >= 3
         ) {
+          const validTitles = this.filterValidTitles(
+            parsed.titles.slice(0, 3),
+            input.researchData.title,
+          );
           console.log(
             "[StrategyAgent] Successfully parsed titles from .titles property",
             {
               reasoning: parsed.reasoning_summary?.substring(0, 100),
-              titlesCount: parsed.titles.length,
+              titlesCount: validTitles.length,
             },
           );
-          return parsed.titles.slice(0, 3);
+          return validTitles;
         }
       } catch (e) {
         console.warn(
@@ -166,6 +181,45 @@ ${allTitles.length > 0 ? allTitles.map((t, i) => `${i + 1}. ${t}`).join("\n") : 
       `${title}怎麼做？專家分享 5 個關鍵步驟`,
       `${title}必知重點：避開常見錯誤`,
     ];
+  }
+
+  private containsPlaceholder(text: string): boolean {
+    const placeholderPatterns = [
+      /<[^>]*標題[^>]*>/,
+      /<[^>]*章節[^>]*>/,
+      /<[^>]*問題[^>]*>/,
+      /<[^>]*答案[^>]*>/,
+      /\[[^\]]*標題[^\]]*\]/,
+      /\[[^\]]*章節[^\]]*\]/,
+      /\{[^}]*標題[^}]*\}/,
+      /<你[^>]+>/,
+      /<第[一二三四五六七八九十]+[^>]*>/,
+      /placeholder/i,
+      /\[insert\s/i,
+      /\[your\s/i,
+    ];
+    return placeholderPatterns.some((pattern) => pattern.test(text));
+  }
+
+  private filterValidTitles(titles: string[], fallbackTitle: string): string[] {
+    const validTitles = titles.filter((t) => {
+      if (!t || typeof t !== "string" || t.trim().length < 5) return false;
+      if (this.containsPlaceholder(t)) {
+        console.warn("[StrategyAgent] Filtered out placeholder title:", t);
+        return false;
+      }
+      return true;
+    });
+
+    if (validTitles.length < 3) {
+      console.warn("[StrategyAgent] Not enough valid titles, using fallback", {
+        valid: validTitles.length,
+        original: titles.length,
+      });
+      return this.getFallbackTitles(fallbackTitle);
+    }
+
+    return validTitles;
   }
 
   private async selectBestTitle(
@@ -462,7 +516,7 @@ Please output the complete JSON that conforms to the above schema in ${languageN
         return null;
       }
 
-      // 驗證每個 section 的必要欄位
+      // 驗證每個 section 的必要欄位與佔位符
       for (const section of parsed.mainSections) {
         if (
           !section.heading ||
@@ -477,12 +531,40 @@ Please output the complete JSON that conforms to the above schema in ${languageN
           );
           return null;
         }
+
+        if (this.containsPlaceholder(section.heading)) {
+          console.warn(
+            "[StrategyAgent] Section heading contains placeholder:",
+            section.heading,
+          );
+          return null;
+        }
+
+        for (const sub of section.subheadings) {
+          if (this.containsPlaceholder(sub)) {
+            console.warn(
+              "[StrategyAgent] Subheading contains placeholder:",
+              sub,
+            );
+            return null;
+          }
+        }
       }
 
       // 驗證 FAQ
       if (!Array.isArray(parsed.faq) || parsed.faq.length < 2) {
         console.warn("[StrategyAgent] Invalid faq array");
         return null;
+      }
+
+      for (const faq of parsed.faq) {
+        if (this.containsPlaceholder(faq.question)) {
+          console.warn(
+            "[StrategyAgent] FAQ question contains placeholder:",
+            faq.question,
+          );
+          return null;
+        }
       }
 
       console.log("[StrategyAgent] ✅ Outline validation passed");
@@ -525,41 +607,44 @@ ${gaps
 
 {
   "introduction": {
-    "hook": "開場吸引讀者的方式",
-    "context": "背景說明",
-    "thesis": "主要觀點",
+    "hook": "用一個引人入勝的問題或數據開場",
+    "context": "說明這個主題的重要性和背景",
+    "thesis": "本文將帶你了解...",
     "wordCount": 200
   },
   "mainSections": [
     {
-      "heading": "<第一個章節的具體標題>",
-      "subheadings": ["<第一個子標題>", "<第二個子標題>"],
-      "keyPoints": ["<第一個重點>", "<第二個重點>"],
+      "heading": "基礎概念與準備工作",
+      "subheadings": ["核心定義解析", "必備工具清單"],
+      "keyPoints": ["關鍵概念一", "實用技巧二"],
       "targetWordCount": 500,
-      "keywords": ["<相關關鍵字1>", "<相關關鍵字2>"]
+      "keywords": ["相關關鍵字A", "相關關鍵字B"]
     },
     {
-      "heading": "<第二個章節的具體標題>",
-      "subheadings": ["<第一個子標題>", "<第二個子標題>"],
-      "keyPoints": ["<第一個重點>", "<第二個重點>"],
+      "heading": "實戰操作步驟詳解",
+      "subheadings": ["第一步驟說明", "第二步驟說明"],
+      "keyPoints": ["操作要點一", "注意事項二"],
       "targetWordCount": 500,
-      "keywords": ["<相關關鍵字>"]
+      "keywords": ["操作關鍵字"]
     }
   ],
   "conclusion": {
-    "summary": "總結重點",
-    "callToAction": "行動呼籲",
+    "summary": "回顧本文重點...",
+    "callToAction": "現在就開始...",
     "wordCount": 150
   },
   "faq": [
     {
-      "question": "<與主題相關的常見問題>？",
-      "answerOutline": "<答案大綱>"
+      "question": "這個方法適合新手嗎？",
+      "answerOutline": "適合，因為..."
     }
   ]
 }
 
-注意：請勿使用「標題1」「子標題1」「常見問題1」等占位符作為實際內容，請生成具體、有意義的標題和內容。
+**重要禁止事項**：
+- ❌ 禁止使用 <...>、[...]、{...} 等佔位符格式
+- ❌ 禁止使用「標題1」「子標題1」「常見問題1」等編號佔位符
+- ✅ 必須輸出具體、有意義的完整內容
 
 **規則：**
 1. mainSections 2-4 個

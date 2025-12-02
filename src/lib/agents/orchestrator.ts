@@ -21,6 +21,7 @@ import { WordPressClient } from "@/lib/wordpress/client";
 import { PerplexityClient } from "@/lib/perplexity/client";
 import { getAPIRouter } from "@/lib/ai/api-router";
 import { ErrorTracker } from "./error-tracker";
+import { PipelineLogger } from "./pipeline-logger";
 import { RetryConfigs, type AgentRetryConfig } from "./retry-config";
 import type {
   ArticleGenerationInput,
@@ -41,6 +42,7 @@ import { AgentExecutionContext } from "./base-agent";
 export class ParallelOrchestrator {
   private supabaseClient?: SupabaseClient;
   private errorTracker: ErrorTracker;
+  private pipelineLogger?: PipelineLogger;
   private currentJobId?: string;
 
   constructor(supabaseClient?: SupabaseClient) {
@@ -55,13 +57,20 @@ export class ParallelOrchestrator {
     });
   }
 
-  private setJobId(jobId: string): void {
+  private setJobId(jobId: string, keyword: string, companyId: string): void {
     this.currentJobId = jobId;
-    // Update error tracker with job ID
     this.errorTracker = new ErrorTracker({
       ...this.errorTracker["options"],
       jobId,
       enableDatabaseTracking: true,
+      getSupabase: () => this.getSupabase(),
+    });
+
+    this.pipelineLogger = new PipelineLogger({
+      jobId,
+      keyword,
+      companyId,
+      enableDatabaseSync: true,
       getSupabase: () => this.getSupabase(),
     });
   }
@@ -79,9 +88,8 @@ export class ParallelOrchestrator {
     const supabase = await this.getSupabase();
     const startTime = Date.now();
 
-    // Set job ID for error tracking
     if (input.articleJobId) {
-      this.setJobId(input.articleJobId);
+      this.setJobId(input.articleJobId, input.title, input.companyId);
     }
 
     const phaseTimings = {
@@ -203,6 +211,7 @@ export class ParallelOrchestrator {
         );
 
         // Phase 1: Research
+        this.pipelineLogger?.startPhase("research", { keyword: input.title });
         const phase1Start = Date.now();
         const researchAgent = new ResearchAgent(aiConfig, context);
         researchOutput = await researchAgent.execute({
@@ -215,6 +224,10 @@ export class ParallelOrchestrator {
         });
         phaseTimings.research = Date.now() - phase1Start;
         result.research = researchOutput;
+        this.pipelineLogger?.completePhase("research", {
+          competitorCount: researchOutput.competitorAnalysis?.length || 0,
+          externalRefsCount: researchOutput.externalReferences?.length || 0,
+        });
 
         await this.updateJobStatus(input.articleJobId, "processing", {
           research: researchOutput,
@@ -222,6 +235,7 @@ export class ParallelOrchestrator {
         });
 
         // Phase 2: Strategy
+        this.pipelineLogger?.startPhase("strategy");
         const phase2Start = Date.now();
         const strategyAgent = new StrategyAgent(aiConfig, context);
         strategyOutput = await strategyAgent.execute({
@@ -238,6 +252,10 @@ export class ParallelOrchestrator {
         });
         phaseTimings.strategy = Date.now() - phase2Start;
         result.strategy = strategyOutput;
+        this.pipelineLogger?.completePhase("strategy", {
+          selectedTitle: strategyOutput.selectedTitle,
+          sectionsCount: strategyOutput.outline?.mainSections?.length || 0,
+        });
 
         await this.updateJobStatus(input.articleJobId, "processing", {
           ...savedState,
@@ -246,7 +264,6 @@ export class ParallelOrchestrator {
           current_phase: "strategy_completed",
         });
 
-        // 更新 currentPhase 變數以繼續執行 Phase 3
         currentPhase = "strategy_completed";
         console.log(
           "[Orchestrator] ✅ Phase 1-2 completed, continuing to Phase 3",
@@ -818,9 +835,12 @@ export class ParallelOrchestrator {
         }
       }
 
+      this.pipelineLogger?.complete();
       return result;
     } catch (error) {
-      result.errors = { orchestrator: error as Error };
+      const err = error as Error;
+      this.pipelineLogger?.fail(err.message);
+      result.errors = { orchestrator: err };
       await this.updateJobStatus(input.articleJobId, "failed", result);
       throw error;
     }
