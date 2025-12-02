@@ -171,47 +171,15 @@ ${specialBlockGuidance}
   }
 
   private determineSpecialBlockType(
-    title: string,
-    research: ContentPlanInput["research"],
+    _title: string,
+    _research: ContentPlanInput["research"],
   ): string {
-    const titleLower = title.toLowerCase();
-    const gaps = research.contentGaps.join(" ").toLowerCase();
+    return `特殊區塊為選擇性使用，請根據內容需要自行判斷是否加入：
+- **tip_block**：適合需要提供額外建議或小技巧的段落
+- **local_advantage**：適合強調地區特色或本地優勢的內容
+- **warning_block**：適合提醒讀者注意事項或風險的段落
 
-    const isTutorial =
-      /教學|教程|如何|方法|步驟|技巧|攻略/i.test(title) ||
-      research.searchIntent === "informational";
-
-    const isLocalService =
-      /地區|本地|當地|服務|推薦|哪裡/i.test(title) ||
-      (research.region && research.region !== "Global");
-
-    const isSafetyRelated = /安全|風險|警告|注意|避免|問題|錯誤/i.test(title);
-
-    const suggestions: string[] = [];
-
-    if (isTutorial) {
-      suggestions.push(`- 建議使用 **tip_block** (小提醒)：提供實用的建議
-  - 內容長度：50-80 字
-  - 位置：放在操作步驟或技巧說明的區塊中`);
-    }
-
-    if (isLocalService) {
-      suggestions.push(`- 建議使用 **local_advantage** (本地優勢)：突出地區特色
-  - 內容長度：80-120 字
-  - 位置：放在服務介紹或優勢說明的區塊中`);
-    }
-
-    if (isSafetyRelated) {
-      suggestions.push(`- 建議使用 **warning_block** (注意事項)：提醒重要注意事項
-  - 內容長度：50-80 字
-  - 位置：放在風險說明或注意事項的區塊中`);
-    }
-
-    if (suggestions.length === 0) {
-      return "根據文章主題，特殊區塊為選擇性使用。";
-    }
-
-    return suggestions.join("\n\n");
+請根據文章實際內容決定是否使用，不是每篇文章都需要特殊區塊。`;
   }
 
   private parseResponse(

@@ -1222,48 +1222,40 @@ ${gaps
 
     return {
       introduction: {
-        hook: `為什麼${keyTopic}如此重要？`,
-        context: `${keyTopic}的背景與應用場景`,
-        thesis: `本文將深入探討${keyTopic}的核心概念與實踐方法`,
+        hook: `${keyTopic}完整指南`,
+        context: `關於${keyTopic}的重要資訊`,
+        thesis: `本文將帶你了解${keyTopic}`,
         wordCount: 200,
       },
       mainSections: [
         {
-          heading: `${keyTopic}的核心原理與運作機制`,
-          subheadings: [`${keyTopic}的定義與特性`, `${keyTopic}的應用場景`],
-          keyPoints: [
-            `${keyTopic}的基本原理`,
-            `${keyTopic}的優勢分析`,
-            `${keyTopic}的適用情境`,
-          ],
+          heading: `認識${keyTopic}`,
+          subheadings: [`什麼是${keyTopic}`, `${keyTopic}的重要性`],
+          keyPoints: [`${keyTopic}介紹`, `${keyTopic}特點`],
           targetWordCount: sectionWordCount,
-          keywords: [keyTopic, "原理", "機制", "應用"],
+          keywords: [keyTopic],
         },
         {
-          heading: `如何有效運用${keyTopic}達成目標`,
-          subheadings: [`${keyTopic}的操作步驟`, `${keyTopic}的進階技法`],
-          keyPoints: [
-            `${keyTopic}的實踐方法`,
-            `${keyTopic}的注意事項`,
-            `${keyTopic}的效果優化`,
-          ],
+          heading: `${keyTopic}實務應用`,
+          subheadings: [`${keyTopic}使用方式`, `${keyTopic}注意事項`],
+          keyPoints: [`${keyTopic}操作`, `${keyTopic}建議`],
           targetWordCount: sectionWordCount,
-          keywords: [keyTopic, "方法", "步驟", "實踐"],
+          keywords: [keyTopic],
         },
       ],
       conclusion: {
-        summary: `${keyTopic}核心要點總結`,
-        callToAction: `立即開始實踐，掌握${keyTopic}的精髓`,
+        summary: `${keyTopic}總結`,
+        callToAction: `開始嘗試${keyTopic}`,
         wordCount: 150,
       },
       faq: [
         {
-          question: `${keyTopic}適合初學者嗎？`,
-          answerOutline: "適合，本文從基礎概念開始循序漸進",
+          question: `${keyTopic}適合誰？`,
+          answerOutline: `適合想了解${keyTopic}的讀者`,
         },
         {
-          question: `需要哪些前置知識？`,
-          answerOutline: "基本的相關背景即可，文中會詳細說明",
+          question: `如何開始${keyTopic}？`,
+          answerOutline: `按照文章步驟即可開始`,
         },
       ],
     };
