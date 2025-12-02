@@ -248,18 +248,26 @@ export async function deleteArticle(articleJobId: string) {
     return { success: false, error: "無權限" };
   }
 
+  console.log("[deleteArticle] Deleting article:", {
+    articleJobId,
+    companyId: membership.company_id,
+  });
+
   const { error, count } = await supabase
     .from("article_jobs")
-    .delete()
+    .delete({ count: "exact" })
     .eq("id", articleJobId)
     .eq("company_id", membership.company_id);
 
+  console.log("[deleteArticle] Delete result:", { error, count });
+
   if (error) {
-    console.error("Failed to delete article:", error);
+    console.error("[deleteArticle] Failed to delete:", error);
     return { success: false, error: error.message };
   }
 
-  if (count === 0) {
+  if (count !== null && count === 0) {
+    console.warn("[deleteArticle] Article not found or no permission");
     return { success: false, error: "找不到文章或無權刪除" };
   }
 
