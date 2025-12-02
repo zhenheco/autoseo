@@ -292,35 +292,95 @@ export async function POST(request: NextRequest) {
         const githubRepo = process.env.GITHUB_REPO_NAME;
 
         if (githubToken && githubOwner && githubRepo) {
-          const response = await fetch(
-            `https://api.github.com/repos/${githubOwner}/${githubRepo}/dispatches`,
-            {
-              method: "POST",
-              headers: {
-                Authorization: `Bearer ${githubToken}`,
-                Accept: "application/vnd.github.v3+json",
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                event_type: "article-jobs-created",
-                client_payload: {
-                  jobCount: newJobIds.length,
-                  jobIds: newJobIds,
-                  timestamp: new Date().toISOString(),
-                },
-              }),
-            },
-          );
+          const maxRetries = 3;
+          let lastError: string | null = null;
+          let success = false;
 
-          if (response.ok) {
-            console.log(
-              `[Batch] ✅ Triggered GitHub Actions workflow for ${newJobIds.length} jobs`,
-            );
-          } else {
+          for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+              const response = await fetch(
+                `https://api.github.com/repos/${githubOwner}/${githubRepo}/dispatches`,
+                {
+                  method: "POST",
+                  headers: {
+                    Authorization: `Bearer ${githubToken}`,
+                    Accept: "application/vnd.github.v3+json",
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    event_type: "article-jobs-created",
+                    client_payload: {
+                      jobCount: newJobIds.length,
+                      jobIds: newJobIds,
+                      timestamp: new Date().toISOString(),
+                    },
+                  }),
+                },
+              );
+
+              if (response.ok) {
+                console.log(
+                  `[Batch] ✅ Triggered GitHub Actions workflow for ${newJobIds.length} jobs (attempt ${attempt})`,
+                );
+                success = true;
+                break;
+              } else {
+                lastError = await response.text();
+                console.warn(
+                  `[Batch] ⚠️  Workflow trigger attempt ${attempt}/${maxRetries} failed:`,
+                  response.status,
+                  lastError,
+                );
+
+                if (attempt < maxRetries) {
+                  await new Promise((resolve) =>
+                    setTimeout(resolve, 1000 * attempt),
+                  );
+                }
+              }
+            } catch (fetchError) {
+              lastError =
+                fetchError instanceof Error
+                  ? fetchError.message
+                  : String(fetchError);
+              console.warn(
+                `[Batch] ⚠️  Workflow trigger attempt ${attempt}/${maxRetries} error:`,
+                lastError,
+              );
+
+              if (attempt < maxRetries) {
+                await new Promise((resolve) =>
+                  setTimeout(resolve, 1000 * attempt),
+                );
+              }
+            }
+          }
+
+          if (!success) {
             console.error(
-              "[Batch] ⚠️  Failed to trigger workflow:",
-              response.status,
-              await response.text(),
+              `[Batch] ❌ Failed to trigger workflow after ${maxRetries} attempts. Deleting jobs...`,
+              lastError,
+            );
+
+            for (const jobId of newJobIds) {
+              try {
+                await supabase.from("article_jobs").delete().eq("id", jobId);
+                console.log(`[Batch] 🗑️  Deleted failed job: ${jobId}`);
+              } catch (deleteError) {
+                console.error(
+                  `[Batch] ❌ Failed to delete job ${jobId}:`,
+                  deleteError,
+                );
+              }
+            }
+
+            return NextResponse.json(
+              {
+                success: false,
+                error: `GitHub Actions 觸發失敗（重試 ${maxRetries} 次後仍失敗），已清除待處理任務`,
+                details: lastError,
+              },
+              { status: 503 },
             );
           }
         } else {
