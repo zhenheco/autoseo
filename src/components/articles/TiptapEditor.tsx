@@ -64,7 +64,13 @@ export function TiptapEditor({
     editorProps: {
       attributes: {
         class:
-          "prose prose-lg max-w-none dark:prose-invert focus:outline-none px-4 py-6 prose-p:leading-relaxed prose-p:my-6 prose-headings:mt-8 prose-headings:mb-4 prose-li:my-2",
+          "prose prose-lg max-w-none dark:prose-invert focus:outline-none px-6 py-8 " +
+          "prose-p:leading-[1.8] prose-p:my-5 " +
+          "prose-h2:mt-10 prose-h2:mb-4 prose-h2:text-2xl prose-h2:font-bold " +
+          "prose-h3:mt-7 prose-h3:mb-3 prose-h3:text-xl prose-h3:font-semibold " +
+          "prose-li:my-2 prose-li:leading-[1.7] " +
+          "prose-ul:my-6 prose-ol:my-6 " +
+          "prose-img:my-8 prose-img:rounded-lg",
       },
     },
   });

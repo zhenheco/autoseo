@@ -15,131 +15,149 @@ export interface AgentRetryConfig extends RetryConfig {
 
 export const RetryConfigs = {
   STRATEGY_AGENT: {
-    agentName: 'StrategyAgent',
+    agentName: "StrategyAgent",
     maxAttempts: 5,
     initialDelayMs: 2000,
     maxDelayMs: 30000,
     backoffMultiplier: 2,
-    retryableErrors: ['ECONNRESET', 'ETIMEDOUT', 'rate_limit_exceeded', 'model_overloaded'],
+    retryableErrors: [
+      "ECONNRESET",
+      "ETIMEDOUT",
+      "rate_limit_exceeded",
+      "model_overloaded",
+    ],
     shouldAdjustParams: true,
     paramAdjustment: (attempt: number) => ({
-      temperature: Math.min(0.7 + attempt * 0.1, 1.0)
+      temperature: Math.min(0.7 + attempt * 0.1, 1.0),
     }),
-    timeoutMs: 120000
+    timeoutMs: 120000,
   },
 
   INTRODUCTION_AGENT: {
-    agentName: 'IntroductionAgent',
+    agentName: "IntroductionAgent",
     maxAttempts: 3,
     initialDelayMs: 1000,
     maxDelayMs: 20000,
     backoffMultiplier: 2,
-    retryableErrors: ['ECONNRESET', 'ETIMEDOUT', 'rate_limit_exceeded'],
+    retryableErrors: ["ECONNRESET", "ETIMEDOUT", "rate_limit_exceeded"],
     shouldAdjustParams: false,
-    timeoutMs: 60000
+    timeoutMs: 60000,
   },
 
   SECTION_AGENT: {
-    agentName: 'SectionAgent',
-    maxAttempts: 3,
-    initialDelayMs: 1000,
-    maxDelayMs: 20000,
+    agentName: "SectionAgent",
+    maxAttempts: 5,
+    initialDelayMs: 2000,
+    maxDelayMs: 30000,
     backoffMultiplier: 2,
-    retryableErrors: ['ECONNRESET', 'ETIMEDOUT', 'rate_limit_exceeded'],
+    retryableErrors: [
+      "ECONNRESET",
+      "ETIMEDOUT",
+      "rate_limit_exceeded",
+      "fetch failed",
+      "network error",
+      "socket hang up",
+      "EHOSTUNREACH",
+    ],
     shouldAdjustParams: false,
-    timeoutMs: 90000
+    timeoutMs: 120000,
   },
 
   CONCLUSION_AGENT: {
-    agentName: 'ConclusionAgent',
+    agentName: "ConclusionAgent",
     maxAttempts: 3,
     initialDelayMs: 1000,
     maxDelayMs: 20000,
     backoffMultiplier: 2,
-    retryableErrors: ['ECONNRESET', 'ETIMEDOUT', 'rate_limit_exceeded'],
+    retryableErrors: ["ECONNRESET", "ETIMEDOUT", "rate_limit_exceeded"],
     shouldAdjustParams: false,
-    timeoutMs: 60000
+    timeoutMs: 60000,
   },
 
   QA_AGENT: {
-    agentName: 'QAAgent',
+    agentName: "QAAgent",
     maxAttempts: 3,
     initialDelayMs: 1000,
     maxDelayMs: 20000,
     backoffMultiplier: 2,
-    retryableErrors: ['ECONNRESET', 'ETIMEDOUT', 'rate_limit_exceeded'],
+    retryableErrors: ["ECONNRESET", "ETIMEDOUT", "rate_limit_exceeded"],
     shouldAdjustParams: false,
-    timeoutMs: 60000
+    timeoutMs: 60000,
   },
 
   IMAGE_AGENT: {
-    agentName: 'ImageAgent',
+    agentName: "ImageAgent",
     maxAttempts: 3,
     initialDelayMs: 5000,
     maxDelayMs: 30000,
     backoffMultiplier: 2,
-    retryableErrors: ['ECONNRESET', 'ETIMEDOUT', 'rate_limit_exceeded', 'content_policy_violation'],
+    retryableErrors: [
+      "ECONNRESET",
+      "ETIMEDOUT",
+      "rate_limit_exceeded",
+      "content_policy_violation",
+    ],
     shouldAdjustParams: true,
     paramAdjustment: (attempt: number) => ({
-      quality: attempt > 1 ? 'medium' : 'high'
+      quality: attempt > 1 ? "medium" : "high",
     }),
-    timeoutMs: 180000
+    timeoutMs: 180000,
   },
 
   ASSEMBLER_AGENT: {
-    agentName: 'ContentAssemblerAgent',
+    agentName: "ContentAssemblerAgent",
     maxAttempts: 2,
     initialDelayMs: 500,
     maxDelayMs: 5000,
     backoffMultiplier: 2,
     retryableErrors: [],
     shouldAdjustParams: false,
-    timeoutMs: 30000
+    timeoutMs: 30000,
   },
 
   HTML_AGENT: {
-    agentName: 'HTMLAgent',
+    agentName: "HTMLAgent",
     maxAttempts: 2,
     initialDelayMs: 500,
     maxDelayMs: 5000,
     backoffMultiplier: 2,
     retryableErrors: [],
     shouldAdjustParams: false,
-    timeoutMs: 30000
+    timeoutMs: 30000,
   },
 
   META_AGENT: {
-    agentName: 'MetaAgent',
+    agentName: "MetaAgent",
     maxAttempts: 3,
     initialDelayMs: 1000,
     maxDelayMs: 10000,
     backoffMultiplier: 2,
-    retryableErrors: ['ECONNRESET', 'ETIMEDOUT', 'rate_limit_exceeded'],
+    retryableErrors: ["ECONNRESET", "ETIMEDOUT", "rate_limit_exceeded"],
     shouldAdjustParams: false,
-    timeoutMs: 60000
+    timeoutMs: 60000,
   },
 
   RESEARCH_AGENT: {
-    agentName: 'ResearchAgent',
+    agentName: "ResearchAgent",
     maxAttempts: 3,
     initialDelayMs: 2000,
     maxDelayMs: 30000,
     backoffMultiplier: 2,
-    retryableErrors: ['ECONNRESET', 'ETIMEDOUT', 'rate_limit_exceeded'],
+    retryableErrors: ["ECONNRESET", "ETIMEDOUT", "rate_limit_exceeded"],
     shouldAdjustParams: false,
-    timeoutMs: 120000
+    timeoutMs: 120000,
   },
 
   CATEGORY_AGENT: {
-    agentName: 'CategoryAgent',
+    agentName: "CategoryAgent",
     maxAttempts: 2,
     initialDelayMs: 1000,
     maxDelayMs: 10000,
     backoffMultiplier: 2,
-    retryableErrors: ['ECONNRESET', 'ETIMEDOUT'],
+    retryableErrors: ["ECONNRESET", "ETIMEDOUT"],
     shouldAdjustParams: false,
-    timeoutMs: 60000
-  }
+    timeoutMs: 60000,
+  },
 } as const;
 
 export type AgentRetryConfigMap = typeof RetryConfigs;
