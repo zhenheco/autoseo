@@ -248,12 +248,6 @@ export async function deleteArticle(articleJobId: string) {
     return { success: false, error: "無權限" };
   }
 
-  await supabase
-    .from("generated_articles")
-    .delete()
-    .eq("article_job_id", articleJobId)
-    .eq("company_id", membership.company_id);
-
   const { error, count } = await supabase
     .from("article_jobs")
     .delete()
@@ -469,12 +463,6 @@ export async function batchDeleteArticles(
   if (!membership) {
     return { success: false, error: "無權限" };
   }
-
-  await supabase
-    .from("generated_articles")
-    .delete()
-    .in("article_job_id", articleIds)
-    .eq("company_id", membership.company_id);
 
   const { error, count } = await supabase
     .from("article_jobs")
