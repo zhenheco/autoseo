@@ -66,12 +66,10 @@ export default async function ReferralsPage() {
     ).length || 0;
   const totalReferrals = referrals?.length || 0;
 
-  const { data: referralHistory } = await supabase
-    .from("referrals")
-    .select("*")
-    .eq("referrer_company_id", membership.company_id)
-    .order("created_at", { ascending: false })
-    .limit(20);
+  const { data: referralHistory } = await supabase.rpc(
+    "get_referrals_with_email",
+    { p_referrer_company_id: membership.company_id },
+  );
 
   const { data: tokenRewards } = await supabase
     .from("referral_token_rewards")

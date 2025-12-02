@@ -26,6 +26,7 @@ export interface Referral {
   last_payment_at: string | null;
   created_at: string | null;
   updated_at: string | null;
+  referred_email?: string | null;
 }
 
 export interface AffiliateTier {
