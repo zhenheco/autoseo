@@ -7,9 +7,31 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { FileText, Save, Check } from "lucide-react";
 import { TiptapEditor } from "@/components/articles/TiptapEditor";
+import { marked } from "marked";
 
 interface ArticlePreviewProps {
   articles: ArticleWithWebsite[];
+}
+
+function containsMarkdown(content: string): boolean {
+  if (!content) return false;
+  const markdownPatterns = [
+    /^#{1,6}\s/m,
+    /\*\*[^*]+\*\*/,
+    /\*[^*]+\*/,
+    /```[\s\S]*?```/,
+    /^\s*[-*+]\s/m,
+    /^\s*\d+\.\s/m,
+  ];
+  return markdownPatterns.some((pattern) => pattern.test(content));
+}
+
+async function ensureHtml(content: string): Promise<string> {
+  if (!content) return "";
+  if (containsMarkdown(content)) {
+    return await marked.parse(content);
+  }
+  return content;
 }
 
 export function ArticlePreview({ articles }: ArticlePreviewProps) {
@@ -32,12 +54,18 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
   useEffect(() => {
     if (article && article.id !== prevArticleIdRef.current) {
       prevArticleIdRef.current = article.id;
-      setTimeout(() => {
-        setEditedTitle(originalTitle);
-        setEditedContent(originalContent);
-        setHasChanges(false);
-        setSaveSuccess(false);
-      }, 0);
+
+      const loadContent = async () => {
+        const processedContent = await ensureHtml(originalContent);
+        setTimeout(() => {
+          setEditedTitle(originalTitle);
+          setEditedContent(processedContent);
+          setHasChanges(false);
+          setSaveSuccess(false);
+        }, 0);
+      };
+
+      loadContent();
     }
   }, [article, originalTitle, originalContent]);
 
