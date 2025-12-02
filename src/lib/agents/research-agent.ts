@@ -2,21 +2,15 @@ import { BaseAgent } from "./base-agent";
 import type {
   ResearchInput,
   ResearchOutput,
-  SERPResult,
   ExternalReference,
   DeepResearchResult,
 } from "@/types/agents";
 import { getPerplexityClient } from "@/lib/perplexity/client";
 
-interface DeepResearchQueryResult {
-  content: string;
-  citations: string[];
-  executionTime: number;
-}
-
 interface UnifiedResearchResult {
   deepResearch: DeepResearchResult;
   externalReferences: ExternalReference[];
+  referenceMapping: ResearchOutput["referenceMapping"];
 }
 
 export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
@@ -25,10 +19,14 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
   }
 
   protected async process(input: ResearchInput): Promise<ResearchOutput> {
-    const [analysis, unifiedResearch] = await Promise.all([
-      this.analyzeTitle(input),
-      this.executeUnifiedResearch(input.title, input.region),
-    ]);
+    console.log("[ResearchAgent] 開始順序執行：先 Perplexity 研究，再 AI 分析");
+
+    const unifiedResearch = await this.executeUnifiedResearch(
+      input.title,
+      input.region,
+    );
+
+    const analysis = await this.analyzeTitle(input, unifiedResearch);
 
     return {
       title: input.title,
@@ -41,6 +39,7 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
       recommendedStrategy: analysis.recommendedStrategy,
       relatedKeywords: analysis.relatedKeywords,
       externalReferences: unifiedResearch.externalReferences,
+      referenceMapping: unifiedResearch.referenceMapping,
       deepResearch: unifiedResearch.deepResearch,
       executionInfo: this.getExecutionInfo(input.model),
     };
@@ -102,16 +101,98 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
       const externalReferences = this.extractReferencesFromCitations(
         keyword,
         result.citations || [],
+        result.content || "",
       );
 
-      return { deepResearch, externalReferences };
+      const referenceMapping = this.buildReferenceMapping(
+        externalReferences,
+        result.content || "",
+        keyword,
+      );
+
+      return { deepResearch, externalReferences, referenceMapping };
     } catch (error) {
       console.warn("[ResearchAgent] 統一研究查詢失敗:", error);
       return {
         deepResearch: {},
         externalReferences: this.getDefaultExternalReferences(keyword),
+        referenceMapping: [],
       };
     }
+  }
+
+  private buildReferenceMapping(
+    references: ExternalReference[],
+    content: string,
+    keyword: string,
+  ): ResearchOutput["referenceMapping"] {
+    const sectionPatterns = [
+      { pattern: /趨勢|動態|發展|方向/i, section: "趨勢與發展" },
+      { pattern: /問題|疑問|FAQ|解決/i, section: "常見問題" },
+      { pattern: /數據|統計|市場|案例/i, section: "數據與案例" },
+      { pattern: /技巧|方法|步驟|教學/i, section: "實用技巧" },
+      { pattern: /比較|優缺|選擇/i, section: "產品比較" },
+      { pattern: /介紹|概述|定義|什麼是/i, section: "基礎介紹" },
+    ];
+
+    return references.map((ref, index) => {
+      const urlContext = this.extractUrlContext(content, ref.url);
+
+      const suggestedSections: string[] = [];
+      for (const { pattern, section } of sectionPatterns) {
+        if (pattern.test(urlContext) || pattern.test(ref.title)) {
+          suggestedSections.push(section);
+        }
+      }
+
+      if (suggestedSections.length === 0) {
+        suggestedSections.push("延伸閱讀");
+      }
+
+      const baseScore = Math.max(0.5, 1 - index * 0.1);
+      const typeBonus = this.getTypeRelevanceBonus(ref.type);
+      const contextBonus = urlContext.length > 50 ? 0.1 : 0;
+      const relevanceScore = Math.min(
+        1,
+        Math.round((baseScore + typeBonus + contextBonus) * 100) / 100,
+      );
+
+      return {
+        url: ref.url,
+        title: ref.title,
+        type: ref.type,
+        suggestedSections: [...new Set(suggestedSections)].slice(0, 3),
+        relevanceScore,
+      };
+    });
+  }
+
+  private extractUrlContext(content: string, url: string): string {
+    try {
+      const domain = new URL(url).hostname;
+      const domainPattern = new RegExp(
+        `[^。！？\\n]*${domain.replace(/\./g, "\\.")}[^。！？\\n]*`,
+        "gi",
+      );
+      const matches = content.match(domainPattern);
+      return matches ? matches.join(" ") : "";
+    } catch {
+      return "";
+    }
+  }
+
+  private getTypeRelevanceBonus(type: ExternalReference["type"]): number {
+    const bonuses: Record<ExternalReference["type"], number> = {
+      official_docs: 0.15,
+      research: 0.12,
+      wikipedia: 0.1,
+      tutorial: 0.1,
+      news: 0.08,
+      industry: 0.08,
+      service: 0.05,
+      blog: 0.03,
+    };
+    return bonuses[type] || 0;
   }
 
   private parseUnifiedContent(
@@ -173,6 +254,7 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
   private extractReferencesFromCitations(
     title: string,
     citations: string[],
+    content: string,
   ): ExternalReference[] {
     if (!citations || citations.length === 0) {
       console.warn("[ResearchAgent] 無 citations，使用預設來源");
@@ -189,12 +271,22 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
         const type = this.categorizeUrl(url);
         const domain = new URL(url).hostname;
 
+        const baseScore = Math.max(0.5, 1 - i * 0.1);
+        const typeBonus = this.getTypeRelevanceBonus(type);
+        const contextBonus =
+          this.extractUrlContext(content, url).length > 50 ? 0.1 : 0;
+        const relevance_score = Math.min(
+          1,
+          Math.round((baseScore + typeBonus + contextBonus) * 100) / 100,
+        );
+
         references.push({
           url,
           title: this.extractTitleFromUrl(url),
           type,
           domain,
           description: `關於「${title}」的參考來源`,
+          relevance_score,
         });
       } catch {
         console.warn("[ResearchAgent] 無效的 URL:", url);
@@ -209,48 +301,49 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
     return references;
   }
 
-  /**
-   * @deprecated 使用 executeUnifiedResearch() 替代，已合併為單一 API 呼叫
-   */
-  private async performDeepResearch(
-    keyword: string,
-    region?: string,
-  ): Promise<DeepResearchResult | undefined> {
-    console.warn(
-      "[ResearchAgent] performDeepResearch 已棄用，請使用 executeUnifiedResearch",
-    );
-    const result = await this.executeUnifiedResearch(keyword, region);
-    return result.deepResearch;
-  }
-
-  /**
-   * @deprecated 使用 executeUnifiedResearch() 替代
-   */
-  private async executeDeepResearchQuery(
-    perplexity: ReturnType<typeof getPerplexityClient>,
-    query: string,
-    queryType: string,
-  ): Promise<DeepResearchQueryResult | null> {
-    console.warn(
-      "[ResearchAgent] executeDeepResearchQuery 已棄用，請使用 executeUnifiedResearch",
-    );
-    return null;
-  }
-
   private async analyzeTitle(
     input: ResearchInput,
+    researchData?: UnifiedResearchResult,
   ): Promise<
     Omit<
       ResearchOutput,
-      "title" | "region" | "externalReferences" | "executionInfo"
+      | "title"
+      | "region"
+      | "externalReferences"
+      | "referenceMapping"
+      | "executionInfo"
     >
   > {
+    const researchContext = researchData?.deepResearch
+      ? `
+## 已收集的研究資料（來自 Perplexity）
+
+### 趨勢資訊
+${researchData.deepResearch.trends?.content || "無"}
+
+### 常見問題
+${researchData.deepResearch.userQuestions?.content || "無"}
+
+### 權威數據
+${researchData.deepResearch.authorityData?.content || "無"}
+
+### 參考來源（共 ${researchData.externalReferences?.length || 0} 個）
+${
+  researchData.externalReferences
+    ?.slice(0, 5)
+    .map((ref) => `- ${ref.title} (${ref.domain})`)
+    .join("\n") || "無"
+}
+`
+      : "";
+
     const prompt = `你是一位 SEO 專家，請針對文章標題「${input.title}」進行深入分析。
 
 文章標題: ${input.title}
 地區: ${input.region || "Taiwan"}
+${researchContext}
 
-請分析以下項目：
+基於上述研究資料，請分析以下項目：
 
 1. **搜尋意圖** (searchIntent):
    - 類型：informational（資訊型）、commercial（商業型）、transactional（交易型）、navigational（導航型）
@@ -264,7 +357,7 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
    - 常見格式：列表、教學、比較等
 
 3. **內容缺口** (contentGaps):
-   - 列出競爭對手沒有深入探討的角度
+   - 根據研究資料，列出競爭對手沒有深入探討的角度
 
 4. **競爭對手分析** (competitorAnalysis):
    - 列出 3-5 個相關權威網站
@@ -273,12 +366,16 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
    - 獨特切入角度
 
 5. **推薦策略** (recommendedStrategy):
-   - 基於以上分析，提出內容創作建議
+   - 基於研究資料和以上分析，提出內容創作建議
 
 6. **相關關鍵字** (relatedKeywords):
    - 列出 5-10 個相關搜尋詞
 
 請用結構化的方式回答，每個項目分開說明。`;
+
+    console.log(
+      "[ResearchAgent] 執行 AI 分析（使用 Perplexity 研究結果作為上下文）",
+    );
 
     const response = await this.complete(prompt, {
       model: input.model,
@@ -429,7 +526,11 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
     title: string,
   ): Omit<
     ResearchOutput,
-    "title" | "region" | "externalReferences" | "executionInfo"
+    | "title"
+    | "region"
+    | "externalReferences"
+    | "referenceMapping"
+    | "executionInfo"
   > {
     return {
       searchIntent: "informational",
@@ -457,19 +558,6 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
       recommendedStrategy: `創建全面且實用的「${title}」指南，包含基礎概念、實用技巧和案例分析`,
       relatedKeywords: [`${title}教學`, `${title}技巧`, `${title}入門`],
     };
-  }
-
-  /**
-   * @deprecated 使用 executeUnifiedResearch() 替代，外部來源已整合到統一查詢中
-   */
-  private async fetchExternalReferences(
-    title: string,
-  ): Promise<ExternalReference[]> {
-    console.warn(
-      "[ResearchAgent] fetchExternalReferences 已棄用，請使用 executeUnifiedResearch",
-    );
-    const result = await this.executeUnifiedResearch(title);
-    return result.externalReferences;
   }
 
   private categorizeUrl(url: string): ExternalReference["type"] {
