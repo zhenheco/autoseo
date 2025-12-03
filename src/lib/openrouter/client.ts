@@ -86,15 +86,19 @@ export class OpenRouterClient {
     this.maxRetries = config.maxRetries || 3;
     this.defaultTemperature = config.defaultTemperature || 0.7;
     this.defaultMaxTokens = config.defaultMaxTokens || 16000;
-
-    if (!this.apiKey) {
-      console.warn(
-        "[OpenRouterClient] API Key 未設定，請設定 OPENROUTER_API_KEY 環境變數",
-      );
-    }
   }
 
+  /**
+   * 檢查是否可以使用 OpenRouter
+   * Gateway 模式下不需要 API Key（使用存儲的 key）
+   * 直連模式下需要 API Key
+   */
   isConfigured(): boolean {
+    // Gateway 模式：只要 Gateway 啟用就可以使用（BYOK 模式）
+    if (this.baseURL.includes("gateway.ai.cloudflare.com")) {
+      return true;
+    }
+    // 直連模式：需要 API Key
     return !!this.apiKey;
   }
 
