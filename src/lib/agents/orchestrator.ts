@@ -969,6 +969,15 @@ export class ParallelOrchestrator {
         model: featuredImageModel,
         quality: "medium" as const,
         size: agentConfig.image_size,
+        articleContext: {
+          outline:
+            strategyOutput.outline?.mainSections?.map((s) => s.heading) || [],
+          mainTopics:
+            strategyOutput.outline?.mainSections
+              ?.slice(0, 3)
+              .map((s) => s.heading) || [],
+          keywords: strategyOutput.keywords || [],
+        },
       }),
       articleImageAgent.execute({
         title: strategyOutput.selectedTitle,
@@ -1512,7 +1521,7 @@ export class ParallelOrchestrator {
       const defaultConfig = {
         website_id: websiteId,
         research_model: "deepseek-reasoner",
-        complex_processing_model: "deepseek-reasoner",
+        complex_processing_model: "deepseek-chat",
         simple_processing_model: "deepseek-chat",
         image_model: "gemini-imagen",
         research_temperature: 0.7,
@@ -1622,10 +1631,10 @@ export class ParallelOrchestrator {
     researchModelInfo?: AIModel;
   } {
     return {
-      complex_processing_model: "deepseek-reasoner",
+      complex_processing_model: "deepseek-chat",
       simple_processing_model: "deepseek-chat",
       research_model: "deepseek-reasoner",
-      strategy_model: "deepseek-reasoner",
+      strategy_model: "deepseek-chat",
       writing_model: "deepseek-chat",
       image_model: "gemini-imagen",
       research_temperature: 0.7,
@@ -2068,7 +2077,7 @@ export class ParallelOrchestrator {
    * 計算所有 AI 調用的總 Token 使用量
    * 用於 Token 扣除
    *
-   * 計費公式：實際扣除 = 官方 Token × 模型倍率 × 150%
+   * 計費公式：實際扣除 = 官方 Token × 模型倍率 × 20%
    */
   private calculateTotalTokenUsage(result: ArticleGenerationResult): {
     official: number;
@@ -2120,8 +2129,8 @@ export class ParallelOrchestrator {
         "model" in execInfo ? (execInfo.model as string) : undefined;
       const multiplier = this.getModelMultiplier(modelName);
 
-      // 計費公式：官方 Token × 模型倍率 × 150%
-      const charged = Math.ceil(rawTotal * multiplier * 1.5);
+      // 計費公式：官方 Token × 模型倍率 × 20%
+      const charged = Math.ceil(rawTotal * multiplier * 0.2);
 
       officialTotal += rawTotal;
       chargedTotal += charged;
