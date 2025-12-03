@@ -38,9 +38,13 @@ export class ArticleImageAgent extends BaseAgent<
     const images: GeneratedImage[] = [];
     const failedIndices: number[] = [];
 
-    const sectionsNeedingImages = input.outline.mainSections.length;
+    const maxImages = input.maxImages ?? 3;
+    const sectionsNeedingImages = Math.min(
+      input.outline.mainSections.length,
+      maxImages,
+    );
     console.log(
-      `[ArticleImageAgent] 🎨 Generating ${sectionsNeedingImages} content images with model: ${model}`,
+      `[ArticleImageAgent] 🎨 Generating ${sectionsNeedingImages} content images (max: ${maxImages}) with model: ${model}`,
     );
 
     for (let i = 0; i < sectionsNeedingImages; i++) {

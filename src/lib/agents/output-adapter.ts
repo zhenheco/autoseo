@@ -112,7 +112,64 @@ export class MultiAgentOutputAdapter {
     }
 
     console.log("[OutputAdapter] ✅ HTML validation passed");
-    return html as string;
+    return this.cleanupResidualMarkdown(html as string);
+  }
+
+  private cleanupResidualMarkdown(html: string): string {
+    let cleaned = html;
+
+    // 清理殘留的 markdown 標題語法（在段落內的）
+    // ### Title -> <h3>Title</h3>
+    cleaned = cleaned.replace(
+      /(?<![<\w])#{6}\s*([^<\n]+?)(?=\s*<|$)/g,
+      "<h6>$1</h6>",
+    );
+    cleaned = cleaned.replace(
+      /(?<![<\w])#{5}\s*([^<\n]+?)(?=\s*<|$)/g,
+      "<h5>$1</h5>",
+    );
+    cleaned = cleaned.replace(
+      /(?<![<\w])#{4}\s*([^<\n]+?)(?=\s*<|$)/g,
+      "<h4>$1</h4>",
+    );
+    cleaned = cleaned.replace(
+      /(?<![<\w])#{3}\s*([^<\n]+?)(?=\s*<|$)/g,
+      "<h3>$1</h3>",
+    );
+    cleaned = cleaned.replace(
+      /(?<![<\w])#{2}\s*([^<\n]+?)(?=\s*<|$)/g,
+      "<h2>$1</h2>",
+    );
+    cleaned = cleaned.replace(
+      /(?<![<\w])#\s*([^<\n]+?)(?=\s*<|$)/g,
+      "<h1>$1</h1>",
+    );
+
+    // 清理殘留的粗體語法 **text** -> <strong>text</strong>
+    cleaned = cleaned.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+
+    // 清理殘留的斜體語法 *text* -> <em>text</em>（避免匹配 ** 的一部分）
+    cleaned = cleaned.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, "<em>$1</em>");
+
+    // 清理殘留的連結語法 [text](url) -> <a href="url">text</a>
+    cleaned = cleaned.replace(
+      /\[([^\]]+)\]\(([^)]+)\)/g,
+      '<a href="$2">$1</a>',
+    );
+
+    // 清理殘留的行內程式碼 `code` -> <code>code</code>
+    cleaned = cleaned.replace(/`([^`]+)`/g, "<code>$1</code>");
+
+    // 清理多餘的空白行
+    cleaned = cleaned.replace(/\n{3,}/g, "\n\n");
+
+    if (cleaned !== html) {
+      console.log(
+        "[OutputAdapter] 🧹 Cleaned up residual markdown syntax in HTML",
+      );
+    }
+
+    return cleaned;
   }
 
   private buildEmptyOutput(): WritingAgentOutput {

@@ -374,6 +374,7 @@ export interface ArticleImageInput {
   quality: "low" | "medium" | "high" | "auto";
   size: string;
   targetLanguage?: string;
+  maxImages?: number;
 }
 
 export interface ArticleImageOutput {
