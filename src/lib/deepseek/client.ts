@@ -184,7 +184,12 @@ export class DeepSeekClient {
     endpoint: string,
     body: Record<string, unknown>,
   ): Promise<DeepSeekCompletionResponse> {
-    const url = `${this.baseURL}${endpoint}`;
+    // Gateway 模式: .../deepseek/chat/completions（不需要 /v1）
+    // 直連模式: https://api.deepseek.com/v1/chat/completions（需要 /v1）
+    const actualEndpoint = isGatewayEnabled()
+      ? endpoint.replace("/v1/", "/")
+      : endpoint;
+    const url = `${this.baseURL}${actualEndpoint}`;
     let lastError: Error | null = null;
 
     for (let attempt = 1; attempt <= this.maxRetries; attempt++) {

@@ -71,20 +71,24 @@ export class CategoryAgent {
       throw new Error("DEEPSEEK_API_KEY is not set");
     }
 
-    const response = await fetch(
-      `${getDeepSeekBaseUrl()}/v1/chat/completions`,
-      {
-        method: "POST",
-        headers: buildDeepSeekHeaders(apiKey),
-        body: JSON.stringify({
-          model: params.model,
-          messages: params.messages,
-          temperature: params.temperature ?? 0.7,
-          max_tokens: params.max_tokens,
-          response_format: params.response_format,
-        }),
-      },
-    );
+    // Gateway 模式: .../deepseek/chat/completions（不需要 /v1）
+    // 直連模式: https://api.deepseek.com/v1/chat/completions（需要 /v1）
+    const baseUrl = getDeepSeekBaseUrl();
+    const endpoint = isGatewayEnabled()
+      ? `${baseUrl}/chat/completions`
+      : `${baseUrl}/v1/chat/completions`;
+
+    const response = await fetch(endpoint, {
+      method: "POST",
+      headers: buildDeepSeekHeaders(apiKey),
+      body: JSON.stringify({
+        model: params.model,
+        messages: params.messages,
+        temperature: params.temperature ?? 0.7,
+        max_tokens: params.max_tokens,
+        response_format: params.response_format,
+      }),
+    });
 
     if (!response.ok) {
       const error = await response.json();
