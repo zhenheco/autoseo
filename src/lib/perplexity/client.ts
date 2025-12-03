@@ -67,8 +67,12 @@ export class PerplexityClient {
     this.apiKey = apiKey || process.env.PERPLEXITY_API_KEY || "";
     this.companyId = companyId;
     this.enableCache = enableCache;
-    if (!this.apiKey) {
-      console.warn("[Perplexity] API Key 未設置，部分功能可能無法使用");
+    // BYOK 模式：不需要 API Key，Gateway 會處理認證
+    // 直連模式：需要 API Key
+    if (!isGatewayEnabled() && !this.apiKey) {
+      console.warn(
+        "[Perplexity] API Key 未設置，部分功能可能無法使用（非 Gateway 模式）",
+      );
     }
   }
 
@@ -77,7 +81,8 @@ export class PerplexityClient {
   }
 
   private getHeaders(): Record<string, string> {
-    return buildPerplexityHeaders(this.apiKey);
+    // BYOK 模式：不傳 apiKey，buildPerplexityHeaders 會自動處理
+    return buildPerplexityHeaders();
   }
 
   /**
@@ -91,8 +96,10 @@ export class PerplexityClient {
     citations?: string[];
     images?: string[];
   }> {
-    if (!this.apiKey) {
-      console.log("[Perplexity] 使用 Mock 資料（無 API Key）");
+    // BYOK 模式：不需要 API Key，Gateway 會處理認證
+    // 直連模式：需要 API Key
+    if (!isGatewayEnabled() && !this.apiKey) {
+      console.log("[Perplexity] 使用 Mock 資料（無 API Key，非 Gateway 模式）");
       return this.getMockResponse(query);
     }
 

@@ -8,6 +8,7 @@
 import {
   getDeepSeekBaseUrl,
   buildDeepSeekHeaders,
+  isGatewayEnabled,
 } from "@/lib/cloudflare/ai-gateway";
 
 export interface DeepSeekMessage {
@@ -94,18 +95,20 @@ export class DeepSeekClient {
     this.defaultTemperature = config.defaultTemperature || 0.7;
     this.defaultMaxTokens = config.defaultMaxTokens || 16000;
 
-    if (!this.apiKey) {
+    // BYOK 模式：不需要 API Key，Gateway 會處理認證
+    // 直連模式：需要 API Key
+    if (!isGatewayEnabled() && !this.apiKey) {
       console.warn(
-        "[DeepSeekClient] ⚠️ API Key 未設定，請設定 DEEPSEEK_API_KEY 環境變數",
+        "[DeepSeekClient] ⚠️ API Key 未設定，請設定 DEEPSEEK_API_KEY 環境變數（非 Gateway 模式）",
       );
     }
   }
 
   /**
-   * 驗證 API Key 是否有效
+   * 驗證 API Key 是否有效（或 Gateway 是否啟用）
    */
   isConfigured(): boolean {
-    return !!this.apiKey;
+    return isGatewayEnabled() || !!this.apiKey;
   }
 
   /**
@@ -115,7 +118,7 @@ export class DeepSeekClient {
     options: DeepSeekCompletionOptions,
   ): Promise<DeepSeekCompletionResponse> {
     if (!this.isConfigured()) {
-      throw new Error("DeepSeek API Key 未設定");
+      throw new Error("DeepSeek API Key 未設定（非 Gateway 模式）");
     }
 
     const requestBody = {
@@ -193,7 +196,8 @@ export class DeepSeekClient {
 
         const response = await fetch(url, {
           method: "POST",
-          headers: buildDeepSeekHeaders(this.apiKey),
+          // BYOK 模式：不傳 apiKey，buildDeepSeekHeaders 會自動處理
+          headers: buildDeepSeekHeaders(),
           body: JSON.stringify(body),
           signal: controller.signal,
         });

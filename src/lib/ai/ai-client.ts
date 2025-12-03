@@ -67,10 +67,13 @@ export class AIClient {
     max_tokens?: number;
     response_format?: { type: string };
   }) {
-    const apiKey = process.env.DEEPSEEK_API_KEY;
-
-    if (!apiKey) {
-      throw new Error("DEEPSEEK_API_KEY is not set");
+    // BYOK 模式：不需要 API Key，Gateway 會處理認證
+    // 直連模式：需要 API Key
+    if (!isGatewayEnabled()) {
+      const apiKey = process.env.DEEPSEEK_API_KEY;
+      if (!apiKey) {
+        throw new Error("DEEPSEEK_API_KEY is not set (non-gateway mode)");
+      }
     }
 
     // 為 deepseek-reasoner 設定較長的超時時間（180 秒）
@@ -82,7 +85,8 @@ export class AIClient {
 
     try {
       const baseUrl = getDeepSeekBaseUrl();
-      const headers = buildDeepSeekHeaders(apiKey);
+      // BYOK 模式：不傳 apiKey，buildDeepSeekHeaders 會自動處理
+      const headers = buildDeepSeekHeaders();
 
       console.log(
         `[AIClient] DeepSeek API (gateway: ${isGatewayEnabled()}, url: ${baseUrl})`,
@@ -365,9 +369,13 @@ export class AIClient {
       options.model.includes("gpt-image-1") ||
       options.model.includes("chatgpt-image")
     ) {
-      const apiKey = process.env.OPENAI_API_KEY;
-      if (!apiKey) {
-        throw new Error("OPENAI_API_KEY is not set");
+      // BYOK 模式：不需要 API Key，Gateway 會處理認證
+      // 直連模式：需要 API Key
+      if (!isGatewayEnabled()) {
+        const apiKey = process.env.OPENAI_API_KEY;
+        if (!apiKey) {
+          throw new Error("OPENAI_API_KEY is not set (non-gateway mode)");
+        }
       }
 
       // 直接使用指定的模型（支援 gpt-image-1-mini, gpt-image-1 等）
@@ -384,7 +392,8 @@ export class AIClient {
       }
 
       const openaiBaseUrl = getOpenAIBaseUrl();
-      const openaiHeaders = buildOpenAIHeaders(apiKey);
+      // BYOK 模式：不傳 apiKey，buildOpenAIHeaders 會自動處理
+      const openaiHeaders = buildOpenAIHeaders();
 
       const response = await fetch(`${openaiBaseUrl}/v1/images/generations`, {
         method: "POST",
@@ -441,9 +450,13 @@ export class AIClient {
 
     // 處理 dall-e-3 模型（使用 OpenAI 官方 API）
     if (options.model.includes("dall-e")) {
-      const apiKey = process.env.OPENAI_API_KEY;
-      if (!apiKey) {
-        throw new Error("OPENAI_API_KEY is not set");
+      // BYOK 模式：不需要 API Key，Gateway 會處理認證
+      // 直連模式：需要 API Key
+      if (!isGatewayEnabled()) {
+        const apiKey = process.env.OPENAI_API_KEY;
+        if (!apiKey) {
+          throw new Error("OPENAI_API_KEY is not set (non-gateway mode)");
+        }
       }
 
       const requestBody: Record<string, unknown> = {
@@ -459,7 +472,8 @@ export class AIClient {
       }
 
       const dalleBaseUrl = getOpenAIBaseUrl();
-      const dalleHeaders = buildOpenAIHeaders(apiKey);
+      // BYOK 模式：不傳 apiKey，buildOpenAIHeaders 會自動處理
+      const dalleHeaders = buildOpenAIHeaders();
 
       const response = await fetch(`${dalleBaseUrl}/v1/images/generations`, {
         method: "POST",
@@ -512,9 +526,11 @@ export class AIClient {
       size?: string;
     },
   ): Promise<{ url: string; revisedPrompt?: string }> {
+    // BYOK 模式：不需要 API Key，Gateway 會處理認證
+    // 直連模式：需要 API Key
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error("GEMINI_API_KEY is not set");
+    if (!isGatewayEnabled() && !apiKey) {
+      throw new Error("GEMINI_API_KEY is not set (non-gateway mode)");
     }
 
     const modelName = this.mapGeminiImageModel(options.model);
@@ -529,11 +545,14 @@ export class AIClient {
       `[AIClient] 🎨 Calling Gemini Image API (model: ${modelName}, requested: ${options.model}, aspect: ${aspectRatio}, gateway: ${isGatewayEnabled()})`,
     );
 
+    // BYOK 模式：不需要在 URL 中傳 apiKey
+    // 直連模式：需要在 URL 中傳 apiKey
     const geminiUrl = isGatewayEnabled()
-      ? `${buildGeminiApiUrl(modelName, "generateContent")}?key=${apiKey}`
+      ? buildGeminiApiUrl(modelName, "generateContent")
       : `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
-    const geminiHeaders = buildGeminiHeaders(apiKey);
+    // BYOK 模式：不傳 apiKey，buildGeminiHeaders 會自動處理
+    const geminiHeaders = buildGeminiHeaders();
 
     const response = await fetch(geminiUrl, {
       method: "POST",
@@ -596,9 +615,11 @@ export class AIClient {
       size?: string;
     },
   ): Promise<{ url: string; revisedPrompt?: string }> {
+    // BYOK 模式：不需要 API Key，Gateway 會處理認證
+    // 直連模式：需要 API Key
     const apiKey = process.env.GEMINI_API_KEY;
-    if (!apiKey) {
-      throw new Error("GEMINI_API_KEY is not set");
+    if (!isGatewayEnabled() && !apiKey) {
+      throw new Error("GEMINI_API_KEY is not set (non-gateway mode)");
     }
 
     const [width, height] = (options.size || "1024x1024")
@@ -619,11 +640,14 @@ export class AIClient {
       `[AIClient] 🎨 Calling Gemini Image API (model: ${modelName}, aspect: ${aspectRatio}, gateway: ${isGatewayEnabled()})`,
     );
 
+    // BYOK 模式：不需要在 URL 中傳 apiKey
+    // 直連模式：需要在 URL 中傳 apiKey
     const geminiImageUrl = isGatewayEnabled()
-      ? `${buildGeminiApiUrl(modelName, "generateContent")}?key=${apiKey}`
+      ? buildGeminiApiUrl(modelName, "generateContent")
       : `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey}`;
 
-    const geminiImageHeaders = buildGeminiHeaders(apiKey);
+    // BYOK 模式：不傳 apiKey，buildGeminiHeaders 會自動處理
+    const geminiImageHeaders = buildGeminiHeaders();
 
     const response = await fetch(geminiImageUrl, {
       method: "POST",
