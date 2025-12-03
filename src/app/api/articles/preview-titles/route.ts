@@ -4,18 +4,25 @@ import { getOpenRouterClient } from "@/lib/openrouter/client";
 import {
   buildGeminiApiUrl,
   buildGeminiHeaders,
+  isGatewayEnabled,
 } from "@/lib/cloudflare/ai-gateway";
 
 async function callGeminiDirectAPI(prompt: string): Promise<string> {
-  const apiKey =
-    process.env.OPENROUTER_API_KEY || process.env.CF_AI_GATEWAY_TOKEN;
-  if (!apiKey) {
-    throw new Error("API Key is not set");
+  // BYOK 模式：不需要 API Key，Gateway 會處理認證
+  // 直連模式：需要 API Key
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!isGatewayEnabled() && !apiKey) {
+    throw new Error("GEMINI_API_KEY is not set (non-gateway mode)");
   }
 
   const modelName = "gemini-2.5-flash";
-  const geminiUrl = buildGeminiApiUrl(modelName, "generateContent");
-  const headers = buildGeminiHeaders(apiKey);
+  // BYOK 模式：不需要在 URL 中傳 apiKey
+  // 直連模式：需要在 URL 中傳 apiKey
+  const geminiUrl = isGatewayEnabled()
+    ? buildGeminiApiUrl(modelName, "generateContent")
+    : `${buildGeminiApiUrl(modelName, "generateContent")}?key=${apiKey}`;
+  // BYOK 模式：不傳 apiKey，buildGeminiHeaders 會自動處理
+  const headers = buildGeminiHeaders();
 
   const response = await fetch(geminiUrl, {
     method: "POST",

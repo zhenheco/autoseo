@@ -7,6 +7,7 @@ import { z } from "zod";
 import {
   getDeepSeekBaseUrl,
   buildDeepSeekHeaders,
+  isGatewayEnabled,
 } from "@/lib/cloudflare/ai-gateway";
 
 // 分類和標籤輸出 Schema
@@ -65,17 +66,21 @@ export class CategoryAgent {
     max_tokens?: number;
     response_format?: { type: string };
   }) {
-    const apiKey = process.env.DEEPSEEK_API_KEY;
-
-    if (!apiKey) {
-      throw new Error("DEEPSEEK_API_KEY is not set");
+    // BYOK 模式：不需要 API Key，Gateway 會處理認證
+    // 直連模式：需要 API Key
+    if (!isGatewayEnabled()) {
+      const apiKey = process.env.DEEPSEEK_API_KEY;
+      if (!apiKey) {
+        throw new Error("DEEPSEEK_API_KEY is not set (non-gateway mode)");
+      }
     }
 
     const response = await fetch(
       `${getDeepSeekBaseUrl()}/v1/chat/completions`,
       {
         method: "POST",
-        headers: buildDeepSeekHeaders(apiKey),
+        // BYOK 模式：不傳 apiKey，buildDeepSeekHeaders 會自動處理
+        headers: buildDeepSeekHeaders(),
         body: JSON.stringify({
           model: params.model,
           messages: params.messages,
