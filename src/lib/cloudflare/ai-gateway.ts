@@ -89,11 +89,18 @@ export function getOpenRouterBaseUrl(): string {
   return "https://openrouter.ai/api/v1";
 }
 
-export function buildOpenRouterHeaders(apiKey: string): Record<string, string> {
+export function buildOpenRouterHeaders(
+  apiKey?: string,
+): Record<string, string> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    Authorization: `Bearer ${apiKey}`,
   };
+
+  // Gateway BYOK 模式：只需要 cf-aig-authorization，Gateway 會使用存儲的 API Key
+  // 非 Gateway 模式：需要 Authorization header
+  if (apiKey) {
+    headers.Authorization = `Bearer ${apiKey}`;
+  }
 
   if (isGatewayEnabled()) {
     Object.assign(headers, getGatewayHeaders());

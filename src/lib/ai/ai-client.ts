@@ -7,7 +7,6 @@ import {
   getDeepSeekBaseUrl,
   buildDeepSeekHeaders,
 } from "@/lib/cloudflare/ai-gateway";
-import { OpenAITextClient } from "@/lib/openai/text-client";
 import { OpenRouterClient } from "@/lib/openrouter/client";
 import type {
   AIClientConfig,
@@ -65,9 +64,8 @@ export class AIClient {
   /**
    * 多層 Fallback 機制：
    * 1. Gateway DeepSeek (當前模型)
-   * 2. OpenRouter DeepSeek (deepseek/deepseek-v3.2)
+   * 2. Gateway OpenRouter DeepSeek (deepseek/deepseek-v3.2)
    * 3. 直連 DeepSeek API
-   * 4. OpenAI (gpt-5-mini)
    */
   private async callDeepSeekAPI(params: {
     model: string;
@@ -144,47 +142,6 @@ export class AIClient {
         const err = error instanceof Error ? error : new Error(String(error));
         errors.push(`直連 DeepSeek: ${err.message}`);
         console.log(`[AIClient] ⚠️ Step 3 失敗: ${err.message}`);
-      }
-    }
-
-    // === Step 4: OpenAI Fallback ===
-    const openaiClient = new OpenAITextClient();
-    if (openaiClient.isConfigured()) {
-      try {
-        // 根據原始模型選擇 OpenAI 對應模型
-        const openaiModel = params.model.includes("reasoner")
-          ? "gpt-5"
-          : "gpt-5-mini";
-        console.log(`[AIClient] 🔄 Step 4: OpenAI Fallback (${openaiModel})`);
-
-        const response = await openaiClient.complete({
-          model: openaiModel,
-          messages: params.messages.map((m) => ({
-            role: m.role as "system" | "user" | "assistant",
-            content: m.content,
-          })),
-          temperature: params.temperature,
-          max_tokens: params.max_tokens,
-          response_format: params.response_format as
-            | { type: "text" | "json_object" }
-            | undefined,
-        });
-        console.log(`[AIClient] ✅ Step 4 成功: OpenAI ${openaiModel}`);
-        return {
-          choices: [
-            { message: { role: "assistant", content: response.content } },
-          ],
-          usage: {
-            prompt_tokens: response.usage.prompt_tokens,
-            completion_tokens: response.usage.completion_tokens,
-            total_tokens: response.usage.total_tokens,
-          },
-          model: response.model,
-        } as DeepSeekResponse;
-      } catch (error: unknown) {
-        const err = error instanceof Error ? error : new Error(String(error));
-        errors.push(`OpenAI: ${err.message}`);
-        console.log(`[AIClient] ⚠️ Step 4 失敗: ${err.message}`);
       }
     }
 
