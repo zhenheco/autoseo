@@ -1,15 +1,16 @@
-import { describe, it, expect } from 'vitest';
-import { MultiAgentOutputAdapter } from '../output-adapter';
+import { describe, it, expect } from "vitest";
+import { MultiAgentOutputAdapter } from "../output-adapter";
 
-describe('MultiAgentOutputAdapter', () => {
+describe("MultiAgentOutputAdapter", () => {
   const adapter = new MultiAgentOutputAdapter();
 
-  describe('adapt', () => {
-    it('should convert ContentAssemblerOutput to WritingAgentOutput format', () => {
+  describe("adapt", () => {
+    it("should convert ContentAssemblerOutput to WritingAgentOutput format", async () => {
       const input = {
         assemblerOutput: {
-          markdown: '# Test Article\n\nThis is a test article with some content.',
-          html: '<h1>Test Article</h1><p>This is a test article with some content.</p>',
+          markdown:
+            "# Test Article\n\nThis is a test article with some content.",
+          html: "<h1>Test Article</h1><p>This is a test article with some content.</p>",
           statistics: {
             totalWords: 10,
             totalParagraphs: 1,
@@ -21,24 +22,24 @@ describe('MultiAgentOutputAdapter', () => {
           },
         },
         strategyOutput: {
-          selectedTitle: 'Test Article',
+          selectedTitle: "Test Article",
           outline: {
             introduction: {
-              hook: 'Test hook',
-              context: 'Test context',
-              thesis: 'Test thesis',
+              hook: "Test hook",
+              context: "Test context",
+              thesis: "Test thesis",
               wordCount: 100,
             },
             mainSections: [
               {
-                heading: 'Section 1',
+                heading: "Section 1",
                 subheadings: [],
                 keyPoints: [],
                 targetWordCount: 100,
                 keywords: [],
               },
               {
-                heading: 'Section 2',
+                heading: "Section 2",
                 subheadings: [],
                 keyPoints: [],
                 targetWordCount: 100,
@@ -46,59 +47,60 @@ describe('MultiAgentOutputAdapter', () => {
               },
             ],
             conclusion: {
-              summary: 'Test summary',
-              callToAction: 'Test CTA',
+              summary: "Test summary",
+              callToAction: "Test CTA",
               wordCount: 50,
             },
             faq: [],
           },
-          keywords: ['test', 'article'],
+          keywords: ["test", "article"],
           targetSections: [],
           competitorAnalysis: [],
           contentGaps: [],
         },
-        focusKeyword: 'test',
+        focusKeyword: "test",
       };
 
-      const result = adapter.adapt(input);
+      const result = await adapter.adapt(input);
 
       // Check structure
-      expect(result).toHaveProperty('markdown');
-      expect(result).toHaveProperty('html');
-      expect(result).toHaveProperty('statistics');
-      expect(result).toHaveProperty('readability');
-      expect(result).toHaveProperty('keywordUsage');
-      expect(result).toHaveProperty('internalLinks');
+      expect(result).toHaveProperty("markdown");
+      expect(result).toHaveProperty("html");
+      expect(result).toHaveProperty("statistics");
+      expect(result).toHaveProperty("readability");
+      expect(result).toHaveProperty("keywordUsage");
+      expect(result).toHaveProperty("internalLinks");
 
       // Check readability metrics
-      expect(result.readability).toHaveProperty('fleschReadingEase');
-      expect(result.readability).toHaveProperty('fleschKincaidGrade');
-      expect(result.readability).toHaveProperty('gunningFog');
-      expect(result.readability).toHaveProperty('averageSentenceLength');
-      expect(result.readability).toHaveProperty('averageWordLength');
+      expect(result.readability).toHaveProperty("fleschReadingEase");
+      expect(result.readability).toHaveProperty("fleschKincaidGrade");
+      expect(result.readability).toHaveProperty("gunningFog");
+      expect(result.readability).toHaveProperty("averageSentenceLength");
+      expect(result.readability).toHaveProperty("averageWordLength");
 
       // Check keyword usage
-      expect(result.keywordUsage).toHaveProperty('keyword', 'test');
-      expect(result.keywordUsage).toHaveProperty('count');
-      expect(result.keywordUsage).toHaveProperty('density');
-      expect(result.keywordUsage).toHaveProperty('positions');
-      expect(result.keywordUsage).toHaveProperty('inTitle');
-      expect(result.keywordUsage).toHaveProperty('inHeadings');
-      expect(result.keywordUsage).toHaveProperty('inFirstParagraph');
-      expect(result.keywordUsage).toHaveProperty('inLastParagraph');
+      expect(result.keywordUsage).toHaveProperty("keyword", "test");
+      expect(result.keywordUsage).toHaveProperty("count");
+      expect(result.keywordUsage).toHaveProperty("density");
+      expect(result.keywordUsage).toHaveProperty("positions");
+      expect(result.keywordUsage).toHaveProperty("inTitle");
+      expect(result.keywordUsage).toHaveProperty("inHeadings");
+      expect(result.keywordUsage).toHaveProperty("inFirstParagraph");
+      expect(result.keywordUsage).toHaveProperty("inLastParagraph");
 
       // Check types
-      expect(typeof result.readability.fleschReadingEase).toBe('number');
-      expect(typeof result.readability.fleschKincaidGrade).toBe('number');
-      expect(typeof result.keywordUsage.density).toBe('number');
+      expect(typeof result.readability.fleschReadingEase).toBe("number");
+      expect(typeof result.readability.fleschKincaidGrade).toBe("number");
+      expect(typeof result.keywordUsage.density).toBe("number");
       expect(Array.isArray(result.internalLinks)).toBe(true);
     });
 
-    it('should calculate keyword usage correctly', () => {
+    it("should calculate keyword usage correctly", async () => {
       const input = {
         assemblerOutput: {
-          markdown: '# Test Keyword Article\n\nThis article contains the test keyword multiple times. The test keyword is important for testing.',
-          html: '<h1>Test Keyword Article</h1><p>This article contains the test keyword multiple times. The test keyword is important for testing.</p>',
+          markdown:
+            "# Test Keyword Article\n\nThis article contains the test keyword multiple times. The test keyword is important for testing.",
+          html: "<h1>Test Keyword Article</h1><p>This article contains the test keyword multiple times. The test keyword is important for testing.</p>",
           statistics: {
             totalWords: 17,
             totalParagraphs: 1,
@@ -110,18 +112,18 @@ describe('MultiAgentOutputAdapter', () => {
           },
         },
         strategyOutput: {
-          selectedTitle: 'Test Keyword Article',
+          selectedTitle: "Test Keyword Article",
           outline: {
             introduction: {
-              hook: '',
-              context: '',
-              thesis: '',
+              hook: "",
+              context: "",
+              thesis: "",
               wordCount: 0,
             },
             mainSections: [],
             conclusion: {
-              summary: '',
-              callToAction: '',
+              summary: "",
+              callToAction: "",
               wordCount: 0,
             },
             faq: [],
@@ -131,22 +133,22 @@ describe('MultiAgentOutputAdapter', () => {
           competitorAnalysis: [],
           contentGaps: [],
         },
-        focusKeyword: 'test',
+        focusKeyword: "test",
       };
 
-      const result = adapter.adapt(input);
+      const result = await adapter.adapt(input);
 
-      expect(result.keywordUsage.keyword).toBe('test');
+      expect(result.keywordUsage.keyword).toBe("test");
       expect(result.keywordUsage.count).toBeGreaterThan(0);
       expect(result.keywordUsage.density).toBeGreaterThan(0);
       expect(result.keywordUsage.inTitle).toBe(true);
       expect(result.keywordUsage.inFirstParagraph).toBe(true);
     });
 
-    it('should extract internal links from HTML', () => {
+    it("should extract internal links from HTML", async () => {
       const input = {
         assemblerOutput: {
-          markdown: '# Article',
+          markdown: "# Article",
           html: '<h1>Article</h1><p>Check out <a href="/about" title="About Us">our about page</a> and <a href="https://external.com">external link</a>.</p>',
           statistics: {
             totalWords: 10,
@@ -159,18 +161,18 @@ describe('MultiAgentOutputAdapter', () => {
           },
         },
         strategyOutput: {
-          selectedTitle: 'Article',
+          selectedTitle: "Article",
           outline: {
             introduction: {
-              hook: '',
-              context: '',
-              thesis: '',
+              hook: "",
+              context: "",
+              thesis: "",
               wordCount: 0,
             },
             mainSections: [],
             conclusion: {
-              summary: '',
-              callToAction: '',
+              summary: "",
+              callToAction: "",
               wordCount: 0,
             },
             faq: [],
@@ -180,23 +182,26 @@ describe('MultiAgentOutputAdapter', () => {
           competitorAnalysis: [],
           contentGaps: [],
         },
-        focusKeyword: 'article',
+        focusKeyword: "article",
       };
 
-      const result = adapter.adapt(input);
+      const result = await adapter.adapt(input);
 
       expect(result.internalLinks).toHaveLength(1);
-      expect(result.internalLinks[0]).toHaveProperty('url', '/about');
-      expect(result.internalLinks[0]).toHaveProperty('anchor', 'our about page');
-      expect(result.internalLinks[0]).toHaveProperty('title', 'About Us');
-      expect(result.internalLinks[0]).toHaveProperty('isInternal', true);
+      expect(result.internalLinks[0]).toHaveProperty("url", "/about");
+      expect(result.internalLinks[0]).toHaveProperty(
+        "anchor",
+        "our about page",
+      );
+      expect(result.internalLinks[0]).toHaveProperty("title", "About Us");
+      expect(result.internalLinks[0]).toHaveProperty("isInternal", true);
     });
 
-    it('should handle empty content gracefully', () => {
+    it("should handle empty content gracefully", async () => {
       const input = {
         assemblerOutput: {
-          markdown: '',
-          html: '',
+          markdown: "",
+          html: "",
           statistics: {
             totalWords: 0,
             totalParagraphs: 0,
@@ -208,18 +213,18 @@ describe('MultiAgentOutputAdapter', () => {
           },
         },
         strategyOutput: {
-          selectedTitle: '',
+          selectedTitle: "",
           outline: {
             introduction: {
-              hook: '',
-              context: '',
-              thesis: '',
+              hook: "",
+              context: "",
+              thesis: "",
               wordCount: 0,
             },
             mainSections: [],
             conclusion: {
-              summary: '',
-              callToAction: '',
+              summary: "",
+              callToAction: "",
               wordCount: 0,
             },
             faq: [],
@@ -229,13 +234,12 @@ describe('MultiAgentOutputAdapter', () => {
           competitorAnalysis: [],
           contentGaps: [],
         },
-        focusKeyword: '',
+        focusKeyword: "",
       };
 
-      const result = adapter.adapt(input);
+      const result = await adapter.adapt(input);
 
-      expect(result).toHaveProperty('markdown', '');
-      expect(result).toHaveProperty('html', '');
+      expect(result).toHaveProperty("markdown", "");
       expect(result.keywordUsage.count).toBe(0);
       expect(result.keywordUsage.density).toBe(0);
       expect(result.internalLinks).toHaveLength(0);

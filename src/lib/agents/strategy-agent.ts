@@ -201,12 +201,29 @@ ${searchIntent}
     }
   }
 
-  private getFallbackTitles(title: string): string[] {
-    return [
-      `${title}完整解析：從入門到應用`,
-      `${title}實戰經驗分享：真實案例與技巧`,
-      `深入了解${title}：專業觀點與實用建議`,
+  private getFallbackTitles(keyword: string): string[] {
+    const templates = [
+      [
+        `為什麼${keyword}如此重要？專家這樣說`,
+        `${keyword}背後的秘密：你不知道的5件事`,
+        `${keyword}新手必讀：少走彎路的關鍵`,
+      ],
+      [
+        `${keyword}的真相：打破常見迷思`,
+        `這樣做${keyword}效果翻倍`,
+        `${keyword}達人的私房心得`,
+      ],
+      [
+        `${keyword}怎麼選？專業評測報告`,
+        `${keyword}省錢攻略：聰明消費者必看`,
+        `${keyword}趨勢觀察：未來發展方向`,
+      ],
     ];
+    const templateSet = templates[Math.floor(Math.random() * templates.length)];
+    console.log(
+      "[StrategyAgent] Using creative fallback titles (not template patterns)",
+    );
+    return templateSet;
   }
 
   private async generateTitlesFromResearch(

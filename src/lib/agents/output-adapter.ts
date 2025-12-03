@@ -27,14 +27,13 @@ export class MultiAgentOutputAdapter {
   /**
    * 轉換 ContentAssembler 輸出為 WritingAgent 格式
    */
-  adapt(input: {
+  async adapt(input: {
     assemblerOutput: ContentAssemblerOutput;
     strategyOutput: AdapterStrategyInput;
     focusKeyword: string;
-  }): WritingAgentOutput {
+  }): Promise<WritingAgentOutput> {
     const { assemblerOutput, focusKeyword } = input;
 
-    // 防禦性檢查：確保 assemblerOutput 存在
     if (!assemblerOutput) {
       console.error("[OutputAdapter] ❌ assemblerOutput is null/undefined");
       return this.buildEmptyOutput();
@@ -43,47 +42,77 @@ export class MultiAgentOutputAdapter {
     let html = assemblerOutput.html;
     const markdown = assemblerOutput.markdown || "";
 
-    if (!this.validateHTML(html)) {
-      console.warn(
-        "[OutputAdapter] ⚠️  HTML validation failed, attempting re-conversion...",
-      );
-
-      // 如果 markdown 存在，嘗試重新轉換
-      if (typeof markdown === "string" && markdown.trim().length > 0) {
-        try {
-          html = marked.parse(markdown) as string;
-
-          if (!this.validateHTML(html)) {
-            console.error("[OutputAdapter] ❌ Re-conversion failed validation");
-            html = `<div class="content-fallback">${marked.parse(markdown)}</div>`;
-          } else {
-            console.log("[OutputAdapter] ✅ Re-conversion successful");
-          }
-        } catch (error) {
-          console.error("[OutputAdapter] ❌ Re-conversion error:", error);
-          html = `<div class="content-error">${markdown}</div>`;
-        }
-      } else {
-        html = '<div class="content-empty"></div>';
-      }
-    } else {
-      console.log("[OutputAdapter] ✅ HTML validation passed");
-    }
+    html = await this.resolveAndValidateHTML(html, markdown);
 
     return {
       markdown,
       html,
       statistics: assemblerOutput.statistics,
-
-      // 計算可讀性指標
       readability: this.calculateReadability(markdown),
-
-      // 計算關鍵字使用情況
       keywordUsage: this.analyzeKeywordUsage(markdown, focusKeyword),
-
-      // 擷取內部連結
       internalLinks: this.extractInternalLinks(html),
     };
+  }
+
+  private async resolveAndValidateHTML(
+    html: unknown,
+    markdown: string,
+  ): Promise<string> {
+    if (html && typeof (html as Promise<unknown>).then === "function") {
+      console.warn("[OutputAdapter] ⚠️ HTML is a Promise, awaiting...");
+      try {
+        html = await (html as Promise<unknown>);
+        console.log("[OutputAdapter] ✅ Promise resolved successfully");
+      } catch (error) {
+        console.error("[OutputAdapter] ❌ Promise resolution failed:", error);
+        html = null;
+      }
+    }
+
+    if (html && typeof html === "object" && html !== null) {
+      console.warn("[OutputAdapter] ⚠️ HTML is an object, extracting...");
+      const obj = html as Record<string, unknown>;
+      if (typeof obj.html === "string") {
+        html = obj.html;
+        console.log("[OutputAdapter] ✅ Extracted html property from object");
+      } else if (typeof obj.content === "string") {
+        html = obj.content;
+        console.log(
+          "[OutputAdapter] ✅ Extracted content property from object",
+        );
+      } else {
+        console.error("[OutputAdapter] ❌ Object has no html/content property");
+        html = null;
+      }
+    }
+
+    if (!this.validateHTML(html)) {
+      console.warn(
+        "[OutputAdapter] ⚠️ HTML validation failed, attempting re-conversion...",
+      );
+
+      if (typeof markdown === "string" && markdown.trim().length > 0) {
+        try {
+          const converted = marked.parse(markdown) as string;
+
+          if (!this.validateHTML(converted)) {
+            console.error("[OutputAdapter] ❌ Re-conversion failed validation");
+            return `<div class="content-fallback">${marked.parse(markdown)}</div>`;
+          } else {
+            console.log("[OutputAdapter] ✅ Re-conversion successful");
+            return converted;
+          }
+        } catch (error) {
+          console.error("[OutputAdapter] ❌ Re-conversion error:", error);
+          return `<div class="content-error">${markdown}</div>`;
+        }
+      } else {
+        return '<div class="content-empty"></div>';
+      }
+    }
+
+    console.log("[OutputAdapter] ✅ HTML validation passed");
+    return html as string;
   }
 
   private buildEmptyOutput(): WritingAgentOutput {

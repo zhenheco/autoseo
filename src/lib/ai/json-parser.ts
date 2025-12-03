@@ -13,6 +13,13 @@ export interface ParseResult<T> {
   rawExtracted?: string;
 }
 
+export interface FallbackRootCause {
+  originalResponsePreview: string;
+  modelId: string;
+  failedStrategies: string[];
+  timestamp: string;
+}
+
 export class AIResponseParser {
   private static readonly JSON_PATTERNS = [
     /```json\s*([\s\S]*?)\s*```/i,
@@ -21,20 +28,82 @@ export class AIResponseParser {
     /\[[\s\S]*\]/,
   ];
 
-  private static readonly THINKING_PATTERNS = [
-    /<thinking>[\s\S]*?<\/thinking>/gi,
-    /<thought>[\s\S]*?<\/thought>/gi,
-    /\*\*Thinking\*\*:[\s\S]*?(?=\n\n|\{|\[)/gi,
-    /^(?:Let me|I'll|First,|Now,|Here's)[\s\S]*?(?=\{|\[)/gim,
-  ];
+  private static lastFallbackCause: FallbackRootCause | null = null;
 
-  static cleanContent(content: string): string {
-    let cleaned = content.trim();
+  static getLastFallbackCause(): FallbackRootCause | null {
+    return this.lastFallbackCause;
+  }
 
-    for (const pattern of this.THINKING_PATTERNS) {
-      cleaned = cleaned.replace(pattern, "");
+  static clearFallbackCause(): void {
+    this.lastFallbackCause = null;
+  }
+
+  static extractBalancedJSON(content: string): string | null {
+    if (!content || typeof content !== "string") {
+      return null;
     }
 
+    const jsonStart = content.search(/[{[]/);
+    if (jsonStart === -1) {
+      return null;
+    }
+
+    const startChar = content[jsonStart];
+    const endChar = startChar === "{" ? "}" : "]";
+    let depth = 0;
+    let inString = false;
+    let escapeNext = false;
+
+    for (let i = jsonStart; i < content.length; i++) {
+      const char = content[i];
+
+      if (escapeNext) {
+        escapeNext = false;
+        continue;
+      }
+
+      if (char === "\\") {
+        escapeNext = true;
+        continue;
+      }
+
+      if (char === '"' && !escapeNext) {
+        inString = !inString;
+        continue;
+      }
+
+      if (inString) {
+        continue;
+      }
+
+      if (char === startChar || char === (startChar === "{" ? "{" : "[")) {
+        if (char === "{" || char === "[") depth++;
+      }
+      if (char === endChar || char === (endChar === "}" ? "}" : "]")) {
+        if (char === "}" || char === "]") depth--;
+      }
+
+      if (depth === 0 && (char === "}" || char === "]")) {
+        const extracted = content.substring(jsonStart, i + 1);
+        try {
+          JSON.parse(extracted);
+          return extracted;
+        } catch {
+          continue;
+        }
+      }
+    }
+
+    return null;
+  }
+
+  static cleanContent(content: string): string {
+    const balanced = this.extractBalancedJSON(content);
+    if (balanced) {
+      return balanced;
+    }
+
+    let cleaned = content.trim();
     cleaned = cleaned
       .replace(/^[\s\S]*?(?=\{|\[)/, "")
       .replace(/(?:\}|\])[\s\S]*$/, (match) => {
@@ -48,6 +117,11 @@ export class AIResponseParser {
   static extractJSON(content: string): string | null {
     if (!content || typeof content !== "string") {
       return null;
+    }
+
+    const balanced = this.extractBalancedJSON(content);
+    if (balanced) {
+      return balanced;
     }
 
     for (const pattern of this.JSON_PATTERNS) {
@@ -249,12 +323,144 @@ export class AIResponseParser {
     content: string,
     schema: z.ZodSchema<T>,
     fallback: T,
+    modelId?: string,
   ): T {
     const result = this.parse(content, schema);
     if (result.success && result.data !== undefined) {
+      this.lastFallbackCause = null;
       return result.data;
     }
+
+    const failedStrategies: string[] = [];
+    if (!this.extractBalancedJSON(content)) {
+      failedStrategies.push("balanced-extraction");
+    }
+    if (!this.extractJSON(content)) {
+      failedStrategies.push("pattern-extraction");
+    }
+    if (result.error?.includes("Schema validation")) {
+      failedStrategies.push("schema-validation");
+    }
+    if (result.error?.includes("JSON parse")) {
+      failedStrategies.push("json-parse");
+    }
+
+    this.lastFallbackCause = {
+      originalResponsePreview: content.substring(0, 200),
+      modelId: modelId || "unknown",
+      failedStrategies,
+      timestamp: new Date().toISOString(),
+    };
+
+    console.warn(
+      `[AIResponseParser] Fallback triggered for model ${modelId || "unknown"}:`,
+      {
+        preview: content.substring(0, 100),
+        failedStrategies,
+        error: result.error,
+      },
+    );
+
     return fallback;
+  }
+
+  static buildStrictJsonPromptSuffix(): string {
+    return "\n\n⚠️ 只輸出 JSON，第一個字符必須是 { 或 [，禁止任何解釋、邊界標記（```json、---）或額外文字。";
+  }
+
+  static shouldRetryParsing(result: ParseResult<unknown>): {
+    shouldRetry: boolean;
+    reason: string;
+    suggestedAction: "add_strict_suffix" | "simplify_schema" | "none";
+  } {
+    if (result.success) {
+      return { shouldRetry: false, reason: "success", suggestedAction: "none" };
+    }
+
+    const error = result.error || "";
+
+    if (error.includes("JSON parse failed")) {
+      return {
+        shouldRetry: true,
+        reason: "json_syntax_error",
+        suggestedAction: "add_strict_suffix",
+      };
+    }
+
+    if (error.includes("Schema validation failed")) {
+      return {
+        shouldRetry: true,
+        reason: "schema_mismatch",
+        suggestedAction: "simplify_schema",
+      };
+    }
+
+    if (error.includes("Empty content")) {
+      return {
+        shouldRetry: false,
+        reason: "empty_response",
+        suggestedAction: "none",
+      };
+    }
+
+    return {
+      shouldRetry: true,
+      reason: "unknown_error",
+      suggestedAction: "add_strict_suffix",
+    };
+  }
+
+  static async parseWithRetry<T>(
+    attemptFn: (useStrictPrompt: boolean) => Promise<string>,
+    schema: z.ZodSchema<T>,
+    fallback: T,
+    options: {
+      maxRetries?: number;
+      modelId?: string;
+      onRetry?: (attempt: number, reason: string) => void;
+    } = {},
+  ): Promise<{ data: T; usedFallback: boolean; attempts: number }> {
+    const { maxRetries = 2, modelId, onRetry } = options;
+
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      const useStrictPrompt = attempt > 0;
+      const content = await attemptFn(useStrictPrompt);
+
+      const result = this.parse(content, schema);
+
+      if (result.success && result.data !== undefined) {
+        return {
+          data: result.data,
+          usedFallback: false,
+          attempts: attempt + 1,
+        };
+      }
+
+      const retryInfo = this.shouldRetryParsing(result);
+
+      if (!retryInfo.shouldRetry || attempt === maxRetries) {
+        console.warn(
+          `[AIResponseParser] Final fallback after ${attempt + 1} attempts`,
+          {
+            modelId,
+            reason: retryInfo.reason,
+            error: result.error,
+          },
+        );
+        return { data: fallback, usedFallback: true, attempts: attempt + 1 };
+      }
+
+      if (onRetry) {
+        onRetry(attempt + 1, retryInfo.reason);
+      }
+
+      console.log(
+        `[AIResponseParser] Retry ${attempt + 1}/${maxRetries} for ${modelId || "unknown"}`,
+        { reason: retryInfo.reason, action: retryInfo.suggestedAction },
+      );
+    }
+
+    return { data: fallback, usedFallback: true, attempts: maxRetries + 1 };
   }
 }
 
