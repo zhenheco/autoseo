@@ -61,7 +61,7 @@ export class LinkProcessorAgent {
       maxExternalLinks: options?.maxExternalLinks ?? 3,
       maxLinksPerUrl: options?.maxLinksPerUrl ?? 2,
       minDistanceBetweenLinks: options?.minDistanceBetweenLinks ?? 500,
-      minSemanticScore: options?.minSemanticScore ?? 0.6,
+      minSemanticScore: options?.minSemanticScore ?? 0.4,
     };
   }
 
@@ -472,23 +472,78 @@ export class LinkProcessorAgent {
 
   private extractKeywordsFromReference(ref: ExternalReference): string[] {
     const keywords: string[] = [];
+    const stopWords = new Set([
+      "的",
+      "是",
+      "在",
+      "和",
+      "了",
+      "與",
+      "或",
+      "及",
+      "等",
+      "這",
+      "那",
+      "關於",
+      "參考",
+      "來源",
+      "the",
+      "a",
+      "an",
+      "and",
+      "or",
+      "is",
+      "are",
+      "for",
+      "to",
+      "in",
+      "on",
+      "at",
+      "by",
+      "with",
+    ]);
 
     if (ref.title) {
       keywords.push(ref.title);
       const titleWords = ref.title
-        .split(/[\s,，、。]+/)
-        .filter((w) => w.length >= 2 && w.length <= 20);
-      keywords.push(...titleWords.slice(0, 3));
+        .split(/[\s,，、。：:]+/)
+        .filter(
+          (w) =>
+            w.length >= 2 && w.length <= 30 && !stopWords.has(w.toLowerCase()),
+        );
+      keywords.push(...titleWords.slice(0, 5));
     }
 
-    if (ref.description) {
+    if (ref.description && ref.description.length > 20) {
+      const chinesePhrasesMatch =
+        ref.description.match(/[\u4e00-\u9fa5]{2,8}/g);
+      if (chinesePhrasesMatch) {
+        const validPhrases = chinesePhrasesMatch.filter(
+          (p) => !stopWords.has(p),
+        );
+        keywords.push(...validPhrases.slice(0, 5));
+      }
+
       const descWords = ref.description
-        .split(/[\s,，、。]+/)
-        .filter((w) => w.length >= 2 && w.length <= 20);
+        .split(/[\s,，、。：:；;！!？?]+/)
+        .filter(
+          (w) =>
+            w.length >= 2 && w.length <= 30 && !stopWords.has(w.toLowerCase()),
+        );
       keywords.push(...descWords.slice(0, 5));
     }
 
-    return [...new Set(keywords)].slice(0, 8);
+    if (ref.domain) {
+      const domainParts = ref.domain
+        .replace(/^www\./, "")
+        .split(".")
+        .filter(
+          (p) => p.length >= 3 && !["com", "tw", "org", "net"].includes(p),
+        );
+      keywords.push(...domainParts.slice(0, 2));
+    }
+
+    return [...new Set(keywords)].slice(0, 12);
   }
 
   private escapeRegex(str: string): string {

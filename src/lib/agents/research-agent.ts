@@ -270,11 +270,11 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
       try {
         const type = this.categorizeUrl(url);
         const domain = new URL(url).hostname;
+        const urlContext = this.extractUrlContext(content, url);
 
         const baseScore = Math.max(0.5, 1 - i * 0.1);
         const typeBonus = this.getTypeRelevanceBonus(type);
-        const contextBonus =
-          this.extractUrlContext(content, url).length > 50 ? 0.1 : 0;
+        const contextBonus = urlContext.length > 50 ? 0.1 : 0;
         const relevance_score = Math.min(
           1,
           Math.round((baseScore + typeBonus + contextBonus) * 100) / 100,
@@ -285,7 +285,7 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
           title: this.extractTitleFromUrl(url),
           type,
           domain,
-          description: `關於「${title}」的參考來源`,
+          description: urlContext || `關於「${title}」的參考來源`,
           relevance_score,
         });
       } catch {
