@@ -72,6 +72,42 @@ export class AIClient {
       throw new Error("DEEPSEEK_API_KEY is not set");
     }
 
+    // 先嘗試 Gateway 模式，如果失敗則自動 fallback 到直連模式
+    const useGateway = isGatewayEnabled();
+
+    if (useGateway) {
+      try {
+        return await this.callDeepSeekAPIInternal(params, apiKey, true);
+      } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        // 如果是 Error 2005（Gateway 無法從 provider 取得回應），嘗試直連
+        if (
+          err.message.includes("2005") ||
+          err.message.includes("Failed to get response from provider")
+        ) {
+          console.log(
+            "[AIClient] ⚠️ Gateway Error 2005, 自動切換到直連 DeepSeek API...",
+          );
+          return await this.callDeepSeekAPIInternal(params, apiKey, false);
+        }
+        throw error;
+      }
+    }
+
+    return await this.callDeepSeekAPIInternal(params, apiKey, false);
+  }
+
+  private async callDeepSeekAPIInternal(
+    params: {
+      model: string;
+      messages: Array<{ role: string; content: string }>;
+      temperature?: number;
+      max_tokens?: number;
+      response_format?: { type: string };
+    },
+    apiKey: string,
+    useGateway: boolean,
+  ) {
     // 為 deepseek-reasoner 設定較長的超時時間（180 秒）
     // 為 deepseek-chat 設定標準超時時間（120 秒）
     const timeoutMs = params.model === "deepseek-reasoner" ? 180000 : 120000;
@@ -80,17 +116,25 @@ export class AIClient {
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
     try {
-      const baseUrl = getDeepSeekBaseUrl();
-      const headers = buildDeepSeekHeaders(apiKey);
+      let endpoint: string;
+      let headers: Record<string, string>;
 
-      // Gateway 模式: .../deepseek/chat/completions（不需要 /v1）
-      // 直連模式: https://api.deepseek.com/v1/chat/completions（需要 /v1）
-      const endpoint = isGatewayEnabled()
-        ? `${baseUrl}/chat/completions`
-        : `${baseUrl}/v1/chat/completions`;
+      if (useGateway) {
+        // Gateway 模式: .../deepseek/chat/completions（不需要 /v1）
+        const baseUrl = getDeepSeekBaseUrl();
+        endpoint = `${baseUrl}/chat/completions`;
+        headers = buildDeepSeekHeaders(apiKey);
+      } else {
+        // 直連模式: https://api.deepseek.com/v1/chat/completions
+        endpoint = "https://api.deepseek.com/v1/chat/completions";
+        headers = {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${apiKey}`,
+        };
+      }
 
       console.log(
-        `[AIClient] DeepSeek API (gateway: ${isGatewayEnabled()}, url: ${endpoint})`,
+        `[AIClient] DeepSeek API (gateway: ${useGateway}, url: ${endpoint})`,
       );
 
       const response = await fetch(endpoint, {
@@ -113,7 +157,13 @@ export class AIClient {
         throw new Error(`DeepSeek API error: ${JSON.stringify(error)}`);
       }
 
-      return (await response.json()) as DeepSeekResponse;
+      const result = (await response.json()) as DeepSeekResponse;
+
+      if (!useGateway) {
+        console.log("[AIClient] ✅ 直連 DeepSeek API 成功");
+      }
+
+      return result;
     } catch (error: unknown) {
       clearTimeout(timeoutId);
       if (error instanceof Error && error.name === "AbortError") {
