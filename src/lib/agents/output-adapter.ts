@@ -112,56 +112,111 @@ export class MultiAgentOutputAdapter {
     }
 
     console.log("[OutputAdapter] ✅ HTML validation passed");
-    return this.cleanupResidualMarkdown(html as string);
+    let cleaned = this.cleanupResidualMarkdown(html as string);
+
+    // 最後檢查：如果仍有明顯的 markdown 語法，強制重新轉換
+    if (this.hasMarkdownSyntax(cleaned)) {
+      console.warn(
+        "[OutputAdapter] ⚠️ Still has markdown syntax, forcing re-conversion",
+      );
+      try {
+        cleaned = await marked.parse(cleaned);
+        cleaned = this.cleanupResidualMarkdown(cleaned);
+      } catch (error) {
+        console.error("[OutputAdapter] ❌ Force re-conversion failed:", error);
+      }
+    }
+
+    return cleaned;
+  }
+
+  private hasMarkdownSyntax(html: string): boolean {
+    const markdownPatterns = [
+      /^#{1,6}\s+/m,
+      /^>\s+/m,
+      /\*\*[^*]+\*\*/,
+      /\[([^\]]+)\]\([^)]+\)/,
+      /^[-*+]\s+/m,
+      /^\d+\.\s+/m,
+      /```/,
+    ];
+    return markdownPatterns.some((pattern) => pattern.test(html));
   }
 
   private cleanupResidualMarkdown(html: string): string {
     let cleaned = html;
 
-    // 清理殘留的 markdown 標題語法（在段落內的）
-    // ### Title -> <h3>Title</h3>
-    cleaned = cleaned.replace(
-      /(?<![<\w])#{6}\s*([^<\n]+?)(?=\s*<|$)/g,
-      "<h6>$1</h6>",
-    );
-    cleaned = cleaned.replace(
-      /(?<![<\w])#{5}\s*([^<\n]+?)(?=\s*<|$)/g,
-      "<h5>$1</h5>",
-    );
-    cleaned = cleaned.replace(
-      /(?<![<\w])#{4}\s*([^<\n]+?)(?=\s*<|$)/g,
-      "<h4>$1</h4>",
-    );
-    cleaned = cleaned.replace(
-      /(?<![<\w])#{3}\s*([^<\n]+?)(?=\s*<|$)/g,
-      "<h3>$1</h3>",
-    );
-    cleaned = cleaned.replace(
-      /(?<![<\w])#{2}\s*([^<\n]+?)(?=\s*<|$)/g,
-      "<h2>$1</h2>",
-    );
-    cleaned = cleaned.replace(
-      /(?<![<\w])#\s*([^<\n]+?)(?=\s*<|$)/g,
-      "<h1>$1</h1>",
-    );
+    // Step 1: 清理 JSON 結構殘留（如 { "content": "..." }）
+    cleaned = cleaned.replace(/\{\s*"content"\s*:\s*"/g, "");
+    cleaned = cleaned.replace(/"\s*\}\s*$/g, "");
+    cleaned = cleaned.replace(/\\n/g, "\n");
 
-    // 清理殘留的粗體語法 **text** -> <strong>text</strong>
+    // Step 2: 清理 markdown 標題（更寬鬆的匹配）
+    cleaned = cleaned.replace(/^######\s+(.+)$/gm, "<h6>$1</h6>");
+    cleaned = cleaned.replace(/^#####\s+(.+)$/gm, "<h5>$1</h5>");
+    cleaned = cleaned.replace(/^####\s+(.+)$/gm, "<h4>$1</h4>");
+    cleaned = cleaned.replace(/^###\s+(.+)$/gm, "<h3>$1</h3>");
+    cleaned = cleaned.replace(/^##\s+(.+)$/gm, "<h2>$1</h2>");
+    cleaned = cleaned.replace(/^#\s+(.+)$/gm, "<h1>$1</h1>");
+
+    // Step 3: 清理引用區塊 > text -> <blockquote>
+    cleaned = cleaned.replace(
+      /^>\s*(.+)$/gm,
+      "<blockquote><p>$1</p></blockquote>",
+    );
+    // 合併連續的 blockquote
+    cleaned = cleaned.replace(/<\/blockquote>\s*<blockquote>/g, "\n");
+
+    // Step 4: 清理粗體語法 **text** -> <strong>text</strong>
     cleaned = cleaned.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
 
-    // 清理殘留的斜體語法 *text* -> <em>text</em>（避免匹配 ** 的一部分）
+    // Step 5: 清理斜體語法 *text* -> <em>text</em>
     cleaned = cleaned.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, "<em>$1</em>");
 
-    // 清理殘留的連結語法 [text](url) -> <a href="url">text</a>
+    // Step 6: 清理連結語法 [text](url) -> <a href="url">text</a>
     cleaned = cleaned.replace(
       /\[([^\]]+)\]\(([^)]+)\)/g,
       '<a href="$2">$1</a>',
     );
 
-    // 清理殘留的行內程式碼 `code` -> <code>code</code>
+    // Step 7: 清理行內程式碼 `code` -> <code>code</code>
     cleaned = cleaned.replace(/`([^`]+)`/g, "<code>$1</code>");
 
-    // 清理多餘的空白行
+    // Step 8: 清理程式碼區塊 ```language\ncode``` -> <pre><code class="language-xxx">code</code></pre>
+    cleaned = cleaned.replace(/```(\w*)\n?([\s\S]*?)```/g, (_, lang, code) => {
+      const langClass = lang ? ` class="language-${lang}"` : "";
+      const escapedCode = code
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+      return `<pre><code${langClass}>${escapedCode.trim()}</code></pre>`;
+    });
+
+    // Step 9: 清理無序列表 - item -> <li>item</li>
+    cleaned = cleaned.replace(/^[-*+]\s+(.+)$/gm, "<li>$1</li>");
+    // 包裝連續的 <li> 為 <ul>
+    cleaned = cleaned.replace(/(<li>[\s\S]*?<\/li>)(\s*<li>)/g, "$1$2");
+
+    // Step 10: 清理有序列表 1. item -> <li>item</li>
+    cleaned = cleaned.replace(/^\d+\.\s+(.+)$/gm, "<li>$1</li>");
+
+    // Step 11: 清理水平線 --- -> <hr>
+    cleaned = cleaned.replace(/^[-*_]{3,}$/gm, "<hr>");
+
+    // Step 12: 清理多餘的空白行
     cleaned = cleaned.replace(/\n{3,}/g, "\n\n");
+
+    // Step 13: 將純文字段落包裝為 <p>
+    const lines = cleaned.split("\n\n");
+    cleaned = lines
+      .map((line) => {
+        const trimmed = line.trim();
+        if (!trimmed) return "";
+        if (trimmed.startsWith("<")) return trimmed;
+        return `<p>${trimmed}</p>`;
+      })
+      .filter(Boolean)
+      .join("\n");
 
     if (cleaned !== html) {
       console.log(
