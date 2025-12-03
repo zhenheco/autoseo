@@ -157,4 +157,39 @@ if (useGateway) {
 - 如果日誌顯示「✅ 直連 DeepSeek API 成功」→ 問題在 Gateway 設定
 - 如果直連也失敗 → 問題在 DeepSeek API 本身
 
+#### 嘗試 4: 完整多層 Fallback 機制 🔄
+
+**目標**：確保服務穩定性，即使單一 Provider 失敗也能繼續運作
+
+**Fallback 鏈**：
+
+```
+Step 1: Gateway DeepSeek (deepseek-reasoner/chat)
+   ↓ 失敗
+Step 2: Gateway OpenRouter (deepseek/deepseek-v3.2)
+   ↓ 失敗
+Step 3: 直連 DeepSeek API
+   ↓ 失敗
+Step 4: OpenAI (gpt-5 或 gpt-5-mini)
+```
+
+**修改檔案**：
+
+- `src/lib/ai/ai-client.ts`: 完整重寫 `callDeepSeekAPI`，加入 4 層 fallback
+
+**日誌輸出範例**：
+
+```
+[AIClient] 🔄 Step 1: Gateway DeepSeek (deepseek-reasoner)
+[AIClient] ⚠️ Step 1 失敗: Error 2005
+[AIClient] 🔄 Step 2: Gateway OpenRouter (deepseek/deepseek-v3.2)
+[AIClient] ✅ Step 2 成功: Gateway OpenRouter (deepseek/deepseek-v3.2)
+```
+
+**環境變數要求**：
+
+- `DEEPSEEK_API_KEY`: DeepSeek API 金鑰
+- `OPENROUTER_API_KEY`: OpenRouter API 金鑰
+- `OPENAI_API_KEY`: OpenAI API 金鑰（最後備援）
+
 ---
