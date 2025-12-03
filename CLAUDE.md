@@ -128,37 +128,25 @@ models/imagen-3.0-generate-001 is not found for API version v1beta
 1. **Vercel Dashboard** → Settings → Environment Variables
 2. **GitHub Secrets** → Repository Settings → Secrets and variables → Actions
 
-### BYOK 模式重要規範（2024-12 修正）
+### Header 模式（2024-12 更新）
 
-**⚠️ 重要**：使用 BYOK（Bring Your Own Keys）模式時，API Key 已存儲在 Cloudflare AI Gateway Dashboard 中。
+**重要**：本專案使用**雙 Header 模式**，同時傳送 provider API Key 和 Gateway Token。
 
-**正確的 Headers（BYOK 模式）**：
+**正確的 Headers**：
 
 ```typescript
 headers = {
   "Content-Type": "application/json",
-  "cf-aig-authorization": `Bearer ${CF_AIG_TOKEN}`,
-};
-// 不要傳 Authorization header！Gateway 會使用存儲的 API Key
-```
-
-**錯誤的 Headers（會導致 Error 2005）**：
-
-```typescript
-headers = {
-  Authorization: `Bearer ${PROVIDER_API_KEY}`, // ❌ 不應該傳！
-  "cf-aig-authorization": `Bearer ${CF_AIG_TOKEN}`,
+  Authorization: `Bearer ${PROVIDER_API_KEY}`, // Provider API Key（總是傳）
+  "cf-aig-authorization": `Bearer ${CF_AIG_TOKEN}`, // Gateway Token（Gateway 模式時傳）
 };
 ```
 
-**關鍵規則**：
+**注意**：
 
-1. 當 `isGatewayEnabled() === true` 時，**只傳** `cf-aig-authorization`
-2. **不要傳** provider 的 `Authorization` 或 `x-goog-api-key`
-3. Gateway 會自動使用在 Dashboard 中存儲的 API Key
-4. 直連模式（非 Gateway）才需要傳 provider 的 API Key
-
-**參考文檔**：[Cloudflare BYOK 文檔](https://developers.cloudflare.com/ai-gateway/configuration/bring-your-own-keys/)
+- 雖然 Cloudflare BYOK 文檔建議只傳 `cf-aig-authorization`，但實測發現**需要同時傳送兩個 header** 才能正常運作
+- 這可能是 Cloudflare AI Gateway 的特定行為或設定需求
+- 如果遇到 Error 2005，請確認兩個 header 都有正確傳送
 
 ---
 
