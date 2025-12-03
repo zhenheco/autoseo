@@ -139,9 +139,13 @@ export class AIClient {
             ? { type: "json_object" }
             : undefined;
 
-        if (wantsJsonFormat && !modelSupportsJson) {
-          console.log(
-            `[AIClient] Model ${currentModel} does not support JSON mode, will use parser fallback`,
+        if (
+          wantsJsonFormat &&
+          !modelSupportsJson &&
+          process.env.NODE_ENV === "development"
+        ) {
+          console.debug(
+            `[AIClient] Model ${currentModel} does not support JSON mode, using parser fallback`,
           );
         }
 
