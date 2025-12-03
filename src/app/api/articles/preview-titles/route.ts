@@ -8,21 +8,17 @@ import {
 } from "@/lib/cloudflare/ai-gateway";
 
 async function callGeminiDirectAPI(prompt: string): Promise<string> {
-  // BYOK 模式：不需要 API Key，Gateway 會處理認證
-  // 直連模式：需要 API Key
   const apiKey = process.env.GEMINI_API_KEY;
-  if (!isGatewayEnabled() && !apiKey) {
-    throw new Error("GEMINI_API_KEY is not set (non-gateway mode)");
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY is not set");
   }
 
   const modelName = "gemini-2.5-flash";
-  // BYOK 模式：不需要在 URL 中傳 apiKey
-  // 直連模式：需要在 URL 中傳 apiKey
+  // Gateway 模式使用 Gateway URL，直連模式使用官方 URL（帶 key 參數）
   const geminiUrl = isGatewayEnabled()
     ? buildGeminiApiUrl(modelName, "generateContent")
     : `${buildGeminiApiUrl(modelName, "generateContent")}?key=${apiKey}`;
-  // BYOK 模式：不傳 apiKey，buildGeminiHeaders 會自動處理
-  const headers = buildGeminiHeaders();
+  const headers = buildGeminiHeaders(apiKey);
 
   const response = await fetch(geminiUrl, {
     method: "POST",

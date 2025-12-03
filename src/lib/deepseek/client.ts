@@ -95,20 +95,18 @@ export class DeepSeekClient {
     this.defaultTemperature = config.defaultTemperature || 0.7;
     this.defaultMaxTokens = config.defaultMaxTokens || 16000;
 
-    // BYOK 模式：不需要 API Key，Gateway 會處理認證
-    // 直連模式：需要 API Key
-    if (!isGatewayEnabled() && !this.apiKey) {
+    if (!this.apiKey) {
       console.warn(
-        "[DeepSeekClient] ⚠️ API Key 未設定，請設定 DEEPSEEK_API_KEY 環境變數（非 Gateway 模式）",
+        "[DeepSeekClient] ⚠️ API Key 未設定，請設定 DEEPSEEK_API_KEY 環境變數",
       );
     }
   }
 
   /**
-   * 驗證 API Key 是否有效（或 Gateway 是否啟用）
+   * 驗證 API Key 是否有效
    */
   isConfigured(): boolean {
-    return isGatewayEnabled() || !!this.apiKey;
+    return !!this.apiKey;
   }
 
   /**
@@ -118,7 +116,7 @@ export class DeepSeekClient {
     options: DeepSeekCompletionOptions,
   ): Promise<DeepSeekCompletionResponse> {
     if (!this.isConfigured()) {
-      throw new Error("DeepSeek API Key 未設定（非 Gateway 模式）");
+      throw new Error("DeepSeek API Key 未設定");
     }
 
     const requestBody = {
@@ -196,8 +194,7 @@ export class DeepSeekClient {
 
         const response = await fetch(url, {
           method: "POST",
-          // BYOK 模式：不傳 apiKey，buildDeepSeekHeaders 會自動處理
-          headers: buildDeepSeekHeaders(),
+          headers: buildDeepSeekHeaders(this.apiKey),
           body: JSON.stringify(body),
           signal: controller.signal,
         });
