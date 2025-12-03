@@ -1,3 +1,0 @@
-# Spec: wysiwyg editor
-
-## Overview
