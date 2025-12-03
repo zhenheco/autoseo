@@ -71,16 +71,66 @@ export class CategoryAgent {
       throw new Error("DEEPSEEK_API_KEY is not set");
     }
 
-    // Gateway 模式: .../deepseek/chat/completions（不需要 /v1）
-    // 直連模式: https://api.deepseek.com/v1/chat/completions（需要 /v1）
-    const baseUrl = getDeepSeekBaseUrl();
-    const endpoint = isGatewayEnabled()
-      ? `${baseUrl}/chat/completions`
-      : `${baseUrl}/v1/chat/completions`;
+    const useGateway = isGatewayEnabled();
+
+    // 先嘗試 Gateway 模式
+    if (useGateway) {
+      try {
+        return await this.callDeepSeekAPIInternal(params, apiKey, true);
+      } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        // 如果是 Error 2005（Gateway 無法從 provider 取得回應），嘗試直連
+        if (
+          err.message.includes("2005") ||
+          err.message.includes("Failed to get response from provider")
+        ) {
+          console.log(
+            "[CategoryAgent] ⚠️ Gateway Error 2005, 自動切換到直連 DeepSeek API...",
+          );
+          return await this.callDeepSeekAPIInternal(params, apiKey, false);
+        }
+        throw error;
+      }
+    }
+
+    return await this.callDeepSeekAPIInternal(params, apiKey, false);
+  }
+
+  private async callDeepSeekAPIInternal(
+    params: {
+      model: string;
+      messages: Array<{ role: string; content: string }>;
+      temperature?: number;
+      max_tokens?: number;
+      response_format?: { type: string };
+    },
+    apiKey: string,
+    useGateway: boolean,
+  ) {
+    let endpoint: string;
+    let headers: Record<string, string>;
+
+    if (useGateway) {
+      // Gateway 模式: .../deepseek/chat/completions（不需要 /v1）
+      const baseUrl = getDeepSeekBaseUrl();
+      endpoint = `${baseUrl}/chat/completions`;
+      headers = buildDeepSeekHeaders(apiKey);
+    } else {
+      // 直連模式: https://api.deepseek.com/v1/chat/completions
+      endpoint = "https://api.deepseek.com/v1/chat/completions";
+      headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      };
+    }
+
+    console.log(
+      `[CategoryAgent] DeepSeek API (gateway: ${useGateway}, url: ${endpoint})`,
+    );
 
     const response = await fetch(endpoint, {
       method: "POST",
-      headers: buildDeepSeekHeaders(apiKey),
+      headers,
       body: JSON.stringify({
         model: params.model,
         messages: params.messages,
@@ -95,7 +145,13 @@ export class CategoryAgent {
       throw new Error(`DeepSeek API error: ${JSON.stringify(error)}`);
     }
 
-    return await response.json();
+    const result = await response.json();
+
+    if (!useGateway) {
+      console.log("[CategoryAgent] ✅ 直連 DeepSeek API 成功");
+    }
+
+    return result;
   }
 
   async generateCategories(input: CategoryInput): Promise<CategoryOutput> {

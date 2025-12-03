@@ -178,18 +178,61 @@ export class DeepSeekClient {
   }
 
   /**
-   * 發送 HTTP 請求（含 retry 機制）
+   * 發送 HTTP 請求（含 retry 機制和 Gateway fallback）
    */
   private async makeRequest(
     endpoint: string,
     body: Record<string, unknown>,
   ): Promise<DeepSeekCompletionResponse> {
-    // Gateway 模式: .../deepseek/chat/completions（不需要 /v1）
-    // 直連模式: https://api.deepseek.com/v1/chat/completions（需要 /v1）
-    const actualEndpoint = isGatewayEnabled()
-      ? endpoint.replace("/v1/", "/")
-      : endpoint;
-    const url = `${this.baseURL}${actualEndpoint}`;
+    const useGateway = isGatewayEnabled();
+
+    // 先嘗試 Gateway 模式
+    if (useGateway) {
+      try {
+        return await this.makeRequestInternal(endpoint, body, true);
+      } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        // 如果是 Error 2005（Gateway 無法從 provider 取得回應），嘗試直連
+        if (
+          err.message.includes("2005") ||
+          err.message.includes("Failed to get response from provider")
+        ) {
+          console.log(
+            "[DeepSeekClient] ⚠️ Gateway Error 2005, 自動切換到直連 DeepSeek API...",
+          );
+          return await this.makeRequestInternal(endpoint, body, false);
+        }
+        throw error;
+      }
+    }
+
+    return await this.makeRequestInternal(endpoint, body, false);
+  }
+
+  private async makeRequestInternal(
+    endpoint: string,
+    body: Record<string, unknown>,
+    useGateway: boolean,
+  ): Promise<DeepSeekCompletionResponse> {
+    let url: string;
+    let headers: Record<string, string>;
+
+    if (useGateway) {
+      // Gateway 模式: .../deepseek/chat/completions（不需要 /v1）
+      const actualEndpoint = endpoint.replace("/v1/", "/");
+      url = `${this.baseURL}${actualEndpoint}`;
+      headers = buildDeepSeekHeaders(this.apiKey);
+    } else {
+      // 直連模式: https://api.deepseek.com/v1/chat/completions
+      url = `https://api.deepseek.com${endpoint}`;
+      headers = {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${this.apiKey}`,
+      };
+    }
+
+    console.log(`[DeepSeekClient] API (gateway: ${useGateway}, url: ${url})`);
+
     let lastError: Error | null = null;
 
     for (let attempt = 1; attempt <= this.maxRetries; attempt++) {
@@ -199,7 +242,7 @@ export class DeepSeekClient {
 
         const response = await fetch(url, {
           method: "POST",
-          headers: buildDeepSeekHeaders(this.apiKey),
+          headers,
           body: JSON.stringify(body),
           signal: controller.signal,
         });
@@ -240,9 +283,12 @@ export class DeepSeekClient {
 
         const data = (await response.json()) as DeepSeekCompletionResponse;
 
-        // 記錄成功請求（僅在重試後）
+        // 記錄成功請求
         if (attempt > 1) {
           console.log(`[DeepSeekClient] ✅ 重試成功 (第 ${attempt} 次嘗試)`);
+        }
+        if (!useGateway) {
+          console.log("[DeepSeekClient] ✅ 直連 DeepSeek API 成功");
         }
 
         return data;
