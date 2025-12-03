@@ -346,6 +346,11 @@ export interface FeaturedImageInput {
   quality: "low" | "medium" | "high" | "auto";
   size: string;
   targetLanguage?: string;
+  articleContext?: {
+    outline?: string[];
+    mainTopics?: string[];
+    keywords?: string[];
+  };
 }
 
 export interface FeaturedImageOutput {

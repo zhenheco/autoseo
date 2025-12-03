@@ -93,11 +93,11 @@ export class MultiAgentOutputAdapter {
 
       if (typeof markdown === "string" && markdown.trim().length > 0) {
         try {
-          const converted = marked.parse(markdown) as string;
+          const converted = await marked.parse(markdown);
 
           if (!this.validateHTML(converted)) {
             console.error("[OutputAdapter] ❌ Re-conversion failed validation");
-            return `<div class="content-fallback">${marked.parse(markdown)}</div>`;
+            return `<div class="content-fallback">${String(converted)}</div>`;
           } else {
             console.log("[OutputAdapter] ✅ Re-conversion successful");
             return converted;

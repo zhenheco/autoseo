@@ -136,11 +136,34 @@ Color scheme: vibrant, eye-catching
 Mood: engaging, informative
 `;
 
+    let contextSection = "";
+    if (input.articleContext) {
+      const parts: string[] = [];
+      if (input.articleContext.outline?.length) {
+        parts.push(
+          `Main Sections: ${input.articleContext.outline.slice(0, 5).join(", ")}`,
+        );
+      }
+      if (input.articleContext.mainTopics?.length) {
+        parts.push(
+          `Key Topics: ${input.articleContext.mainTopics.slice(0, 5).join(", ")}`,
+        );
+      }
+      if (input.articleContext.keywords?.length) {
+        parts.push(
+          `Keywords: ${input.articleContext.keywords.slice(0, 5).join(", ")}`,
+        );
+      }
+      if (parts.length > 0) {
+        contextSection = `\nArticle Context:\n${parts.join("\n")}\n`;
+      }
+    }
+
     return `Create a high-quality featured image for an article.
 
 Target Language Context: ${targetLang}
 Article Title: "${input.title}"
-
+${contextSection}
 ${styleGuide}
 
 CRITICAL - ABSOLUTELY NO TEXT (THIS IS THE MOST IMPORTANT RULE):
@@ -152,7 +175,7 @@ CRITICAL - ABSOLUTELY NO TEXT (THIS IS THE MOST IMPORTANT RULE):
 
 Other Requirements:
 - Eye-catching and professional
-- Relevant to the article topic
+- Relevant to the article topic and its main sections
 - This is for a ${targetLang} article - create culturally appropriate visuals
 - Suitable for blog header/social media
 - High visual impact

@@ -527,6 +527,13 @@ export class LinearOrchestrator {
         model: featuredImageModel,
         quality: "medium",
         size: agentConfig.image_size,
+        articleContext: {
+          outline: strategy.outline?.mainSections?.map((s) => s.heading) || [],
+          mainTopics:
+            strategy.outline?.mainSections?.slice(0, 3).map((s) => s.heading) ||
+            [],
+          keywords: strategy.keywords || [],
+        },
       }),
       articleImageAgent.execute({
         title: strategy.selectedTitle,
@@ -1221,7 +1228,7 @@ export class LinearOrchestrator {
       const rawTotal =
         (execInfo.tokenUsage.input || 0) + (execInfo.tokenUsage.output || 0);
       const multiplier = this.getModelMultiplier(execInfo.model);
-      const charged = Math.ceil(rawTotal * multiplier * 1.5);
+      const charged = Math.ceil(rawTotal * multiplier * 0.2);
 
       officialTotal += rawTotal;
       chargedTotal += charged;
@@ -1347,7 +1354,7 @@ export class LinearOrchestrator {
   private async getAgentConfig(websiteId: string | null): Promise<AgentConfig> {
     const defaults: AgentConfig = {
       research_model: "deepseek-reasoner",
-      strategy_model: "deepseek-reasoner",
+      strategy_model: "deepseek-chat",
       writing_model: "deepseek-chat",
       image_model: "gemini-imagen",
       featured_image_model: "gemini-2.5-flash-image",
