@@ -14,6 +14,25 @@ import type {
   AIMessage,
 } from "@/types/agents";
 
+export interface ModelCapability {
+  jsonMode: boolean;
+  purpose: "text-generation" | "reasoning" | "image-generation" | "research";
+}
+
+export const MODEL_CAPABILITIES: Record<string, ModelCapability> = {
+  "deepseek-reasoner": { jsonMode: false, purpose: "reasoning" },
+  "deepseek-chat": { jsonMode: true, purpose: "text-generation" },
+  "gemini-2.5-flash-image": { jsonMode: false, purpose: "image-generation" },
+  "gpt-image-1-mini": { jsonMode: false, purpose: "image-generation" },
+  "gpt-5-mini": { jsonMode: true, purpose: "text-generation" },
+  "perplexity-research": { jsonMode: false, purpose: "research" },
+};
+
+export function supportsJsonMode(model: string): boolean {
+  const capability = MODEL_CAPABILITIES[model];
+  return capability?.jsonMode ?? false;
+}
+
 interface DeepSeekMessage {
   role: string;
   content?: string;
@@ -110,9 +129,21 @@ export class AIClient {
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
+        const modelSupportsJson = supportsJsonMode(currentModel);
+        const wantsJsonFormat =
+          options.format === "json" ||
+          options.responseFormat?.type === "json_object";
+
         const responseFormat =
-          options.responseFormat ||
-          (options.format === "json" ? { type: "json_object" } : undefined);
+          wantsJsonFormat && modelSupportsJson
+            ? { type: "json_object" }
+            : undefined;
+
+        if (wantsJsonFormat && !modelSupportsJson) {
+          console.log(
+            `[AIClient] Model ${currentModel} does not support JSON mode, will use parser fallback`,
+          );
+        }
 
         let deepseekModel = "deepseek-chat";
         let maxTokensLimit = 8192;

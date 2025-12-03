@@ -1108,7 +1108,7 @@ export class ParallelOrchestrator {
 
     // 使用 OutputAdapter 轉換為 WritingAgent 格式
     const adapter = new MultiAgentOutputAdapter();
-    const writingOutput = adapter.adapt({
+    const writingOutput = await adapter.adapt({
       assemblerOutput: assembled,
       strategyOutput: {
         selectedTitle,
@@ -2104,17 +2104,7 @@ export class ParallelOrchestrator {
 
       const execInfo = phase.executionInfo;
 
-      if (!("tokenUsage" in execInfo)) {
-        console.log(
-          `[Orchestrator]   ${phaseName}: ⚠️ executionInfo 中沒有 tokenUsage 屬性`,
-        );
-        continue;
-      }
-
-      if (!execInfo.tokenUsage) {
-        console.log(
-          `[Orchestrator]   ${phaseName}: ⚠️ tokenUsage 是 null/undefined`,
-        );
+      if (!("tokenUsage" in execInfo) || !execInfo.tokenUsage) {
         continue;
       }
 
