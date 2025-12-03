@@ -89,40 +89,53 @@ export function getOpenRouterBaseUrl(): string {
   return "https://openrouter.ai/api/v1";
 }
 
-export function buildOpenRouterHeaders(apiKey: string): Record<string, string> {
+export function buildOpenRouterHeaders(
+  apiKey?: string,
+): Record<string, string> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    Authorization: `Bearer ${apiKey}`,
   };
 
+  // BYOK 模式：只用 Gateway Token，不傳 provider API Key
   if (isGatewayEnabled()) {
     Object.assign(headers, getGatewayHeaders());
+  } else if (apiKey) {
+    // 直連模式：需要 API Key
+    headers["Authorization"] = `Bearer ${apiKey}`;
   }
 
   return headers;
 }
 
-export function buildDeepSeekHeaders(apiKey: string): Record<string, string> {
+export function buildDeepSeekHeaders(apiKey?: string): Record<string, string> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    Authorization: `Bearer ${apiKey}`,
   };
 
+  // BYOK 模式：只用 Gateway Token，不傳 provider API Key
   if (isGatewayEnabled()) {
     Object.assign(headers, getGatewayHeaders());
+  } else if (apiKey) {
+    // 直連模式：需要 API Key
+    headers["Authorization"] = `Bearer ${apiKey}`;
   }
 
   return headers;
 }
 
-export function buildPerplexityHeaders(apiKey: string): Record<string, string> {
+export function buildPerplexityHeaders(
+  apiKey?: string,
+): Record<string, string> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    Authorization: `Bearer ${apiKey}`,
   };
 
+  // BYOK 模式：只用 Gateway Token，不傳 provider API Key
   if (isGatewayEnabled()) {
     Object.assign(headers, getGatewayHeaders());
+  } else if (apiKey) {
+    // 直連模式：需要 API Key
+    headers["Authorization"] = `Bearer ${apiKey}`;
   }
 
   return headers;
@@ -136,29 +149,33 @@ export function buildGeminiApiUrl(model: string, action: string): string {
   return `${baseUrl}/v1beta/models/${model}:${action}`;
 }
 
-export function buildGeminiHeaders(apiKey: string): Record<string, string> {
+export function buildGeminiHeaders(apiKey?: string): Record<string, string> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    "x-goog-api-key": apiKey,
   };
 
+  // BYOK 模式：只用 Gateway Token，不傳 provider API Key
   if (isGatewayEnabled()) {
-    const gatewayHeaders = getGatewayHeaders();
-    Object.assign(headers, gatewayHeaders);
+    Object.assign(headers, getGatewayHeaders());
+  } else if (apiKey) {
+    // 直連模式：需要 API Key
+    headers["x-goog-api-key"] = apiKey;
   }
 
   return headers;
 }
 
-export function buildOpenAIHeaders(apiKey: string): Record<string, string> {
+export function buildOpenAIHeaders(apiKey?: string): Record<string, string> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
-    Authorization: `Bearer ${apiKey}`,
   };
 
+  // BYOK 模式：只用 Gateway Token，不傳 provider API Key
   if (isGatewayEnabled()) {
-    const gatewayHeaders = getGatewayHeaders();
-    Object.assign(headers, gatewayHeaders);
+    Object.assign(headers, getGatewayHeaders());
+  } else if (apiKey) {
+    // 直連模式：需要 API Key
+    headers["Authorization"] = `Bearer ${apiKey}`;
   }
 
   return headers;

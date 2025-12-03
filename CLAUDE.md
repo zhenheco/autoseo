@@ -128,6 +128,38 @@ models/imagen-3.0-generate-001 is not found for API version v1beta
 1. **Vercel Dashboard** → Settings → Environment Variables
 2. **GitHub Secrets** → Repository Settings → Secrets and variables → Actions
 
+### BYOK 模式重要規範（2024-12 修正）
+
+**⚠️ 重要**：使用 BYOK（Bring Your Own Keys）模式時，API Key 已存儲在 Cloudflare AI Gateway Dashboard 中。
+
+**正確的 Headers（BYOK 模式）**：
+
+```typescript
+headers = {
+  "Content-Type": "application/json",
+  "cf-aig-authorization": `Bearer ${CF_AIG_TOKEN}`,
+};
+// 不要傳 Authorization header！Gateway 會使用存儲的 API Key
+```
+
+**錯誤的 Headers（會導致 Error 2005）**：
+
+```typescript
+headers = {
+  Authorization: `Bearer ${PROVIDER_API_KEY}`, // ❌ 不應該傳！
+  "cf-aig-authorization": `Bearer ${CF_AIG_TOKEN}`,
+};
+```
+
+**關鍵規則**：
+
+1. 當 `isGatewayEnabled() === true` 時，**只傳** `cf-aig-authorization`
+2. **不要傳** provider 的 `Authorization` 或 `x-goog-api-key`
+3. Gateway 會自動使用在 Dashboard 中存儲的 API Key
+4. 直連模式（非 Gateway）才需要傳 provider 的 API Key
+
+**參考文檔**：[Cloudflare BYOK 文檔](https://developers.cloudflare.com/ai-gateway/configuration/bring-your-own-keys/)
+
 ---
 
 # 🚀 部署前檢查清單（Pre-Deployment Checklist）
