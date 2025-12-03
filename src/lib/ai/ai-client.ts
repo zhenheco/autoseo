@@ -7,6 +7,8 @@ import {
   getDeepSeekBaseUrl,
   buildDeepSeekHeaders,
 } from "@/lib/cloudflare/ai-gateway";
+import { OpenAITextClient } from "@/lib/openai/text-client";
+import { OpenRouterClient } from "@/lib/openrouter/client";
 import type {
   AIClientConfig,
   AICompletionOptions,
@@ -60,6 +62,13 @@ export class AIClient {
     this.config = config;
   }
 
+  /**
+   * 多層 Fallback 機制：
+   * 1. Gateway DeepSeek (當前模型)
+   * 2. OpenRouter DeepSeek (deepseek/deepseek-v3.2)
+   * 3. 直連 DeepSeek API
+   * 4. OpenAI (gpt-5-mini)
+   */
   private async callDeepSeekAPI(params: {
     model: string;
     messages: Array<{ role: string; content: string }>;
@@ -67,34 +76,122 @@ export class AIClient {
     max_tokens?: number;
     response_format?: { type: string };
   }) {
-    const apiKey = process.env.DEEPSEEK_API_KEY;
-    if (!apiKey) {
-      throw new Error("DEEPSEEK_API_KEY is not set");
-    }
+    const deepseekApiKey = process.env.DEEPSEEK_API_KEY;
+    const errors: string[] = [];
 
-    // 先嘗試 Gateway 模式，如果失敗則自動 fallback 到直連模式
-    const useGateway = isGatewayEnabled();
-
-    if (useGateway) {
+    // === Step 1: Gateway DeepSeek ===
+    if (isGatewayEnabled() && deepseekApiKey) {
       try {
-        return await this.callDeepSeekAPIInternal(params, apiKey, true);
+        console.log(`[AIClient] 🔄 Step 1: Gateway DeepSeek (${params.model})`);
+        return await this.callDeepSeekAPIInternal(params, deepseekApiKey, true);
       } catch (error: unknown) {
         const err = error instanceof Error ? error : new Error(String(error));
-        // 如果是 Error 2005（Gateway 無法從 provider 取得回應），嘗試直連
-        if (
-          err.message.includes("2005") ||
-          err.message.includes("Failed to get response from provider")
-        ) {
-          console.log(
-            "[AIClient] ⚠️ Gateway Error 2005, 自動切換到直連 DeepSeek API...",
-          );
-          return await this.callDeepSeekAPIInternal(params, apiKey, false);
-        }
-        throw error;
+        errors.push(`Gateway DeepSeek: ${err.message}`);
+        console.log(`[AIClient] ⚠️ Step 1 失敗: ${err.message}`);
       }
     }
 
-    return await this.callDeepSeekAPIInternal(params, apiKey, false);
+    // === Step 2: Gateway OpenRouter DeepSeek ===
+    const openRouterClient = new OpenRouterClient();
+    if (openRouterClient.isConfigured()) {
+      try {
+        console.log(
+          "[AIClient] 🔄 Step 2: Gateway OpenRouter (deepseek/deepseek-v3.2)",
+        );
+        const response = await openRouterClient.chat({
+          model: "deepseek/deepseek-v3.2",
+          messages: params.messages.map((m) => ({
+            role: m.role as "system" | "user" | "assistant",
+            content: m.content,
+          })),
+          temperature: params.temperature,
+          max_tokens: params.max_tokens,
+          response_format: params.response_format as
+            | { type: "text" | "json_object" }
+            | undefined,
+        });
+        console.log(
+          "[AIClient] ✅ Step 2 成功: Gateway OpenRouter (deepseek/deepseek-v3.2)",
+        );
+        return {
+          choices: response.choices.map((c) => ({
+            message: { role: c.message.role, content: c.message.content },
+          })),
+          usage: response.usage,
+          model: response.model,
+        } as DeepSeekResponse;
+      } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        errors.push(`OpenRouter DeepSeek: ${err.message}`);
+        console.log(`[AIClient] ⚠️ Step 2 失敗: ${err.message}`);
+      }
+    }
+
+    // === Step 3: 直連 DeepSeek API ===
+    if (deepseekApiKey) {
+      try {
+        console.log(
+          `[AIClient] 🔄 Step 3: 直連 DeepSeek API (${params.model})`,
+        );
+        const result = await this.callDeepSeekAPIInternal(
+          params,
+          deepseekApiKey,
+          false,
+        );
+        console.log("[AIClient] ✅ Step 3 成功: 直連 DeepSeek API");
+        return result;
+      } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        errors.push(`直連 DeepSeek: ${err.message}`);
+        console.log(`[AIClient] ⚠️ Step 3 失敗: ${err.message}`);
+      }
+    }
+
+    // === Step 4: OpenAI Fallback ===
+    const openaiClient = new OpenAITextClient();
+    if (openaiClient.isConfigured()) {
+      try {
+        // 根據原始模型選擇 OpenAI 對應模型
+        const openaiModel = params.model.includes("reasoner")
+          ? "gpt-5"
+          : "gpt-5-mini";
+        console.log(`[AIClient] 🔄 Step 4: OpenAI Fallback (${openaiModel})`);
+
+        const response = await openaiClient.complete({
+          model: openaiModel,
+          messages: params.messages.map((m) => ({
+            role: m.role as "system" | "user" | "assistant",
+            content: m.content,
+          })),
+          temperature: params.temperature,
+          max_tokens: params.max_tokens,
+          response_format: params.response_format as
+            | { type: "text" | "json_object" }
+            | undefined,
+        });
+        console.log(`[AIClient] ✅ Step 4 成功: OpenAI ${openaiModel}`);
+        return {
+          choices: [
+            { message: { role: "assistant", content: response.content } },
+          ],
+          usage: {
+            prompt_tokens: response.usage.prompt_tokens,
+            completion_tokens: response.usage.completion_tokens,
+            total_tokens: response.usage.total_tokens,
+          },
+          model: response.model,
+        } as DeepSeekResponse;
+      } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        errors.push(`OpenAI: ${err.message}`);
+        console.log(`[AIClient] ⚠️ Step 4 失敗: ${err.message}`);
+      }
+    }
+
+    // 所有 fallback 都失敗
+    throw new Error(
+      `所有 AI Provider 都失敗了:\n${errors.map((e, i) => `  ${i + 1}. ${e}`).join("\n")}`,
+    );
   }
 
   private async callDeepSeekAPIInternal(
