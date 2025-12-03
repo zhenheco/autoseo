@@ -83,11 +83,17 @@ export class AIClient {
       const baseUrl = getDeepSeekBaseUrl();
       const headers = buildDeepSeekHeaders(apiKey);
 
+      // Gateway 模式: .../deepseek/chat/completions（不需要 /v1）
+      // 直連模式: https://api.deepseek.com/v1/chat/completions（需要 /v1）
+      const endpoint = isGatewayEnabled()
+        ? `${baseUrl}/chat/completions`
+        : `${baseUrl}/v1/chat/completions`;
+
       console.log(
-        `[AIClient] DeepSeek API (gateway: ${isGatewayEnabled()}, url: ${baseUrl})`,
+        `[AIClient] DeepSeek API (gateway: ${isGatewayEnabled()}, url: ${endpoint})`,
       );
 
-      const response = await fetch(`${baseUrl}/v1/chat/completions`, {
+      const response = await fetch(endpoint, {
         method: "POST",
         headers,
         body: JSON.stringify({
