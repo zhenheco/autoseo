@@ -1,3 +1,0 @@
-# Spec: status display
-
-## Overview
