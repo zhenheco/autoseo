@@ -126,7 +126,7 @@ ${specialBlockGuidance}
 1. mainSections 數量：2-4 個（根據內容需求彈性調整）
 2. 每個 section 的 writingInstructions 要具體、可執行
 3. specialBlock 根據文章主題選擇性使用（參考上方特殊區塊建議）
-4. FAQ 問題數量為 6-8 個
+4. FAQ 問題數量為 3-5 個
 5. 所有內容必須與標題主題直接相關
 6. H2 標題必須原創，不要照抄現有大綱
 7. **FAQ 區塊必須存在**：文章結構最後一定要有獨立的 FAQ H2 區塊（在 conclusion 之前）
