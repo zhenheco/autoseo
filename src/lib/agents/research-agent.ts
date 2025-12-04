@@ -282,7 +282,7 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
 
         references.push({
           url,
-          title: this.extractTitleFromUrl(url),
+          title: this.extractTitleFromContent(url, content),
           type,
           domain,
           description: urlContext || `關於「${title}」的參考來源`,
@@ -632,6 +632,66 @@ ${researchContext}
     return "blog";
   }
 
+  /**
+   * 從內容中提取標題（優先）或從 URL 提取（fallback）
+   */
+  private extractTitleFromContent(url: string, content: string): string {
+    try {
+      const domain = new URL(url).hostname.replace(/^www\./, "");
+
+      // 1. 嘗試從內文找「標題」格式（在 URL/domain 附近）
+      const patterns = [
+        // 「標題」格式
+        new RegExp(
+          `「([^」]{4,60})」[^]*?${domain.replace(/\./g, "\\.")}`,
+          "i",
+        ),
+        // "標題" 格式
+        new RegExp(`"([^"]{4,60})"[^]*?${domain.replace(/\./g, "\\.")}`, "i"),
+        // 《標題》格式
+        new RegExp(
+          `《([^》]{4,60})》[^]*?${domain.replace(/\./g, "\\.")}`,
+          "i",
+        ),
+        // domain 前面的文字（可能是標題）
+        new RegExp(
+          `([\\u4e00-\\u9fa5a-zA-Z][^。！？\\n]{3,50})\\s*[（(]?${domain.replace(/\./g, "\\.")}`,
+          "i",
+        ),
+      ];
+
+      for (const pattern of patterns) {
+        const match = content.match(pattern);
+        if (match && match[1]) {
+          const title = match[1].trim();
+          // 過濾掉太短或看起來不像標題的結果
+          if (title.length >= 4 && !this.isInvalidTitle(title)) {
+            return title;
+          }
+        }
+      }
+
+      // 2. Fallback: 從 URL 路徑提取
+      return this.extractTitleFromUrl(url);
+    } catch {
+      return this.extractTitleFromUrl(url);
+    }
+  }
+
+  /**
+   * 檢查是否為無效的標題
+   */
+  private isInvalidTitle(title: string): boolean {
+    const invalidPatterns = [
+      /^https?:\/\//i,
+      /^www\./i,
+      /^\d+$/,
+      /^[h][1-6]$/i,
+      /^(index|page|post|article|blog|news)$/i,
+    ];
+    return invalidPatterns.some((p) => p.test(title.trim()));
+  }
+
   private extractTitleFromUrl(url: string): string {
     try {
       const urlObj = new URL(url);
@@ -639,13 +699,34 @@ ${researchContext}
 
       if (pathParts.length > 0) {
         const lastPart = pathParts[pathParts.length - 1];
-        return lastPart
+        // 過濾掉技術性詞彙
+        const technicalTerms = new Set([
+          "index",
+          "page",
+          "post",
+          "article",
+          "blog",
+          "news",
+          "h1",
+          "h2",
+          "h3",
+          "h4",
+          "h5",
+          "h6",
+        ]);
+
+        const words = lastPart
           .replace(/-/g, " ")
           .replace(/_/g, " ")
           .replace(/\.[^.]+$/, "")
           .split(" ")
-          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-          .join(" ");
+          .filter((w) => w.length >= 2 && !technicalTerms.has(w.toLowerCase()));
+
+        if (words.length > 0) {
+          return words
+            .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+            .join(" ");
+        }
       }
 
       return urlObj.hostname;

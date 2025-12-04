@@ -35,7 +35,7 @@ export class IntroductionAgent extends BaseAgent<
   protected async process(
     input: IntroductionInput,
   ): Promise<IntroductionOutput> {
-    const { outline, featuredImage, brandVoice, contentContext } = input;
+    const { outline, brandVoice, contentContext } = input;
 
     const languageNames: Record<string, string> = {
       "zh-TW": "Traditional Chinese (繁體中文)",
@@ -84,7 +84,6 @@ Write an article introduction based on the following information:
 3. Clearly explain the article topic and reader value
 4. Tone matches brand style
 5. Use Markdown format
-${featuredImage ? `6. Insert featured image at the beginning: ![${featuredImage.altText || "Article featured image"}](${featuredImage.url})` : ""}
 
 **CRITICAL: Write ALL content in ${languageName}**
 
@@ -97,12 +96,7 @@ Output the introduction content in Markdown directly, without including a title.
       maxTokens: input.maxTokens || 500,
     });
 
-    let markdown = response.content.trim();
-
-    if (featuredImage && !markdown.includes("![")) {
-      markdown = `![${featuredImage.altText || "文章主圖"}](${featuredImage.url})\n\n${markdown}`;
-    }
-
+    const markdown = response.content.trim();
     const wordCount = this.countWords(markdown);
 
     return {

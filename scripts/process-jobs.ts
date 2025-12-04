@@ -44,10 +44,15 @@ async function main() {
   console.log(`[Process Jobs] 🔄 發現 ${jobs.length} 個任務`);
   console.log(`[Process Jobs] ⚡ 使用並行處理模式`);
 
+  // 樂觀鎖定時間戳（與查詢條件一致）
+  const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000).toISOString();
+
   // 並行處理所有任務
   const processPromises = jobs.map(async (job) => {
     console.log(`[Process Jobs] 🔒 嘗試鎖定任務 ${job.id}`);
 
+    // 使用樂觀鎖定：只有當 started_at 仍為 null 或超過 3 分鐘時才更新
+    // 這樣可以避免兩個 workflow 同時鎖定同一個任務
     const { data: locked, error: lockError } = await supabase
       .from("article_jobs")
       .update({
@@ -55,6 +60,8 @@ async function main() {
         started_at: new Date().toISOString(),
       })
       .eq("id", job.id)
+      .in("status", ["pending", "processing"]) // 確保狀態仍為待處理
+      .or(`started_at.is.null,started_at.lt.${threeMinutesAgo}`) // 樂觀鎖定條件
       .select();
 
     if (lockError) {
@@ -65,9 +72,7 @@ async function main() {
     }
 
     if (!locked || locked.length === 0) {
-      console.log(
-        `[Process Jobs] ⏭️  任務 ${job.id} 無法鎖定（可能已被其他程序處理）`,
-      );
+      console.log(`[Process Jobs] ⏭️  任務 ${job.id} 已被其他程序處理，跳過`);
       return { success: false, jobId: job.id };
     }
 
