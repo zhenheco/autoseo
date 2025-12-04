@@ -18,24 +18,9 @@ import { WebsiteSelector } from "@/components/articles/WebsiteSelector";
 const STORAGE_KEYS = {
   LANGUAGE: "preferred-language",
   INDUSTRY: "preferred-industry",
-  CUSTOM_INDUSTRY: "preferred-custom-industry",
   REGION: "preferred-region",
   CUSTOM_REGION: "preferred-custom-region",
 };
-
-const INDUSTRIES = [
-  { value: "tech", label: "科技" },
-  { value: "finance", label: "金融" },
-  { value: "healthcare", label: "醫療" },
-  { value: "education", label: "教育" },
-  { value: "realestate", label: "房地產" },
-  { value: "travel", label: "旅遊" },
-  { value: "food", label: "餐飲" },
-  { value: "ecommerce", label: "電商" },
-  { value: "legal", label: "法律" },
-  { value: "manufacturing", label: "製造業" },
-  { value: "other", label: "其他" },
-];
 
 const REGIONS = [
   { value: "taiwan", label: "台灣" },
@@ -98,7 +83,6 @@ export function ArticleFormTabs({
     initialWebsiteId || null,
   );
   const [industry, setIndustry] = useState("");
-  const [customIndustry, setCustomIndustry] = useState("");
   const [region, setRegion] = useState("");
   const [customRegion, setCustomRegion] = useState("");
   const [language, setLanguage] = useState("zh-TW");
@@ -113,13 +97,6 @@ export function ArticleFormTabs({
     const storedIndustry = localStorage.getItem(STORAGE_KEYS.INDUSTRY);
     if (storedIndustry) {
       setTimeout(() => setIndustry(storedIndustry), 0);
-    }
-
-    const storedCustomIndustry = localStorage.getItem(
-      STORAGE_KEYS.CUSTOM_INDUSTRY,
-    );
-    if (storedCustomIndustry) {
-      setTimeout(() => setCustomIndustry(storedCustomIndustry), 0);
     }
 
     const storedRegion = localStorage.getItem(STORAGE_KEYS.REGION);
@@ -148,18 +125,7 @@ export function ArticleFormTabs({
 
         // 只有網站有設定時才更新
         if (settings.industry) {
-          // 檢查是否為預設產業
-          const isPreset = INDUSTRIES.some(
-            (i) => i.value === settings.industry,
-          );
-          if (isPreset) {
-            setTimeout(() => setIndustry(settings.industry), 0);
-          } else {
-            setTimeout(() => {
-              setIndustry("other");
-              setCustomIndustry(settings.industry);
-            }, 0);
-          }
+          setTimeout(() => setIndustry(settings.industry), 0);
         }
 
         if (settings.region) {
@@ -189,14 +155,6 @@ export function ArticleFormTabs({
   const handleIndustryChange = (value: string) => {
     setIndustry(value);
     localStorage.setItem(STORAGE_KEYS.INDUSTRY, value);
-    if (value !== "other") {
-      localStorage.removeItem(STORAGE_KEYS.CUSTOM_INDUSTRY);
-    }
-  };
-
-  const handleCustomIndustryChange = (value: string) => {
-    setCustomIndustry(value);
-    localStorage.setItem(STORAGE_KEYS.CUSTOM_INDUSTRY, value);
   };
 
   const handleRegionChange = (value: string) => {
@@ -238,28 +196,13 @@ export function ArticleFormTabs({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="industry">產業 *</Label>
-          <Select value={industry} onValueChange={handleIndustryChange}>
-            <SelectTrigger id="industry">
-              <SelectValue placeholder="請選擇產業" />
-            </SelectTrigger>
-            <SelectContent>
-              {INDUSTRIES.map((ind) => (
-                <SelectItem key={ind.value} value={ind.value}>
-                  {ind.label}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          {industry === "other" && (
-            <Input
-              id="customIndustry"
-              value={customIndustry}
-              onChange={(e) => handleCustomIndustryChange(e.target.value)}
-              placeholder="請輸入您的產業"
-              className="mt-2"
-            />
-          )}
+          <Label htmlFor="industry">你想要寫些什麼?</Label>
+          <Input
+            id="industry"
+            value={industry}
+            onChange={(e) => handleIndustryChange(e.target.value)}
+            placeholder="如何把ai融入行銷中"
+          />
         </div>
 
         <div className="space-y-2">
@@ -317,7 +260,7 @@ export function ArticleFormTabs({
             <QuickArticleForm
               quotaStatus={quotaStatus}
               websiteId={selectedWebsiteId}
-              industry={industry === "other" ? customIndustry : industry}
+              industry={industry}
               region={region === "other" ? customRegion : region}
               language={language}
             />
@@ -325,7 +268,7 @@ export function ArticleFormTabs({
           <TabsContent value="advanced" className="mt-4">
             <ArticleForm
               websiteId={selectedWebsiteId}
-              industry={industry === "other" ? customIndustry : industry}
+              industry={industry}
               region={region === "other" ? customRegion : region}
               language={language}
             />
