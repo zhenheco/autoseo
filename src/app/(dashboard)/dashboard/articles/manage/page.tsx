@@ -1,9 +1,6 @@
 import { Suspense } from "react";
 import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { PenSquare, RefreshCw } from "lucide-react";
-import Link from "next/link";
 import { getArticles } from "./actions";
 import { ArticleListWrapper } from "./components/ArticleListWrapper";
 import { ArticleFilters } from "./components/ArticleFilters";
@@ -18,23 +15,9 @@ interface PageProps {
 
 function HeaderFilters() {
   return (
-    <div className="flex items-center gap-2">
-      <Suspense fallback={null}>
-        <ArticleFilters />
-      </Suspense>
-      <Button variant="outline" size="sm" asChild>
-        <Link href="/dashboard/articles/manage">
-          <RefreshCw className="mr-1 h-3 w-3" />
-          重新整理
-        </Link>
-      </Button>
-      <Button size="sm" asChild>
-        <Link href="/dashboard/articles">
-          <PenSquare className="mr-1 h-3 w-3" />
-          生成新文章
-        </Link>
-      </Button>
-    </div>
+    <Suspense fallback={null}>
+      <ArticleFilters />
+    </Suspense>
   );
 }
 
