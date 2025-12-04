@@ -40,14 +40,44 @@
 #### 聯絡方式
 
 - **檔案**: `src/components/dashboard/sidebar.tsx`
-- **修改**: 在側邊欄底部添加聯絡郵件 `service@1wayseo.com`
+- **修改**: 在側邊欄底部添加「客服信箱」連結（mailto:service@1wayseo.com）
 
-### 待處理項目
+#### AI 模型頁面認證
 
-- [ ] Phase 1.3: API 路由認證加強（遵循 DAL 模式）
-- [ ] Phase 2.2: 緩存策略優化（移除 force-dynamic）
-- [ ] Phase 3: Cloudflare Rate Limiting（用戶手動）
-- [ ] Phase 4: 金流環境切換（需用戶提供憑證）
+- **檔案**: `src/app/(dashboard)/dashboard/settings/ai-models/page.tsx`
+- **修改**: 添加用戶認證檢查，未登入重定向到登入頁
+
+### Cloudflare Rate Limiting
+
+- **規則 ID**: `6070e61623a146899f4f9a3010e2f957`
+- **匹配**: 所有 `/api/` 開頭的請求
+- **限制**: 每 IP 每 10 秒 10 次請求（約 60 次/分鐘）
+- **超過後**: 封鎖 10 秒
+- **注意**: Free 方案限制只能 1 條規則、10 秒週期、不支援 regex
+
+### 金流環境切換（沙盒 → 生產）
+
+- **Vercel 環境變數**: 已更新
+  - `NEWEBPAY_MERCHANT_ID`: NPP83446730
+  - `NEWEBPAY_HASH_KEY`: (已設定)
+  - `NEWEBPAY_HASH_IV`: (已設定)
+  - `NEWEBPAY_API_URL`: https://core.newebpay.com
+- **GitHub Secrets**: 已同步更新
+- **藍新後台 Webhook**:
+  - Notify URL: https://1wayseo.com/api/payment/notify
+  - Return URL: https://1wayseo.com/api/payment/callback
+
+### 完成項目
+
+- [x] Phase 1.1: Debug 端點禁用
+- [x] Phase 1.2: Dashboard 認證恢復
+- [x] Phase 1.3: API 路由認證（AI 模型頁面）
+- [x] Phase 1.4: 日誌脫敏工具
+- [x] Phase 2.1: Dashboard 查詢並行化
+- [x] Phase 2.3: 移除不必要的輪詢
+- [x] Phase 2.5: 側邊欄客服信箱
+- [x] Phase 3: Cloudflare Rate Limiting
+- [x] Phase 4: 金流環境切換
 
 ---
 
