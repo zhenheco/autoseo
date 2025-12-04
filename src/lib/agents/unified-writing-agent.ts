@@ -90,7 +90,6 @@ export class UnifiedWritingAgent extends BaseAgent<
       input,
       languageName,
       contentContext,
-      imageOutput?.featuredImage || null,
     );
 
     console.log("[UnifiedWritingAgent] 步驟 2: 順序生成各段落");
@@ -167,7 +166,6 @@ export class UnifiedWritingAgent extends BaseAgent<
     input: UnifiedWritingInput,
     languageName: string,
     contentContext: ContentContext,
-    featuredImage: GeneratedImage | null,
   ): Promise<{ markdown: string; wordCount: number }> {
     const { strategy, brandVoice } = input;
     const outline = strategy.outline;
@@ -193,7 +191,6 @@ Write an article introduction based on the following information:
 3. Clearly explain the article topic and reader value
 4. Tone matches brand style
 5. Use Markdown format
-${featuredImage ? `6. Insert featured image at the beginning: ![${featuredImage.altText || "Article featured image"}](${featuredImage.url})` : ""}
 
 **CRITICAL: Write ALL content in ${languageName}**
 
@@ -206,11 +203,7 @@ Output the introduction content in Markdown directly, without including a title.
       maxTokens: 500,
     });
 
-    let markdown = response.content.trim();
-
-    if (featuredImage && !markdown.includes("![")) {
-      markdown = `![${featuredImage.altText || "文章主圖"}](${featuredImage.url})\n\n${markdown}`;
-    }
+    const markdown = response.content.trim();
 
     return {
       markdown,
