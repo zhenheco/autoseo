@@ -644,16 +644,40 @@ export class PaymentService {
               periodEnd,
             });
           } else {
-            // 首次購買或購買不同方案
+            // 首次購買或購買不同方案（升級）
+            // 【重要】：升級時保留並累加所有配額
             const { data: oldSubscription } = await this.supabase
               .from("company_subscriptions")
-              .select("purchased_token_balance")
+              .select(
+                "purchased_token_balance, monthly_token_quota, monthly_quota_balance, current_period_start",
+              )
               .eq("company_id", orderData.company_id)
               .eq("status", "active")
               .maybeSingle();
 
             const preservedPurchasedBalance =
               oldSubscription?.purchased_token_balance || 0;
+
+            // 保留並累加配額（跨方案升級不丟失配額）
+            const previousMonthlyQuota =
+              oldSubscription?.monthly_token_quota || 0;
+            const previousQuotaBalance =
+              oldSubscription?.monthly_quota_balance || 0;
+            const newMonthlyQuota = previousMonthlyQuota + planData.base_tokens;
+            const newQuotaBalance = previousQuotaBalance + planData.base_tokens;
+
+            // 保留原始週期開始時間（如果存在）
+            const preservedPeriodStart =
+              oldSubscription?.current_period_start || periodStart;
+
+            console.log("[PaymentService] 跨方案升級配額保留:", {
+              previousMonthlyQuota,
+              previousQuotaBalance,
+              newPlanBaseTokens: planData.base_tokens,
+              newMonthlyQuota,
+              newQuotaBalance,
+              preservedPurchasedBalance,
+            });
 
             await this.supabase
               .from("company_subscriptions")
@@ -667,13 +691,13 @@ export class PaymentService {
                 plan_id: planData.id,
                 status: "active",
                 purchased_token_balance: preservedPurchasedBalance,
-                monthly_quota_balance: planData.base_tokens,
-                monthly_token_quota: planData.base_tokens,
+                monthly_quota_balance: newQuotaBalance,
+                monthly_token_quota: newMonthlyQuota,
                 base_monthly_quota: planData.base_tokens,
                 purchased_count: 1,
                 is_lifetime: true,
                 lifetime_discount: 1.0,
-                current_period_start: periodStart,
+                current_period_start: preservedPeriodStart,
                 current_period_end: periodEnd,
               });
 
@@ -939,10 +963,12 @@ export class PaymentService {
             now.getDate(),
           ).toISOString();
 
-          // 查詢舊的訂閱記錄，保留 purchased_token_balance
+          // 查詢舊的訂閱記錄，保留所有配額（包括 purchased_token_balance 和累積配額）
           const { data: oldSubscription } = await this.supabase
             .from("company_subscriptions")
-            .select("purchased_token_balance")
+            .select(
+              "purchased_token_balance, monthly_token_quota, monthly_quota_balance",
+            )
             .eq("company_id", mandateData.company_id)
             .eq("status", "active")
             .single();
@@ -950,13 +976,30 @@ export class PaymentService {
           const preservedPurchasedBalance =
             oldSubscription?.purchased_token_balance || 0;
 
+          // 保留並累加配額（從終身方案轉換或續約時不丟失配額）
+          const previousMonthlyQuota =
+            oldSubscription?.monthly_token_quota || 0;
+          const previousQuotaBalance =
+            oldSubscription?.monthly_quota_balance || 0;
+          const newMonthlyQuota = previousMonthlyQuota + planData.base_tokens;
+          const newQuotaBalance = previousQuotaBalance + planData.base_tokens;
+
+          console.log("[PaymentService] 定期定額訂閱配額保留:", {
+            previousMonthlyQuota,
+            previousQuotaBalance,
+            newPlanBaseTokens: planData.base_tokens,
+            newMonthlyQuota,
+            newQuotaBalance,
+            preservedPurchasedBalance,
+          });
+
           // 刪除該公司的所有舊訂閱記錄
           await this.supabase
             .from("company_subscriptions")
             .delete()
             .eq("company_id", mandateData.company_id);
 
-          // 創建新的訂閱記錄，保留購買的 Token
+          // 創建新的訂閱記錄，保留購買的 Token 和累積配額
           const { error: subscriptionError } = await this.supabase
             .from("company_subscriptions")
             .insert({
@@ -964,8 +1007,8 @@ export class PaymentService {
               plan_id: mandateData.plan_id,
               status: "active",
               purchased_token_balance: preservedPurchasedBalance,
-              monthly_quota_balance: planData.base_tokens,
-              monthly_token_quota: planData.base_tokens,
+              monthly_quota_balance: newQuotaBalance,
+              monthly_token_quota: newMonthlyQuota,
               is_lifetime: false,
               lifetime_discount: 1.0,
               current_period_start: periodStart,

@@ -2,6 +2,66 @@
 
 ---
 
+## 2025-12-04: 修復訂閱配額疊加 bug（嚴重）
+
+### 問題描述
+
+用戶購買 PRO 方案後升級到 BUSINESS 方案，累積的配額被清零：
+
+- 預期配額：STARTER (50K) + PRO x2 (500K) + BUSINESS x2 (1500K) = **2,050K**
+- 實際配額：只有 **1,500K**（2 次 BUSINESS）
+
+### 根因分析
+
+`payment-service.ts` 第 599-608 行的邏輯只檢查**相同 plan_id** 的疊加：
+
+```typescript
+// ❌ BUG：只檢查相同 plan_id
+.eq("plan_id", planData.id)
+```
+
+當升級到**不同方案**時（PRO → BUSINESS）：
+
+1. 舊訂閱被刪除
+2. 新訂閱只有新方案的 base_tokens
+3. **累積配額全部丟失**
+
+### 解決方案
+
+修改跨方案升級邏輯，保留並累加所有配額：
+
+```typescript
+// ✅ 修復：保留並累加配額
+const previousMonthlyQuota = oldSubscription?.monthly_token_quota || 0;
+const previousQuotaBalance = oldSubscription?.monthly_quota_balance || 0;
+const newMonthlyQuota = previousMonthlyQuota + planData.base_tokens;
+const newQuotaBalance = previousQuotaBalance + planData.base_tokens;
+```
+
+### 修改檔案
+
+| 檔案                                                         | 修改內容                                         |
+| ------------------------------------------------------------ | ------------------------------------------------ |
+| `src/lib/payment/payment-service.ts`                         | 終身方案升級邏輯（lines 646-697）- 保留累積配額  |
+| `src/lib/payment/payment-service.ts`                         | 定期定額訂閱邏輯（lines 961-1007）- 保留累積配額 |
+| `supabase/migrations/20251204000001_fix_deduction_order.sql` | 修正扣款順序                                     |
+
+### 扣款順序修正
+
+同時修正 `deduct_tokens_atomic` 函式的扣款順序：
+
+- **修改前**：先扣月配額 (`monthly_quota_balance`)，再扣購買的 (`purchased_token_balance`)
+- **修改後**：先扣購買的 credits (`purchased_token_balance`)，再扣月配額 (`monthly_quota_balance`)
+
+用戶需求：「扣款的時候要先用單次的扣款」
+
+### 影響範圍
+
+- 所有未來的跨方案升級都會正確累加配額
+- 已受影響的用戶需要手動修正配額（如 ace@stima.io 已手動修正為 2,050K）
+
+---
+
 ## 2025-12-04: 修復文章內外部連結未插入問題
 
 ### 問題描述
