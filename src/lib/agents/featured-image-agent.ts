@@ -14,9 +14,10 @@ import {
   calculateCompressionRatio,
 } from "@/lib/image-processor";
 
-const DEFAULT_MODEL = "gemini-2.5-flash-image";
+const DEFAULT_MODEL = "gemini-3-pro-image-preview";
 
 const IMAGE_PRICING: Record<string, Record<string, number>> = {
+  "gemini-3-pro-image-preview": { "1024x1024": 0.02, "1792x1024": 0.03 },
   "gemini-2.5-flash-image": { "1024x1024": 0.01, "1792x1024": 0.02 },
   "gemini-imagen-flash": { "1024x1024": 0.01 },
   "gpt-image-1-mini": { "1024x1024": 0.015 },

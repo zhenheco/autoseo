@@ -23,6 +23,10 @@ export interface ModelCapability {
 export const MODEL_CAPABILITIES: Record<string, ModelCapability> = {
   "deepseek-reasoner": { jsonMode: false, purpose: "reasoning" },
   "deepseek-chat": { jsonMode: true, purpose: "text-generation" },
+  "gemini-3-pro-image-preview": {
+    jsonMode: false,
+    purpose: "image-generation",
+  },
   "gemini-2.5-flash-image": { jsonMode: false, purpose: "image-generation" },
   "gpt-image-1-mini": { jsonMode: false, purpose: "image-generation" },
   "gpt-5-mini": { jsonMode: true, purpose: "text-generation" },
@@ -588,7 +592,7 @@ export class AIClient {
     },
   ): Promise<{ url: string; revisedPrompt?: string }> {
     const MAX_RETRIES = 3;
-    const FALLBACK_MODEL = "gpt-image-1-mini";
+    const FALLBACK_MODEL = "gemini-2.5-flash-image";
 
     // 第一階段：嘗試主要模型（最多 3 次）
     const primaryResult = await this.tryGenerateWithRetries(
