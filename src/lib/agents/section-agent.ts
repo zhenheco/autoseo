@@ -1,4 +1,5 @@
 import { BaseAgent } from "./base-agent";
+import { jsonrepair } from "jsonrepair";
 import type {
   SectionInput,
   SectionOutput,
@@ -195,24 +196,34 @@ Avoid:
 
     let markdown = "";
     let summary = "";
+    const content = response.content;
 
     try {
-      const parsed = JSON.parse(response.content);
-      markdown = parsed.content || response.content;
+      // 使用 jsonrepair 修復可能截斷或格式錯誤的 JSON
+      const repaired = jsonrepair(content);
+      const parsed = JSON.parse(repaired);
+      markdown = parsed.content || content;
       summary = parsed.summary || this.generateSummary(markdown);
-    } catch {
-      const jsonMatch = response.content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        try {
-          const parsed = JSON.parse(jsonMatch[0]);
-          markdown = parsed.content || response.content;
-          summary = parsed.summary || this.generateSummary(markdown);
-        } catch {
-          markdown = response.content;
-          summary = this.generateSummary(markdown);
-        }
+    } catch (repairError) {
+      console.warn(
+        "[SectionAgent] ⚠️ JSON 修復失敗，使用 fallback 提取",
+        repairError,
+      );
+
+      // Fallback：嘗試提取 content 欄位的內容
+      const contentMatch = content.match(
+        /"content"\s*:\s*"([\s\S]*?)(?=",\s*"|"\s*}|$)/,
+      );
+      if (contentMatch) {
+        markdown = contentMatch[1].replace(/\\n/g, "\n").replace(/\\"/g, '"');
+        summary = this.generateSummary(markdown);
       } else {
-        markdown = response.content;
+        // 最終 fallback：清理 JSON 結構後使用原始內容
+        console.warn("[SectionAgent] 使用原始內容作為 markdown");
+        markdown = content
+          .replace(/^\s*\{\s*"content"\s*:\s*"?/g, "")
+          .replace(/"?\s*,?\s*"summary"\s*:[\s\S]*$/g, "")
+          .replace(/\\n/g, "\n");
         summary = this.generateSummary(markdown);
       }
     }
