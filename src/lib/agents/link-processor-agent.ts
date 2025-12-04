@@ -55,6 +55,7 @@ export class LinkProcessorAgent {
   private config: LinkProcessorConfig;
   private urlUsageCount: Map<string, number> = new Map();
   private lastLinkPosition: number = 0;
+  private usedAnchors: Set<string> = new Set(); // 追蹤已使用的錨文字
 
   constructor(options?: Partial<LinkProcessorConfig>) {
     this.config = {
@@ -70,6 +71,7 @@ export class LinkProcessorAgent {
     const startTime = Date.now();
     this.urlUsageCount.clear();
     this.lastLinkPosition = 0;
+    this.usedAnchors.clear();
 
     const insertedLinks: InsertedLink[] = [];
     let html = input.html;
@@ -202,6 +204,7 @@ export class LinkProcessorAgent {
             semanticScoreSum += bestMatch.semanticScore;
             this.urlUsageCount.set(ref.url, urlCount + 1);
             this.lastLinkPosition = bestMatch.matchIndex;
+            this.usedAnchors.add(bestMatch.matchText.toLowerCase()); // 記錄已使用的錨文字
 
             const section = this.findSectionAtPosition(
               sections,
@@ -327,8 +330,12 @@ export class LinkProcessorAgent {
 
     while ((match = pattern.exec(html)) !== null) {
       const matchIndex = match.index;
+      const matchText = match[0];
 
       if (this.isInsideLink(html, matchIndex)) continue;
+
+      // 跳過已使用的錨文字
+      if (this.usedAnchors.has(matchText.toLowerCase())) continue;
 
       const distance = Math.abs(matchIndex - this.lastLinkPosition);
       if (
@@ -352,7 +359,7 @@ export class LinkProcessorAgent {
 
       candidates.push({
         index: matchIndex,
-        text: match[0],
+        text: matchText,
         section: section ?? sections[0],
         score: semanticScore,
       });
@@ -513,6 +520,37 @@ export class LinkProcessorAgent {
     // 優先使用主關鍵字（文章標題/主題）作為 fallback
     if (primaryKeyword && primaryKeyword.length >= 2) {
       keywords.push(primaryKeyword);
+
+      // 產生關鍵字變體，讓不同的連結可以使用不同的錨文字
+      // 對於中文：提取不同長度的子串
+      if (/[\u4e00-\u9fa5]/.test(primaryKeyword)) {
+        const keywordLen: number = primaryKeyword.length;
+        // 提取 3-6 字的子串作為變體
+        for (
+          let subLen: number = Math.min(6, keywordLen - 1);
+          subLen >= 3;
+          subLen--
+        ) {
+          for (let idx: number = 0; idx <= keywordLen - subLen; idx++) {
+            const subStr: string = primaryKeyword.slice(idx, idx + subLen);
+            if (subStr !== primaryKeyword && !stopWords.has(subStr)) {
+              keywords.push(subStr);
+            }
+          }
+        }
+      } else {
+        // 對於英文：按空格分割取詞組
+        const words: string[] = primaryKeyword
+          .split(/\s+/)
+          .filter((w: string) => w.length >= 3);
+        if (words.length >= 2) {
+          // 取前 N 個詞、後 N 個詞等組合
+          for (let j: number = 2; j <= Math.min(4, words.length); j++) {
+            keywords.push(words.slice(0, j).join(" "));
+            keywords.push(words.slice(-j).join(" "));
+          }
+        }
+      }
     }
 
     // 技術性詞彙黑名單
