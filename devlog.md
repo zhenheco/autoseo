@@ -2,6 +2,48 @@
 
 ---
 
+## 2025-12-05: 產業欄位功能修復
+
+### 問題描述
+
+文章生成時「產業」欄位未正確傳遞，導致 AI 無法根據產業特性調整內容。
+
+### 根本原因
+
+1. **網站編輯頁面**沒有產業、地區、語言欄位，無法在網站層級設定
+2. **ArticleFormTabs** 只從 localStorage 讀取設定，未從網站配置自動帶入
+
+### 修復方案
+
+#### 1. 網站設定表單
+
+- **新建檔案**: `src/app/(dashboard)/dashboard/websites/[id]/edit/WebsiteSettingsForm.tsx`
+- **功能**: 讓用戶在網站編輯頁設定產業、目標地區、撰寫語言
+
+#### 2. 更新網站設定 Action
+
+- **修改檔案**: `src/app/(dashboard)/dashboard/websites/actions.ts`
+- **新增函數**: `updateWebsiteSettings()` 儲存產業/地區/語言設定
+
+#### 3. 網站設定 API
+
+- **新建檔案**: `src/app/api/websites/[id]/settings/route.ts`
+- **功能**: 提供 API 端點讓前端取得網站的產業/地區/語言設定
+
+#### 4. ArticleFormTabs 自動載入
+
+- **修改檔案**: `src/app/(dashboard)/dashboard/articles/components/ArticleFormTabs.tsx`
+- **新增邏輯**: 當選擇網站時自動呼叫 API 載入網站設定，覆蓋表單欄位
+
+### 行為說明
+
+- 用戶可在「網站管理」→「編輯」頁面設定預設的產業、地區、語言
+- 寫文章時選擇該網站，表單會自動帶入網站的設定
+- 如果網站沒有設定，則使用用戶上次的選擇（localStorage）
+- 用戶仍可在寫文章頁面手動修改
+
+---
+
 ## 2025-12-04: 安全性與性能優化
 
 ### 安全性修復
