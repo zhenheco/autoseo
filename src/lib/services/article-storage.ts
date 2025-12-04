@@ -460,6 +460,14 @@ export class ArticleStorageService {
       console.log("[ArticleStorage] ✅ HTML validation passed before storage");
     }
 
+    // 最終清理：確保 HTML 中沒有殘留的 Markdown 語法
+    if (!this.isValidHTML(result.writing!.html)) {
+      console.log(
+        "[ArticleStorage] 🧹 Final cleanup: removing residual Markdown...",
+      );
+      result.writing!.html = this.cleanMarkdownFromHtml(result.writing!.html);
+    }
+
     // 保底機制：如果 HTML 中沒有圖片但 result.image 有值，則插入圖片
     if (result.image && !result.writing!.html.includes("<img ")) {
       console.log(
@@ -711,6 +719,52 @@ export class ArticleStorageService {
     }
 
     return true;
+  }
+
+  /**
+   * 清理 HTML 中殘留的 Markdown 語法（用於混合內容）
+   */
+  private cleanMarkdownFromHtml(html: string): string {
+    let cleaned = html;
+
+    // 處理標題（注意：需要處理 \n 和實際換行）
+    // ### 標題 → <h3>標題</h3>
+    cleaned = cleaned.replace(/\\n### ([^\n\\]+)/g, "\n<h3>$1</h3>");
+    cleaned = cleaned.replace(/\n### ([^\n]+)/g, "\n<h3>$1</h3>");
+    cleaned = cleaned.replace(/^### ([^\n]+)/gm, "<h3>$1</h3>");
+
+    // ## 標題 → <h2>標題</h2>
+    cleaned = cleaned.replace(/\\n## ([^\n\\]+)/g, "\n<h2>$1</h2>");
+    cleaned = cleaned.replace(/\n## ([^\n]+)/g, "\n<h2>$1</h2>");
+    cleaned = cleaned.replace(/^## ([^\n]+)/gm, "<h2>$1</h2>");
+
+    // # 標題 → <h1>標題</h1>
+    cleaned = cleaned.replace(/\\n# ([^\n\\]+)/g, "\n<h1>$1</h1>");
+    cleaned = cleaned.replace(/\n# ([^\n]+)/g, "\n<h1>$1</h1>");
+    cleaned = cleaned.replace(/^# ([^\n]+)/gm, "<h1>$1</h1>");
+
+    // **粗體** → <strong>粗體</strong>
+    cleaned = cleaned.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+
+    // *斜體* → <em>斜體</em>（但避免影響已存在的 HTML 屬性）
+    cleaned = cleaned.replace(/(?<![="])\*([^*]+)\*(?!["])/g, "<em>$1</em>");
+
+    // ```code``` → <code>code</code>
+    cleaned = cleaned.replace(/```([^`]+)```/g, "<pre><code>$1</code></pre>");
+    cleaned = cleaned.replace(/`([^`]+)`/g, "<code>$1</code>");
+
+    // 處理 \n\n → 段落分隔（但不影響已有的 HTML 標籤）
+    cleaned = cleaned.replace(/\\n\\n/g, "</p>\n<p>");
+    cleaned = cleaned.replace(/\\n/g, "\n");
+
+    console.log("[ArticleStorage] 清理 Markdown 殘留:", {
+      hadMarkdown:
+        html.includes("##") || html.includes("**") || html.includes("```"),
+      inputLength: html.length,
+      outputLength: cleaned.length,
+    });
+
+    return cleaned;
   }
 
   /**
