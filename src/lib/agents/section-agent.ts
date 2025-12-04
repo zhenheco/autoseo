@@ -160,8 +160,7 @@ ${previousSummary ? `## Previous Section Summary\n${previousSummary}\n\nEnsure s
 4. Use ### for subheadings if applicable
 5. Cover all key points
 6. Naturally integrate related keywords
-${sectionImage ? `7. Insert image at appropriate position: ![${sectionImage.altText || section.heading}](${sectionImage.url})` : ""}
-8. Provide a brief summary at the end (for connecting to next section)
+7. Provide a brief summary at the end (for connecting to next section)
 ${specialBlockSection}
 
 ## Writing Style (Important!)
@@ -216,19 +215,6 @@ Avoid:
         markdown = response.content;
         summary = this.generateSummary(markdown);
       }
-    }
-
-    if (sectionImage && !markdown.includes("![")) {
-      const lines = markdown.split("\n");
-      const insertIndex = Math.floor(lines.length / 2);
-      lines.splice(
-        insertIndex,
-        0,
-        "",
-        `![${sectionImage.altText || section.heading}](${sectionImage.url})`,
-        "",
-      );
-      markdown = lines.join("\n");
     }
 
     const wordCount = this.countWords(markdown);
