@@ -85,19 +85,19 @@ export async function updateSession(request: NextRequest) {
   }
   // ===== 結束追蹤邏輯 =====
 
-  // 暫時停用認證檢查，允許未登入使用者訪問 dashboard
-  // TODO: 未來需要重新啟用認證系統
-  // if (!user && request.nextUrl.pathname.startsWith('/dashboard')) {
-  //   const url = request.nextUrl.clone()
-  //   url.pathname = '/login'
-  //   return NextResponse.redirect(url)
-  // }
+  // Dashboard 認證檢查：未登入用戶重定向到登入頁
+  if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    return NextResponse.redirect(url);
+  }
 
-  // if (user && request.nextUrl.pathname === '/login') {
-  //   const url = request.nextUrl.clone()
-  //   url.pathname = '/dashboard'
-  //   return NextResponse.redirect(url)
-  // }
+  // 已登入用戶訪問登入頁時重定向到 Dashboard
+  if (user && request.nextUrl.pathname === "/login") {
+    const url = request.nextUrl.clone();
+    url.pathname = "/dashboard";
+    return NextResponse.redirect(url);
+  }
 
   // IMPORTANT: You *must* return the supabaseResponse object as it is. If you're
   // creating a new response object with NextResponse.next() make sure to:
