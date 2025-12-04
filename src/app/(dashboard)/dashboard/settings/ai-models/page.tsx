@@ -1,4 +1,6 @@
 import { createAdminClient } from "@/lib/supabase/server";
+import { getUser } from "@/lib/auth";
+import { redirect } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -6,8 +8,6 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
@@ -46,6 +46,12 @@ async function getAgentConfigs() {
 }
 
 export default async function AIModelsPage() {
+  // 認證檢查
+  const user = await getUser();
+  if (!user) {
+    redirect("/login");
+  }
+
   const models = await getAIModels();
   const config = await getAgentConfigs();
 
