@@ -257,6 +257,75 @@ export async function toggleWebsiteStatus(formData: FormData) {
 }
 
 /**
+ * 更新網站文章生成設定（產業、地區、語言）
+ */
+export async function updateWebsiteSettings(formData: FormData) {
+  const user = await getUser();
+  if (!user) {
+    redirect("/login");
+  }
+
+  const websiteId = formData.get("websiteId") as string;
+  const industry = formData.get("industry") as string;
+  const region = formData.get("region") as string;
+  const language = formData.get("language") as string;
+
+  if (!websiteId) {
+    redirect("/dashboard/websites?error=" + encodeURIComponent("缺少網站 ID"));
+  }
+
+  const supabase = await createClient();
+
+  const { data: website } = await supabase
+    .from("website_configs")
+    .select("company_id")
+    .eq("id", websiteId)
+    .single();
+
+  if (!website) {
+    redirect("/dashboard/websites?error=" + encodeURIComponent("找不到網站"));
+  }
+
+  const { data: membership } = await supabase
+    .from("company_members")
+    .select("role")
+    .eq("company_id", website.company_id)
+    .eq("user_id", user.id)
+    .single();
+
+  if (
+    !membership ||
+    (membership.role !== "owner" && membership.role !== "admin")
+  ) {
+    redirect(
+      "/dashboard/websites?error=" + encodeURIComponent("您沒有權限編輯此網站"),
+    );
+  }
+
+  const { error } = await supabase
+    .from("website_configs")
+    .update({
+      industry: industry || null,
+      region: region || null,
+      language: language || null,
+    })
+    .eq("id", websiteId);
+
+  if (error) {
+    redirect(
+      `/dashboard/websites/${websiteId}/edit?error=` +
+        encodeURIComponent(error.message),
+    );
+  }
+
+  revalidatePath("/dashboard/websites");
+  redirect(
+    `/dashboard/websites/${websiteId}/edit?success=` +
+      encodeURIComponent("文章生成設定已更新"),
+  );
+}
+
+/**
  * 更新 Brand Voice 設定
  */
 export async function updateWebsiteBrandVoice(formData: FormData) {
