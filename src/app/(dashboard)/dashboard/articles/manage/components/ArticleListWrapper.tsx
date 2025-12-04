@@ -32,9 +32,8 @@ function PageHeader({ filters }: { filters?: ReactNode }) {
         <span className="text-orange-500 text-xs whitespace-nowrap">
           (選擇目標網站)
         </span>
+        {filters}
       </div>
-      <div className="flex-1" />
-      {filters}
     </div>
   );
 }
