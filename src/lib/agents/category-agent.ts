@@ -285,7 +285,9 @@ export class CategoryAgent {
   "primaryCategory": "主要分類名稱",
   "focusKeywords": ["關鍵字1", "關鍵字2"]
 }
-\`\`\``;
+\`\`\`
+
+**重要：請確保輸出完整的 JSON，不要省略或截斷任何部分。**`;
   }
 
   private buildUserPrompt(input: CategoryInput): string {
