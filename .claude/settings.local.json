@@ -79,7 +79,12 @@
       "WebFetch(domain:vocus.cc)",
       "WebFetch(domain:zh.moegirl.org.cn)",
       "Bash(git ls-tree:*)",
-      "Bash(git grep:*)"
+      "Bash(git grep:*)",
+      "mcp__github__get_commit",
+      "WebFetch(domain:developers.cloudflare.com)",
+      "WebFetch(domain:api-docs.deepseek.com)",
+      "WebFetch(domain:community.cloudflare.com)",
+      "Bash(SUPABASE_URL=\"https://vdjzeregvyimgzflfalv.supabase.co\" SUPABASE_KEY=\"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InZkanplcmVndnlpbWd6ZmxmYWx2Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MTIxNTY1NywiZXhwIjoyMDc2NzkxNjU3fQ.DSL9Ckh3S0ii5Xv-s0I87XZ0cRHI6_hwJ_s3xE1E-og\" curl -s \"$SUPABASE_URL/rest/v1/article_jobs?id=eq.a20eccdc-9ef5-4764-86b2-f426e715f9ae&select=error_message\" -H \"apikey: $SUPABASE_KEY\" -H \"Authorization: Bearer $SUPABASE_KEY\")"
     ],
     "deny": [],
     "ask": []

@@ -2,6 +2,47 @@
 
 ---
 
+## 2025-12-04: 修復圖片重複插入 Bug
+
+### 問題描述
+
+前端 HTML 中出現 8 張圖片，但實際只生成 4 張。每張圖片都被重複插入了 2 次。
+
+### 根因分析
+
+圖片在兩個地方被插入：
+
+1. **SectionAgent** (section-agent.ts) - 在生成 markdown 時透過 prompt 和後處理插入圖片
+2. **orchestrator.ts** 的 `insertImagesToHtml` - 再次將圖片插入到 HTML
+
+### 解決方案
+
+**刪除 SectionAgent 的圖片插入邏輯**，保留 `insertImagesToHtml` 作為唯一的圖片插入點。
+
+理由：
+
+- `insertImagesToHtml` 有更智能的分配邏輯（根據 H2/H3 位置分配）
+- 單一責任原則：圖片插入只在一個地方處理
+- 更簡單 = 更穩定
+
+### 修改內容
+
+**section-agent.ts**：
+
+- 移除 prompt 中的圖片插入指令
+- 移除後處理的圖片插入邏輯
+
+**orchestrator.ts**：
+
+- 移除先前加入的重複檢查邏輯（因為 SectionAgent 不再插入圖片，檢查不需要了）
+
+### 修改檔案
+
+- `src/lib/agents/section-agent.ts`
+- `src/lib/agents/orchestrator.ts`
+
+---
+
 ## 2025-12-04: 5 層 AI Provider Fallback 機制
 
 ### 問題描述
