@@ -713,8 +713,17 @@ export class ArticleStorageService {
       return false;
     }
 
-    const markdownPatterns = ["##", "**", "```"];
-    if (markdownPatterns.some((p) => html.includes(p))) {
+    // 更嚴格的 markdown 檢測
+    const markdownPatterns = [
+      /^#{1,6}\s+/m, // 開頭的標題
+      /\n#{1,6}\s+/, // 換行後的標題
+      /\*\*[^*]+\*\*/, // 粗體
+      /```/, // 程式碼區塊
+      /<p>\s*#{1,6}/, // <p> 內的標題
+    ];
+
+    if (markdownPatterns.some((p) => p.test(html))) {
+      console.log("[ArticleStorage] isValidHTML: 檢測到 markdown 語法");
       return false;
     }
 
@@ -756,6 +765,24 @@ export class ArticleStorageService {
     // 處理 \n\n → 段落分隔（但不影響已有的 HTML 標籤）
     cleaned = cleaned.replace(/\\n\\n/g, "</p>\n<p>");
     cleaned = cleaned.replace(/\\n/g, "\n");
+
+    // 處理 <p> 標籤內的 markdown 標題（最常見的問題）
+    cleaned = cleaned.replace(
+      /<p>\s*(#{1,6})\s+([^<\n]+)(?:<\/p>)?/g,
+      (_, hashes, text) => {
+        const level = hashes.length;
+        return `<h${level}>${text.trim()}</h${level}>`;
+      },
+    );
+
+    // 處理連續換行後的 markdown 標題
+    cleaned = cleaned.replace(/\n(#{1,6})\s+([^\n<]+)/g, (_, hashes, text) => {
+      const level = hashes.length;
+      return `\n<h${level}>${text.trim()}</h${level}>`;
+    });
+
+    // 最終清理：移除任何剩餘的 # 標記（非 HTML 實體，且非 CSS 顏色碼如 #fff）
+    cleaned = cleaned.replace(/(?<!&)(?<!#[0-9a-fA-F])#{2,6}\s+/g, "");
 
     console.log("[ArticleStorage] 清理 Markdown 殘留:", {
       hadMarkdown:

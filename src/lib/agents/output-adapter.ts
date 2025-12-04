@@ -112,13 +112,13 @@ export class MultiAgentOutputAdapter {
     }
 
     console.log("[OutputAdapter] ✅ HTML validation passed");
+
+    // 🔧 修改：先清理再驗證，而不是檢測到 markdown 就重新轉換
     let cleaned = this.cleanupResidualMarkdown(html as string);
 
-    // 最後檢查：如果仍有明顯的 markdown 語法，強制重新轉換
-    if (this.hasMarkdownSyntax(cleaned)) {
-      console.warn(
-        "[OutputAdapter] ⚠️ Still has markdown syntax, forcing re-conversion",
-      );
+    // 只有當清理後仍然有嚴重 markdown 問題（標題、程式碼區塊）才重新轉換
+    if (this.hasSeriousMarkdownIssues(cleaned)) {
+      console.warn("[OutputAdapter] ⚠️ 嚴重 markdown 問題，需要重新轉換");
       try {
         cleaned = await marked.parse(cleaned);
         cleaned = this.cleanupResidualMarkdown(cleaned);
@@ -130,15 +130,32 @@ export class MultiAgentOutputAdapter {
     return cleaned;
   }
 
+  /**
+   * 只檢測嚴重的 markdown 問題（標題、程式碼區塊）
+   * 小問題（粗體、斜體）由 cleanupResidualMarkdown 處理即可
+   */
+  private hasSeriousMarkdownIssues(html: string): boolean {
+    const seriousPatterns = [
+      /^#{1,6}\s+/m, // 行首標題（嚴重）
+      /```[\s\S]*?```/, // 程式碼區塊（嚴重）
+    ];
+    return seriousPatterns.some((p) => p.test(html));
+  }
+
+  /**
+   * 檢測 HTML 中是否有任何 markdown 語法（用於最終驗證）
+   */
   private hasMarkdownSyntax(html: string): boolean {
     const markdownPatterns = [
-      /^#{1,6}\s+/m,
-      /^>\s+/m,
-      /\*\*[^*]+\*\*/,
-      /\[([^\]]+)\]\([^)]+\)/,
-      /^[-*+]\s+/m,
-      /^\d+\.\s+/m,
-      /```/,
+      /^#{1,6}\s+/m, // 標題
+      /^>\s+/m, // 引用
+      /\*\*[^*]+\*\*/, // 粗體
+      /\[([^\]]+)\]\([^)]+\)/, // 連結
+      /^[-*+]\s+/m, // 無序列表
+      /^\d+\.\s+/m, // 有序列表
+      /```/, // 程式碼區塊
+      /<[^>]*>.*#{1,6}\s/, // HTML 標籤內有 markdown 標題
+      /<p>\s*#{1,6}\s/, // <p> 內的 markdown 標題
     ];
     return markdownPatterns.some((pattern) => pattern.test(html));
   }
@@ -150,6 +167,26 @@ export class MultiAgentOutputAdapter {
     cleaned = cleaned.replace(/\{\s*"content"\s*:\s*"/g, "");
     cleaned = cleaned.replace(/"\s*\}\s*$/g, "");
     cleaned = cleaned.replace(/\\n/g, "\n");
+
+    // Step 1.5: 處理 HTML 標籤內的 markdown 標題（如 <p>## 標題</p>）
+    cleaned = cleaned.replace(
+      /<p>\s*(#{1,6})\s+([^<]+)<\/p>/g,
+      (_, hashes, text) => {
+        const level = hashes.length;
+        return `<h${level}>${text.trim()}</h${level}>`;
+      },
+    );
+
+    // Step 1.6: 處理 blockquote 內的 markdown
+    cleaned = cleaned.replace(
+      /<blockquote>([\s\S]*?)<\/blockquote>/g,
+      (_, inner) => {
+        let fixed = inner;
+        fixed = fixed.replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+        fixed = fixed.replace(/(?<!\*)\*([^*]+)\*(?!\*)/g, "<em>$1</em>");
+        return `<blockquote>${fixed}</blockquote>`;
+      },
+    );
 
     // Step 2: 清理 markdown 標題（更寬鬆的匹配）
     cleaned = cleaned.replace(/^######\s+(.+)$/gm, "<h6>$1</h6>");

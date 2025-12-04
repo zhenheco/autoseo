@@ -412,13 +412,37 @@ export class AIClient {
 
         const maxTokens = Math.min(options.maxTokens ?? 8000, maxTokensLimit);
 
-        const response = await this.callDeepSeekAPI({
+        let response = await this.callDeepSeekAPI({
           model: deepseekModel,
           messages,
           temperature: options.temperature ?? 0.7,
           max_tokens: maxTokens,
           response_format: responseFormat,
         });
+
+        // 截斷重試邏輯：如果 finish_reason=length，自動增加 token 重試一次
+        const finishReason = response.choices?.[0]?.finish_reason;
+        if (
+          finishReason === "length" &&
+          attempt === 1 &&
+          maxTokens < maxTokensLimit
+        ) {
+          const increasedTokens = Math.min(
+            Math.floor(maxTokens * 1.5),
+            maxTokensLimit,
+          );
+          console.warn(
+            `[AIClient] ⚠️ 輸出被截斷，自動重試 (${maxTokens} → ${increasedTokens} tokens)`,
+          );
+
+          response = await this.callDeepSeekAPI({
+            model: deepseekModel,
+            messages,
+            temperature: options.temperature ?? 0.7,
+            max_tokens: increasedTokens,
+            response_format: responseFormat,
+          });
+        }
 
         if (currentModel !== options.model) {
           console.log(
