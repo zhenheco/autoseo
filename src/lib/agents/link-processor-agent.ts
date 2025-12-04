@@ -13,6 +13,7 @@ export interface LinkProcessorInput {
   internalLinks: InternalLink[];
   externalReferences: ExternalReference[];
   targetLanguage?: string;
+  primaryKeyword?: string; // 文章主關鍵字，用於 fallback 匹配
 }
 
 export interface LinkInsertionStats {
@@ -161,7 +162,10 @@ export class LinkProcessorAgent {
       const urlCount = this.urlUsageCount.get(ref.url) ?? 0;
       if (urlCount >= this.config.maxLinksPerUrl) continue;
 
-      const keywords = this.extractKeywordsFromReference(ref);
+      const keywords = this.extractKeywordsFromReference(
+        ref,
+        input.primaryKeyword,
+      );
       for (const keyword of keywords) {
         if (externalInserted >= this.config.maxExternalLinks) break;
         if (!keyword || keyword.length < 2) continue;
@@ -470,7 +474,10 @@ export class LinkProcessorAgent {
     return openTags > closeTags;
   }
 
-  private extractKeywordsFromReference(ref: ExternalReference): string[] {
+  private extractKeywordsFromReference(
+    ref: ExternalReference,
+    primaryKeyword?: string,
+  ): string[] {
     const keywords: string[] = [];
     const stopWords = new Set([
       "的",
@@ -502,6 +509,11 @@ export class LinkProcessorAgent {
       "by",
       "with",
     ]);
+
+    // 優先使用主關鍵字（文章標題/主題）作為 fallback
+    if (primaryKeyword && primaryKeyword.length >= 2) {
+      keywords.push(primaryKeyword);
+    }
 
     // 技術性詞彙黑名單
     const technicalTerms = new Set([

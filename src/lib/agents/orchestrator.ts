@@ -565,6 +565,7 @@ export class ParallelOrchestrator {
         })),
         externalReferences: strategyOutput.externalReferences || [],
         targetLanguage: input.region?.startsWith("zh") ? "zh-TW" : "en",
+        primaryKeyword: input.title, // 文章主關鍵字，用於 fallback 匹配
       });
 
       writingOutput.html = htmlOutput.html;
