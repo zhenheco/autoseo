@@ -51,18 +51,20 @@ async function main() {
   const processPromises = jobs.map(async (job) => {
     console.log(`[Process Jobs] 🔒 嘗試鎖定任務 ${job.id}`);
 
-    // 使用樂觀鎖定：只有當 started_at 仍為 null 或超過 3 分鐘時才更新
-    // 這樣可以避免兩個 workflow 同時鎖定同一個任務
-    const { data: locked, error: lockError } = await supabase
+    // 生成唯一的鎖定時間戳
+    const lockTimestamp = new Date().toISOString();
+
+    // Step 1: 嘗試更新（使用樂觀鎖定條件）
+    // 注意：不使用 .select()，因為 Supabase 會重新套用 .or() 條件導致空結果
+    const { error: lockError } = await supabase
       .from("article_jobs")
       .update({
         status: "processing",
-        started_at: new Date().toISOString(),
+        started_at: lockTimestamp,
       })
       .eq("id", job.id)
-      .in("status", ["pending", "processing"]) // 確保狀態仍為待處理
-      .or(`started_at.is.null,started_at.lt.${threeMinutesAgo}`) // 樂觀鎖定條件
-      .select();
+      .in("status", ["pending", "processing"])
+      .or(`started_at.is.null,started_at.lt.${threeMinutesAgo}`);
 
     if (lockError) {
       console.log(
@@ -71,7 +73,15 @@ async function main() {
       return { success: false, jobId: job.id };
     }
 
-    if (!locked || locked.length === 0) {
+    // Step 2: 驗證是否成功取得鎖定（檢查 started_at 是否為我們設定的值）
+    const { data: locked } = await supabase
+      .from("article_jobs")
+      .select("*")
+      .eq("id", job.id)
+      .eq("started_at", lockTimestamp)
+      .single();
+
+    if (!locked) {
       console.log(`[Process Jobs] ⏭️  任務 ${job.id} 已被其他程序處理，跳過`);
       return { success: false, jobId: job.id };
     }
