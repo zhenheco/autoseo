@@ -503,33 +503,73 @@ export class LinkProcessorAgent {
       "with",
     ]);
 
+    // 技術性詞彙黑名單
+    const technicalTerms = new Set([
+      "h1",
+      "h2",
+      "h3",
+      "h4",
+      "h5",
+      "h6",
+      "https",
+      "http",
+      "www",
+      "html",
+      "php",
+      "asp",
+      "jsp",
+      "index",
+      "page",
+      "post",
+      "article",
+      "blog",
+      "news",
+      "id",
+      "ref",
+      "src",
+      "img",
+      "css",
+      "js",
+    ]);
+
+    // 關鍵字驗證函式
+    const isValidKeyword = (w: string): boolean => {
+      const lower = w.toLowerCase();
+      return (
+        w.length >= 3 &&
+        w.length <= 30 &&
+        !stopWords.has(lower) &&
+        !technicalTerms.has(lower) &&
+        !/^\d+$/.test(w) // 不是純數字
+      );
+    };
+
     if (ref.title) {
-      keywords.push(ref.title);
+      // 只有當標題看起來有效時才加入
+      if (ref.title.length >= 4 && isValidKeyword(ref.title)) {
+        keywords.push(ref.title);
+      }
       const titleWords = ref.title
         .split(/[\s,，、。：:]+/)
-        .filter(
-          (w) =>
-            w.length >= 2 && w.length <= 30 && !stopWords.has(w.toLowerCase()),
-        );
+        .filter((w) => isValidKeyword(w));
       keywords.push(...titleWords.slice(0, 5));
     }
 
     if (ref.description && ref.description.length > 20) {
-      const chinesePhrasesMatch =
-        ref.description.match(/[\u4e00-\u9fa5]{2,8}/g);
+      // 中文短語提取（優先使用 description）
+      const chinesePhrasesMatch = ref.description.match(
+        /[\u4e00-\u9fa5]{3,10}/g,
+      );
       if (chinesePhrasesMatch) {
         const validPhrases = chinesePhrasesMatch.filter(
-          (p) => !stopWords.has(p),
+          (p) => !stopWords.has(p) && p.length >= 3,
         );
         keywords.push(...validPhrases.slice(0, 5));
       }
 
       const descWords = ref.description
         .split(/[\s,，、。：:；;！!？?]+/)
-        .filter(
-          (w) =>
-            w.length >= 2 && w.length <= 30 && !stopWords.has(w.toLowerCase()),
-        );
+        .filter((w) => isValidKeyword(w));
       keywords.push(...descWords.slice(0, 5));
     }
 

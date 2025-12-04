@@ -2,6 +2,101 @@
 
 ---
 
+## 2025-12-04: 修復文章重複執行問題
+
+### 問題描述
+
+文章生成完成後，系統又重新執行一次相同的任務。
+
+### 根因分析
+
+`scripts/process-jobs.ts` 的 job 鎖定機制存在 **Race Condition（競態條件）**：
+
+1. GitHub Actions 每 2 分鐘執行一次 workflow
+2. 查詢條件：`started_at.is.null` 或 `started_at.lt.${3分鐘前}`
+3. 鎖定邏輯：直接 UPDATE，**沒有檢查 `started_at` 是否仍符合條件**
+
+**問題場景**：
+
+```
+T=0:  Workflow A 查詢，找到 Job X（started_at = null）
+T=1s: Workflow B 啟動，也找到 Job X（started_at 仍為 null）
+T=2s: Workflow A 鎖定 Job X（started_at = T+2s）
+T=3s: Workflow B 也鎖定 Job X（覆蓋 started_at）← 重複執行！
+```
+
+### 解決方案
+
+使用**樂觀鎖定**：UPDATE 時加入與查詢相同的條件，確保只有第一個 workflow 能鎖定成功。
+
+```typescript
+// 修復前：直接更新，沒有條件檢查
+.update({ status: "processing", started_at: now })
+.eq("id", job.id)
+
+// 修復後：加入樂觀鎖定條件
+.update({ status: "processing", started_at: now })
+.eq("id", job.id)
+.in("status", ["pending", "processing"])
+.or(`started_at.is.null,started_at.lt.${threeMinutesAgo}`)
+```
+
+### 修改檔案
+
+- `scripts/process-jobs.ts`
+
+---
+
+## 2025-12-04: 修復精選圖片重複插入（Introduction/UnifiedWriting）
+
+### 問題描述
+
+精選圖片在 HTML 中出現兩次。
+
+### 根因分析
+
+圖片在多個地方被插入：
+
+1. **IntroductionAgent** - prompt 指令 + 後處理插入
+2. **UnifiedWritingAgent** - prompt 指令 + 後處理插入
+3. **orchestrator.ts** 的 `insertImagesToHtml` - 再次插入
+
+### 解決方案
+
+與 SectionAgent 相同，移除 IntroductionAgent 和 UnifiedWritingAgent 的圖片插入邏輯，保留 `insertImagesToHtml` 作為唯一插入點。
+
+### 修改檔案
+
+- `src/lib/agents/introduction-agent.ts`
+- `src/lib/agents/unified-writing-agent.ts`
+
+---
+
+## 2025-12-04: 修復外部連結關鍵字提取問題
+
+### 問題描述
+
+LinkProcessorAgent 拒絕插入外部連結，因為提取到的關鍵字是 "H3"、"https" 等無效詞彙。
+
+### 根因分析
+
+1. `research-agent.ts` 的 `extractTitleFromUrl()` 從 URL 路徑提取標題
+2. URL 如 `/blog/h3-styling` 會提取出 "H3 Styling" 作為標題
+3. 這些無效標題被用於關鍵字比對，導致語義相似度過低被拒絕
+
+### 解決方案
+
+1. 新增 `extractTitleFromContent()` 從 Perplexity 內容中提取真實標題
+2. 新增 `isInvalidTitle()` 過濾無效標題
+3. 在 `link-processor-agent.ts` 新增技術詞彙黑名單
+
+### 修改檔案
+
+- `src/lib/agents/research-agent.ts`
+- `src/lib/agents/link-processor-agent.ts`
+
+---
+
 ## 2025-12-04: 修復圖片重複插入 Bug
 
 ### 問題描述
