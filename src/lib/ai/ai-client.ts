@@ -45,6 +45,7 @@ interface DeepSeekMessage {
 interface DeepSeekResponse {
   choices: Array<{
     message: DeepSeekMessage;
+    finish_reason?: "stop" | "length" | "content_filter" | null;
   }>;
   usage?: {
     prompt_tokens?: number;
@@ -188,7 +189,7 @@ export class AIClient {
       }
 
       console.log(
-        `[AIClient] DeepSeek API (gateway: ${useGateway}, url: ${endpoint})`,
+        `[AIClient] DeepSeek API (gateway: ${useGateway}, url: ${endpoint}, max_tokens: ${params.max_tokens})`,
       );
 
       const response = await fetch(endpoint, {
@@ -206,16 +207,47 @@ export class AIClient {
 
       clearTimeout(timeoutId);
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(`DeepSeek API error: ${JSON.stringify(error)}`);
+      // 安全解析 JSON 響應
+      let responseText: string;
+      try {
+        responseText = await response.text();
+      } catch (textError) {
+        throw new Error(
+          `DeepSeek API 響應讀取失敗: ${textError instanceof Error ? textError.message : "unknown"}`,
+        );
       }
 
-      const result = (await response.json()) as DeepSeekResponse;
+      let result: DeepSeekResponse;
+      try {
+        result = JSON.parse(responseText) as DeepSeekResponse;
+      } catch (parseError) {
+        console.error(
+          `[AIClient] JSON 解析失敗，響應前 500 字: ${responseText.slice(0, 500)}`,
+        );
+        throw new Error(
+          `DeepSeek API 響應不是有效 JSON: ${parseError instanceof Error ? parseError.message : "parse error"}`,
+        );
+      }
+
+      if (!response.ok) {
+        throw new Error(`DeepSeek API error: ${JSON.stringify(result)}`);
+      }
+
+      // 檢查 finish_reason
+      const finishReason = result.choices?.[0]?.finish_reason;
+      if (finishReason === "length") {
+        console.warn(
+          `[AIClient] ⚠️ 輸出被截斷 (finish_reason=length)，max_tokens=${params.max_tokens}，考慮增加 token 限制`,
+        );
+      }
 
       if (!useGateway) {
         console.log("[AIClient] ✅ 直連 DeepSeek API 成功");
       }
+
+      console.log(
+        `[AIClient] ✅ DeepSeek 完成 (finish_reason=${finishReason}, tokens=${result.usage?.total_tokens || "unknown"})`,
+      );
 
       return result;
     } catch (error: unknown) {
@@ -269,7 +301,7 @@ export class AIClient {
           maxTokensLimit = 8192;
         }
 
-        const maxTokens = Math.min(options.maxTokens ?? 2000, maxTokensLimit);
+        const maxTokens = Math.min(options.maxTokens ?? 8000, maxTokensLimit);
 
         const response = await this.callDeepSeekAPI({
           model: deepseekModel,

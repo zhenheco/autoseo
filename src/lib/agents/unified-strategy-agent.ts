@@ -554,7 +554,8 @@ ${JSON.stringify(strategy.outline, null, 2)}
 ## 語言
 所有內容必須使用 ${targetLang === "zh-TW" ? "繁體中文" : targetLang === "zh-CN" ? "简体中文" : "English"}
 
-請直接輸出 JSON，不要用 \`\`\`json 包裹：`;
+請直接輸出 JSON，不要用 \`\`\`json 包裹。
+**重要：請確保輸出完整的 JSON，不要省略或截斷任何部分。**`;
 
     try {
       const response = await this.complete(prompt, {

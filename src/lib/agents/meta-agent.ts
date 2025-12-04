@@ -1,9 +1,9 @@
-import { BaseAgent } from './base-agent';
-import type { MetaInput, MetaOutput } from '@/types/agents';
+import { BaseAgent } from "./base-agent";
+import type { MetaInput, MetaOutput } from "@/types/agents";
 
 export class MetaAgent extends BaseAgent<MetaInput, MetaOutput> {
   get agentName(): string {
-    return 'MetaAgent';
+    return "MetaAgent";
   }
 
   protected async process(input: MetaInput): Promise<MetaOutput> {
@@ -16,12 +16,12 @@ export class MetaAgent extends BaseAgent<MetaInput, MetaOutput> {
   }
 
   private async generateMetaData(
-    input: MetaInput
-  ): Promise<Omit<MetaOutput, 'executionInfo'>> {
+    input: MetaInput,
+  ): Promise<Omit<MetaOutput, "executionInfo">> {
     const prompt = `你是一位 SEO 專家，請為以下文章生成完整的 meta 資料。
 
 # 文章標題選項
-${input.titleOptions.map((t, i) => `${i + 1}. ${t}`).join('\n')}
+${input.titleOptions.map((t, i) => `${i + 1}. ${t}`).join("\n")}
 
 # 主要關鍵字
 ${input.keyword}
@@ -58,13 +58,14 @@ ${input.content.markdown.substring(0, 500)}...
 2. 描述必須在 150-160 字元之間
 3. 標題和描述都要自然地包含主要關鍵字
 4. slug 應該簡短、清晰、SEO 友好
-5. 所有文字都要吸引人且具有說服力`;
+5. 所有文字都要吸引人且具有說服力
+6. **請確保輸出完整的 JSON，不要省略或截斷任何部分**`;
 
     const response = await this.complete(prompt, {
       model: input.model,
       temperature: input.temperature,
       maxTokens: input.maxTokens,
-      format: 'json',
+      format: "json",
     });
 
     let metaData;
@@ -76,9 +77,9 @@ ${input.content.markdown.substring(0, 500)}...
         metaData = JSON.parse(response.content);
       }
     } catch (error) {
-      console.error('[MetaAgent] JSON parse error:', error);
-      console.error('[MetaAgent] Response content:', response.content);
-      console.error('[MetaAgent] Using fallback meta data based on input');
+      console.error("[MetaAgent] JSON parse error:", error);
+      console.error("[MetaAgent] Response content:", response.content);
+      console.error("[MetaAgent] Using fallback meta data based on input");
 
       metaData = this.getFallbackMetaData(input);
     }
@@ -93,14 +94,28 @@ ${input.content.markdown.substring(0, 500)}...
         keywords: metaData.keywords || [input.keyword],
       },
       openGraph: {
-        title: metaData.openGraph?.title || metaData.title || input.titleOptions[0] || input.keyword,
-        description: metaData.openGraph?.description || metaData.description || `關於${input.keyword}的完整指南`,
-        type: 'article',
+        title:
+          metaData.openGraph?.title ||
+          metaData.title ||
+          input.titleOptions[0] ||
+          input.keyword,
+        description:
+          metaData.openGraph?.description ||
+          metaData.description ||
+          `關於${input.keyword}的完整指南`,
+        type: "article",
       },
       twitterCard: {
-        card: 'summary_large_image',
-        title: metaData.twitterCard?.title || metaData.title || input.titleOptions[0] || input.keyword,
-        description: metaData.twitterCard?.description || metaData.description || `關於${input.keyword}的完整指南`,
+        card: "summary_large_image",
+        title:
+          metaData.twitterCard?.title ||
+          metaData.title ||
+          input.titleOptions[0] ||
+          input.keyword,
+        description:
+          metaData.twitterCard?.description ||
+          metaData.description ||
+          `關於${input.keyword}的完整指南`,
       },
       focusKeyphrase: metaData.focusKeyphrase || input.keyword,
     };
@@ -108,7 +123,7 @@ ${input.content.markdown.substring(0, 500)}...
 
   private getFallbackMetaData(input: MetaInput) {
     const title = input.titleOptions[0] || input.keyword;
-    const description = `關於${input.keyword}的詳細介紹與完整指南。${input.content.markdown.substring(0, 100).replace(/[#*\[\]]/g, '')}...`;
+    const description = `關於${input.keyword}的詳細介紹與完整指南。${input.content.markdown.substring(0, 100).replace(/[#*\[\]]/g, "")}...`;
     const slug = this.sanitizeSlug(input.keyword);
 
     return {
@@ -131,9 +146,9 @@ ${input.content.markdown.substring(0, 500)}...
   private sanitizeSlug(slug: string): string {
     return slug
       .toLowerCase()
-      .replace(/[^\w\s-]/g, '')
-      .replace(/\s+/g, '-')
-      .replace(/-+/g, '-')
-      .replace(/^-+|-+$/g, '');
+      .replace(/[^\w\s-]/g, "")
+      .replace(/\s+/g, "-")
+      .replace(/-+/g, "-")
+      .replace(/^-+|-+$/g, "");
   }
 }
