@@ -63,10 +63,12 @@ export class AIClient {
   }
 
   /**
-   * 多層 Fallback 機制：
+   * 5 層 Fallback 機制：
    * 1. Gateway DeepSeek (當前模型)
    * 2. Gateway OpenRouter DeepSeek (deepseek/deepseek-v3.2)
    * 3. 直連 DeepSeek API
+   * 4. Gateway OpenAI (gpt-5/gpt-5-mini)
+   * 5. 直連 OpenAI
    */
   private async callDeepSeekAPI(params: {
     model: string;
@@ -143,6 +145,35 @@ export class AIClient {
         const err = error instanceof Error ? error : new Error(String(error));
         errors.push(`直連 DeepSeek: ${err.message}`);
         console.log(`[AIClient] ⚠️ Step 3 失敗: ${err.message}`);
+      }
+    }
+
+    // === Step 4: Gateway OpenAI ===
+    const openaiApiKey = process.env.OPENAI_API_KEY;
+    if (isGatewayEnabled() && openaiApiKey) {
+      try {
+        console.log("[AIClient] 🔄 Step 4: Gateway OpenAI");
+        const result = await this.callOpenAIAPI(params, openaiApiKey, true);
+        console.log("[AIClient] ✅ Step 4 成功: Gateway OpenAI");
+        return result;
+      } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        errors.push(`Gateway OpenAI: ${err.message}`);
+        console.log(`[AIClient] ⚠️ Step 4 失敗: ${err.message}`);
+      }
+    }
+
+    // === Step 5: 直連 OpenAI ===
+    if (openaiApiKey) {
+      try {
+        console.log("[AIClient] 🔄 Step 5: 直連 OpenAI");
+        const result = await this.callOpenAIAPI(params, openaiApiKey, false);
+        console.log("[AIClient] ✅ Step 5 成功: 直連 OpenAI");
+        return result;
+      } catch (error: unknown) {
+        const err = error instanceof Error ? error : new Error(String(error));
+        errors.push(`直連 OpenAI: ${err.message}`);
+        console.log(`[AIClient] ⚠️ Step 5 失敗: ${err.message}`);
       }
     }
 
@@ -254,6 +285,84 @@ export class AIClient {
       clearTimeout(timeoutId);
       if (error instanceof Error && error.name === "AbortError") {
         throw new Error(`DeepSeek API timeout after ${timeoutMs / 1000}s`);
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * OpenAI API 呼叫（用於 Fallback）
+   */
+  private async callOpenAIAPI(
+    params: {
+      model: string;
+      messages: Array<{ role: string; content: string }>;
+      temperature?: number;
+      max_tokens?: number;
+      response_format?: { type: string };
+    },
+    apiKey: string,
+    useGateway: boolean,
+  ): Promise<DeepSeekResponse> {
+    const timeoutMs = 120000; // 2 分鐘
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+
+    // 模型映射：deepseek-reasoner → gpt-5, deepseek-chat → gpt-5-mini
+    const openaiModel = params.model.includes("reasoner")
+      ? "gpt-5"
+      : "gpt-5-mini";
+
+    try {
+      const baseUrl = useGateway
+        ? getOpenAIBaseUrl()
+        : "https://api.openai.com";
+
+      const headers = useGateway
+        ? buildOpenAIHeaders(apiKey)
+        : {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${apiKey}`,
+          };
+
+      console.log(
+        `[AIClient] OpenAI API (gateway: ${useGateway}, model: ${openaiModel})`,
+      );
+
+      const response = await fetch(`${baseUrl}/v1/chat/completions`, {
+        method: "POST",
+        headers,
+        body: JSON.stringify({
+          model: openaiModel,
+          messages: params.messages,
+          temperature: params.temperature ?? 0.7,
+          max_tokens: params.max_tokens ?? 8192,
+          response_format: params.response_format,
+        }),
+        signal: controller.signal,
+      });
+
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        const error = await response.json();
+        throw new Error(`OpenAI API error: ${JSON.stringify(error)}`);
+      }
+
+      const data = await response.json();
+      return {
+        choices: data.choices.map(
+          (c: { message: { role: string; content: string } }) => ({
+            message: { role: c.message.role, content: c.message.content },
+          }),
+        ),
+        usage: data.usage,
+        model: data.model,
+      } as DeepSeekResponse;
+    } catch (error: unknown) {
+      clearTimeout(timeoutId);
+      if (error instanceof Error && error.name === "AbortError") {
+        throw new Error(`OpenAI API timeout after ${timeoutMs / 1000}s`);
       }
       throw error;
     }
