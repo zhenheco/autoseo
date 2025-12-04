@@ -2,6 +2,56 @@
 
 ---
 
+## 2025-12-04: 修復文章內外部連結未插入問題
+
+### 問題描述
+
+文章生成後，HTML 編輯器中看不到任何內外部連結。經調查發現：
+
+- 10 篇文章中只有 1 篇有連結
+- 連結存在於 `external_references` 但未被插入到 `html_content`
+
+### 根因分析
+
+`ResearchAgent` 生成的 `externalReferences` 品質不穩定：
+
+| 文章            | external_references.title  | 連結插入結果 |
+| --------------- | -------------------------- | ------------ |
+| ✅ 1440精選圖片 | `"測試1440精選圖片重複"`   | 3 個連結     |
+| ❌ 測試1811     | `"Head116"`, `"114%E5..."` | 0 個連結     |
+
+**問題**：當 `title` 只是 URL 路徑片段（如 `Head116`）時，`LinkProcessorAgent` 無法在文章內容中找到匹配的關鍵字來插入連結。
+
+### 解決方案
+
+在 `LinkProcessorAgent` 中加入 **主關鍵字 fallback 機制**：
+
+```typescript
+// link-processor-agent.ts
+interface LinkProcessorInput {
+  // ...
+  primaryKeyword?: string; // 新增：文章主關鍵字
+}
+
+// extractKeywordsFromReference() 優先使用主關鍵字
+if (primaryKeyword && primaryKeyword.length >= 2) {
+  keywords.push(primaryKeyword);
+}
+```
+
+### 修改檔案
+
+| 檔案                                     | 修改內容                                   |
+| ---------------------------------------- | ------------------------------------------ |
+| `src/lib/agents/link-processor-agent.ts` | 新增 `primaryKeyword` 參數和 fallback 邏輯 |
+| `src/lib/agents/orchestrator.ts`         | 傳入 `primaryKeyword: input.title`         |
+
+### 預期效果
+
+即使 `external_references.title` 是無意義的 URL 片段，也能使用文章的主關鍵字（如「測試1811」）作為錨點文字插入連結。
+
+---
+
 ## 2025-12-04: 文章生成系統穩定運行確認
 
 ### 狀態
