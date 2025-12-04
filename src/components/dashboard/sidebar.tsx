@@ -185,7 +185,7 @@ export function Sidebar({ userEmail = "user@example.com" }: SidebarProps) {
             )}
           >
             <Mail className="h-4 w-4 shrink-0" />
-            {!collapsed && <span className="text-xs">service@1wayseo.com</span>}
+            {!collapsed && <span className="text-xs">客服信箱</span>}
           </a>
         </div>
 
