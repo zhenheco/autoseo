@@ -14,6 +14,7 @@ import { Label } from "@/components/ui/label";
 import Link from "next/link";
 import { updateWebsite } from "../../actions";
 import { BrandVoiceForm } from "./BrandVoiceForm";
+import { WebsiteSettingsForm } from "./WebsiteSettingsForm";
 
 interface BrandVoice {
   brand_name?: string;
@@ -28,7 +29,7 @@ async function getWebsite(websiteId: string, companyId: string) {
   const { data, error } = await supabase
     .from("website_configs")
     .select(
-      "id, website_name, wordpress_url, wp_username, company_id, brand_voice",
+      "id, website_name, wordpress_url, wp_username, company_id, brand_voice, industry, region, language",
     )
     .eq("id", websiteId)
     .eq("company_id", companyId)
@@ -43,6 +44,9 @@ async function getWebsite(websiteId: string, companyId: string) {
     wp_username: string | null;
     company_id: string;
     brand_voice: BrandVoice | null;
+    industry: string | null;
+    region: string | null;
+    language: string | null;
   };
 }
 
@@ -161,6 +165,13 @@ export default async function EditWebsitePage({
             </form>
           </CardContent>
         </Card>
+
+        <WebsiteSettingsForm
+          websiteId={website.id}
+          industry={website.industry}
+          region={website.region}
+          language={website.language}
+        />
 
         <BrandVoiceForm
           websiteId={website.id}

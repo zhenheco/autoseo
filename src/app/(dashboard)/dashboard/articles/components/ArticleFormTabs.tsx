@@ -103,6 +103,7 @@ export function ArticleFormTabs({
   const [customRegion, setCustomRegion] = useState("");
   const [language, setLanguage] = useState("zh-TW");
 
+  // 初始載入 localStorage 設定
   useEffect(() => {
     const storedLanguage = localStorage.getItem(STORAGE_KEYS.LANGUAGE);
     if (storedLanguage) {
@@ -131,6 +132,59 @@ export function ArticleFormTabs({
       setTimeout(() => setCustomRegion(storedCustomRegion), 0);
     }
   }, []);
+
+  // 當選擇網站時，自動載入網站設定
+  useEffect(() => {
+    if (!selectedWebsiteId) return;
+
+    const fetchWebsiteSettings = async () => {
+      try {
+        const response = await fetch(
+          `/api/websites/${selectedWebsiteId}/settings`,
+        );
+        if (!response.ok) return;
+
+        const settings = await response.json();
+
+        // 只有網站有設定時才更新
+        if (settings.industry) {
+          // 檢查是否為預設產業
+          const isPreset = INDUSTRIES.some(
+            (i) => i.value === settings.industry,
+          );
+          if (isPreset) {
+            setTimeout(() => setIndustry(settings.industry), 0);
+          } else {
+            setTimeout(() => {
+              setIndustry("other");
+              setCustomIndustry(settings.industry);
+            }, 0);
+          }
+        }
+
+        if (settings.region) {
+          // 檢查是否為預設地區
+          const isPreset = REGIONS.some((r) => r.value === settings.region);
+          if (isPreset) {
+            setTimeout(() => setRegion(settings.region), 0);
+          } else {
+            setTimeout(() => {
+              setRegion("other");
+              setCustomRegion(settings.region);
+            }, 0);
+          }
+        }
+
+        if (settings.language) {
+          setTimeout(() => setLanguage(settings.language), 0);
+        }
+      } catch (error) {
+        console.error("載入網站設定失敗:", error);
+      }
+    };
+
+    fetchWebsiteSettings();
+  }, [selectedWebsiteId]);
 
   const handleIndustryChange = (value: string) => {
     setIndustry(value);
