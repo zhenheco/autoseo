@@ -81,13 +81,8 @@ export function WebsiteArticleManager({
     onStatusChange: handleJobStatusChange,
   });
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      router.refresh();
-    }, 60000);
-
-    return () => clearInterval(interval);
-  }, [router]);
+  // 已移除 60 秒輪詢 - Realtime 訂閱已足夠處理狀態更新
+  // 這樣可以減少不必要的伺服器請求和重新渲染
 
   useEffect(() => {
     setJobs(initialJobs);
