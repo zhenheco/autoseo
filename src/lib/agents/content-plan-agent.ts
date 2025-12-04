@@ -131,7 +131,8 @@ ${specialBlockGuidance}
 6. H2 標題必須原創，不要照抄現有大綱
 7. **FAQ 區塊必須存在**：文章結構最後一定要有獨立的 FAQ H2 區塊（在 conclusion 之前）
 
-請直接輸出 JSON，不要用 \`\`\`json 包裹：`;
+請直接輸出 JSON，不要用 \`\`\`json 包裹。
+**重要：請確保輸出完整的 JSON，不要省略或截斷任何部分。**`;
   }
 
   private buildDeepResearchSection(
