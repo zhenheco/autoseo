@@ -1070,7 +1070,6 @@ export class ParallelOrchestrator {
             count: contentPlan?.detailedOutline.faq.questions.length || 3,
             model: agentConfig.writing_model,
             temperature: agentConfig.writing_temperature,
-            maxTokens: 1000,
           });
         },
         RetryConfigs.QA_AGENT,

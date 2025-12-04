@@ -585,7 +585,7 @@ Please output the complete JSON that conforms to the above schema in ${languageN
         },
         faq: {
           type: "array",
-          minItems: 2,
+          minItems: 3,
           maxItems: 5,
           items: {
             type: "object",
