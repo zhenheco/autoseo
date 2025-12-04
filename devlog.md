@@ -2,6 +2,86 @@
 
 ---
 
+## 2025-12-04: 5 層 AI Provider Fallback 機制
+
+### 問題描述
+
+DeepSeek API 在半夜時段不穩定，導致文章生成失敗。
+
+### 解決方案
+
+將 3 層 Fallback 擴展為 5 層，新增 OpenAI 作為最後防線：
+
+```
+Step 1: Gateway DeepSeek     ← 主要（成本最低）
+Step 2: Gateway OpenRouter   ← DeepSeek v3.2 via OpenRouter
+Step 3: 直連 DeepSeek        ← 繞過 Gateway
+Step 4: Gateway OpenAI       ← GPT-5/GPT-5-mini（新增）
+Step 5: 直連 OpenAI          ← 最後防線（新增）
+```
+
+### 模型映射
+
+| DeepSeek 模型       | OpenAI Fallback |
+| ------------------- | --------------- |
+| `deepseek-chat`     | `gpt-5-mini`    |
+| `deepseek-reasoner` | `gpt-5`         |
+
+### 修改內容
+
+- 新增 `callOpenAIAPI()` 方法
+- 在 `callDeepSeekAPI()` 新增 Step 4-5
+
+**Commit**: `7d2a1aa`
+
+**修改檔案**：
+
+- `src/lib/ai/ai-client.ts`
+
+---
+
+## 2025-12-04: 修復 DeepSeek JSON 截斷問題
+
+### 問題描述
+
+文章生成失敗，錯誤訊息：
+
+```
+Unexpected end of JSON input
+```
+
+### 根本原因
+
+1. **maxTokens 預設值過小**：預設 2000 tokens 不足以完成複雜 JSON 輸出（如 ContentPlanAgent）
+2. **缺乏截斷偵測**：DeepSeek 在 token 限制時會設 `finish_reason="length"`，但程式未檢查
+3. **錯誤處理不完善**：直接使用 `response.json()` 解析，失敗時無法看到原始響應內容
+
+### 修復內容
+
+| 修改                  | 描述                                               |
+| --------------------- | -------------------------------------------------- |
+| maxTokens 2000 → 8000 | 足夠大部分 JSON 輸出                               |
+| 安全 JSON 解析        | 先 `text()` 再 `JSON.parse()`，失敗時輸出前 500 字 |
+| finish_reason 檢查    | 如果是 `"length"` 輸出警告                         |
+| Prompt 優化           | 4 個 agent 加入「請確保輸出完整的 JSON」提示       |
+| 類型補全              | DeepSeekResponse 加入 `finish_reason` 欄位         |
+
+**Commit**: `43c7fb3`
+
+**修改檔案**：
+
+- `src/lib/ai/ai-client.ts`
+- `src/lib/agents/category-agent.ts`
+- `src/lib/agents/meta-agent.ts`
+- `src/lib/agents/content-plan-agent.ts`
+- `src/lib/agents/unified-strategy-agent.ts`
+
+### 參考資料
+
+- [DeepSeek JSON 模式文檔](https://api-docs.deepseek.com/zh-cn/guides/json_mode)
+
+---
+
 ## 2025-12-04: Cloudflare AI Gateway Error 2005 調查與修復嘗試
 
 ### 問題描述
