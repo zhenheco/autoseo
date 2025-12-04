@@ -1097,7 +1097,10 @@ export class ParallelOrchestrator {
               index: i,
               model: agentConfig.writing_model,
               temperature: agentConfig.writing_temperature,
-              maxTokens: Math.floor(section.targetWordCount * 2),
+              maxTokens: Math.max(
+                Math.floor(section.targetWordCount * 3),
+                2000,
+              ),
             });
           },
           RetryConfigs.SECTION_AGENT,

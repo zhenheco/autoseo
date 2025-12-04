@@ -2,6 +2,54 @@
 
 ---
 
+## 2025-12-04: 修復 HTML 中殘留 Markdown 語法問題
+
+### 問題描述
+
+文章生成後的 HTML 中仍然殘留 Markdown 語法（如 `**粗體**`、`## 標題`），導致前端顯示異常。
+
+### 根因分析
+
+**兩個獨立問題**：
+
+1. **JSON 截斷**：Section agents 的 `maxTokens` 設定過低（400 字段落只有 800 tokens），導致 AI 輸出被截斷（`finish_reason=length`），JSON 解析失敗，原始 markdown 直接流入後續處理。
+
+2. **Markdown 清理不完整**：`marked.js` 有時會遺漏嵌套在 HTML 區塊內的 markdown（[by design](https://github.com/markedjs/marked/issues/488)），特別是 `<p>## 標題</p>` 這類情況。
+
+### 解決方案（三層防線架構）
+
+```
+Layer 1: PREVENTION（預防）
+├── 提高 token 限制：maxTokens = max(wordCount * 3, 2000)
+└── 自動重試截斷輸出：檢測 finish_reason=length 時增加 50% token 重試
+
+Layer 2: REPAIR（修復）
+├── 使用 jsonrepair 修復截斷/格式錯誤的 JSON
+└── Fallback regex 提取 content 欄位
+
+Layer 3: CLEANUP（清理）
+├── OutputAdapter：先清理再驗證，只對嚴重問題觸發重新轉換
+└── ArticleStorage：最終防線，處理 <p> 內的 markdown 標題
+```
+
+### 修改檔案
+
+| 檔案                                  | 修改內容                                          |
+| ------------------------------------- | ------------------------------------------------- |
+| `package.json`                        | 新增 `jsonrepair` 依賴                            |
+| `src/lib/agents/orchestrator.ts`      | 提高 Section agent token 限制                     |
+| `src/lib/agents/section-agent.ts`     | 使用 jsonrepair 修復 JSON                         |
+| `src/lib/agents/output-adapter.ts`    | 新增 `hasSeriousMarkdownIssues()`、增強清理函數   |
+| `src/lib/ai/ai-client.ts`             | 新增截斷自動重試機制                              |
+| `src/lib/services/article-storage.ts` | 增強 `isValidHTML()` 和 `cleanMarkdownFromHtml()` |
+
+### 參考資料
+
+- [jsonrepair (npm)](https://github.com/josdejong/jsonrepair) - LLM JSON 修復套件
+- [DeepSeek JSON Output Docs](https://api-docs.deepseek.com/guides/json_mode) - 官方建議設定足夠的 max_tokens
+
+---
+
 ## 2025-12-04: 修復文章重複執行問題
 
 ### 問題描述
