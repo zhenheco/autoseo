@@ -1668,6 +1668,18 @@ export class ParallelOrchestrator {
     accessToken?: string;
     refreshToken?: string;
   } | null> {
+    // 驗證 websiteId 是有效的 UUID
+    if (
+      !websiteId ||
+      websiteId === "null" ||
+      websiteId === "undefined" ||
+      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+        websiteId,
+      )
+    ) {
+      return null;
+    }
+
     const supabase = await this.getSupabase();
     const { data: configs, error } = await supabase
       .from("website_configs")
