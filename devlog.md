@@ -2,6 +2,55 @@
 
 ---
 
+## 2025-12-04: 安全性與性能優化
+
+### 安全性修復
+
+#### 1. Debug 端點生產環境禁用
+
+- **檔案**: `src/middleware.ts`
+- **修改**: 在生產環境對 `/api/debug/*` 返回 404，開發環境仍可訪問
+
+#### 2. Dashboard 認證恢復
+
+- **檔案**: `src/lib/supabase/middleware.ts`
+- **修改**: 恢復被註解的認證檢查，未登入用戶訪問 `/dashboard` 會重定向到 `/login`
+
+#### 3. 日誌脫敏工具
+
+- **檔案**: `src/lib/utils/log-sanitizer.ts`（新建）
+- **功能**: 自動過濾 API keys、tokens、密碼等敏感資訊
+
+### 性能優化
+
+#### 1. Dashboard 查詢並行化
+
+- **檔案**: `src/app/(dashboard)/dashboard/page.tsx`
+- **修改**: 將 4 個連續 Supabase 查詢改為 `Promise.all()` 並行執行
+- **效果**: 預估減少 300-400ms 頁面載入時間
+
+#### 2. 移除不必要的輪詢
+
+- **檔案**: `src/app/(dashboard)/dashboard/websites/[id]/components/WebsiteArticleManager.tsx`
+- **修改**: 移除 60 秒輪詢，保留 Realtime 訂閱機制
+- **效果**: 減少不必要的伺服器請求和重新渲染
+
+### UI 改進
+
+#### 聯絡方式
+
+- **檔案**: `src/components/dashboard/sidebar.tsx`
+- **修改**: 在側邊欄底部添加聯絡郵件 `service@1wayseo.com`
+
+### 待處理項目
+
+- [ ] Phase 1.3: API 路由認證加強（遵循 DAL 模式）
+- [ ] Phase 2.2: 緩存策略優化（移除 force-dynamic）
+- [ ] Phase 3: Cloudflare Rate Limiting（用戶手動）
+- [ ] Phase 4: 金流環境切換（需用戶提供憑證）
+
+---
+
 ## 2025-12-04: 修復訂閱配額疊加 bug（嚴重）
 
 ### 問題描述

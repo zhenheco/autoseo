@@ -4,8 +4,11 @@ import { updateSession } from "@/lib/supabase/middleware";
 export const runtime = "nodejs";
 
 export async function middleware(request: NextRequest) {
-  // 跳過 debug 路由，讓診斷端點可以直接執行
+  // Debug 端點：生產環境完全禁用，開發環境允許訪問
   if (request.nextUrl.pathname.startsWith("/api/debug")) {
+    if (process.env.NODE_ENV === "production") {
+      return new NextResponse(null, { status: 404 });
+    }
     return NextResponse.next();
   }
 

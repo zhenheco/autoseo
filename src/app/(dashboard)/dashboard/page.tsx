@@ -42,15 +42,29 @@ export default async function DashboardPage() {
   let websitesCount = 0;
 
   if (membership) {
-    const { data: subscription } = await supabase
-      .from("company_subscriptions")
-      .select(
-        "monthly_quota_balance, purchased_token_balance, monthly_token_quota",
-      )
-      .eq("company_id", membership.company_id)
-      .eq("status", "active")
-      .single();
+    // 並行執行所有查詢，提升頁面載入速度
+    const [subscriptionResult, articlesResult, websitesResult] =
+      await Promise.all([
+        supabase
+          .from("company_subscriptions")
+          .select(
+            "monthly_quota_balance, purchased_token_balance, monthly_token_quota",
+          )
+          .eq("company_id", membership.company_id)
+          .eq("status", "active")
+          .single(),
+        supabase
+          .from("generated_articles")
+          .select("*", { count: "exact", head: true })
+          .eq("company_id", membership.company_id),
+        supabase
+          .from("website_configs")
+          .select("*", { count: "exact", head: true })
+          .eq("company_id", membership.company_id)
+          .eq("is_active", true),
+      ]);
 
+    const subscription = subscriptionResult.data;
     if (subscription) {
       const isFree = subscription.monthly_token_quota === 0;
       tokenBalance = isFree
@@ -59,20 +73,8 @@ export default async function DashboardPage() {
           subscription.purchased_token_balance;
     }
 
-    const { count: articlesTotal } = await supabase
-      .from("generated_articles")
-      .select("*", { count: "exact", head: true })
-      .eq("company_id", membership.company_id);
-
-    articlesCount = articlesTotal || 0;
-
-    const { count: websitesTotal } = await supabase
-      .from("website_configs")
-      .select("*", { count: "exact", head: true })
-      .eq("company_id", membership.company_id)
-      .eq("is_active", true);
-
-    websitesCount = websitesTotal || 0;
+    articlesCount = articlesResult.count || 0;
+    websitesCount = websitesResult.count || 0;
   }
 
   return (

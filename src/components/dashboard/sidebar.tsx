@@ -14,6 +14,7 @@ import {
   Handshake,
   Shield,
   Users,
+  Mail,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -173,6 +174,20 @@ export function Sidebar({ userEmail = "user@example.com" }: SidebarProps) {
             </>
           )}
         </nav>
+
+        {/* 聯絡我們 */}
+        <div className="px-4 py-2 border-t border-sidebar-foreground/10">
+          <a
+            href="mailto:service@1wayseo.com"
+            className={cn(
+              "flex items-center gap-2 text-sidebar-foreground/60 hover:text-sidebar-foreground transition-colors",
+              collapsed && "justify-center",
+            )}
+          >
+            <Mail className="h-4 w-4 shrink-0" />
+            {!collapsed && <span className="text-xs">service@1wayseo.com</span>}
+          </a>
+        </div>
 
         <div className="p-4 border-t border-sidebar-foreground/10">
           <div
