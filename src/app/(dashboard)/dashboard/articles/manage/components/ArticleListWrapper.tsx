@@ -60,9 +60,20 @@ export function ArticleListWrapper({
       .map((a) => a.id);
   }, [articles]);
 
+  // 可刪除的文章（已取消或失敗）
+  const deletableArticleIds = useMemo(() => {
+    return articles
+      .filter((a) => a.status === "cancelled" || a.status === "failed")
+      .map((a) => a.id);
+  }, [articles]);
+
   const selectableArticleIds = useMemo(() => {
-    return [...schedulableArticleIds, ...cancellableArticleIds];
-  }, [schedulableArticleIds, cancellableArticleIds]);
+    return [
+      ...schedulableArticleIds,
+      ...cancellableArticleIds,
+      ...deletableArticleIds,
+    ];
+  }, [schedulableArticleIds, cancellableArticleIds, deletableArticleIds]);
 
   return (
     <ScheduleProvider>
