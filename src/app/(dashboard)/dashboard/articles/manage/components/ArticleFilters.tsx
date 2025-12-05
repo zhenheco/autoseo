@@ -8,6 +8,7 @@ import { cn } from "@/lib/utils";
 const filters = [
   { value: "all", label: "全部" },
   { value: "unpublished", label: "待發布" },
+  { value: "scheduled", label: "已排程" },
   { value: "published", label: "已發布" },
 ];
 
