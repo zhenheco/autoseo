@@ -501,6 +501,81 @@ export async function batchDeleteArticles(
   return { success: true, deletedCount: count ?? articleIds.length };
 }
 
+export async function cancelArticleGeneration(articleJobId: string): Promise<{
+  success: boolean;
+  error?: string;
+  tokensDeducted?: number;
+  tokensRefunded?: number;
+}> {
+  const user = await getUser();
+  if (!user) return { success: false, error: "未登入" };
+
+  try {
+    const response = await fetch(
+      `${process.env.NEXT_PUBLIC_APP_URL || ""}/api/articles/${articleJobId}/cancel`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      },
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      return { success: false, error: errorData.error || "取消失敗" };
+    }
+
+    const result = await response.json();
+
+    revalidatePath("/dashboard/articles/manage");
+    return {
+      success: true,
+      tokensDeducted: result.tokensDeducted,
+      tokensRefunded: result.tokensRefunded,
+    };
+  } catch (err) {
+    console.error("Cancel generation error:", err);
+    return { success: false, error: "取消過程發生錯誤" };
+  }
+}
+
+export async function batchCancelArticleGeneration(
+  articleIds: string[],
+): Promise<{
+  success: boolean;
+  error?: string;
+  cancelledCount?: number;
+  totalDeducted?: number;
+  totalRefunded?: number;
+}> {
+  const user = await getUser();
+  if (!user) return { success: false, error: "未登入" };
+
+  if (articleIds.length === 0) {
+    return { success: false, error: "請選擇要取消的文章" };
+  }
+
+  let cancelledCount = 0;
+  let totalDeducted = 0;
+  let totalRefunded = 0;
+
+  for (const articleId of articleIds) {
+    const result = await cancelArticleGeneration(articleId);
+    if (result.success) {
+      cancelledCount++;
+      totalDeducted += result.tokensDeducted || 0;
+      totalRefunded += result.tokensRefunded || 0;
+    }
+  }
+
+  revalidatePath("/dashboard/articles/manage");
+  return {
+    success: cancelledCount > 0,
+    cancelledCount,
+    totalDeducted,
+    totalRefunded,
+  };
+}
+
 export async function updateArticleContent(
   articleJobId: string,
   title: string,

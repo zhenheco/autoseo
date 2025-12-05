@@ -49,12 +49,21 @@ export function ArticleListWrapper({
       .map((a) => a.id);
   }, [articles]);
 
+  const cancellableArticleIds = useMemo(() => {
+    return articles
+      .filter((a) => a.status === "pending" || a.status === "processing")
+      .map((a) => a.id);
+  }, [articles]);
+
   return (
     <ScheduleProvider>
       <PageHeader filters={filters} />
       <div className="flex gap-3 h-[calc(100vh-160px)]">
         <div className="w-[45%] min-w-0 overflow-y-auto">
-          <ScheduleControlBar schedulableArticleIds={schedulableArticleIds} />
+          <ScheduleControlBar
+            schedulableArticleIds={schedulableArticleIds}
+            cancellableArticleIds={cancellableArticleIds}
+          />
           <ArticleList articles={articles} />
         </div>
         <div className="w-[55%] shrink-0 overflow-hidden flex flex-col">
