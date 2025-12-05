@@ -1061,7 +1061,12 @@ export type Database = {
           keywords: string[];
           region: string;
           article_type: string;
-          status: "pending" | "processing" | "completed" | "failed";
+          status:
+            | "pending"
+            | "processing"
+            | "completed"
+            | "failed"
+            | "cancelled";
           progress: number;
           current_step: string | null;
           result_url: string | null;
@@ -1088,7 +1093,12 @@ export type Database = {
           keywords: string[];
           region?: string;
           article_type?: string;
-          status?: "pending" | "processing" | "completed" | "failed";
+          status?:
+            | "pending"
+            | "processing"
+            | "completed"
+            | "failed"
+            | "cancelled";
           progress?: number;
           current_step?: string | null;
           result_url?: string | null;
@@ -1115,7 +1125,12 @@ export type Database = {
           keywords?: string[];
           region?: string;
           article_type?: string;
-          status?: "pending" | "processing" | "completed" | "failed";
+          status?:
+            | "pending"
+            | "processing"
+            | "completed"
+            | "failed"
+            | "cancelled";
           progress?: number;
           current_step?: string | null;
           result_url?: string | null;

@@ -33,6 +33,7 @@ const statusConfig: Record<
   published: { label: "已發布", variant: "default" },
   failed: { label: "失敗", variant: "destructive" },
   schedule_failed: { label: "排程失敗", variant: "destructive" },
+  cancelled: { label: "已取消", variant: "outline" },
 };
 
 export function ArticleList({ articles }: ArticleListProps) {
@@ -44,10 +45,21 @@ export function ArticleList({ articles }: ArticleListProps) {
     setPreviewArticleId,
   } = useScheduleContext();
 
+  // 可以排程/刪除的狀態
   const canManage = (status: string) => {
     return (
       status === "completed" || status === "draft" || status === "scheduled"
     );
+  };
+
+  // 可以取消生成的狀態
+  const canCancel = (status: string) => {
+    return status === "pending" || status === "processing";
+  };
+
+  // 可以勾選的狀態（排程或取消）
+  const canSelect = (status: string) => {
+    return canManage(status) || canCancel(status);
   };
 
   const formatScheduledDate = (dateString: string | null) => {
@@ -101,7 +113,7 @@ export function ArticleList({ articles }: ArticleListProps) {
                 onClick={() => setPreviewArticleId(article.id)}
               >
                 <TableCell className="py-2 px-2">
-                  {canManage(article.status) && (
+                  {canSelect(article.status) && (
                     <Checkbox
                       checked={isSelected(article.id)}
                       onCheckedChange={() => toggleSelection(article.id)}
