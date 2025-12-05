@@ -89,7 +89,8 @@
       "WebFetch(domain:www.npmjs.com)",
       "mcp__filesystem__read_text_file",
       "WebFetch(domain:tiptap.dev)",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(timeout 15 vercel logs:*)"
     ],
     "deny": [],
     "ask": []

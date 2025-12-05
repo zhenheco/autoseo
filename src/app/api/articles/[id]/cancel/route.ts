@@ -118,16 +118,8 @@ export async function POST(
       await billingService.releaseReservation(jobId);
     }
 
-    // 7. 刪除任務（級聯刪除相關資料）
-    const { error: deleteError } = await supabase
-      .from("article_jobs")
-      .delete()
-      .eq("id", jobId);
-
-    if (deleteError) {
-      console.error("Error deleting job:", deleteError);
-      // 不返回錯誤，因為狀態已經更新為 cancelled
-    }
+    // 注意：不刪除任務記錄，讓 orchestrator 可以檢查取消狀態
+    // 任務會保留在列表中顯示「已取消」狀態
 
     return NextResponse.json({
       success: true,
