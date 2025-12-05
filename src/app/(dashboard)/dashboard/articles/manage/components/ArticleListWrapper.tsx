@@ -45,7 +45,12 @@ export function ArticleListWrapper({
 }: ArticleListWrapperProps) {
   const schedulableArticleIds = useMemo(() => {
     return articles
-      .filter((a) => a.status === "completed" || a.status === "draft")
+      .filter(
+        (a) =>
+          a.status === "completed" ||
+          a.status === "draft" ||
+          a.status === "scheduled",
+      )
       .map((a) => a.id);
   }, [articles]);
 
@@ -54,6 +59,10 @@ export function ArticleListWrapper({
       .filter((a) => a.status === "pending" || a.status === "processing")
       .map((a) => a.id);
   }, [articles]);
+
+  const selectableArticleIds = useMemo(() => {
+    return [...schedulableArticleIds, ...cancellableArticleIds];
+  }, [schedulableArticleIds, cancellableArticleIds]);
 
   return (
     <ScheduleProvider>
@@ -64,7 +73,10 @@ export function ArticleListWrapper({
             schedulableArticleIds={schedulableArticleIds}
             cancellableArticleIds={cancellableArticleIds}
           />
-          <ArticleList articles={articles} />
+          <ArticleList
+            articles={articles}
+            selectableArticleIds={selectableArticleIds}
+          />
         </div>
         <div className="w-[55%] shrink-0 overflow-hidden flex flex-col">
           {children}

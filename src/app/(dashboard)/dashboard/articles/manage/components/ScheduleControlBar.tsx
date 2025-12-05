@@ -2,7 +2,6 @@
 
 import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
   SelectContent,
@@ -49,7 +48,6 @@ export function ScheduleControlBar({
   const router = useRouter();
   const {
     selectedArticleIds,
-    selectAll,
     clearSelection,
     websiteId,
     setWebsiteId,
@@ -68,13 +66,6 @@ export function ScheduleControlBar({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const selectedCount = selectedArticleIds.size;
-  const allSelected =
-    schedulableArticleIds.length > 0 &&
-    schedulableArticleIds.every((id) => selectedArticleIds.has(id));
-
-  const handleSelectAll = useCallback(() => {
-    selectAll(schedulableArticleIds);
-  }, [selectAll, schedulableArticleIds]);
 
   const handleSchedule = useCallback(async () => {
     if (selectedCount === 0) {
@@ -254,22 +245,6 @@ export function ScheduleControlBar({
             篇
           </span>
         </div>
-
-        <label className="flex items-center gap-2 cursor-pointer">
-          <Checkbox
-            checked={allSelected}
-            onCheckedChange={handleSelectAll}
-            disabled={isScheduling}
-          />
-          <span className="text-sm whitespace-nowrap">
-            全選
-            {selectedCount > 0 && (
-              <span className="text-muted-foreground ml-1">
-                ({selectedCount})
-              </span>
-            )}
-          </span>
-        </label>
 
         <Button
           size="sm"

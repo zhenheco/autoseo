@@ -16,6 +16,7 @@ import { useScheduleContext } from "./ScheduleContext";
 
 interface ArticleListProps {
   articles: ArticleWithWebsite[];
+  selectableArticleIds: string[];
 }
 
 const statusConfig: Record<
@@ -36,14 +37,23 @@ const statusConfig: Record<
   cancelled: { label: "已取消", variant: "outline" },
 };
 
-export function ArticleList({ articles }: ArticleListProps) {
+export function ArticleList({
+  articles,
+  selectableArticleIds,
+}: ArticleListProps) {
   const {
     toggleSelection,
     isSelected,
     isScheduling,
+    selectAll,
+    selectedArticleIds,
     previewArticleId,
     setPreviewArticleId,
   } = useScheduleContext();
+
+  const allSelected =
+    selectableArticleIds.length > 0 &&
+    selectableArticleIds.every((id) => selectedArticleIds.has(id));
 
   // 可以排程/刪除的狀態
   const canManage = (status: string) => {
@@ -91,7 +101,15 @@ export function ArticleList({ articles }: ArticleListProps) {
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead className="w-[32px] px-2"></TableHead>
+            <TableHead className="w-[32px] px-2">
+              {selectableArticleIds.length > 0 && (
+                <Checkbox
+                  checked={allSelected}
+                  onCheckedChange={() => selectAll(selectableArticleIds)}
+                  disabled={isScheduling}
+                />
+              )}
+            </TableHead>
             <TableHead className="px-2">標題</TableHead>
             <TableHead className="w-[90px] px-2">目標網站</TableHead>
             <TableHead className="w-[70px] px-2">狀態</TableHead>
