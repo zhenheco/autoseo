@@ -85,6 +85,20 @@ export class ParallelOrchestrator {
     return createAdminClient();
   }
 
+  /**
+   * 檢查任務是否已被取消
+   */
+  private async checkCancelled(jobId?: string): Promise<boolean> {
+    if (!jobId) return false;
+    const supabase = await this.getSupabase();
+    const { data } = await supabase
+      .from("article_jobs")
+      .select("status")
+      .eq("id", jobId)
+      .single();
+    return data?.status === "cancelled";
+  }
+
   async execute(
     input: ArticleGenerationInput,
   ): Promise<ArticleGenerationResult> {
@@ -119,6 +133,14 @@ export class ParallelOrchestrator {
         .select("metadata, status")
         .eq("id", input.articleJobId)
         .single();
+
+      // ✅ 檢查任務是否已被取消
+      if (jobData?.status === "cancelled") {
+        console.log("[Orchestrator] ⚠️ Job was cancelled, stopping execution", {
+          jobId: input.articleJobId,
+        });
+        return result;
+      }
 
       // ✅ 修復問題 1: 防止重複生成 - 檢查是否已生成文章
       if (jobData?.metadata?.saved_article_id) {
@@ -240,6 +262,14 @@ export class ParallelOrchestrator {
           current_phase: "research_completed",
         });
 
+        // 檢查是否已取消
+        if (await this.checkCancelled(input.articleJobId)) {
+          console.log(
+            "[Orchestrator] ⚠️ Job cancelled after research phase, stopping",
+          );
+          return result;
+        }
+
         // Phase 2: Strategy
         this.pipelineLogger?.startPhase("strategy");
         const phase2Start = Date.now();
@@ -269,6 +299,14 @@ export class ParallelOrchestrator {
           strategy: strategyOutput,
           current_phase: "strategy_completed",
         });
+
+        // 檢查是否已取消
+        if (await this.checkCancelled(input.articleJobId)) {
+          console.log(
+            "[Orchestrator] ⚠️ Job cancelled after strategy phase, stopping",
+          );
+          return result;
+        }
 
         currentPhase = "strategy_completed";
         console.log(
@@ -414,6 +452,14 @@ export class ParallelOrchestrator {
               image: imageOutput,
             });
 
+            // 檢查是否已取消
+            if (await this.checkCancelled(input.articleJobId)) {
+              console.log(
+                "[Orchestrator] ⚠️ Job cancelled after images phase, stopping",
+              );
+              return result;
+            }
+
             writingOutput = await this.executeContentGeneration(
               strategyOutput,
               imageOutput,
@@ -491,6 +537,14 @@ export class ParallelOrchestrator {
           image: imageOutput,
           current_phase: "content_completed",
         });
+
+        // 檢查是否已取消
+        if (await this.checkCancelled(input.articleJobId)) {
+          console.log(
+            "[Orchestrator] ⚠️ Job cancelled after content phase, stopping",
+          );
+          return result;
+        }
 
         // 更新 currentPhase 變數以繼續執行 Phase 4-6
         currentPhase = "content_completed";
