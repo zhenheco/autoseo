@@ -51,7 +51,7 @@ export interface GeneratedArticle {
 }
 
 export async function getArticles(
-  filter: "all" | "unpublished" | "published" = "all",
+  filter: "all" | "unpublished" | "published" | "scheduled" = "all",
 ) {
   const user = await getUser();
   if (!user) return { articles: [], error: "未登入" };
@@ -86,12 +86,22 @@ export async function getArticles(
     `,
     )
     .eq("company_id", companyId)
+    .order("scheduled_publish_at", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false });
 
   if (filter === "unpublished") {
-    query = query.in("status", ["pending", "processing", "draft", "completed"]);
+    query = query.in("status", [
+      "pending",
+      "processing",
+      "draft",
+      "completed",
+      "cancelled",
+      "failed",
+    ]);
   } else if (filter === "published") {
     query = query.eq("status", "published");
+  } else if (filter === "scheduled") {
+    query = query.eq("status", "scheduled");
   }
 
   const { data, error } = await query;

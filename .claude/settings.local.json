@@ -90,7 +90,9 @@
       "mcp__filesystem__read_text_file",
       "WebFetch(domain:tiptap.dev)",
       "Bash(wc:*)",
-      "Bash(timeout 15 vercel logs:*)"
+      "Bash(timeout 15 vercel logs:*)",
+      "Bash(mcp__vercel__list_deployments)",
+      "Bash(vercel:*)"
     ],
     "deny": [],
     "ask": []
