@@ -24,7 +24,7 @@ function HeaderFilters() {
 async function ArticleListContent({
   filter,
 }: {
-  filter: "all" | "unpublished" | "published";
+  filter: "all" | "unpublished" | "published" | "scheduled";
 }) {
   const { articles, error } = await getArticles(filter);
 
