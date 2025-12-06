@@ -415,20 +415,35 @@ function calculateScheduleTimes(
   articlesPerDay: number,
 ): Date[] {
   const times: Date[] = [];
-  const hoursInterval = Math.floor(12 / articlesPerDay);
+
+  // 台灣時間 (UTC+8) 的工作時段：09:00-21:00 = UTC 01:00-13:00
+  const START_HOUR_UTC = 1; // 台灣 09:00
+  const END_HOUR_UTC = 13; // 台灣 21:00
+  const WORKING_HOURS = END_HOUR_UTC - START_HOUR_UTC; // 12 小時
+
+  // 計算每篇文章的間隔（分鐘）
+  const intervalMinutes = Math.floor((WORKING_HOURS * 60) / articlesPerDay);
 
   const now = new Date();
   const startDate = new Date(now);
-  startDate.setDate(startDate.getDate() + 1);
-  startDate.setHours(9, 0, 0, 0);
+  startDate.setUTCDate(startDate.getUTCDate() + 1);
+  startDate.setUTCHours(START_HOUR_UTC, 0, 0, 0);
 
   for (let i = 0; i < articleCount; i++) {
     const dayIndex = Math.floor(i / articlesPerDay);
     const slotIndex = i % articlesPerDay;
 
     const scheduleTime = new Date(startDate);
-    scheduleTime.setDate(scheduleTime.getDate() + dayIndex);
-    scheduleTime.setHours(9 + slotIndex * hoursInterval);
+    scheduleTime.setUTCDate(scheduleTime.getUTCDate() + dayIndex);
+
+    // 基準時間 + 時段偏移
+    const baseMinutes = slotIndex * intervalMinutes;
+    // 加入隨機偏移 (±15 分鐘)，讓時間更自然
+    const randomOffset = Math.floor(Math.random() * 31) - 15;
+    const totalMinutes = Math.max(0, baseMinutes + randomOffset);
+
+    scheduleTime.setUTCHours(START_HOUR_UTC);
+    scheduleTime.setUTCMinutes(totalMinutes);
 
     times.push(scheduleTime);
   }
