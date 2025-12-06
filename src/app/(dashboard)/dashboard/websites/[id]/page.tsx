@@ -39,6 +39,32 @@ interface ArticleJob {
   metadata: { title?: string } | null;
 }
 
+// 從 article_jobs 查詢的結果類型
+interface ArticleJobWithContent {
+  id: string;
+  status: string;
+  progress: number | null;
+  current_step: string | null;
+  keywords: string[] | null;
+  metadata: { title?: string } | null;
+  created_at: string;
+  published_at: string | null;
+  generated_articles: Array<{
+    id: string;
+    title: string;
+    html_content: string | null;
+    markdown_content: string | null;
+    word_count: number | null;
+    reading_time: number | null;
+    focus_keyword: string | null;
+    seo_title: string | null;
+    seo_description: string | null;
+    featured_image_url: string | null;
+    updated_at: string;
+    wordpress_post_url: string | null;
+  }> | null;
+}
+
 async function getWebsite(websiteId: string, companyId: string) {
   const supabase = await createClient();
 
@@ -57,31 +83,40 @@ async function getWebsite(websiteId: string, companyId: string) {
   return data;
 }
 
-async function getWebsiteArticles(
+// 統一從 article_jobs 查詢（與文章列表頁面一致）
+async function getWebsiteArticlesFromJobs(
   websiteId: string,
   companyId: string,
-): Promise<Article[]> {
+): Promise<{ articles: Article[]; jobs: ArticleJob[] }> {
   const supabase = await createClient();
 
+  // 從 article_jobs 查詢，JOIN generated_articles
   const { data, error } = await supabase
-    .from("generated_articles")
+    .from("article_jobs")
     .select(
       `
       id,
-      title,
-      html_content,
-      markdown_content,
       status,
-      word_count,
-      reading_time,
-      focus_keyword,
-      seo_title,
-      seo_description,
-      featured_image_url,
+      progress,
+      current_step,
+      keywords,
+      metadata,
       created_at,
-      updated_at,
       published_at,
-      wordpress_post_url
+      generated_articles (
+        id,
+        title,
+        html_content,
+        markdown_content,
+        word_count,
+        reading_time,
+        focus_keyword,
+        seo_title,
+        seo_description,
+        featured_image_url,
+        updated_at,
+        wordpress_post_url
+      )
     `,
     )
     .eq("website_id", websiteId)
@@ -89,35 +124,52 @@ async function getWebsiteArticles(
     .order("created_at", { ascending: false });
 
   if (error) {
-    console.error("Error fetching articles:", error);
-    return [];
+    console.error("Error fetching articles from jobs:", error);
+    return { articles: [], jobs: [] };
   }
 
-  return (data || []) as Article[];
-}
+  const jobsData = (data || []) as ArticleJobWithContent[];
 
-async function getWebsiteArticleJobs(
-  websiteId: string,
-  companyId: string,
-): Promise<ArticleJob[]> {
-  const supabase = await createClient();
+  // 分離已完成的文章和進行中的任務
+  const articles: Article[] = [];
+  const jobs: ArticleJob[] = [];
 
-  const { data, error } = await supabase
-    .from("article_jobs")
-    .select(
-      "id, keywords, status, progress, current_step, created_at, metadata",
-    )
-    .eq("website_id", websiteId)
-    .eq("company_id", companyId)
-    .in("status", ["pending", "processing", "scheduled"])
-    .order("created_at", { ascending: false });
-
-  if (error) {
-    console.error("Error fetching article jobs:", error);
-    return [];
+  for (const job of jobsData) {
+    // 有生成文章內容的，轉換成 Article 格式
+    if (job.generated_articles && job.generated_articles.length > 0) {
+      const ga = job.generated_articles[0];
+      articles.push({
+        id: ga.id,
+        title: ga.title,
+        html_content: ga.html_content,
+        markdown_content: ga.markdown_content,
+        status: job.status, // 使用 job 的 status（確保與文章列表一致）
+        word_count: ga.word_count,
+        reading_time: ga.reading_time,
+        focus_keyword: ga.focus_keyword,
+        seo_title: ga.seo_title,
+        seo_description: ga.seo_description,
+        featured_image_url: ga.featured_image_url,
+        created_at: job.created_at,
+        updated_at: ga.updated_at,
+        published_at: job.published_at,
+        wordpress_post_url: ga.wordpress_post_url,
+      });
+    } else if (job.status === "pending" || job.status === "processing") {
+      // 還沒有生成文章的任務
+      jobs.push({
+        id: job.id,
+        keywords: job.keywords,
+        status: job.status,
+        progress: job.progress,
+        current_step: job.current_step,
+        created_at: job.created_at,
+        metadata: job.metadata,
+      });
+    }
   }
 
-  return (data || []) as ArticleJob[];
+  return { articles, jobs };
 }
 
 export default async function WebsiteDetailPage({
@@ -144,10 +196,8 @@ export default async function WebsiteDetailPage({
     redirect("/dashboard/websites?error=網站不存在或無權訪問");
   }
 
-  const [articles, jobs] = await Promise.all([
-    getWebsiteArticles(id, company.id),
-    getWebsiteArticleJobs(id, company.id),
-  ]);
+  // 統一從 article_jobs 查詢（與文章列表頁面一致）
+  const { articles, jobs } = await getWebsiteArticlesFromJobs(id, company.id);
 
   const publishedCount = articles.filter(
     (a) => a.status === "published",
