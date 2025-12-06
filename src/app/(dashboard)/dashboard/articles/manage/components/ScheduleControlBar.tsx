@@ -39,11 +39,13 @@ import { toast } from "sonner";
 interface ScheduleControlBarProps {
   schedulableArticleIds: string[];
   cancellableArticleIds: string[];
+  deletableArticleIds: string[];
 }
 
 export function ScheduleControlBar({
   schedulableArticleIds,
   cancellableArticleIds,
+  deletableArticleIds,
 }: ScheduleControlBarProps) {
   const router = useRouter();
   const {
@@ -213,7 +215,8 @@ export function ScheduleControlBar({
   // 如果沒有可管理的文章，不顯示控制欄
   if (
     schedulableArticleIds.length === 0 &&
-    cancellableArticleIds.length === 0
+    cancellableArticleIds.length === 0 &&
+    deletableArticleIds.length === 0
   ) {
     return null;
   }

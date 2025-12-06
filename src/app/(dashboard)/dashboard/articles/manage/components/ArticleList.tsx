@@ -55,8 +55,8 @@ export function ArticleList({
     selectableArticleIds.length > 0 &&
     selectableArticleIds.every((id) => selectedArticleIds.has(id));
 
-  // 可以排程/刪除的狀態
-  const canManage = (status: string) => {
+  // 可以排程的狀態
+  const canSchedule = (status: string) => {
     return (
       status === "completed" || status === "draft" || status === "scheduled"
     );
@@ -67,9 +67,14 @@ export function ArticleList({
     return status === "pending" || status === "processing";
   };
 
-  // 可以勾選的狀態（排程或取消）
+  // 可以刪除的狀態
+  const canDelete = (status: string) => {
+    return status === "cancelled" || status === "failed";
+  };
+
+  // 可以勾選的狀態（排程、取消或刪除）
   const canSelect = (status: string) => {
-    return canManage(status) || canCancel(status);
+    return canSchedule(status) || canCancel(status) || canDelete(status);
   };
 
   const formatScheduledDate = (dateString: string | null) => {
