@@ -83,6 +83,7 @@ export function ArticleListWrapper({
           <ScheduleControlBar
             schedulableArticleIds={schedulableArticleIds}
             cancellableArticleIds={cancellableArticleIds}
+            deletableArticleIds={deletableArticleIds}
           />
           <ArticleList
             articles={articles}
