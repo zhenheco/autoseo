@@ -1,15 +1,13 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
-import { WordPressClient } from "@/lib/wordpress/client";
 
 interface ScheduleResult {
   article_id: string;
   title: string;
   success: boolean;
   scheduled_date?: string;
-  wordpress_post_id?: number;
-  wordpress_url?: string;
+  target_status?: string;
   error?: string;
 }
 
@@ -20,7 +18,7 @@ export async function POST(request: NextRequest) {
   }
 
   const body = await request.json();
-  const { website_id, articles_per_day } = body;
+  const { website_id, articles_per_day, target_status = "publish" } = body;
 
   if (!website_id) {
     return NextResponse.json({ error: "必須指定目標網站" }, { status: 400 });
@@ -29,6 +27,13 @@ export async function POST(request: NextRequest) {
   if (!articles_per_day || articles_per_day < 1 || articles_per_day > 10) {
     return NextResponse.json(
       { error: "每日發布數量必須在 1-10 之間" },
+      { status: 400 },
+    );
+  }
+
+  if (!["draft", "publish"].includes(target_status)) {
+    return NextResponse.json(
+      { error: "發布狀態必須是 draft 或 publish" },
       { status: 400 },
     );
   }
@@ -94,14 +99,6 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  const wordpressClient = new WordPressClient({
-    url: website.wordpress_url,
-    username: website.wp_username || "",
-    applicationPassword: website.wp_app_password,
-    accessToken: website.wordpress_access_token || undefined,
-    refreshToken: website.wordpress_refresh_token || undefined,
-  });
-
   const results: ScheduleResult[] = [];
   const now = new Date();
   const startDate = new Date(now);
@@ -119,84 +116,36 @@ export async function POST(request: NextRequest) {
     scheduledDate.setDate(scheduledDate.getDate() + dayIndex);
     scheduledDate.setHours(9 + slotIndex * hoursInterval);
 
+    // 隨機偏移避免同一時間發佈
+    const randomMinutes = Math.floor(Math.random() * 15);
+    scheduledDate.setMinutes(randomMinutes);
+
     try {
-      const { categoryIds, tagIds } = await wordpressClient.ensureTaxonomies(
-        article.categories || [],
-        article.tags || [],
-      );
-
-      let featuredMediaId: number | undefined;
-      if (article.og_image) {
-        try {
-          const media = await wordpressClient.uploadMediaFromUrl(
-            article.og_image,
-            `${article.slug || "article"}-featured`,
-          );
-          featuredMediaId = media.id;
-        } catch (mediaError) {
-          console.warn(`[Schedule] 無法上傳精選圖片: ${mediaError}`);
-        }
-      }
-
-      const response = await fetch(
-        `${website.wordpress_url.replace(/\/$/, "")}/wp-json/wp/v2/posts`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Basic ${Buffer.from(
-              `${website.wp_username}:${website.wp_app_password}`,
-            ).toString("base64")}`,
-          },
-          body: JSON.stringify({
-            title: article.seo_title || article.title,
-            content: article.html_content || "",
-            excerpt: article.seo_description || "",
-            slug: article.slug || "",
-            status: "future",
-            date: scheduledDate.toISOString(),
-            categories: categoryIds,
-            tags: tagIds,
-            featured_media: featuredMediaId,
-            meta: {
-              yoast_wpseo_title: article.seo_title || article.title,
-              yoast_wpseo_metadesc: article.seo_description || "",
-              yoast_wpseo_focuskw: article.focus_keyword || "",
-            },
-          }),
-        },
-      );
-
-      if (!response.ok) {
-        const errorText = await response.text();
-        throw new Error(
-          `WordPress API 錯誤: ${response.status} - ${errorText}`,
-        );
-      }
-
-      const wpPost = await response.json();
-
-      await supabase
+      // 只更新資料庫，不呼叫 WordPress API
+      // 實際發佈由 GitHub Actions 每小時執行
+      const { error: updateError } = await supabase
         .from("generated_articles")
         .update({
-          wordpress_post_id: wpPost.id,
-          wordpress_post_url: wpPost.link,
-          wordpress_status: "future",
-          status: "published",
           scheduled_publish_at: scheduledDate.toISOString(),
+          target_wordpress_status: target_status,
           published_to_website_id: website_id,
-          published_to_website_at: new Date().toISOString(),
+          status: "scheduled",
+          publish_retry_count: 0,
+          last_publish_error: null,
         })
         .eq("id", article.id)
         .eq("company_id", membership.company_id);
+
+      if (updateError) {
+        throw updateError;
+      }
 
       results.push({
         article_id: article.id,
         title: article.title,
         success: true,
         scheduled_date: scheduledDate.toISOString(),
-        wordpress_post_id: wpPost.id,
-        wordpress_url: wpPost.link,
+        target_status: target_status,
       });
     } catch (error) {
       console.error(`[Schedule] 排程文章失敗 ${article.id}:`, error);
@@ -216,6 +165,7 @@ export async function POST(request: NextRequest) {
     success: true,
     scheduled_count: successCount,
     failed_count: failedCount,
+    target_status: target_status,
     results,
   });
 }
