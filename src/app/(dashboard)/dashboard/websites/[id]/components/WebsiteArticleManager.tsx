@@ -45,6 +45,7 @@ export function WebsiteArticleManager({
     initialArticles[0] || null,
   );
   const [articlesPerDay, setArticlesPerDay] = useState<string>("1");
+  const [targetStatus, setTargetStatus] = useState<string>("publish");
   const [isScheduling, setIsScheduling] = useState(false);
 
   const handleJobCompleted = useCallback(() => {
@@ -169,6 +170,7 @@ export function WebsiteArticleManager({
         body: JSON.stringify({
           website_id: websiteId,
           articles_per_day: parseInt(articlesPerDay),
+          target_status: targetStatus,
         }),
       });
 
@@ -206,6 +208,8 @@ export function WebsiteArticleManager({
           onDelete={handleDeleteArticle}
           articlesPerDay={articlesPerDay}
           onArticlesPerDayChange={setArticlesPerDay}
+          targetStatus={targetStatus}
+          onTargetStatusChange={setTargetStatus}
           isScheduling={isScheduling}
           publishableCount={publishableArticles.length}
           onSchedulePublish={handleSchedulePublish}

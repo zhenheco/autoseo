@@ -16,6 +16,7 @@ import {
   CheckCircle,
   Loader2,
   Calendar,
+  AlertCircle,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
 import { zhTW } from "date-fns/locale";
@@ -61,6 +62,8 @@ interface WebsiteArticleListProps {
   onDelete: (id: string) => void;
   articlesPerDay: string;
   onArticlesPerDayChange: (value: string) => void;
+  targetStatus: string;
+  onTargetStatusChange: (value: string) => void;
   isScheduling: boolean;
   publishableCount: number;
   onSchedulePublish: () => void;
@@ -102,6 +105,16 @@ const statusConfig: Record<
     color: "text-green-500 bg-green-50",
     icon: CheckCircle,
   },
+  scheduled: {
+    label: "已排程",
+    color: "text-purple-500 bg-purple-50",
+    icon: Calendar,
+  },
+  publish_failed: {
+    label: "發佈失敗",
+    color: "text-red-500 bg-red-50",
+    icon: AlertCircle,
+  },
 };
 
 export function WebsiteArticleList({
@@ -112,6 +125,8 @@ export function WebsiteArticleList({
   onDelete,
   articlesPerDay,
   onArticlesPerDayChange,
+  targetStatus,
+  onTargetStatusChange,
   isScheduling,
   publishableCount,
   onSchedulePublish,
@@ -147,13 +162,13 @@ export function WebsiteArticleList({
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold">文章列表</h2>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 flex-wrap">
           <Select
             value={articlesPerDay}
             onValueChange={onArticlesPerDayChange}
             disabled={isScheduling || publishableCount === 0}
           >
-            <SelectTrigger className="w-[100px] h-8 text-xs">
+            <SelectTrigger className="w-[90px] h-8 text-xs">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -162,6 +177,19 @@ export function WebsiteArticleList({
                   每天 {n} 篇
                 </SelectItem>
               ))}
+            </SelectContent>
+          </Select>
+          <Select
+            value={targetStatus}
+            onValueChange={onTargetStatusChange}
+            disabled={isScheduling || publishableCount === 0}
+          >
+            <SelectTrigger className="w-[80px] h-8 text-xs">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="publish">發佈</SelectItem>
+              <SelectItem value="draft">草稿</SelectItem>
             </SelectContent>
           </Select>
           <Button
