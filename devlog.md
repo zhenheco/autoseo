@@ -2,6 +2,69 @@
 
 ---
 
+## 2025-12-06: 修復文章列表與網站管理數據不一致問題
+
+### 問題描述
+
+- 文章列表顯示 10 篇（從 `article_jobs` 查詢）
+- 網站管理顯示 15 篇（從 `generated_articles` 查詢）
+- 兩個頁面使用不同的數據源，導致數量不一致
+
+### 根本原因
+
+1. **數據源不一致**：文章列表用 `article_jobs`，網站管理用 `generated_articles`
+2. **重複生成問題**：6 個 job 各生成了 2 篇 `generated_articles`
+   - 原因：代碼使用 `INSERT` 而非 `UPSERT`，且無唯一約束
+   - 當任務處理超過 3 分鐘，會被 GitHub Actions 重新處理
+
+### 修復方案
+
+#### 1. 清理重複數據
+
+```sql
+DELETE FROM generated_articles
+WHERE id IN (
+  SELECT id FROM (
+    SELECT id,
+           ROW_NUMBER() OVER (PARTITION BY article_job_id ORDER BY created_at DESC) as rn
+    FROM generated_articles
+    WHERE article_job_id IS NOT NULL
+  ) t WHERE rn > 1
+);
+```
+
+刪除 6 篇重複文章。
+
+#### 2. 添加唯一約束
+
+```sql
+CREATE UNIQUE INDEX idx_generated_articles_job_id_unique
+ON generated_articles (article_job_id)
+WHERE article_job_id IS NOT NULL;
+```
+
+#### 3. 修改網站管理頁面查詢邏輯
+
+- **修改檔案**: `src/app/(dashboard)/dashboard/websites/[id]/page.tsx`
+- **變更**: 統一從 `article_jobs` 查詢，JOIN `generated_articles`
+
+#### 4. 修改 article-storage.ts 使用 UPSERT
+
+- **修改檔案**: `src/lib/services/article-storage.ts`
+- **變更**: 將 `insert()` 改為 `upsert()`，以 `article_job_id` 為衝突鍵
+
+### 修復結果
+
+| 修復前                                  | 修復後                             |
+| --------------------------------------- | ---------------------------------- |
+| `article_jobs`: 10 篇                   | `article_jobs`: 10 篇              |
+| `generated_articles`: 15 篇（6 篇重複） | `generated_articles`: 9 篇（正確） |
+| 無唯一約束                              | 有唯一約束                         |
+
+現在兩個頁面使用同一個數據源（`article_jobs`），數據一致。
+
+---
+
 ## 2025-12-05: 產業欄位功能修復
 
 ### 問題描述

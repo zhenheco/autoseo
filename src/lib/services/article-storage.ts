@@ -590,9 +590,13 @@ export class ArticleStorageService {
       keywords_count: articleData.keywords.length,
     });
 
+    // 使用 UPSERT 防止重複生成（以 article_job_id 為衝突鍵）
     const { data, error } = await this.supabase
       .from("generated_articles")
-      .insert(articleData)
+      .upsert(articleData, {
+        onConflict: "article_job_id",
+        ignoreDuplicates: false,
+      })
       .select(
         "id, title, slug, wordpress_post_id, wordpress_post_url, created_at",
       )
