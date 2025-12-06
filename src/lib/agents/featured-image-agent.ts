@@ -112,7 +112,7 @@ export class FeaturedImageAgent extends BaseAgent<
 
     const [width, height] = input.size.split("x").map(Number);
 
-    const altText = this.generateAltText(input.title, input.targetLanguage);
+    const altText = this.generateAltText(input.title);
 
     return {
       url: finalUrl,
@@ -124,69 +124,9 @@ export class FeaturedImageAgent extends BaseAgent<
     };
   }
 
-  private generateAltText(title: string, targetLanguage?: string): string {
-    const lang = targetLanguage || "zh-TW";
-
-    const altTextSuffix: Record<string, string> = {
-      "zh-TW": "精選圖片",
-      "zh-CN": "精选图片",
-      en: "Featured Image",
-      "en-US": "Featured Image",
-      "en-GB": "Featured Image",
-      ja: "アイキャッチ画像",
-      ko: "대표 이미지",
-      vi: "Hình ảnh nổi bật",
-      th: "ภาพเด่น",
-      id: "Gambar Unggulan",
-      ms: "Imej Pilihan",
-    };
-
-    const suffix =
-      altTextSuffix[lang] || altTextSuffix["en"] || "Featured Image";
-    return `${title} - ${suffix}`;
-  }
-
-  private getCulturalStyleGuide(targetLang: string): string {
-    const culturalGuides: Record<string, string> = {
-      "zh-TW": `
-Cultural Style Guide (Traditional Chinese / Taiwan):
-- Use warm, inviting colors that resonate with East Asian aesthetics
-- Consider incorporating subtle elements inspired by Taiwanese culture
-- Modern yet approachable visual style
-- Balance between traditional elegance and contemporary design`,
-      "zh-CN": `
-Cultural Style Guide (Simplified Chinese / China):
-- Use bold, dynamic colors popular in Chinese digital media
-- Consider modern Chinese design aesthetics
-- Clean, professional appearance with Asian influences
-- Contemporary visual style`,
-      ja: `
-Cultural Style Guide (Japanese):
-- Embrace minimalist aesthetics (less is more)
-- Consider subtle Japanese design principles
-- Clean lines, balanced composition
-- Refined and elegant visual approach`,
-      ko: `
-Cultural Style Guide (Korean):
-- Modern, trendy K-style aesthetics
-- Clean and polished visual design
-- Consider Korean design sensibilities
-- Fresh, contemporary look`,
-      en: `
-Cultural Style Guide (English / Western):
-- Professional Western design aesthetics
-- Bold, impactful visuals
-- Clean, modern composition
-- Universal visual appeal`,
-    };
-
-    // Default to English style guide if language not found
-    const langPrefix = targetLang.split("-")[0];
-    return (
-      culturalGuides[targetLang] ||
-      culturalGuides[langPrefix] ||
-      culturalGuides["en"]
-    );
+  private generateAltText(title: string): string {
+    // 直接使用標題作為 alt text，因為標題已經是目標語言
+    return title;
   }
 
   private buildPrompt(input: FeaturedImageInput): string {
@@ -203,8 +143,6 @@ Style: professional, modern, clean
 Color scheme: vibrant, eye-catching
 Mood: engaging, informative
 `;
-
-    const culturalGuide = this.getCulturalStyleGuide(targetLang);
 
     let contextSection = "";
     if (input.articleContext) {
@@ -235,7 +173,11 @@ Target Language/Region: ${targetLang}
 Article Title: "${input.title}"
 ${contextSection}
 ${styleGuide}
-${culturalGuide}
+
+IMPORTANT - Cultural & Visual Style:
+- This image is for a "${targetLang}" audience
+- Use visual style, colors, and design elements that are culturally appropriate and appealing for "${targetLang}" readers
+- Consider the cultural aesthetics and design preferences of the target region
 
 CRITICAL - ABSOLUTELY NO TEXT (THIS IS THE MOST IMPORTANT RULE):
 - ZERO text, words, letters, numbers, or characters of ANY language
@@ -247,7 +189,6 @@ CRITICAL - ABSOLUTELY NO TEXT (THIS IS THE MOST IMPORTANT RULE):
 Other Requirements:
 - Eye-catching and professional
 - Relevant to the article topic and its main sections
-- Create culturally appropriate visuals for the target audience (${targetLang})
 - Suitable for blog header/social media
 - High visual impact
 - Pure visual design ONLY`;
