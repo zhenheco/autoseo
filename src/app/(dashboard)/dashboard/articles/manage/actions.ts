@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { TokenBillingService } from "@/lib/billing/token-billing-service";
@@ -57,12 +57,9 @@ export async function getArticles(
   const user = await getUser();
   if (!user) return { articles: [], error: "未登入" };
 
-  // 使用 adminClient 確保 JOIN 資料正確返回（繞過 RLS）
-  // 安全性由 company_id 過濾保證
-  const supabase = createAdminClient();
+  const supabase = await createClient();
 
-  const userClient = await createClient();
-  const { data: membership } = await userClient
+  const { data: membership } = await supabase
     .from("company_members")
     .select("company_id")
     .eq("user_id", user.id)
