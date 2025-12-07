@@ -136,28 +136,8 @@ async function getWebsiteArticlesFromJobs(
   const jobs: ArticleJob[] = [];
 
   for (const job of jobsData) {
-    // 有生成文章內容的，轉換成 Article 格式
-    if (job.generated_articles && job.generated_articles.length > 0) {
-      const ga = job.generated_articles[0];
-      articles.push({
-        id: ga.id,
-        title: ga.title,
-        html_content: ga.html_content,
-        markdown_content: ga.markdown_content,
-        status: job.status, // 使用 job 的 status（確保與文章列表一致）
-        word_count: ga.word_count,
-        reading_time: ga.reading_time,
-        focus_keyword: ga.focus_keyword,
-        seo_title: ga.seo_title,
-        seo_description: ga.seo_description,
-        featured_image_url: ga.featured_image_url,
-        created_at: job.created_at,
-        updated_at: ga.updated_at,
-        published_at: job.published_at,
-        wordpress_post_url: ga.wordpress_post_url,
-      });
-    } else if (job.status === "pending" || job.status === "processing") {
-      // 還沒有生成文章的任務
+    // 正在處理中的任務 → 顯示為 job（帶進度）
+    if (job.status === "pending" || job.status === "processing") {
       jobs.push({
         id: job.id,
         keywords: job.keywords,
@@ -166,6 +146,26 @@ async function getWebsiteArticlesFromJobs(
         current_step: job.current_step,
         created_at: job.created_at,
         metadata: job.metadata,
+      });
+    } else {
+      // 其他狀態（completed/scheduled/published/failed 等）→ 顯示為文章
+      const ga = job.generated_articles?.[0];
+      articles.push({
+        id: ga?.id || job.id, // 如果沒有 GA，用 job.id
+        title: ga?.title || job.keywords?.join(", ") || "未命名文章",
+        html_content: ga?.html_content || null,
+        markdown_content: ga?.markdown_content || null,
+        status: job.status,
+        word_count: ga?.word_count || null,
+        reading_time: ga?.reading_time || null,
+        focus_keyword: ga?.focus_keyword || job.keywords?.[0] || null,
+        seo_title: ga?.seo_title || null,
+        seo_description: ga?.seo_description || null,
+        featured_image_url: ga?.featured_image_url || null,
+        created_at: job.created_at,
+        updated_at: ga?.updated_at || job.created_at,
+        published_at: job.published_at,
+        wordpress_post_url: ga?.wordpress_post_url || null,
       });
     }
   }
