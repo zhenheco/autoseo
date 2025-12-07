@@ -15,6 +15,7 @@ import {
   Shield,
   Users,
   Mail,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -63,6 +64,11 @@ const adminItems = [
     title: "聯盟管理",
     href: "/dashboard/admin/affiliates",
     icon: Users,
+  },
+  {
+    title: "可疑推薦",
+    href: "/dashboard/admin/suspicious-referrals",
+    icon: AlertTriangle,
   },
 ];
 
