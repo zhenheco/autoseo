@@ -21,6 +21,17 @@ export async function createWebsite(formData: FormData) {
   const wpUsername = formData.get("wpUsername") as string;
   const wpPassword = formData.get("wpPassword") as string;
 
+  // 文章生成設定
+  const industry = formData.get("industry") as string;
+  const region = formData.get("region") as string;
+  const language = formData.get("language") as string;
+
+  // 品牌聲音設定
+  const brandName = formData.get("brandName") as string;
+  const toneOfVoice = formData.get("toneOfVoice") as string;
+  const targetAudience = formData.get("targetAudience") as string;
+  const writingStyle = formData.get("writingStyle") as string;
+
   if (!companyId || !siteName || !siteUrl || !wpUsername || !wpPassword) {
     redirect(
       "/dashboard/websites/new?error=" + encodeURIComponent("缺少必要欄位"),
@@ -99,6 +110,17 @@ export async function createWebsite(formData: FormData) {
     wp_app_password: wpPassword, // TODO: 應該加密儲存
     wp_enabled: true, // 連線驗證成功，啟用 WordPress 發佈
     is_active: true,
+    // 文章生成設定
+    industry: industry || null,
+    region: region || null,
+    language: language || "zh-TW",
+    // 品牌聲音設定
+    brand_voice: {
+      brand_name: brandName || "",
+      tone_of_voice: toneOfVoice || "專業親切",
+      target_audience: targetAudience || "",
+      writing_style: writingStyle || "專業正式",
+    },
   });
 
   if (error) {
