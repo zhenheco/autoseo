@@ -4,6 +4,25 @@ import { createClient } from "@supabase/supabase-js";
 import { ParallelOrchestrator } from "../src/lib/agents/orchestrator";
 import type { Database } from "../src/types/database.types";
 
+const MAX_RETRIES = 2;
+
+/**
+ * 判斷錯誤是否可重試
+ * 不可重試的錯誤包括：認證錯誤、無效請求等
+ */
+function isRetryableJobError(errorMessage: string): boolean {
+  const nonRetryablePatterns = [
+    "Invalid API key",
+    "Unauthorized",
+    "invalid_request",
+    "company_id is required",
+    "website_id is required",
+  ];
+  return !nonRetryablePatterns.some((p) =>
+    errorMessage.toLowerCase().includes(p.toLowerCase()),
+  );
+}
+
 async function main() {
   const supabase = createClient<Database>(
     process.env.SUPABASE_URL!,
@@ -120,17 +139,47 @@ async function main() {
     } catch (err) {
       console.error(`[Process Jobs] ❌ 任務 ${job.id} 失敗:`, err);
 
-      await supabase
-        .from("article_jobs")
-        .update({
-          status: "failed",
-          metadata: {
-            ...((job.metadata as Record<string, unknown>) || {}),
-            error: err instanceof Error ? err.message : String(err),
-            failed_at: new Date().toISOString(),
-          },
-        })
-        .eq("id", job.id);
+      const currentMetadata = (job.metadata as Record<string, unknown>) || {};
+      const retryCount = (currentMetadata.retry_count as number) || 0;
+      const errorMessage = err instanceof Error ? err.message : String(err);
+
+      // 檢查是否可重試且未超過最大重試次數
+      if (isRetryableJobError(errorMessage) && retryCount < MAX_RETRIES) {
+        console.log(
+          `[Process Jobs] 🔄 排程重試 ${retryCount + 1}/${MAX_RETRIES} - 任務 ${job.id}`,
+        );
+        await supabase
+          .from("article_jobs")
+          .update({
+            status: "pending",
+            started_at: null,
+            metadata: {
+              ...currentMetadata,
+              retry_count: retryCount + 1,
+              last_error: errorMessage,
+              last_retry_at: new Date().toISOString(),
+            },
+          })
+          .eq("id", job.id);
+      } else {
+        // 不可重試或已達最大重試次數，標記為失敗
+        const reason = !isRetryableJobError(errorMessage)
+          ? "不可重試的錯誤"
+          : `已重試 ${retryCount} 次`;
+        console.log(`[Process Jobs] ❌ 任務 ${job.id} 標記為失敗（${reason}）`);
+        await supabase
+          .from("article_jobs")
+          .update({
+            status: "failed",
+            metadata: {
+              ...currentMetadata,
+              error: errorMessage,
+              failed_at: new Date().toISOString(),
+              retry_count: retryCount,
+            },
+          })
+          .eq("id", job.id);
+      }
 
       return { success: false, jobId: job.id };
     }

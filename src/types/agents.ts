@@ -325,7 +325,7 @@ export interface GeneratedImage {
 }
 
 export interface ImageOutput {
-  featuredImage: GeneratedImage;
+  featuredImage: GeneratedImage | null;
   contentImages: GeneratedImage[];
   executionInfo: {
     model?: string;
@@ -354,11 +354,12 @@ export interface FeaturedImageInput {
 }
 
 export interface FeaturedImageOutput {
-  image: GeneratedImage;
+  image: GeneratedImage | null;
   executionInfo: {
     model: string;
     executionTime: number;
     cost: number;
+    skippedReason?: string;
   };
 }
 
