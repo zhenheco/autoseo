@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { getOpenRouterClient } from "@/lib/openrouter/client";
+import { getDeepSeekClient } from "@/lib/deepseek/client";
 import {
   buildGeminiApiUrl,
   buildGeminiHeaders,
@@ -13,7 +14,7 @@ async function callGeminiDirectAPI(prompt: string): Promise<string> {
     throw new Error("GEMINI_API_KEY is not set");
   }
 
-  const modelName = "gemini-2.5-flash";
+  const modelName = "gemini-2.0-flash";
   // Gateway 模式使用 Gateway URL，直連模式使用官方 URL（帶 key 參數）
   const geminiUrl = isGatewayEnabled()
     ? buildGeminiApiUrl(modelName, "generateContent")
@@ -161,8 +162,29 @@ ${langConfig.instruction}
           (geminiError as Error).message,
         );
 
-        responseContent = await callGeminiDirectAPI(prompt);
-        console.log("[preview-titles] ✅ Gemini Direct 成功");
+        // Layer 3: Gemini Direct API
+        try {
+          responseContent = await callGeminiDirectAPI(prompt);
+          console.log("[preview-titles] ✅ Gemini Direct 成功");
+        } catch (geminiDirectError) {
+          console.warn(
+            "[preview-titles] ⚠️ Gemini Direct 失敗:",
+            (geminiDirectError as Error).message,
+          );
+
+          // Layer 4: DeepSeek Chat (透過 AI Gateway)
+          const deepseekClient = getDeepSeekClient();
+          const deepseekResponse = await deepseekClient.complete({
+            model: "deepseek-chat",
+            prompt,
+            temperature: 0.8,
+            max_tokens: 500,
+          });
+          responseContent = deepseekResponse.content;
+          console.log(
+            "[preview-titles] ✅ DeepSeek Chat 成功 (via AI Gateway)",
+          );
+        }
       }
     }
 
