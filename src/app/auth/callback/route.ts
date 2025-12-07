@@ -4,6 +4,10 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
 import { generateReferralCode } from "@/lib/referral";
 import { cookies } from "next/headers";
+import {
+  performFraudCheckAndRecord,
+  saveDeviceFingerprint,
+} from "@/lib/fraud-detection";
 
 function generateSlug(email: string): string {
   const username = email.split("@")[0];
@@ -72,6 +76,9 @@ export async function GET(request: Request) {
           const cookieStore = await cookies();
           const affiliateRef = cookieStore.get("affiliate_ref")?.value;
 
+          // 處理推薦碼和詐騙偵測
+          const deviceFingerprint = cookieStore.get("device_fp")?.value;
+
           if (affiliateRef) {
             const { data: referrerCode } = await adminClient
               .from("referral_codes")
@@ -80,13 +87,33 @@ export async function GET(request: Request) {
               .single();
 
             if (referrerCode) {
-              await adminClient.from("referrals").insert({
-                referrer_company_id: referrerCode.company_id,
-                referred_company_id: company.id,
-                referral_code: affiliateRef,
-                status: "pending",
-              });
+              // 建立推薦關係
+              const { data: referral } = await adminClient
+                .from("referrals")
+                .insert({
+                  referrer_company_id: referrerCode.company_id,
+                  referred_company_id: company.id,
+                  referral_code: affiliateRef,
+                  status: "pending",
+                })
+                .select("id")
+                .single();
+
+              // 執行詐騙偵測（非同步，不阻塞）
+              performFraudCheckAndRecord({
+                referralId: referral?.id,
+                referrerCompanyId: referrerCode.company_id,
+                referredCompanyId: company.id,
+                fingerprintHash: deviceFingerprint,
+              }).catch((err) => console.error("[OAuth] 詐騙偵測失敗:", err));
             }
+          }
+
+          // 儲存裝置指紋與帳號關聯（即使沒有推薦碼）
+          if (deviceFingerprint) {
+            saveDeviceFingerprint(deviceFingerprint, company.id).catch((err) =>
+              console.error("[OAuth] 儲存指紋失敗:", err),
+            );
           }
 
           try {

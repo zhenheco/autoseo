@@ -48,6 +48,7 @@
     "@smithy/node-http-handler": "^4.4.5",
     "@supabase/ssr": "^0.7.0",
     "@supabase/supabase-js": "^2.76.1",
+    "@thumbmarkjs/thumbmarkjs": "^1.5.1",
     "@tiptap/extension-image": "^3.10.7",
     "@tiptap/extension-link": "^3.10.7",
     "@tiptap/pm": "^3.10.7",
