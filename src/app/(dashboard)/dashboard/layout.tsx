@@ -22,6 +22,7 @@ import { LogoutButton } from "@/components/dashboard/logout-button";
 import { TokenBalanceDisplay } from "@/components/billing/TokenBalanceDisplay";
 import { NewArticleButton } from "@/components/articles/NewArticleButton";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { MobileBottomNav } from "@/components/dashboard/mobile-bottom-nav";
 
 async function performLogout() {
   "use server";
@@ -42,19 +43,31 @@ export default async function DashboardLayout({
 
   return (
     <DashboardLayoutClient>
-      <div className="h-screen overflow-hidden bg-background">
+      <div className="min-h-screen bg-background">
+        {/* 桌面版側邊欄（手機隱藏） */}
         <Sidebar userEmail={user.email} />
 
+        {/* 手機版底部導航 */}
+        <MobileBottomNav userEmail={user.email} />
+
         <MainContent>
-          <div className="h-screen flex flex-col overflow-hidden">
-            <header className="flex-shrink-0 z-30 h-16 border-b border-border bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60">
-              <div className="flex h-full items-center justify-between px-6">
-                <div className="flex items-center gap-4 flex-1"></div>
+          <div className="min-h-screen flex flex-col">
+            <header className="sticky top-0 flex-shrink-0 z-30 h-14 md:h-16 border-b border-border bg-background/95 backdrop-blur-sm supports-[backdrop-filter]:bg-background/60">
+              <div className="flex h-full items-center justify-between px-4 md:px-6">
+                {/* 手機版顯示 Logo */}
+                <div className="flex items-center gap-2 md:hidden">
+                  <span className="text-lg font-bold">1waySEO</span>
+                </div>
+                <div className="hidden md:flex items-center gap-4 flex-1"></div>
 
-                <div className="flex items-center gap-3">
-                  <NewArticleButton />
+                <div className="flex items-center gap-2 md:gap-3">
+                  {/* 新文章按鈕 - 手機版隱藏（已在底部導航） */}
+                  <div className="hidden md:block">
+                    <NewArticleButton />
+                  </div>
 
-                  <Link href="/dashboard/referrals">
+                  {/* 好友推薦 - 手機版隱藏 */}
+                  <Link href="/dashboard/referrals" className="hidden md:block">
                     <Button variant="ghost" size="sm" className="gap-2">
                       <Gift className="h-4 w-4" />
                       <span className="hidden sm:inline">好友推薦</span>
@@ -65,7 +78,7 @@ export default async function DashboardLayout({
 
                   <ThemeToggle />
 
-                  <div className="h-6 w-px bg-border" />
+                  <div className="hidden md:block h-6 w-px bg-border" />
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
@@ -113,7 +126,7 @@ export default async function DashboardLayout({
               </div>
             </header>
 
-            <main className="flex-1 overflow-auto p-6">{children}</main>
+            <main className="flex-1 overflow-auto p-4 md:p-6">{children}</main>
           </div>
         </MainContent>
       </div>

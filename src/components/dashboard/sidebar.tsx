@@ -81,6 +81,8 @@ export function Sidebar({ userEmail = "user@example.com" }: SidebarProps) {
       className={cn(
         "fixed left-0 top-0 z-40 h-screen transition-all duration-300 bg-sidebar border-r border-sidebar-foreground/10",
         collapsed ? "w-20" : "w-48",
+        // 手機版隱藏，平板以上顯示
+        "hidden md:block",
       )}
     >
       <div className="flex h-full flex-col">

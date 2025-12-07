@@ -101,89 +101,163 @@ export function ArticleList({
     });
   };
 
+  // 手機版卡片
+  const MobileCard = ({ article }: { article: ArticleWithWebsite }) => (
+    <div
+      className={`p-3 border rounded-lg cursor-pointer transition-colors ${
+        previewArticleId === article.id
+          ? "bg-muted border-primary"
+          : "hover:bg-muted/50"
+      }`}
+      onClick={() => setPreviewArticleId(article.id)}
+    >
+      <div className="flex items-start gap-3">
+        {canSelect(article.status) && (
+          <Checkbox
+            checked={isSelected(article.id)}
+            onCheckedChange={() => toggleSelection(article.id)}
+            disabled={isScheduling}
+            onClick={(e) => e.stopPropagation()}
+            className="mt-1"
+          />
+        )}
+        <div className="flex-1 min-w-0">
+          <p className="font-medium text-sm line-clamp-2">
+            {article.generated_articles?.[0]?.title ||
+              article.keywords?.join(", ") ||
+              "未命名"}
+          </p>
+          <div className="flex items-center gap-2 mt-2 flex-wrap">
+            {getStatusBadge(article.status)}
+            {article.status === "scheduled" && article.scheduled_publish_at && (
+              <span className="text-xs text-muted-foreground flex items-center gap-1">
+                <CalendarClock className="h-3 w-3" />
+                {formatScheduledDate(article.scheduled_publish_at)}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center justify-between mt-2 text-xs text-muted-foreground">
+            <span>{formatDate(article.created_at)}</span>
+            {article.website_configs && (
+              <div className="flex items-center gap-1">
+                <Globe className="h-3 w-3" />
+                <span>{article.website_configs.website_name}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
-    <div className="rounded-md border">
-      <Table>
-        <TableHeader>
-          <TableRow>
-            <TableHead className="w-[32px] px-2">
-              {selectableArticleIds.length > 0 && (
-                <Checkbox
-                  checked={allSelected}
-                  onCheckedChange={() => selectAll(selectableArticleIds)}
-                  disabled={isScheduling}
-                />
-              )}
-            </TableHead>
-            <TableHead className="px-2">標題</TableHead>
-            <TableHead className="w-[90px] px-2">目標網站</TableHead>
-            <TableHead className="w-[70px] px-2">狀態</TableHead>
-            <TableHead className="w-[85px] px-2">建立時間</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {articles.length === 0 ? (
+    <>
+      {/* 手機版：卡片列表 */}
+      <div className="lg:hidden space-y-2">
+        {/* 全選 */}
+        {selectableArticleIds.length > 0 && (
+          <div className="flex items-center gap-2 p-2 border rounded-lg bg-muted/30">
+            <Checkbox
+              checked={allSelected}
+              onCheckedChange={() => selectAll(selectableArticleIds)}
+              disabled={isScheduling}
+            />
+            <span className="text-sm text-muted-foreground">全選</span>
+          </div>
+        )}
+        {articles.length === 0 ? (
+          <div className="text-center py-8 text-muted-foreground">尚無文章</div>
+        ) : (
+          articles.map((article) => (
+            <MobileCard key={article.id} article={article} />
+          ))
+        )}
+      </div>
+
+      {/* 桌面版：表格 */}
+      <div className="hidden lg:block rounded-md border">
+        <Table>
+          <TableHeader>
             <TableRow>
-              <TableCell colSpan={5} className="h-24 text-center">
-                尚無文章
-              </TableCell>
+              <TableHead className="w-[32px] px-2">
+                {selectableArticleIds.length > 0 && (
+                  <Checkbox
+                    checked={allSelected}
+                    onCheckedChange={() => selectAll(selectableArticleIds)}
+                    disabled={isScheduling}
+                  />
+                )}
+              </TableHead>
+              <TableHead className="px-2">標題</TableHead>
+              <TableHead className="w-[90px] px-2">目標網站</TableHead>
+              <TableHead className="w-[70px] px-2">狀態</TableHead>
+              <TableHead className="w-[85px] px-2">建立時間</TableHead>
             </TableRow>
-          ) : (
-            articles.map((article) => (
-              <TableRow
-                key={article.id}
-                className={`cursor-pointer transition-colors ${previewArticleId === article.id ? "bg-muted" : "hover:bg-muted/50"}`}
-                onClick={() => setPreviewArticleId(article.id)}
-              >
-                <TableCell className="py-2 px-2">
-                  {canSelect(article.status) && (
-                    <Checkbox
-                      checked={isSelected(article.id)}
-                      onCheckedChange={() => toggleSelection(article.id)}
-                      disabled={isScheduling}
-                      onClick={(e) => e.stopPropagation()}
-                    />
-                  )}
-                </TableCell>
-                <TableCell className="py-2 px-2 text-sm font-medium">
-                  {article.generated_articles?.[0]?.title ||
-                    article.keywords?.join(", ") ||
-                    "未命名"}
-                </TableCell>
-                <TableCell className="py-2 px-2">
-                  {article.website_configs ? (
-                    <div className="flex items-center gap-1">
-                      <Globe className="h-3 w-3" />
-                      <span className="text-xs">
-                        {article.website_configs.website_name}
-                      </span>
-                    </div>
-                  ) : (
-                    <span className="text-muted-foreground text-xs">
-                      未指定
-                    </span>
-                  )}
-                </TableCell>
-                <TableCell className="py-2 px-2">
-                  <div className="flex flex-col gap-0.5">
-                    {getStatusBadge(article.status)}
-                    {article.status === "scheduled" &&
-                      article.scheduled_publish_at && (
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <CalendarClock className="h-3 w-3" />
-                          {formatScheduledDate(article.scheduled_publish_at)}
-                        </span>
-                      )}
-                  </div>
-                </TableCell>
-                <TableCell className="py-2 px-2 text-xs text-muted-foreground">
-                  {formatDate(article.created_at)}
+          </TableHeader>
+          <TableBody>
+            {articles.length === 0 ? (
+              <TableRow>
+                <TableCell colSpan={5} className="h-24 text-center">
+                  尚無文章
                 </TableCell>
               </TableRow>
-            ))
-          )}
-        </TableBody>
-      </Table>
-    </div>
+            ) : (
+              articles.map((article) => (
+                <TableRow
+                  key={article.id}
+                  className={`cursor-pointer transition-colors ${previewArticleId === article.id ? "bg-muted" : "hover:bg-muted/50"}`}
+                  onClick={() => setPreviewArticleId(article.id)}
+                >
+                  <TableCell className="py-2 px-2">
+                    {canSelect(article.status) && (
+                      <Checkbox
+                        checked={isSelected(article.id)}
+                        onCheckedChange={() => toggleSelection(article.id)}
+                        disabled={isScheduling}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    )}
+                  </TableCell>
+                  <TableCell className="py-2 px-2 text-sm font-medium">
+                    {article.generated_articles?.[0]?.title ||
+                      article.keywords?.join(", ") ||
+                      "未命名"}
+                  </TableCell>
+                  <TableCell className="py-2 px-2">
+                    {article.website_configs ? (
+                      <div className="flex items-center gap-1">
+                        <Globe className="h-3 w-3" />
+                        <span className="text-xs">
+                          {article.website_configs.website_name}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">
+                        未指定
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className="py-2 px-2">
+                    <div className="flex flex-col gap-0.5">
+                      {getStatusBadge(article.status)}
+                      {article.status === "scheduled" &&
+                        article.scheduled_publish_at && (
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <CalendarClock className="h-3 w-3" />
+                            {formatScheduledDate(article.scheduled_publish_at)}
+                          </span>
+                        )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-2 px-2 text-xs text-muted-foreground">
+                    {formatDate(article.created_at)}
+                  </TableCell>
+                </TableRow>
+              ))
+            )}
+          </TableBody>
+        </Table>
+      </div>
+    </>
   );
 }
