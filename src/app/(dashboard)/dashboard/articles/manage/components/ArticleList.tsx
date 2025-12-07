@@ -177,7 +177,7 @@ export function ArticleList({
       </div>
 
       {/* 桌面版：表格 */}
-      <div className="hidden lg:block rounded-md border">
+      <div className="hidden lg:block rounded-md border overflow-auto max-h-full">
         <Table>
           <TableHeader>
             <TableRow>
