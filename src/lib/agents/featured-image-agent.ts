@@ -39,18 +39,37 @@ export class FeaturedImageAgent extends BaseAgent<
       `[FeaturedImageAgent] 🎨 Generating featured image with model: ${model}`,
     );
 
-    const image = await this.generateFeaturedImage(input, model);
+    try {
+      const image = await this.generateFeaturedImage(input, model);
+      const cost = this.calculateCost(model, input.size);
 
-    const cost = this.calculateCost(model, input.size);
-
-    return {
-      image,
-      executionInfo: {
-        model,
-        executionTime: this.startTime ? Date.now() - this.startTime : 0,
-        cost,
-      },
-    };
+      return {
+        image,
+        executionInfo: {
+          model,
+          executionTime: this.startTime ? Date.now() - this.startTime : 0,
+          cost,
+        },
+      };
+    } catch (error) {
+      const err = error as Error;
+      // 如果是內容安全過濾器拒絕，返回 null 圖片而非失敗
+      if (err.message.includes("[NO_IMAGE]")) {
+        console.warn(
+          `[FeaturedImageAgent] ⚠️ 圖片生成被拒（內容安全過濾器），繼續無精選圖片`,
+        );
+        return {
+          image: null,
+          executionInfo: {
+            model,
+            executionTime: this.startTime ? Date.now() - this.startTime : 0,
+            cost: 0,
+            skippedReason: "content_safety_filter",
+          },
+        };
+      }
+      throw error;
+    }
   }
 
   private async generateFeaturedImage(

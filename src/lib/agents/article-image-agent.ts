@@ -116,6 +116,12 @@ export class ArticleImageAgent extends BaseAgent<
           `[ArticleImageAgent] ⚠️ Attempt ${attempt} failed: ${lastError.message}`,
         );
 
+        // NO_IMAGE 錯誤是內容安全過濾器拒絕，不需要重試
+        if (lastError.message.includes("[NO_IMAGE]")) {
+          console.warn(`[ArticleImageAgent] ⚠️ 內容安全過濾器拒絕，跳過此圖片`);
+          throw lastError;
+        }
+
         if (attempt < maxRetries) {
           const delays = [5000, 10000, 20000];
           const delay = delays[attempt - 1] || 20000;
