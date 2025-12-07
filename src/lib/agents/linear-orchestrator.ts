@@ -511,7 +511,7 @@ export class LinearOrchestrator {
 
     const agentConfig = context.getAgentConfig();
     const featuredImageModel =
-      agentConfig.featured_image_model || "gemini-2.5-flash-image";
+      agentConfig.featured_image_model || "gemini-3-pro-image-preview";
     const contentImageModel =
       agentConfig.content_image_model || "gpt-image-1-mini";
 
@@ -1357,7 +1357,7 @@ export class LinearOrchestrator {
       strategy_model: "deepseek-chat",
       writing_model: "deepseek-chat",
       image_model: "gemini-imagen",
-      featured_image_model: "gemini-2.5-flash-image",
+      featured_image_model: "gemini-3-pro-image-preview",
       content_image_model: "gpt-image-1-mini",
       research_temperature: 0.7,
       strategy_temperature: 0.7,
