@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, createContext, useContext, ReactNode } from "react";
+import { cn } from "@/lib/utils";
 
 interface SidebarContextType {
   collapsed: boolean;
@@ -29,8 +30,13 @@ export function MainContent({ children }: { children: ReactNode }) {
 
   return (
     <div
-      className="transition-all duration-300"
-      style={{ paddingLeft: collapsed ? "80px" : "192px" }}
+      className={cn(
+        "transition-all duration-300",
+        // 手機版：無左側 padding，有底部 padding（給底部導航空間）
+        "pb-16 md:pb-0",
+        // 平板以上：根據 sidebar 狀態調整左側 padding
+        collapsed ? "md:pl-20" : "md:pl-48",
+      )}
     >
       {children}
     </div>

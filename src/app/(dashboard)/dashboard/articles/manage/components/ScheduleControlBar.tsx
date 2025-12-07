@@ -223,7 +223,9 @@ export function ScheduleControlBar({
 
   return (
     <div className="border rounded-lg p-3 mb-4 bg-muted/30">
-      <div className="flex items-center gap-3">
+      {/* 手機版：垂直堆疊 */}
+      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-3">
+        {/* 每日篇數設定 */}
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground whitespace-nowrap">
             每日
@@ -233,7 +235,7 @@ export function ScheduleControlBar({
             onValueChange={(v) => setArticlesPerDay(parseInt(v))}
             disabled={isScheduling}
           >
-            <SelectTrigger className="w-[60px] h-8">
+            <SelectTrigger className="w-[70px] h-10 lg:h-8">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -249,92 +251,95 @@ export function ScheduleControlBar({
           </span>
         </div>
 
-        <Button
-          size="sm"
-          onClick={handleSchedule}
-          disabled={
-            isScheduling ||
-            isCancelling ||
-            isDeleting ||
-            selectedCount === 0 ||
-            !websiteId
-          }
-          className="whitespace-nowrap"
-        >
-          {isScheduling ? (
-            <>
-              <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-              排程中...
-            </>
-          ) : (
-            <>
-              <CalendarClock className="mr-1 h-3 w-3" />
-              排程
-            </>
-          )}
-        </Button>
-
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={handleCancelSchedule}
-          disabled={
-            isScheduling || isCancelling || isDeleting || selectedCount === 0
-          }
-          className="whitespace-nowrap"
-        >
-          {isCancelling ? (
-            <>
-              <Loader2 className="mr-1 h-3 w-3 animate-spin" />
-              取消中...
-            </>
-          ) : (
-            <>
-              <XCircle className="mr-1 h-3 w-3" />
-              取消排程
-            </>
-          )}
-        </Button>
-
-        {selectedCancellableIds.length > 0 && (
+        {/* 按鈕區域 - 手機版橫向滾動或換行 */}
+        <div className="flex flex-wrap gap-2 lg:flex-nowrap lg:gap-3">
           <Button
             size="sm"
-            variant="outline"
-            onClick={() => setCancelGenerationDialogOpen(true)}
+            onClick={handleSchedule}
             disabled={
               isScheduling ||
               isCancelling ||
-              isCancellingGeneration ||
-              isDeleting
+              isDeleting ||
+              selectedCount === 0 ||
+              !websiteId
             }
-            className="whitespace-nowrap border-orange-300 text-orange-600 hover:bg-orange-50"
+            className="whitespace-nowrap h-10 px-4 lg:h-8 lg:px-3"
           >
-            {isCancellingGeneration ? (
+            {isScheduling ? (
               <>
-                <Loader2 className="mr-1 h-3 w-3 animate-spin" />
+                <Loader2 className="mr-1 h-4 w-4 lg:h-3 lg:w-3 animate-spin" />
+                排程中...
+              </>
+            ) : (
+              <>
+                <CalendarClock className="mr-1 h-4 w-4 lg:h-3 lg:w-3" />
+                排程
+              </>
+            )}
+          </Button>
+
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={handleCancelSchedule}
+            disabled={
+              isScheduling || isCancelling || isDeleting || selectedCount === 0
+            }
+            className="whitespace-nowrap h-10 px-4 lg:h-8 lg:px-3"
+          >
+            {isCancelling ? (
+              <>
+                <Loader2 className="mr-1 h-4 w-4 lg:h-3 lg:w-3 animate-spin" />
                 取消中...
               </>
             ) : (
               <>
-                <StopCircle className="mr-1 h-3 w-3" />
-                取消生成 ({selectedCancellableIds.length})
+                <XCircle className="mr-1 h-4 w-4 lg:h-3 lg:w-3" />
+                取消排程
               </>
             )}
           </Button>
-        )}
 
-        <Button
-          size="sm"
-          variant="destructive"
-          onClick={() => setDeleteDialogOpen(true)}
-          disabled={
-            isScheduling || isCancelling || isDeleting || selectedCount === 0
-          }
-          className="whitespace-nowrap"
-        >
-          <Trash2 className="mr-1 h-3 w-3" />
-          刪除
-        </Button>
+          {selectedCancellableIds.length > 0 && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setCancelGenerationDialogOpen(true)}
+              disabled={
+                isScheduling ||
+                isCancelling ||
+                isCancellingGeneration ||
+                isDeleting
+              }
+              className="whitespace-nowrap h-10 px-4 lg:h-8 lg:px-3 border-orange-300 text-orange-600 hover:bg-orange-50"
+            >
+              {isCancellingGeneration ? (
+                <>
+                  <Loader2 className="mr-1 h-4 w-4 lg:h-3 lg:w-3 animate-spin" />
+                  取消中...
+                </>
+              ) : (
+                <>
+                  <StopCircle className="mr-1 h-4 w-4 lg:h-3 lg:w-3" />
+                  取消生成 ({selectedCancellableIds.length})
+                </>
+              )}
+            </Button>
+          )}
+
+          <Button
+            size="sm"
+            variant="destructive"
+            onClick={() => setDeleteDialogOpen(true)}
+            disabled={
+              isScheduling || isCancelling || isDeleting || selectedCount === 0
+            }
+            className="whitespace-nowrap h-10 px-4 lg:h-8 lg:px-3"
+          >
+            <Trash2 className="mr-1 h-4 w-4 lg:h-3 lg:w-3" />
+            刪除
+          </Button>
+        </div>
 
         {error && <p className="text-sm text-destructive">{error}</p>}
       </div>

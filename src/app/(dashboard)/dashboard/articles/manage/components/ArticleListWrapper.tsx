@@ -18,10 +18,19 @@ function PageHeader({ filters }: { filters?: ReactNode }) {
   const { websiteId, setWebsiteId, isScheduling } = useScheduleContext();
 
   return (
-    <div className="mb-4 flex items-center gap-3">
-      <h1 className="text-xl font-bold whitespace-nowrap">文章管理</h1>
-      <div className="flex items-center gap-2">
-        <div className="w-[160px]">
+    <div className="mb-4 space-y-3">
+      {/* 標題列 */}
+      <div className="flex items-center justify-between gap-3">
+        <h1 className="text-lg md:text-xl font-bold whitespace-nowrap">
+          文章管理
+        </h1>
+        {/* 手機版篩選器放在標題旁 */}
+        <div className="md:hidden">{filters}</div>
+      </div>
+
+      {/* 網站選擇器 */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+        <div className="w-full sm:w-[160px]">
           <WebsiteSelector
             value={websiteId}
             onChange={setWebsiteId}
@@ -32,7 +41,8 @@ function PageHeader({ filters }: { filters?: ReactNode }) {
         <span className="text-orange-500 text-xs whitespace-nowrap">
           (選擇目標網站)
         </span>
-        {filters}
+        {/* 桌面版篩選器 */}
+        <div className="hidden md:block">{filters}</div>
       </div>
     </div>
   );
@@ -78,8 +88,13 @@ export function ArticleListWrapper({
   return (
     <ScheduleProvider>
       <PageHeader filters={filters} />
-      <div className="flex gap-3 h-[calc(100vh-160px)]">
-        <div className="w-[45%] min-w-0 overflow-y-auto">
+      {/*
+        手機版：單欄，只顯示文章列表（預覽在點擊後以 modal 或新頁面顯示）
+        平板以上：左右雙欄
+      */}
+      <div className="flex flex-col lg:flex-row gap-3 lg:h-[calc(100vh-180px)]">
+        {/* 文章列表 */}
+        <div className="w-full lg:w-[45%] min-w-0 lg:overflow-y-auto">
           <ScheduleControlBar
             schedulableArticleIds={schedulableArticleIds}
             cancellableArticleIds={cancellableArticleIds}
@@ -90,7 +105,8 @@ export function ArticleListWrapper({
             selectableArticleIds={selectableArticleIds}
           />
         </div>
-        <div className="w-[55%] shrink-0 overflow-hidden flex flex-col">
+        {/* 預覽區域 - 手機版隱藏 */}
+        <div className="hidden lg:flex lg:w-[55%] shrink-0 overflow-hidden flex-col">
           {children}
         </div>
       </div>
