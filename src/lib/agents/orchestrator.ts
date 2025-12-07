@@ -1005,7 +1005,7 @@ export class ParallelOrchestrator {
     if (!strategyOutput) throw new Error("Strategy output is required");
 
     const featuredImageModel =
-      agentConfig.featured_image_model || "gemini-2.5-flash-image";
+      agentConfig.featured_image_model || "gemini-3-pro-image-preview";
     const contentImageModel =
       agentConfig.content_image_model || "gpt-image-1-mini";
 
