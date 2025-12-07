@@ -186,3 +186,66 @@ function getRoleDescription(role: string): string {
   };
   return descriptions[role] || "團隊成員";
 }
+
+interface ScheduleAlertEmailParams {
+  to: string;
+  companyName: string;
+  daysRemaining: number;
+  alertLevel: 7 | 3 | 1;
+}
+
+export async function sendScheduleAlertEmail({
+  to,
+  companyName,
+  daysRemaining,
+  alertLevel,
+}: ScheduleAlertEmailParams): Promise<boolean> {
+  const colors: Record<number, { bg: string; border: string; text: string }> = {
+    7: { bg: "#FEF3C7", border: "#F59E0B", text: "#B45309" }, // 黃色
+    3: { bg: "#FED7AA", border: "#EA580C", text: "#C2410C" }, // 橘色
+    1: { bg: "#FEE2E2", border: "#DC2626", text: "#991B1B" }, // 紅色
+  };
+
+  const c = colors[alertLevel];
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://1wayseo.com";
+
+  const subject = `${alertLevel}天警告：再過 ${daysRemaining} 天就沒有排程文章囉！`;
+
+  const html = `
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5;">
+  <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <div style="background-color: ${c.bg}; border-left: 4px solid ${c.border}; padding: 20px;">
+      <h2 style="color: ${c.text}; margin: 0 0 10px 0;">${alertLevel}天警告</h2>
+      <p style="color: #374151; margin: 0; font-size: 16px;">
+        再過 <strong>${daysRemaining}</strong> 天就沒有排程文章囉！
+      </p>
+    </div>
+    <div style="padding: 20px;">
+      <p style="color: #4B5563; line-height: 1.6;">
+        您的公司「<strong>${companyName}</strong>」的排程文章即將用盡。
+      </p>
+      <p style="color: #4B5563; line-height: 1.6;">
+        快來補充新文章，確保網站持續有新內容發布！
+      </p>
+      <div style="text-align: center; margin-top: 24px;">
+        <a href="${appUrl}/dashboard/articles/manage"
+           style="display: inline-block; background-color: #2563EB; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500;">
+          前往補充文章
+        </a>
+      </div>
+    </div>
+    <div style="background-color: #F9FAFB; padding: 16px 20px; text-align: center; color: #6B7280; font-size: 12px;">
+      此郵件由 1WaySEO 自動發送
+    </div>
+  </div>
+</body>
+</html>
+  `;
+
+  return sendEmail({ to, subject, html });
+}
