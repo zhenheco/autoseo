@@ -125,7 +125,7 @@ export function ArticleList({
         )}
         <div className="flex-1 min-w-0">
           <p className="font-medium text-sm line-clamp-2">
-            {article.generated_articles?.[0]?.title ||
+            {article.generated_articles?.title ||
               article.keywords?.join(", ") ||
               "未命名"}
           </p>
@@ -221,7 +221,7 @@ export function ArticleList({
                     )}
                   </TableCell>
                   <TableCell className="py-2 px-2 text-sm font-medium">
-                    {article.generated_articles?.[0]?.title ||
+                    {article.generated_articles?.title ||
                       article.keywords?.join(", ") ||
                       "未命名"}
                   </TableCell>

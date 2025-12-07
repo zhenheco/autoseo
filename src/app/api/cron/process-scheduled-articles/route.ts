@@ -90,7 +90,7 @@ export async function GET(request: NextRequest) {
   for (const article of articles) {
     results.processed++;
     const website = article.website_configs;
-    const generatedArticle = article.generated_articles?.[0];
+    const generatedArticle = article.generated_articles;
 
     if (!website) {
       await handlePublishError(
