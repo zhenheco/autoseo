@@ -304,8 +304,30 @@ export class WordPressClient {
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`創建分類失敗: ${response.status} - ${error}`);
+      const errorText = await response.text();
+      try {
+        const errorJson = JSON.parse(errorText);
+        // 處理分類已存在的情況：使用已存在的分類 ID
+        if (errorJson.code === "term_exists" && errorJson.data?.term_id) {
+          console.log(
+            "[WordPress] 分類已存在，使用現有 ID:",
+            errorJson.data.term_id,
+          );
+          // 只返回必要的 id，ensureTaxonomies() 只使用 id 欄位
+          return {
+            id: errorJson.data.term_id,
+            name,
+            slug: data.slug,
+            count: 0,
+            description: "",
+            link: "",
+            taxonomy: "category",
+          } as WordPressTaxonomy;
+        }
+      } catch {
+        // 無法解析 JSON，繼續拋出原始錯誤
+      }
+      throw new Error(`創建分類失敗: ${response.status} - ${errorText}`);
     }
 
     const category = await response.json();
@@ -357,8 +379,30 @@ export class WordPressClient {
     });
 
     if (!response.ok) {
-      const error = await response.text();
-      throw new Error(`創建標籤失敗: ${response.status} - ${error}`);
+      const errorText = await response.text();
+      try {
+        const errorJson = JSON.parse(errorText);
+        // 處理標籤已存在的情況：使用已存在的標籤 ID
+        if (errorJson.code === "term_exists" && errorJson.data?.term_id) {
+          console.log(
+            "[WordPress] 標籤已存在，使用現有 ID:",
+            errorJson.data.term_id,
+          );
+          // 只返回必要的 id，ensureTaxonomies() 只使用 id 欄位
+          return {
+            id: errorJson.data.term_id,
+            name,
+            slug: slug || this.slugify(name),
+            count: 0,
+            description: "",
+            link: "",
+            taxonomy: "post_tag",
+          } as WordPressTaxonomy;
+        }
+      } catch {
+        // 無法解析 JSON，繼續拋出原始錯誤
+      }
+      throw new Error(`創建標籤失敗: ${response.status} - ${errorText}`);
     }
 
     const tag = await response.json();
