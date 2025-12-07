@@ -223,63 +223,102 @@ export async function POST(request: NextRequest) {
     const skippedJobIds: string[] = [];
     const failedItems: string[] = [];
 
-    // 批次生成模式：直接執行，實作冪等性檢查
-    for (const item of generationItems) {
+    // ===== 優化：批量查詢現有任務（1 次查詢取代 N 次）=====
+    const { data: allPendingJobs } = await adminClient
+      .from("article_jobs")
+      .select("id, keywords")
+      .eq("company_id", billingId)
+      .in("status", ["pending", "processing"]);
+
+    // 建立 Set 快速查找已存在的關鍵字
+    const existingKeywordToJobId = new Map<string, string>();
+    allPendingJobs?.forEach((job) => {
+      const keywords = job.keywords as string[] | null;
+      keywords?.forEach((kw: string) => {
+        existingKeywordToJobId.set(kw, job.id);
+      });
+    });
+
+    // ===== 優化：準備所有要插入的任務 =====
+    const jobsToInsert: Array<{
+      id: string;
+      job_id: string;
+      company_id: string;
+      website_id: string | null;
+      user_id: string;
+      keywords: string[];
+      status: string;
+      metadata: Record<string, unknown>;
+    }> = [];
+
+    for (let i = 0; i < generationItems.length; i++) {
+      const item = generationItems[i];
       const keyword = item.keyword || item.title;
       const title = item.title || item.keyword;
 
-      // 檢查是否已存在相同關鍵字的 pending/processing 任務
-      const { data: existingJobs } = await adminClient
-        .from("article_jobs")
-        .select("id, status, keywords")
-        .eq("company_id", billingId)
-        .contains("keywords", [keyword])
-        .in("status", ["pending", "processing"])
-        .order("created_at", { ascending: false })
-        .limit(1);
-
-      // 如果存在未完成的任務，跳過創建並記錄 ID
-      if (existingJobs && existingJobs.length > 0) {
-        const existingJob = existingJobs[0];
-        skippedJobIds.push(existingJob.id);
+      // 檢查是否已存在相同關鍵字的任務
+      const existingJobId = existingKeywordToJobId.get(keyword);
+      if (existingJobId) {
+        skippedJobIds.push(existingJobId);
         console.log(
-          `[Batch] ⏭️  Skipping duplicate job: ${title} (existing: ${existingJob.id}, status: ${existingJob.status})`,
+          `[Batch] ⏭️  Skipping duplicate job: ${title} (existing: ${existingJobId})`,
         );
         continue;
       }
 
-      // 創建新任務
+      // 準備新任務
       const articleJobId = uuidv4();
-
-      const { error: jobError } = await adminClient
-        .from("article_jobs")
-        .insert({
-          id: articleJobId,
-          job_id: articleJobId,
-          company_id: billingId,
-          website_id: websiteId,
-          user_id: user.id,
-          keywords: [keyword],
-          status: "pending",
-          metadata: {
-            mode: "batch",
-            title,
-            batchIndex: generationItems.indexOf(item),
-            totalBatch: generationItems.length,
-            targetLanguage: options?.targetLanguage || "zh-TW",
-            wordCount: options?.wordCount || "1500",
-          },
-        });
-
-      if (jobError) {
-        console.error("[Batch] Failed to create article job:", jobError);
-        failedItems.push(title);
-        continue;
-      }
-
-      newJobIds.push(articleJobId);
-      console.log(`[Batch] ✅ Article job queued: ${title}`);
+      jobsToInsert.push({
+        id: articleJobId,
+        job_id: articleJobId,
+        company_id: billingId!,
+        website_id: websiteId,
+        user_id: user.id,
+        keywords: [keyword],
+        status: "pending",
+        metadata: {
+          mode: "batch",
+          title,
+          batchIndex: i,
+          totalBatch: generationItems.length,
+          targetLanguage: options?.targetLanguage || "zh-TW",
+          wordCount: options?.wordCount || "1500",
+        },
+      });
     }
+
+    // ===== 優化：分批插入（每批 20 筆）=====
+    const BATCH_SIZE = 20;
+    for (let i = 0; i < jobsToInsert.length; i += BATCH_SIZE) {
+      const batch = jobsToInsert.slice(i, i + BATCH_SIZE);
+      const { data: inserted, error: batchError } = await adminClient
+        .from("article_jobs")
+        .insert(batch)
+        .select("id");
+
+      if (inserted) {
+        newJobIds.push(...inserted.map((j) => j.id));
+        console.log(
+          `[Batch] ✅ Inserted batch ${Math.floor(i / BATCH_SIZE) + 1}: ${inserted.length} jobs`,
+        );
+      }
+      if (batchError) {
+        console.error(
+          `[Batch] ❌ Batch ${Math.floor(i / BATCH_SIZE) + 1} failed:`,
+          batchError,
+        );
+        // 記錄失敗的項目
+        batch.forEach((job) => {
+          const title =
+            (job.metadata as Record<string, unknown>)?.title || job.keywords[0];
+          failedItems.push(title as string);
+        });
+      }
+    }
+
+    console.log(
+      `[Batch] 📊 Summary: ${newJobIds.length} created, ${skippedJobIds.length} skipped, ${failedItems.length} failed`,
+    );
 
     // 合併所有 job ID（新建立 + 跳過的）
     const allJobIds = [...newJobIds, ...skippedJobIds];
