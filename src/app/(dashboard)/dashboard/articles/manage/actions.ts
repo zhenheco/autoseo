@@ -362,7 +362,26 @@ export async function scheduleArticlesForPublish(
     return { success: false, error: "沒有符合條件的文章可排程" };
   }
 
-  const scheduleTimes = calculateScheduleTimes(articles.length, articlesPerDay);
+  // 查詢該網站已有的最後排程時間，讓新排程接續而非重疊
+  const { data: lastScheduled } = await supabase
+    .from("article_jobs")
+    .select("scheduled_publish_at")
+    .eq("website_id", websiteId)
+    .eq("status", "scheduled")
+    .not("scheduled_publish_at", "is", null)
+    .order("scheduled_publish_at", { ascending: false })
+    .limit(1)
+    .single();
+
+  const lastScheduledDate = lastScheduled?.scheduled_publish_at
+    ? new Date(lastScheduled.scheduled_publish_at)
+    : null;
+
+  const scheduleTimes = calculateScheduleTimes(
+    articles.length,
+    articlesPerDay,
+    lastScheduledDate,
+  );
 
   const scheduledArticles: ScheduleResult[] = [];
 
@@ -419,6 +438,7 @@ export async function scheduleArticlesForPublish(
 function calculateScheduleTimes(
   articleCount: number,
   articlesPerDay: number,
+  lastScheduledDate?: Date | null,
 ): Date[] {
   const times: Date[] = [];
 
@@ -431,9 +451,19 @@ function calculateScheduleTimes(
   const intervalMinutes = Math.floor((WORKING_HOURS * 60) / articlesPerDay);
 
   const now = new Date();
-  const startDate = new Date(now);
-  startDate.setUTCDate(startDate.getUTCDate() + 1);
-  startDate.setUTCHours(START_HOUR_UTC, 0, 0, 0);
+  let startDate: Date;
+
+  if (lastScheduledDate && lastScheduledDate > now) {
+    // 有已有排程：從最後排程的下一天開始
+    startDate = new Date(lastScheduledDate);
+    startDate.setUTCDate(startDate.getUTCDate() + 1);
+    startDate.setUTCHours(START_HOUR_UTC, 0, 0, 0);
+  } else {
+    // 沒有已有排程：從明天開始
+    startDate = new Date(now);
+    startDate.setUTCDate(startDate.getUTCDate() + 1);
+    startDate.setUTCHours(START_HOUR_UTC, 0, 0, 0);
+  }
 
   for (let i = 0; i < articleCount; i++) {
     const dayIndex = Math.floor(i / articlesPerDay);
