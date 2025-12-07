@@ -3,8 +3,8 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { v4 as uuidv4 } from "uuid";
 import slugify from "slugify";
 
-// Vercel 無伺服器函數最大執行時間（異步模式：立即返回，無需長時間執行）
-export const maxDuration = 10; // 10 秒足夠（實際 < 1 秒）
+// Vercel 無伺服器函數最大執行時間（增加以避免 504 超時）
+export const maxDuration = 25; // 增加到 25 秒
 
 export async function POST(request: NextRequest) {
   try {
@@ -292,96 +292,58 @@ export async function POST(request: NextRequest) {
         const githubRepo = process.env.GITHUB_REPO_NAME;
 
         if (githubToken && githubOwner && githubRepo) {
-          const maxRetries = 3;
-          let lastError: string | null = null;
-          let success = false;
+          // 使用 AbortController 設定 5 秒超時（避免阻塞過久導致 504）
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000);
 
-          for (let attempt = 1; attempt <= maxRetries; attempt++) {
-            try {
-              const response = await fetch(
-                `https://api.github.com/repos/${githubOwner}/${githubRepo}/dispatches`,
-                {
-                  method: "POST",
-                  headers: {
-                    Authorization: `Bearer ${githubToken}`,
-                    Accept: "application/vnd.github.v3+json",
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({
-                    event_type: "article-jobs-created",
-                    client_payload: {
-                      jobCount: newJobIds.length,
-                      jobIds: newJobIds,
-                      timestamp: new Date().toISOString(),
-                    },
-                  }),
-                },
-              );
-
-              if (response.ok) {
-                console.log(
-                  `[Batch] ✅ Triggered GitHub Actions workflow for ${newJobIds.length} jobs (attempt ${attempt})`,
-                );
-                success = true;
-                break;
-              } else {
-                lastError = await response.text();
-                console.warn(
-                  `[Batch] ⚠️  Workflow trigger attempt ${attempt}/${maxRetries} failed:`,
-                  response.status,
-                  lastError,
-                );
-
-                if (attempt < maxRetries) {
-                  await new Promise((resolve) =>
-                    setTimeout(resolve, 1000 * attempt),
-                  );
-                }
-              }
-            } catch (fetchError) {
-              lastError =
-                fetchError instanceof Error
-                  ? fetchError.message
-                  : String(fetchError);
-              console.warn(
-                `[Batch] ⚠️  Workflow trigger attempt ${attempt}/${maxRetries} error:`,
-                lastError,
-              );
-
-              if (attempt < maxRetries) {
-                await new Promise((resolve) =>
-                  setTimeout(resolve, 1000 * attempt),
-                );
-              }
-            }
-          }
-
-          if (!success) {
-            console.error(
-              `[Batch] ❌ Failed to trigger workflow after ${maxRetries} attempts. Deleting jobs...`,
-              lastError,
-            );
-
-            for (const jobId of newJobIds) {
-              try {
-                await supabase.from("article_jobs").delete().eq("id", jobId);
-                console.log(`[Batch] 🗑️  Deleted failed job: ${jobId}`);
-              } catch (deleteError) {
-                console.error(
-                  `[Batch] ❌ Failed to delete job ${jobId}:`,
-                  deleteError,
-                );
-              }
-            }
-
-            return NextResponse.json(
+          try {
+            const response = await fetch(
+              `https://api.github.com/repos/${githubOwner}/${githubRepo}/dispatches`,
               {
-                success: false,
-                error: `GitHub Actions 觸發失敗（重試 ${maxRetries} 次後仍失敗），已清除待處理任務`,
-                details: lastError,
+                method: "POST",
+                headers: {
+                  Authorization: `Bearer ${githubToken}`,
+                  Accept: "application/vnd.github.v3+json",
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  event_type: "article-jobs-created",
+                  client_payload: {
+                    jobCount: newJobIds.length,
+                    jobIds: newJobIds,
+                    timestamp: new Date().toISOString(),
+                  },
+                }),
+                signal: controller.signal,
               },
-              { status: 503 },
             );
+            clearTimeout(timeoutId);
+
+            if (response.ok) {
+              console.log(
+                `[Batch] ✅ Triggered GitHub Actions workflow for ${newJobIds.length} jobs`,
+              );
+            } else {
+              const errorText = await response.text();
+              console.warn(
+                `[Batch] ⚠️ Workflow trigger failed: ${response.status}`,
+                errorText,
+              );
+              // 不刪除 jobs，讓定時任務處理
+            }
+          } catch (fetchError) {
+            clearTimeout(timeoutId);
+            if (
+              fetchError instanceof Error &&
+              fetchError.name === "AbortError"
+            ) {
+              console.warn(
+                "[Batch] ⚠️ GitHub API timeout (5s), jobs will be processed by scheduler",
+              );
+            } else {
+              console.error("[Batch] ❌ Trigger error:", fetchError);
+            }
+            // 不刪除 jobs，讓定時任務處理
           }
         } else {
           console.log(
