@@ -55,3 +55,6 @@ supabase/.env
 .dev.vars
 .wrangler/
 note.md
+
+# Development logs (may contain sensitive info)
+devlog.md
