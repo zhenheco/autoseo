@@ -19,31 +19,29 @@ function PageHeader({ filters }: { filters?: ReactNode }) {
 
   return (
     <div className="mb-4 space-y-3">
-      {/* 標題列 */}
-      <div className="flex items-center justify-between gap-3">
+      {/* 標題列 + 網站選擇器 */}
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2 md:gap-3">
         <h1 className="text-lg md:text-xl font-bold whitespace-nowrap">
           文章管理
         </h1>
-        {/* 手機版篩選器放在標題旁 */}
-        <div className="md:hidden">{filters}</div>
+        {/* 網站選擇器 - 手機全寬，桌面固定寬度在右側 */}
+        <div className="flex items-center gap-2">
+          <div className="w-full md:w-[240px]">
+            <WebsiteSelector
+              value={websiteId}
+              onChange={setWebsiteId}
+              placeholder="選擇發布網站"
+              disabled={isScheduling}
+            />
+          </div>
+          <span className="text-orange-500 text-xs whitespace-nowrap">
+            (選擇目標網站)
+          </span>
+        </div>
       </div>
 
-      {/* 網站選擇器 */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
-        <div className="w-full sm:w-[160px]">
-          <WebsiteSelector
-            value={websiteId}
-            onChange={setWebsiteId}
-            placeholder="選擇發布網站"
-            disabled={isScheduling}
-          />
-        </div>
-        <span className="text-orange-500 text-xs whitespace-nowrap">
-          (選擇目標網站)
-        </span>
-        {/* 桌面版篩選器 */}
-        <div className="hidden md:block">{filters}</div>
-      </div>
+      {/* 篩選器 - 統一顯示在標題下方左對齊 */}
+      <div>{filters}</div>
     </div>
   );
 }
