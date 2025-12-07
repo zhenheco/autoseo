@@ -28,6 +28,66 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 ---
 
+# 🔗 Supabase UNIQUE 約束與 JOIN 返回格式（重要！）
+
+> **⚠️ 2025-12-07 重大教訓**：添加 UNIQUE 約束會改變 Supabase JOIN 返回格式！
+
+## 問題說明
+
+當 Supabase 檢測到關聯表有 **UNIQUE 約束**（一對一關係）時，會自動將 JOIN 結果從**陣列格式**改為**對象格式**：
+
+```typescript
+// 無 UNIQUE 約束時 → 返回陣列
+{ generated_articles: [{ id: "...", title: "..." }] }
+
+// 有 UNIQUE 約束時 → 返回對象
+{ generated_articles: { id: "...", title: "..." } }
+```
+
+## 本專案受影響的關聯
+
+| 表格                 | 約束                    | 返回格式 |
+| -------------------- | ----------------------- | -------- |
+| `generated_articles` | `article_job_id` UNIQUE | 對象     |
+
+## 添加 UNIQUE 約束前的檢查清單
+
+1. **搜索受影響的代碼**：
+
+   ```bash
+   grep -r "關聯名稱\?\.\[0\]" src/
+   ```
+
+2. **更新 TypeScript interface**：
+
+   ```typescript
+   // 從陣列
+   generated_articles: Array<{...}> | null;
+   // 改為對象
+   generated_articles: {...} | null;
+   ```
+
+3. **更新存取方式**：
+
+   ```typescript
+   // 從陣列存取
+   article.generated_articles?.[0]?.title;
+   // 改為直接存取
+   article.generated_articles?.title;
+   ```
+
+4. **處理類型斷言**：
+   ```typescript
+   // 需要 as unknown as 轉換
+   const ga = data.generated_articles as unknown as { id: string } | null;
+   ```
+
+## 參考案例
+
+詳見 `devlog.md` 的 `2025-12-07 23:30` 記錄。
+
+---
+
 # 📝 文章生成架構（重要！）
 
 **Vercel 有 300 秒超時限制，所以正確的架構是：**
