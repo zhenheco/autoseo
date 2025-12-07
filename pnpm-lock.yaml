@@ -70,6 +70,9 @@ importers:
       "@supabase/supabase-js":
         specifier: ^2.76.1
         version: 2.78.0
+      "@thumbmarkjs/thumbmarkjs":
+        specifier: ^1.5.1
+        version: 1.5.1
       "@tiptap/extension-image":
         specifier: ^3.10.7
         version: 3.10.7(@tiptap/core@3.10.7(@tiptap/pm@3.10.7))
@@ -4219,6 +4222,12 @@ packages:
         optional: true
       "@types/react-dom":
         optional: true
+
+  "@thumbmarkjs/thumbmarkjs@1.5.1":
+    resolution:
+      {
+        integrity: sha512-eiymVc/uZ2Y+2AvNLp+3iEKFnk0lNAnlk0JlU44CKQI/RbWmlJQXDnSKU7Bc/IVUMpaxcrR3PBU1p0HkMURVng==,
+      }
 
   "@tiptap/core@3.10.7":
     resolution:
@@ -13580,6 +13589,8 @@ snapshots:
     optionalDependencies:
       "@types/react": 19.2.2
       "@types/react-dom": 19.2.2(@types/react@19.2.2)
+
+  "@thumbmarkjs/thumbmarkjs@1.5.1": {}
 
   "@tiptap/core@3.10.7(@tiptap/pm@3.10.7)":
     dependencies:
