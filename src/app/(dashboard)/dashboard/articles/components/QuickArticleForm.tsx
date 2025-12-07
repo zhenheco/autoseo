@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { fetchWithRetry } from "@/lib/utils/fetch-with-retry";
 import {
   Dialog,
   DialogContent,
@@ -44,6 +45,7 @@ export function QuickArticleForm({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [generatedKeyword, setGeneratedKeyword] = useState("");
+  const [retryInfo, setRetryInfo] = useState<string | null>(null);
 
   const hasRemainingQuota = quotaStatus
     ? quotaStatus.remaining > 0 || quotaStatus.quota === -1
@@ -54,6 +56,7 @@ export function QuickArticleForm({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
+    setRetryInfo(null);
 
     try {
       const keywords = batchKeywords
@@ -65,19 +68,30 @@ export function QuickArticleForm({
         throw new Error("請輸入至少一個關鍵字");
       }
 
-      const response = await fetch("/api/articles/generate-batch", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          keywords,
-          industry,
-          region,
-          targetLanguage: language,
-          website_id: websiteId,
-        }),
-      });
+      // 使用自動重試的 fetch
+      const response = await fetchWithRetry(
+        "/api/articles/generate-batch",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            keywords,
+            industry,
+            region,
+            targetLanguage: language,
+            website_id: websiteId,
+          }),
+        },
+        {
+          maxRetries: 2,
+          delayMs: 1500,
+          onRetry: (attempt, max) => {
+            setRetryInfo(`正在重試 (${attempt}/${max})...`);
+          },
+        },
+      );
 
-      // 先用 text() 讀取，再嘗試解析為 JSON（避免 504 HTML 頁面導致 JSON 解析錯誤）
+      // 先用 text() 讀取，再嘗試解析為 JSON
       const text = await response.text();
       let data: {
         success?: boolean;
@@ -90,10 +104,6 @@ export function QuickArticleForm({
       try {
         data = JSON.parse(text);
       } catch {
-        // text 不是 JSON（如 504 HTML 頁面）
-        if (response.status === 504) {
-          throw new Error("請求超時，請稍後重試");
-        }
         throw new Error(`伺服器錯誤 (${response.status})`);
       }
 
@@ -129,6 +139,7 @@ export function QuickArticleForm({
       alert(errorMessage);
     } finally {
       setIsSubmitting(false);
+      setRetryInfo(null);
     }
   };
 
@@ -170,7 +181,7 @@ export function QuickArticleForm({
         disabled={isSubmitting || isFormDisabled}
       >
         {isSubmitting
-          ? "生成中..."
+          ? retryInfo || "正在提交任務..."
           : `開始生成 (${batchKeywords.split("\n").filter((k) => k.trim()).length || 0} 篇)`}
       </Button>
 
