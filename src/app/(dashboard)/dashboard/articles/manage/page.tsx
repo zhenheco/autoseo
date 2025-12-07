@@ -57,7 +57,7 @@ export default async function ArticleManagePage({ searchParams }: PageProps) {
   const websiteId = params.website;
 
   return (
-    <AutoRefreshWrapper intervalMs={5 * 60 * 1000}>
+    <AutoRefreshWrapper intervalMs={30 * 1000}>
       <div className="container mx-auto px-4 py-4 max-w-[1600px] h-[calc(100vh-4rem)] flex flex-col overflow-hidden">
         <Suspense
           fallback={
