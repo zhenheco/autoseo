@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import type {
   ReviewStatus,
   SuspicionType,
@@ -39,8 +39,11 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "20", 10);
     const offset = (page - 1) * limit;
 
+    // 使用 admin client 繞過 RLS（僅限 service_role 可存取 suspicious_referrals）
+    const adminSupabase = createAdminClient();
+
     // 建立查詢
-    let query = supabase
+    let query = adminSupabase
       .from("suspicious_referrals")
       .select(
         `
@@ -73,7 +76,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 取得統計資訊
-    const { data: stats } = await supabase
+    const { data: stats } = await adminSupabase
       .from("suspicious_referrals")
       .select("status, severity")
       .then((result) => {
@@ -144,6 +147,9 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "缺少必要參數" }, { status: 400 });
     }
 
+    // 使用 admin client 繞過 RLS
+    const adminSupabase = createAdminClient();
+
     // 更新可疑記錄
     const updateData: Record<string, unknown> = {
       status,
@@ -160,7 +166,7 @@ export async function PATCH(request: NextRequest) {
       updateData.action_taken_at = new Date().toISOString();
     }
 
-    const { data, error } = await supabase
+    const { data, error } = await adminSupabase
       .from("suspicious_referrals")
       .update(updateData)
       .eq("id", id)
@@ -176,13 +182,13 @@ export async function PATCH(request: NextRequest) {
     if (status === "confirmed_fraud" && action_taken === "reward_cancelled") {
       // 取消相關的推薦獎勵
       if (data.referral_id) {
-        await supabase
+        await adminSupabase
           .from("referrals")
           .update({ status: "cancelled" })
           .eq("id", data.referral_id);
 
         // 如果有佣金記錄，也標記為取消
-        await supabase
+        await adminSupabase
           .from("affiliate_commissions")
           .update({ status: "cancelled" })
           .eq("referral_id", data.referral_id);
