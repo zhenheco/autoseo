@@ -49,7 +49,8 @@ interface ArticleJobWithContent {
   metadata: { title?: string } | null;
   created_at: string;
   published_at: string | null;
-  generated_articles: Array<{
+  // UNIQUE 約束導致 Supabase 返回對象而非陣列
+  generated_articles: {
     id: string;
     title: string;
     html_content: string | null;
@@ -62,7 +63,7 @@ interface ArticleJobWithContent {
     featured_image_url: string | null;
     updated_at: string;
     wordpress_post_url: string | null;
-  }> | null;
+  } | null;
 }
 
 async function getWebsite(websiteId: string, companyId: string) {
@@ -128,7 +129,8 @@ async function getWebsiteArticlesFromJobs(
     return { articles: [], jobs: [] };
   }
 
-  const jobsData = (data || []) as ArticleJobWithContent[];
+  // UNIQUE 約束導致 Supabase 返回對象而非陣列，需要先轉為 unknown
+  const jobsData = (data || []) as unknown as ArticleJobWithContent[];
 
   // 分離已完成的文章和進行中的任務
   const articles: Article[] = [];
@@ -148,7 +150,7 @@ async function getWebsiteArticlesFromJobs(
       });
     } else {
       // 其他狀態（completed/scheduled/published/failed 等）→ 顯示為文章
-      const ga = job.generated_articles?.[0];
+      const ga = job.generated_articles;
       articles.push({
         id: ga?.id || job.id, // 如果沒有 GA，用 job.id
         title: ga?.title || job.keywords?.join(", ") || "未命名文章",

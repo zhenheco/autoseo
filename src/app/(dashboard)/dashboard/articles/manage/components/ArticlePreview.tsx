@@ -45,7 +45,7 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
 
   const article = articles.find((a) => a.id === previewArticleId);
 
-  const generatedArticle = article?.generated_articles?.[0] || null;
+  const generatedArticle = article?.generated_articles || null;
 
   const originalTitle =
     generatedArticle?.title || article?.keywords?.join(", ") || "未命名文章";

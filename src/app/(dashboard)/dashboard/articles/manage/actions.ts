@@ -25,14 +25,12 @@ export interface ArticleWithWebsite {
     website_name: string;
     wordpress_url: string;
   } | null;
-  generated_articles:
-    | {
-        id: string;
-        title: string;
-        html_content: string;
-        content_json: Record<string, unknown> | null;
-      }[]
-    | null;
+  generated_articles: {
+    id: string;
+    title: string;
+    html_content: string;
+    content_json: Record<string, unknown> | null;
+  } | null;
 }
 
 export interface GeneratedArticle {
@@ -387,11 +385,13 @@ export async function scheduleArticlesForPublish(
       continue;
     }
 
-    const generatedArticle = article.generated_articles as
-      | { id: string; title: string }[]
-      | null;
-    const generatedArticleId = generatedArticle?.[0]?.id;
-    const title = generatedArticle?.[0]?.title || null;
+    // UNIQUE 約束導致 Supabase 返回對象而非陣列，需要先轉為 unknown
+    const generatedArticle = article.generated_articles as unknown as {
+      id: string;
+      title: string;
+    } | null;
+    const generatedArticleId = generatedArticle?.id;
+    const title = generatedArticle?.title || null;
 
     if (generatedArticleId) {
       await supabase
