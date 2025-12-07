@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { fetchWithRetry } from "@/lib/utils/fetch-with-retry";
 import {
   Dialog,
   DialogContent,
@@ -32,6 +33,7 @@ export function ArticleForm({
 }: ArticleFormProps) {
   const router = useRouter();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [retryInfo, setRetryInfo] = useState<string | null>(null);
 
   const [titleMode, setTitleMode] = useState<"auto" | "preview">("auto");
   const [isLoadingTitles, setIsLoadingTitles] = useState(false);
@@ -109,6 +111,7 @@ export function ArticleForm({
     if (selectedTitles.length === 0) return;
     setShowTitleDialog(false);
     setIsSubmitting(true);
+    setRetryInfo(null);
 
     try {
       for (const title of selectedTitles) {
@@ -119,34 +122,59 @@ export function ArticleForm({
       setShowSuccessDialog(true);
     } catch (error) {
       console.error("批量生成失敗:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "生成失敗，請稍後再試";
+      alert(errorMessage);
     } finally {
       setIsSubmitting(false);
+      setRetryInfo(null);
     }
   };
 
   const submitArticleWithoutRedirect = async (title?: string) => {
-    const response = await fetch("/api/articles/generate", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        industry,
-        region,
-        language,
-        ...(title && { title }),
-        website_id: websiteId,
-      }),
-    });
+    // 使用自動重試的 fetch
+    const response = await fetchWithRetry(
+      "/api/articles/generate",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          industry,
+          region,
+          language,
+          ...(title && { title }),
+          website_id: websiteId,
+        }),
+      },
+      {
+        maxRetries: 2,
+        delayMs: 1500,
+        onRetry: (attempt, max) => {
+          setRetryInfo(`正在重試 (${attempt}/${max})...`);
+        },
+      },
+    );
 
-    if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || "文章生成失敗");
+    // 先用 text() 讀取，再嘗試解析為 JSON
+    const text = await response.text();
+    let data;
+
+    try {
+      data = JSON.parse(text);
+    } catch {
+      throw new Error(`伺服器錯誤 (${response.status})`);
     }
 
-    return response.json();
+    if (!response.ok) {
+      throw new Error(data.message || data.error || "文章生成失敗");
+    }
+
+    return data;
   };
 
   const submitArticle = async (title?: string) => {
     setIsSubmitting(true);
+    setRetryInfo(null);
     try {
       await submitArticleWithoutRedirect(title);
       window.dispatchEvent(new Event("tokenReserved"));
@@ -154,13 +182,18 @@ export function ArticleForm({
       setShowSuccessDialog(true);
     } catch (error) {
       console.error("提交失敗:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "生成失敗，請稍後再試";
+      alert(errorMessage);
     } finally {
       setIsSubmitting(false);
+      setRetryInfo(null);
     }
   };
 
   const submitMultipleArticles = async (count: number) => {
     setIsSubmitting(true);
+    setRetryInfo(null);
     try {
       const generatedList: string[] = [];
       for (let i = 0; i < count; i++) {
@@ -172,8 +205,12 @@ export function ArticleForm({
       setShowSuccessDialog(true);
     } catch (error) {
       console.error("批量生成失敗:", error);
+      const errorMessage =
+        error instanceof Error ? error.message : "生成失敗，請稍後再試";
+      alert(errorMessage);
     } finally {
       setIsSubmitting(false);
+      setRetryInfo(null);
     }
   };
 
@@ -275,7 +312,7 @@ export function ArticleForm({
         }
       >
         {isSubmitting
-          ? "生成中..."
+          ? retryInfo || "正在提交任務..."
           : isLoadingTitles
             ? "正在生成標題..."
             : titleMode === "preview"
