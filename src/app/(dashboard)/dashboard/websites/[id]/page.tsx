@@ -1,6 +1,6 @@
 import { getUser, getUserPrimaryCompany } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
@@ -84,11 +84,12 @@ async function getWebsite(websiteId: string, companyId: string) {
 }
 
 // 統一從 article_jobs 查詢（與文章列表頁面一致）
+// 使用 adminClient 確保 JOIN 資料正確返回（繞過 RLS）
 async function getWebsiteArticlesFromJobs(
   websiteId: string,
   companyId: string,
 ): Promise<{ articles: Article[]; jobs: ArticleJob[] }> {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   // 從 article_jobs 查詢，JOIN generated_articles
   const { data, error } = await supabase

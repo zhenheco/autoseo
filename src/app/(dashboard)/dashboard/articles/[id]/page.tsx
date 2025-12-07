@@ -1,6 +1,6 @@
 import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import {
   Card,
   CardContent,
@@ -13,7 +13,7 @@ import Link from "next/link";
 import { ArticleDetailPublish } from "./components/ArticleDetailPublish";
 
 async function getArticle(articleId: string) {
-  const supabase = await createClient();
+  const supabase = createAdminClient();
 
   const { data, error } = await supabase
     .from("article_jobs")
@@ -23,6 +23,15 @@ async function getArticle(articleId: string) {
       website_configs (
         site_name,
         site_url
+      ),
+      generated_articles (
+        id,
+        title,
+        html_content,
+        markdown_content,
+        word_count,
+        seo_title,
+        seo_description
       )
     `,
     )
@@ -57,7 +66,9 @@ export default async function ArticleDetailPage({
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">
-            {article.article_title || "未命名文章"}
+            {article.generated_articles?.[0]?.title ||
+              article.article_title ||
+              "未命名文章"}
           </h1>
           <p className="text-muted-foreground mt-2">
             網站: {article.website_configs?.site_name || "未指定"}
@@ -159,7 +170,7 @@ export default async function ArticleDetailPage({
         </Card>
 
         {/* 文章內容 */}
-        {article.generated_content && (
+        {article.generated_articles?.[0] && (
           <Card>
             <CardHeader>
               <CardTitle>生成內容</CardTitle>
@@ -167,16 +178,16 @@ export default async function ArticleDetailPage({
             </CardHeader>
             <CardContent>
               <div className="prose max-w-none">
-                {article.generated_content.title && (
+                {article.generated_articles[0].title && (
                   <h2 className="text-2xl font-bold mb-4">
-                    {article.generated_content.title}
+                    {article.generated_articles[0].title}
                   </h2>
                 )}
-                {article.generated_content.content && (
+                {article.generated_articles[0].html_content && (
                   <div
                     className="prose prose-lg max-w-none prose-p:leading-[1.8] prose-p:my-5 prose-h2:mt-10 prose-h2:mb-4 prose-h3:mt-7 prose-h3:mb-3 prose-li:my-2 prose-li:leading-[1.7] prose-ul:my-6 prose-ol:my-6 prose-img:my-8"
                     dangerouslySetInnerHTML={{
-                      __html: article.generated_content.content,
+                      __html: article.generated_articles[0].html_content,
                     }}
                   />
                 )}
