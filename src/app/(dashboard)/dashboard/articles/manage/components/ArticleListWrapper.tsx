@@ -92,21 +92,27 @@ export function ArticleListWrapper({
         手機版：單欄，只顯示文章列表（預覽在點擊後以 modal 或新頁面顯示）
         平板以上：左右雙欄
       */}
-      <div className="flex flex-col lg:flex-row gap-3 lg:h-[calc(100vh-180px)]">
-        {/* 文章列表 */}
-        <div className="w-full lg:w-[45%] min-w-0 lg:overflow-y-auto">
-          <ScheduleControlBar
-            schedulableArticleIds={schedulableArticleIds}
-            cancellableArticleIds={cancellableArticleIds}
-            deletableArticleIds={deletableArticleIds}
-          />
-          <ArticleList
-            articles={articles}
-            selectableArticleIds={selectableArticleIds}
-          />
+      <div className="flex flex-col lg:flex-row gap-3 flex-1 min-h-0">
+        {/* 文章列表區域 */}
+        <div className="w-full lg:w-[45%] min-w-0 flex flex-col min-h-0">
+          {/* 排程控制列 - 固定不滾動 */}
+          <div className="shrink-0">
+            <ScheduleControlBar
+              schedulableArticleIds={schedulableArticleIds}
+              cancellableArticleIds={cancellableArticleIds}
+              deletableArticleIds={deletableArticleIds}
+            />
+          </div>
+          {/* 文章列表 - 可滾動 */}
+          <div className="flex-1 overflow-y-auto min-h-0">
+            <ArticleList
+              articles={articles}
+              selectableArticleIds={selectableArticleIds}
+            />
+          </div>
         </div>
         {/* 預覽區域 - 手機版隱藏 */}
-        <div className="hidden lg:flex lg:w-[55%] shrink-0 overflow-hidden flex-col">
+        <div className="hidden lg:flex lg:w-[55%] shrink-0 overflow-hidden flex-col min-h-0">
           {children}
         </div>
       </div>

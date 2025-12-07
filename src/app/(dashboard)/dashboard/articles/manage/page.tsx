@@ -10,7 +10,7 @@ import { AutoRefreshWrapper } from "./components/AutoRefreshWrapper";
 export const dynamic = "force-dynamic";
 
 interface PageProps {
-  searchParams: Promise<{ filter?: string }>;
+  searchParams: Promise<{ filter?: string; website?: string }>;
 }
 
 function HeaderFilters() {
@@ -23,10 +23,12 @@ function HeaderFilters() {
 
 async function ArticleListContent({
   filter,
+  websiteId,
 }: {
   filter: "all" | "unpublished" | "published" | "scheduled";
+  websiteId?: string;
 }) {
-  const { articles, error } = await getArticles(filter);
+  const { articles, error } = await getArticles(filter, websiteId);
 
   if (error) {
     return (
@@ -52,10 +54,11 @@ export default async function ArticleManagePage({ searchParams }: PageProps) {
   const params = await searchParams;
   const filter =
     (params.filter as "all" | "unpublished" | "published") || "all";
+  const websiteId = params.website;
 
   return (
     <AutoRefreshWrapper intervalMs={5 * 60 * 1000}>
-      <div className="container mx-auto px-4 py-4 max-w-[1600px]">
+      <div className="container mx-auto px-4 py-4 max-w-[1600px] h-[calc(100vh-4rem)] flex flex-col">
         <Suspense
           fallback={
             <div className="text-center py-8 text-muted-foreground">
@@ -63,7 +66,7 @@ export default async function ArticleManagePage({ searchParams }: PageProps) {
             </div>
           }
         >
-          <ArticleListContent filter={filter} />
+          <ArticleListContent filter={filter} websiteId={websiteId} />
         </Suspense>
       </div>
     </AutoRefreshWrapper>

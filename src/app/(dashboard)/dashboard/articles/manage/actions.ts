@@ -52,6 +52,7 @@ export interface GeneratedArticle {
 
 export async function getArticles(
   filter: "all" | "unpublished" | "published" | "scheduled" = "all",
+  websiteId?: string | null,
 ) {
   const user = await getUser();
   if (!user) return { articles: [], error: "未登入" };
@@ -88,6 +89,11 @@ export async function getArticles(
     .eq("company_id", companyId)
     .order("scheduled_publish_at", { ascending: true, nullsFirst: false })
     .order("created_at", { ascending: false });
+
+  // 網站篩選
+  if (websiteId) {
+    query = query.eq("website_id", websiteId);
+  }
 
   if (filter === "unpublished") {
     query = query.in("status", [
