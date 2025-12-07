@@ -77,7 +77,25 @@ export function QuickArticleForm({
         }),
       });
 
-      const data = await response.json();
+      // 先用 text() 讀取，再嘗試解析為 JSON（避免 504 HTML 頁面導致 JSON 解析錯誤）
+      const text = await response.text();
+      let data: {
+        success?: boolean;
+        error?: string;
+        message?: string;
+        newJobs?: number;
+        skippedJobs?: number;
+      };
+
+      try {
+        data = JSON.parse(text);
+      } catch {
+        // text 不是 JSON（如 504 HTML 頁面）
+        if (response.status === 504) {
+          throw new Error("請求超時，請稍後重試");
+        }
+        throw new Error(`伺服器錯誤 (${response.status})`);
+      }
 
       if (!response.ok) {
         throw new Error(data.error || data.message || "批量生成失敗");
