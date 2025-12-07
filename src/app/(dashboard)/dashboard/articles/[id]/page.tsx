@@ -1,6 +1,6 @@
 import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
-import { createAdminClient } from "@/lib/supabase/server";
+import { createClient } from "@/lib/supabase/server";
 import {
   Card,
   CardContent,
@@ -13,7 +13,7 @@ import Link from "next/link";
 import { ArticleDetailPublish } from "./components/ArticleDetailPublish";
 
 async function getArticle(articleId: string) {
-  const supabase = createAdminClient();
+  const supabase = await createClient();
 
   const { data, error } = await supabase
     .from("article_jobs")
