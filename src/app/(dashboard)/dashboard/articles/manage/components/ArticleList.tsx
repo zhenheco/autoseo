@@ -69,7 +69,9 @@ export function ArticleList({
 
   // 可以刪除的狀態
   const canDelete = (status: string) => {
-    return status === "cancelled" || status === "failed";
+    return (
+      status === "cancelled" || status === "failed" || status === "published"
+    );
   };
 
   // 可以勾選的狀態（排程、取消或刪除）
