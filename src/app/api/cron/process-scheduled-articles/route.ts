@@ -143,6 +143,28 @@ export async function GET(request: NextRequest) {
       continue;
     }
 
+    // 防止重複發布：檢查文章是否已經發布到 WordPress
+    if (generatedArticle.wordpress_post_id) {
+      console.log(
+        `[Process Scheduled Articles] Already published to WordPress (post_id: ${generatedArticle.wordpress_post_id}), updating status: ${article.id}`,
+      );
+      // 同步更新 article_jobs 狀態
+      await supabase
+        .from("article_jobs")
+        .update({
+          status: "published",
+          wordpress_post_id: generatedArticle.wordpress_post_id?.toString(),
+        })
+        .eq("id", article.id);
+      results.published++;
+      results.details.push({
+        articleId: article.id,
+        title: article.article_title,
+        status: "published",
+      });
+      continue;
+    }
+
     try {
       const wordpressClient = new WordPressClient({
         url: website.wordpress_url,
