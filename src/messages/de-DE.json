@@ -62,13 +62,18 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "welcome": "Willkommen zurück",
+    "welcome": "Willkommen zurück, {email}",
     "quickStats": "Schnellstatistiken",
     "recentArticles": "Aktuelle Artikel",
     "totalArticles": "Gesamte Artikel",
+    "websiteCount": "Webseiten",
     "totalWebsites": "Gesamte Webseiten",
     "creditsRemaining": "Verbleibende Credits",
-    "monthlyUsage": "Monatliche Nutzung"
+    "monthlyUsage": "Monatliche Nutzung",
+    "trafficTrend": "7-Tage-Traffic-Trend",
+    "featureInDevelopment": "Diese Funktion ist in Entwicklung",
+    "underDevelopment": "Demnächst",
+    "trafficChartComingSoon": "Wöchentliches Traffic-Diagramm kommt bald"
   },
   "articles": {
     "title": "Artikelverwaltung",

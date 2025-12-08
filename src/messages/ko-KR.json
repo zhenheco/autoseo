@@ -62,13 +62,18 @@
   },
   "dashboard": {
     "title": "대시보드",
-    "welcome": "다시 오신 것을 환영합니다",
+    "welcome": "다시 오신 것을 환영합니다, {email}",
     "quickStats": "빠른 통계",
     "recentArticles": "최근 글",
     "totalArticles": "총 글 수",
+    "websiteCount": "웹사이트 수",
     "totalWebsites": "총 웹사이트 수",
     "creditsRemaining": "남은 크레딧",
-    "monthlyUsage": "월간 사용량"
+    "monthlyUsage": "월간 사용량",
+    "trafficTrend": "7일간 트래픽 추이",
+    "featureInDevelopment": "이 기능은 개발 중입니다",
+    "underDevelopment": "곧 출시 예정",
+    "trafficChartComingSoon": "주간 트래픽 차트가 곧 제공됩니다"
   },
   "articles": {
     "title": "글 관리",

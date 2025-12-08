@@ -62,13 +62,18 @@
   },
   "dashboard": {
     "title": "儀表板",
-    "welcome": "歡迎回來",
+    "welcome": "歡迎回來，{email}",
     "quickStats": "快速統計",
     "recentArticles": "最近文章",
     "totalArticles": "總文章數",
+    "websiteCount": "網站數量",
     "totalWebsites": "總網站數",
     "creditsRemaining": "剩餘 Credits",
-    "monthlyUsage": "本月用量"
+    "monthlyUsage": "本月用量",
+    "trafficTrend": "7 天流量趨勢",
+    "featureInDevelopment": "此功能正在開發中",
+    "underDevelopment": "待開發",
+    "trafficChartComingSoon": "近一週的網站訪問數據圖表即將推出"
   },
   "articles": {
     "title": "文章管理",

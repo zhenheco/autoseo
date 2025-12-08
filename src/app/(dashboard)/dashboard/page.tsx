@@ -1,21 +1,11 @@
 import { getUser, getUserCompanies } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { StatCard } from "@/components/dashboard/stat-card";
-import { TokenBalanceCard } from "@/components/dashboard/TokenBalanceCard";
-import { UpgradePromptCard } from "@/components/dashboard/UpgradePromptCard";
-import { FileText, Globe, TrendingUp } from "lucide-react";
-import {
   checkPagePermission,
   getUserSubscriptionTier,
 } from "@/lib/permissions";
 import { createClient } from "@/lib/supabase/server";
+import { DashboardClient } from "./dashboard-client";
 
 export default async function DashboardPage() {
   await checkPagePermission("canAccessDashboard");
@@ -78,62 +68,12 @@ export default async function DashboardPage() {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
-            儀表版
-          </h1>
-          <p className="text-muted-foreground mt-1">歡迎回來，{user.email}</p>
-        </div>
-      </div>
-
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        <StatCard
-          title="總文章數"
-          value={articlesCount.toString()}
-          icon={FileText}
-          iconBgColor="bg-primary/10"
-          iconColor="text-primary"
-        />
-        <StatCard
-          title="網站數量"
-          value={websitesCount.toString()}
-          icon={Globe}
-          iconBgColor="bg-success/10"
-          iconColor="text-success"
-        />
-        <TokenBalanceCard />
-      </div>
-
-      {/* 免費用戶升級提示 */}
-      {subscriptionTier === "free" && (
-        <div className="mt-6">
-          <UpgradePromptCard
-            currentTier={subscriptionTier}
-            tokenBalance={tokenBalance}
-          />
-        </div>
-      )}
-
-      <Card className="border-border/30 bg-muted/30 backdrop-blur-sm rounded-xl opacity-60">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-muted-foreground flex items-center gap-2">
-            🚧 7 天流量趨勢
-          </CardTitle>
-          <CardDescription className="text-base text-muted-foreground">
-            此功能正在開發中
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="h-[300px] flex items-center justify-center text-muted-foreground bg-muted/20 rounded-xl border border-dashed border-muted-foreground/30">
-            <div className="text-center space-y-2">
-              <p className="text-lg font-semibold">🚧 待開發</p>
-              <p className="text-sm">近一週的網站訪問數據圖表即將推出</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
+    <DashboardClient
+      userEmail={user.email || ""}
+      articlesCount={articlesCount}
+      websitesCount={websitesCount}
+      subscriptionTier={subscriptionTier || "free"}
+      tokenBalance={tokenBalance}
+    />
   );
 }

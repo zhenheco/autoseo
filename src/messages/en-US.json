@@ -62,13 +62,18 @@
   },
   "dashboard": {
     "title": "Dashboard",
-    "welcome": "Welcome back",
+    "welcome": "Welcome back, {email}",
     "quickStats": "Quick Stats",
     "recentArticles": "Recent Articles",
     "totalArticles": "Total Articles",
+    "websiteCount": "Websites",
     "totalWebsites": "Total Websites",
     "creditsRemaining": "Credits Remaining",
-    "monthlyUsage": "Monthly Usage"
+    "monthlyUsage": "Monthly Usage",
+    "trafficTrend": "7-Day Traffic Trend",
+    "featureInDevelopment": "This feature is under development",
+    "underDevelopment": "Coming Soon",
+    "trafficChartComingSoon": "Weekly website traffic chart coming soon"
   },
   "articles": {
     "title": "Article Management",

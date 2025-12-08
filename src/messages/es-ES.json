@@ -62,13 +62,18 @@
   },
   "dashboard": {
     "title": "Panel",
-    "welcome": "Bienvenido de nuevo",
+    "welcome": "Bienvenido de nuevo, {email}",
     "quickStats": "Estadísticas rápidas",
     "recentArticles": "Artículos recientes",
     "totalArticles": "Total de artículos",
+    "websiteCount": "Sitios web",
     "totalWebsites": "Total de sitios web",
     "creditsRemaining": "Créditos restantes",
-    "monthlyUsage": "Uso mensual"
+    "monthlyUsage": "Uso mensual",
+    "trafficTrend": "Tendencia de tráfico de 7 días",
+    "featureInDevelopment": "Esta función está en desarrollo",
+    "underDevelopment": "Próximamente",
+    "trafficChartComingSoon": "Gráfico de tráfico semanal próximamente"
   },
   "articles": {
     "title": "Gestión de artículos",
