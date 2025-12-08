@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Card,
   CardContent,
@@ -37,6 +38,8 @@ export interface ScheduleConfig {
 }
 
 export default function ImportPage() {
+  const t = useTranslations("articles.import");
+  const tCommon = useTranslations("common");
   const [step, setStep] = useState<
     "upload" | "preview" | "schedule" | "confirm"
   >("upload");
@@ -64,14 +67,14 @@ export default function ImportPage() {
       });
 
       if (!response.ok) {
-        throw new Error("批次匯入失敗");
+        throw new Error(t("importFailed"));
       }
 
       const result = await response.json();
-      alert(`成功建立 ${result.created} 個任務`);
+      alert(t("importSuccess", { count: result.created }));
       window.location.href = "/dashboard/articles";
     } catch (error) {
-      alert(error instanceof Error ? error.message : "發生錯誤");
+      alert(error instanceof Error ? error.message : t("errorOccurred"));
     }
   };
 
@@ -81,24 +84,20 @@ export default function ImportPage() {
         <Link href="/dashboard/articles">
           <Button variant="ghost" size="sm">
             <ArrowLeft className="h-4 w-4 mr-2" />
-            返回
+            {tCommon("back")}
           </Button>
         </Link>
         <div>
-          <h1 className="text-3xl font-bold">批次匯入文章</h1>
-          <p className="text-muted-foreground">
-            上傳 Excel 檔案批次建立文章任務
-          </p>
+          <h1 className="text-3xl font-bold">{t("title")}</h1>
+          <p className="text-muted-foreground">{t("description")}</p>
         </div>
       </div>
 
       {step === "upload" && (
         <Card>
           <CardHeader>
-            <CardTitle>上傳 Excel 檔案</CardTitle>
-            <CardDescription>
-              支援五欄格式：關鍵字、網站名稱、文章類型、發佈時間、自訂 Slug
-            </CardDescription>
+            <CardTitle>{t("uploadTitle")}</CardTitle>
+            <CardDescription>{t("uploadDescription")}</CardDescription>
           </CardHeader>
           <CardContent>
             <ExcelUploadZone onFileUploaded={handleFileUploaded} />
@@ -114,10 +113,10 @@ export default function ImportPage() {
           />
           <div className="flex justify-end gap-4">
             <Button variant="outline" onClick={() => setStep("upload")}>
-              返回上傳
+              {t("backToUpload")}
             </Button>
             <Button onClick={() => setStep("schedule")}>
-              下一步：設定排程
+              {t("nextSchedule")}
             </Button>
           </div>
         </>
@@ -132,9 +131,9 @@ export default function ImportPage() {
           />
           <div className="flex justify-end gap-4">
             <Button variant="outline" onClick={() => setStep("preview")}>
-              返回
+              {tCommon("back")}
             </Button>
-            <Button onClick={handleScheduleNext}>下一步：確認執行</Button>
+            <Button onClick={handleScheduleNext}>{t("nextConfirm")}</Button>
           </div>
         </>
       )}
@@ -142,31 +141,33 @@ export default function ImportPage() {
       {step === "confirm" && (
         <Card>
           <CardHeader>
-            <CardTitle>確認執行</CardTitle>
+            <CardTitle>{t("confirmTitle")}</CardTitle>
             <CardDescription>
-              即將建立 {publishPlans.length} 個文章任務
+              {t("confirmDescription", { count: publishPlans.length })}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid gap-4">
               <div>
-                <h3 className="font-semibold mb-2">任務數量</h3>
-                <p>{publishPlans.length} 個</p>
+                <h3 className="font-semibold mb-2">{t("taskCount")}</h3>
+                <p>{t("taskUnit", { count: publishPlans.length })}</p>
               </div>
               <div>
-                <h3 className="font-semibold mb-2">排程模式</h3>
+                <h3 className="font-semibold mb-2">{t("scheduleMode")}</h3>
                 <p>
                   {scheduleConfig.mode === "interval"
-                    ? `每 ${scheduleConfig.intervalHours} 小時發佈一篇`
-                    : "依指定時間發佈"}
+                    ? t("intervalPublish", {
+                        hours: scheduleConfig.intervalHours || 24,
+                      })
+                    : t("specificTimePublish")}
                 </p>
               </div>
             </div>
             <div className="flex justify-end gap-4">
               <Button variant="outline" onClick={() => setStep("schedule")}>
-                返回
+                {tCommon("back")}
               </Button>
-              <Button onClick={handleConfirm}>確認執行</Button>
+              <Button onClick={handleConfirm}>{t("confirm")}</Button>
             </div>
           </CardContent>
         </Card>

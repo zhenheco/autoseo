@@ -1,5 +1,6 @@
 import { getUser, getUserPrimaryCompany } from "@/lib/auth";
 import { Database } from "@/types/database.types";
+import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 import { redirect } from "next/navigation";
@@ -40,6 +41,8 @@ export default async function WebsitesPage({
 }) {
   await checkPagePermission("canAccessWebsites");
 
+  const t = await getTranslations("websites");
+  const tCommon = await getTranslations("common");
   const user = await getUser();
 
   if (!user) {
@@ -51,7 +54,7 @@ export default async function WebsitesPage({
   if (!company) {
     return (
       <div className="container mx-auto p-8">
-        <p className="text-muted-foreground">您尚未加入任何公司</p>
+        <p className="text-muted-foreground">{t("noCompanyJoined")}</p>
       </div>
     );
   }
@@ -63,13 +66,11 @@ export default async function WebsitesPage({
     <div className="container mx-auto p-8">
       <div className="mb-8 flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">網站管理</h1>
-          <p className="text-muted-foreground mt-2">
-            管理您的 WordPress 網站設定
-          </p>
+          <h1 className="text-3xl font-bold">{t("title")}</h1>
+          <p className="text-muted-foreground mt-2">{t("manageDescription")}</p>
         </div>
         <Link href="/dashboard/websites/new">
-          <Button>新增網站</Button>
+          <Button>{t("addWebsite")}</Button>
         </Link>
       </div>
 
@@ -106,7 +107,9 @@ export default async function WebsitesPage({
               <CardContent>
                 <div className="space-y-3">
                   <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">狀態</span>
+                    <span className="text-sm text-muted-foreground">
+                      {t("status")}
+                    </span>
                     <WebsiteStatusToggle
                       websiteId={website.id}
                       initialStatus={website.is_active ?? true}
@@ -118,12 +121,12 @@ export default async function WebsitesPage({
                       className="flex-1"
                     >
                       <Button variant="default" size="sm" className="w-full">
-                        查看文章
+                        {t("viewArticles")}
                       </Button>
                     </Link>
                     <Link href={`/dashboard/websites/${website.id}/edit`}>
                       <Button variant="outline" size="sm">
-                        編輯
+                        {tCommon("edit")}
                       </Button>
                     </Link>
                     <form action={deleteWebsite} className="inline">
@@ -138,7 +141,7 @@ export default async function WebsitesPage({
                         type="submit"
                         className="text-destructive hover:text-destructive"
                       >
-                        刪除
+                        {tCommon("delete")}
                       </Button>
                     </form>
                   </div>
@@ -150,9 +153,9 @@ export default async function WebsitesPage({
           <div className="col-span-full">
             <Card>
               <CardContent className="flex flex-col items-center justify-center py-12">
-                <p className="text-muted-foreground mb-4">尚未新增任何網站</p>
+                <p className="text-muted-foreground mb-4">{t("noWebsites")}</p>
                 <Link href="/dashboard/websites/new">
-                  <Button>新增第一個網站</Button>
+                  <Button>{t("addFirstWebsite")}</Button>
                 </Link>
               </CardContent>
             </Card>

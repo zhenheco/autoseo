@@ -27,7 +27,8 @@
     "selectPlaceholder": "선택해 주세요",
     "noData": "데이터 없음",
     "viewAll": "모두 보기",
-    "learnMore": "자세히 보기"
+    "learnMore": "자세히 보기",
+    "returnHome": "홈으로 돌아가기"
   },
   "nav": {
     "home": "홈",
@@ -58,7 +59,24 @@
     "privacyPolicy": "개인정보처리방침",
     "loginFailed": "로그인 실패",
     "loginSuccess": "로그인 성공",
-    "logoutSuccess": "로그아웃되었습니다"
+    "logoutSuccess": "로그아웃되었습니다",
+    "signupTitle": "새 계정 만들기",
+    "googleSignupDesc": "Google 계정으로 빠르게 가입",
+    "signupTermsAgreement": "가입하면 다음에 동의하는 것입니다:",
+    "signupWithGoogle": "Google로 가입",
+    "forgotPassword": "비밀번호를 잊으셨나요",
+    "forgotPasswordDesc": "이메일 주소를 입력하시면 비밀번호 재설정 링크를 보내드립니다",
+    "emailLabel": "이메일",
+    "sendResetLink": "재설정 링크 보내기",
+    "sending": "전송 중...",
+    "rememberPassword": "비밀번호가 기억나셨나요?",
+    "loginNow": "지금 로그인",
+    "emailSent": "이메일 전송 완료",
+    "emailSentDesc": "비밀번호 재설정 링크를 이메일로 보냈습니다",
+    "checkInbox": "받은 편지함(스팸 폴더 포함)을 확인하고 링크를 클릭하여 비밀번호를 재설정하세요.",
+    "noEmailReceived": "몇 분 내에 이메일을 받지 못하셨다면 다시 시도해 주세요.",
+    "resendEmail": "이메일 재전송",
+    "backToLogin": "로그인으로 돌아가기"
   },
   "dashboard": {
     "title": "대시보드",
@@ -194,7 +212,130 @@
       "confirmPublish": "게시 확인",
       "failed": "게시 실패"
     },
-    "loadFailed": "로드 실패"
+    "loadFailed": "로드 실패",
+    "batchPublish": {
+      "title": "일괄 게시 ({count}개)",
+      "description": "선택한 글을 지정된 사이트에 게시",
+      "selectedArticles": "선택한 글",
+      "targetWebsite": "대상 사이트",
+      "selectWebsite": "사이트 선택",
+      "selectWebsiteError": "대상 사이트를 선택해 주세요",
+      "confirmMessage": "{count}개의 글을 \"{website}\"에 게시하시겠습니까?",
+      "publishStatus": "게시 상태",
+      "statusDraft": "초안",
+      "statusPublished": "게시됨",
+      "progress": "게시 진행률",
+      "publishing": "게시 중...",
+      "result": "게시 결과",
+      "total": "전체: {count}개",
+      "success": "성공: {count}개",
+      "failed": "실패: {count}개",
+      "startPublish": "일괄 게시 시작",
+      "close": "닫기",
+      "publishFailed": "일괄 게시 실패",
+      "publishSuccess": "{count}개의 글을 게시했습니다",
+      "publishPartial": "게시 완료: 성공 {success}개, 실패 {failed}개",
+      "publishError": "일괄 게시 실패",
+      "unknownError": "알 수 없는 오류"
+    },
+    "batchDialog": {
+      "title": "일괄 글 생성",
+      "description": "3단계 프로세스: 주제 탐색 → 제목 선택 → 일괄 생성",
+      "generateTitlesFailed": "제목 생성 실패",
+      "generateTitlesRetry": "제목 생성에 실패했습니다. 다시 시도해 주세요",
+      "addTitlesFirst": "먼저 생성할 제목을 추가해 주세요",
+      "steps": {
+        "topicInput": "주제 입력",
+        "titleSelect": "제목 선택",
+        "confirmGenerate": "생성 확인"
+      },
+      "keywordLabel": "글 주제/키워드",
+      "keywordPlaceholder": "글 주제를 입력하면 시스템이 제목 제안을 생성합니다",
+      "keywordHint": "주제 개념 또는 SEO 키워드를 입력하면 여러 제목 옵션이 생성됩니다",
+      "generating": "생성 중...",
+      "generateIdeas": "아이디어 생성",
+      "customTitleLabel": "또는 직접 제목 입력",
+      "customTitlePlaceholder": "직접 제목 입력",
+      "add": "추가",
+      "generatedTitlesLabel": "생성된 제목 (추가할 항목 선택)",
+      "addTitles": "제목 추가 ({count})",
+      "pendingList": "대기 목록 ({count})",
+      "submitting": "제출 중...",
+      "startGeneration": "생성 시작",
+      "topic": "주제",
+      "editTitlePlaceholder": "클릭하여 제목 편집",
+      "emptyStateHint": "키워드를 입력하고 아이디어 생성을 클릭하여 시작",
+      "options": {
+        "title": "생성 옵션",
+        "targetLanguage": "대상 언어",
+        "wordCount": "글자 수",
+        "words": "{count}자",
+        "autoImageTitle": "자동 이미지 설정",
+        "autoImageDesc": "시스템이 각 H2 제목에 적절한 이미지를 자동 설정합니다",
+        "hint1": "일괄 생성 모드",
+        "hint2": "모든 글에 동일한 설정 적용",
+        "hint3": "생성 후 목록에서 확인 가능"
+      }
+    },
+    "publishPlan": {
+      "loadFailed": "웹사이트 목록을 불러오지 못했습니다",
+      "websiteNotFound": "해당 웹사이트를 찾을 수 없습니다",
+      "title": "게시 계획 목록",
+      "summary": "총: {total} 개 | 유효: {valid} | 오류: {error}",
+      "columns": {
+        "status": "상태",
+        "keyword": "키워드",
+        "website": "웹사이트",
+        "type": "유형",
+        "publishTime": "게시 시간",
+        "customSlug": "사용자 정의 슬러그",
+        "actions": "작업"
+      },
+      "status": {
+        "valid": "유효",
+        "warning": "경고",
+        "error": "오류"
+      },
+      "validating": "검증 중...",
+      "noData": "아직 가져온 데이터가 없습니다",
+      "aiDetermine": "AI 판단",
+      "bySchedule": "일정에 따라",
+      "autoGenerate": "자동 생성"
+    },
+    "scheduleSettings": {
+      "title": "일정 설정",
+      "description": "글 게시 간격 설정",
+      "intervalMode": "고정 간격 게시",
+      "specificMode": "Excel 지정 시간 사용 (입력된 경우)",
+      "intervalLabel": "게시 간격 (시간)",
+      "intervalHint": "{hours}시간마다 1개의 글 게시",
+      "previewTitle": "게시 시간 미리보기 (처음 5개)",
+      "morePlans": "...그 외 {count}개의 계획",
+      "totalPlans": "총 계획 수",
+      "plansCount": "{count}개",
+      "estimatedTime": "예상 완료 시간",
+      "days": "약 {days}일"
+    },
+    "import": {
+      "title": "일괄 가져오기",
+      "description": "Excel 파일을 업로드하여 글 작업을 일괄 생성",
+      "uploadTitle": "Excel 파일 업로드",
+      "uploadDescription": "5열 형식 지원: 키워드, 웹사이트 이름, 글 유형, 게시 시간, 사용자 지정 슬러그",
+      "backToUpload": "업로드로 돌아가기",
+      "nextSchedule": "다음: 일정 설정",
+      "nextConfirm": "다음: 확인",
+      "confirmTitle": "실행 확인",
+      "confirmDescription": "{count}개의 글 작업을 생성합니다",
+      "taskCount": "작업 수",
+      "taskUnit": "{count}개",
+      "scheduleMode": "일정 모드",
+      "intervalPublish": "{hours}시간마다 1개 게시",
+      "specificTimePublish": "지정된 시간에 게시",
+      "confirm": "확인",
+      "importFailed": "일괄 가져오기 실패",
+      "importSuccess": "{count}개의 작업을 성공적으로 생성했습니다",
+      "errorOccurred": "오류가 발생했습니다"
+    }
   },
   "websites": {
     "title": "웹사이트 관리",
@@ -208,7 +349,13 @@
     "wordpressSettings": "WordPress 설정",
     "apiKey": "API 키",
     "connected": "연결됨",
-    "notConnected": "연결되지 않음"
+    "notConnected": "연결되지 않음",
+    "manageDescription": "WordPress 웹사이트 설정 관리",
+    "noCompanyJoined": "아직 가입한 회사가 없습니다",
+    "status": "상태",
+    "viewArticles": "기사 보기",
+    "noWebsites": "아직 추가된 웹사이트가 없습니다",
+    "addFirstWebsite": "첫 번째 웹사이트 추가"
   },
   "subscription": {
     "title": "구독 플랜",
@@ -222,7 +369,85 @@
     "purchaseHistory": "구매 내역",
     "features": "기능",
     "popular": "인기",
-    "recommended": "추천"
+    "recommended": "추천",
+    "planType": "플랜 유형",
+    "freePlan": "무료 플랜",
+    "unknownPlan": "알 수 없는 플랜",
+    "monthlyResetCredits": "월간 리셋 크레딧",
+    "base": "기본",
+    "purchasedCredits": "구매한 크레딧",
+    "neverExpires": "만료 없음",
+    "quotaResetDate": "할당량 리셋 날짜",
+    "creditPackagePurchase": "크레딧 패키지 구매"
+  },
+  "payment": {
+    "failed": "결제 실패",
+    "success": "결제 성공",
+    "checking": "결제 상태 확인 중...",
+    "queryFailed": "조회 실패",
+    "cannotConfirm": "결제 상태를 확인할 수 없습니다. 페이지를 새로고침하거나 고객지원에 문의하세요.",
+    "timeout": "결제 확인 시간이 초과되었습니다. 페이지를 새로고침하거나 고객지원에 문의하세요.",
+    "confirmingTitle": "확인 중",
+    "waitingMessage": "몇 초 정도 걸릴 수 있습니다. 잠시만 기다려 주세요... ({current}/{max})",
+    "successTitle": "결제 성공",
+    "failedTitle": "결제 실패"
+  },
+  "subscriptionStatus": {
+    "failed": "구독 실패",
+    "success": "구독 성공! 요금제가 업데이트되었습니다",
+    "processing": "구독 처리 중...",
+    "processingTitle": "처리 중",
+    "waitingMessage": "몇 초 정도 걸릴 수 있습니다. 잠시만 기다려 주세요...",
+    "successTitle": "구독 성공",
+    "failedTitle": "구독 실패"
+  },
+  "upgrade": {
+    "title": "업그레이드로 더 많은 기능 잠금 해제",
+    "descriptionLowBalance": "크레딧이 부족합니다. 업그레이드로 더 많은 용량을 획득하세요!",
+    "descriptionNormal": "한 번 결제, 평생 사용. SEO를 다음 단계로 끌어올리세요",
+    "mostPopular": "가장 인기",
+    "lifetime": "평생",
+    "processing": "처리 중...",
+    "upgradeNow": "지금 업그레이드",
+    "viewAllPlans": "모든 요금제 보기",
+    "paymentFailed": "결제 요청 실패",
+    "upgradeFailed": "업그레이드 실패, 나중에 다시 시도해 주세요",
+    "features": {
+      "starter": {
+        "website": "WordPress 사이트 1개 연결",
+        "aiModels": "모든 AI 모델 사용",
+        "images": "글당 무제한 이미지",
+        "support": "우선 고객 지원"
+      },
+      "professional": {
+        "website": "WordPress 사이트 5개 연결",
+        "team": "팀원 3명",
+        "api": "API 액세스",
+        "voice": "브랜드 보이스 설정"
+      },
+      "business": {
+        "website": "WordPress 사이트 10개 연결",
+        "team": "팀원 10명",
+        "manager": "전담 계정 매니저",
+        "analytics": "고급 분석 보고서"
+      },
+      "agency": {
+        "website": "WordPress 사이트 무제한",
+        "team": "팀원 무제한",
+        "whitelabel": "화이트 라벨 솔루션",
+        "api": "전용 API 할당량"
+      }
+    }
+  },
+  "companies": {
+    "createTitle": "회사 만들기",
+    "createDescription": "팀과 프로젝트를 관리하기 위해 새 회사를 만듭니다",
+    "nameLabel": "회사명",
+    "namePlaceholder": "회사명 입력",
+    "createButton": "회사 만들기",
+    "creating": "생성 중...",
+    "createFailed": "회사 생성 실패",
+    "createFailedRetry": "회사 생성에 실패했습니다. 나중에 다시 시도해 주세요"
   },
   "affiliate": {
     "title": "제휴 파트너",
@@ -242,13 +467,71 @@
   },
   "settings": {
     "title": "설정",
+    "description": "계정 설정 관리",
     "profile": "프로필",
     "aiModels": "AI 모델 설정",
     "notifications": "알림 설정",
     "language": "언어 설정",
     "theme": "테마 설정",
     "darkMode": "다크 모드",
-    "lightMode": "라이트 모드"
+    "lightMode": "라이트 모드",
+    "accountInfo": "계정 정보",
+    "accountInfoDescription": "기본 계정 정보 관리",
+    "accountName": "계정 이름",
+    "accountNamePlaceholder": "계정 이름을 입력하세요",
+    "saveChanges": "변경 사항 저장"
+  },
+  "gettingStarted": {
+    "title": "빠른 시작",
+    "subtitle": "플랫폼 설정을 단계별로 완료하세요",
+    "steps": {
+      "addWebsite": {
+        "title": "웹사이트 추가",
+        "description": "WordPress 웹사이트를 1waySEO에 연결",
+        "buttonText": "설정 시작",
+        "details": [
+          "웹사이트 이름과 WordPress URL 입력",
+          "WordPress 애플리케이션 비밀번호 설정",
+          "연결 테스트로 설정 확인"
+        ]
+      },
+      "connect": {
+        "title": "연결",
+        "description": "웹사이트가 성공적으로 연결되고 기사를 게시할 수 있는지 확인",
+        "details": [
+          "WordPress API 연결 상태 확인",
+          "게시 권한 설정 확인",
+          "기사 게시 기능 테스트"
+        ]
+      },
+      "keywords": {
+        "title": "키워드 설정",
+        "description": "최적화할 SEO 키워드 추가",
+        "buttonText": "키워드 관리",
+        "details": [
+          "메인 키워드 추가",
+          "대상 지역 설정 (대만, 홍콩, 미국 등)",
+          "키워드 우선순위 설정"
+        ]
+      },
+      "writeArticle": {
+        "title": "기사 작성",
+        "description": "AI를 사용하여 고품질 SEO 기사 자동 생성",
+        "buttonText": "생성 시작",
+        "details": [
+          "사용할 키워드 선택",
+          "기사 유형과 길이 설정",
+          "원클릭 생성 및 게시"
+        ]
+      }
+    },
+    "help": {
+      "title": "도움이 필요하신가요?",
+      "description": "설정 중 문제가 발생하면 문서를 참조하거나 고객 지원에 문의하세요.",
+      "viewDocs": "문서 보기",
+      "contactSupport": "지원팀 연락"
+    },
+    "backToDashboard": "대시보드로 돌아가기"
   },
   "home": {
     "heroTagline": "AI 기반 SEO 콘텐츠 플랫폼",
@@ -328,7 +611,49 @@
     "registerNow": "지금 가입하고 10K 무료 크레딧으로 시작하세요",
     "freeStartUsing": "무료로 시작하기",
     "terms": "이용약관",
-    "privacy": "개인정보 처리방침"
+    "privacy": "개인정보 처리방침",
+    "costComparison": {
+      "badge": "비용 비교",
+      "whyChoose": "왜",
+      "description": "기존 방식 대비 90% 이상의 비용과 시간 절약",
+      "costTitle": "비용 비교",
+      "featureTitle": "기능 비교: 기존 방식 vs 1WaySEO",
+      "traditional": "기존 방식",
+      "comparisons": {
+        "professionalWriter": {
+          "category": "전문 작가",
+          "traditional": "₩100,000-300,000/글",
+          "ours": "₩2,000-5,000/글",
+          "savings": "95% 절약"
+        },
+        "seoAgency": {
+          "category": "SEO 대행사",
+          "traditional": "₩2,000,000+/월",
+          "ours": "₩50,000/월부터",
+          "savings": "97% 절약"
+        },
+        "chatgptManual": {
+          "category": "ChatGPT 직접",
+          "traditional": "수동 교정 2-4시간",
+          "ours": "완전 자동 SEO 최적화",
+          "savings": "90% 절약"
+        },
+        "productionTime": {
+          "category": "제작 시간",
+          "traditional": "4-8시간/글",
+          "ours": "10분/글",
+          "savings": "48배 빠름"
+        }
+      },
+      "features": {
+        "keywordResearch": "키워드 조사",
+        "competitorAnalysis": "경쟁사 분석",
+        "seoStructure": "SEO 최적화 구조",
+        "autoImageGen": "자동 이미지 생성",
+        "wordpressPublish": "WordPress 원클릭 게시",
+        "scheduledPost": "예약 자동 게시"
+      }
+    }
   },
   "faq": {
     "title": "자주 묻는 질문",

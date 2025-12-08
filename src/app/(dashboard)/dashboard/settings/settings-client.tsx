@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updateCompany } from "./actions";
+import { useTranslations } from "next-intl";
 
 interface Company {
   id: string;
@@ -23,11 +24,13 @@ interface SettingsClientProps {
 }
 
 export function SettingsClient({ company, searchParams }: SettingsClientProps) {
+  const t = useTranslations("settings");
+
   return (
     <div className="container mx-auto p-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">設定</h1>
-        <p className="text-muted-foreground mt-2">管理您的帳戶設定</p>
+        <h1 className="text-3xl font-bold">{t("title")}</h1>
+        <p className="text-muted-foreground mt-2">{t("description")}</p>
       </div>
 
       {searchParams.error && (
@@ -49,23 +52,23 @@ export function SettingsClient({ company, searchParams }: SettingsClientProps) {
       <div className="grid gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>帳戶資訊</CardTitle>
-            <CardDescription>管理您的帳戶基本資訊</CardDescription>
+            <CardTitle>{t("accountInfo")}</CardTitle>
+            <CardDescription>{t("accountInfoDescription")}</CardDescription>
           </CardHeader>
           <CardContent>
             <form action={updateCompany} className="space-y-4">
               <input type="hidden" name="companyId" value={company.id} />
               <div className="space-y-2">
-                <Label htmlFor="company-name">帳戶名稱</Label>
+                <Label htmlFor="company-name">{t("accountName")}</Label>
                 <Input
                   id="company-name"
                   name="companyName"
                   defaultValue={company.name}
-                  placeholder="請輸入帳戶名稱"
+                  placeholder={t("accountNamePlaceholder")}
                   required
                 />
               </div>
-              <Button type="submit">儲存變更</Button>
+              <Button type="submit">{t("saveChanges")}</Button>
             </form>
           </CardContent>
         </Card>

@@ -27,7 +27,8 @@
     "selectPlaceholder": "選択してください",
     "noData": "データがありません",
     "viewAll": "すべて表示",
-    "learnMore": "詳細を見る"
+    "learnMore": "詳細を見る",
+    "returnHome": "ホームに戻る"
   },
   "nav": {
     "home": "ホーム",
@@ -58,7 +59,24 @@
     "privacyPolicy": "プライバシーポリシー",
     "loginFailed": "ログインに失敗しました",
     "loginSuccess": "ログイン成功",
-    "logoutSuccess": "ログアウトしました"
+    "logoutSuccess": "ログアウトしました",
+    "signupTitle": "新規アカウント作成",
+    "googleSignupDesc": "Googleアカウントで簡単登録",
+    "signupTermsAgreement": "登録することで、当社の",
+    "signupWithGoogle": "Googleで登録",
+    "forgotPassword": "パスワードをお忘れですか",
+    "forgotPasswordDesc": "メールアドレスを入力してください。パスワードリセットリンクをお送りします",
+    "emailLabel": "メールアドレス",
+    "sendResetLink": "リセットリンクを送信",
+    "sending": "送信中...",
+    "rememberPassword": "パスワードを覚えていますか？",
+    "loginNow": "今すぐログイン",
+    "emailSent": "メール送信完了",
+    "emailSentDesc": "パスワードリセットリンクをメールで送信しました",
+    "checkInbox": "受信トレイ（迷惑メールフォルダも含む）を確認し、リンクをクリックしてパスワードをリセットしてください。",
+    "noEmailReceived": "数分以内にメールが届かない場合は、再送信してください。",
+    "resendEmail": "メールを再送信",
+    "backToLogin": "ログインに戻る"
   },
   "dashboard": {
     "title": "ダッシュボード",
@@ -194,7 +212,130 @@
       "confirmPublish": "公開する",
       "failed": "公開に失敗しました"
     },
-    "loadFailed": "読み込みに失敗しました"
+    "loadFailed": "読み込みに失敗しました",
+    "batchPublish": {
+      "title": "一括公開（{count}件）",
+      "description": "選択した記事を指定のサイトに公開",
+      "selectedArticles": "選択した記事",
+      "targetWebsite": "公開先サイト",
+      "selectWebsite": "サイトを選択",
+      "selectWebsiteError": "公開先サイトを選択してください",
+      "confirmMessage": "{count}件の記事を「{website}」に公開してもよろしいですか？",
+      "publishStatus": "公開状態",
+      "statusDraft": "下書き",
+      "statusPublished": "公開済み",
+      "progress": "公開進捗",
+      "publishing": "公開中...",
+      "result": "公開結果",
+      "total": "合計：{count}件",
+      "success": "成功：{count}件",
+      "failed": "失敗：{count}件",
+      "startPublish": "一括公開を開始",
+      "close": "閉じる",
+      "publishFailed": "一括公開に失敗しました",
+      "publishSuccess": "{count}件の記事を公開しました",
+      "publishPartial": "公開完了：成功 {success}件、失敗 {failed}件",
+      "publishError": "一括公開に失敗しました",
+      "unknownError": "不明なエラー"
+    },
+    "batchDialog": {
+      "title": "一括記事生成",
+      "description": "3ステップ：トピック探索 → タイトル選択 → 一括生成",
+      "generateTitlesFailed": "タイトル生成に失敗しました",
+      "generateTitlesRetry": "タイトル生成に失敗しました。再試行してください",
+      "addTitlesFirst": "先に生成するタイトルを追加してください",
+      "steps": {
+        "topicInput": "トピック入力",
+        "titleSelect": "タイトル選択",
+        "confirmGenerate": "生成確認"
+      },
+      "keywordLabel": "記事トピック/キーワード",
+      "keywordPlaceholder": "記事のトピックを入力すると、システムがタイトル候補を生成します",
+      "keywordHint": "トピック概念またはSEOキーワードを入力すると、複数のタイトル候補が生成されます",
+      "generating": "生成中...",
+      "generateIdeas": "アイデア生成",
+      "customTitleLabel": "またはカスタムタイトルを入力",
+      "customTitlePlaceholder": "カスタムタイトルを入力",
+      "add": "追加",
+      "generatedTitlesLabel": "生成されたタイトル（追加するものを選択）",
+      "addTitles": "タイトル追加 ({count})",
+      "pendingList": "生成待ちリスト ({count})",
+      "submitting": "送信中...",
+      "startGeneration": "生成開始",
+      "topic": "トピック",
+      "editTitlePlaceholder": "クリックしてタイトルを編集",
+      "emptyStateHint": "キーワードを入力し「アイデア生成」をクリックして開始",
+      "options": {
+        "title": "生成オプション",
+        "targetLanguage": "ターゲット言語",
+        "wordCount": "文字数",
+        "words": "{count} 文字",
+        "autoImageTitle": "自動画像設定",
+        "autoImageDesc": "システムは各H2見出しに適切な画像を自動設定します",
+        "hint1": "一括生成モード",
+        "hint2": "すべての記事に同じ設定を適用",
+        "hint3": "生成後リストで確認可能"
+      }
+    },
+    "publishPlan": {
+      "loadFailed": "ウェブサイトリストの読み込みに失敗しました",
+      "websiteNotFound": "該当するウェブサイトが見つかりません",
+      "title": "公開計画リスト",
+      "summary": "合計: {total} 件 | 有効: {valid} | エラー: {error}",
+      "columns": {
+        "status": "ステータス",
+        "keyword": "キーワード",
+        "website": "ウェブサイト",
+        "type": "タイプ",
+        "publishTime": "公開時間",
+        "customSlug": "カスタムスラッグ",
+        "actions": "操作"
+      },
+      "status": {
+        "valid": "有効",
+        "warning": "警告",
+        "error": "エラー"
+      },
+      "validating": "検証中...",
+      "noData": "データがインポートされていません",
+      "aiDetermine": "AI判定",
+      "bySchedule": "スケジュール通り",
+      "autoGenerate": "自動生成"
+    },
+    "scheduleSettings": {
+      "title": "スケジュール設定",
+      "description": "記事公開の間隔を設定",
+      "intervalMode": "固定間隔で公開",
+      "specificMode": "Excel指定時間を使用（入力があれば）",
+      "intervalLabel": "公開間隔（時間）",
+      "intervalHint": "{hours}時間ごとに1記事を公開",
+      "previewTitle": "公開時間プレビュー（最初の5件）",
+      "morePlans": "...他に{count}件の計画",
+      "totalPlans": "総計画数",
+      "plansCount": "{count}件",
+      "estimatedTime": "完了予定",
+      "days": "約{days}日"
+    },
+    "import": {
+      "title": "一括インポート",
+      "description": "Excelファイルをアップロードして記事タスクを一括作成",
+      "uploadTitle": "Excelファイルをアップロード",
+      "uploadDescription": "5列形式に対応：キーワード、サイト名、記事タイプ、公開時間、カスタムスラッグ",
+      "backToUpload": "アップロードに戻る",
+      "nextSchedule": "次へ：スケジュール設定",
+      "nextConfirm": "次へ：確認",
+      "confirmTitle": "実行確認",
+      "confirmDescription": "{count}件の記事タスクを作成します",
+      "taskCount": "タスク数",
+      "taskUnit": "{count}件",
+      "scheduleMode": "スケジュールモード",
+      "intervalPublish": "{hours}時間ごとに1件公開",
+      "specificTimePublish": "指定時間に公開",
+      "confirm": "実行確認",
+      "importFailed": "一括インポートに失敗しました",
+      "importSuccess": "{count}件のタスクを作成しました",
+      "errorOccurred": "エラーが発生しました"
+    }
   },
   "websites": {
     "title": "ウェブサイト管理",
@@ -208,7 +349,13 @@
     "wordpressSettings": "WordPress設定",
     "apiKey": "APIキー",
     "connected": "接続済み",
-    "notConnected": "未接続"
+    "notConnected": "未接続",
+    "manageDescription": "WordPressウェブサイトの設定を管理",
+    "noCompanyJoined": "まだどの会社にも参加していません",
+    "status": "ステータス",
+    "viewArticles": "記事を見る",
+    "noWebsites": "ウェブサイトはまだ追加されていません",
+    "addFirstWebsite": "最初のウェブサイトを追加"
   },
   "subscription": {
     "title": "サブスクリプションプラン",
@@ -222,7 +369,85 @@
     "purchaseHistory": "購入履歴",
     "features": "機能",
     "popular": "人気",
-    "recommended": "おすすめ"
+    "recommended": "おすすめ",
+    "planType": "プランタイプ",
+    "freePlan": "無料プラン",
+    "unknownPlan": "不明なプラン",
+    "monthlyResetCredits": "月間リセットクレジット",
+    "base": "基本",
+    "purchasedCredits": "購入クレジット",
+    "neverExpires": "期限なし",
+    "quotaResetDate": "クォータリセット日",
+    "creditPackagePurchase": "クレジットパッケージ購入"
+  },
+  "payment": {
+    "failed": "決済失敗",
+    "success": "決済成功",
+    "checking": "決済状況を確認中...",
+    "queryFailed": "クエリ失敗",
+    "cannotConfirm": "決済状況を確認できません。ページを更新するか、サポートにお問い合わせください。",
+    "timeout": "決済確認がタイムアウトしました。ページを更新するか、サポートにお問い合わせください。",
+    "confirmingTitle": "確認中",
+    "waitingMessage": "数秒かかる場合があります。お待ちください...（{current}/{max}）",
+    "successTitle": "決済成功",
+    "failedTitle": "決済失敗"
+  },
+  "subscriptionStatus": {
+    "failed": "サブスクリプション失敗",
+    "success": "サブスクリプション成功！プランが更新されました",
+    "processing": "サブスクリプションを処理中...",
+    "processingTitle": "処理中",
+    "waitingMessage": "数秒かかる場合があります。お待ちください...",
+    "successTitle": "サブスクリプション成功",
+    "failedTitle": "サブスクリプション失敗"
+  },
+  "upgrade": {
+    "title": "アップグレードでより多くの機能を解放",
+    "descriptionLowBalance": "クレジットが残りわずかです。アップグレードでより多くの容量を獲得！",
+    "descriptionNormal": "一度の支払いで永久に利用可能。SEOを次のレベルへ",
+    "mostPopular": "最も人気",
+    "lifetime": "永久",
+    "processing": "処理中...",
+    "upgradeNow": "今すぐアップグレード",
+    "viewAllPlans": "すべてのプランを見る",
+    "paymentFailed": "支払いリクエストが失敗しました",
+    "upgradeFailed": "アップグレードに失敗しました。後でもう一度お試しください",
+    "features": {
+      "starter": {
+        "website": "WordPressサイト1つを接続",
+        "aiModels": "すべてのAIモデルを使用",
+        "images": "記事ごとに無制限の画像",
+        "support": "優先カスタマーサポート"
+      },
+      "professional": {
+        "website": "WordPressサイト5つを接続",
+        "team": "チームメンバー3人",
+        "api": "APIアクセス",
+        "voice": "ブランドボイス設定"
+      },
+      "business": {
+        "website": "WordPressサイト10つを接続",
+        "team": "チームメンバー10人",
+        "manager": "専任アカウントマネージャー",
+        "analytics": "高度な分析レポート"
+      },
+      "agency": {
+        "website": "WordPressサイト無制限",
+        "team": "チームメンバー無制限",
+        "whitelabel": "ホワイトラベルソリューション",
+        "api": "専用APIクォータ"
+      }
+    }
+  },
+  "companies": {
+    "createTitle": "会社を作成",
+    "createDescription": "新しい会社を作成してチームとプロジェクトを管理",
+    "nameLabel": "会社名",
+    "namePlaceholder": "会社名を入力",
+    "createButton": "会社を作成",
+    "creating": "作成中...",
+    "createFailed": "会社の作成に失敗しました",
+    "createFailedRetry": "会社の作成に失敗しました。後でもう一度お試しください"
   },
   "affiliate": {
     "title": "アフィリエイトパートナー",
@@ -242,13 +467,71 @@
   },
   "settings": {
     "title": "設定",
+    "description": "アカウント設定を管理",
     "profile": "プロフィール",
     "aiModels": "AIモデル設定",
     "notifications": "通知設定",
     "language": "言語設定",
     "theme": "テーマ設定",
     "darkMode": "ダークモード",
-    "lightMode": "ライトモード"
+    "lightMode": "ライトモード",
+    "accountInfo": "アカウント情報",
+    "accountInfoDescription": "基本的なアカウント情報を管理",
+    "accountName": "アカウント名",
+    "accountNamePlaceholder": "アカウント名を入力",
+    "saveChanges": "変更を保存"
+  },
+  "gettingStarted": {
+    "title": "クイックスタート",
+    "subtitle": "ステップバイステップでプラットフォームの設定を完了",
+    "steps": {
+      "addWebsite": {
+        "title": "ウェブサイトを追加",
+        "description": "WordPressウェブサイトを1waySEOに接続",
+        "buttonText": "設定を開始",
+        "details": [
+          "ウェブサイト名とWordPress URLを入力",
+          "WordPressアプリケーションパスワードを設定",
+          "接続テストで設定を確認"
+        ]
+      },
+      "connect": {
+        "title": "接続",
+        "description": "ウェブサイトが正常に接続され、記事を公開できることを確認",
+        "details": [
+          "WordPress API接続状態を確認",
+          "公開権限の設定を確認",
+          "記事公開機能をテスト"
+        ]
+      },
+      "keywords": {
+        "title": "キーワードを設定",
+        "description": "最適化したいSEOキーワードを追加",
+        "buttonText": "キーワードを管理",
+        "details": [
+          "メインキーワードを追加",
+          "ターゲット地域を設定（台湾、香港、アメリカなど）",
+          "キーワードの優先順位を設定"
+        ]
+      },
+      "writeArticle": {
+        "title": "記事を書く",
+        "description": "AIを使用して高品質なSEO記事を自動生成",
+        "buttonText": "生成を開始",
+        "details": [
+          "使用するキーワードを選択",
+          "記事のタイプと長さを設定",
+          "ワンクリックで生成・公開"
+        ]
+      }
+    },
+    "help": {
+      "title": "ヘルプが必要ですか？",
+      "description": "設定中に問題が発生した場合は、ドキュメントを参照するか、サポートにお問い合わせください。",
+      "viewDocs": "ドキュメントを見る",
+      "contactSupport": "サポートに連絡"
+    },
+    "backToDashboard": "ダッシュボードに戻る"
   },
   "home": {
     "heroTagline": "AI駆動のSEOコンテンツプラットフォーム",
@@ -328,7 +611,49 @@
     "registerNow": "今すぐ登録して10K無料クレジットで始めましょう",
     "freeStartUsing": "無料で始める",
     "terms": "利用規約",
-    "privacy": "プライバシーポリシー"
+    "privacy": "プライバシーポリシー",
+    "costComparison": {
+      "badge": "コスト比較",
+      "whyChoose": "なぜ",
+      "description": "従来の方法と比べて90%以上のコストと時間を節約",
+      "costTitle": "コスト比較",
+      "featureTitle": "機能比較：従来方式 vs 1WaySEO",
+      "traditional": "従来方式",
+      "comparisons": {
+        "professionalWriter": {
+          "category": "プロのライター",
+          "traditional": "¥10,000-30,000/記事",
+          "ours": "¥200-500/記事",
+          "savings": "95%節約"
+        },
+        "seoAgency": {
+          "category": "SEO代行会社",
+          "traditional": "¥200,000+/月",
+          "ours": "¥5,000/月から",
+          "savings": "97%節約"
+        },
+        "chatgptManual": {
+          "category": "ChatGPT自力",
+          "traditional": "手動校正2-4時間",
+          "ours": "全自動SEO最適化",
+          "savings": "90%節約"
+        },
+        "productionTime": {
+          "category": "制作時間",
+          "traditional": "4-8時間/記事",
+          "ours": "10分/記事",
+          "savings": "48倍速い"
+        }
+      },
+      "features": {
+        "keywordResearch": "キーワード調査",
+        "competitorAnalysis": "競合分析",
+        "seoStructure": "SEO最適化構造",
+        "autoImageGen": "自動画像生成",
+        "wordpressPublish": "WordPressワンクリック公開",
+        "scheduledPost": "スケジュール自動投稿"
+      }
+    }
   },
   "faq": {
     "title": "よくある質問",

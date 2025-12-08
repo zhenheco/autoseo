@@ -27,7 +27,8 @@
     "selectPlaceholder": "Veuillez sélectionner",
     "noData": "Aucune donnée",
     "viewAll": "Voir tout",
-    "learnMore": "En savoir plus"
+    "learnMore": "En savoir plus",
+    "returnHome": "Retour à l'accueil"
   },
   "nav": {
     "home": "Accueil",
@@ -58,7 +59,24 @@
     "privacyPolicy": "Politique de confidentialité",
     "loginFailed": "Échec de la connexion",
     "loginSuccess": "Connexion réussie",
-    "logoutSuccess": "Déconnexion réussie"
+    "logoutSuccess": "Déconnexion réussie",
+    "signupTitle": "Créer un nouveau compte",
+    "googleSignupDesc": "Inscrivez-vous rapidement avec Google",
+    "signupTermsAgreement": "En vous inscrivant, vous acceptez nos",
+    "signupWithGoogle": "S'inscrire avec Google",
+    "forgotPassword": "Mot de passe oublié",
+    "forgotPasswordDesc": "Entrez votre adresse e-mail et nous vous enverrons un lien de réinitialisation",
+    "emailLabel": "E-mail",
+    "sendResetLink": "Envoyer le lien",
+    "sending": "Envoi en cours...",
+    "rememberPassword": "Vous vous souvenez de votre mot de passe ?",
+    "loginNow": "Se connecter maintenant",
+    "emailSent": "E-mail envoyé",
+    "emailSentDesc": "Nous vous avons envoyé un lien de réinitialisation",
+    "checkInbox": "Veuillez vérifier votre boîte de réception (y compris les spams) et cliquer sur le lien.",
+    "noEmailReceived": "Si vous ne recevez pas l'e-mail dans quelques minutes, réessayez.",
+    "resendEmail": "Renvoyer l'e-mail",
+    "backToLogin": "Retour à la connexion"
   },
   "dashboard": {
     "title": "Tableau de bord",
@@ -194,7 +212,130 @@
       "confirmPublish": "Confirmer la publication",
       "failed": "Échec de la publication"
     },
-    "loadFailed": "Échec du chargement"
+    "loadFailed": "Échec du chargement",
+    "batchPublish": {
+      "title": "Publication en lot ({count} articles)",
+      "description": "Publier les articles sélectionnés sur le site spécifié",
+      "selectedArticles": "Articles sélectionnés",
+      "targetWebsite": "Site cible",
+      "selectWebsite": "Sélectionner le site",
+      "selectWebsiteError": "Veuillez sélectionner un site cible",
+      "confirmMessage": "Êtes-vous sûr de vouloir publier {count} articles sur « {website} » ?",
+      "publishStatus": "État de publication",
+      "statusDraft": "Brouillon",
+      "statusPublished": "Publié",
+      "progress": "Progression de publication",
+      "publishing": "Publication...",
+      "result": "Résultat de publication",
+      "total": "Total : {count}",
+      "success": "Réussi : {count}",
+      "failed": "Échoué : {count}",
+      "startPublish": "Démarrer la publication en lot",
+      "close": "Fermer",
+      "publishFailed": "Échec de la publication en lot",
+      "publishSuccess": "{count} articles publiés avec succès",
+      "publishPartial": "Publication terminée : {success} réussis, {failed} échoués",
+      "publishError": "Échec de la publication en lot",
+      "unknownError": "Erreur inconnue"
+    },
+    "batchDialog": {
+      "title": "Génération d'articles en lot",
+      "description": "Processus en trois étapes : Exploration des sujets → Sélection des titres → Génération en lot",
+      "generateTitlesFailed": "Échec de la génération des titres",
+      "generateTitlesRetry": "Échec de la génération des titres, veuillez réessayer",
+      "addTitlesFirst": "Veuillez d'abord ajouter des titres à générer",
+      "steps": {
+        "topicInput": "Saisie du sujet",
+        "titleSelect": "Sélection du titre",
+        "confirmGenerate": "Confirmer la génération"
+      },
+      "keywordLabel": "Sujet/Mot-clé de l'article",
+      "keywordPlaceholder": "Entrez le sujet de l'article, le système générera des suggestions de titres",
+      "keywordHint": "Entrez un concept de sujet ou un mot-clé SEO, le système générera plusieurs options de titres",
+      "generating": "Génération...",
+      "generateIdeas": "Générer des idées",
+      "customTitleLabel": "Ou entrez un titre personnalisé",
+      "customTitlePlaceholder": "Entrez un titre personnalisé",
+      "add": "Ajouter",
+      "generatedTitlesLabel": "Titres générés (sélectionner pour ajouter)",
+      "addTitles": "Ajouter des titres ({count})",
+      "pendingList": "Liste en attente ({count})",
+      "submitting": "Envoi...",
+      "startGeneration": "Démarrer la génération",
+      "topic": "Sujet",
+      "editTitlePlaceholder": "Cliquez pour modifier le titre",
+      "emptyStateHint": "Entrez un mot-clé et cliquez sur Générer des idées pour commencer",
+      "options": {
+        "title": "Options de génération",
+        "targetLanguage": "Langue cible",
+        "wordCount": "Nombre de mots",
+        "words": "{count} mots",
+        "autoImageTitle": "Configuration automatique des images",
+        "autoImageDesc": "Le système configurera automatiquement les images pour chaque titre H2",
+        "hint1": "Mode de génération en lot",
+        "hint2": "Tous les articles utilisent les mêmes paramètres",
+        "hint3": "Visible dans la liste après génération"
+      }
+    },
+    "publishPlan": {
+      "loadFailed": "Impossible de charger la liste des sites web",
+      "websiteNotFound": "Site web introuvable",
+      "title": "Liste des plans de publication",
+      "summary": "Total : {total} plans | Valides : {valid} | Erreurs : {error}",
+      "columns": {
+        "status": "Statut",
+        "keyword": "Mot-clé",
+        "website": "Site web",
+        "type": "Type",
+        "publishTime": "Heure de publication",
+        "customSlug": "Slug personnalisé",
+        "actions": "Actions"
+      },
+      "status": {
+        "valid": "Valide",
+        "warning": "Avertissement",
+        "error": "Erreur"
+      },
+      "validating": "Validation en cours...",
+      "noData": "Aucune donnée importée",
+      "aiDetermine": "Déterminé par IA",
+      "bySchedule": "Selon le calendrier",
+      "autoGenerate": "Générer automatiquement"
+    },
+    "scheduleSettings": {
+      "title": "Paramètres de planification",
+      "description": "Configurer les intervalles de publication",
+      "intervalMode": "Publication à intervalle fixe",
+      "specificMode": "Utiliser l'heure spécifiée dans Excel (si disponible)",
+      "intervalLabel": "Intervalle de publication (heures)",
+      "intervalHint": "Publier un article toutes les {hours} heures",
+      "previewTitle": "Aperçu des heures de publication (5 premiers)",
+      "morePlans": "...et {count} plans de plus",
+      "totalPlans": "Total des plans",
+      "plansCount": "{count}",
+      "estimatedTime": "Temps estimé d'achèvement",
+      "days": "Environ {days} jours"
+    },
+    "import": {
+      "title": "Importation par lots",
+      "description": "Téléchargez un fichier Excel pour créer des tâches d'articles en lot",
+      "uploadTitle": "Télécharger un fichier Excel",
+      "uploadDescription": "Prend en charge le format 5 colonnes : Mot-clé, Nom du site, Type d'article, Heure de publication, Slug personnalisé",
+      "backToUpload": "Retour au téléchargement",
+      "nextSchedule": "Suivant : Planification",
+      "nextConfirm": "Suivant : Confirmer",
+      "confirmTitle": "Confirmer l'exécution",
+      "confirmDescription": "{count} tâches d'articles seront créées",
+      "taskCount": "Nombre de tâches",
+      "taskUnit": "{count}",
+      "scheduleMode": "Mode de planification",
+      "intervalPublish": "Publier un toutes les {hours} heures",
+      "specificTimePublish": "Publier aux heures spécifiées",
+      "confirm": "Confirmer",
+      "importFailed": "Échec de l'importation par lots",
+      "importSuccess": "{count} tâches créées avec succès",
+      "errorOccurred": "Une erreur s'est produite"
+    }
   },
   "websites": {
     "title": "Gestion des sites web",
@@ -208,7 +349,13 @@
     "wordpressSettings": "Paramètres WordPress",
     "apiKey": "Clé API",
     "connected": "Connecté",
-    "notConnected": "Non connecté"
+    "notConnected": "Non connecté",
+    "manageDescription": "Gérez les paramètres de votre site WordPress",
+    "noCompanyJoined": "Vous n'avez pas encore rejoint d'entreprise",
+    "status": "Statut",
+    "viewArticles": "Voir les articles",
+    "noWebsites": "Aucun site web ajouté",
+    "addFirstWebsite": "Ajouter votre premier site web"
   },
   "subscription": {
     "title": "Plans d'abonnement",
@@ -222,7 +369,85 @@
     "purchaseHistory": "Historique des achats",
     "features": "Fonctionnalités",
     "popular": "Populaire",
-    "recommended": "Recommandé"
+    "recommended": "Recommandé",
+    "planType": "Type de plan",
+    "freePlan": "Plan gratuit",
+    "unknownPlan": "Plan inconnu",
+    "monthlyResetCredits": "Crédits réinitialisés mensuellement",
+    "base": "Base",
+    "purchasedCredits": "Crédits achetés",
+    "neverExpires": "N'expire jamais",
+    "quotaResetDate": "Date de réinitialisation du quota",
+    "creditPackagePurchase": "Achat de pack de crédits"
+  },
+  "payment": {
+    "failed": "Paiement échoué",
+    "success": "Paiement réussi",
+    "checking": "Vérification du statut de paiement...",
+    "queryFailed": "Échec de la requête",
+    "cannotConfirm": "Impossible de confirmer le statut du paiement. Veuillez actualiser la page ou contacter le support.",
+    "timeout": "Délai de confirmation du paiement dépassé. Veuillez actualiser la page ou contacter le support.",
+    "confirmingTitle": "Confirmation en cours",
+    "waitingMessage": "Cela peut prendre quelques secondes, veuillez patienter... ({current}/{max})",
+    "successTitle": "Paiement réussi",
+    "failedTitle": "Paiement échoué"
+  },
+  "subscriptionStatus": {
+    "failed": "Abonnement échoué",
+    "success": "Abonnement réussi ! Votre forfait a été mis à jour",
+    "processing": "Traitement de votre abonnement...",
+    "processingTitle": "En cours de traitement",
+    "waitingMessage": "Cela peut prendre quelques secondes, veuillez patienter...",
+    "successTitle": "Abonnement réussi",
+    "failedTitle": "Abonnement échoué"
+  },
+  "upgrade": {
+    "title": "Passez à la version supérieure pour débloquer plus de fonctionnalités",
+    "descriptionLowBalance": "Vos crédits sont presque épuisés, passez à la version supérieure pour plus de quota !",
+    "descriptionNormal": "Paiement unique, accès à vie. Faites passer votre SEO au niveau supérieur",
+    "mostPopular": "Le plus populaire",
+    "lifetime": "À vie",
+    "processing": "Traitement en cours...",
+    "upgradeNow": "Passer à la version supérieure",
+    "viewAllPlans": "Voir tous les forfaits",
+    "paymentFailed": "Demande de paiement échouée",
+    "upgradeFailed": "Échec de la mise à niveau, veuillez réessayer plus tard",
+    "features": {
+      "starter": {
+        "website": "Connecter 1 site WordPress",
+        "aiModels": "Accès à tous les modèles IA",
+        "images": "Images illimitées par article",
+        "support": "Support client prioritaire"
+      },
+      "professional": {
+        "website": "Connecter 5 sites WordPress",
+        "team": "3 membres d'équipe",
+        "api": "Accès API",
+        "voice": "Paramètres de voix de marque"
+      },
+      "business": {
+        "website": "Connecter 10 sites WordPress",
+        "team": "10 membres d'équipe",
+        "manager": "Gestionnaire de compte dédié",
+        "analytics": "Rapports analytiques avancés"
+      },
+      "agency": {
+        "website": "Sites WordPress illimités",
+        "team": "Membres d'équipe illimités",
+        "whitelabel": "Solution marque blanche",
+        "api": "Quota API dédié"
+      }
+    }
+  },
+  "companies": {
+    "createTitle": "Créer une entreprise",
+    "createDescription": "Créez une nouvelle entreprise pour gérer votre équipe et vos projets",
+    "nameLabel": "Nom de l'entreprise",
+    "namePlaceholder": "Entrez le nom de l'entreprise",
+    "createButton": "Créer l'entreprise",
+    "creating": "Création en cours...",
+    "createFailed": "Échec de la création de l'entreprise",
+    "createFailedRetry": "Échec de la création de l'entreprise, veuillez réessayer plus tard"
   },
   "affiliate": {
     "title": "Partenaire affilié",
@@ -242,13 +467,71 @@
   },
   "settings": {
     "title": "Paramètres",
+    "description": "Gérer les paramètres de votre compte",
     "profile": "Profil",
     "aiModels": "Paramètres des modèles IA",
     "notifications": "Paramètres de notification",
     "language": "Paramètres de langue",
     "theme": "Paramètres du thème",
     "darkMode": "Mode sombre",
-    "lightMode": "Mode clair"
+    "lightMode": "Mode clair",
+    "accountInfo": "Informations du compte",
+    "accountInfoDescription": "Gérer les informations de base de votre compte",
+    "accountName": "Nom du compte",
+    "accountNamePlaceholder": "Entrez le nom du compte",
+    "saveChanges": "Enregistrer les modifications"
+  },
+  "gettingStarted": {
+    "title": "Démarrage rapide",
+    "subtitle": "Guide étape par étape pour compléter la configuration de la plateforme",
+    "steps": {
+      "addWebsite": {
+        "title": "Ajouter un site web",
+        "description": "Connectez votre site WordPress à 1waySEO",
+        "buttonText": "Commencer la configuration",
+        "details": [
+          "Entrez le nom du site et l'URL WordPress",
+          "Configurez le mot de passe d'application WordPress",
+          "Testez la connexion pour confirmer les paramètres"
+        ]
+      },
+      "connect": {
+        "title": "Connecter",
+        "description": "Confirmez que votre site est connecté avec succès et peut publier des articles",
+        "details": [
+          "Vérifier l'état de connexion API WordPress",
+          "Confirmer les autorisations de publication",
+          "Tester la fonction de publication d'articles"
+        ]
+      },
+      "keywords": {
+        "title": "Configurer les mots-clés",
+        "description": "Ajoutez les mots-clés SEO que vous souhaitez optimiser",
+        "buttonText": "Gérer les mots-clés",
+        "details": [
+          "Ajouter les mots-clés principaux",
+          "Définir la région cible (Taïwan, Hong Kong, États-Unis, etc.)",
+          "Définir la priorité des mots-clés"
+        ]
+      },
+      "writeArticle": {
+        "title": "Écrire un article",
+        "description": "Utilisez l'IA pour générer automatiquement des articles SEO de haute qualité",
+        "buttonText": "Commencer la génération",
+        "details": [
+          "Sélectionner les mots-clés à utiliser",
+          "Définir le type et la longueur de l'article",
+          "Générer et publier en un clic"
+        ]
+      }
+    },
+    "help": {
+      "title": "Besoin d'aide ?",
+      "description": "Si vous rencontrez des problèmes lors de la configuration, consultez notre documentation ou contactez le support.",
+      "viewDocs": "Voir la documentation",
+      "contactSupport": "Contacter le support"
+    },
+    "backToDashboard": "Retour au tableau de bord"
   },
   "home": {
     "heroTagline": "Plateforme de contenu SEO propulsée par l'IA",
@@ -328,7 +611,49 @@
     "registerNow": "Inscrivez-vous maintenant et obtenez 10K crédits gratuits pour commencer",
     "freeStartUsing": "Commencer gratuitement",
     "terms": "Conditions d'utilisation",
-    "privacy": "Politique de confidentialité"
+    "privacy": "Politique de confidentialité",
+    "costComparison": {
+      "badge": "Comparaison des coûts",
+      "whyChoose": "Pourquoi choisir",
+      "description": "Économisez plus de 90% en coûts et en temps par rapport aux méthodes traditionnelles",
+      "costTitle": "Comparaison des coûts",
+      "featureTitle": "Comparaison des fonctionnalités : Traditionnel vs 1WaySEO",
+      "traditional": "Traditionnel",
+      "comparisons": {
+        "professionalWriter": {
+          "category": "Rédacteur professionnel",
+          "traditional": "80-250€/article",
+          "ours": "2-5€/article",
+          "savings": "Économie 95%"
+        },
+        "seoAgency": {
+          "category": "Agence SEO",
+          "traditional": "1.500€+/mois",
+          "ours": "35€/mois",
+          "savings": "Économie 97%"
+        },
+        "chatgptManual": {
+          "category": "ChatGPT manuel",
+          "traditional": "2-4h édition manuelle",
+          "ours": "SEO entièrement automatique",
+          "savings": "Économie 90%"
+        },
+        "productionTime": {
+          "category": "Temps de production",
+          "traditional": "4-8 heures/article",
+          "ours": "10 minutes/article",
+          "savings": "48x plus rapide"
+        }
+      },
+      "features": {
+        "keywordResearch": "Recherche de mots-clés",
+        "competitorAnalysis": "Analyse de la concurrence",
+        "seoStructure": "Structure SEO optimisée",
+        "autoImageGen": "Génération automatique d'images",
+        "wordpressPublish": "Publication WordPress en un clic",
+        "scheduledPost": "Publication automatique programmée"
+      }
+    }
   },
   "faq": {
     "title": "FAQ",

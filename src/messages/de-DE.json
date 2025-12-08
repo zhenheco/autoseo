@@ -27,7 +27,8 @@
     "selectPlaceholder": "Bitte auswählen",
     "noData": "Keine Daten",
     "viewAll": "Alle anzeigen",
-    "learnMore": "Mehr erfahren"
+    "learnMore": "Mehr erfahren",
+    "returnHome": "Zurück zur Startseite"
   },
   "nav": {
     "home": "Startseite",
@@ -58,7 +59,24 @@
     "privacyPolicy": "Datenschutzrichtlinie",
     "loginFailed": "Anmeldung fehlgeschlagen",
     "loginSuccess": "Anmeldung erfolgreich",
-    "logoutSuccess": "Erfolgreich abgemeldet"
+    "logoutSuccess": "Erfolgreich abgemeldet",
+    "signupTitle": "Neues Konto erstellen",
+    "googleSignupDesc": "Schnell mit Google registrieren",
+    "signupTermsAgreement": "Mit der Registrierung stimmen Sie zu:",
+    "signupWithGoogle": "Mit Google registrieren",
+    "forgotPassword": "Passwort vergessen",
+    "forgotPasswordDesc": "Geben Sie Ihre E-Mail-Adresse ein und wir senden Ihnen einen Link zum Zurücksetzen",
+    "emailLabel": "E-Mail",
+    "sendResetLink": "Link senden",
+    "sending": "Wird gesendet...",
+    "rememberPassword": "Passwort eingefallen?",
+    "loginNow": "Jetzt anmelden",
+    "emailSent": "E-Mail gesendet",
+    "emailSentDesc": "Wir haben Ihnen einen Link zum Zurücksetzen gesendet",
+    "checkInbox": "Bitte überprüfen Sie Ihren Posteingang (einschließlich Spam-Ordner) und klicken Sie auf den Link.",
+    "noEmailReceived": "Wenn Sie die E-Mail nicht innerhalb weniger Minuten erhalten, versuchen Sie es erneut.",
+    "resendEmail": "E-Mail erneut senden",
+    "backToLogin": "Zurück zur Anmeldung"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -194,7 +212,130 @@
       "confirmPublish": "Veröffentlichung bestätigen",
       "failed": "Veröffentlichung fehlgeschlagen"
     },
-    "loadFailed": "Laden fehlgeschlagen"
+    "loadFailed": "Laden fehlgeschlagen",
+    "batchPublish": {
+      "title": "Stapel-Veröffentlichung ({count} Artikel)",
+      "description": "Ausgewählte Artikel auf der angegebenen Website veröffentlichen",
+      "selectedArticles": "Ausgewählte Artikel",
+      "targetWebsite": "Ziel-Website",
+      "selectWebsite": "Website auswählen",
+      "selectWebsiteError": "Bitte wählen Sie eine Ziel-Website",
+      "confirmMessage": "Möchten Sie {count} Artikel auf \"{website}\" veröffentlichen?",
+      "publishStatus": "Veröffentlichungsstatus",
+      "statusDraft": "Entwurf",
+      "statusPublished": "Veröffentlicht",
+      "progress": "Veröffentlichungsfortschritt",
+      "publishing": "Veröffentlichen...",
+      "result": "Veröffentlichungsergebnis",
+      "total": "Gesamt: {count}",
+      "success": "Erfolgreich: {count}",
+      "failed": "Fehlgeschlagen: {count}",
+      "startPublish": "Stapel-Veröffentlichung starten",
+      "close": "Schließen",
+      "publishFailed": "Stapel-Veröffentlichung fehlgeschlagen",
+      "publishSuccess": "{count} Artikel erfolgreich veröffentlicht",
+      "publishPartial": "Veröffentlichung abgeschlossen: {success} erfolgreich, {failed} fehlgeschlagen",
+      "publishError": "Stapel-Veröffentlichung fehlgeschlagen",
+      "unknownError": "Unbekannter Fehler"
+    },
+    "batchDialog": {
+      "title": "Stapel-Artikelerstellung",
+      "description": "Drei-Schritte-Prozess: Themensuche → Titelauswahl → Stapelerstellung",
+      "generateTitlesFailed": "Titelerstellung fehlgeschlagen",
+      "generateTitlesRetry": "Titelerstellung fehlgeschlagen, bitte erneut versuchen",
+      "addTitlesFirst": "Bitte fügen Sie zuerst Titel hinzu",
+      "steps": {
+        "topicInput": "Themeneingabe",
+        "titleSelect": "Titelauswahl",
+        "confirmGenerate": "Erstellung bestätigen"
+      },
+      "keywordLabel": "Artikelthema/Schlüsselwort",
+      "keywordPlaceholder": "Artikelthema eingeben, System generiert Titelvorschläge",
+      "keywordHint": "Themenkonzept oder SEO-Schlüsselwort eingeben, System generiert mehrere Titeloptionen",
+      "generating": "Generiere...",
+      "generateIdeas": "Ideen generieren",
+      "customTitleLabel": "Oder eigenen Titel eingeben",
+      "customTitlePlaceholder": "Eigenen Titel eingeben",
+      "add": "Hinzufügen",
+      "generatedTitlesLabel": "Generierte Titel (zum Hinzufügen auswählen)",
+      "addTitles": "Titel hinzufügen ({count})",
+      "pendingList": "Warteschlange ({count})",
+      "submitting": "Wird übermittelt...",
+      "startGeneration": "Erstellung starten",
+      "topic": "Thema",
+      "editTitlePlaceholder": "Klicken zum Bearbeiten",
+      "emptyStateHint": "Schlüsselwort eingeben und auf Ideen generieren klicken",
+      "options": {
+        "title": "Erstellungsoptionen",
+        "targetLanguage": "Zielsprache",
+        "wordCount": "Wortanzahl",
+        "words": "{count} Wörter",
+        "autoImageTitle": "Automatische Bildkonfiguration",
+        "autoImageDesc": "System konfiguriert automatisch Bilder für jede H2-Überschrift",
+        "hint1": "Stapel-Erstellungsmodus",
+        "hint2": "Alle Artikel verwenden gleiche Einstellungen",
+        "hint3": "Nach Erstellung in Liste einsehbar"
+      }
+    },
+    "publishPlan": {
+      "loadFailed": "Webseitenliste konnte nicht geladen werden",
+      "websiteNotFound": "Webseite nicht gefunden",
+      "title": "Veröffentlichungsplan-Liste",
+      "summary": "Gesamt: {total} Pläne | Gültig: {valid} | Fehler: {error}",
+      "columns": {
+        "status": "Status",
+        "keyword": "Schlüsselwort",
+        "website": "Webseite",
+        "type": "Typ",
+        "publishTime": "Veröffentlichungszeit",
+        "customSlug": "Benutzerdefinierter Slug",
+        "actions": "Aktionen"
+      },
+      "status": {
+        "valid": "Gültig",
+        "warning": "Warnung",
+        "error": "Fehler"
+      },
+      "validating": "Wird validiert...",
+      "noData": "Noch keine Daten importiert",
+      "aiDetermine": "KI-Bestimmung",
+      "bySchedule": "Nach Zeitplan",
+      "autoGenerate": "Automatisch generieren"
+    },
+    "scheduleSettings": {
+      "title": "Zeitplan-Einstellungen",
+      "description": "Veröffentlichungsintervalle konfigurieren",
+      "intervalMode": "Festes Intervall",
+      "specificMode": "Excel-angegebene Zeit verwenden (falls verfügbar)",
+      "intervalLabel": "Veröffentlichungsintervall (Stunden)",
+      "intervalHint": "Alle {hours} Stunden einen Artikel veröffentlichen",
+      "previewTitle": "Veröffentlichungszeit-Vorschau (erste 5)",
+      "morePlans": "...und {count} weitere Pläne",
+      "totalPlans": "Gesamtpläne",
+      "plansCount": "{count}",
+      "estimatedTime": "Voraussichtliche Fertigstellung",
+      "days": "Ca. {days} Tage"
+    },
+    "import": {
+      "title": "Stapelimport",
+      "description": "Excel-Datei hochladen, um Artikelaufgaben stapelweise zu erstellen",
+      "uploadTitle": "Excel-Datei hochladen",
+      "uploadDescription": "Unterstützt 5-Spalten-Format: Schlüsselwort, Website-Name, Artikeltyp, Veröffentlichungszeit, Benutzerdefinierter Slug",
+      "backToUpload": "Zurück zum Upload",
+      "nextSchedule": "Weiter: Zeitplan",
+      "nextConfirm": "Weiter: Bestätigen",
+      "confirmTitle": "Ausführung bestätigen",
+      "confirmDescription": "{count} Artikelaufgaben werden erstellt",
+      "taskCount": "Aufgabenanzahl",
+      "taskUnit": "{count}",
+      "scheduleMode": "Zeitplanmodus",
+      "intervalPublish": "Alle {hours} Stunden einen veröffentlichen",
+      "specificTimePublish": "Zu festgelegten Zeiten veröffentlichen",
+      "confirm": "Bestätigen",
+      "importFailed": "Stapelimport fehlgeschlagen",
+      "importSuccess": "{count} Aufgaben erfolgreich erstellt",
+      "errorOccurred": "Ein Fehler ist aufgetreten"
+    }
   },
   "websites": {
     "title": "Webseitenverwaltung",
@@ -208,7 +349,13 @@
     "wordpressSettings": "WordPress-Einstellungen",
     "apiKey": "API-Schlüssel",
     "connected": "Verbunden",
-    "notConnected": "Nicht verbunden"
+    "notConnected": "Nicht verbunden",
+    "manageDescription": "Verwalten Sie Ihre WordPress-Webseiten-Einstellungen",
+    "noCompanyJoined": "Sie sind noch keinem Unternehmen beigetreten",
+    "status": "Status",
+    "viewArticles": "Artikel anzeigen",
+    "noWebsites": "Noch keine Webseiten hinzugefügt",
+    "addFirstWebsite": "Erste Webseite hinzufügen"
   },
   "subscription": {
     "title": "Abonnementpläne",
@@ -222,7 +369,85 @@
     "purchaseHistory": "Kaufhistorie",
     "features": "Funktionen",
     "popular": "Beliebt",
-    "recommended": "Empfohlen"
+    "recommended": "Empfohlen",
+    "planType": "Plantyp",
+    "freePlan": "Kostenloser Plan",
+    "unknownPlan": "Unbekannter Plan",
+    "monthlyResetCredits": "Monatlich zurückgesetzte Credits",
+    "base": "Basis",
+    "purchasedCredits": "Gekaufte Credits",
+    "neverExpires": "Läuft nie ab",
+    "quotaResetDate": "Kontingent-Reset-Datum",
+    "creditPackagePurchase": "Credit-Paket kaufen"
+  },
+  "payment": {
+    "failed": "Zahlung fehlgeschlagen",
+    "success": "Zahlung erfolgreich",
+    "checking": "Zahlungsstatus wird überprüft...",
+    "queryFailed": "Abfrage fehlgeschlagen",
+    "cannotConfirm": "Zahlungsstatus kann nicht bestätigt werden. Bitte Seite aktualisieren oder Support kontaktieren.",
+    "timeout": "Zahlungsbestätigung Zeitüberschreitung. Bitte Seite aktualisieren oder Support kontaktieren.",
+    "confirmingTitle": "Bestätigung läuft",
+    "waitingMessage": "Dies kann einige Sekunden dauern, bitte warten... ({current}/{max})",
+    "successTitle": "Zahlung erfolgreich",
+    "failedTitle": "Zahlung fehlgeschlagen"
+  },
+  "subscriptionStatus": {
+    "failed": "Abonnement fehlgeschlagen",
+    "success": "Abonnement erfolgreich! Ihr Plan wurde aktualisiert",
+    "processing": "Ihr Abonnement wird verarbeitet...",
+    "processingTitle": "Verarbeitung läuft",
+    "waitingMessage": "Dies kann einige Sekunden dauern, bitte warten...",
+    "successTitle": "Abonnement erfolgreich",
+    "failedTitle": "Abonnement fehlgeschlagen"
+  },
+  "upgrade": {
+    "title": "Upgrade für mehr Funktionen freischalten",
+    "descriptionLowBalance": "Ihre Credits gehen zur Neige, Upgrade für mehr Kontingent!",
+    "descriptionNormal": "Einmalige Zahlung, lebenslanger Zugang. Heben Sie Ihr SEO auf die nächste Stufe",
+    "mostPopular": "Am beliebtesten",
+    "lifetime": "Lebenslang",
+    "processing": "Verarbeitung...",
+    "upgradeNow": "Jetzt upgraden",
+    "viewAllPlans": "Alle Pläne ansehen",
+    "paymentFailed": "Zahlungsanfrage fehlgeschlagen",
+    "upgradeFailed": "Upgrade fehlgeschlagen, bitte versuchen Sie es später erneut",
+    "features": {
+      "starter": {
+        "website": "1 WordPress-Website verbinden",
+        "aiModels": "Zugang zu allen KI-Modellen",
+        "images": "Unbegrenzte Bilder pro Artikel",
+        "support": "Prioritärer Kundensupport"
+      },
+      "professional": {
+        "website": "5 WordPress-Websites verbinden",
+        "team": "3 Teammitglieder",
+        "api": "API-Zugang",
+        "voice": "Markensprache-Einstellungen"
+      },
+      "business": {
+        "website": "10 WordPress-Websites verbinden",
+        "team": "10 Teammitglieder",
+        "manager": "Dedizierter Account Manager",
+        "analytics": "Erweiterte Analyseberichte"
+      },
+      "agency": {
+        "website": "Unbegrenzte WordPress-Websites",
+        "team": "Unbegrenzte Teammitglieder",
+        "whitelabel": "White-Label-Lösung",
+        "api": "Dediziertes API-Kontingent"
+      }
+    }
+  },
+  "companies": {
+    "createTitle": "Unternehmen erstellen",
+    "createDescription": "Erstellen Sie ein neues Unternehmen, um Ihr Team und Ihre Projekte zu verwalten",
+    "nameLabel": "Unternehmensname",
+    "namePlaceholder": "Unternehmensname eingeben",
+    "createButton": "Unternehmen erstellen",
+    "creating": "Wird erstellt...",
+    "createFailed": "Unternehmen konnte nicht erstellt werden",
+    "createFailedRetry": "Unternehmen konnte nicht erstellt werden, bitte versuchen Sie es später erneut"
   },
   "affiliate": {
     "title": "Affiliate-Partner",
@@ -242,13 +467,71 @@
   },
   "settings": {
     "title": "Einstellungen",
+    "description": "Kontoeinstellungen verwalten",
     "profile": "Profil",
     "aiModels": "KI-Modell-Einstellungen",
     "notifications": "Benachrichtigungseinstellungen",
     "language": "Spracheinstellungen",
     "theme": "Design-Einstellungen",
     "darkMode": "Dunkelmodus",
-    "lightMode": "Hellmodus"
+    "lightMode": "Hellmodus",
+    "accountInfo": "Kontoinformationen",
+    "accountInfoDescription": "Grundlegende Kontoinformationen verwalten",
+    "accountName": "Kontoname",
+    "accountNamePlaceholder": "Kontonamen eingeben",
+    "saveChanges": "Änderungen speichern"
+  },
+  "gettingStarted": {
+    "title": "Schnellstart",
+    "subtitle": "Schritt-für-Schritt-Anleitung zur Plattform-Einrichtung",
+    "steps": {
+      "addWebsite": {
+        "title": "Webseite hinzufügen",
+        "description": "Verbinden Sie Ihre WordPress-Webseite mit 1waySEO",
+        "buttonText": "Einrichtung starten",
+        "details": [
+          "Webseitenname und WordPress-URL eingeben",
+          "WordPress-Anwendungspasswort einrichten",
+          "Verbindung testen zur Bestätigung"
+        ]
+      },
+      "connect": {
+        "title": "Verbinden",
+        "description": "Bestätigen Sie, dass Ihre Webseite erfolgreich verbunden ist und Artikel veröffentlichen kann",
+        "details": [
+          "WordPress-API-Verbindungsstatus überprüfen",
+          "Veröffentlichungsberechtigungen bestätigen",
+          "Artikelveröffentlichung testen"
+        ]
+      },
+      "keywords": {
+        "title": "Keywords einrichten",
+        "description": "SEO-Keywords hinzufügen, die Sie optimieren möchten",
+        "buttonText": "Keywords verwalten",
+        "details": [
+          "Haupt-Keywords hinzufügen",
+          "Zielregion festlegen (Taiwan, Hongkong, USA usw.)",
+          "Keyword-Priorität festlegen"
+        ]
+      },
+      "writeArticle": {
+        "title": "Artikel schreiben",
+        "description": "KI nutzen, um hochwertige SEO-Artikel automatisch zu generieren",
+        "buttonText": "Generierung starten",
+        "details": [
+          "Keywords zur Verwendung auswählen",
+          "Artikeltyp und -länge festlegen",
+          "Mit einem Klick generieren und veröffentlichen"
+        ]
+      }
+    },
+    "help": {
+      "title": "Brauchen Sie Hilfe?",
+      "description": "Bei Problemen während der Einrichtung lesen Sie unsere Dokumentation oder kontaktieren Sie den Support.",
+      "viewDocs": "Dokumentation ansehen",
+      "contactSupport": "Support kontaktieren"
+    },
+    "backToDashboard": "Zurück zum Dashboard"
   },
   "home": {
     "heroTagline": "KI-gestützte SEO-Content-Plattform",
@@ -328,7 +611,49 @@
     "registerNow": "Jetzt registrieren und 10K kostenlose Credits zum Starten erhalten",
     "freeStartUsing": "Kostenlos starten",
     "terms": "Nutzungsbedingungen",
-    "privacy": "Datenschutzrichtlinie"
+    "privacy": "Datenschutzrichtlinie",
+    "costComparison": {
+      "badge": "Kostenvergleich",
+      "whyChoose": "Warum",
+      "description": "Sparen Sie über 90% an Kosten und Zeit im Vergleich zu traditionellen Methoden",
+      "costTitle": "Kostenvergleich",
+      "featureTitle": "Funktionsvergleich: Traditionell vs 1WaySEO",
+      "traditional": "Traditionell",
+      "comparisons": {
+        "professionalWriter": {
+          "category": "Professioneller Autor",
+          "traditional": "€80-250/Artikel",
+          "ours": "€2-5/Artikel",
+          "savings": "95% sparen"
+        },
+        "seoAgency": {
+          "category": "SEO-Agentur",
+          "traditional": "€1.500+/Monat",
+          "ours": "€35/Monat",
+          "savings": "97% sparen"
+        },
+        "chatgptManual": {
+          "category": "ChatGPT selbst",
+          "traditional": "2-4 Std. manuelle Bearbeitung",
+          "ours": "Vollautomatische SEO",
+          "savings": "90% sparen"
+        },
+        "productionTime": {
+          "category": "Produktionszeit",
+          "traditional": "4-8 Stunden/Artikel",
+          "ours": "10 Minuten/Artikel",
+          "savings": "48x schneller"
+        }
+      },
+      "features": {
+        "keywordResearch": "Keyword-Recherche",
+        "competitorAnalysis": "Wettbewerbsanalyse",
+        "seoStructure": "SEO-optimierte Struktur",
+        "autoImageGen": "Automatische Bildgenerierung",
+        "wordpressPublish": "WordPress Ein-Klick-Veröffentlichung",
+        "scheduledPost": "Geplante Auto-Veröffentlichung"
+      }
+    }
   },
   "faq": {
     "title": "FAQ",
