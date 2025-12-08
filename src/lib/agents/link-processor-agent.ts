@@ -63,7 +63,7 @@ export class LinkProcessorAgent {
       maxExternalLinks: options?.maxExternalLinks ?? 3,
       maxLinksPerUrl: options?.maxLinksPerUrl ?? 2,
       minDistanceBetweenLinks: options?.minDistanceBetweenLinks ?? 500,
-      minSemanticScore: options?.minSemanticScore ?? 0.4,
+      minSemanticScore: options?.minSemanticScore ?? 0.3,
     };
   }
 
@@ -633,7 +633,25 @@ export class LinkProcessorAgent {
       keywords.push(...domainParts.slice(0, 2));
     }
 
-    return [...new Set(keywords)].slice(0, 12);
+    // 通用匹配詞 fallback - 如果沒有足夠的關鍵字，添加常見的中文匹配詞
+    // 這些詞在大多數技術/教學文章中都會出現
+    if (keywords.length < 5) {
+      const genericKeywords = [
+        "研究",
+        "工具",
+        "方法",
+        "教學",
+        "指南",
+        "技巧",
+        "分析",
+        "應用",
+        "實作",
+        "範例",
+      ];
+      keywords.push(...genericKeywords);
+    }
+
+    return [...new Set(keywords)].slice(0, 15);
   }
 
   private escapeRegex(str: string): string {
