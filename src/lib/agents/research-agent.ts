@@ -77,7 +77,10 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
    - 可以是：服務商網站、產業部落格、新聞報導、教學文章、官方文檔
    - 不需要限制為學術或官方來源，實用性優先
 
-請在回答中自然引用來源，確保資訊的可追溯性。`;
+**重要：引用格式要求**
+每次引用來源時，請使用以下格式：「[來源標題](網址)」
+例如：根據「[AI寫作工具指南](https://example.com)」的說明...
+這樣可以讓讀者清楚知道每個來源的名稱。`;
 
       const result = await perplexity.search(query, {
         return_citations: true,
@@ -640,7 +643,15 @@ ${researchContext}
       const domain = new URL(url).hostname.replace(/^www\./, "");
 
       // 1. 嘗試從內文找「標題」格式（在 URL/domain 附近）
+      const escapedUrl = url.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
       const patterns = [
+        // Markdown 連結格式：[標題](URL)
+        new RegExp(`\\[([^\\]]{4,60})\\]\\(${escapedUrl}\\)`, "i"),
+        // Markdown 連結格式（只匹配 domain）：[標題](https://domain...)
+        new RegExp(
+          `\\[([^\\]]{4,60})\\]\\([^)]*${domain.replace(/\./g, "\\.")}[^)]*\\)`,
+          "i",
+        ),
         // 「標題」格式
         new RegExp(
           `「([^」]{4,60})」[^]*?${domain.replace(/\./g, "\\.")}`,

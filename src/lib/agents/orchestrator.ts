@@ -624,6 +624,21 @@ export class ParallelOrchestrator {
 
       writingOutput.html = htmlOutput.html;
 
+      // 保底機制：如果連結插入不足，在文末添加「延伸閱讀」區塊
+      const totalLinksInserted =
+        htmlOutput.linkStats.internalLinksInserted +
+        htmlOutput.linkStats.externalLinksInserted;
+      if (totalLinksInserted < 2 && strategyOutput.externalReferences?.length) {
+        console.log(
+          `[Orchestrator] 連結插入不足 (${totalLinksInserted})，添加延伸閱讀區塊`,
+        );
+        writingOutput.html = this.insertFurtherReadingSection(
+          writingOutput.html,
+          strategyOutput.externalReferences,
+          3,
+        );
+      }
+
       if (imageOutput) {
         writingOutput.html = this.insertImagesToHtml(
           writingOutput.html,
@@ -1831,6 +1846,59 @@ export class ParallelOrchestrator {
     }
 
     console.log(`[Orchestrator] ✅ 狀態已更新:`, result);
+  }
+
+  /**
+   * 在文章末尾插入「延伸閱讀」區塊（保底機制）
+   * 當 LinkProcessor 無法成功插入連結時使用
+   */
+  private insertFurtherReadingSection(
+    html: string,
+    externalReferences: ExternalReference[],
+    minLinks: number = 3,
+  ): string {
+    if (!externalReferences || externalReferences.length === 0) {
+      return html;
+    }
+
+    // 取前 minLinks 個連結
+    const linksToInsert = externalReferences.slice(0, minLinks);
+
+    // 生成列表項目
+    const listItems = linksToInsert
+      .map((ref) => {
+        // 優先使用 domain 作為顯示文字，因為 title 可能是文章標題而非來源標題
+        const displayText =
+          ref.domain ||
+          (ref.title.length > 30
+            ? ref.title.substring(0, 30) + "..."
+            : ref.title);
+        return `  <li><a href="${ref.url}" target="_blank" rel="noopener noreferrer">${displayText}</a></li>`;
+      })
+      .join("\n");
+
+    const furtherReadingHtml = `
+<h2>延伸閱讀</h2>
+<ul>
+${listItems}
+</ul>`;
+
+    // 嘗試在 </article> 或最後一個 </section> 或 </div> 前插入
+    const insertPoints = ["</article>", "</section>", "</main>"];
+    for (const point of insertPoints) {
+      const lastIndex = html.lastIndexOf(point);
+      if (lastIndex !== -1) {
+        return (
+          html.slice(0, lastIndex) +
+          furtherReadingHtml +
+          "\n" +
+          html.slice(lastIndex)
+        );
+      }
+    }
+
+    // Fallback: 直接追加到末尾
+    return html + furtherReadingHtml;
   }
 
   private insertImagesToHtml(
