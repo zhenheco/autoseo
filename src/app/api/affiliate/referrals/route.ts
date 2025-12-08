@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { getAffiliate } from "@/lib/affiliate-service";
 
 export async function GET(request: NextRequest) {
@@ -36,9 +36,21 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "您還不是聯盟夥伴" }, { status: 404 });
     }
 
-    let query = supabase
+    const adminClient = createAdminClient();
+
+    // 查詢 referrals 和關聯的 companies
+    let query = adminClient
       .from("referrals")
-      .select("*", { count: "exact" })
+      .select(
+        `
+        *,
+        referred_company:companies!referred_company_id (
+          name,
+          owner_id
+        )
+      `,
+        { count: "exact" },
+      )
       .eq("referrer_company_id", companyMember.company_id);
 
     if (status === "active") {
@@ -61,14 +73,45 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "查詢失敗" }, { status: 500 });
     }
 
-    const formattedData = referrals?.map((ref) => ({
-      id: ref.id,
-      company_name: `客戶 #${ref.referred_company_id.slice(0, 8)}`,
-      registered_at: ref.registered_at,
-      first_payment_at: ref.first_payment_at,
-      is_active: ref.first_payment_at !== null,
-      status: ref.status,
-    }));
+    // 批量獲取用戶 email
+    const ownerIds = referrals
+      ?.map((r) => (r.referred_company as { owner_id?: string })?.owner_id)
+      .filter((id): id is string => !!id);
+
+    let emailMap = new Map<string, string>();
+    if (ownerIds && ownerIds.length > 0) {
+      const { data: users } = await adminClient.auth.admin.listUsers();
+      if (users?.users) {
+        const relevantUsers = users.users.filter((u) =>
+          ownerIds.includes(u.id),
+        );
+        emailMap = new Map(relevantUsers.map((u) => [u.id, u.email || ""]));
+      }
+    }
+
+    const formattedData = referrals?.map((ref) => {
+      const company = ref.referred_company as {
+        name?: string;
+        owner_id?: string;
+      } | null;
+      const email = company?.owner_id
+        ? emailMap.get(company.owner_id)
+        : undefined;
+      return {
+        id: ref.id,
+        company_name: email || company?.name || "未知",
+        registered_at: ref.registered_at,
+        first_payment_at: ref.first_payment_at,
+        first_payment_amount: ref.first_payment_amount || null,
+        total_payments: ref.total_payments || 0,
+        lifetime_value: ref.lifetime_value || 0,
+        total_commission_generated: ref.total_commission_generated || 0,
+        last_payment_at: ref.last_payment_at || null,
+        cancelled_at: null,
+        is_active: ref.first_payment_at !== null,
+        status: ref.status,
+      };
+    });
 
     return NextResponse.json({
       data: formattedData,
