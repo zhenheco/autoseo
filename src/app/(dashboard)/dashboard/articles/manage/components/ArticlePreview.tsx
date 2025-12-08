@@ -57,12 +57,10 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
 
       const loadContent = async () => {
         const processedContent = await ensureHtml(originalContent);
-        setTimeout(() => {
-          setEditedTitle(originalTitle);
-          setEditedContent(processedContent);
-          setHasChanges(false);
-          setSaveSuccess(false);
-        }, 0);
+        setEditedTitle(originalTitle);
+        setEditedContent(processedContent);
+        setHasChanges(false);
+        setSaveSuccess(false);
       };
 
       loadContent();
