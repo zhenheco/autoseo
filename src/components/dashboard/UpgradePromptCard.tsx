@@ -36,8 +36,16 @@ export function UpgradePromptCard({
   tokenBalance,
 }: UpgradePromptCardProps) {
   const t = useTranslations("upgrade");
+  const tSub = useTranslations("subscription");
   const router = useRouter();
   const [processingSlug, setProcessingSlug] = useState<string | null>(null);
+
+  // 獲取翻譯後的方案名稱
+  const getPlanName = (plan: LifetimePlan) => {
+    const slug = plan.slug?.replace("-lifetime", "") || "";
+    const translatedName = tSub.raw(`plans.${slug}`);
+    return typeof translatedName === "string" ? translatedName : plan.name;
+  };
   const [plans, setPlans] = useState<LifetimePlan[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -227,7 +235,7 @@ export function UpgradePromptCard({
                 )}
 
                 <div className="mb-3">
-                  <h3 className="font-bold text-lg">{plan.name}</h3>
+                  <h3 className="font-bold text-lg">{getPlanName(plan)}</h3>
                 </div>
 
                 <div className="mb-4">

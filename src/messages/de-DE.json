@@ -378,7 +378,13 @@
     "purchasedCredits": "Gekaufte Credits",
     "neverExpires": "Läuft nie ab",
     "quotaResetDate": "Kontingent-Reset-Datum",
-    "creditPackagePurchase": "Credit-Paket kaufen"
+    "creditPackagePurchase": "Credit-Paket kaufen",
+    "plans": {
+      "starter": "Persönlich",
+      "professional": "Team",
+      "business": "Organisation",
+      "agency": "Unternehmenspartner"
+    }
   },
   "payment": {
     "failed": "Zahlung fehlgeschlagen",

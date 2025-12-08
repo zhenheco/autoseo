@@ -7,6 +7,7 @@ import {
 } from "./newebpay-service";
 import { processFirstPaymentReward } from "@/lib/referral-service";
 import { processAffiliateCommission } from "@/lib/affiliate-service";
+import { TIER_HIERARCHY } from "@/lib/subscription/upgrade-rules";
 
 interface NewebPayPeriodResult {
   MerchantOrderNo?: string;
@@ -644,79 +645,145 @@ export class PaymentService {
               periodEnd,
             });
           } else {
-            // 首次購買或購買不同方案（升級）
-            // 【重要】：升級時保留並累加所有配額
+            // 首次購買或購買不同方案
+            // 【重要】：需要檢查是否為降級，防止高階方案被低階方案覆蓋
             const { data: oldSubscription } = await this.supabase
               .from("company_subscriptions")
               .select(
-                "purchased_token_balance, monthly_token_quota, monthly_quota_balance, current_period_start",
+                "id, plan_id, purchased_token_balance, monthly_token_quota, monthly_quota_balance, current_period_start",
               )
               .eq("company_id", orderData.company_id)
               .eq("status", "active")
               .maybeSingle();
 
-            const preservedPurchasedBalance =
-              oldSubscription?.purchased_token_balance || 0;
-
-            // 保留並累加配額（跨方案升級不丟失配額）
-            const previousMonthlyQuota =
-              oldSubscription?.monthly_token_quota || 0;
-            const previousQuotaBalance =
-              oldSubscription?.monthly_quota_balance || 0;
-            const newMonthlyQuota = previousMonthlyQuota + planData.base_tokens;
-            const newQuotaBalance = previousQuotaBalance + planData.base_tokens;
-
-            // 保留原始週期開始時間（如果存在）
-            const preservedPeriodStart =
-              oldSubscription?.current_period_start || periodStart;
-
-            console.log("[PaymentService] 跨方案升級配額保留:", {
-              previousMonthlyQuota,
-              previousQuotaBalance,
-              newPlanBaseTokens: planData.base_tokens,
-              newMonthlyQuota,
-              newQuotaBalance,
-              preservedPurchasedBalance,
-            });
-
-            await this.supabase
-              .from("company_subscriptions")
-              .delete()
-              .eq("company_id", orderData.company_id);
-
-            const { error: subscriptionError } = await this.supabase
-              .from("company_subscriptions")
-              .insert({
-                company_id: orderData.company_id,
-                plan_id: planData.id,
-                status: "active",
-                purchased_token_balance: preservedPurchasedBalance,
-                monthly_quota_balance: newQuotaBalance,
-                monthly_token_quota: newMonthlyQuota,
-                base_monthly_quota: planData.base_tokens,
-                purchased_count: 1,
-                is_lifetime: true,
-                lifetime_discount: 1.0,
-                current_period_start: preservedPeriodStart,
-                current_period_end: periodEnd,
-              });
-
-            if (subscriptionError) {
-              console.error(
-                "[PaymentService] 創建終身訂閱記錄失敗:",
-                subscriptionError,
-              );
+            // 獲取舊方案的 tier 等級
+            let oldTierLevel = 0;
+            if (oldSubscription?.plan_id) {
+              const { data: oldPlan } = await this.supabase
+                .from("subscription_plans")
+                .select("slug")
+                .eq("id", oldSubscription.plan_id)
+                .single();
+              if (oldPlan?.slug) {
+                oldTierLevel = TIER_HIERARCHY[oldPlan.slug] ?? 0;
+              }
             }
 
-            console.log("[PaymentService] 終身方案首次購買成功:", {
-              planName: planData.name,
-              planSlug: planData.slug,
-              tier,
-              companyId: orderData.company_id,
-              purchasedCount: 1,
-              monthlyTokenQuota: planData.base_tokens,
-              periodEnd,
+            // 獲取新方案的 tier 等級
+            const newTierLevel = TIER_HIERARCHY[planData.slug] ?? 0;
+
+            console.log("[PaymentService] 方案等級比較:", {
+              oldTierLevel,
+              newTierLevel,
+              oldPlanId: oldSubscription?.plan_id,
+              newPlanSlug: planData.slug,
+              isDowngrade: newTierLevel < oldTierLevel,
             });
+
+            // 【關鍵修復】：如果是降級，只累加 tokens，不更換方案
+            if (oldSubscription && newTierLevel < oldTierLevel) {
+              console.warn(
+                `[PaymentService] 拒絕降級：保持原方案，只累加 tokens`,
+              );
+
+              const currentQuotaBalance =
+                oldSubscription.monthly_quota_balance || 0;
+              const newQuotaBalance =
+                currentQuotaBalance + planData.base_tokens;
+              const currentMonthlyQuota =
+                oldSubscription.monthly_token_quota || 0;
+              const newMonthlyQuota =
+                currentMonthlyQuota + planData.base_tokens;
+
+              const { error: stackError } = await this.supabase
+                .from("company_subscriptions")
+                .update({
+                  monthly_quota_balance: newQuotaBalance,
+                  monthly_token_quota: newMonthlyQuota,
+                  current_period_end: periodEnd,
+                })
+                .eq("id", oldSubscription.id);
+
+              if (stackError) {
+                console.error("[PaymentService] 累加 tokens 失敗:", stackError);
+                return { success: false, error: "累加 tokens 失敗" };
+              }
+
+              console.log("[PaymentService] 購買低階方案，只累加 tokens:", {
+                purchasedPlanName: planData.name,
+                purchasedPlanSlug: planData.slug,
+                keptOldPlanId: oldSubscription.plan_id,
+                previousQuotaBalance: currentQuotaBalance,
+                addedTokens: planData.base_tokens,
+                newQuotaBalance,
+              });
+            } else {
+              // 升級或首次購買：正常流程
+              const preservedPurchasedBalance =
+                oldSubscription?.purchased_token_balance || 0;
+
+              // 保留並累加配額（跨方案升級不丟失配額）
+              const previousMonthlyQuota =
+                oldSubscription?.monthly_token_quota || 0;
+              const previousQuotaBalance =
+                oldSubscription?.monthly_quota_balance || 0;
+              const newMonthlyQuota =
+                previousMonthlyQuota + planData.base_tokens;
+              const newQuotaBalance =
+                previousQuotaBalance + planData.base_tokens;
+
+              // 保留原始週期開始時間（如果存在）
+              const preservedPeriodStart =
+                oldSubscription?.current_period_start || periodStart;
+
+              console.log("[PaymentService] 跨方案升級配額保留:", {
+                previousMonthlyQuota,
+                previousQuotaBalance,
+                newPlanBaseTokens: planData.base_tokens,
+                newMonthlyQuota,
+                newQuotaBalance,
+                preservedPurchasedBalance,
+              });
+
+              await this.supabase
+                .from("company_subscriptions")
+                .delete()
+                .eq("company_id", orderData.company_id);
+
+              const { error: subscriptionError } = await this.supabase
+                .from("company_subscriptions")
+                .insert({
+                  company_id: orderData.company_id,
+                  plan_id: planData.id,
+                  status: "active",
+                  purchased_token_balance: preservedPurchasedBalance,
+                  monthly_quota_balance: newQuotaBalance,
+                  monthly_token_quota: newMonthlyQuota,
+                  base_monthly_quota: planData.base_tokens,
+                  purchased_count: 1,
+                  is_lifetime: true,
+                  lifetime_discount: 1.0,
+                  current_period_start: preservedPeriodStart,
+                  current_period_end: periodEnd,
+                });
+
+              if (subscriptionError) {
+                console.error(
+                  "[PaymentService] 創建終身訂閱記錄失敗:",
+                  subscriptionError,
+                );
+              }
+
+              console.log("[PaymentService] 終身方案購買成功:", {
+                planName: planData.name,
+                planSlug: planData.slug,
+                tier,
+                companyId: orderData.company_id,
+                purchasedCount: 1,
+                monthlyTokenQuota: planData.base_tokens,
+                periodEnd,
+              });
+            }
           }
         }
 
@@ -967,62 +1034,129 @@ export class PaymentService {
           const { data: oldSubscription } = await this.supabase
             .from("company_subscriptions")
             .select(
-              "purchased_token_balance, monthly_token_quota, monthly_quota_balance",
+              "id, plan_id, purchased_token_balance, monthly_token_quota, monthly_quota_balance",
             )
             .eq("company_id", mandateData.company_id)
             .eq("status", "active")
             .single();
 
+          // 獲取舊方案的 tier 等級
+          let oldTierLevel = 0;
+          if (oldSubscription?.plan_id) {
+            const { data: oldPlan } = await this.supabase
+              .from("subscription_plans")
+              .select("slug")
+              .eq("id", oldSubscription.plan_id)
+              .single();
+            if (oldPlan?.slug) {
+              oldTierLevel = TIER_HIERARCHY[oldPlan.slug] ?? 0;
+            }
+          }
+
+          // 獲取新方案的 tier 等級
+          const newTierLevel = TIER_HIERARCHY[planData.slug] ?? 0;
+
+          console.log("[PaymentService] 定期定額方案等級比較:", {
+            oldTierLevel,
+            newTierLevel,
+            oldPlanId: oldSubscription?.plan_id,
+            newPlanSlug: planData.slug,
+            isDowngrade: newTierLevel < oldTierLevel,
+          });
+
+          // 定義在 if/else 外部，供後續使用
           const preservedPurchasedBalance =
             oldSubscription?.purchased_token_balance || 0;
 
-          // 保留並累加配額（從終身方案轉換或續約時不丟失配額）
-          const previousMonthlyQuota =
-            oldSubscription?.monthly_token_quota || 0;
-          const previousQuotaBalance =
-            oldSubscription?.monthly_quota_balance || 0;
-          const newMonthlyQuota = previousMonthlyQuota + planData.base_tokens;
-          const newQuotaBalance = previousQuotaBalance + planData.base_tokens;
+          // 【關鍵修復】：如果是降級，只累加 tokens，不更換方案
+          if (oldSubscription && newTierLevel < oldTierLevel) {
+            console.warn(
+              `[PaymentService] 定期定額拒絕降級：保持原方案，只累加 tokens`,
+            );
 
-          console.log("[PaymentService] 定期定額訂閱配額保留:", {
-            previousMonthlyQuota,
-            previousQuotaBalance,
-            newPlanBaseTokens: planData.base_tokens,
-            newMonthlyQuota,
-            newQuotaBalance,
-            preservedPurchasedBalance,
-          });
+            const currentQuotaBalance =
+              oldSubscription.monthly_quota_balance || 0;
+            const newQuotaBalance = currentQuotaBalance + planData.base_tokens;
+            const currentMonthlyQuota =
+              oldSubscription.monthly_token_quota || 0;
+            const newMonthlyQuota = currentMonthlyQuota + planData.base_tokens;
 
-          // 刪除該公司的所有舊訂閱記錄
-          await this.supabase
-            .from("company_subscriptions")
-            .delete()
-            .eq("company_id", mandateData.company_id);
+            const { error: stackError } = await this.supabase
+              .from("company_subscriptions")
+              .update({
+                monthly_quota_balance: newQuotaBalance,
+                monthly_token_quota: newMonthlyQuota,
+                current_period_end: periodEnd,
+              })
+              .eq("id", oldSubscription.id);
 
-          // 創建新的訂閱記錄，保留購買的 Token 和累積配額
-          const { error: subscriptionError } = await this.supabase
-            .from("company_subscriptions")
-            .insert({
-              company_id: mandateData.company_id,
-              plan_id: mandateData.plan_id,
-              status: "active",
-              purchased_token_balance: preservedPurchasedBalance,
-              monthly_quota_balance: newQuotaBalance,
-              monthly_token_quota: newMonthlyQuota,
-              is_lifetime: false,
-              lifetime_discount: 1.0,
-              current_period_start: periodStart,
-              current_period_end: periodEnd,
+            if (stackError) {
+              console.error(
+                "[PaymentService] 定期定額累加 tokens 失敗:",
+                stackError,
+              );
+              businessLogicErrors.push("累加 tokens 失敗");
+            } else {
+              console.log(
+                "[PaymentService] 定期定額購買低階方案，只累加 tokens:",
+                {
+                  purchasedPlanSlug: planData.slug,
+                  keptOldPlanId: oldSubscription.plan_id,
+                  addedTokens: planData.base_tokens,
+                  newQuotaBalance,
+                },
+              );
+            }
+          } else {
+            // 升級或首次購買：正常流程
+            // 保留並累加配額（從終身方案轉換或續約時不丟失配額）
+            const previousMonthlyQuota =
+              oldSubscription?.monthly_token_quota || 0;
+            const previousQuotaBalance =
+              oldSubscription?.monthly_quota_balance || 0;
+            const newMonthlyQuota = previousMonthlyQuota + planData.base_tokens;
+            const newQuotaBalance = previousQuotaBalance + planData.base_tokens;
+
+            console.log("[PaymentService] 定期定額訂閱配額保留:", {
+              previousMonthlyQuota,
+              previousQuotaBalance,
+              newPlanBaseTokens: planData.base_tokens,
+              newMonthlyQuota,
+              newQuotaBalance,
+              preservedPurchasedBalance,
             });
 
-          if (subscriptionError) {
-            console.error(
-              "[PaymentService] ❌ 創建訂閱失敗:",
-              subscriptionError,
-            );
-            businessLogicErrors.push("創建訂閱失敗");
-          } else {
-            console.log("[PaymentService] ✅ 訂閱已創建");
+            // 刪除該公司的所有舊訂閱記錄
+            await this.supabase
+              .from("company_subscriptions")
+              .delete()
+              .eq("company_id", mandateData.company_id);
+
+            // 創建新的訂閱記錄，保留購買的 Token 和累積配額
+            const { error: subscriptionError } = await this.supabase
+              .from("company_subscriptions")
+              .insert({
+                company_id: mandateData.company_id,
+                plan_id: mandateData.plan_id,
+                status: "active",
+                purchased_token_balance: preservedPurchasedBalance,
+                monthly_quota_balance: newQuotaBalance,
+                monthly_token_quota: newMonthlyQuota,
+                is_lifetime: false,
+                lifetime_discount: 1.0,
+                current_period_start: periodStart,
+                current_period_end: periodEnd,
+              });
+
+            if (subscriptionError) {
+              console.error(
+                "[PaymentService] ❌ 創建訂閱失敗:",
+                subscriptionError,
+              );
+              businessLogicErrors.push("創建訂閱失敗");
+            } else {
+              console.log("[PaymentService] ✅ 訂閱已創建");
+            }
           }
 
           // 更新公司的訂閱層級和到期時間

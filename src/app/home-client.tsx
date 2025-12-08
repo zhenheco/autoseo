@@ -91,6 +91,14 @@ const AI_MODEL_KEYS = ["gpt5", "claude45", "gemini3"] as const;
 
 export function HomeClient({ plans, tokenPackages }: HomeClientProps) {
   const t = useTranslations("home");
+  const tSub = useTranslations("subscription");
+
+  // 獲取翻譯後的方案名稱
+  const getPlanName = (plan: SubscriptionPlan) => {
+    const slug = plan.slug?.replace("-lifetime", "") || "";
+    const translatedName = tSub.raw(`plans.${slug}`);
+    return typeof translatedName === "string" ? translatedName : plan.name;
+  };
 
   return (
     <>
@@ -399,7 +407,7 @@ export function HomeClient({ plans, tokenPackages }: HomeClientProps) {
                         <h3
                           className={`text-lg font-bold ${isPopular ? "text-slate-900 dark:text-white" : "text-slate-900 dark:text-white"}`}
                         >
-                          {plan.name}
+                          {getPlanName(plan)}
                         </h3>
                       </div>
                       <div className="mb-4">
