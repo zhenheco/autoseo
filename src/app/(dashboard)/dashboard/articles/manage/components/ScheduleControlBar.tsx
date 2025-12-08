@@ -35,6 +35,7 @@ import {
 } from "../actions";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { useTranslations } from "next-intl";
 
 interface ScheduleControlBarProps {
   schedulableArticleIds: string[];
@@ -47,6 +48,8 @@ export function ScheduleControlBar({
   cancellableArticleIds,
   deletableArticleIds,
 }: ScheduleControlBarProps) {
+  const t = useTranslations("articles");
+  const tCommon = useTranslations("common");
   const router = useRouter();
   const {
     selectedArticleIds,
@@ -71,11 +74,11 @@ export function ScheduleControlBar({
 
   const handleSchedule = useCallback(async () => {
     if (selectedCount === 0) {
-      toast.error("請先選擇要排程的文章");
+      toast.error(t("toasts.selectArticles"));
       return;
     }
     if (!websiteId) {
-      toast.error("請選擇發布網站");
+      toast.error(t("toasts.selectWebsite"));
       return;
     }
 
@@ -90,16 +93,19 @@ export function ScheduleControlBar({
       );
 
       if (!result.success) {
-        setError(result.error || "排程失敗");
-        toast.error(result.error || "排程失敗");
+        setError(result.error || t("toasts.scheduleFailed"));
+        toast.error(result.error || t("toasts.scheduleFailed"));
         return;
       }
 
-      toast.success(`已排程 ${result.scheduledCount} 篇文章`);
+      toast.success(
+        t("toasts.scheduleSuccess", { count: result.scheduledCount || 0 }),
+      );
       router.refresh();
     } catch (err) {
       console.error("Schedule error:", err);
-      const errorMessage = err instanceof Error ? err.message : "排程發生錯誤";
+      const errorMessage =
+        err instanceof Error ? err.message : t("toasts.scheduleError");
       setError(errorMessage);
       toast.error(errorMessage);
     } finally {
@@ -112,11 +118,12 @@ export function ScheduleControlBar({
     articlesPerDay,
     setIsScheduling,
     router,
+    t,
   ]);
 
   const handleCancelSchedule = useCallback(async () => {
     if (selectedCount === 0) {
-      toast.error("請先選擇要取消排程的文章");
+      toast.error(t("toasts.selectCancelArticles"));
       return;
     }
 
@@ -132,22 +139,24 @@ export function ScheduleControlBar({
       }
 
       if (cancelledCount > 0) {
-        toast.success(`已取消 ${cancelledCount} 篇文章的排程`);
+        toast.success(
+          t("toasts.cancelScheduleSuccess", { count: cancelledCount }),
+        );
         router.refresh();
       } else {
-        toast.error("沒有文章被取消排程");
+        toast.error(t("toasts.noCancelledArticles"));
       }
     } catch (err) {
       console.error("Cancel schedule error:", err);
-      toast.error("取消排程發生錯誤");
+      toast.error(t("toasts.cancelScheduleError"));
     } finally {
       setIsCancelling(false);
     }
-  }, [selectedCount, selectedArticleIds, router]);
+  }, [selectedCount, selectedArticleIds, router, t]);
 
   const handleBatchDelete = useCallback(async () => {
     if (selectedCount === 0) {
-      toast.error("請先選擇要刪除的文章");
+      toast.error(t("toasts.selectDeleteArticles"));
       return;
     }
 
@@ -157,20 +166,22 @@ export function ScheduleControlBar({
       const result = await batchDeleteArticles(Array.from(selectedArticleIds));
 
       if (result.success) {
-        toast.success(`已刪除 ${result.deletedCount} 篇文章`);
+        toast.success(
+          t("toasts.deleteSuccess", { count: result.deletedCount || 0 }),
+        );
         clearSelection();
         router.refresh();
       } else {
-        toast.error(result.error || "刪除失敗");
+        toast.error(result.error || t("toasts.deleteFailed"));
       }
     } catch (err) {
       console.error("Batch delete error:", err);
-      toast.error("刪除發生錯誤");
+      toast.error(t("toasts.deleteError"));
     } finally {
       setIsDeleting(false);
       setDeleteDialogOpen(false);
     }
-  }, [selectedCount, selectedArticleIds, clearSelection, router]);
+  }, [selectedCount, selectedArticleIds, clearSelection, router, t]);
 
   // 計算選中的可取消文章數量
   const selectedCancellableIds = Array.from(selectedArticleIds).filter((id) =>
@@ -179,7 +190,7 @@ export function ScheduleControlBar({
 
   const handleCancelGeneration = useCallback(async () => {
     if (selectedCancellableIds.length === 0) {
-      toast.error("沒有選中可取消的生成中文章");
+      toast.error(t("toasts.noCancellableArticles"));
       return;
     }
 
@@ -191,26 +202,30 @@ export function ScheduleControlBar({
       if (result.success) {
         const refundMsg =
           result.totalRefunded && result.totalRefunded > 0
-            ? `，已退還 ${result.totalRefunded.toLocaleString()} tokens`
+            ? t("toasts.refundTokens", {
+                amount: result.totalRefunded.toLocaleString(),
+              })
             : "";
         toast.success(
-          `已取消 ${result.cancelledCount} 篇文章的生成${refundMsg}`,
+          t("toasts.cancelGenerationSuccess", {
+            count: result.cancelledCount || 0,
+          }) + refundMsg,
         );
         clearSelection();
         router.refresh();
         // 觸發餘額更新事件
         window.dispatchEvent(new CustomEvent("tokenReserved"));
       } else {
-        toast.error(result.error || "取消失敗");
+        toast.error(result.error || t("toasts.cancelGenerationFailed"));
       }
     } catch (err) {
       console.error("Cancel generation error:", err);
-      toast.error("取消生成發生錯誤");
+      toast.error(t("toasts.cancelGenerationError"));
     } finally {
       setIsCancellingGeneration(false);
       setCancelGenerationDialogOpen(false);
     }
-  }, [selectedCancellableIds, clearSelection, router]);
+  }, [selectedCancellableIds, clearSelection, router, t]);
 
   // 如果沒有可管理的文章，不顯示控制欄
   if (
@@ -228,7 +243,7 @@ export function ScheduleControlBar({
         {/* 每日篇數設定 */}
         <div className="flex items-center gap-2">
           <span className="text-sm text-muted-foreground whitespace-nowrap">
-            每日
+            {t("schedule.perDay")}
           </span>
           <Select
             value={articlesPerDay.toString()}
@@ -247,7 +262,7 @@ export function ScheduleControlBar({
             </SelectContent>
           </Select>
           <span className="text-sm text-muted-foreground whitespace-nowrap">
-            篇
+            {t("schedule.articles")}
           </span>
         </div>
 
@@ -268,12 +283,12 @@ export function ScheduleControlBar({
             {isScheduling ? (
               <>
                 <Loader2 className="mr-1 h-4 w-4 lg:h-3 lg:w-3 animate-spin" />
-                排程中...
+                {t("schedule.scheduling")}
               </>
             ) : (
               <>
                 <CalendarClock className="mr-1 h-4 w-4 lg:h-3 lg:w-3" />
-                排程
+                {t("schedule.schedule")}
               </>
             )}
           </Button>
@@ -290,12 +305,12 @@ export function ScheduleControlBar({
             {isCancelling ? (
               <>
                 <Loader2 className="mr-1 h-4 w-4 lg:h-3 lg:w-3 animate-spin" />
-                取消中...
+                {t("schedule.cancelling")}
               </>
             ) : (
               <>
                 <XCircle className="mr-1 h-4 w-4 lg:h-3 lg:w-3" />
-                取消排程
+                {t("schedule.cancelSchedule")}
               </>
             )}
           </Button>
@@ -316,12 +331,13 @@ export function ScheduleControlBar({
               {isCancellingGeneration ? (
                 <>
                   <Loader2 className="mr-1 h-4 w-4 lg:h-3 lg:w-3 animate-spin" />
-                  取消中...
+                  {t("schedule.cancelling")}
                 </>
               ) : (
                 <>
                   <StopCircle className="mr-1 h-4 w-4 lg:h-3 lg:w-3" />
-                  取消生成 ({selectedCancellableIds.length})
+                  {t("schedule.cancelGeneration")} (
+                  {selectedCancellableIds.length})
                 </>
               )}
             </Button>
@@ -337,7 +353,7 @@ export function ScheduleControlBar({
             className="whitespace-nowrap h-10 px-4 lg:h-8 lg:px-3"
           >
             <Trash2 className="mr-1 h-4 w-4 lg:h-3 lg:w-3" />
-            刪除
+            {t("schedule.delete")}
           </Button>
         </div>
 
@@ -347,19 +363,23 @@ export function ScheduleControlBar({
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>確定要刪除選中的文章嗎？</AlertDialogTitle>
+            <AlertDialogTitle>{t("dialogs.confirmDelete")}</AlertDialogTitle>
             <AlertDialogDescription>
-              此操作無法復原。將永久刪除 {selectedCount} 篇文章。
+              {t("dialogs.deleteWarning", { count: selectedCount })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={isDeleting}>取消</AlertDialogCancel>
+            <AlertDialogCancel disabled={isDeleting}>
+              {tCommon("cancel")}
+            </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleBatchDelete}
               disabled={isDeleting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isDeleting ? "刪除中..." : "確定刪除"}
+              {isDeleting
+                ? t("dialogs.deleting")
+                : t("dialogs.confirmDeleteBtn")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -371,22 +391,27 @@ export function ScheduleControlBar({
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>確定要取消這些文章的生成嗎？</AlertDialogTitle>
+            <AlertDialogTitle>
+              {t("dialogs.confirmCancelGeneration")}
+            </AlertDialogTitle>
             <AlertDialogDescription>
-              將取消 {selectedCancellableIds.length} 篇文章的生成。已使用的
-              tokens 會按進度扣除，未使用的部分會退還。
+              {t("dialogs.cancelGenerationWarning", {
+                count: selectedCancellableIds.length,
+              })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isCancellingGeneration}>
-              返回
+              {t("dialogs.goBack")}
             </AlertDialogCancel>
             <AlertDialogAction
               onClick={handleCancelGeneration}
               disabled={isCancellingGeneration}
               className="bg-orange-600 text-white hover:bg-orange-700"
             >
-              {isCancellingGeneration ? "取消中..." : "確定取消"}
+              {isCancellingGeneration
+                ? t("schedule.cancelling")
+                : t("dialogs.confirmCancelBtn")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

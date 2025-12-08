@@ -100,8 +100,13 @@
     "status": {
       "pending": "等待中",
       "processing": "處理中",
-      "completed": "已完成",
+      "generating": "生成中",
+      "completed": "待發布",
+      "draft": "草稿",
+      "scheduled": "已排程",
       "failed": "失敗",
+      "scheduleFailed": "排程失敗",
+      "cancelled": "已取消",
       "publishing": "發布中",
       "published": "已發布"
     },
@@ -116,7 +121,80 @@
       "global": "全球",
       "other": "其他"
     },
-    "customRegionPlaceholder": "請輸入您的目標地區"
+    "customRegionPlaceholder": "請輸入您的目標地區",
+    "filters": {
+      "all": "全部",
+      "unpublished": "待發布",
+      "scheduled": "已排程",
+      "published": "已發布",
+      "filterWebsite": "篩選網站",
+      "allWebsites": "全部網站"
+    },
+    "table": {
+      "title": "標題",
+      "targetWebsite": "目標網站",
+      "status": "狀態",
+      "createdAt": "建立時間",
+      "untitled": "未命名",
+      "unspecified": "未指定",
+      "noArticles": "尚無文章",
+      "selectAll": "全選"
+    },
+    "schedule": {
+      "selectPublishWebsite": "選擇發布網站",
+      "selectTargetWebsite": "(選擇目標網站)",
+      "perDay": "每日",
+      "articles": "篇",
+      "scheduling": "排程中...",
+      "schedule": "排程",
+      "cancelling": "取消中...",
+      "cancelSchedule": "取消排程",
+      "cancelGeneration": "取消生成",
+      "delete": "刪除"
+    },
+    "dialogs": {
+      "confirmDelete": "確定要刪除選中的文章嗎？",
+      "deleteWarning": "此操作無法復原。將永久刪除 {count} 篇文章。",
+      "deleting": "刪除中...",
+      "confirmDeleteBtn": "確定刪除",
+      "confirmCancelGeneration": "確定要取消這些文章的生成嗎？",
+      "cancelGenerationWarning": "將取消 {count} 篇文章的生成。已使用的 tokens 會按進度扣除，未使用的部分會退還。",
+      "confirmCancelBtn": "確定取消",
+      "goBack": "返回"
+    },
+    "toasts": {
+      "selectArticles": "請先選擇要排程的文章",
+      "selectWebsite": "請選擇發布網站",
+      "scheduleFailed": "排程失敗",
+      "scheduleSuccess": "已排程 {count} 篇文章",
+      "scheduleError": "排程發生錯誤",
+      "selectCancelArticles": "請先選擇要取消排程的文章",
+      "cancelScheduleSuccess": "已取消 {count} 篇文章的排程",
+      "noCancelledArticles": "沒有文章被取消排程",
+      "cancelScheduleError": "取消排程發生錯誤",
+      "selectDeleteArticles": "請先選擇要刪除的文章",
+      "deleteSuccess": "已刪除 {count} 篇文章",
+      "deleteFailed": "刪除失敗",
+      "deleteError": "刪除發生錯誤",
+      "noCancellableArticles": "沒有選中可取消的生成中文章",
+      "cancelGenerationSuccess": "已取消 {count} 篇文章的生成",
+      "refundTokens": "，已退還 {amount} tokens",
+      "cancelGenerationFailed": "取消失敗",
+      "cancelGenerationError": "取消生成發生錯誤"
+    },
+    "publish": {
+      "success": "發布成功",
+      "title": "發布文章",
+      "successDesc": "文章已成功發布至 WordPress",
+      "publishTo": "將「{title}」發布到指定網站",
+      "viewArticle": "查看文章",
+      "selectWebsite": "選擇要發布的網站",
+      "pleaseSelectWebsite": "請選擇要發布的目標網站",
+      "publishing": "發布中...",
+      "confirmPublish": "確認發布",
+      "failed": "發布失敗"
+    },
+    "loadFailed": "載入失敗"
   },
   "websites": {
     "title": "網站管理",

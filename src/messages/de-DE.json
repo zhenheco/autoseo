@@ -100,8 +100,13 @@
     "status": {
       "pending": "Ausstehend",
       "processing": "Verarbeitung",
-      "completed": "Abgeschlossen",
+      "generating": "Generierung",
+      "completed": "Bereit",
+      "draft": "Entwurf",
+      "scheduled": "Geplant",
       "failed": "Fehlgeschlagen",
+      "scheduleFailed": "Planung fehlgeschlagen",
+      "cancelled": "Abgebrochen",
       "publishing": "Veröffentlichen",
       "published": "Veröffentlicht"
     },
@@ -116,7 +121,80 @@
       "global": "Global",
       "other": "Andere"
     },
-    "customRegionPlaceholder": "Geben Sie Ihre Zielregion ein"
+    "customRegionPlaceholder": "Geben Sie Ihre Zielregion ein",
+    "filters": {
+      "all": "Alle",
+      "unpublished": "Unveröffentlicht",
+      "scheduled": "Geplant",
+      "published": "Veröffentlicht",
+      "filterWebsite": "Nach Website filtern",
+      "allWebsites": "Alle Websites"
+    },
+    "table": {
+      "title": "Titel",
+      "targetWebsite": "Ziel-Website",
+      "status": "Status",
+      "createdAt": "Erstellt",
+      "untitled": "Ohne Titel",
+      "unspecified": "Nicht angegeben",
+      "noArticles": "Keine Artikel",
+      "selectAll": "Alle auswählen"
+    },
+    "schedule": {
+      "selectPublishWebsite": "Veröffentlichungs-Website wählen",
+      "selectTargetWebsite": "(Ziel-Website auswählen)",
+      "perDay": "Pro Tag",
+      "articles": "Artikel",
+      "scheduling": "Planen...",
+      "schedule": "Planen",
+      "cancelling": "Abbrechen...",
+      "cancelSchedule": "Planung abbrechen",
+      "cancelGeneration": "Generierung abbrechen",
+      "delete": "Löschen"
+    },
+    "dialogs": {
+      "confirmDelete": "Ausgewählte Artikel löschen?",
+      "deleteWarning": "Diese Aktion kann nicht rückgängig gemacht werden. {count} Artikel werden dauerhaft gelöscht.",
+      "deleting": "Löschen...",
+      "confirmDeleteBtn": "Löschen",
+      "confirmCancelGeneration": "Generierung für diese Artikel abbrechen?",
+      "cancelGenerationWarning": "Die Generierung wird für {count} Artikel abgebrochen. Verwendete Token werden entsprechend abgezogen, nicht verwendete Token werden erstattet.",
+      "confirmCancelBtn": "Abbruch bestätigen",
+      "goBack": "Zurück"
+    },
+    "toasts": {
+      "selectArticles": "Bitte wählen Sie Artikel zum Planen",
+      "selectWebsite": "Bitte wählen Sie eine Veröffentlichungs-Website",
+      "scheduleFailed": "Planung fehlgeschlagen",
+      "scheduleSuccess": "{count} Artikel geplant",
+      "scheduleError": "Planungsfehler aufgetreten",
+      "selectCancelArticles": "Bitte wählen Sie Artikel zum Abbrechen",
+      "cancelScheduleSuccess": "Planung für {count} Artikel abgebrochen",
+      "noCancelledArticles": "Keine Artikel abgebrochen",
+      "cancelScheduleError": "Fehler beim Abbrechen",
+      "selectDeleteArticles": "Bitte wählen Sie Artikel zum Löschen",
+      "deleteSuccess": "{count} Artikel gelöscht",
+      "deleteFailed": "Löschen fehlgeschlagen",
+      "deleteError": "Löschfehler aufgetreten",
+      "noCancellableArticles": "Keine generierende Artikel ausgewählt",
+      "cancelGenerationSuccess": "Generierung für {count} Artikel abgebrochen",
+      "refundTokens": ", {amount} Token erstattet",
+      "cancelGenerationFailed": "Abbruch fehlgeschlagen",
+      "cancelGenerationError": "Fehler beim Abbrechen der Generierung"
+    },
+    "publish": {
+      "success": "Erfolgreich veröffentlicht",
+      "title": "Artikel veröffentlichen",
+      "successDesc": "Artikel erfolgreich auf WordPress veröffentlicht",
+      "publishTo": "\"{title}\" auf ausgewählter Website veröffentlichen",
+      "viewArticle": "Artikel ansehen",
+      "selectWebsite": "Website zum Veröffentlichen auswählen",
+      "pleaseSelectWebsite": "Bitte wählen Sie eine Ziel-Website",
+      "publishing": "Veröffentlichen...",
+      "confirmPublish": "Veröffentlichung bestätigen",
+      "failed": "Veröffentlichung fehlgeschlagen"
+    },
+    "loadFailed": "Laden fehlgeschlagen"
   },
   "websites": {
     "title": "Webseitenverwaltung",

@@ -19,6 +19,7 @@ import {
 } from "../actions";
 import { Loader2, CheckCircle, ExternalLink } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useTranslations } from "next-intl";
 
 interface QuickPublishDialogProps {
   open: boolean;
@@ -33,6 +34,8 @@ export function QuickPublishDialog({
   onOpenChange,
   article,
 }: QuickPublishDialogProps) {
+  const t = useTranslations("articles");
+  const tCommon = useTranslations("common");
   const [selectedWebsiteId, setSelectedWebsiteId] = useState<string | null>(
     article.website_id,
   );
@@ -57,7 +60,7 @@ export function QuickPublishDialog({
       setPublishedUrl(result.url || null);
     } else {
       setPublishState("error");
-      setErrorMessage(result.error || "發布失敗");
+      setErrorMessage(result.error || t("publish.failed"));
     }
   };
 
@@ -71,17 +74,24 @@ export function QuickPublishDialog({
     }, 200);
   };
 
+  const articleTitle =
+    article.generated_articles?.title ||
+    article.keywords?.join(", ") ||
+    t("table.untitled");
+
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {publishState === "success" ? "發布成功" : "發布文章"}
+            {publishState === "success"
+              ? t("publish.success")
+              : t("publish.title")}
           </DialogTitle>
           <DialogDescription>
             {publishState === "success"
-              ? "文章已成功發布至 WordPress"
-              : `將「${article.generated_articles?.title || article.keywords?.join(", ") || "未命名"}」發布到指定網站`}
+              ? t("publish.successDesc")
+              : t("publish.publishTo", { title: articleTitle })}
           </DialogDescription>
         </DialogHeader>
 
@@ -96,7 +106,7 @@ export function QuickPublishDialog({
                   rel="noopener noreferrer"
                 >
                   <ExternalLink className="mr-2 h-4 w-4" />
-                  查看文章
+                  {t("publish.viewArticle")}
                 </a>
               </Button>
             )}
@@ -105,17 +115,17 @@ export function QuickPublishDialog({
           <>
             <div className="grid gap-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="website">目標網站</Label>
+                <Label htmlFor="website">{t("targetWebsite")}</Label>
                 <WebsiteSelector
                   value={selectedWebsiteId}
                   onChange={setSelectedWebsiteId}
                   disabled={publishState === "publishing"}
-                  placeholder="選擇要發布的網站"
+                  placeholder={t("publish.selectWebsite")}
                 />
               </div>
               {!selectedWebsiteId && (
                 <p className="text-sm text-muted-foreground">
-                  請選擇要發布的目標網站
+                  {t("publish.pleaseSelectWebsite")}
                 </p>
               )}
               {errorMessage && (
@@ -131,7 +141,7 @@ export function QuickPublishDialog({
                 onClick={handleClose}
                 disabled={publishState === "publishing"}
               >
-                取消
+                {tCommon("cancel")}
               </Button>
               <Button
                 onClick={handlePublish}
@@ -140,10 +150,10 @@ export function QuickPublishDialog({
                 {publishState === "publishing" ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    發布中...
+                    {t("publish.publishing")}
                   </>
                 ) : (
-                  "確認發布"
+                  t("publish.confirmPublish")
                 )}
               </Button>
             </DialogFooter>
