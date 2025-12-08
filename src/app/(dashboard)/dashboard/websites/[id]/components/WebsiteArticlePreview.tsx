@@ -207,6 +207,8 @@ export function WebsiteArticlePreview({
     ],
     content: article?.html_content || "",
     editable: true,
+    immediatelyRender: false,
+    shouldRerenderOnTransaction: false,
     editorProps: {
       attributes: {
         class:
