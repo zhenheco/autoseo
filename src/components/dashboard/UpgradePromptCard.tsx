@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import {
   Card,
   CardContent,
@@ -34,6 +35,7 @@ export function UpgradePromptCard({
   currentTier,
   tokenBalance,
 }: UpgradePromptCardProps) {
+  const t = useTranslations("upgrade");
   const router = useRouter();
   const [processingSlug, setProcessingSlug] = useState<string | null>(null);
   const [plans, setPlans] = useState<LifetimePlan[]>([]);
@@ -81,31 +83,15 @@ export function UpgradePromptCard({
 
   const isLowBalance = tokenBalance < 5000;
 
-  const planFeatures: Record<string, string[]> = {
-    starter: [
-      "連接 1 個 WordPress 網站",
-      "使用全部 AI 模型",
-      "每篇文章無限圖片",
-      "優先客服支援",
-    ],
-    professional: [
-      "連接 5 個 WordPress 網站",
-      "3 個團隊成員",
-      "API 存取",
-      "品牌聲音設定",
-    ],
-    business: [
-      "連接 10 個 WordPress 網站",
-      "10 個團隊成員",
-      "專屬客戶經理",
-      "進階分析報告",
-    ],
-    agency: [
-      "無限 WordPress 網站",
-      "無限團隊成員",
-      "白牌解決方案",
-      "專屬 API 配額",
-    ],
+  const getPlanFeatures = (slug: string): string[] => {
+    const featureKeys: Record<string, string[]> = {
+      starter: ["website", "aiModels", "images", "support"],
+      professional: ["website", "team", "api", "voice"],
+      business: ["website", "team", "manager", "analytics"],
+      agency: ["website", "team", "whitelabel", "api"],
+    };
+    const keys = featureKeys[slug] || [];
+    return keys.map((key) => t(`features.${slug}.${key}`));
   };
 
   const planGradients: Record<
@@ -160,7 +146,7 @@ export function UpgradePromptCard({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "支付請求失敗");
+        throw new Error(data.error || t("paymentFailed"));
       }
 
       if (data.paymentForm) {
@@ -179,8 +165,8 @@ export function UpgradePromptCard({
         );
       }
     } catch (error) {
-      console.error("升級失敗:", error);
-      alert(error instanceof Error ? error.message : "升級失敗，請稍後再試");
+      console.error("Upgrade failed:", error);
+      alert(error instanceof Error ? error.message : t("upgradeFailed"));
     } finally {
       setProcessingSlug(null);
     }
@@ -206,11 +192,11 @@ export function UpgradePromptCard({
             <Sparkles className="h-5 w-5 text-primary" />
           </div>
           <div className="flex-1">
-            <CardTitle className="text-xl">升級解鎖更多功能</CardTitle>
+            <CardTitle className="text-xl">{t("title")}</CardTitle>
             <CardDescription>
               {isLowBalance
-                ? "您的 Credit 即將用完，升級獲得更多配額！"
-                : "一次付費，終身使用，讓您的 SEO 更上一層樓"}
+                ? t("descriptionLowBalance")
+                : t("descriptionNormal")}
             </CardDescription>
           </div>
         </div>
@@ -219,7 +205,7 @@ export function UpgradePromptCard({
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {displayPlans.map((plan, index) => {
             const styles = planGradients[plan.slug] || planGradients.starter;
-            const features = planFeatures[plan.slug] || [];
+            const features = getPlanFeatures(plan.slug);
             const isPopular = plan.slug === "professional";
 
             return (
@@ -235,7 +221,7 @@ export function UpgradePromptCard({
                   <div className="absolute -top-3 left-1/2 -translate-x-1/2">
                     <span className="inline-flex items-center gap-1 px-3 py-1 rounded-full bg-primary text-primary-foreground text-xs font-semibold shadow-md">
                       <Zap className="h-3 w-3" />
-                      最受歡迎
+                      {t("mostPopular")}
                     </span>
                   </div>
                 )}
@@ -249,7 +235,9 @@ export function UpgradePromptCard({
                     <span className="text-3xl font-bold">
                       NT$ {plan.lifetime_price.toLocaleString()}
                     </span>
-                    <span className="text-sm text-muted-foreground">終身</span>
+                    <span className="text-sm text-muted-foreground">
+                      {t("lifetime")}
+                    </span>
                   </div>
                   <div className="mt-1">
                     <span className="text-sm font-semibold text-primary">
@@ -282,7 +270,9 @@ export function UpgradePromptCard({
                   )}
                   size="sm"
                 >
-                  {processingSlug === plan.slug ? "處理中..." : "立即升級"}
+                  {processingSlug === plan.slug
+                    ? t("processing")
+                    : t("upgradeNow")}
                   {processingSlug !== plan.slug && (
                     <ArrowRight className="ml-2 h-3 w-3" />
                   )}
@@ -295,7 +285,7 @@ export function UpgradePromptCard({
         <div className="mt-4 pt-4 border-t border-border/50 flex items-center justify-end">
           <Button asChild variant="ghost" size="sm" className="text-xs">
             <Link href="/#pricing">
-              查看所有方案
+              {t("viewAllPlans")}
               <ArrowRight className="ml-1 h-3 w-3" />
             </Link>
           </Button>

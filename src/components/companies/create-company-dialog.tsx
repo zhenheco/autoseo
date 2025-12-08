@@ -1,7 +1,8 @@
-'use client'
+"use client";
 
-import { useState } from 'react'
-import { Button } from '@/components/ui/button'
+import { useState } from "react";
+import { useTranslations } from "next-intl";
+import { Button } from "@/components/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -10,43 +11,45 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
-import { Plus } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export function CreateCompanyDialog() {
-  const [open, setOpen] = useState(false)
-  const [loading, setLoading] = useState(false)
-  const [name, setName] = useState('')
-  const router = useRouter()
+  const t = useTranslations("companies");
+  const tCommon = useTranslations("common");
+  const [open, setOpen] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [name, setName] = useState("");
+  const router = useRouter();
 
   async function handleSubmit(e: React.FormEvent) {
-    e.preventDefault()
-    setLoading(true)
+    e.preventDefault();
+    setLoading(true);
 
     try {
-      const response = await fetch('/api/companies', {
-        method: 'POST',
+      const response = await fetch("/api/companies", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({ name }),
-      })
+      });
 
       if (!response.ok) {
-        throw new Error('建立公司失敗')
+        throw new Error(t("createFailed"));
       }
 
-      setOpen(false)
-      setName('')
-      router.refresh()
+      setOpen(false);
+      setName("");
+      router.refresh();
     } catch (error) {
-      console.error(error)
-      alert('建立公司失敗，請稍後再試')
+      console.error(error);
+      alert(t("createFailedRetry"));
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
   }
 
@@ -55,25 +58,25 @@ export function CreateCompanyDialog() {
       <DialogTrigger asChild>
         <Button>
           <Plus className="h-4 w-4 mr-2" />
-          新增公司
+          {t("createTitle")}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <form onSubmit={handleSubmit}>
           <DialogHeader>
-            <DialogTitle className="text-2xl">新增公司</DialogTitle>
+            <DialogTitle className="text-2xl">{t("createTitle")}</DialogTitle>
             <DialogDescription className="text-base">
-              建立一個新的公司來管理您的團隊和專案
+              {t("createDescription")}
             </DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="name" className="text-base">
-                公司名稱
+                {t("nameLabel")}
               </Label>
               <Input
                 id="name"
-                placeholder="輸入公司名稱"
+                placeholder={t("namePlaceholder")}
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 required
@@ -82,15 +85,19 @@ export function CreateCompanyDialog() {
             </div>
           </div>
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setOpen(false)}>
-              取消
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+            >
+              {tCommon("cancel")}
             </Button>
             <Button type="submit" disabled={loading || !name}>
-              {loading ? '建立中...' : '建立公司'}
+              {loading ? t("creating") : t("createButton")}
             </Button>
           </DialogFooter>
         </form>
       </DialogContent>
     </Dialog>
-  )
+  );
 }

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Sparkles } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { LoginForm } from "./login-form";
 
 export default async function LoginPage({
@@ -8,6 +9,7 @@ export default async function LoginPage({
   searchParams: Promise<{ error?: string; success?: string }>;
 }) {
   const params = await searchParams;
+  const t = await getTranslations("auth");
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden p-4">
@@ -19,10 +21,10 @@ export default async function LoginPage({
             </div>
           </div>
           <h1 className="text-3xl font-bold tracking-tight mb-2 text-foreground">
-            歡迎使用 1waySEO
+            {t("welcomeTitle")}
           </h1>
           <p className="text-base text-muted-foreground">
-            使用 Google 帳號快速開始
+            {t("googleLoginDesc")}
           </p>
         </div>
 
@@ -31,19 +33,19 @@ export default async function LoginPage({
         </div>
 
         <p className="text-xs text-center text-muted-foreground mt-8 px-8">
-          繼續即表示您同意我們的{" "}
+          {t("termsAgreement")}{" "}
           <Link
             href="/terms"
             className="underline underline-offset-2 hover:text-foreground transition-all"
           >
-            服務條款
+            {t("termsOfService")}
           </Link>{" "}
-          和{" "}
+          {t("and")}{" "}
           <Link
             href="/privacy"
             className="underline underline-offset-2 hover:text-foreground transition-all"
           >
-            隱私政策
+            {t("privacyPolicy")}
           </Link>
         </p>
       </div>

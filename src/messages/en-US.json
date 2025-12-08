@@ -27,7 +27,8 @@
     "selectPlaceholder": "Please select",
     "noData": "No data",
     "viewAll": "View all",
-    "learnMore": "Learn more"
+    "learnMore": "Learn more",
+    "returnHome": "Return Home"
   },
   "nav": {
     "home": "Home",
@@ -58,7 +59,24 @@
     "privacyPolicy": "Privacy Policy",
     "loginFailed": "Login failed",
     "loginSuccess": "Login successful",
-    "logoutSuccess": "Logged out successfully"
+    "logoutSuccess": "Logged out successfully",
+    "signupTitle": "Create New Account",
+    "googleSignupDesc": "Sign up quickly with Google",
+    "signupTermsAgreement": "By signing up, you agree to our",
+    "signupWithGoogle": "Sign up with Google",
+    "forgotPassword": "Forgot Password",
+    "forgotPasswordDesc": "Enter your email address and we'll send you a password reset link",
+    "emailLabel": "Email",
+    "sendResetLink": "Send Reset Link",
+    "sending": "Sending...",
+    "rememberPassword": "Remember your password?",
+    "loginNow": "Login now",
+    "emailSent": "Email Sent",
+    "emailSentDesc": "We've sent a password reset link to your email",
+    "checkInbox": "Please check your inbox (including spam folder) and click the link to reset your password.",
+    "noEmailReceived": "If you don't receive the email in a few minutes, please try again.",
+    "resendEmail": "Resend Email",
+    "backToLogin": "Back to Login"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -194,7 +212,130 @@
       "confirmPublish": "Confirm Publish",
       "failed": "Publish failed"
     },
-    "loadFailed": "Load failed"
+    "loadFailed": "Load failed",
+    "batchPublish": {
+      "title": "Batch Publish Articles ({count})",
+      "description": "Publish selected articles to specified website",
+      "selectedArticles": "Selected Articles",
+      "targetWebsite": "Target Website",
+      "selectWebsite": "Select Website",
+      "selectWebsiteError": "Please select a target website",
+      "confirmMessage": "Are you sure you want to publish {count} articles to \"{website}\"?",
+      "publishStatus": "Publish Status",
+      "statusDraft": "Draft",
+      "statusPublished": "Published",
+      "progress": "Publish Progress",
+      "publishing": "Publishing...",
+      "result": "Publish Result",
+      "total": "Total: {count}",
+      "success": "Success: {count}",
+      "failed": "Failed: {count}",
+      "startPublish": "Start Batch Publish",
+      "close": "Close",
+      "publishFailed": "Batch publish failed",
+      "publishSuccess": "Successfully published {count} articles",
+      "publishPartial": "Publish completed: {success} succeeded, {failed} failed",
+      "publishError": "Batch publish failed",
+      "unknownError": "Unknown error"
+    },
+    "batchDialog": {
+      "title": "Batch Article Generation",
+      "description": "Three-step process: Topic Exploration → Title Selection → Batch Generation",
+      "generateTitlesFailed": "Failed to generate titles",
+      "generateTitlesRetry": "Failed to generate titles, please try again",
+      "addTitlesFirst": "Please add titles to generate first",
+      "steps": {
+        "topicInput": "Topic Input",
+        "titleSelect": "Title Selection",
+        "confirmGenerate": "Confirm Generation"
+      },
+      "keywordLabel": "Article Topic/Keyword",
+      "keywordPlaceholder": "Enter article topic, system will generate title suggestions",
+      "keywordHint": "Enter topic concept or SEO keyword, system will generate multiple title options for you to choose",
+      "generating": "Generating...",
+      "generateIdeas": "Generate Ideas",
+      "customTitleLabel": "Or enter custom title",
+      "customTitlePlaceholder": "Enter custom title",
+      "add": "Add",
+      "generatedTitlesLabel": "Generated Titles (select to add)",
+      "addTitles": "Add Titles ({count})",
+      "pendingList": "Pending List ({count})",
+      "submitting": "Submitting...",
+      "startGeneration": "Start Generation",
+      "topic": "Topic",
+      "editTitlePlaceholder": "Click to edit title",
+      "emptyStateHint": "Enter keyword and click Generate Ideas to start",
+      "options": {
+        "title": "Generation Options",
+        "targetLanguage": "Target Language",
+        "wordCount": "Word Count",
+        "words": "{count} words",
+        "autoImageTitle": "Auto Image Configuration",
+        "autoImageDesc": "System will automatically configure images for each H2 heading",
+        "hint1": "Batch generation mode",
+        "hint2": "All articles use same settings",
+        "hint3": "View in list after generation"
+      }
+    },
+    "publishPlan": {
+      "loadFailed": "Failed to load website list",
+      "websiteNotFound": "Website not found",
+      "title": "Publish Plan List",
+      "summary": "Total: {total} plans | Valid: {valid} | Errors: {error}",
+      "columns": {
+        "status": "Status",
+        "keyword": "Keyword",
+        "website": "Website",
+        "type": "Type",
+        "publishTime": "Publish Time",
+        "customSlug": "Custom Slug",
+        "actions": "Actions"
+      },
+      "status": {
+        "valid": "Valid",
+        "warning": "Warning",
+        "error": "Error"
+      },
+      "validating": "Validating...",
+      "noData": "No data imported yet",
+      "aiDetermine": "AI Determined",
+      "bySchedule": "By Schedule",
+      "autoGenerate": "Auto Generate"
+    },
+    "scheduleSettings": {
+      "title": "Schedule Settings",
+      "description": "Configure article publish intervals",
+      "intervalMode": "Fixed Interval Publishing",
+      "specificMode": "Use Excel specified time (if available)",
+      "intervalLabel": "Publish Interval (hours)",
+      "intervalHint": "Publish one article every {hours} hours",
+      "previewTitle": "Publish Time Preview (first 5)",
+      "morePlans": "...and {count} more plans",
+      "totalPlans": "Total Plans",
+      "plansCount": "{count}",
+      "estimatedTime": "Estimated Completion",
+      "days": "About {days} days"
+    },
+    "import": {
+      "title": "Batch Import Articles",
+      "description": "Upload Excel file to create article tasks in batch",
+      "uploadTitle": "Upload Excel File",
+      "uploadDescription": "Supports 5-column format: Keyword, Website Name, Article Type, Publish Time, Custom Slug",
+      "backToUpload": "Back to Upload",
+      "nextSchedule": "Next: Schedule Settings",
+      "nextConfirm": "Next: Confirm",
+      "confirmTitle": "Confirm Execution",
+      "confirmDescription": "About to create {count} article tasks",
+      "taskCount": "Task Count",
+      "taskUnit": "{count}",
+      "scheduleMode": "Schedule Mode",
+      "intervalPublish": "Publish one every {hours} hours",
+      "specificTimePublish": "Publish at specified times",
+      "confirm": "Confirm",
+      "importFailed": "Batch import failed",
+      "importSuccess": "Successfully created {count} tasks",
+      "errorOccurred": "An error occurred"
+    }
   },
   "websites": {
     "title": "Website Management",
@@ -208,7 +349,13 @@
     "wordpressSettings": "WordPress Settings",
     "apiKey": "API Key",
     "connected": "Connected",
-    "notConnected": "Not Connected"
+    "notConnected": "Not Connected",
+    "manageDescription": "Manage your WordPress website settings",
+    "noCompanyJoined": "You have not joined any company yet",
+    "status": "Status",
+    "viewArticles": "View Articles",
+    "noWebsites": "No websites added yet",
+    "addFirstWebsite": "Add Your First Website"
   },
   "subscription": {
     "title": "Subscription Plans",
@@ -222,7 +369,85 @@
     "purchaseHistory": "Purchase History",
     "features": "Features",
     "popular": "Popular",
-    "recommended": "Recommended"
+    "recommended": "Recommended",
+    "planType": "Plan Type",
+    "freePlan": "Free Plan",
+    "unknownPlan": "Unknown Plan",
+    "monthlyResetCredits": "Monthly Reset Credits",
+    "base": "Base",
+    "purchasedCredits": "Purchased Credits",
+    "neverExpires": "Never Expires",
+    "quotaResetDate": "Quota Reset Date",
+    "creditPackagePurchase": "Credit Package Purchase"
+  },
+  "payment": {
+    "failed": "Payment Failed",
+    "success": "Payment Successful",
+    "checking": "Verifying payment status...",
+    "queryFailed": "Query Failed",
+    "cannotConfirm": "Cannot confirm payment status. Please refresh the page or contact support.",
+    "timeout": "Payment confirmation timeout. Please refresh the page or contact support.",
+    "confirmingTitle": "Confirming",
+    "waitingMessage": "This may take a few seconds, please wait... ({current}/{max})",
+    "successTitle": "Payment Successful",
+    "failedTitle": "Payment Failed"
+  },
+  "subscriptionStatus": {
+    "failed": "Subscription Failed",
+    "success": "Subscription Successful! Your plan has been updated",
+    "processing": "Processing your subscription...",
+    "processingTitle": "Processing",
+    "waitingMessage": "This may take a few seconds, please wait...",
+    "successTitle": "Subscription Successful",
+    "failedTitle": "Subscription Failed"
+  },
+  "upgrade": {
+    "title": "Upgrade to Unlock More Features",
+    "descriptionLowBalance": "Your credits are running low, upgrade for more quota!",
+    "descriptionNormal": "One-time payment, lifetime access. Take your SEO to the next level",
+    "mostPopular": "Most Popular",
+    "lifetime": "Lifetime",
+    "processing": "Processing...",
+    "upgradeNow": "Upgrade Now",
+    "viewAllPlans": "View All Plans",
+    "paymentFailed": "Payment request failed",
+    "upgradeFailed": "Upgrade failed, please try again later",
+    "features": {
+      "starter": {
+        "website": "Connect 1 WordPress site",
+        "aiModels": "Access all AI models",
+        "images": "Unlimited images per article",
+        "support": "Priority customer support"
+      },
+      "professional": {
+        "website": "Connect 5 WordPress sites",
+        "team": "3 team members",
+        "api": "API access",
+        "voice": "Brand voice settings"
+      },
+      "business": {
+        "website": "Connect 10 WordPress sites",
+        "team": "10 team members",
+        "manager": "Dedicated account manager",
+        "analytics": "Advanced analytics reports"
+      },
+      "agency": {
+        "website": "Unlimited WordPress sites",
+        "team": "Unlimited team members",
+        "whitelabel": "White-label solution",
+        "api": "Dedicated API quota"
+      }
+    }
+  },
+  "companies": {
+    "createTitle": "Create Company",
+    "createDescription": "Create a new company to manage your team and projects",
+    "nameLabel": "Company Name",
+    "namePlaceholder": "Enter company name",
+    "createButton": "Create Company",
+    "creating": "Creating...",
+    "createFailed": "Failed to create company",
+    "createFailedRetry": "Failed to create company, please try again later"
   },
   "affiliate": {
     "title": "Affiliate Partner",
@@ -242,13 +467,71 @@
   },
   "settings": {
     "title": "Settings",
+    "description": "Manage your account settings",
     "profile": "Profile",
     "aiModels": "AI Model Settings",
     "notifications": "Notification Settings",
     "language": "Language Settings",
     "theme": "Theme Settings",
     "darkMode": "Dark Mode",
-    "lightMode": "Light Mode"
+    "lightMode": "Light Mode",
+    "accountInfo": "Account Information",
+    "accountInfoDescription": "Manage your basic account information",
+    "accountName": "Account Name",
+    "accountNamePlaceholder": "Enter account name",
+    "saveChanges": "Save Changes"
+  },
+  "gettingStarted": {
+    "title": "Getting Started",
+    "subtitle": "Step-by-step guide to complete your platform setup",
+    "steps": {
+      "addWebsite": {
+        "title": "Add Website",
+        "description": "Connect your WordPress website to 1waySEO",
+        "buttonText": "Start Setup",
+        "details": [
+          "Enter website name and WordPress URL",
+          "Set up WordPress application password",
+          "Test connection to confirm settings"
+        ]
+      },
+      "connect": {
+        "title": "Connect",
+        "description": "Confirm your website is successfully connected and can publish articles",
+        "details": [
+          "Verify WordPress API connection status",
+          "Confirm publishing permissions",
+          "Test article publishing"
+        ]
+      },
+      "keywords": {
+        "title": "Set Keywords",
+        "description": "Add SEO keywords you want to optimize",
+        "buttonText": "Manage Keywords",
+        "details": [
+          "Add main keywords",
+          "Set target region (Taiwan, Hong Kong, USA, etc.)",
+          "Set keyword priority"
+        ]
+      },
+      "writeArticle": {
+        "title": "Write Article",
+        "description": "Use AI to automatically generate high-quality SEO articles",
+        "buttonText": "Start Generating",
+        "details": [
+          "Select keywords to use",
+          "Set article type and length",
+          "One-click generate and publish"
+        ]
+      }
+    },
+    "help": {
+      "title": "Need Help?",
+      "description": "If you encounter any issues during setup, please refer to our documentation or contact support.",
+      "viewDocs": "View Documentation",
+      "contactSupport": "Contact Support"
+    },
+    "backToDashboard": "Back to Dashboard"
   },
   "home": {
     "heroTagline": "AI-Powered SEO Content Platform",
@@ -328,7 +611,49 @@
     "registerNow": "Sign up now and get 10K free Credits to start",
     "freeStartUsing": "Get Started Free",
     "terms": "Terms of Service",
-    "privacy": "Privacy Policy"
+    "privacy": "Privacy Policy",
+    "costComparison": {
+      "badge": "Cost Comparison",
+      "whyChoose": "Why Choose",
+      "description": "Save over 90% in cost and time compared to traditional methods",
+      "costTitle": "Cost Comparison",
+      "featureTitle": "Feature Comparison: Traditional vs 1WaySEO",
+      "traditional": "Traditional",
+      "comparisons": {
+        "professionalWriter": {
+          "category": "Professional Writer",
+          "traditional": "$100-300/article",
+          "ours": "$2-5/article",
+          "savings": "Save 95%"
+        },
+        "seoAgency": {
+          "category": "SEO Agency",
+          "traditional": "$2,000+/month",
+          "ours": "$40/month",
+          "savings": "Save 97%"
+        },
+        "chatgptManual": {
+          "category": "DIY with ChatGPT",
+          "traditional": "2-4 hrs manual editing",
+          "ours": "Fully automated SEO",
+          "savings": "Save 90%"
+        },
+        "productionTime": {
+          "category": "Production Time",
+          "traditional": "4-8 hours/article",
+          "ours": "10 minutes/article",
+          "savings": "48x faster"
+        }
+      },
+      "features": {
+        "keywordResearch": "Keyword Research",
+        "competitorAnalysis": "Competitor Analysis",
+        "seoStructure": "SEO-Optimized Structure",
+        "autoImageGen": "Auto Image Generation",
+        "wordpressPublish": "One-Click WordPress Publish",
+        "scheduledPost": "Scheduled Auto-Posting"
+      }
+    }
   },
   "faq": {
     "title": "FAQ",

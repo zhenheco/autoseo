@@ -7,10 +7,12 @@ import { PaymentHistory } from "./payment-history";
 import { SubscriptionStatusChecker } from "@/components/subscription/SubscriptionStatusChecker";
 import type { Database } from "@/types/database.types";
 import { checkPagePermission } from "@/lib/permissions";
+import { getTranslations } from "next-intl/server";
 
 export default async function SubscriptionPage() {
   await checkPagePermission("canAccessSubscription");
 
+  const t = await getTranslations("subscription");
   const user = await getUser();
 
   if (!user) {
@@ -74,11 +76,13 @@ export default async function SubscriptionPage() {
       {company && (
         <div className="mb-8 p-6 rounded-lg bg-gradient-to-br from-card to-muted border border-border shadow-sm">
           <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-semibold">目前方案</h2>
+            <h2 className="text-xl font-semibold">{t("currentPlan")}</h2>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <p className="text-sm text-muted-foreground mb-1">方案類型</p>
+              <p className="text-sm text-muted-foreground mb-1">
+                {t("planType")}
+              </p>
               <p className="text-lg font-semibold">
                 {(
                   companySubscription?.subscription_plans as {
@@ -86,8 +90,8 @@ export default async function SubscriptionPage() {
                   } | null
                 )?.name ||
                   (company.subscription_tier === "free"
-                    ? "免費方案"
-                    : "未知方案")}
+                    ? t("freePlan")
+                    : t("unknownPlan"))}
                 {(companySubscription?.purchased_count || 1) > 1 && (
                   <span className="ml-2 text-sm text-purple-600">
                     (x{companySubscription?.purchased_count})
@@ -97,7 +101,7 @@ export default async function SubscriptionPage() {
             </div>
             <div>
               <p className="text-sm text-muted-foreground mb-1">
-                每月重置 Credits
+                {t("monthlyResetCredits")}
               </p>
               <p className="text-lg font-semibold">
                 {companySubscription?.monthly_token_quota?.toLocaleString() ||
@@ -105,22 +109,26 @@ export default async function SubscriptionPage() {
               </p>
               {(companySubscription?.purchased_count || 1) > 1 && (
                 <p className="text-xs text-muted-foreground">
-                  基礎{" "}
+                  {t("base")}{" "}
                   {companySubscription?.base_monthly_quota?.toLocaleString()} x{" "}
                   {companySubscription?.purchased_count}
                 </p>
               )}
             </div>
             <div>
-              <p className="text-sm text-muted-foreground mb-1">購買 Credit</p>
+              <p className="text-sm text-muted-foreground mb-1">
+                {t("purchasedCredits")}
+              </p>
               <p className="text-lg font-semibold">
                 {companySubscription?.purchased_token_balance?.toLocaleString() ||
                   0}
               </p>
-              <p className="text-xs text-success mt-1">永不過期</p>
+              <p className="text-xs text-success mt-1">{t("neverExpires")}</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground mb-1">配額重置日</p>
+              <p className="text-sm text-muted-foreground mb-1">
+                {t("quotaResetDate")}
+              </p>
               <p className="text-lg font-semibold">
                 {companySubscription?.current_period_end
                   ? new Date(
@@ -161,7 +169,9 @@ export default async function SubscriptionPage() {
       </div>
 
       <div className="mb-12">
-        <h2 className="text-2xl font-bold mb-6">Credit 包購買</h2>
+        <h2 className="text-2xl font-bold mb-6">
+          {t("creditPackagePurchase")}
+        </h2>
         <TokenPackages
           packages={tokenPackages || []}
           companyId={member.company_id}

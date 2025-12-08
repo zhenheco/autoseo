@@ -27,7 +27,8 @@
     "selectPlaceholder": "請選擇",
     "noData": "沒有資料",
     "viewAll": "查看全部",
-    "learnMore": "了解更多"
+    "learnMore": "了解更多",
+    "returnHome": "返回首頁"
   },
   "nav": {
     "home": "首頁",
@@ -58,7 +59,24 @@
     "privacyPolicy": "隱私政策",
     "loginFailed": "登入失敗",
     "loginSuccess": "登入成功",
-    "logoutSuccess": "已成功登出"
+    "logoutSuccess": "已成功登出",
+    "signupTitle": "建立新帳號",
+    "googleSignupDesc": "使用 Google 帳號快速註冊",
+    "signupTermsAgreement": "註冊即表示您同意我們的",
+    "signupWithGoogle": "使用 Google 帳號註冊",
+    "forgotPassword": "忘記密碼",
+    "forgotPasswordDesc": "輸入您的電子郵件地址，我們將發送密碼重設連結給您",
+    "emailLabel": "電子郵件",
+    "sendResetLink": "發送重設連結",
+    "sending": "發送中...",
+    "rememberPassword": "記得密碼了？",
+    "loginNow": "立即登入",
+    "emailSent": "郵件已發送",
+    "emailSentDesc": "我們已發送密碼重設連結到您的電子郵件",
+    "checkInbox": "請檢查您的收件匣（包括垃圾郵件資料夾），並點擊郵件中的連結來重設密碼。",
+    "noEmailReceived": "如果幾分鐘內沒有收到郵件，請嘗試重新發送。",
+    "resendEmail": "重新發送郵件",
+    "backToLogin": "返回登入"
   },
   "dashboard": {
     "title": "儀表板",
@@ -194,7 +212,130 @@
       "confirmPublish": "確認發布",
       "failed": "發布失敗"
     },
-    "loadFailed": "載入失敗"
+    "loadFailed": "載入失敗",
+    "batchPublish": {
+      "title": "批次發布文章（{count} 篇）",
+      "description": "將選中的文章發布到指定網站",
+      "selectedArticles": "選中的文章",
+      "targetWebsite": "目標網站",
+      "selectWebsite": "選擇網站",
+      "selectWebsiteError": "請選擇目標網站",
+      "confirmMessage": "確定要將 {count} 篇文章發布到「{website}」嗎？",
+      "publishStatus": "發布狀態",
+      "statusDraft": "草稿",
+      "statusPublished": "已發布",
+      "progress": "發布進度",
+      "publishing": "發布中...",
+      "result": "發布結果",
+      "total": "總共：{count} 篇",
+      "success": "成功：{count} 篇",
+      "failed": "失敗：{count} 篇",
+      "startPublish": "開始批次發布",
+      "close": "關閉",
+      "publishFailed": "批次發布失敗",
+      "publishSuccess": "成功發布 {count} 篇文章",
+      "publishPartial": "發布完成：成功 {success} 篇，失敗 {failed} 篇",
+      "publishError": "批次發布失敗",
+      "unknownError": "未知錯誤"
+    },
+    "batchDialog": {
+      "title": "批次文章生成",
+      "description": "三步驟流程：主題探索 → 標題選擇 → 批次生成",
+      "generateTitlesFailed": "生成標題失敗",
+      "generateTitlesRetry": "生成標題失敗，請重試",
+      "addTitlesFirst": "請先添加要生成的標題",
+      "steps": {
+        "topicInput": "主題輸入",
+        "titleSelect": "標題選擇",
+        "confirmGenerate": "確認生成"
+      },
+      "keywordLabel": "文章主題/關鍵字",
+      "keywordPlaceholder": "輸入文章主題方向，系統將基於此生成標題建議",
+      "keywordHint": "輸入主題概念或 SEO 關鍵字，系統將生成多個標題選項供您選擇",
+      "generating": "生成中...",
+      "generateIdeas": "Generate Ideas",
+      "customTitleLabel": "或自行輸入標題",
+      "customTitlePlaceholder": "輸入自訂標題",
+      "add": "添加",
+      "generatedTitlesLabel": "生成的標題（選擇要添加的）",
+      "addTitles": "Add Titles ({count})",
+      "pendingList": "待生成列表 ({count})",
+      "submitting": "提交中...",
+      "startGeneration": "Start Generation",
+      "topic": "主題",
+      "editTitlePlaceholder": "點擊編輯標題",
+      "emptyStateHint": "輸入關鍵字並點擊 Generate Ideas 開始",
+      "options": {
+        "title": "生成選項",
+        "targetLanguage": "目標語言",
+        "wordCount": "文章字數",
+        "words": "{count} 字",
+        "autoImageTitle": "自動圖片配置",
+        "autoImageDesc": "系統將自動為每個 H2 標題配置相應圖片",
+        "hint1": "批次生成模式",
+        "hint2": "所有文章使用相同設定",
+        "hint3": "生成後可在列表中查看"
+      }
+    },
+    "publishPlan": {
+      "loadFailed": "無法載入網站列表",
+      "websiteNotFound": "找不到對應的網站",
+      "title": "發佈計畫列表",
+      "summary": "共 {total} 個計畫 | 有效: {valid} | 錯誤: {error}",
+      "columns": {
+        "status": "狀態",
+        "keyword": "關鍵字",
+        "website": "網站",
+        "type": "類型",
+        "publishTime": "發佈時間",
+        "customSlug": "自訂 Slug",
+        "actions": "操作"
+      },
+      "status": {
+        "valid": "有效",
+        "warning": "警告",
+        "error": "錯誤"
+      },
+      "validating": "驗證中...",
+      "noData": "尚未匯入任何資料",
+      "aiDetermine": "AI 判斷",
+      "bySchedule": "依排程",
+      "autoGenerate": "自動生成"
+    },
+    "scheduleSettings": {
+      "title": "排程設定",
+      "description": "設定文章發佈的時間間隔",
+      "intervalMode": "固定間隔發佈",
+      "specificMode": "依 Excel 指定時間（若有填寫）",
+      "intervalLabel": "發佈間隔（小時）",
+      "intervalHint": "每隔 {hours} 小時發佈一篇文章",
+      "previewTitle": "發佈時間預覽（前 5 個）",
+      "morePlans": "...還有 {count} 個計畫",
+      "totalPlans": "總計畫數",
+      "plansCount": "{count} 個",
+      "estimatedTime": "預計完成時間",
+      "days": "約 {days} 天"
+    },
+    "import": {
+      "title": "批次匯入文章",
+      "description": "上傳 Excel 檔案批次建立文章任務",
+      "uploadTitle": "上傳 Excel 檔案",
+      "uploadDescription": "支援五欄格式：關鍵字、網站名稱、文章類型、發佈時間、自訂 Slug",
+      "backToUpload": "返回上傳",
+      "nextSchedule": "下一步：設定排程",
+      "nextConfirm": "下一步：確認執行",
+      "confirmTitle": "確認執行",
+      "confirmDescription": "即將建立 {count} 個文章任務",
+      "taskCount": "任務數量",
+      "taskUnit": "{count} 個",
+      "scheduleMode": "排程模式",
+      "intervalPublish": "每 {hours} 小時發佈一篇",
+      "specificTimePublish": "依指定時間發佈",
+      "confirm": "確認執行",
+      "importFailed": "批次匯入失敗",
+      "importSuccess": "成功建立 {count} 個任務",
+      "errorOccurred": "發生錯誤"
+    }
   },
   "websites": {
     "title": "網站管理",
@@ -208,7 +349,13 @@
     "wordpressSettings": "WordPress 設定",
     "apiKey": "API Key",
     "connected": "已連接",
-    "notConnected": "未連接"
+    "notConnected": "未連接",
+    "manageDescription": "管理您的 WordPress 網站設定",
+    "noCompanyJoined": "您尚未加入任何公司",
+    "status": "狀態",
+    "viewArticles": "查看文章",
+    "noWebsites": "尚未新增任何網站",
+    "addFirstWebsite": "新增第一個網站"
   },
   "subscription": {
     "title": "訂閱方案",
@@ -222,7 +369,85 @@
     "purchaseHistory": "購買紀錄",
     "features": "功能特色",
     "popular": "熱門",
-    "recommended": "推薦"
+    "recommended": "推薦",
+    "planType": "方案類型",
+    "freePlan": "免費方案",
+    "unknownPlan": "未知方案",
+    "monthlyResetCredits": "每月重置 Credits",
+    "base": "基礎",
+    "purchasedCredits": "購買 Credit",
+    "neverExpires": "永不過期",
+    "quotaResetDate": "配額重置日",
+    "creditPackagePurchase": "Credit 包購買"
+  },
+  "payment": {
+    "failed": "付款失敗",
+    "success": "付款成功",
+    "checking": "正在確認付款狀態...",
+    "queryFailed": "查詢失敗",
+    "cannotConfirm": "無法確認付款狀態，請重新整理頁面或聯繫客服",
+    "timeout": "付款確認超時，請重新整理頁面或聯繫客服",
+    "confirmingTitle": "確認中",
+    "waitingMessage": "這可能需要幾秒鐘，請稍候...（{current}/{max}）",
+    "successTitle": "付款成功",
+    "failedTitle": "付款失敗"
+  },
+  "subscriptionStatus": {
+    "failed": "訂閱失敗",
+    "success": "訂閱成功！您的方案已更新",
+    "processing": "正在處理您的訂閱...",
+    "processingTitle": "處理中",
+    "waitingMessage": "這可能需要幾秒鐘，請稍候...",
+    "successTitle": "訂閱成功",
+    "failedTitle": "訂閱失敗"
+  },
+  "upgrade": {
+    "title": "升級解鎖更多功能",
+    "descriptionLowBalance": "您的 Credit 即將用完，升級獲得更多配額！",
+    "descriptionNormal": "一次付費，終身使用，讓您的 SEO 更上一層樓",
+    "mostPopular": "最受歡迎",
+    "lifetime": "終身",
+    "processing": "處理中...",
+    "upgradeNow": "立即升級",
+    "viewAllPlans": "查看所有方案",
+    "paymentFailed": "支付請求失敗",
+    "upgradeFailed": "升級失敗，請稍後再試",
+    "features": {
+      "starter": {
+        "website": "連接 1 個 WordPress 網站",
+        "aiModels": "使用全部 AI 模型",
+        "images": "每篇文章無限圖片",
+        "support": "優先客服支援"
+      },
+      "professional": {
+        "website": "連接 5 個 WordPress 網站",
+        "team": "3 個團隊成員",
+        "api": "API 存取",
+        "voice": "品牌聲音設定"
+      },
+      "business": {
+        "website": "連接 10 個 WordPress 網站",
+        "team": "10 個團隊成員",
+        "manager": "專屬客戶經理",
+        "analytics": "進階分析報告"
+      },
+      "agency": {
+        "website": "無限 WordPress 網站",
+        "team": "無限團隊成員",
+        "whitelabel": "白牌解決方案",
+        "api": "專屬 API 配額"
+      }
+    }
+  },
+  "companies": {
+    "createTitle": "新增公司",
+    "createDescription": "建立一個新的公司來管理您的團隊和專案",
+    "nameLabel": "公司名稱",
+    "namePlaceholder": "輸入公司名稱",
+    "createButton": "建立公司",
+    "creating": "建立中...",
+    "createFailed": "建立公司失敗",
+    "createFailedRetry": "建立公司失敗，請稍後再試"
   },
   "affiliate": {
     "title": "聯盟夥伴",
@@ -242,13 +467,71 @@
   },
   "settings": {
     "title": "設定",
+    "description": "管理您的帳戶設定",
     "profile": "個人資料",
     "aiModels": "AI 模型設定",
     "notifications": "通知設定",
     "language": "語言設定",
     "theme": "主題設定",
     "darkMode": "深色模式",
-    "lightMode": "淺色模式"
+    "lightMode": "淺色模式",
+    "accountInfo": "帳戶資訊",
+    "accountInfoDescription": "管理您的帳戶基本資訊",
+    "accountName": "帳戶名稱",
+    "accountNamePlaceholder": "請輸入帳戶名稱",
+    "saveChanges": "儲存變更"
+  },
+  "gettingStarted": {
+    "title": "快速開始",
+    "subtitle": "一步步引導您完成平台設定",
+    "steps": {
+      "addWebsite": {
+        "title": "新增網站",
+        "description": "連接您的 WordPress 網站到 1waySEO",
+        "buttonText": "開始設定",
+        "details": [
+          "輸入網站名稱和 WordPress URL",
+          "設定 WordPress 應用程式密碼",
+          "測試連線確認設定正確"
+        ]
+      },
+      "connect": {
+        "title": "連線",
+        "description": "確認您的網站已成功連線並可以發布文章",
+        "details": [
+          "驗證 WordPress API 連線狀態",
+          "確認發布權限設定",
+          "測試文章發布功能"
+        ]
+      },
+      "keywords": {
+        "title": "設定關鍵字",
+        "description": "新增您想要優化的 SEO 關鍵字",
+        "buttonText": "管理關鍵字",
+        "details": [
+          "新增主要關鍵字",
+          "設定目標地區（台灣、香港、美國等）",
+          "設定關鍵字優先級"
+        ]
+      },
+      "writeArticle": {
+        "title": "寫文章",
+        "description": "使用 AI 自動生成高品質 SEO 文章",
+        "buttonText": "開始生成",
+        "details": [
+          "選擇要使用的關鍵字",
+          "設定文章類型和長度",
+          "一鍵生成並發布文章"
+        ]
+      }
+    },
+    "help": {
+      "title": "需要協助？",
+      "description": "如果在設定過程中遇到任何問題，請參考我們的文檔或聯繫客服團隊。",
+      "viewDocs": "查看文檔",
+      "contactSupport": "聯繫客服"
+    },
+    "backToDashboard": "返回儀表板"
   },
   "home": {
     "heroTagline": "AI 驅動的 SEO 內容平台",
@@ -328,7 +611,49 @@
     "registerNow": "立即註冊，免費獲得 10K Credits 開始體驗",
     "freeStartUsing": "免費開始使用",
     "terms": "服務條款",
-    "privacy": "隱私政策"
+    "privacy": "隱私政策",
+    "costComparison": {
+      "badge": "成本對比",
+      "whyChoose": "為什麼選擇",
+      "description": "比傳統方式省下 90% 以上的成本和時間",
+      "costTitle": "成本對比",
+      "featureTitle": "功能對比：傳統方式 vs 1WaySEO",
+      "traditional": "傳統方式",
+      "comparisons": {
+        "professionalWriter": {
+          "category": "請專業寫手",
+          "traditional": "NT$3,000-8,000/篇",
+          "ours": "NT$50-150/篇",
+          "savings": "省下 95%"
+        },
+        "seoAgency": {
+          "category": "SEO 代操公司",
+          "traditional": "NT$50,000+/月",
+          "ours": "NT$1,200/月起",
+          "savings": "省下 97%"
+        },
+        "chatgptManual": {
+          "category": "自己用 ChatGPT",
+          "traditional": "需人工校對 2-4 小時",
+          "ours": "全自動 SEO 優化",
+          "savings": "省下 90%"
+        },
+        "productionTime": {
+          "category": "內容產出時間",
+          "traditional": "4-8 小時/篇",
+          "ours": "10 分鐘/篇",
+          "savings": "快 48 倍"
+        }
+      },
+      "features": {
+        "keywordResearch": "關鍵字研究",
+        "competitorAnalysis": "競爭對手分析",
+        "seoStructure": "SEO 優化結構",
+        "autoImageGen": "自動圖片生成",
+        "wordpressPublish": "WordPress 一鍵發布",
+        "scheduledPost": "排程自動發文"
+      }
+    }
   },
   "faq": {
     "title": "常見問題",

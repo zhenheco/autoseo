@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -16,6 +17,7 @@ import {
 import { ArrowLeft, Mail, CheckCircle2 } from "lucide-react";
 
 export default function ForgotPasswordPage() {
+  const t = useTranslations("auth");
   const [email, setEmail] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
@@ -34,12 +36,12 @@ export default function ForgotPasswordPage() {
       });
 
       if (!response.ok) {
-        throw new Error("請求失敗");
+        throw new Error("Request failed");
       }
 
       setIsSubmitted(true);
     } catch {
-      setError("發送重設密碼郵件失敗，請稍後再試");
+      setError(t("loginFailed"));
     } finally {
       setIsLoading(false);
     }
@@ -53,17 +55,15 @@ export default function ForgotPasswordPage() {
             <div className="mx-auto w-12 h-12 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mb-4">
               <CheckCircle2 className="h-6 w-6 text-green-600 dark:text-green-400" />
             </div>
-            <CardTitle className="text-2xl">郵件已發送</CardTitle>
-            <CardDescription>
-              我們已發送密碼重設連結到您的電子郵件
-            </CardDescription>
+            <CardTitle className="text-2xl">{t("emailSent")}</CardTitle>
+            <CardDescription>{t("emailSentDesc")}</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
             <p className="text-sm text-slate-600 dark:text-slate-300 text-center">
-              請檢查您的收件匣（包括垃圾郵件資料夾），並點擊郵件中的連結來重設密碼。
+              {t("checkInbox")}
             </p>
             <p className="text-sm text-slate-600 dark:text-slate-300 text-center">
-              如果幾分鐘內沒有收到郵件，請嘗試重新發送。
+              {t("noEmailReceived")}
             </p>
           </CardContent>
           <CardFooter className="flex flex-col space-y-2">
@@ -72,12 +72,12 @@ export default function ForgotPasswordPage() {
               onClick={() => setIsSubmitted(false)}
               className="w-full"
             >
-              重新發送郵件
+              {t("resendEmail")}
             </Button>
             <Link href="/login" className="w-full">
               <Button variant="ghost" className="w-full">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                返回登入
+                {t("backToLogin")}
               </Button>
             </Link>
           </CardFooter>
@@ -93,18 +93,16 @@ export default function ForgotPasswordPage() {
           <Link href="/login">
             <Button variant="ghost" size="sm" className="mb-4">
               <ArrowLeft className="mr-2 h-4 w-4" />
-              返回登入
+              {t("backToLogin")}
             </Button>
           </Link>
-          <CardTitle className="text-2xl">忘記密碼</CardTitle>
-          <CardDescription>
-            輸入您的電子郵件地址，我們將發送密碼重設連結給您
-          </CardDescription>
+          <CardTitle className="text-2xl">{t("forgotPassword")}</CardTitle>
+          <CardDescription>{t("forgotPasswordDesc")}</CardDescription>
         </CardHeader>
         <form onSubmit={handleSubmit}>
           <CardContent className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">電子郵件</Label>
+              <Label htmlFor="email">{t("emailLabel")}</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-slate-400" />
                 <Input
@@ -130,12 +128,12 @@ export default function ForgotPasswordPage() {
           </CardContent>
           <CardFooter className="flex flex-col space-y-2">
             <Button type="submit" className="w-full" disabled={isLoading}>
-              {isLoading ? "發送中..." : "發送重設連結"}
+              {isLoading ? t("sending") : t("sendResetLink")}
             </Button>
             <p className="text-sm text-slate-600 dark:text-slate-300 text-center">
-              記得密碼了？{" "}
+              {t("rememberPassword")}{" "}
               <Link href="/login" className="text-blue-600 hover:underline">
-                立即登入
+                {t("loginNow")}
               </Link>
             </p>
           </CardFooter>
