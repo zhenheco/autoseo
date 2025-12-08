@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Copy, Check, Link as LinkIcon } from "lucide-react";
-import { REFERRAL_TOKEN_REWARD } from "@/types/referral.types";
+import { REFERRAL_CREDIT_REWARD } from "@/types/referral.types";
 
 interface ReferralLinkCardProps {
   referralCode: string;
@@ -47,7 +47,7 @@ export function ReferralLinkCard({ referralCode }: ReferralLinkCardProps) {
             <CardTitle>您的推薦連結</CardTitle>
             <CardDescription>
               分享給朋友，朋友付款後雙方都將獲得{" "}
-              {REFERRAL_TOKEN_REWARD.toLocaleString()} tokens
+              {REFERRAL_CREDIT_REWARD.toLocaleString()} credits
             </CardDescription>
           </div>
         </div>

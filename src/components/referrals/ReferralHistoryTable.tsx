@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle2, Clock, Gift } from "lucide-react";
-import { REFERRAL_TOKEN_REWARD } from "@/types/referral.types";
+import { REFERRAL_CREDIT_REWARD } from "@/types/referral.types";
 import type { Referral } from "@/types/referral.types";
 
 interface ReferralHistoryTableProps {
@@ -65,7 +65,7 @@ export function ReferralHistoryTable({ referrals }: ReferralHistoryTableProps) {
     if (referral.status === "rewarded") {
       return (
         <span className="font-semibold text-green-600">
-          +{REFERRAL_TOKEN_REWARD.toLocaleString()} tokens
+          +{REFERRAL_CREDIT_REWARD.toLocaleString()} credits
         </span>
       );
     }

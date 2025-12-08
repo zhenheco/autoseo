@@ -114,7 +114,7 @@ export default function AffiliateDashboardPage() {
   const getReferralLink = () => {
     if (!affiliateCode) return "";
     const baseUrl = typeof window !== "undefined" ? window.location.origin : "";
-    return `${baseUrl}/r/${affiliateCode}`;
+    return `${baseUrl}/p/${affiliateCode}`;
   };
 
   const copyToClipboard = (text: string) => {
