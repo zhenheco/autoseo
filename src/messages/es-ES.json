@@ -77,6 +77,8 @@
   },
   "articles": {
     "title": "Gestión de artículos",
+    "generateNewArticle": "Generar nuevo artículo",
+    "articleSettings": "Configuración del artículo",
     "newArticle": "Nuevo artículo",
     "generate": "Generar artículo",
     "batchGenerate": "Generación por lotes",
@@ -85,6 +87,7 @@
     "targetWebsite": "Sitio web objetivo",
     "selectWebsite": "Seleccionar sitio web (opcional)",
     "whatToWrite": "¿Sobre qué quieres escribir?",
+    "industryPlaceholder": "Cómo integrar IA en marketing",
     "targetRegion": "Región objetivo",
     "selectRegion": "Por favor seleccione la región objetivo",
     "writingLanguage": "Idioma de escritura",

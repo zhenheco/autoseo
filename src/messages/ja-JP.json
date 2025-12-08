@@ -77,6 +77,8 @@
   },
   "articles": {
     "title": "記事管理",
+    "generateNewArticle": "新しい記事を生成",
+    "articleSettings": "記事設定",
     "newArticle": "新規記事",
     "generate": "記事を生成",
     "batchGenerate": "一括生成",
@@ -85,6 +87,7 @@
     "targetWebsite": "対象ウェブサイト",
     "selectWebsite": "ウェブサイトを選択（任意）",
     "whatToWrite": "何について書きますか？",
+    "industryPlaceholder": "AIをマーケティングに活用する方法",
     "targetRegion": "対象地域",
     "selectRegion": "対象地域を選択してください",
     "writingLanguage": "執筆言語",

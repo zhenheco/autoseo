@@ -1,6 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { getQuotaStatus } from "./actions";
-import { ArticleFormTabs } from "./components/ArticleFormTabs";
+import { ArticlesClient } from "./articles-client";
 
 export const dynamic = "force-dynamic";
 
@@ -13,22 +12,6 @@ export default async function ArticlesPage({ searchParams }: PageProps) {
   const { website: websiteId } = await searchParams;
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">生成新文章</h1>
-      </div>
-
-      <Card>
-        <CardHeader className="pb-4">
-          <CardTitle>📝 文章設定</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ArticleFormTabs
-            quotaStatus={quotaStatus}
-            initialWebsiteId={websiteId}
-          />
-        </CardContent>
-      </Card>
-    </div>
+    <ArticlesClient quotaStatus={quotaStatus} initialWebsiteId={websiteId} />
   );
 }

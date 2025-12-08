@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
@@ -26,17 +27,17 @@ const STORAGE_KEYS = {
   CUSTOM_REGION: "preferred-custom-region",
 };
 
-const REGIONS = [
-  { value: "taiwan", label: "台灣" },
-  { value: "japan", label: "日本" },
-  { value: "usa", label: "美國" },
-  { value: "singapore", label: "新加坡" },
-  { value: "hongkong", label: "香港" },
-  { value: "china", label: "中國" },
-  { value: "korea", label: "韓國" },
-  { value: "global", label: "全球" },
-  { value: "other", label: "其他" },
-];
+const REGION_KEYS = [
+  "taiwan",
+  "japan",
+  "usa",
+  "singapore",
+  "hongkong",
+  "china",
+  "korea",
+  "global",
+  "other",
+] as const;
 
 interface QuotaStatus {
   plan: string;
@@ -56,6 +57,7 @@ export function ArticleFormTabs({
   quotaStatus,
   initialWebsiteId,
 }: ArticleFormTabsProps) {
+  const t = useTranslations("articles");
   const [selectedWebsiteId, setSelectedWebsiteId] = useState<string | null>(
     initialWebsiteId || null,
   );
@@ -107,7 +109,9 @@ export function ArticleFormTabs({
 
         if (settings.region) {
           // 檢查是否為預設地區
-          const isPreset = REGIONS.some((r) => r.value === settings.region);
+          const isPreset = (REGION_KEYS as readonly string[]).includes(
+            settings.region,
+          );
           if (isPreset) {
             setTimeout(() => setRegion(settings.region), 0);
           } else {
@@ -156,42 +160,42 @@ export function ArticleFormTabs({
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       <div className="lg:col-span-4 space-y-4">
         <div className="space-y-2">
-          <Label htmlFor="website">目標網站</Label>
+          <Label htmlFor="website">{t("targetWebsite")}</Label>
           <WebsiteSelector
             value={selectedWebsiteId}
             onChange={setSelectedWebsiteId}
             allowNoWebsite={true}
-            placeholder="選擇網站（選填）"
+            placeholder={t("selectWebsite")}
           />
         </div>
         <div className="rounded-lg bg-muted/50 p-4 space-y-3">
-          <h4 className="font-medium text-sm">💡 使用說明</h4>
+          <h4 className="font-medium text-sm">💡 {t("usageHint")}</h4>
           <ul className="text-sm text-muted-foreground space-y-2">
-            <li>• 不選擇網站也可生成文章</li>
-            <li>• 稍後可在「文章管理」決定發布目標</li>
+            <li>• {t("noWebsiteHint")}</li>
+            <li>• {t("laterPublishHint")}</li>
           </ul>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="industry">你想要寫些什麼?</Label>
+          <Label htmlFor="industry">{t("whatToWrite")}</Label>
           <Input
             id="industry"
             value={industry}
             onChange={(e) => handleIndustryChange(e.target.value)}
-            placeholder="如何把ai融入行銷中"
+            placeholder={t("industryPlaceholder")}
           />
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="region">目標地區 *</Label>
+          <Label htmlFor="region">{t("targetRegion")} *</Label>
           <Select value={region} onValueChange={handleRegionChange}>
             <SelectTrigger id="region">
-              <SelectValue placeholder="請選擇目標地區" />
+              <SelectValue placeholder={t("selectRegion")} />
             </SelectTrigger>
             <SelectContent>
-              {REGIONS.map((reg) => (
-                <SelectItem key={reg.value} value={reg.value}>
-                  {reg.label}
+              {REGION_KEYS.map((key) => (
+                <SelectItem key={key} value={key}>
+                  {t(`regions.${key}`)}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -201,17 +205,17 @@ export function ArticleFormTabs({
               id="customRegion"
               value={customRegion}
               onChange={(e) => handleCustomRegionChange(e.target.value)}
-              placeholder="請輸入您的目標地區"
+              placeholder={t("customRegionPlaceholder")}
               className="mt-2"
             />
           )}
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="language">撰寫語言 *</Label>
+          <Label htmlFor="language">{t("writingLanguage")} *</Label>
           <Select value={language} onValueChange={handleLanguageChange}>
             <SelectTrigger id="language">
-              <SelectValue placeholder="請選擇撰寫語言" />
+              <SelectValue placeholder={t("selectLanguage")} />
             </SelectTrigger>
             <SelectContent>
               {ARTICLE_LOCALES.map((lang) => (
@@ -230,8 +234,8 @@ export function ArticleFormTabs({
       <div className="lg:col-span-8">
         <Tabs defaultValue="quick" className="w-full">
           <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="quick">關鍵字生成</TabsTrigger>
-            <TabsTrigger value="advanced">AI全自動生成</TabsTrigger>
+            <TabsTrigger value="quick">{t("keywordGenerate")}</TabsTrigger>
+            <TabsTrigger value="advanced">{t("aiAutoGenerate")}</TabsTrigger>
           </TabsList>
           <TabsContent value="quick" className="mt-4">
             <QuickArticleForm

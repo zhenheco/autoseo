@@ -77,6 +77,8 @@
   },
   "articles": {
     "title": "Article Management",
+    "generateNewArticle": "Generate New Article",
+    "articleSettings": "Article Settings",
     "newArticle": "New Article",
     "generate": "Generate Article",
     "batchGenerate": "Batch Generate",
@@ -85,6 +87,7 @@
     "targetWebsite": "Target Website",
     "selectWebsite": "Select website (optional)",
     "whatToWrite": "What would you like to write about?",
+    "industryPlaceholder": "How to integrate AI into marketing",
     "targetRegion": "Target Region",
     "selectRegion": "Please select target region",
     "writingLanguage": "Writing Language",

@@ -77,6 +77,8 @@
   },
   "articles": {
     "title": "Artikelverwaltung",
+    "generateNewArticle": "Neuen Artikel generieren",
+    "articleSettings": "Artikeleinstellungen",
     "newArticle": "Neuer Artikel",
     "generate": "Artikel generieren",
     "batchGenerate": "Stapelgenerierung",
@@ -85,6 +87,7 @@
     "targetWebsite": "Ziel-Webseite",
     "selectWebsite": "Webseite auswählen (optional)",
     "whatToWrite": "Worüber möchten Sie schreiben?",
+    "industryPlaceholder": "Wie man KI ins Marketing integriert",
     "targetRegion": "Zielregion",
     "selectRegion": "Bitte Zielregion auswählen",
     "writingLanguage": "Schreibsprache",
