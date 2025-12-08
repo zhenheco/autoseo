@@ -157,7 +157,7 @@ export function WebsiteArticleList({
   const totalCount = articlesWithTitle.length + jobs.length;
 
   return (
-    <div className="w-[400px] flex flex-col overflow-hidden border-r">
+    <div className="w-full md:w-[400px] flex flex-col overflow-hidden md:border-r">
       <div className="p-4 border-b">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-lg font-semibold">文章列表</h2>
