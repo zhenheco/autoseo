@@ -44,6 +44,7 @@ interface Affiliate {
 export default function AdminAffiliatesPage() {
   const [loading, setLoading] = useState(true);
   const [affiliates, setAffiliates] = useState<Affiliate[]>([]);
+  const [testPaymentLoading, setTestPaymentLoading] = useState(false);
 
   useEffect(() => {
     fetchAffiliates();
@@ -69,6 +70,50 @@ export default function AdminAffiliatesPage() {
       toast.error("載入失敗");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleTestPayment = async () => {
+    setTestPaymentLoading(true);
+    try {
+      const response = await fetch("/api/admin/test-payment", {
+        method: "POST",
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "建立測試訂單失敗");
+      }
+
+      const { paymentForm } = await response.json();
+
+      // 創建隱藏表單並提交到藍新金流
+      const form = document.createElement("form");
+      form.method = "POST";
+      form.action = paymentForm.apiUrl;
+
+      const fields = [
+        { name: "MerchantID", value: paymentForm.merchantId },
+        { name: "TradeInfo", value: paymentForm.tradeInfo },
+        { name: "TradeSha", value: paymentForm.tradeSha },
+        { name: "Version", value: paymentForm.version },
+      ];
+
+      fields.forEach(({ name, value }) => {
+        const input = document.createElement("input");
+        input.type = "hidden";
+        input.name = name;
+        input.value = value;
+        form.appendChild(input);
+      });
+
+      document.body.appendChild(form);
+      form.submit();
+    } catch (error) {
+      console.error("測試支付失敗:", error);
+      toast.error(error instanceof Error ? error.message : "測試支付失敗");
+    } finally {
+      setTestPaymentLoading(false);
     }
   };
 
@@ -116,9 +161,18 @@ export default function AdminAffiliatesPage() {
           <h1 className="text-3xl font-bold">聯盟夥伴管理</h1>
           <p className="text-muted-foreground">管理所有聯盟夥伴和佣金統計</p>
         </div>
-        <Link href="/dashboard/admin/withdrawals">
-          <Button variant="outline">提領審核</Button>
-        </Link>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            onClick={handleTestPayment}
+            disabled={testPaymentLoading}
+          >
+            {testPaymentLoading ? "處理中..." : "測試支付 NT$1"}
+          </Button>
+          <Link href="/dashboard/admin/withdrawals">
+            <Button variant="outline">提領審核</Button>
+          </Link>
+        </div>
       </div>
 
       <div className="grid gap-4 md:grid-cols-4">
