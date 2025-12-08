@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 
 export interface IdempotencyConfig {
   timeWindowDays: number;
@@ -45,7 +45,7 @@ export async function checkIdempotency(
   cutoffDate.setDate(cutoffDate.getDate() - finalConfig.timeWindowDays);
 
   try {
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     const { data: existingArticle, error: articleError } = await supabase
       .from("generated_articles")
@@ -137,7 +137,7 @@ export async function getExistingArticle(
   const normalizedKeyword = normalizeKeyword(keyword);
 
   try {
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     const { data, error } = await supabase
       .from("generated_articles")

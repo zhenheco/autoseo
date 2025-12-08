@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 import {
   PipelineContext,
   PipelinePhase,
@@ -33,7 +33,7 @@ export class CheckpointManager {
 
   async saveCheckpoint(context: PipelineContext): Promise<CheckpointResult> {
     try {
-      const supabase = await createClient();
+      const supabase = createAdminClient();
 
       const checkpointData: CheckpointData = {
         version: CHECKPOINT_VERSION,
@@ -80,7 +80,7 @@ export class CheckpointManager {
 
   async loadCheckpoint(): Promise<PipelineContext | null> {
     try {
-      const supabase = await createClient();
+      const supabase = createAdminClient();
 
       const { data, error } = await supabase
         .from("article_jobs")
@@ -167,7 +167,7 @@ export class CheckpointManager {
 
   async clearCheckpoint(): Promise<boolean> {
     try {
-      const supabase = await createClient();
+      const supabase = createAdminClient();
 
       const { error } = await supabase
         .from("article_jobs")
@@ -194,7 +194,7 @@ export class CheckpointManager {
 
   async updatePhase(phase: PipelinePhase): Promise<boolean> {
     try {
-      const supabase = await createClient();
+      const supabase = createAdminClient();
 
       const { error } = await supabase
         .from("article_jobs")
@@ -218,7 +218,7 @@ export class CheckpointManager {
 
   static async cleanupOldCheckpoints(daysOld: number = 30): Promise<number> {
     try {
-      const supabase = await createClient();
+      const supabase = createAdminClient();
       const cutoffDate = new Date();
       cutoffDate.setDate(cutoffDate.getDate() - daysOld);
 
