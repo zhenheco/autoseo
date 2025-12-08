@@ -80,12 +80,13 @@ export default function AdminAffiliatesPage() {
         method: "POST",
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "建立測試訂單失敗");
+        throw new Error(data.error || "建立測試訂單失敗");
       }
 
-      const { paymentForm } = await response.json();
+      const { paymentForm } = data;
 
       // 創建隱藏表單並提交到藍新金流
       const form = document.createElement("form");
