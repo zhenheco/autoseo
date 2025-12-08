@@ -378,7 +378,13 @@
     "purchasedCredits": "Créditos comprados",
     "neverExpires": "Nunca caduca",
     "quotaResetDate": "Fecha de reinicio de cuota",
-    "creditPackagePurchase": "Comprar paquete de créditos"
+    "creditPackagePurchase": "Comprar paquete de créditos",
+    "plans": {
+      "starter": "Personal",
+      "professional": "Equipo",
+      "business": "Organización",
+      "agency": "Socio Empresarial"
+    }
   },
   "payment": {
     "failed": "Pago fallido",

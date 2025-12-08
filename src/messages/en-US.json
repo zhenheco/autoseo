@@ -378,7 +378,13 @@
     "purchasedCredits": "Purchased Credits",
     "neverExpires": "Never Expires",
     "quotaResetDate": "Quota Reset Date",
-    "creditPackagePurchase": "Credit Package Purchase"
+    "creditPackagePurchase": "Credit Package Purchase",
+    "plans": {
+      "starter": "Personal",
+      "professional": "Team",
+      "business": "Organization",
+      "agency": "Enterprise Partner"
+    }
   },
   "payment": {
     "failed": "Payment Failed",

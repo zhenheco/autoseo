@@ -378,7 +378,13 @@
     "purchasedCredits": "구매한 크레딧",
     "neverExpires": "만료 없음",
     "quotaResetDate": "할당량 리셋 날짜",
-    "creditPackagePurchase": "크레딧 패키지 구매"
+    "creditPackagePurchase": "크레딧 패키지 구매",
+    "plans": {
+      "starter": "개인",
+      "professional": "팀",
+      "business": "조직",
+      "agency": "기업 파트너"
+    }
   },
   "payment": {
     "failed": "결제 실패",

@@ -378,7 +378,13 @@
     "purchasedCredits": "購買 Credit",
     "neverExpires": "永不過期",
     "quotaResetDate": "配額重置日",
-    "creditPackagePurchase": "Credit 包購買"
+    "creditPackagePurchase": "Credit 包購買",
+    "plans": {
+      "starter": "個人版",
+      "professional": "團隊版",
+      "business": "組織版",
+      "agency": "企業合作版"
+    }
   },
   "payment": {
     "failed": "付款失敗",

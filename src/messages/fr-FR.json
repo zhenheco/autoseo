@@ -378,7 +378,13 @@
     "purchasedCredits": "Crédits achetés",
     "neverExpires": "N'expire jamais",
     "quotaResetDate": "Date de réinitialisation du quota",
-    "creditPackagePurchase": "Achat de pack de crédits"
+    "creditPackagePurchase": "Achat de pack de crédits",
+    "plans": {
+      "starter": "Personnel",
+      "professional": "Équipe",
+      "business": "Organisation",
+      "agency": "Partenaire Entreprise"
+    }
   },
   "payment": {
     "failed": "Paiement échoué",

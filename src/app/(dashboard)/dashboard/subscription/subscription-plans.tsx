@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Check, Plus } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import type { Database } from "@/types/database.types";
 
 type Plan = Database["public"]["Tables"]["subscription_plans"]["Row"];
@@ -40,14 +41,22 @@ export function SubscriptionPlans({
 }: SubscriptionPlansProps) {
   const [loading, setLoading] = useState<string | null>(null);
   const router = useRouter();
+  const t = useTranslations("subscription");
+
+  // 獲取翻譯後的方案名稱
+  const getPlanName = (plan: Plan) => {
+    const slug = plan.slug?.replace("-lifetime", "") || "";
+    const translatedName = t.raw(`plans.${slug}`);
+    return typeof translatedName === "string" ? translatedName : plan.name;
+  };
 
   const handleSubscribe = async (plan: Plan, isStacking = false) => {
     try {
       setLoading(plan.id);
 
       const description = isStacking
-        ? `${plan.name} 疊加購買（+${plan.base_tokens?.toLocaleString()} 配額）`
-        : `${plan.name} 終身方案`;
+        ? `${getPlanName(plan)} 疊加購買（+${plan.base_tokens?.toLocaleString()} 配額）`
+        : `${getPlanName(plan)} 終身方案`;
 
       const response = await fetch("/api/payment/onetime/create", {
         method: "POST",
@@ -132,7 +141,7 @@ export function SubscriptionPlans({
               </div>
             )}
             <CardHeader>
-              <CardTitle className="text-2xl">{plan.name}</CardTitle>
+              <CardTitle className="text-2xl">{getPlanName(plan)}</CardTitle>
               <CardDescription>
                 {canStack && purchasedCount > 1 ? (
                   <>
