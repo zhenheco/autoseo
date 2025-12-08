@@ -1,0 +1,249 @@
+{
+  "common": {
+    "save": "儲存",
+    "cancel": "取消",
+    "delete": "刪除",
+    "edit": "編輯",
+    "loading": "載入中...",
+    "confirm": "確認",
+    "success": "成功",
+    "error": "錯誤",
+    "close": "關閉",
+    "back": "返回",
+    "next": "下一步",
+    "previous": "上一步",
+    "submit": "送出",
+    "search": "搜尋",
+    "filter": "篩選",
+    "refresh": "重新整理",
+    "copy": "複製",
+    "copied": "已複製",
+    "download": "下載",
+    "upload": "上傳",
+    "preview": "預覽",
+    "publish": "發布",
+    "required": "必填",
+    "optional": "選填",
+    "selectPlaceholder": "請選擇",
+    "noData": "沒有資料",
+    "viewAll": "查看全部",
+    "learnMore": "了解更多"
+  },
+  "nav": {
+    "home": "首頁",
+    "dashboard": "儀表板",
+    "websites": "網站管理",
+    "newArticle": "寫新文章",
+    "articleManagement": "文章管理",
+    "subscription": "訂閱方案",
+    "affiliate": "聯盟夥伴",
+    "settings": "設定",
+    "logout": "登出",
+    "login": "登入",
+    "signup": "免費開始",
+    "referrals": "好友推薦",
+    "adminPanel": "管理後台",
+    "withdrawalReview": "提領審核",
+    "affiliateManagement": "聯盟管理",
+    "suspiciousReferrals": "可疑推薦",
+    "customerService": "客服信箱"
+  },
+  "auth": {
+    "welcomeTitle": "歡迎使用 1waySEO",
+    "googleLoginDesc": "使用 Google 帳號快速開始",
+    "loginWithGoogle": "使用 Google 登入",
+    "termsAgreement": "繼續即表示您同意我們的",
+    "termsOfService": "服務條款",
+    "and": "和",
+    "privacyPolicy": "隱私政策",
+    "loginFailed": "登入失敗",
+    "loginSuccess": "登入成功",
+    "logoutSuccess": "已成功登出"
+  },
+  "dashboard": {
+    "title": "儀表板",
+    "welcome": "歡迎回來",
+    "quickStats": "快速統計",
+    "recentArticles": "最近文章",
+    "totalArticles": "總文章數",
+    "totalWebsites": "總網站數",
+    "creditsRemaining": "剩餘 Credits",
+    "monthlyUsage": "本月用量"
+  },
+  "articles": {
+    "title": "文章管理",
+    "newArticle": "寫新文章",
+    "generate": "生成文章",
+    "batchGenerate": "批量生成",
+    "importArticle": "匯入文章",
+    "exportArticle": "匯出文章",
+    "targetWebsite": "目標網站",
+    "selectWebsite": "選擇網站（選填）",
+    "whatToWrite": "你想要寫些什麼?",
+    "targetRegion": "目標地區",
+    "selectRegion": "請選擇目標地區",
+    "writingLanguage": "撰寫語言",
+    "selectLanguage": "請選擇撰寫語言",
+    "keywordGenerate": "關鍵字生成",
+    "aiAutoGenerate": "AI全自動生成",
+    "usageHint": "使用說明",
+    "noWebsiteHint": "不選擇網站也可生成文章",
+    "laterPublishHint": "稍後可在「文章管理」決定發布目標",
+    "status": {
+      "pending": "等待中",
+      "processing": "處理中",
+      "completed": "已完成",
+      "failed": "失敗",
+      "publishing": "發布中",
+      "published": "已發布"
+    },
+    "regions": {
+      "taiwan": "台灣",
+      "japan": "日本",
+      "usa": "美國",
+      "singapore": "新加坡",
+      "hongkong": "香港",
+      "china": "中國",
+      "korea": "韓國",
+      "global": "全球",
+      "other": "其他"
+    },
+    "customRegionPlaceholder": "請輸入您的目標地區"
+  },
+  "websites": {
+    "title": "網站管理",
+    "addWebsite": "新增網站",
+    "editWebsite": "編輯網站",
+    "websiteName": "網站名稱",
+    "websiteUrl": "網站網址",
+    "defaultLanguage": "預設語言",
+    "defaultRegion": "預設地區",
+    "industry": "產業類別",
+    "wordpressSettings": "WordPress 設定",
+    "apiKey": "API Key",
+    "connected": "已連接",
+    "notConnected": "未連接"
+  },
+  "subscription": {
+    "title": "訂閱方案",
+    "currentPlan": "目前方案",
+    "upgradePlan": "升級方案",
+    "monthlyCredits": "每月 Credits",
+    "lifetimePlan": "終身方案",
+    "oneTimePurchase": "一次付費",
+    "buyCredits": "購買 Credits",
+    "creditPackages": "Credit 加值包",
+    "purchaseHistory": "購買紀錄",
+    "features": "功能特色",
+    "popular": "熱門",
+    "recommended": "推薦"
+  },
+  "affiliate": {
+    "title": "聯盟夥伴",
+    "overview": "總覽",
+    "referrals": "推薦紀錄",
+    "commissions": "佣金紀錄",
+    "withdrawals": "提領紀錄",
+    "withdraw": "申請提領",
+    "guide": "推廣教學",
+    "terms": "合作條款",
+    "taxNotice": "稅務說明",
+    "apply": "申請成為夥伴",
+    "referralLink": "推薦連結",
+    "totalEarnings": "累計收益",
+    "pendingCommission": "待發放佣金",
+    "availableBalance": "可提領餘額"
+  },
+  "settings": {
+    "title": "設定",
+    "profile": "個人資料",
+    "aiModels": "AI 模型設定",
+    "notifications": "通知設定",
+    "language": "語言設定",
+    "theme": "主題設定",
+    "darkMode": "深色模式",
+    "lightMode": "淺色模式"
+  },
+  "home": {
+    "heroTagline": "AI 驅動的 SEO 內容平台",
+    "heroTitle1": "讓 AI 為您打造",
+    "heroTitle2": "完美的 SEO 內容",
+    "heroDescription": "1WaySEO 結合 GPT、Claude、Gemini 等最先進 AI 技術，從關鍵字研究到文章發布，全自動化 SEO 內容生產流程。",
+    "freeStart": "免費開始",
+    "freeCredits": "免費 10K Credits",
+    "noCreditCard": "無需信用卡",
+    "features": {
+      "keywordResearch": "智能關鍵字研究",
+      "keywordResearchDesc": "AI 自動分析高價值關鍵字，找出最佳排名機會",
+      "webResearch": "網路資料調查",
+      "webResearchDesc": "自動爬取分析相關網路資訊，確保內容深度與準確性",
+      "competitorAnalysis": "競業分析",
+      "competitorAnalysisDesc": "深度分析競爭對手內容策略，找出差異化優勢",
+      "structureGeneration": "智能架構生成",
+      "structureGenerationDesc": "依照關鍵字與搜尋結果自動決定最佳文章字數與架構",
+      "aiWriting": "AI 寫作引擎",
+      "aiWritingDesc": "整合所有研究資料，生成高品質 SEO 優化文章",
+      "imageGeneration": "圖片自動生成",
+      "imageGenerationDesc": "AI 自動生成相關配圖，增強內容視覺吸引力",
+      "linkOptimization": "內外部連結優化",
+      "linkOptimizationDesc": "智能建議內外部連結策略，提升網站權重",
+      "aiSearchOptimization": "AI 檢索優化",
+      "aiSearchOptimizationDesc": "針對 AI 搜尋引擎優化，提升 SGE 曝光機會",
+      "autoPublish": "自動發文排程",
+      "autoPublishDesc": "一鍵發布 WordPress，支援排程自動化發文"
+    },
+    "stats": {
+      "users": "已服務用戶",
+      "costSaving": "節省內容成本",
+      "articleTime": "分鐘完成一篇文章"
+    },
+    "pricing": "價格方案",
+    "testimonials": "用戶評價"
+  },
+  "faq": {
+    "title": "常見問題",
+    "subtitle": "還有疑問嗎？",
+    "description": "以下是用戶最常詢問的問題",
+    "questions": {
+      "whatIsCredits": {
+        "question": "什麼是 Credits？",
+        "answer": "Credits 是 1WaySEO 的使用點數，用於衡量 AI 運算消耗。生成一篇文章大約需要 3,000-5,000 Credits，具體取決於文章長度和所選 AI 模型。"
+      },
+      "creditsPerArticle": {
+        "question": "一篇文章需要多少 Credits？",
+        "answer": "一般 2,000 字的 SEO 文章約需 3,000-4,000 Credits，包含關鍵字研究、競爭分析、文章生成和圖片生成。長篇文章（5,000+ 字）可能需要 5,000-8,000 Credits。"
+      },
+      "lifetimePlan": {
+        "question": "終身方案真的是永久的嗎？",
+        "answer": "是的！終身方案一次付費後，您將永久享有每月自動重置的 Credits 配額。只要 1WaySEO 服務持續運營，您的方案就永遠有效。"
+      },
+      "creditsAccumulate": {
+        "question": "每月配額用不完會累積嗎？",
+        "answer": "每月配額會在每月 1 日自動重置，不會累積到下個月。但您額外購買的 Credit 包則是永久有效，不會過期。"
+      },
+      "getMoreCredits": {
+        "question": "如何獲得更多 Credits？",
+        "answer": "您可以隨時購買 Credits 加值包，直接增加到您的帳戶餘額。如果您想要每月更多配額，也可以再次購買終身方案，新方案的每月配額會與原有配額疊加。"
+      },
+      "paymentMethods": {
+        "question": "支援哪些付款方式？",
+        "answer": "我們支援信用卡（Visa、MasterCard、JCB）、網路 ATM 轉帳等多種付款方式，透過藍新金流安全處理。"
+      }
+    }
+  },
+  "errors": {
+    "generic": "發生錯誤，請稍後再試",
+    "networkError": "網路連線錯誤",
+    "unauthorized": "請先登入",
+    "forbidden": "您沒有權限執行此操作",
+    "notFound": "找不到此頁面",
+    "serverError": "伺服器錯誤",
+    "validationError": "請檢查輸入內容",
+    "quotaExceeded": "Credits 不足",
+    "sessionExpired": "登入已過期，請重新登入"
+  },
+  "ui": {
+    "languageSelector": "介面語言",
+    "articleLanguageSelector": "撰寫語系"
+  }
+}

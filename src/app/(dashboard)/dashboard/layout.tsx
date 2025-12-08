@@ -23,6 +23,7 @@ import { TokenBalanceDisplay } from "@/components/billing/TokenBalanceDisplay";
 import { NewArticleButton } from "@/components/articles/NewArticleButton";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { MobileBottomNav } from "@/components/dashboard/mobile-bottom-nav";
+import { UILanguageSelector } from "@/components/common/UILanguageSelector";
 
 async function performLogout() {
   "use server";
@@ -75,6 +76,8 @@ export default async function DashboardLayout({
                   </Link>
 
                   <TokenBalanceDisplay compact />
+
+                  <UILanguageSelector />
 
                   <ThemeToggle />
 

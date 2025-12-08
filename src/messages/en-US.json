@@ -1,0 +1,249 @@
+{
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "loading": "Loading...",
+    "confirm": "Confirm",
+    "success": "Success",
+    "error": "Error",
+    "close": "Close",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "search": "Search",
+    "filter": "Filter",
+    "refresh": "Refresh",
+    "copy": "Copy",
+    "copied": "Copied",
+    "download": "Download",
+    "upload": "Upload",
+    "preview": "Preview",
+    "publish": "Publish",
+    "required": "Required",
+    "optional": "Optional",
+    "selectPlaceholder": "Please select",
+    "noData": "No data",
+    "viewAll": "View all",
+    "learnMore": "Learn more"
+  },
+  "nav": {
+    "home": "Home",
+    "dashboard": "Dashboard",
+    "websites": "Websites",
+    "newArticle": "New Article",
+    "articleManagement": "Articles",
+    "subscription": "Subscription",
+    "affiliate": "Affiliate",
+    "settings": "Settings",
+    "logout": "Logout",
+    "login": "Login",
+    "signup": "Get Started Free",
+    "referrals": "Referrals",
+    "adminPanel": "Admin Panel",
+    "withdrawalReview": "Withdrawal Review",
+    "affiliateManagement": "Affiliate Management",
+    "suspiciousReferrals": "Suspicious Referrals",
+    "customerService": "Support"
+  },
+  "auth": {
+    "welcomeTitle": "Welcome to 1waySEO",
+    "googleLoginDesc": "Get started quickly with Google",
+    "loginWithGoogle": "Sign in with Google",
+    "termsAgreement": "By continuing, you agree to our",
+    "termsOfService": "Terms of Service",
+    "and": "and",
+    "privacyPolicy": "Privacy Policy",
+    "loginFailed": "Login failed",
+    "loginSuccess": "Login successful",
+    "logoutSuccess": "Logged out successfully"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Welcome back",
+    "quickStats": "Quick Stats",
+    "recentArticles": "Recent Articles",
+    "totalArticles": "Total Articles",
+    "totalWebsites": "Total Websites",
+    "creditsRemaining": "Credits Remaining",
+    "monthlyUsage": "Monthly Usage"
+  },
+  "articles": {
+    "title": "Article Management",
+    "newArticle": "New Article",
+    "generate": "Generate Article",
+    "batchGenerate": "Batch Generate",
+    "importArticle": "Import Article",
+    "exportArticle": "Export Article",
+    "targetWebsite": "Target Website",
+    "selectWebsite": "Select website (optional)",
+    "whatToWrite": "What would you like to write about?",
+    "targetRegion": "Target Region",
+    "selectRegion": "Please select target region",
+    "writingLanguage": "Writing Language",
+    "selectLanguage": "Please select writing language",
+    "keywordGenerate": "Keyword Generate",
+    "aiAutoGenerate": "AI Auto Generate",
+    "usageHint": "Usage Tips",
+    "noWebsiteHint": "You can generate articles without selecting a website",
+    "laterPublishHint": "You can decide the publishing target later in Article Management",
+    "status": {
+      "pending": "Pending",
+      "processing": "Processing",
+      "completed": "Completed",
+      "failed": "Failed",
+      "publishing": "Publishing",
+      "published": "Published"
+    },
+    "regions": {
+      "taiwan": "Taiwan",
+      "japan": "Japan",
+      "usa": "United States",
+      "singapore": "Singapore",
+      "hongkong": "Hong Kong",
+      "china": "China",
+      "korea": "South Korea",
+      "global": "Global",
+      "other": "Other"
+    },
+    "customRegionPlaceholder": "Enter your target region"
+  },
+  "websites": {
+    "title": "Website Management",
+    "addWebsite": "Add Website",
+    "editWebsite": "Edit Website",
+    "websiteName": "Website Name",
+    "websiteUrl": "Website URL",
+    "defaultLanguage": "Default Language",
+    "defaultRegion": "Default Region",
+    "industry": "Industry",
+    "wordpressSettings": "WordPress Settings",
+    "apiKey": "API Key",
+    "connected": "Connected",
+    "notConnected": "Not Connected"
+  },
+  "subscription": {
+    "title": "Subscription Plans",
+    "currentPlan": "Current Plan",
+    "upgradePlan": "Upgrade Plan",
+    "monthlyCredits": "Monthly Credits",
+    "lifetimePlan": "Lifetime Plan",
+    "oneTimePurchase": "One-time Purchase",
+    "buyCredits": "Buy Credits",
+    "creditPackages": "Credit Packages",
+    "purchaseHistory": "Purchase History",
+    "features": "Features",
+    "popular": "Popular",
+    "recommended": "Recommended"
+  },
+  "affiliate": {
+    "title": "Affiliate Partner",
+    "overview": "Overview",
+    "referrals": "Referral Records",
+    "commissions": "Commission Records",
+    "withdrawals": "Withdrawal Records",
+    "withdraw": "Request Withdrawal",
+    "guide": "Promotion Guide",
+    "terms": "Partner Terms",
+    "taxNotice": "Tax Information",
+    "apply": "Apply to Become a Partner",
+    "referralLink": "Referral Link",
+    "totalEarnings": "Total Earnings",
+    "pendingCommission": "Pending Commission",
+    "availableBalance": "Available Balance"
+  },
+  "settings": {
+    "title": "Settings",
+    "profile": "Profile",
+    "aiModels": "AI Model Settings",
+    "notifications": "Notification Settings",
+    "language": "Language Settings",
+    "theme": "Theme Settings",
+    "darkMode": "Dark Mode",
+    "lightMode": "Light Mode"
+  },
+  "home": {
+    "heroTagline": "AI-Powered SEO Content Platform",
+    "heroTitle1": "Let AI Create",
+    "heroTitle2": "Perfect SEO Content",
+    "heroDescription": "1WaySEO combines the most advanced AI technologies including GPT, Claude, and Gemini to fully automate SEO content production from keyword research to article publishing.",
+    "freeStart": "Get Started Free",
+    "freeCredits": "Free 10K Credits",
+    "noCreditCard": "No credit card required",
+    "features": {
+      "keywordResearch": "Smart Keyword Research",
+      "keywordResearchDesc": "AI automatically analyzes high-value keywords to find the best ranking opportunities",
+      "webResearch": "Web Data Research",
+      "webResearchDesc": "Automatically crawls and analyzes relevant web information to ensure content depth and accuracy",
+      "competitorAnalysis": "Competitor Analysis",
+      "competitorAnalysisDesc": "In-depth analysis of competitor content strategies to find differentiation advantages",
+      "structureGeneration": "Smart Structure Generation",
+      "structureGenerationDesc": "Automatically determines optimal article length and structure based on keywords and search results",
+      "aiWriting": "AI Writing Engine",
+      "aiWritingDesc": "Integrates all research data to generate high-quality SEO-optimized articles",
+      "imageGeneration": "Auto Image Generation",
+      "imageGenerationDesc": "AI automatically generates relevant images to enhance content visual appeal",
+      "linkOptimization": "Internal/External Link Optimization",
+      "linkOptimizationDesc": "Smart suggestions for internal and external link strategies to improve site authority",
+      "aiSearchOptimization": "AI Search Optimization",
+      "aiSearchOptimizationDesc": "Optimized for AI search engines to increase SGE exposure opportunities",
+      "autoPublish": "Auto Publishing Schedule",
+      "autoPublishDesc": "One-click WordPress publishing with scheduled automation"
+    },
+    "stats": {
+      "users": "Users Served",
+      "costSaving": "Content Cost Savings",
+      "articleTime": "Minutes Per Article"
+    },
+    "pricing": "Pricing Plans",
+    "testimonials": "Testimonials"
+  },
+  "faq": {
+    "title": "FAQ",
+    "subtitle": "Have Questions?",
+    "description": "Here are the most frequently asked questions",
+    "questions": {
+      "whatIsCredits": {
+        "question": "What are Credits?",
+        "answer": "Credits are usage points for 1WaySEO, used to measure AI computation consumption. Generating one article requires approximately 3,000-5,000 Credits, depending on article length and the selected AI model."
+      },
+      "creditsPerArticle": {
+        "question": "How many Credits does one article need?",
+        "answer": "A typical 2,000-word SEO article requires about 3,000-4,000 Credits, including keyword research, competitor analysis, article generation, and image generation. Longer articles (5,000+ words) may need 5,000-8,000 Credits."
+      },
+      "lifetimePlan": {
+        "question": "Is the lifetime plan really permanent?",
+        "answer": "Yes! After a one-time payment for the lifetime plan, you will permanently enjoy monthly auto-reset Credits quota. As long as 1WaySEO continues to operate, your plan remains valid forever."
+      },
+      "creditsAccumulate": {
+        "question": "Do unused monthly credits accumulate?",
+        "answer": "Monthly quota resets automatically on the 1st of each month and does not carry over. However, Credit packages you purchase additionally are permanent and never expire."
+      },
+      "getMoreCredits": {
+        "question": "How can I get more Credits?",
+        "answer": "You can purchase Credit top-up packages anytime, which are added directly to your account balance. If you want more monthly quota, you can also purchase another lifetime plan - the new plan's monthly quota will stack with your existing quota."
+      },
+      "paymentMethods": {
+        "question": "What payment methods are supported?",
+        "answer": "We support credit cards (Visa, MasterCard, JCB), online ATM transfers, and other payment methods, securely processed through NewebPay."
+      }
+    }
+  },
+  "errors": {
+    "generic": "An error occurred. Please try again later",
+    "networkError": "Network connection error",
+    "unauthorized": "Please log in first",
+    "forbidden": "You don't have permission to perform this action",
+    "notFound": "Page not found",
+    "serverError": "Server error",
+    "validationError": "Please check your input",
+    "quotaExceeded": "Insufficient Credits",
+    "sessionExpired": "Session expired. Please log in again"
+  },
+  "ui": {
+    "languageSelector": "Interface Language",
+    "articleLanguageSelector": "Writing Language"
+  }
+}

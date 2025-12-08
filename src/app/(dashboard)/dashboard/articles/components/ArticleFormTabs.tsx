@@ -14,9 +14,13 @@ import {
 import { QuickArticleForm } from "./QuickArticleForm";
 import { ArticleForm } from "./ArticleForm";
 import { WebsiteSelector } from "@/components/articles/WebsiteSelector";
+import {
+  ARTICLE_LOCALES,
+  ARTICLE_LOCALE_STORAGE_KEY,
+} from "@/lib/i18n/locales";
 
 const STORAGE_KEYS = {
-  LANGUAGE: "preferred-language",
+  LANGUAGE: ARTICLE_LOCALE_STORAGE_KEY,
   INDUSTRY: "preferred-industry",
   REGION: "preferred-region",
   CUSTOM_REGION: "preferred-custom-region",
@@ -32,33 +36,6 @@ const REGIONS = [
   { value: "korea", label: "韓國" },
   { value: "global", label: "全球" },
   { value: "other", label: "其他" },
-];
-
-interface Language {
-  code: string;
-  name: string;
-  flag: string;
-}
-
-const SUPPORTED_LANGUAGES: Language[] = [
-  { code: "zh-TW", name: "繁體中文", flag: "🇹🇼" },
-  { code: "zh-CN", name: "简体中文", flag: "🇨🇳" },
-  { code: "en-US", name: "English", flag: "🇺🇸" },
-  { code: "ja-JP", name: "日本語", flag: "🇯🇵" },
-  { code: "ko-KR", name: "한국어", flag: "🇰🇷" },
-  { code: "vi-VN", name: "Tiếng Việt", flag: "🇻🇳" },
-  { code: "ms-MY", name: "Bahasa Melayu", flag: "🇲🇾" },
-  { code: "th-TH", name: "ไทย", flag: "🇹🇭" },
-  { code: "id-ID", name: "Bahasa Indonesia", flag: "🇮🇩" },
-  { code: "tl-PH", name: "Filipino", flag: "🇵🇭" },
-  { code: "fr-FR", name: "Français", flag: "🇫🇷" },
-  { code: "de-DE", name: "Deutsch", flag: "🇩🇪" },
-  { code: "es-ES", name: "Español", flag: "🇪🇸" },
-  { code: "pt-PT", name: "Português", flag: "🇵🇹" },
-  { code: "it-IT", name: "Italiano", flag: "🇮🇹" },
-  { code: "ru-RU", name: "Русский", flag: "🇷🇺" },
-  { code: "ar-SA", name: "العربية", flag: "🇸🇦" },
-  { code: "hi-IN", name: "हिन्दी", flag: "🇮🇳" },
 ];
 
 interface QuotaStatus {
@@ -237,7 +214,7 @@ export function ArticleFormTabs({
               <SelectValue placeholder="請選擇撰寫語言" />
             </SelectTrigger>
             <SelectContent>
-              {SUPPORTED_LANGUAGES.map((lang) => (
+              {ARTICLE_LOCALES.map((lang) => (
                 <SelectItem key={lang.code} value={lang.code}>
                   <div className="flex items-center gap-2">
                     <span>{lang.flag}</span>
