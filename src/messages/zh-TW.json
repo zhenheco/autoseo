@@ -77,6 +77,8 @@
   },
   "articles": {
     "title": "文章管理",
+    "generateNewArticle": "生成新文章",
+    "articleSettings": "文章設定",
     "newArticle": "寫新文章",
     "generate": "生成文章",
     "batchGenerate": "批量生成",
@@ -85,6 +87,7 @@
     "targetWebsite": "目標網站",
     "selectWebsite": "選擇網站（選填）",
     "whatToWrite": "你想要寫些什麼?",
+    "industryPlaceholder": "如何把ai融入行銷中",
     "targetRegion": "目標地區",
     "selectRegion": "請選擇目標地區",
     "writingLanguage": "撰寫語言",
