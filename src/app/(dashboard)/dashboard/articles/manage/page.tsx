@@ -6,7 +6,6 @@ import { ArticleListWrapper } from "./components/ArticleListWrapper";
 import { ArticleFilters } from "./components/ArticleFilters";
 import { ArticlePreview } from "./components/ArticlePreview";
 import { AutoRefreshWrapper } from "./components/AutoRefreshWrapper";
-import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 
@@ -29,13 +28,12 @@ async function ArticleListContent({
   filter: "all" | "unpublished" | "published" | "scheduled";
   websiteId?: string;
 }) {
-  const t = await getTranslations("articles");
   const { articles, error } = await getArticles(filter, websiteId);
 
   if (error) {
     return (
       <div className="text-center py-8 text-muted-foreground">
-        {t("loadFailed")}: {error}
+        載入失敗: {error}
       </div>
     );
   }
@@ -53,7 +51,6 @@ export default async function ArticleManagePage({ searchParams }: PageProps) {
     redirect("/login");
   }
 
-  const t = await getTranslations("common");
   const params = await searchParams;
   const filter =
     (params.filter as "all" | "unpublished" | "published") || "all";
@@ -65,7 +62,7 @@ export default async function ArticleManagePage({ searchParams }: PageProps) {
         <Suspense
           fallback={
             <div className="text-center py-8 text-muted-foreground">
-              {t("loading")}
+              載入中...
             </div>
           }
         >
