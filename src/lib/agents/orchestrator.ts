@@ -925,23 +925,43 @@ export class ParallelOrchestrator {
 
               await tokenBillingService.consumeReservation(input.articleJobId);
 
+              // 記錄扣款成功到 metadata（供審計追蹤）
+              const successMetadata =
+                (jobData?.metadata as Record<string, unknown>) || {};
+              await supabase
+                .from("article_jobs")
+                .update({
+                  metadata: {
+                    ...successMetadata,
+                    billing_status: "success",
+                    deducted_amount: totalTokenUsage.charged,
+                    deducted_at: new Date().toISOString(),
+                  },
+                })
+                .eq("id", input.articleJobId);
+
               console.log("[Orchestrator] ✅ Token 已扣除，預扣已消耗:", {
                 official: totalTokenUsage.official,
                 charged: totalTokenUsage.charged,
               });
             } catch (tokenError) {
-              console.error(
-                "[Orchestrator] ⚠️ Token 扣除失敗（不影響文章生成）:",
-                tokenError,
-              );
-              // 記錄錯誤但不中斷流程
+              const errorMsg =
+                tokenError instanceof Error
+                  ? tokenError.message
+                  : String(tokenError);
+              console.error("[Orchestrator] ❌ Token 扣除失敗:", tokenError);
+              // 記錄錯誤到 metadata（供每日審計發現），但不中斷流程
+              const failMetadata =
+                (jobData?.metadata as Record<string, unknown>) || {};
               await supabase
                 .from("article_jobs")
                 .update({
                   metadata: {
-                    ...(jobData?.metadata || {}),
-                    token_deduction_error: (tokenError as Error).message,
-                    token_deduction_attempted_at: new Date().toISOString(),
+                    ...failMetadata,
+                    billing_status: "failed",
+                    billing_error: errorMsg,
+                    billing_error_notice: "扣款失敗，請聯絡客服信箱處理",
+                    billing_failed_at: new Date().toISOString(),
                   },
                 })
                 .eq("id", input.articleJobId);

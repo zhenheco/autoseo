@@ -1,0 +1,52 @@
+name: Daily Billing Audit
+
+on:
+  schedule:
+    # 每日凌晨 2 點執行（UTC 時間，即台灣時間上午 10 點）
+    - cron: "0 2 * * *"
+  workflow_dispatch: # 允許手動觸發
+    inputs:
+      days:
+        description: "Number of days to audit"
+        required: false
+        default: "1"
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install tsx
+        run: pnpm add -g tsx
+
+      - name: Set environment variables
+        run: |
+          echo "SUPABASE_URL=$(echo -n '${{ secrets.SUPABASE_URL }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "SUPABASE_SERVICE_ROLE_KEY=$(echo -n '${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
+
+      - name: Run Billing Audit
+        run: tsx scripts/billing-audit.ts --days=${{ github.event.inputs.days || '1' }}
+
+      - name: Log Results
+        if: always()
+        run: |
+          echo "Billing audit executed at: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
+          echo "Audited ${{ github.event.inputs.days || '1' }} day(s) of data"
