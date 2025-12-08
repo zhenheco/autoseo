@@ -100,8 +100,13 @@
     "status": {
       "pending": "Pending",
       "processing": "Processing",
-      "completed": "Completed",
+      "generating": "Generating",
+      "completed": "Ready",
+      "draft": "Draft",
+      "scheduled": "Scheduled",
       "failed": "Failed",
+      "scheduleFailed": "Schedule Failed",
+      "cancelled": "Cancelled",
       "publishing": "Publishing",
       "published": "Published"
     },
@@ -116,7 +121,80 @@
       "global": "Global",
       "other": "Other"
     },
-    "customRegionPlaceholder": "Enter your target region"
+    "customRegionPlaceholder": "Enter your target region",
+    "filters": {
+      "all": "All",
+      "unpublished": "Unpublished",
+      "scheduled": "Scheduled",
+      "published": "Published",
+      "filterWebsite": "Filter by website",
+      "allWebsites": "All websites"
+    },
+    "table": {
+      "title": "Title",
+      "targetWebsite": "Target Website",
+      "status": "Status",
+      "createdAt": "Created",
+      "untitled": "Untitled",
+      "unspecified": "Not specified",
+      "noArticles": "No articles",
+      "selectAll": "Select all"
+    },
+    "schedule": {
+      "selectPublishWebsite": "Select publish website",
+      "selectTargetWebsite": "(Select target website)",
+      "perDay": "Per day",
+      "articles": "articles",
+      "scheduling": "Scheduling...",
+      "schedule": "Schedule",
+      "cancelling": "Cancelling...",
+      "cancelSchedule": "Cancel Schedule",
+      "cancelGeneration": "Cancel Generation",
+      "delete": "Delete"
+    },
+    "dialogs": {
+      "confirmDelete": "Delete selected articles?",
+      "deleteWarning": "This action cannot be undone. {count} articles will be permanently deleted.",
+      "deleting": "Deleting...",
+      "confirmDeleteBtn": "Delete",
+      "confirmCancelGeneration": "Cancel generation for these articles?",
+      "cancelGenerationWarning": "Generation will be cancelled for {count} articles. Used tokens will be deducted based on progress, unused tokens will be refunded.",
+      "confirmCancelBtn": "Confirm Cancel",
+      "goBack": "Go Back"
+    },
+    "toasts": {
+      "selectArticles": "Please select articles to schedule",
+      "selectWebsite": "Please select a publish website",
+      "scheduleFailed": "Schedule failed",
+      "scheduleSuccess": "Scheduled {count} articles",
+      "scheduleError": "Schedule error occurred",
+      "selectCancelArticles": "Please select articles to cancel schedule",
+      "cancelScheduleSuccess": "Cancelled schedule for {count} articles",
+      "noCancelledArticles": "No articles were cancelled",
+      "cancelScheduleError": "Cancel schedule error occurred",
+      "selectDeleteArticles": "Please select articles to delete",
+      "deleteSuccess": "Deleted {count} articles",
+      "deleteFailed": "Delete failed",
+      "deleteError": "Delete error occurred",
+      "noCancellableArticles": "No generating articles selected",
+      "cancelGenerationSuccess": "Cancelled generation for {count} articles",
+      "refundTokens": ", refunded {amount} tokens",
+      "cancelGenerationFailed": "Cancel failed",
+      "cancelGenerationError": "Cancel generation error occurred"
+    },
+    "publish": {
+      "success": "Published Successfully",
+      "title": "Publish Article",
+      "successDesc": "Article published to WordPress successfully",
+      "publishTo": "Publish \"{title}\" to selected website",
+      "viewArticle": "View Article",
+      "selectWebsite": "Select website to publish",
+      "pleaseSelectWebsite": "Please select a target website",
+      "publishing": "Publishing...",
+      "confirmPublish": "Confirm Publish",
+      "failed": "Publish failed"
+    },
+    "loadFailed": "Load failed"
   },
   "websites": {
     "title": "Website Management",

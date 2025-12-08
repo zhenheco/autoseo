@@ -100,8 +100,13 @@
     "status": {
       "pending": "대기 중",
       "processing": "처리 중",
-      "completed": "완료",
+      "generating": "생성 중",
+      "completed": "게시 대기",
+      "draft": "초안",
+      "scheduled": "예약됨",
       "failed": "실패",
+      "scheduleFailed": "예약 실패",
+      "cancelled": "취소됨",
       "publishing": "게시 중",
       "published": "게시됨"
     },
@@ -116,7 +121,80 @@
       "global": "글로벌",
       "other": "기타"
     },
-    "customRegionPlaceholder": "대상 지역을 입력해 주세요"
+    "customRegionPlaceholder": "대상 지역을 입력해 주세요",
+    "filters": {
+      "all": "전체",
+      "unpublished": "미게시",
+      "scheduled": "예약됨",
+      "published": "게시됨",
+      "filterWebsite": "사이트 필터",
+      "allWebsites": "모든 사이트"
+    },
+    "table": {
+      "title": "제목",
+      "targetWebsite": "대상 사이트",
+      "status": "상태",
+      "createdAt": "생성일",
+      "untitled": "제목 없음",
+      "unspecified": "미지정",
+      "noArticles": "글이 없습니다",
+      "selectAll": "전체 선택"
+    },
+    "schedule": {
+      "selectPublishWebsite": "게시할 사이트 선택",
+      "selectTargetWebsite": "(대상 사이트 선택)",
+      "perDay": "일일",
+      "articles": "개",
+      "scheduling": "예약 중...",
+      "schedule": "예약",
+      "cancelling": "취소 중...",
+      "cancelSchedule": "예약 취소",
+      "cancelGeneration": "생성 취소",
+      "delete": "삭제"
+    },
+    "dialogs": {
+      "confirmDelete": "선택한 글을 삭제하시겠습니까?",
+      "deleteWarning": "이 작업은 되돌릴 수 없습니다. {count}개의 글이 영구 삭제됩니다.",
+      "deleting": "삭제 중...",
+      "confirmDeleteBtn": "삭제",
+      "confirmCancelGeneration": "이 글들의 생성을 취소하시겠습니까?",
+      "cancelGenerationWarning": "{count}개의 글 생성이 취소됩니다. 사용된 토큰은 진행도에 따라 차감되고 미사용분은 환불됩니다.",
+      "confirmCancelBtn": "취소 확인",
+      "goBack": "돌아가기"
+    },
+    "toasts": {
+      "selectArticles": "예약할 글을 선택해 주세요",
+      "selectWebsite": "게시할 사이트를 선택해 주세요",
+      "scheduleFailed": "예약 실패",
+      "scheduleSuccess": "{count}개의 글이 예약되었습니다",
+      "scheduleError": "예약 오류가 발생했습니다",
+      "selectCancelArticles": "예약 취소할 글을 선택해 주세요",
+      "cancelScheduleSuccess": "{count}개의 글 예약이 취소되었습니다",
+      "noCancelledArticles": "취소된 글이 없습니다",
+      "cancelScheduleError": "예약 취소 오류가 발생했습니다",
+      "selectDeleteArticles": "삭제할 글을 선택해 주세요",
+      "deleteSuccess": "{count}개의 글이 삭제되었습니다",
+      "deleteFailed": "삭제 실패",
+      "deleteError": "삭제 오류가 발생했습니다",
+      "noCancellableArticles": "취소 가능한 생성 중 글이 없습니다",
+      "cancelGenerationSuccess": "{count}개의 글 생성이 취소되었습니다",
+      "refundTokens": ", {amount} 토큰 환불됨",
+      "cancelGenerationFailed": "취소 실패",
+      "cancelGenerationError": "생성 취소 오류가 발생했습니다"
+    },
+    "publish": {
+      "success": "게시 성공",
+      "title": "글 게시",
+      "successDesc": "글이 WordPress에 성공적으로 게시되었습니다",
+      "publishTo": "\"{title}\"을(를) 선택한 사이트에 게시",
+      "viewArticle": "글 보기",
+      "selectWebsite": "게시할 사이트 선택",
+      "pleaseSelectWebsite": "대상 사이트를 선택해 주세요",
+      "publishing": "게시 중...",
+      "confirmPublish": "게시 확인",
+      "failed": "게시 실패"
+    },
+    "loadFailed": "로드 실패"
   },
   "websites": {
     "title": "웹사이트 관리",

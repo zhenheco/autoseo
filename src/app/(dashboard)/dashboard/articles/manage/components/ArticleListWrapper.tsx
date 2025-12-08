@@ -7,6 +7,7 @@ import { ArticleList } from "./ArticleList";
 import { ArticleWithWebsite } from "../actions";
 import { WebsiteSelector } from "@/components/articles/WebsiteSelector";
 import { useScheduleContext } from "./ScheduleContext";
+import { useTranslations } from "next-intl";
 
 interface ArticleListWrapperProps {
   articles: ArticleWithWebsite[];
@@ -15,6 +16,7 @@ interface ArticleListWrapperProps {
 }
 
 function PageHeader({ filters }: { filters?: ReactNode }) {
+  const t = useTranslations("articles");
   const { websiteId, setWebsiteId, isScheduling } = useScheduleContext();
 
   return (
@@ -22,7 +24,7 @@ function PageHeader({ filters }: { filters?: ReactNode }) {
       {/* 標題列 + 網站選擇器 */}
       <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3">
         <h1 className="text-lg md:text-xl font-bold whitespace-nowrap">
-          文章管理
+          {t("title")}
         </h1>
         {/* 網站選擇器 - 手機全寬，桌面固定寬度在右側 */}
         <div className="flex items-center gap-2">
@@ -30,12 +32,12 @@ function PageHeader({ filters }: { filters?: ReactNode }) {
             <WebsiteSelector
               value={websiteId}
               onChange={setWebsiteId}
-              placeholder="選擇發布網站"
+              placeholder={t("schedule.selectPublishWebsite")}
               disabled={isScheduling}
             />
           </div>
           <span className="text-orange-500 text-xs whitespace-nowrap">
-            (選擇目標網站)
+            {t("schedule.selectTargetWebsite")}
           </span>
         </div>
       </div>

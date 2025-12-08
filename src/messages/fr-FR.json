@@ -100,8 +100,13 @@
     "status": {
       "pending": "En attente",
       "processing": "En cours",
-      "completed": "Terminé",
+      "generating": "Génération",
+      "completed": "Prêt",
+      "draft": "Brouillon",
+      "scheduled": "Programmé",
       "failed": "Échoué",
+      "scheduleFailed": "Échec programmation",
+      "cancelled": "Annulé",
       "publishing": "Publication en cours",
       "published": "Publié"
     },
@@ -116,7 +121,80 @@
       "global": "Mondial",
       "other": "Autre"
     },
-    "customRegionPlaceholder": "Entrez votre région cible"
+    "customRegionPlaceholder": "Entrez votre région cible",
+    "filters": {
+      "all": "Tout",
+      "unpublished": "Non publié",
+      "scheduled": "Programmé",
+      "published": "Publié",
+      "filterWebsite": "Filtrer par site",
+      "allWebsites": "Tous les sites"
+    },
+    "table": {
+      "title": "Titre",
+      "targetWebsite": "Site cible",
+      "status": "Statut",
+      "createdAt": "Créé le",
+      "untitled": "Sans titre",
+      "unspecified": "Non spécifié",
+      "noArticles": "Aucun article",
+      "selectAll": "Tout sélectionner"
+    },
+    "schedule": {
+      "selectPublishWebsite": "Sélectionner le site de publication",
+      "selectTargetWebsite": "(Sélectionner le site cible)",
+      "perDay": "Par jour",
+      "articles": "articles",
+      "scheduling": "Programmation...",
+      "schedule": "Programmer",
+      "cancelling": "Annulation...",
+      "cancelSchedule": "Annuler programmation",
+      "cancelGeneration": "Annuler génération",
+      "delete": "Supprimer"
+    },
+    "dialogs": {
+      "confirmDelete": "Supprimer les articles sélectionnés ?",
+      "deleteWarning": "Cette action est irréversible. {count} articles seront définitivement supprimés.",
+      "deleting": "Suppression...",
+      "confirmDeleteBtn": "Supprimer",
+      "confirmCancelGeneration": "Annuler la génération de ces articles ?",
+      "cancelGenerationWarning": "La génération sera annulée pour {count} articles. Les tokens utilisés seront déduits selon la progression, les tokens non utilisés seront remboursés.",
+      "confirmCancelBtn": "Confirmer l'annulation",
+      "goBack": "Retour"
+    },
+    "toasts": {
+      "selectArticles": "Veuillez sélectionner des articles à programmer",
+      "selectWebsite": "Veuillez sélectionner un site de publication",
+      "scheduleFailed": "Échec de la programmation",
+      "scheduleSuccess": "{count} articles programmés",
+      "scheduleError": "Erreur de programmation",
+      "selectCancelArticles": "Veuillez sélectionner des articles à déprogrammer",
+      "cancelScheduleSuccess": "Programmation annulée pour {count} articles",
+      "noCancelledArticles": "Aucun article annulé",
+      "cancelScheduleError": "Erreur d'annulation",
+      "selectDeleteArticles": "Veuillez sélectionner des articles à supprimer",
+      "deleteSuccess": "{count} articles supprimés",
+      "deleteFailed": "Échec de la suppression",
+      "deleteError": "Erreur de suppression",
+      "noCancellableArticles": "Aucun article en génération sélectionné",
+      "cancelGenerationSuccess": "Génération annulée pour {count} articles",
+      "refundTokens": ", {amount} tokens remboursés",
+      "cancelGenerationFailed": "Échec de l'annulation",
+      "cancelGenerationError": "Erreur d'annulation de génération"
+    },
+    "publish": {
+      "success": "Publié avec succès",
+      "title": "Publier l'article",
+      "successDesc": "Article publié sur WordPress avec succès",
+      "publishTo": "Publier « {title} » sur le site sélectionné",
+      "viewArticle": "Voir l'article",
+      "selectWebsite": "Sélectionner le site de publication",
+      "pleaseSelectWebsite": "Veuillez sélectionner un site cible",
+      "publishing": "Publication...",
+      "confirmPublish": "Confirmer la publication",
+      "failed": "Échec de la publication"
+    },
+    "loadFailed": "Échec du chargement"
   },
   "websites": {
     "title": "Gestion des sites web",

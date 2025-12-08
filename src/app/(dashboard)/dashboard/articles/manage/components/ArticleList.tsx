@@ -13,34 +13,49 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Globe, CalendarClock } from "lucide-react";
 import { ArticleWithWebsite } from "../actions";
 import { useScheduleContext } from "./ScheduleContext";
+import { useTranslations, useLocale } from "next-intl";
 
 interface ArticleListProps {
   articles: ArticleWithWebsite[];
   selectableArticleIds: string[];
 }
 
-const statusConfig: Record<
+// Status key to translation key mapping
+const STATUS_KEYS: Record<string, string> = {
+  pending: "pending",
+  processing: "processing",
+  generating: "generating",
+  draft: "draft",
+  completed: "completed",
+  scheduled: "scheduled",
+  published: "published",
+  failed: "failed",
+  schedule_failed: "scheduleFailed",
+  cancelled: "cancelled",
+};
+
+const STATUS_VARIANTS: Record<
   string,
-  {
-    label: string;
-    variant: "default" | "secondary" | "destructive" | "outline";
-  }
+  "default" | "secondary" | "destructive" | "outline"
 > = {
-  pending: { label: "生成中", variant: "secondary" },
-  processing: { label: "生成中", variant: "secondary" },
-  draft: { label: "草稿", variant: "outline" },
-  completed: { label: "待發布", variant: "default" },
-  scheduled: { label: "已排程", variant: "secondary" },
-  published: { label: "已發布", variant: "default" },
-  failed: { label: "失敗", variant: "destructive" },
-  schedule_failed: { label: "排程失敗", variant: "destructive" },
-  cancelled: { label: "已取消", variant: "outline" },
+  pending: "secondary",
+  processing: "secondary",
+  generating: "secondary",
+  draft: "outline",
+  completed: "default",
+  scheduled: "secondary",
+  published: "default",
+  failed: "destructive",
+  schedule_failed: "destructive",
+  cancelled: "outline",
 };
 
 export function ArticleList({
   articles,
   selectableArticleIds,
 }: ArticleListProps) {
+  const t = useTranslations("articles");
+  const locale = useLocale();
   const {
     toggleSelection,
     isSelected,
@@ -81,22 +96,20 @@ export function ArticleList({
 
   const formatScheduledDate = (dateString: string | null) => {
     if (!dateString) return null;
-    return new Date(dateString).toLocaleDateString("zh-TW", {
+    return new Date(dateString).toLocaleDateString(locale, {
       month: "2-digit",
       day: "2-digit",
     });
   };
 
   const getStatusBadge = (status: string) => {
-    const config = statusConfig[status] || {
-      label: status,
-      variant: "outline" as const,
-    };
-    return <Badge variant={config.variant}>{config.label}</Badge>;
+    const translationKey = STATUS_KEYS[status] || status;
+    const variant = STATUS_VARIANTS[status] || "outline";
+    return <Badge variant={variant}>{t(`status.${translationKey}`)}</Badge>;
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString("zh-TW", {
+    return new Date(dateString).toLocaleDateString(locale, {
       year: "numeric",
       month: "2-digit",
       day: "2-digit",
@@ -127,7 +140,7 @@ export function ArticleList({
           <p className="font-medium text-sm line-clamp-2">
             {article.generated_articles?.title ||
               article.keywords?.join(", ") ||
-              "未命名"}
+              t("table.untitled")}
           </p>
           <div className="flex items-center gap-2 mt-2 flex-wrap">
             {getStatusBadge(article.status)}
@@ -164,11 +177,15 @@ export function ArticleList({
               onCheckedChange={() => selectAll(selectableArticleIds)}
               disabled={isScheduling}
             />
-            <span className="text-sm text-muted-foreground">全選</span>
+            <span className="text-sm text-muted-foreground">
+              {t("table.selectAll")}
+            </span>
           </div>
         )}
         {articles.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">尚無文章</div>
+          <div className="text-center py-8 text-muted-foreground">
+            {t("table.noArticles")}
+          </div>
         ) : (
           articles.map((article) => (
             <MobileCard key={article.id} article={article} />
@@ -190,17 +207,23 @@ export function ArticleList({
                   />
                 )}
               </TableHead>
-              <TableHead className="px-2">標題</TableHead>
-              <TableHead className="w-[90px] px-2">目標網站</TableHead>
-              <TableHead className="w-[70px] px-2">狀態</TableHead>
-              <TableHead className="w-[85px] px-2">建立時間</TableHead>
+              <TableHead className="px-2">{t("table.title")}</TableHead>
+              <TableHead className="w-[90px] px-2">
+                {t("table.targetWebsite")}
+              </TableHead>
+              <TableHead className="w-[70px] px-2">
+                {t("table.status")}
+              </TableHead>
+              <TableHead className="w-[85px] px-2">
+                {t("table.createdAt")}
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {articles.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={5} className="h-24 text-center">
-                  尚無文章
+                  {t("table.noArticles")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -223,7 +246,7 @@ export function ArticleList({
                   <TableCell className="py-2 px-2 text-sm font-medium">
                     {article.generated_articles?.title ||
                       article.keywords?.join(", ") ||
-                      "未命名"}
+                      t("table.untitled")}
                   </TableCell>
                   <TableCell className="py-2 px-2">
                     {article.website_configs ? (
@@ -235,7 +258,7 @@ export function ArticleList({
                       </div>
                     ) : (
                       <span className="text-muted-foreground text-xs">
-                        未指定
+                        {t("table.unspecified")}
                       </span>
                     )}
                   </TableCell>

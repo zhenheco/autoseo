@@ -2,6 +2,7 @@
 
 import { useOptimistic, useTransition, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -19,14 +20,10 @@ interface Website {
   website_name: string;
 }
 
-const filters = [
-  { value: "all", label: "全部" },
-  { value: "unpublished", label: "待發布" },
-  { value: "scheduled", label: "已排程" },
-  { value: "published", label: "已發布" },
-];
+const FILTER_KEYS = ["all", "unpublished", "scheduled", "published"] as const;
 
 export function ArticleFilters() {
+  const t = useTranslations("articles");
   const router = useRouter();
   const searchParams = useSearchParams();
   const currentFilter = searchParams.get("filter") || "all";
@@ -89,19 +86,21 @@ export function ArticleFilters() {
         disabled={loadingWebsites || isPending}
       >
         <SelectTrigger className="w-[140px] h-8">
-          <SelectValue placeholder="篩選網站">
+          <SelectValue placeholder={t("filters.filterWebsite")}>
             {currentWebsite && selectedWebsite ? (
               <div className="flex items-center gap-1.5">
                 <Globe className="h-3 w-3" />
                 <span className="truncate">{selectedWebsite.website_name}</span>
               </div>
             ) : (
-              <span className="text-muted-foreground">全部網站</span>
+              <span className="text-muted-foreground">
+                {t("filters.allWebsites")}
+              </span>
             )}
           </SelectValue>
         </SelectTrigger>
         <SelectContent>
-          <SelectItem value="all">全部網站</SelectItem>
+          <SelectItem value="all">{t("filters.allWebsites")}</SelectItem>
           {websites.map((website) => (
             <SelectItem key={website.id} value={website.id}>
               <div className="flex items-center gap-1.5">
@@ -114,20 +113,20 @@ export function ArticleFilters() {
       </Select>
 
       {/* 狀態篩選 */}
-      {filters.map((filter) => (
+      {FILTER_KEYS.map((filterKey) => (
         <Button
-          key={filter.value}
-          variant={optimisticFilter === filter.value ? "default" : "outline"}
+          key={filterKey}
+          variant={optimisticFilter === filterKey ? "default" : "outline"}
           size="sm"
-          onClick={() => handleFilterChange(filter.value)}
-          disabled={isPending && optimisticFilter !== filter.value}
+          onClick={() => handleFilterChange(filterKey)}
+          disabled={isPending && optimisticFilter !== filterKey}
           className={cn(
             "h-8",
-            optimisticFilter === filter.value &&
+            optimisticFilter === filterKey &&
               "bg-primary text-primary-foreground",
           )}
         >
-          {filter.label}
+          {t(`filters.${filterKey}`)}
         </Button>
       ))}
     </div>

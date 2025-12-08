@@ -100,8 +100,13 @@
     "status": {
       "pending": "待機中",
       "processing": "処理中",
-      "completed": "完了",
+      "generating": "生成中",
+      "completed": "公開待ち",
+      "draft": "下書き",
+      "scheduled": "予約済み",
       "failed": "失敗",
+      "scheduleFailed": "予約失敗",
+      "cancelled": "キャンセル済み",
       "publishing": "公開中",
       "published": "公開済み"
     },
@@ -116,7 +121,80 @@
       "global": "グローバル",
       "other": "その他"
     },
-    "customRegionPlaceholder": "対象地域を入力してください"
+    "customRegionPlaceholder": "対象地域を入力してください",
+    "filters": {
+      "all": "すべて",
+      "unpublished": "未公開",
+      "scheduled": "予約済み",
+      "published": "公開済み",
+      "filterWebsite": "サイトで絞り込み",
+      "allWebsites": "すべてのサイト"
+    },
+    "table": {
+      "title": "タイトル",
+      "targetWebsite": "対象サイト",
+      "status": "ステータス",
+      "createdAt": "作成日",
+      "untitled": "無題",
+      "unspecified": "未指定",
+      "noArticles": "記事がありません",
+      "selectAll": "すべて選択"
+    },
+    "schedule": {
+      "selectPublishWebsite": "公開先を選択",
+      "selectTargetWebsite": "(対象サイトを選択)",
+      "perDay": "1日",
+      "articles": "件",
+      "scheduling": "予約中...",
+      "schedule": "予約",
+      "cancelling": "キャンセル中...",
+      "cancelSchedule": "予約取消",
+      "cancelGeneration": "生成取消",
+      "delete": "削除"
+    },
+    "dialogs": {
+      "confirmDelete": "選択した記事を削除しますか？",
+      "deleteWarning": "この操作は取り消せません。{count}件の記事が完全に削除されます。",
+      "deleting": "削除中...",
+      "confirmDeleteBtn": "削除する",
+      "confirmCancelGeneration": "これらの記事の生成をキャンセルしますか？",
+      "cancelGenerationWarning": "{count}件の記事の生成がキャンセルされます。使用済みトークンは進捗に応じて差し引かれ、未使用分は返還されます。",
+      "confirmCancelBtn": "キャンセルする",
+      "goBack": "戻る"
+    },
+    "toasts": {
+      "selectArticles": "予約する記事を選択してください",
+      "selectWebsite": "公開先サイトを選択してください",
+      "scheduleFailed": "予約に失敗しました",
+      "scheduleSuccess": "{count}件の記事を予約しました",
+      "scheduleError": "予約エラーが発生しました",
+      "selectCancelArticles": "予約を取り消す記事を選択してください",
+      "cancelScheduleSuccess": "{count}件の記事の予約を取り消しました",
+      "noCancelledArticles": "取り消された記事はありません",
+      "cancelScheduleError": "予約取消エラーが発生しました",
+      "selectDeleteArticles": "削除する記事を選択してください",
+      "deleteSuccess": "{count}件の記事を削除しました",
+      "deleteFailed": "削除に失敗しました",
+      "deleteError": "削除エラーが発生しました",
+      "noCancellableArticles": "キャンセル可能な生成中の記事がありません",
+      "cancelGenerationSuccess": "{count}件の記事の生成をキャンセルしました",
+      "refundTokens": "、{amount}トークンを返還",
+      "cancelGenerationFailed": "キャンセルに失敗しました",
+      "cancelGenerationError": "生成キャンセルエラーが発生しました"
+    },
+    "publish": {
+      "success": "公開成功",
+      "title": "記事を公開",
+      "successDesc": "記事がWordPressに公開されました",
+      "publishTo": "「{title}」を選択したサイトに公開",
+      "viewArticle": "記事を見る",
+      "selectWebsite": "公開先サイトを選択",
+      "pleaseSelectWebsite": "公開先サイトを選択してください",
+      "publishing": "公開中...",
+      "confirmPublish": "公開する",
+      "failed": "公開に失敗しました"
+    },
+    "loadFailed": "読み込みに失敗しました"
   },
   "websites": {
     "title": "ウェブサイト管理",
