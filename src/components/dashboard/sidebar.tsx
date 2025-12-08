@@ -20,6 +20,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useSidebar } from "./dashboard-layout-client";
+import { useTranslations } from "next-intl";
 
 const SUPER_ADMIN_EMAILS = (process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAILS || "")
   .split(",")
@@ -28,27 +29,27 @@ const SUPER_ADMIN_EMAILS = (process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAILS || "")
 
 const navItems = [
   {
-    title: "網站管理",
+    titleKey: "websites",
     href: "/dashboard/websites",
     icon: Globe,
   },
   {
-    title: "寫新文章",
+    titleKey: "newArticle",
     href: "/dashboard/articles",
     icon: PenSquare,
   },
   {
-    title: "文章管理",
+    titleKey: "articleManagement",
     href: "/dashboard/articles/manage",
     icon: FileText,
   },
   {
-    title: "訂閱方案",
+    titleKey: "subscription",
     href: "/dashboard/subscription",
     icon: CreditCard,
   },
   {
-    title: "聯盟夥伴",
+    titleKey: "affiliate",
     href: "/dashboard/affiliate",
     icon: Handshake,
   },
@@ -56,17 +57,17 @@ const navItems = [
 
 const adminItems = [
   {
-    title: "提領審核",
+    titleKey: "withdrawalReview",
     href: "/dashboard/admin/withdrawals",
     icon: Shield,
   },
   {
-    title: "聯盟管理",
+    titleKey: "affiliateManagement",
     href: "/dashboard/admin/affiliates",
     icon: Users,
   },
   {
-    title: "可疑推薦",
+    titleKey: "suspiciousReferrals",
     href: "/dashboard/admin/suspicious-referrals",
     icon: AlertTriangle,
   },
@@ -79,6 +80,7 @@ interface SidebarProps {
 export function Sidebar({ userEmail = "user@example.com" }: SidebarProps) {
   const pathname = usePathname();
   const { collapsed, setCollapsed } = useSidebar();
+  const t = useTranslations("nav");
 
   const isSuperAdmin = SUPER_ADMIN_EMAILS.includes(userEmail.toLowerCase());
 
@@ -142,7 +144,7 @@ export function Sidebar({ userEmail = "user@example.com" }: SidebarProps) {
                   <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r" />
                 )}
                 <Icon className="h-5 w-5 shrink-0" />
-                {!collapsed && <span>{item.title}</span>}
+                {!collapsed && <span>{t(item.titleKey)}</span>}
               </Link>
             );
           })}
@@ -152,7 +154,7 @@ export function Sidebar({ userEmail = "user@example.com" }: SidebarProps) {
               <div className="my-3 border-t border-sidebar-foreground/10" />
               {!collapsed && (
                 <p className="px-3 py-1 text-xs font-semibold text-sidebar-foreground/50 uppercase">
-                  管理後台
+                  {t("adminPanel")}
                 </p>
               )}
               {adminItems.map((item) => {
@@ -175,7 +177,7 @@ export function Sidebar({ userEmail = "user@example.com" }: SidebarProps) {
                       <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r" />
                     )}
                     <Icon className="h-5 w-5 shrink-0" />
-                    {!collapsed && <span>{item.title}</span>}
+                    {!collapsed && <span>{t(item.titleKey)}</span>}
                   </Link>
                 );
               })}
@@ -193,7 +195,9 @@ export function Sidebar({ userEmail = "user@example.com" }: SidebarProps) {
             )}
           >
             <Mail className="h-4 w-4 shrink-0" />
-            {!collapsed && <span className="text-xs">客服信箱</span>}
+            {!collapsed && (
+              <span className="text-xs">{t("customerService")}</span>
+            )}
           </a>
         </div>
 

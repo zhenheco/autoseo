@@ -1,0 +1,249 @@
+{
+  "common": {
+    "save": "Speichern",
+    "cancel": "Abbrechen",
+    "delete": "Löschen",
+    "edit": "Bearbeiten",
+    "loading": "Laden...",
+    "confirm": "Bestätigen",
+    "success": "Erfolg",
+    "error": "Fehler",
+    "close": "Schließen",
+    "back": "Zurück",
+    "next": "Weiter",
+    "previous": "Zurück",
+    "submit": "Absenden",
+    "search": "Suchen",
+    "filter": "Filtern",
+    "refresh": "Aktualisieren",
+    "copy": "Kopieren",
+    "copied": "Kopiert",
+    "download": "Herunterladen",
+    "upload": "Hochladen",
+    "preview": "Vorschau",
+    "publish": "Veröffentlichen",
+    "required": "Erforderlich",
+    "optional": "Optional",
+    "selectPlaceholder": "Bitte auswählen",
+    "noData": "Keine Daten",
+    "viewAll": "Alle anzeigen",
+    "learnMore": "Mehr erfahren"
+  },
+  "nav": {
+    "home": "Startseite",
+    "dashboard": "Dashboard",
+    "websites": "Webseiten",
+    "newArticle": "Neuer Artikel",
+    "articleManagement": "Artikel",
+    "subscription": "Abonnement",
+    "affiliate": "Partner",
+    "settings": "Einstellungen",
+    "logout": "Abmelden",
+    "login": "Anmelden",
+    "signup": "Kostenlos starten",
+    "referrals": "Empfehlungen",
+    "adminPanel": "Admin-Bereich",
+    "withdrawalReview": "Auszahlungsprüfung",
+    "affiliateManagement": "Partner-Verwaltung",
+    "suspiciousReferrals": "Verdächtige Empfehlungen",
+    "customerService": "Support"
+  },
+  "auth": {
+    "welcomeTitle": "Willkommen bei 1waySEO",
+    "googleLoginDesc": "Schnell mit Google starten",
+    "loginWithGoogle": "Mit Google anmelden",
+    "termsAgreement": "Durch Fortfahren stimmen Sie unseren",
+    "termsOfService": "Nutzungsbedingungen",
+    "and": "und",
+    "privacyPolicy": "Datenschutzrichtlinie",
+    "loginFailed": "Anmeldung fehlgeschlagen",
+    "loginSuccess": "Anmeldung erfolgreich",
+    "logoutSuccess": "Erfolgreich abgemeldet"
+  },
+  "dashboard": {
+    "title": "Dashboard",
+    "welcome": "Willkommen zurück",
+    "quickStats": "Schnellstatistiken",
+    "recentArticles": "Aktuelle Artikel",
+    "totalArticles": "Gesamte Artikel",
+    "totalWebsites": "Gesamte Webseiten",
+    "creditsRemaining": "Verbleibende Credits",
+    "monthlyUsage": "Monatliche Nutzung"
+  },
+  "articles": {
+    "title": "Artikelverwaltung",
+    "newArticle": "Neuer Artikel",
+    "generate": "Artikel generieren",
+    "batchGenerate": "Stapelgenerierung",
+    "importArticle": "Artikel importieren",
+    "exportArticle": "Artikel exportieren",
+    "targetWebsite": "Ziel-Webseite",
+    "selectWebsite": "Webseite auswählen (optional)",
+    "whatToWrite": "Worüber möchten Sie schreiben?",
+    "targetRegion": "Zielregion",
+    "selectRegion": "Bitte Zielregion auswählen",
+    "writingLanguage": "Schreibsprache",
+    "selectLanguage": "Bitte Schreibsprache auswählen",
+    "keywordGenerate": "Keyword-Generierung",
+    "aiAutoGenerate": "KI-Autogenerierung",
+    "usageHint": "Nutzungshinweise",
+    "noWebsiteHint": "Sie können Artikel ohne Webseite generieren",
+    "laterPublishHint": "Sie können das Veröffentlichungsziel später in der Artikelverwaltung festlegen",
+    "status": {
+      "pending": "Ausstehend",
+      "processing": "Verarbeitung",
+      "completed": "Abgeschlossen",
+      "failed": "Fehlgeschlagen",
+      "publishing": "Veröffentlichen",
+      "published": "Veröffentlicht"
+    },
+    "regions": {
+      "taiwan": "Taiwan",
+      "japan": "Japan",
+      "usa": "USA",
+      "singapore": "Singapur",
+      "hongkong": "Hongkong",
+      "china": "China",
+      "korea": "Südkorea",
+      "global": "Global",
+      "other": "Andere"
+    },
+    "customRegionPlaceholder": "Geben Sie Ihre Zielregion ein"
+  },
+  "websites": {
+    "title": "Webseitenverwaltung",
+    "addWebsite": "Webseite hinzufügen",
+    "editWebsite": "Webseite bearbeiten",
+    "websiteName": "Webseitenname",
+    "websiteUrl": "Webseiten-URL",
+    "defaultLanguage": "Standardsprache",
+    "defaultRegion": "Standardregion",
+    "industry": "Branche",
+    "wordpressSettings": "WordPress-Einstellungen",
+    "apiKey": "API-Schlüssel",
+    "connected": "Verbunden",
+    "notConnected": "Nicht verbunden"
+  },
+  "subscription": {
+    "title": "Abonnementpläne",
+    "currentPlan": "Aktueller Plan",
+    "upgradePlan": "Plan upgraden",
+    "monthlyCredits": "Monatliche Credits",
+    "lifetimePlan": "Lebenslanger Plan",
+    "oneTimePurchase": "Einmaliger Kauf",
+    "buyCredits": "Credits kaufen",
+    "creditPackages": "Credit-Pakete",
+    "purchaseHistory": "Kaufhistorie",
+    "features": "Funktionen",
+    "popular": "Beliebt",
+    "recommended": "Empfohlen"
+  },
+  "affiliate": {
+    "title": "Affiliate-Partner",
+    "overview": "Übersicht",
+    "referrals": "Empfehlungsaufzeichnungen",
+    "commissions": "Provisionsaufzeichnungen",
+    "withdrawals": "Auszahlungsaufzeichnungen",
+    "withdraw": "Auszahlung beantragen",
+    "guide": "Werbeleitfaden",
+    "terms": "Partnerbedingungen",
+    "taxNotice": "Steuerinformationen",
+    "apply": "Partner werden",
+    "referralLink": "Empfehlungslink",
+    "totalEarnings": "Gesamteinnahmen",
+    "pendingCommission": "Ausstehende Provision",
+    "availableBalance": "Verfügbares Guthaben"
+  },
+  "settings": {
+    "title": "Einstellungen",
+    "profile": "Profil",
+    "aiModels": "KI-Modell-Einstellungen",
+    "notifications": "Benachrichtigungseinstellungen",
+    "language": "Spracheinstellungen",
+    "theme": "Design-Einstellungen",
+    "darkMode": "Dunkelmodus",
+    "lightMode": "Hellmodus"
+  },
+  "home": {
+    "heroTagline": "KI-gestützte SEO-Content-Plattform",
+    "heroTitle1": "Lassen Sie KI",
+    "heroTitle2": "Perfekten SEO-Content erstellen",
+    "heroDescription": "1WaySEO kombiniert die fortschrittlichsten KI-Technologien wie GPT, Claude und Gemini, um die SEO-Content-Produktion von der Keyword-Recherche bis zur Artikelveröffentlichung vollständig zu automatisieren.",
+    "freeStart": "Kostenlos starten",
+    "freeCredits": "10K Credits gratis",
+    "noCreditCard": "Keine Kreditkarte erforderlich",
+    "features": {
+      "keywordResearch": "Intelligente Keyword-Recherche",
+      "keywordResearchDesc": "KI analysiert automatisch hochwertige Keywords, um die besten Ranking-Chancen zu finden",
+      "webResearch": "Web-Datenrecherche",
+      "webResearchDesc": "Crawlt und analysiert automatisch relevante Web-Informationen, um Inhaltstiefe und -genauigkeit zu gewährleisten",
+      "competitorAnalysis": "Wettbewerbsanalyse",
+      "competitorAnalysisDesc": "Tiefgehende Analyse der Content-Strategien von Wettbewerbern, um Differenzierungsvorteile zu finden",
+      "structureGeneration": "Intelligente Strukturgenerierung",
+      "structureGenerationDesc": "Bestimmt automatisch optimale Artikellänge und -struktur basierend auf Keywords und Suchergebnissen",
+      "aiWriting": "KI-Schreibmaschine",
+      "aiWritingDesc": "Integriert alle Recherche-Daten, um hochwertige SEO-optimierte Artikel zu generieren",
+      "imageGeneration": "Automatische Bildgenerierung",
+      "imageGenerationDesc": "KI generiert automatisch relevante Bilder, um die visuelle Anziehungskraft des Inhalts zu verbessern",
+      "linkOptimization": "Interne/Externe Link-Optimierung",
+      "linkOptimizationDesc": "Intelligente Vorschläge für interne und externe Link-Strategien zur Verbesserung der Website-Autorität",
+      "aiSearchOptimization": "KI-Suchoptimierung",
+      "aiSearchOptimizationDesc": "Optimiert für KI-Suchmaschinen, um SGE-Expositionsmöglichkeiten zu erhöhen",
+      "autoPublish": "Automatische Veröffentlichungsplanung",
+      "autoPublishDesc": "Ein-Klick-WordPress-Veröffentlichung mit geplanter Automatisierung"
+    },
+    "stats": {
+      "users": "Bediente Nutzer",
+      "costSaving": "Content-Kosteneinsparungen",
+      "articleTime": "Minuten pro Artikel"
+    },
+    "pricing": "Preispläne",
+    "testimonials": "Kundenmeinungen"
+  },
+  "faq": {
+    "title": "FAQ",
+    "subtitle": "Haben Sie Fragen?",
+    "description": "Hier sind die am häufigsten gestellten Fragen",
+    "questions": {
+      "whatIsCredits": {
+        "question": "Was sind Credits?",
+        "answer": "Credits sind Nutzungspunkte für 1WaySEO, die den KI-Rechenverbrauch messen. Die Generierung eines Artikels erfordert etwa 3.000-5.000 Credits, abhängig von der Artikellänge und dem gewählten KI-Modell."
+      },
+      "creditsPerArticle": {
+        "question": "Wie viele Credits benötigt ein Artikel?",
+        "answer": "Ein typischer 2.000-Wörter-SEO-Artikel benötigt etwa 3.000-4.000 Credits, einschließlich Keyword-Recherche, Wettbewerbsanalyse, Artikelgenerierung und Bildgenerierung. Längere Artikel (5.000+ Wörter) können 5.000-8.000 Credits benötigen."
+      },
+      "lifetimePlan": {
+        "question": "Ist der lebenslange Plan wirklich dauerhaft?",
+        "answer": "Ja! Nach einer einmaligen Zahlung für den lebenslangen Plan genießen Sie dauerhaft ein monatlich zurückgesetztes Credit-Kontingent. Solange 1WaySEO weiter betrieben wird, bleibt Ihr Plan für immer gültig."
+      },
+      "creditsAccumulate": {
+        "question": "Sammeln sich ungenutzte monatliche Credits an?",
+        "answer": "Das monatliche Kontingent wird automatisch am 1. jedes Monats zurückgesetzt und wird nicht übertragen. Jedoch sind zusätzlich gekaufte Credit-Pakete dauerhaft und verfallen nie."
+      },
+      "getMoreCredits": {
+        "question": "Wie kann ich mehr Credits bekommen?",
+        "answer": "Sie können jederzeit Credit-Aufladepakete kaufen, die direkt zu Ihrem Kontoguthaben hinzugefügt werden. Wenn Sie mehr monatliches Kontingent möchten, können Sie auch einen weiteren lebenslangen Plan kaufen - das monatliche Kontingent des neuen Plans wird mit Ihrem bestehenden Kontingent addiert."
+      },
+      "paymentMethods": {
+        "question": "Welche Zahlungsmethoden werden unterstützt?",
+        "answer": "Wir unterstützen Kreditkarten (Visa, MasterCard, JCB), Online-Banküberweisungen und andere Zahlungsmethoden, sicher verarbeitet über NewebPay."
+      }
+    }
+  },
+  "errors": {
+    "generic": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut",
+    "networkError": "Netzwerkverbindungsfehler",
+    "unauthorized": "Bitte melden Sie sich zuerst an",
+    "forbidden": "Sie haben keine Berechtigung für diese Aktion",
+    "notFound": "Seite nicht gefunden",
+    "serverError": "Serverfehler",
+    "validationError": "Bitte überprüfen Sie Ihre Eingabe",
+    "quotaExceeded": "Unzureichende Credits",
+    "sessionExpired": "Sitzung abgelaufen. Bitte melden Sie sich erneut an"
+  },
+  "ui": {
+    "languageSelector": "Oberflächensprache",
+    "articleLanguageSelector": "Schreibsprache"
+  }
+}

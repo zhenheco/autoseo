@@ -1,0 +1,249 @@
+{
+  "common": {
+    "save": "保存",
+    "cancel": "キャンセル",
+    "delete": "削除",
+    "edit": "編集",
+    "loading": "読み込み中...",
+    "confirm": "確認",
+    "success": "成功",
+    "error": "エラー",
+    "close": "閉じる",
+    "back": "戻る",
+    "next": "次へ",
+    "previous": "前へ",
+    "submit": "送信",
+    "search": "検索",
+    "filter": "フィルター",
+    "refresh": "更新",
+    "copy": "コピー",
+    "copied": "コピーしました",
+    "download": "ダウンロード",
+    "upload": "アップロード",
+    "preview": "プレビュー",
+    "publish": "公開",
+    "required": "必須",
+    "optional": "任意",
+    "selectPlaceholder": "選択してください",
+    "noData": "データがありません",
+    "viewAll": "すべて表示",
+    "learnMore": "詳細を見る"
+  },
+  "nav": {
+    "home": "ホーム",
+    "dashboard": "ダッシュボード",
+    "websites": "ウェブサイト",
+    "newArticle": "新規記事",
+    "articleManagement": "記事管理",
+    "subscription": "サブスクリプション",
+    "affiliate": "アフィリエイト",
+    "settings": "設定",
+    "logout": "ログアウト",
+    "login": "ログイン",
+    "signup": "無料で始める",
+    "referrals": "紹介",
+    "adminPanel": "管理パネル",
+    "withdrawalReview": "出金審査",
+    "affiliateManagement": "アフィリエイト管理",
+    "suspiciousReferrals": "不審な紹介",
+    "customerService": "サポート"
+  },
+  "auth": {
+    "welcomeTitle": "1waySEOへようこそ",
+    "googleLoginDesc": "Googleで素早く始める",
+    "loginWithGoogle": "Googleでログイン",
+    "termsAgreement": "続行することで、当社の",
+    "termsOfService": "利用規約",
+    "and": "および",
+    "privacyPolicy": "プライバシーポリシー",
+    "loginFailed": "ログインに失敗しました",
+    "loginSuccess": "ログイン成功",
+    "logoutSuccess": "ログアウトしました"
+  },
+  "dashboard": {
+    "title": "ダッシュボード",
+    "welcome": "おかえりなさい",
+    "quickStats": "クイック統計",
+    "recentArticles": "最近の記事",
+    "totalArticles": "総記事数",
+    "totalWebsites": "総ウェブサイト数",
+    "creditsRemaining": "残りクレジット",
+    "monthlyUsage": "月間使用量"
+  },
+  "articles": {
+    "title": "記事管理",
+    "newArticle": "新規記事",
+    "generate": "記事を生成",
+    "batchGenerate": "一括生成",
+    "importArticle": "記事をインポート",
+    "exportArticle": "記事をエクスポート",
+    "targetWebsite": "対象ウェブサイト",
+    "selectWebsite": "ウェブサイトを選択（任意）",
+    "whatToWrite": "何について書きますか？",
+    "targetRegion": "対象地域",
+    "selectRegion": "対象地域を選択してください",
+    "writingLanguage": "執筆言語",
+    "selectLanguage": "執筆言語を選択してください",
+    "keywordGenerate": "キーワード生成",
+    "aiAutoGenerate": "AI自動生成",
+    "usageHint": "使い方のヒント",
+    "noWebsiteHint": "ウェブサイトを選択せずに記事を生成できます",
+    "laterPublishHint": "公開先は後で記事管理から決定できます",
+    "status": {
+      "pending": "待機中",
+      "processing": "処理中",
+      "completed": "完了",
+      "failed": "失敗",
+      "publishing": "公開中",
+      "published": "公開済み"
+    },
+    "regions": {
+      "taiwan": "台湾",
+      "japan": "日本",
+      "usa": "アメリカ",
+      "singapore": "シンガポール",
+      "hongkong": "香港",
+      "china": "中国",
+      "korea": "韓国",
+      "global": "グローバル",
+      "other": "その他"
+    },
+    "customRegionPlaceholder": "対象地域を入力してください"
+  },
+  "websites": {
+    "title": "ウェブサイト管理",
+    "addWebsite": "ウェブサイトを追加",
+    "editWebsite": "ウェブサイトを編集",
+    "websiteName": "ウェブサイト名",
+    "websiteUrl": "ウェブサイトURL",
+    "defaultLanguage": "デフォルト言語",
+    "defaultRegion": "デフォルト地域",
+    "industry": "業界",
+    "wordpressSettings": "WordPress設定",
+    "apiKey": "APIキー",
+    "connected": "接続済み",
+    "notConnected": "未接続"
+  },
+  "subscription": {
+    "title": "サブスクリプションプラン",
+    "currentPlan": "現在のプラン",
+    "upgradePlan": "プランをアップグレード",
+    "monthlyCredits": "月間クレジット",
+    "lifetimePlan": "永久プラン",
+    "oneTimePurchase": "一回限りの購入",
+    "buyCredits": "クレジットを購入",
+    "creditPackages": "クレジットパッケージ",
+    "purchaseHistory": "購入履歴",
+    "features": "機能",
+    "popular": "人気",
+    "recommended": "おすすめ"
+  },
+  "affiliate": {
+    "title": "アフィリエイトパートナー",
+    "overview": "概要",
+    "referrals": "紹介記録",
+    "commissions": "コミッション記録",
+    "withdrawals": "出金記録",
+    "withdraw": "出金を申請",
+    "guide": "プロモーションガイド",
+    "terms": "パートナー規約",
+    "taxNotice": "税務情報",
+    "apply": "パートナーになる",
+    "referralLink": "紹介リンク",
+    "totalEarnings": "総収益",
+    "pendingCommission": "保留中のコミッション",
+    "availableBalance": "出金可能残高"
+  },
+  "settings": {
+    "title": "設定",
+    "profile": "プロフィール",
+    "aiModels": "AIモデル設定",
+    "notifications": "通知設定",
+    "language": "言語設定",
+    "theme": "テーマ設定",
+    "darkMode": "ダークモード",
+    "lightMode": "ライトモード"
+  },
+  "home": {
+    "heroTagline": "AI駆動のSEOコンテンツプラットフォーム",
+    "heroTitle1": "AIが作る",
+    "heroTitle2": "完璧なSEOコンテンツ",
+    "heroDescription": "1WaySEOは、GPT、Claude、Geminiなどの最先端AI技術を組み合わせ、キーワードリサーチから記事公開まで、SEOコンテンツ制作を完全自動化します。",
+    "freeStart": "無料で始める",
+    "freeCredits": "10Kクレジット無料",
+    "noCreditCard": "クレジットカード不要",
+    "features": {
+      "keywordResearch": "スマートキーワードリサーチ",
+      "keywordResearchDesc": "AIが自動的に高価値キーワードを分析し、最適なランキング機会を見つけます",
+      "webResearch": "Webデータリサーチ",
+      "webResearchDesc": "関連するWeb情報を自動でクロール・分析し、コンテンツの深さと正確性を確保",
+      "competitorAnalysis": "競合分析",
+      "competitorAnalysisDesc": "競合他社のコンテンツ戦略を深く分析し、差別化の優位性を見つけます",
+      "structureGeneration": "スマート構造生成",
+      "structureGenerationDesc": "キーワードと検索結果に基づいて、最適な記事の長さと構造を自動決定",
+      "aiWriting": "AIライティングエンジン",
+      "aiWritingDesc": "すべてのリサーチデータを統合し、高品質なSEO最適化記事を生成",
+      "imageGeneration": "自動画像生成",
+      "imageGenerationDesc": "AIが関連画像を自動生成し、コンテンツの視覚的魅力を向上",
+      "linkOptimization": "内部/外部リンク最適化",
+      "linkOptimizationDesc": "サイト権威を向上させる内部・外部リンク戦略をスマートに提案",
+      "aiSearchOptimization": "AI検索最適化",
+      "aiSearchOptimizationDesc": "AI検索エンジン向けに最適化し、SGE露出機会を増加",
+      "autoPublish": "自動公開スケジュール",
+      "autoPublishDesc": "ワンクリックWordPress公開と予約自動化に対応"
+    },
+    "stats": {
+      "users": "サービス提供ユーザー数",
+      "costSaving": "コンテンツコスト削減",
+      "articleTime": "記事あたりの時間（分）"
+    },
+    "pricing": "料金プラン",
+    "testimonials": "お客様の声"
+  },
+  "faq": {
+    "title": "よくある質問",
+    "subtitle": "ご質問がありますか？",
+    "description": "よくあるご質問をまとめました",
+    "questions": {
+      "whatIsCredits": {
+        "question": "クレジットとは何ですか？",
+        "answer": "クレジットは1WaySEOの使用ポイントで、AI計算消費量を測定するために使用されます。1記事の生成には約3,000〜5,000クレジットが必要で、記事の長さと選択したAIモデルによって異なります。"
+      },
+      "creditsPerArticle": {
+        "question": "1記事に何クレジット必要ですか？",
+        "answer": "一般的な2,000語のSEO記事には約3,000〜4,000クレジットが必要で、キーワードリサーチ、競合分析、記事生成、画像生成を含みます。長い記事（5,000語以上）は5,000〜8,000クレジットが必要な場合があります。"
+      },
+      "lifetimePlan": {
+        "question": "永久プランは本当に永久ですか？",
+        "answer": "はい！永久プランを一度購入すると、毎月自動リセットされるクレジット枠を永続的にご利用いただけます。1WaySEOがサービスを継続する限り、お客様のプランは永久に有効です。"
+      },
+      "creditsAccumulate": {
+        "question": "未使用の月間クレジットは繰り越されますか？",
+        "answer": "月間枠は毎月1日に自動リセットされ、翌月に繰り越されません。ただし、追加購入されたクレジットパッケージは永続的で、期限切れになることはありません。"
+      },
+      "getMoreCredits": {
+        "question": "クレジットを追加で取得するには？",
+        "answer": "いつでもクレジット追加パッケージを購入でき、アカウント残高に直接追加されます。月間枠を増やしたい場合は、別の永久プランを購入することもでき、新しいプランの月間枠は既存の枠に加算されます。"
+      },
+      "paymentMethods": {
+        "question": "どのような支払い方法に対応していますか？",
+        "answer": "クレジットカード（Visa、MasterCard、JCB）、オンライン銀行振込などの支払い方法に対応しており、NewebPayで安全に処理されます。"
+      }
+    }
+  },
+  "errors": {
+    "generic": "エラーが発生しました。後でもう一度お試しください",
+    "networkError": "ネットワーク接続エラー",
+    "unauthorized": "まずログインしてください",
+    "forbidden": "この操作を実行する権限がありません",
+    "notFound": "ページが見つかりません",
+    "serverError": "サーバーエラー",
+    "validationError": "入力内容を確認してください",
+    "quotaExceeded": "クレジットが不足しています",
+    "sessionExpired": "セッションが期限切れです。再度ログインしてください"
+  },
+  "ui": {
+    "languageSelector": "インターフェース言語",
+    "articleLanguageSelector": "執筆言語"
+  }
+}

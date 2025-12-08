@@ -1,0 +1,249 @@
+{
+  "common": {
+    "save": "Enregistrer",
+    "cancel": "Annuler",
+    "delete": "Supprimer",
+    "edit": "Modifier",
+    "loading": "Chargement...",
+    "confirm": "Confirmer",
+    "success": "Succès",
+    "error": "Erreur",
+    "close": "Fermer",
+    "back": "Retour",
+    "next": "Suivant",
+    "previous": "Précédent",
+    "submit": "Soumettre",
+    "search": "Rechercher",
+    "filter": "Filtrer",
+    "refresh": "Actualiser",
+    "copy": "Copier",
+    "copied": "Copié",
+    "download": "Télécharger",
+    "upload": "Importer",
+    "preview": "Aperçu",
+    "publish": "Publier",
+    "required": "Obligatoire",
+    "optional": "Facultatif",
+    "selectPlaceholder": "Veuillez sélectionner",
+    "noData": "Aucune donnée",
+    "viewAll": "Voir tout",
+    "learnMore": "En savoir plus"
+  },
+  "nav": {
+    "home": "Accueil",
+    "dashboard": "Tableau de bord",
+    "websites": "Sites web",
+    "newArticle": "Nouvel article",
+    "articleManagement": "Articles",
+    "subscription": "Abonnement",
+    "affiliate": "Affiliés",
+    "settings": "Paramètres",
+    "logout": "Déconnexion",
+    "login": "Connexion",
+    "signup": "Commencer gratuitement",
+    "referrals": "Parrainages",
+    "adminPanel": "Administration",
+    "withdrawalReview": "Examen des retraits",
+    "affiliateManagement": "Gestion des affiliés",
+    "suspiciousReferrals": "Parrainages suspects",
+    "customerService": "Support"
+  },
+  "auth": {
+    "welcomeTitle": "Bienvenue sur 1waySEO",
+    "googleLoginDesc": "Commencez rapidement avec Google",
+    "loginWithGoogle": "Se connecter avec Google",
+    "termsAgreement": "En continuant, vous acceptez nos",
+    "termsOfService": "Conditions d'utilisation",
+    "and": "et",
+    "privacyPolicy": "Politique de confidentialité",
+    "loginFailed": "Échec de la connexion",
+    "loginSuccess": "Connexion réussie",
+    "logoutSuccess": "Déconnexion réussie"
+  },
+  "dashboard": {
+    "title": "Tableau de bord",
+    "welcome": "Bienvenue",
+    "quickStats": "Statistiques rapides",
+    "recentArticles": "Articles récents",
+    "totalArticles": "Total des articles",
+    "totalWebsites": "Total des sites web",
+    "creditsRemaining": "Crédits restants",
+    "monthlyUsage": "Utilisation mensuelle"
+  },
+  "articles": {
+    "title": "Gestion des articles",
+    "newArticle": "Nouvel article",
+    "generate": "Générer un article",
+    "batchGenerate": "Génération par lot",
+    "importArticle": "Importer un article",
+    "exportArticle": "Exporter un article",
+    "targetWebsite": "Site web cible",
+    "selectWebsite": "Sélectionner un site web (facultatif)",
+    "whatToWrite": "Sur quoi voulez-vous écrire ?",
+    "targetRegion": "Région cible",
+    "selectRegion": "Veuillez sélectionner la région cible",
+    "writingLanguage": "Langue d'écriture",
+    "selectLanguage": "Veuillez sélectionner la langue d'écriture",
+    "keywordGenerate": "Génération par mot-clé",
+    "aiAutoGenerate": "Génération automatique IA",
+    "usageHint": "Conseils d'utilisation",
+    "noWebsiteHint": "Vous pouvez générer des articles sans sélectionner de site web",
+    "laterPublishHint": "Vous pouvez décider de la destination de publication plus tard dans la gestion des articles",
+    "status": {
+      "pending": "En attente",
+      "processing": "En cours",
+      "completed": "Terminé",
+      "failed": "Échoué",
+      "publishing": "Publication en cours",
+      "published": "Publié"
+    },
+    "regions": {
+      "taiwan": "Taïwan",
+      "japan": "Japon",
+      "usa": "États-Unis",
+      "singapore": "Singapour",
+      "hongkong": "Hong Kong",
+      "china": "Chine",
+      "korea": "Corée du Sud",
+      "global": "Mondial",
+      "other": "Autre"
+    },
+    "customRegionPlaceholder": "Entrez votre région cible"
+  },
+  "websites": {
+    "title": "Gestion des sites web",
+    "addWebsite": "Ajouter un site web",
+    "editWebsite": "Modifier le site web",
+    "websiteName": "Nom du site web",
+    "websiteUrl": "URL du site web",
+    "defaultLanguage": "Langue par défaut",
+    "defaultRegion": "Région par défaut",
+    "industry": "Secteur",
+    "wordpressSettings": "Paramètres WordPress",
+    "apiKey": "Clé API",
+    "connected": "Connecté",
+    "notConnected": "Non connecté"
+  },
+  "subscription": {
+    "title": "Plans d'abonnement",
+    "currentPlan": "Plan actuel",
+    "upgradePlan": "Mettre à niveau",
+    "monthlyCredits": "Crédits mensuels",
+    "lifetimePlan": "Plan à vie",
+    "oneTimePurchase": "Achat unique",
+    "buyCredits": "Acheter des crédits",
+    "creditPackages": "Packs de crédits",
+    "purchaseHistory": "Historique des achats",
+    "features": "Fonctionnalités",
+    "popular": "Populaire",
+    "recommended": "Recommandé"
+  },
+  "affiliate": {
+    "title": "Partenaire affilié",
+    "overview": "Vue d'ensemble",
+    "referrals": "Registres de parrainage",
+    "commissions": "Registres de commissions",
+    "withdrawals": "Registres de retraits",
+    "withdraw": "Demander un retrait",
+    "guide": "Guide de promotion",
+    "terms": "Conditions partenaire",
+    "taxNotice": "Informations fiscales",
+    "apply": "Devenir partenaire",
+    "referralLink": "Lien de parrainage",
+    "totalEarnings": "Gains totaux",
+    "pendingCommission": "Commission en attente",
+    "availableBalance": "Solde disponible"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "profile": "Profil",
+    "aiModels": "Paramètres des modèles IA",
+    "notifications": "Paramètres de notification",
+    "language": "Paramètres de langue",
+    "theme": "Paramètres du thème",
+    "darkMode": "Mode sombre",
+    "lightMode": "Mode clair"
+  },
+  "home": {
+    "heroTagline": "Plateforme de contenu SEO propulsée par l'IA",
+    "heroTitle1": "Laissez l'IA créer",
+    "heroTitle2": "Un contenu SEO parfait",
+    "heroDescription": "1WaySEO combine les technologies IA les plus avancées, notamment GPT, Claude et Gemini, pour automatiser entièrement la production de contenu SEO, de la recherche de mots-clés à la publication d'articles.",
+    "freeStart": "Commencer gratuitement",
+    "freeCredits": "10K crédits gratuits",
+    "noCreditCard": "Sans carte de crédit",
+    "features": {
+      "keywordResearch": "Recherche intelligente de mots-clés",
+      "keywordResearchDesc": "L'IA analyse automatiquement les mots-clés à haute valeur pour trouver les meilleures opportunités de classement",
+      "webResearch": "Recherche de données web",
+      "webResearchDesc": "Explore et analyse automatiquement les informations web pertinentes pour garantir la profondeur et la précision du contenu",
+      "competitorAnalysis": "Analyse de la concurrence",
+      "competitorAnalysisDesc": "Analyse approfondie des stratégies de contenu des concurrents pour trouver des avantages de différenciation",
+      "structureGeneration": "Génération intelligente de structure",
+      "structureGenerationDesc": "Détermine automatiquement la longueur et la structure optimales de l'article en fonction des mots-clés et des résultats de recherche",
+      "aiWriting": "Moteur d'écriture IA",
+      "aiWritingDesc": "Intègre toutes les données de recherche pour générer des articles de haute qualité optimisés pour le SEO",
+      "imageGeneration": "Génération automatique d'images",
+      "imageGenerationDesc": "L'IA génère automatiquement des images pertinentes pour améliorer l'attrait visuel du contenu",
+      "linkOptimization": "Optimisation des liens internes/externes",
+      "linkOptimizationDesc": "Suggestions intelligentes de stratégies de liens internes et externes pour améliorer l'autorité du site",
+      "aiSearchOptimization": "Optimisation pour la recherche IA",
+      "aiSearchOptimizationDesc": "Optimisé pour les moteurs de recherche IA afin d'augmenter les opportunités d'exposition SGE",
+      "autoPublish": "Planification de publication automatique",
+      "autoPublishDesc": "Publication WordPress en un clic avec automatisation programmée"
+    },
+    "stats": {
+      "users": "Utilisateurs servis",
+      "costSaving": "Économies sur les coûts de contenu",
+      "articleTime": "Minutes par article"
+    },
+    "pricing": "Plans tarifaires",
+    "testimonials": "Témoignages"
+  },
+  "faq": {
+    "title": "FAQ",
+    "subtitle": "Des questions ?",
+    "description": "Voici les questions les plus fréquemment posées",
+    "questions": {
+      "whatIsCredits": {
+        "question": "Que sont les crédits ?",
+        "answer": "Les crédits sont des points d'utilisation pour 1WaySEO, utilisés pour mesurer la consommation de calcul IA. La génération d'un article nécessite environ 3 000 à 5 000 crédits, selon la longueur de l'article et le modèle IA sélectionné."
+      },
+      "creditsPerArticle": {
+        "question": "Combien de crédits faut-il pour un article ?",
+        "answer": "Un article SEO typique de 2 000 mots nécessite environ 3 000 à 4 000 crédits, incluant la recherche de mots-clés, l'analyse de la concurrence, la génération d'articles et la génération d'images. Les articles plus longs (5 000+ mots) peuvent nécessiter 5 000 à 8 000 crédits."
+      },
+      "lifetimePlan": {
+        "question": "Le plan à vie est-il vraiment permanent ?",
+        "answer": "Oui ! Après un paiement unique pour le plan à vie, vous bénéficierez en permanence d'un quota de crédits réinitialisé mensuellement. Tant que 1WaySEO continue de fonctionner, votre plan reste valide pour toujours."
+      },
+      "creditsAccumulate": {
+        "question": "Les crédits mensuels non utilisés s'accumulent-ils ?",
+        "answer": "Le quota mensuel est automatiquement réinitialisé le 1er de chaque mois et n'est pas reporté. Cependant, les packs de crédits achetés en supplément sont permanents et n'expirent jamais."
+      },
+      "getMoreCredits": {
+        "question": "Comment puis-je obtenir plus de crédits ?",
+        "answer": "Vous pouvez acheter des packs de recharge de crédits à tout moment, qui sont ajoutés directement au solde de votre compte. Si vous souhaitez plus de quota mensuel, vous pouvez également acheter un autre plan à vie - le quota mensuel du nouveau plan s'additionnera à votre quota existant."
+      },
+      "paymentMethods": {
+        "question": "Quels modes de paiement sont acceptés ?",
+        "answer": "Nous acceptons les cartes de crédit (Visa, MasterCard, JCB), les virements bancaires en ligne et d'autres méthodes de paiement, traités de manière sécurisée via NewebPay."
+      }
+    }
+  },
+  "errors": {
+    "generic": "Une erreur s'est produite. Veuillez réessayer plus tard",
+    "networkError": "Erreur de connexion réseau",
+    "unauthorized": "Veuillez d'abord vous connecter",
+    "forbidden": "Vous n'avez pas la permission d'effectuer cette action",
+    "notFound": "Page non trouvée",
+    "serverError": "Erreur serveur",
+    "validationError": "Veuillez vérifier votre saisie",
+    "quotaExceeded": "Crédits insuffisants",
+    "sessionExpired": "Session expirée. Veuillez vous reconnecter"
+  },
+  "ui": {
+    "languageSelector": "Langue de l'interface",
+    "articleLanguageSelector": "Langue d'écriture"
+  }
+}
