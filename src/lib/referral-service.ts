@@ -4,7 +4,6 @@ import type {
   Referral,
   ReferralStats,
   ReferralTokenReward,
-  REFERRAL_TOKEN_REWARD,
 } from "@/types/referral.types";
 
 export async function generateReferralCode(

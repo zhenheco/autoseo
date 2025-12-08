@@ -188,7 +188,7 @@ export interface AffiliateApplyForm {
   is_resident: boolean;
 }
 
-export const REFERRAL_TOKEN_REWARD = 10000;
+export const REFERRAL_CREDIT_REWARD = 10000;
 
 export const AFFILIATE_TIERS: AffiliateTier[] = [
   {

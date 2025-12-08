@@ -11,7 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { UserPlus, Loader2 } from "lucide-react";
-import { REFERRAL_TOKEN_REWARD } from "@/types/referral.types";
+import { REFERRAL_CREDIT_REWARD } from "@/types/referral.types";
 import { useRouter } from "next/navigation";
 
 export function SetReferrerCard() {
@@ -63,7 +63,7 @@ export function SetReferrerCard() {
             <CardTitle>輸入推薦碼</CardTitle>
             <CardDescription>
               如果您是透過朋友推薦來的，輸入推薦碼後，首次付款時雙方都將獲得{" "}
-              {REFERRAL_TOKEN_REWARD.toLocaleString()} tokens
+              {REFERRAL_CREDIT_REWARD.toLocaleString()} credits
             </CardDescription>
           </div>
         </div>

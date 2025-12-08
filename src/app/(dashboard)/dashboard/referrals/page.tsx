@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { ReferralLinkCard } from "@/components/referrals/ReferralLinkCard";
 import { ReferralHistoryTable } from "@/components/referrals/ReferralHistoryTable";
-import { REFERRAL_TOKEN_REWARD } from "@/types/referral.types";
+import { REFERRAL_CREDIT_REWARD } from "@/types/referral.types";
 
 export default async function ReferralsPage() {
   const user = await getUser();
@@ -92,7 +92,7 @@ export default async function ReferralsPage() {
         <h1 className="text-3xl font-bold">好友推薦計畫</h1>
         <p className="text-muted-foreground mt-2">
           分享您的推薦連結，朋友註冊並付款後，雙方都將獲得{" "}
-          {REFERRAL_TOKEN_REWARD.toLocaleString()} tokens 獎勵
+          {REFERRAL_CREDIT_REWARD.toLocaleString()} credits 獎勵
         </p>
       </div>
 
@@ -114,7 +114,7 @@ export default async function ReferralsPage() {
               )}
               {myReferrer.status === "rewarded" && (
                 <span className="ml-2 text-green-600">
-                  ✓ 已獲得 {REFERRAL_TOKEN_REWARD.toLocaleString()} tokens
+                  ✓ 已獲得 {REFERRAL_CREDIT_REWARD.toLocaleString()} credits
                 </span>
               )}
             </p>
@@ -171,7 +171,7 @@ export default async function ReferralsPage() {
             <div className="text-2xl font-bold text-primary">
               {totalRewardTokens.toLocaleString()}
             </div>
-            <p className="text-xs text-muted-foreground">tokens 獎勵總額</p>
+            <p className="text-xs text-muted-foreground">credits 獎勵總額</p>
           </CardContent>
         </Card>
       </div>
@@ -232,7 +232,7 @@ export default async function ReferralsPage() {
               <p className="text-sm text-muted-foreground">
                 朋友完成首次付款後，您和朋友都將獲得{" "}
                 <span className="font-bold text-primary">
-                  {REFERRAL_TOKEN_REWARD.toLocaleString()} tokens
+                  {REFERRAL_CREDIT_REWARD.toLocaleString()} credits
                 </span>{" "}
                 獎勵
               </p>
