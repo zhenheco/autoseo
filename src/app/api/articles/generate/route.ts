@@ -114,6 +114,21 @@ export async function POST(request: NextRequest) {
     // 使用 company_id 或 user_id 作為 billing identifier
     const billingId = membership?.company_id || user.id;
 
+    // 檢查 subscription 是否存在（防止無訂閱用戶生成文章）
+    const { data: subscription } = await supabase
+      .from("company_subscriptions")
+      .select("id, status")
+      .eq("company_id", billingId)
+      .eq("status", "active")
+      .single();
+
+    if (!subscription) {
+      return NextResponse.json(
+        { error: "找不到有效的訂閱，請聯絡客服信箱處理" },
+        { status: 402 },
+      );
+    }
+
     const billingService = new TokenBillingService(supabase);
     const articleJobId = uuidv4();
 
