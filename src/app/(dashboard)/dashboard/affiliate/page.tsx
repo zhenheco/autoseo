@@ -290,102 +290,106 @@ export default function AffiliateDashboardPage() {
         </Card>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>您的專屬推薦連結</CardTitle>
-          <CardDescription>
-            分享此連結給新客戶，可獲得 15%~30% 佣金（依推薦人數分級）
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {affiliateCode ? (
-            <>
-              <div>
-                <label className="text-sm font-medium text-foreground">
-                  推薦碼
-                </label>
-                <div className="mt-1 flex gap-2">
-                  <input
-                    type="text"
-                    readOnly
-                    value={affiliateCode}
-                    className="flex-1 rounded-md border border-border px-3 py-2 bg-muted font-mono"
-                  />
-                  <Button
-                    onClick={() => copyToClipboard(affiliateCode)}
-                    variant={copied ? "default" : "outline"}
-                  >
-                    {copied ? (
-                      <>
-                        <Check className="h-4 w-4 mr-2" /> 已複製
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="h-4 w-4 mr-2" /> 複製
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-
-              <div>
-                <label className="text-sm font-medium text-foreground">
-                  完整連結
-                </label>
-                <div className="mt-1 flex gap-2">
-                  <input
-                    type="text"
-                    readOnly
-                    value={getReferralLink()}
-                    className="flex-1 rounded-md border border-border px-3 py-2 bg-muted font-mono text-sm"
-                  />
-                  <Button
-                    onClick={() => copyToClipboard(getReferralLink())}
-                    variant={copied ? "default" : "outline"}
-                  >
-                    {copied ? (
-                      <>
-                        <Check className="h-4 w-4 mr-2" /> 已複製
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="h-4 w-4 mr-2" /> 複製
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-
-              <div className="flex gap-2">
-                <Button variant="outline" asChild>
-                  <a
-                    href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getReferralLink())}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    分享到 Facebook
-                  </a>
-                </Button>
-                <Button variant="outline" asChild>
-                  <a
-                    href={`https://line.me/R/msg/text/?${encodeURIComponent(getReferralLink())}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    分享到 LINE
-                  </a>
-                </Button>
-              </div>
-            </>
-          ) : (
-            <div className="rounded-md bg-yellow-50 p-4">
-              <p className="text-yellow-800">尚未取得推薦碼，請稍後重新整理</p>
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
       <div className="grid gap-4 md:grid-cols-2">
+        {/* 推薦連結卡片 - 左側 50% */}
+        <Card>
+          <CardHeader>
+            <CardTitle>您的專屬推薦連結</CardTitle>
+            <CardDescription>
+              分享此連結給新客戶，可獲得 15%~30% 佣金（依推薦人數分級）
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {affiliateCode ? (
+              <>
+                <div>
+                  <label className="text-sm font-medium text-foreground">
+                    推薦碼
+                  </label>
+                  <div className="mt-1 flex gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={affiliateCode}
+                      className="flex-1 rounded-md border border-border px-3 py-2 bg-muted font-mono"
+                    />
+                    <Button
+                      onClick={() => copyToClipboard(affiliateCode)}
+                      variant={copied ? "default" : "outline"}
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="h-4 w-4 mr-2" /> 已複製
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-4 w-4 mr-2" /> 複製
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-sm font-medium text-foreground">
+                    完整連結
+                  </label>
+                  <div className="mt-1 flex gap-2">
+                    <input
+                      type="text"
+                      readOnly
+                      value={getReferralLink()}
+                      className="flex-1 rounded-md border border-border px-3 py-2 bg-muted font-mono text-sm"
+                    />
+                    <Button
+                      onClick={() => copyToClipboard(getReferralLink())}
+                      variant={copied ? "default" : "outline"}
+                    >
+                      {copied ? (
+                        <>
+                          <Check className="h-4 w-4 mr-2" /> 已複製
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="h-4 w-4 mr-2" /> 複製
+                        </>
+                      )}
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button variant="outline" asChild>
+                    <a
+                      href={`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(getReferralLink())}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      分享到 Facebook
+                    </a>
+                  </Button>
+                  <Button variant="outline" asChild>
+                    <a
+                      href={`https://line.me/R/msg/text/?${encodeURIComponent(getReferralLink())}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      分享到 LINE
+                    </a>
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <div className="rounded-md bg-yellow-50 p-4">
+                <p className="text-yellow-800">
+                  尚未取得推薦碼，請稍後重新整理
+                </p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* 推薦統計卡片 - 右側 50% */}
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
