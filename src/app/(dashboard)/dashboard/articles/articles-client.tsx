@@ -26,13 +26,14 @@ export function ArticlesClient({
 
   return (
     <div className="container mx-auto p-6 max-w-6xl">
-      <div className="mb-6">
-        <h1 className="text-3xl font-bold">{t("generateNewArticle")}</h1>
-      </div>
-
       <Card>
         <CardHeader className="pb-4">
-          <CardTitle>📝 {t("articleSettings")}</CardTitle>
+          <div className="flex flex-col gap-2">
+            <CardTitle>📝 {t("articleSettings")}</CardTitle>
+            <p className="text-sm text-muted-foreground">
+              因為我們有三十多個步驟，所以寫文章的時間會需要比較久一點，但相對文章品質會比較好，請耐心等候喔!!!
+            </p>
+          </div>
         </CardHeader>
         <CardContent>
           <ArticleFormTabs
