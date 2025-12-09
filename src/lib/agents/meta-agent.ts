@@ -1,5 +1,6 @@
 import { BaseAgent } from "./base-agent";
 import type { MetaInput, MetaOutput } from "@/types/agents";
+import { LOCALE_FULL_NAMES } from "@/lib/i18n/locales";
 
 export class MetaAgent extends BaseAgent<MetaInput, MetaOutput> {
   get agentName(): string {
@@ -18,48 +19,55 @@ export class MetaAgent extends BaseAgent<MetaInput, MetaOutput> {
   private async generateMetaData(
     input: MetaInput,
   ): Promise<Omit<MetaOutput, "executionInfo">> {
-    const prompt = `你是一位 SEO 專家，請為以下文章生成完整的 meta 資料。
+    const targetLang = input.targetLanguage || "zh-TW";
+    const languageName =
+      LOCALE_FULL_NAMES[targetLang] || "Traditional Chinese (繁體中文)";
 
-# 文章標題選項
+    const prompt = `You are an SEO expert. Generate complete meta data for the following article.
+
+**Target Language: ${languageName}** (ALL meta content MUST be written in this language)
+
+# Article Title Options
 ${input.titleOptions.map((t, i) => `${i + 1}. ${t}`).join("\n")}
 
-# 主要關鍵字
+# Primary Keyword
 ${input.keyword}
 
-# 文章摘要
+# Article Summary
 ${input.content.markdown.substring(0, 500)}...
 
-# 文章統計
-- 字數: ${input.content.statistics.wordCount}
-- 段落數: ${input.content.statistics.paragraphCount}
-- 閱讀時間: ${input.content.statistics.readingTime} 分鐘
+# Article Statistics
+- Word count: ${input.content.statistics.wordCount}
+- Paragraph count: ${input.content.statistics.paragraphCount}
+- Reading time: ${input.content.statistics.readingTime} minutes
 
-請生成以下 meta 資料（以 JSON 格式回答）:
+Generate the following meta data (respond in JSON format):
 
 {
-  "title": "SEO 標題（50-60 字元，包含關鍵字）",
-  "description": "meta 描述（150-160 字元，吸引人且包含關鍵字）",
-  "slug": "url-friendly-slug（使用連字符，包含關鍵字）",
+  "title": "SEO title (50-60 characters, including keyword, in ${languageName})",
+  "description": "Meta description (150-160 characters, engaging and including keyword, in ${languageName})",
+  "slug": "url-friendly-slug (use hyphens, include keyword, in English/romanized)",
   "openGraph": {
-    "title": "Open Graph 標題（可與 SEO 標題相同或略有不同）",
-    "description": "Open Graph 描述（簡短吸引人）",
+    "title": "Open Graph title (can be same as or slightly different from SEO title, in ${languageName})",
+    "description": "Open Graph description (short and engaging, in ${languageName})",
     "type": "article"
   },
   "twitterCard": {
     "card": "summary_large_image",
-    "title": "Twitter 卡片標題",
-    "description": "Twitter 卡片描述"
+    "title": "Twitter card title (in ${languageName})",
+    "description": "Twitter card description (in ${languageName})"
   },
-  "focusKeyphrase": "主要關鍵字短語"
+  "focusKeyphrase": "Primary keyphrase (in ${languageName})"
 }
 
-要求:
-1. 標題必須在 50-60 字元之間
-2. 描述必須在 150-160 字元之間
-3. 標題和描述都要自然地包含主要關鍵字
-4. slug 應該簡短、清晰、SEO 友好
-5. 所有文字都要吸引人且具有說服力
-6. **請確保輸出完整的 JSON，不要省略或截斷任何部分**`;
+Requirements:
+1. Title must be 50-60 characters
+2. Description must be 150-160 characters
+3. Title and description must naturally include the primary keyword
+4. Slug should be short, clear, and SEO-friendly (always in English/romanized)
+5. All text should be engaging and persuasive
+6. **Ensure complete JSON output, do not omit or truncate any part**
+7. **CRITICAL: All content except slug MUST be in ${languageName}**`;
 
     const response = await this.complete(prompt, {
       model: input.model,
@@ -84,13 +92,15 @@ ${input.content.markdown.substring(0, 500)}...
       metaData = this.getFallbackMetaData(input);
     }
 
+    const fallbackDesc = `${input.keyword}`;
+
     return {
       title: metaData.title || input.titleOptions[0] || input.keyword,
-      description: metaData.description || `關於${input.keyword}的完整指南`,
+      description: metaData.description || fallbackDesc,
       slug: this.sanitizeSlug(metaData.slug || input.keyword),
       seo: {
         title: metaData.title || input.titleOptions[0] || input.keyword,
-        description: metaData.description || `關於${input.keyword}的完整指南`,
+        description: metaData.description || fallbackDesc,
         keywords: metaData.keywords || [input.keyword],
       },
       openGraph: {
@@ -102,7 +112,7 @@ ${input.content.markdown.substring(0, 500)}...
         description:
           metaData.openGraph?.description ||
           metaData.description ||
-          `關於${input.keyword}的完整指南`,
+          fallbackDesc,
         type: "article",
       },
       twitterCard: {
@@ -115,7 +125,7 @@ ${input.content.markdown.substring(0, 500)}...
         description:
           metaData.twitterCard?.description ||
           metaData.description ||
-          `關於${input.keyword}的完整指南`,
+          fallbackDesc,
       },
       focusKeyphrase: metaData.focusKeyphrase || input.keyword,
     };
@@ -123,7 +133,12 @@ ${input.content.markdown.substring(0, 500)}...
 
   private getFallbackMetaData(input: MetaInput) {
     const title = input.titleOptions[0] || input.keyword;
-    const description = `關於${input.keyword}的詳細介紹與完整指南。${input.content.markdown.substring(0, 100).replace(/[#*\[\]]/g, "")}...`;
+    // Use article content excerpt as description (language-neutral approach)
+    const contentExcerpt = input.content.markdown
+      .substring(0, 150)
+      .replace(/[#*\[\]]/g, "")
+      .trim();
+    const description = contentExcerpt || input.keyword;
     const slug = this.sanitizeSlug(input.keyword);
 
     return {

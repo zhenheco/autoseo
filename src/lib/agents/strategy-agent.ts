@@ -1,5 +1,6 @@
 import { BaseAgent } from "./base-agent";
 import type { StrategyInput, StrategyOutput } from "@/types/agents";
+import { LOCALE_FULL_NAMES } from "@/lib/i18n/locales";
 
 export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
   get agentName(): string {
@@ -45,60 +46,64 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
   }
 
   private async generateTitleOptions(input: StrategyInput): Promise<string[]> {
-    // 從 ResearchAgent 獲取策略建議和內容缺口
     const recommendedStrategy = input.researchData.recommendedStrategy || "";
     const contentGaps = input.researchData.contentGaps || [];
     const searchIntent = input.researchData.searchIntent || "informational";
 
     const targetLang = input.targetLanguage || "zh-TW";
+    const languageName =
+      LOCALE_FULL_NAMES[targetLang] || "Traditional Chinese (繁體中文)";
     const titleLengthRange = this.getTitleLengthRange(targetLang);
 
-    const prompt = `你是一位精通國際市場的 SEO 專家。根據研究分析結果，為主題「${input.researchData.title}」生成 3 個原創標題。
+    const prompt = `You are an SEO expert. Based on research analysis, generate 3 original titles for the topic "${input.researchData.title}".
 
-## 主題關鍵字（僅作為主題參考，不要直接複製）
+**Target Language: ${languageName}** (ALL titles MUST be written in this language)
+
+## Topic Keyword (reference only, do not copy directly)
 ${input.researchData.title}
 
-## 研究分析結果
-### 建議策略
-${recommendedStrategy || "提供專業、實用的內容"}
+## Research Analysis Results
+### Recommended Strategy
+${recommendedStrategy || "Provide professional, practical content"}
 
-### 內容缺口（可填補的機會）
+### Content Gaps (opportunities to fill)
 ${
   contentGaps.length > 0
     ? contentGaps
         .slice(0, 3)
         .map((g, i) => `${i + 1}. ${g}`)
         .join("\n")
-    : "無特定缺口"
+    : "No specific gaps identified"
 }
 
-### 搜尋意圖
+### Search Intent
 ${searchIntent}
 
-## 標題生成原則
-1. **原創性**：標題必須是全新創作，不要直接使用關鍵字作為標題
-2. **差異化**：利用內容缺口創造獨特角度
-3. **吸引力**：根據搜尋意圖設計能引起共鳴的標題
-4. **SEO 友善**：自然融入核心概念，但不要生硬堆砌
+## Title Generation Principles
+1. **Originality**: Titles must be newly created, do not directly use keywords as titles
+2. **Differentiation**: Use content gaps to create unique angles
+3. **Appeal**: Design titles that resonate with the search intent
+4. **SEO-friendly**: Naturally incorporate core concepts without keyword stuffing
 
-## 標題長度要求
-- ${titleLengthRange.min}-${titleLengthRange.max} ${targetLang.startsWith("zh") ? "字" : "characters"}
+## Title Length Requirements
+- ${titleLengthRange.min}-${titleLengthRange.max} ${targetLang.startsWith("zh") ? "characters" : "characters"}
 
-## 禁止使用
-- **直接複製關鍵字**：標題 ≠ 關鍵字，必須重新創作
-- **泛用模板詞**：「完整指南」「全攻略」「入門到精通」「一次搞懂」「懶人包」「超詳細」
-- **年份**：2024、2025 等
-- **過度誇大**：「史上最全」「終極」「無敵」
-- **佔位符**：<標題>、[標題1]、{第一個標題} 等
+## FORBIDDEN (DO NOT USE)
+- **Direct keyword copying**: Title ≠ keyword, must be re-created
+- **Generic template words** (in any language): "Complete Guide", "Full Tutorial", "Everything You Need to Know", "Ultimate"
+- **Years**: 2024, 2025, etc.
+- **Exaggerations**: "Best Ever", "Ultimate", "Perfect"
+- **Placeholders**: <Title>, [Title1], {First Title}, etc.
 
-## 要求
-- 生成 3 個不同風格的標題（例如：問句型、數字型、利益型）
-- 標題要能引起目標讀者的共鳴
-- 每個標題必須是完整、可直接使用的句子
+## Requirements
+- Generate 3 titles with different styles (e.g., question, number-based, benefit-focused)
+- Titles must resonate with target readers
+- Each title must be complete and ready to use
+- **CRITICAL: All titles MUST be in ${languageName}**
 
-## 輸出格式（只輸出 JSON，不要其他文字）
+## Output Format (JSON only, no other text)
 {
-  "titles": ["完整的第一個標題", "完整的第二個標題", "完整的第三個標題"]
+  "titles": ["First complete title in ${languageName}", "Second complete title in ${languageName}", "Third complete title in ${languageName}"]
 }`;
 
     try {
@@ -435,31 +440,12 @@ ${questionsContent.substring(0, 500) || "無問題資料"}
     input: StrategyInput,
     selectedTitle: string,
   ): Promise<StrategyOutput["outline"]> {
-    // 使用結構化 JSON schema + DeepSeek JSON mode
     try {
       const outlineSchema = this.getOutlineSchema();
 
-      // Language mapping
-      const languageNames: Record<string, string> = {
-        "zh-TW": "Traditional Chinese (繁體中文)",
-        "zh-CN": "Simplified Chinese (简体中文)",
-        en: "English",
-        ja: "Japanese (日本語)",
-        ko: "Korean (한국어)",
-        es: "Spanish (Español)",
-        fr: "French (Français)",
-        de: "German (Deutsch)",
-        pt: "Portuguese (Português)",
-        it: "Italian (Italiano)",
-        ru: "Russian (Русский)",
-        ar: "Arabic (العربية)",
-        th: "Thai (ไทย)",
-        vi: "Vietnamese (Tiếng Việt)",
-        id: "Indonesian (Bahasa Indonesia)",
-      };
-
       const targetLang = input.targetLanguage || "zh-TW";
-      const languageName = languageNames[targetLang] || languageNames["zh-TW"];
+      const languageName =
+        LOCALE_FULL_NAMES[targetLang] || "Traditional Chinese (繁體中文)";
 
       const prompt = `Generate a structured outline for the article titled "${selectedTitle}".
 

@@ -244,7 +244,8 @@ export class ParallelOrchestrator {
         const researchAgent = new ResearchAgent(aiConfig, context);
         researchOutput = await researchAgent.execute({
           title: input.title,
-          region: input.region,
+          region: targetRegion,
+          targetLanguage: targetLanguage,
           competitorCount: workflowSettings.competitor_count,
           model: agentConfig.research_model,
           temperature: agentConfig.research_temperature,
@@ -494,6 +495,8 @@ export class ParallelOrchestrator {
                 aiConfig,
                 context,
                 competitorAnalysis,
+                targetLanguage,
+                targetRegion,
               ),
               imageOutput ||
                 this.executeImageAgent(
@@ -517,6 +520,8 @@ export class ParallelOrchestrator {
               aiConfig,
               context,
               competitorAnalysis,
+              targetLanguage,
+              targetRegion,
             ),
             this.executeImageAgent(
               strategyOutput,
@@ -618,7 +623,7 @@ export class ParallelOrchestrator {
           keywords: a.keywords,
         })),
         externalReferences: strategyOutput.externalReferences || [],
-        targetLanguage: input.region?.startsWith("zh") ? "zh-TW" : "en",
+        targetLanguage: targetLanguage,
         primaryKeyword: input.title, // 文章主關鍵字，用於 fallback 匹配
       });
 
@@ -721,7 +726,7 @@ export class ParallelOrchestrator {
         content: writingOutput.html || writingOutput.markdown || "",
         keywords: [input.title, ...strategyOutput.keywords.slice(0, 5)],
         outline: strategyOutput,
-        language: input.region?.startsWith("zh") ? "zh-TW" : "en",
+        language: targetLanguage,
         existingCategories,
         existingTags,
       });
@@ -1016,6 +1021,8 @@ export class ParallelOrchestrator {
     aiConfig: AIClientConfig,
     context: AgentExecutionContext,
     competitorAnalysis?: CompetitorAnalysisOutput,
+    targetLanguage?: string,
+    targetRegion?: string,
   ) {
     if (!strategyOutput) throw new Error("Strategy output is required");
 
@@ -1028,6 +1035,8 @@ export class ParallelOrchestrator {
       model: agentConfig.writing_model,
       temperature: agentConfig.writing_temperature,
       maxTokens: agentConfig.writing_max_tokens,
+      targetLanguage,
+      targetRegion,
     });
   }
 

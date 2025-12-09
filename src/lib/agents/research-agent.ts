@@ -6,6 +6,7 @@ import type {
   DeepResearchResult,
 } from "@/types/agents";
 import { getPerplexityClient } from "@/lib/perplexity/client";
+import { LOCALE_FULL_NAMES } from "@/lib/i18n/locales";
 
 interface UnifiedResearchResult {
   deepResearch: DeepResearchResult;
@@ -19,11 +20,14 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
   }
 
   protected async process(input: ResearchInput): Promise<ResearchOutput> {
-    console.log("[ResearchAgent] 開始順序執行：先 Perplexity 研究，再 AI 分析");
+    console.log(
+      "[ResearchAgent] Starting sequential execution: Perplexity research, then AI analysis",
+    );
 
     const unifiedResearch = await this.executeUnifiedResearch(
       input.title,
       input.region,
+      input.targetLanguage,
     );
 
     const analysis = await this.analyzeTitle(input, unifiedResearch);
@@ -48,6 +52,7 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
   private async executeUnifiedResearch(
     keyword: string,
     region?: string,
+    targetLanguage?: string,
   ): Promise<UnifiedResearchResult> {
     const startTime = Date.now();
     try {
@@ -55,32 +60,46 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
       const regionStr = region || "Taiwan";
       const currentYear = new Date().getFullYear();
       const nextYear = currentYear + 1;
+      const languageName =
+        LOCALE_FULL_NAMES[targetLanguage || "zh-TW"] ||
+        "Traditional Chinese (繁體中文)";
 
-      console.log("[ResearchAgent] 執行統一研究查詢:", keyword, regionStr);
+      console.log(
+        "[ResearchAgent] Executing unified research query:",
+        keyword,
+        regionStr,
+        languageName,
+      );
 
-      const query = `請針對「${keyword}」${regionStr !== "Taiwan" ? `（${regionStr}地區）` : ""} 進行綜合研究，提供以下資訊：
+      // Use English for the query to get better AI understanding
+      // but request output in the target language
+      const query = `Conduct comprehensive research on "${keyword}" for the ${regionStr} market/region.
 
-1. **最新趨勢**（${currentYear}-${nextYear}）：
-   - 行業動態、專家見解、發展方向
-   - 最新技術或方法
+**IMPORTANT: Provide ALL responses in ${languageName}**
 
-2. **常見問題與解決方案**：
-   - 用戶常見疑問、FAQ
-   - 實際使用體驗和建議
+Please provide the following information:
 
-3. **權威數據與統計**：
-   - 相關數據、市場資訊、實用統計
-   - 成功案例或效果數據
+1. **Latest Trends** (${currentYear}-${nextYear}):
+   - Industry developments, expert insights, future directions
+   - New technologies or methodologies
 
-4. **實用參考來源**：
-   - 請提供 5-8 個最相關、最實用的來源網址
-   - 可以是：服務商網站、產業部落格、新聞報導、教學文章、官方文檔
-   - 不需要限制為學術或官方來源，實用性優先
+2. **Common Questions & Solutions**:
+   - Frequently asked questions by users
+   - Real-world experiences and recommendations
 
-**重要：引用格式要求**
-每次引用來源時，請使用以下格式：「[來源標題](網址)」
-例如：根據「[AI寫作工具指南](https://example.com)」的說明...
-這樣可以讓讀者清楚知道每個來源的名稱。`;
+3. **Authoritative Data & Statistics**:
+   - Relevant data, market information, practical statistics
+   - Success cases or effectiveness data
+
+4. **Useful Reference Sources**:
+   - Provide 5-8 most relevant and practical source URLs
+   - Can include: service provider websites, industry blogs, news articles, tutorials, official documentation
+   - Prioritize practical usefulness over academic sources
+
+**Important: Citation Format**
+When citing sources, use this format: "[Source Title](URL)"
+Example: According to "[AI Writing Tools Guide](https://example.com)"...
+This helps readers clearly identify each source.`;
 
       const result = await perplexity.search(query, {
         return_citations: true,
@@ -317,64 +336,70 @@ export class ResearchAgent extends BaseAgent<ResearchInput, ResearchOutput> {
       | "executionInfo"
     >
   > {
+    const languageName =
+      LOCALE_FULL_NAMES[input.targetLanguage || "zh-TW"] ||
+      "Traditional Chinese (繁體中文)";
+
     const researchContext = researchData?.deepResearch
       ? `
-## 已收集的研究資料（來自 Perplexity）
+## Collected Research Data (from Perplexity)
 
-### 趨勢資訊
-${researchData.deepResearch.trends?.content || "無"}
+### Trend Information
+${researchData.deepResearch.trends?.content || "None"}
 
-### 常見問題
-${researchData.deepResearch.userQuestions?.content || "無"}
+### Common Questions
+${researchData.deepResearch.userQuestions?.content || "None"}
 
-### 權威數據
-${researchData.deepResearch.authorityData?.content || "無"}
+### Authoritative Data
+${researchData.deepResearch.authorityData?.content || "None"}
 
-### 參考來源（共 ${researchData.externalReferences?.length || 0} 個）
+### Reference Sources (${researchData.externalReferences?.length || 0} total)
 ${
   researchData.externalReferences
     ?.slice(0, 5)
     .map((ref) => `- ${ref.title} (${ref.domain})`)
-    .join("\n") || "無"
+    .join("\n") || "None"
 }
 `
       : "";
 
-    const prompt = `你是一位 SEO 專家，請針對文章標題「${input.title}」進行深入分析。
+    const prompt = `You are an SEO expert. Analyze the article title "${input.title}" in depth.
 
-文章標題: ${input.title}
-地區: ${input.region || "Taiwan"}
+**IMPORTANT: Provide analysis output in ${languageName}**
+
+Article Title: ${input.title}
+Target Region: ${input.region || "Taiwan"}
 ${researchContext}
 
-基於上述研究資料，請分析以下項目：
+Based on the research data above, analyze the following:
 
-1. **搜尋意圖** (searchIntent):
-   - 類型：informational（資訊型）、commercial（商業型）、transactional（交易型）、navigational（導航型）
-   - 信心度 (intentConfidence): 0-1 之間
+1. **Search Intent** (searchIntent):
+   - Type: informational, commercial, transactional, or navigational
+   - Confidence (intentConfidence): 0-1 scale
 
-2. **高排名內容特徵** (topRankingFeatures):
-   - 內容長度：最短、最長、平均字數
-   - 標題模式：常見的標題結構
-   - 內容結構：段落組織方式
-   - 常見主題：經常討論的子主題
-   - 常見格式：列表、教學、比較等
+2. **Top Ranking Content Features** (topRankingFeatures):
+   - Content length: minimum, maximum, average word count
+   - Title patterns: common title structures
+   - Content structure: paragraph organization
+   - Common topics: frequently discussed subtopics
+   - Common formats: lists, tutorials, comparisons, etc.
 
-3. **內容缺口** (contentGaps):
-   - 根據研究資料，列出競爭對手沒有深入探討的角度
+3. **Content Gaps** (contentGaps):
+   - Based on research data, list angles competitors haven't covered deeply
 
-4. **競爭對手分析** (competitorAnalysis):
-   - 列出 3-5 個相關權威網站
-   - 每個網站的標題、網域、字數估計
-   - 優勢和弱點
-   - 獨特切入角度
+4. **Competitor Analysis** (competitorAnalysis):
+   - List 3-5 relevant authority websites
+   - Each site's title, domain, estimated word count
+   - Strengths and weaknesses
+   - Unique angles
 
-5. **推薦策略** (recommendedStrategy):
-   - 基於研究資料和以上分析，提出內容創作建議
+5. **Recommended Strategy** (recommendedStrategy):
+   - Based on research data and analysis above, provide content creation recommendations
 
-6. **相關關鍵字** (relatedKeywords):
-   - 列出 5-10 個相關搜尋詞
+6. **Related Keywords** (relatedKeywords):
+   - List 5-10 related search terms
 
-請用結構化的方式回答，每個項目分開說明。`;
+Respond in a structured manner, separating each item clearly.`;
 
     console.log(
       "[ResearchAgent] 執行 AI 分析（使用 Perplexity 研究結果作為上下文）",

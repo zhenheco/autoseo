@@ -6,6 +6,7 @@ import type {
   CompetitorAnalysisOutput,
 } from "@/types/agents";
 import { marked } from "marked";
+import { LOCALE_FULL_NAMES } from "@/lib/i18n/locales";
 
 // 配置 marked 全局選項（使用推薦的 marked.use() 方式）
 marked.use({
@@ -129,85 +130,93 @@ export class WritingAgent extends BaseAgent<WritingInput, WritingOutput> {
   }
 
   private async generateArticle(input: WritingInput): Promise<string> {
-    const { strategy, brandVoice, previousArticles, competitorAnalysis } =
-      input;
+    const {
+      strategy,
+      brandVoice,
+      previousArticles,
+      competitorAnalysis,
+      targetLanguage,
+      targetRegion,
+    } = input;
 
-    const personaSection = this.buildPersonaFromVoice(brandVoice);
+    // Get the language name for the prompt
+    const languageName =
+      LOCALE_FULL_NAMES[targetLanguage || "zh-TW"] ||
+      "Traditional Chinese (繁體中文)";
+    const regionName = targetRegion || "Taiwan";
+
+    const personaSection = this.buildPersonaFromVoice(brandVoice, languageName);
     const competitorSection = this.buildCompetitorContext(competitorAnalysis);
     const voiceExamplesSection = this.buildVoiceExamples(brandVoice);
 
     const prompt = `${personaSection}
 
-# 你的任務
-為「${strategy.selectedTitle}」撰寫一篇完整的文章。
+# Your Task
+Write a complete article for "${strategy.selectedTitle}".
+
+**CRITICAL: Output Language Requirement**
+- ALL content MUST be written in ${languageName}
+- Target region/audience: ${regionName}
+- Use culturally appropriate expressions and references for the target region
+- Do NOT mix languages unless quoting specific terms
 
 ${competitorSection}
 
 ${voiceExamplesSection}
 
-# 文章大綱
+# Article Outline
 ${this.formatOutline(strategy.outline)}
 
-# 目標規格
-- 目標字數: ${strategy.targetWordCount} 字
-- 主要關鍵字: ${strategy.outline.mainSections.flatMap((s) => s.keywords).join(", ")}
-- LSI 關鍵字: ${strategy.lsiKeywords.join(", ")}
+# Target Specifications
+- Target word count: ${strategy.targetWordCount} words/characters
+- Primary keywords: ${strategy.outline.mainSections.flatMap((s) => s.keywords).join(", ")}
+- LSI keywords: ${strategy.lsiKeywords.join(", ")}
 
-# 格式要求
-- Markdown 格式，直接從 ## 導言 開始（不重複標題）
-- H2 (##) 為主要章節，H3 (###) 為子章節
-- 適當使用清單、表格增加可讀性
-- 禁止使用程式碼區塊（\`\`\`）
-- 禁止生成 FAQ 段落（FAQ 由專門的 Agent 處理）
+# Format Requirements
+- Markdown format, start directly with ## Introduction (do not repeat title)
+- H2 (##) for main sections, H3 (###) for subsections
+- Use lists and tables appropriately for readability
+- Do NOT use code blocks (\`\`\`)
+- Do NOT generate FAQ sections (FAQ is handled by a dedicated Agent)
 
-# 觀點融合與分析要求（重要！）
+# Perspective Integration & Analysis Requirements (IMPORTANT!)
 
-## 寫作結構（每個 H2 段落）
-1. **多方觀點呈現**：引用 2-3 個不同來源或角度
-   - 使用：「根據 [來源] 的研究...」「專家 [姓名] 認為...」「業界普遍認為...」
-2. **觀點對比**：指出不同觀點的差異或爭議
-   - 使用：「相較之下...」「另一方面...」「不過也有人認為...」
-3. **作者分析**：綜合觀點後給出你的結論與判斷
-   - 使用：「綜合以上分析，我認為...」「從實務角度來看...」「根據我的經驗...」
-4. **具體建議**：給讀者可執行的行動建議
+## Writing Structure (for each H2 section)
+1. **Present multiple perspectives**: Cite 2-3 different sources or angles
+   - Use phrases like: "According to [source]'s research...", "Expert [name] believes...", "Industry consensus suggests..."
+2. **Compare viewpoints**: Point out differences or controversies between perspectives
+   - Use phrases like: "In contrast...", "On the other hand...", "However, some argue..."
+3. **Author's analysis**: Synthesize perspectives and provide your conclusion
+   - Use phrases like: "Based on my analysis...", "From a practical standpoint...", "In my experience..."
+4. **Actionable advice**: Give readers concrete action items
 
-## 禁止的寫法
-- ❌ 只列資訊沒有分析
-- ❌ 所有段落都是相同的結構
-- ❌ 缺少「我認為」「建議」「綜合分析」等觀點表達
-- ❌ 純粹複述資料沒有加入個人見解
+## Prohibited Writing Patterns
+- ❌ Listing information without analysis
+- ❌ All paragraphs following the same structure
+- ❌ Lacking opinion expressions like "I believe", "recommend", "analysis suggests"
+- ❌ Pure data repetition without personal insights
 
-## 🚫 禁用詞清單（絕對不要使用以下詞彙）
-**AI 腔調詞彙**：
-- 至關重要、不可或缺、綜上所述、總而言之
-- 顯而易見、毋庸置疑、無可否認、不言而喻
-- 誠如上述、如前所述、事實上、實際上
-- 值得一提、需要指出、令人驚訝的是
+## 🚫 Banned Phrases (NEVER use these)
+**AI-sounding phrases** (avoid in ALL languages):
+- "Crucial/vital/essential" overuse
+- "In conclusion/To summarize" at every section end
+- "It's worth noting/mentioning"
+- "Needless to say/Obviously"
+- "In today's world/society"
+- "As we all know"
 
-**模板化開場**：
-- 在當今社會、隨著時代發展、眾所周知
-- 近年來、在這個時代、不可避免地
+**Use natural conversational alternatives instead**
 
-**生硬轉折**：
-- 然而不可忽視的是、除此之外還需考慮
-- 與此同時我們也應該、從另一個角度來看
+## Example Writing Pattern
+"Regarding X, the industry has different views. Group A believes we should..., while Group B advocates...
 
-**替代寫法**（用自然口語表達）：
-- 「至關重要」→「這很重要」「這點關鍵」
-- 「綜上所述」→「所以」「整體來看」
-- 「值得一提」→ 直接說內容
-- 「在當今社會」→ 直接進入主題
+**My analysis**: Based on practical experience and research data, I believe [conclusion]. For [specific reader type], I recommend [specific advice]."
 
-## 範例寫法
-「關於 X 的做法，業界有不同看法。A 方認為應該...，B 方則主張...。
+# Citation Requirements
+- When citing data or opinions, use expressions like "Research shows...", "Experts point out..."
+- Links will be automatically inserted in post-processing; focus on content quality
 
-**我的分析**：綜合實務經驗和研究數據，我認為 [結論]。對於 [特定讀者類型]，我建議 [具體建議]。」
-
-# 引用要求
-- 在引用數據或觀點時，使用「根據研究顯示...」「專家指出...」等表述
-- 連結會在後處理階段自動插入，撰寫時專注於內容品質
-
-請撰寫完整的文章，直接輸出 Markdown 文字。`;
+Write the complete article now. Output ONLY the Markdown content in ${languageName}.`;
 
     const response = await this.complete(prompt, {
       model: input.model,
@@ -225,46 +234,56 @@ ${this.formatOutline(strategy.outline)}
     return content;
   }
 
-  private buildPersonaFromVoice(brandVoice: BrandVoice): string {
-    const brandName = brandVoice.brand_name || "專業品牌";
+  private buildPersonaFromVoice(
+    brandVoice: BrandVoice,
+    languageName: string,
+  ): string {
+    const brandName = brandVoice.brand_name || "Professional Brand";
     const writingStyle = brandVoice.writing_style;
     const brandIntegration = brandVoice.brand_integration;
 
     let styleDescription = "";
     if (writingStyle) {
       const styleMap: Record<string, string> = {
-        short_punchy: "短句有力，節奏明快，像在和朋友聊天但帶著專業感",
-        conversational: "對話式語調，親切自然，像在咖啡廳和讀者交流",
-        academic: "嚴謹專業，邏輯清晰，適合需要深度分析的主題",
-        storytelling: "敘事風格，用故事和案例帶動讀者，增加代入感",
-        mixed: "靈活切換，根據內容需求調整節奏和語調",
+        short_punchy:
+          "Short, punchy sentences with a fast pace - conversational yet professional",
+        conversational:
+          "Conversational tone, warm and natural, like chatting with a friend at a café",
+        academic:
+          "Rigorous and professional, logically clear, suitable for in-depth analysis",
+        storytelling:
+          "Narrative style, using stories and cases to engage readers",
+        mixed:
+          "Flexible switching, adjusting pace and tone based on content needs",
       };
       styleDescription = styleMap[writingStyle.sentence_style] || "";
     }
 
     let interactionGuide = "";
     if (writingStyle?.use_questions) {
-      interactionGuide = "適時拋出問題引導讀者思考，但不要過度使用";
+      interactionGuide =
+        "Occasionally pose questions to engage readers, but don't overuse";
     }
 
-    return `# 你的寫作人格
+    return `# Your Writing Persona
 
-你現在扮演「${brandName}」的資深內容編輯。
+You are now acting as a senior content editor for "${brandName}".
+**IMPORTANT: All output must be in ${languageName}**
 
-## 你的聲音特質
-- 語調: ${brandVoice.tone_of_voice}
-- 目標讀者: ${brandVoice.target_audience}
-${styleDescription ? `- 寫作風格: ${styleDescription}` : ""}
-${interactionGuide ? `- 互動方式: ${interactionGuide}` : ""}
+## Your Voice Characteristics
+- Tone: ${brandVoice.tone_of_voice}
+- Target audience: ${brandVoice.target_audience}
+${styleDescription ? `- Writing style: ${styleDescription}` : ""}
+${interactionGuide ? `- Reader interaction: ${interactionGuide}` : ""}
 
-## 品牌整合原則
-${brandIntegration?.value_first ? "- 永遠先提供價值，再自然帶入品牌" : ""}
-${brandIntegration?.max_brand_mentions ? `- 品牌提及控制在 ${brandIntegration.max_brand_mentions} 次以內` : ""}
+## Brand Integration Principles
+${brandIntegration?.value_first ? "- Always provide value first, then naturally incorporate the brand" : ""}
+${brandIntegration?.max_brand_mentions ? `- Limit brand mentions to ${brandIntegration.max_brand_mentions} times maximum` : ""}
 
-## 你的寫作哲學
-- 每個句子都要有存在的理由
-- 用具體案例和數據說話，避免空泛陳述
-- 讀者的時間很寶貴，直接給他們需要的資訊`;
+## Your Writing Philosophy
+- Every sentence must have a reason to exist
+- Use concrete examples and data, avoid vague statements
+- Readers' time is precious - give them what they need directly`;
   }
 
   private buildCompetitorContext(
@@ -280,26 +299,26 @@ ${brandIntegration?.max_brand_mentions ? `- 品牌提及控制在 ${brandIntegra
       seoOpportunities,
     } = competitorAnalysis;
 
-    return `# 競爭對手分析（你剛做完的研究）
+    return `# Competitor Analysis (your recent research)
 
-## 我們的差異化策略
-- 獨特角度: ${differentiationStrategy.contentAngle}
-- 價值增強: ${differentiationStrategy.valueEnhancement}
-- 用戶體驗: ${differentiationStrategy.userExperience}
+## Our Differentiation Strategy
+- Unique angle: ${differentiationStrategy.contentAngle}
+- Value enhancement: ${differentiationStrategy.valueEnhancement}
+- User experience: ${differentiationStrategy.userExperience}
 
-## 內容建議
-**必須涵蓋的要點**:
+## Content Recommendations
+**Must include**:
 ${contentRecommendations.mustInclude.map((item) => `- ${item}`).join("\n")}
 
-**可深入發展的領域**:
+**Areas to develop in depth**:
 ${contentRecommendations.focusAreas.map((item) => `- ${item}`).join("\n")}
 
-**競爭對手已覆蓋（可簡化）**:
+**Already covered by competitors (can simplify)**:
 ${contentRecommendations.canSkip.map((item) => `- ${item}`).join("\n")}
 
-## SEO 機會
-- 可補充的關鍵字: ${seoOpportunities.keywordGaps.join(", ")}
-- 結構優化建議: ${seoOpportunities.structureOptimization}`;
+## SEO Opportunities
+- Keyword gaps to fill: ${seoOpportunities.keywordGaps.join(", ")}
+- Structure optimization suggestions: ${seoOpportunities.structureOptimization}`;
   }
 
   private buildVoiceExamples(brandVoice: BrandVoice): string {
@@ -308,15 +327,15 @@ ${contentRecommendations.canSkip.map((item) => `- ${item}`).join("\n")}
       return "";
     }
 
-    let section = `# 品牌聲音範例
+    let section = `# Brand Voice Examples
 
-## ✅ 我們的聲音（學習這種風格）
+## ✅ Our Voice (learn this style)
 ${examples.good_examples.map((ex) => `> ${ex}`).join("\n\n")}`;
 
     if (examples.bad_examples && examples.bad_examples.length > 0) {
       section += `
 
-## ❌ 避免這種聲音
+## ❌ Avoid This Voice
 ${examples.bad_examples.map((ex) => `> ${ex}`).join("\n\n")}`;
     }
 
@@ -324,24 +343,24 @@ ${examples.bad_examples.map((ex) => `> ${ex}`).join("\n\n")}`;
   }
 
   private formatOutline(outline: WritingInput["strategy"]["outline"]): string {
-    let result = "## 導言\n";
-    result += `- 開場: ${outline.introduction.hook}\n`;
-    result += `- 背景: ${outline.introduction.context}\n`;
-    result += `- 主旨: ${outline.introduction.thesis}\n\n`;
+    let result = "## Introduction\n";
+    result += `- Hook: ${outline.introduction.hook}\n`;
+    result += `- Context: ${outline.introduction.context}\n`;
+    result += `- Thesis: ${outline.introduction.thesis}\n\n`;
 
     outline.mainSections.forEach((section) => {
       result += `## ${section.heading}\n`;
       section.subheadings.forEach((sub) => {
         result += `### ${sub}\n`;
       });
-      result += `重點: ${section.keyPoints.join(", ")}\n`;
-      result += `字數: ${section.targetWordCount}\n\n`;
+      result += `Key points: ${section.keyPoints.join(", ")}\n`;
+      result += `Target word count: ${section.targetWordCount}\n\n`;
     });
 
     if (outline.conclusion) {
-      result += "## 結論\n";
-      result += `- 總結: ${outline.conclusion.summary}\n`;
-      result += `- 行動呼籲: ${outline.conclusion.callToAction}\n\n`;
+      result += "## Conclusion\n";
+      result += `- Summary: ${outline.conclusion.summary}\n`;
+      result += `- Call to action: ${outline.conclusion.callToAction}\n\n`;
     }
 
     return result;
