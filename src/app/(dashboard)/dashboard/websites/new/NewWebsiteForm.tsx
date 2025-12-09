@@ -156,7 +156,7 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="industry">你想要寫些什麼?</Label>
+            <Label htmlFor="industry">你想要寫哪些主題?</Label>
             <Input
               id="industry"
               name="industryDisplay"
