@@ -239,7 +239,6 @@ export function ArticleFormTabs({
           </TabsList>
           <TabsContent value="quick" className="mt-4">
             <QuickArticleForm
-              quotaStatus={quotaStatus}
               websiteId={selectedWebsiteId}
               industry={industry}
               region={region === "other" ? customRegion : region}
