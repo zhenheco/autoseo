@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Card,
   CardContent,
@@ -12,6 +13,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { updateCompany } from "./actions";
 import { useTranslations } from "next-intl";
+import { RefundRequestDialog } from "@/components/refund";
 
 interface Company {
   id: string;
@@ -25,6 +27,7 @@ interface SettingsClientProps {
 
 export function SettingsClient({ company, searchParams }: SettingsClientProps) {
   const t = useTranslations("settings");
+  const [refundDialogOpen, setRefundDialogOpen] = useState(false);
 
   return (
     <div className="container mx-auto p-8">
@@ -72,7 +75,37 @@ export function SettingsClient({ company, searchParams }: SettingsClientProps) {
             </form>
           </CardContent>
         </Card>
+
+        {/* Refund Request Card */}
+        <Card>
+          <CardHeader>
+            <CardTitle>退款申請</CardTitle>
+            <CardDescription>
+              如果您對服務不滿意，可以在此申請退款
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              <p className="text-sm text-muted-foreground">
+                購買後 7 天內可自動退款，超過 7 天需經人工審核。
+                退款完成後，您的訂閱將降級為 Free 方案，且相關 credits
+                將被扣除。
+              </p>
+              <Button
+                variant="outline"
+                onClick={() => setRefundDialogOpen(true)}
+              >
+                申請退款
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
       </div>
+
+      <RefundRequestDialog
+        open={refundDialogOpen}
+        onOpenChange={setRefundDialogOpen}
+      />
     </div>
   );
 }
