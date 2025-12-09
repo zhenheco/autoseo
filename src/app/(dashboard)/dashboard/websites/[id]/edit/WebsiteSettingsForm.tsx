@@ -105,7 +105,7 @@ export function WebsiteSettingsForm({
           <input type="hidden" name="language" value={language} />
 
           <div className="space-y-2">
-            <Label htmlFor="industry">你想要寫些什麼?</Label>
+            <Label htmlFor="industry">你想要寫哪些主題?</Label>
             <Input
               id="industry"
               value={industry}
