@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { v4 as uuidv4 } from "uuid";
 import slugify from "slugify";
+import {
+  TokenBillingService,
+  ESTIMATED_TOKENS_PER_ARTICLE,
+} from "@/lib/billing/token-billing-service";
 
 // Vercel 無伺服器函數最大執行時間（增加以避免 504 超時）
 export const maxDuration = 25; // 增加到 25 秒
@@ -218,6 +222,38 @@ export async function POST(request: NextRequest) {
       websiteId = websites[0].id;
       console.log("[Batch] 自動使用現有網站配置:", websiteId);
     }
+
+    // ===== 配額檢查：確保有足夠的 credits =====
+    // 此時 billingId 一定有值（前面邏輯會創建公司）
+    const billingService = new TokenBillingService(adminClient);
+    const balanceInfo =
+      await billingService.getAvailableBalanceWithReservations(billingId!);
+    const requiredTokens =
+      generationItems.length * ESTIMATED_TOKENS_PER_ARTICLE;
+
+    if (balanceInfo.available < requiredTokens) {
+      const maxArticles = Math.floor(
+        balanceInfo.available / ESTIMATED_TOKENS_PER_ARTICLE,
+      );
+      console.log(
+        `[Batch] ❌ 餘額不足: 需要 ${requiredTokens}, 可用 ${balanceInfo.available}`,
+      );
+      return NextResponse.json(
+        {
+          error: "Insufficient balance",
+          message: `餘額不足：需要 ${requiredTokens.toLocaleString()} credits，可用 ${balanceInfo.available.toLocaleString()} credits`,
+          requiredCredits: requiredTokens,
+          availableCredits: balanceInfo.available,
+          reservedCredits: balanceInfo.reserved,
+          maxArticles,
+        },
+        { status: 402 },
+      );
+    }
+
+    console.log(
+      `[Batch] ✅ 配額檢查通過: 需要 ${requiredTokens}, 可用 ${balanceInfo.available}`,
+    );
 
     const newJobIds: string[] = [];
     const skippedJobIds: string[] = [];
