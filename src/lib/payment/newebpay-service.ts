@@ -409,6 +409,7 @@ export class NewebPayService {
     const refundData: Record<string, string> = {
       RespondType: "JSON",
       Version: "1.1",
+      TimeStamp: Math.floor(Date.now() / 1000).toString(),
       Amt: params.amount.toString(),
       MerchantOrderNo: params.orderNo,
       IndexType: "1", // 1=商店訂單編號, 2=藍新交易序號
