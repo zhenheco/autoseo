@@ -14,11 +14,14 @@ import {
   Link as LinkIcon,
   Undo,
   Redo,
+  Copy,
+  Check,
 } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 import { Separator } from "@/components/ui/separator";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 interface TiptapEditorProps {
   content: string;
@@ -31,6 +34,8 @@ export function TiptapEditor({
   onChange,
   editable = true,
 }: TiptapEditorProps) {
+  const [copied, setCopied] = useState(false);
+
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -97,6 +102,31 @@ export function TiptapEditor({
     }
 
     editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
+  }, [editor]);
+
+  const copyToClipboard = useCallback(async () => {
+    if (!editor) return;
+
+    const html = editor.getHTML();
+    const text = editor.getText();
+
+    try {
+      await navigator.clipboard.write([
+        new ClipboardItem({
+          "text/html": new Blob([html], { type: "text/html" }),
+          "text/plain": new Blob([text], { type: "text/plain" }),
+        }),
+      ]);
+      setCopied(true);
+      toast.success("已複製到剪貼簿");
+      setTimeout(() => setCopied(false), 2000);
+    } catch {
+      // 降級方案：只複製 HTML 原始碼
+      await navigator.clipboard.writeText(html);
+      setCopied(true);
+      toast.success("已複製到剪貼簿");
+      setTimeout(() => setCopied(false), 2000);
+    }
   }, [editor]);
 
   if (!editor) {
@@ -211,6 +241,22 @@ export function TiptapEditor({
           aria-label="重做"
         >
           <Redo className="h-4 w-4" />
+        </Button>
+
+        <div className="flex-1" />
+
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={copyToClipboard}
+          aria-label="複製內容"
+          title="複製內容到剪貼簿（可直接貼到 Medium、Blogger 等平台）"
+        >
+          {copied ? (
+            <Check className="h-4 w-4 text-green-500" />
+          ) : (
+            <Copy className="h-4 w-4" />
+          )}
         </Button>
       </div>
 
