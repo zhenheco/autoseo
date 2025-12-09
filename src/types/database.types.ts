@@ -279,6 +279,159 @@ export type Database = {
           },
         ];
       };
+      refund_requests: {
+        Row: {
+          id: string;
+          company_id: string;
+          payment_order_id: string;
+          refund_no: string;
+          original_amount: number;
+          refund_amount: number;
+          retention_offered: boolean;
+          retention_accepted: boolean;
+          retention_credits: number;
+          is_auto_eligible: boolean;
+          days_since_purchase: number | null;
+          reason_category:
+            | "product_issue"
+            | "service_unsatisfied"
+            | "billing_error"
+            | "change_of_mind"
+            | "other";
+          reason_detail: string | null;
+          status:
+            | "pending"
+            | "retention_accepted"
+            | "auto_processing"
+            | "pending_review"
+            | "approved"
+            | "processing"
+            | "completed"
+            | "rejected"
+            | "failed";
+          reviewed_by: string | null;
+          reviewed_at: string | null;
+          review_notes: string | null;
+          reject_reason: string | null;
+          newebpay_trade_no: string | null;
+          newebpay_status: string | null;
+          newebpay_message: string | null;
+          newebpay_response: Json | null;
+          credits_deducted: number;
+          subscription_downgraded: boolean;
+          requested_at: string;
+          processed_at: string | null;
+          completed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          payment_order_id: string;
+          refund_no: string;
+          original_amount: number;
+          refund_amount: number;
+          retention_offered?: boolean;
+          retention_accepted?: boolean;
+          retention_credits?: number;
+          is_auto_eligible?: boolean;
+          days_since_purchase?: number | null;
+          reason_category:
+            | "product_issue"
+            | "service_unsatisfied"
+            | "billing_error"
+            | "change_of_mind"
+            | "other";
+          reason_detail?: string | null;
+          status?:
+            | "pending"
+            | "retention_accepted"
+            | "auto_processing"
+            | "pending_review"
+            | "approved"
+            | "processing"
+            | "completed"
+            | "rejected"
+            | "failed";
+          reviewed_by?: string | null;
+          reviewed_at?: string | null;
+          review_notes?: string | null;
+          reject_reason?: string | null;
+          newebpay_trade_no?: string | null;
+          newebpay_status?: string | null;
+          newebpay_message?: string | null;
+          newebpay_response?: Json | null;
+          credits_deducted?: number;
+          subscription_downgraded?: boolean;
+          requested_at?: string;
+          processed_at?: string | null;
+          completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          payment_order_id?: string;
+          refund_no?: string;
+          original_amount?: number;
+          refund_amount?: number;
+          retention_offered?: boolean;
+          retention_accepted?: boolean;
+          retention_credits?: number;
+          is_auto_eligible?: boolean;
+          days_since_purchase?: number | null;
+          reason_category?:
+            | "product_issue"
+            | "service_unsatisfied"
+            | "billing_error"
+            | "change_of_mind"
+            | "other";
+          reason_detail?: string | null;
+          status?:
+            | "pending"
+            | "retention_accepted"
+            | "auto_processing"
+            | "pending_review"
+            | "approved"
+            | "processing"
+            | "completed"
+            | "rejected"
+            | "failed";
+          reviewed_by?: string | null;
+          reviewed_at?: string | null;
+          review_notes?: string | null;
+          reject_reason?: string | null;
+          newebpay_trade_no?: string | null;
+          newebpay_status?: string | null;
+          newebpay_message?: string | null;
+          newebpay_response?: Json | null;
+          credits_deducted?: number;
+          subscription_downgraded?: boolean;
+          requested_at?: string;
+          processed_at?: string | null;
+          completed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "refund_requests_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "refund_requests_payment_order_id_fkey";
+            columns: ["payment_order_id"];
+            isOneToOne: false;
+            referencedRelation: "payment_orders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       companies: {
         Row: {
           id: string;
