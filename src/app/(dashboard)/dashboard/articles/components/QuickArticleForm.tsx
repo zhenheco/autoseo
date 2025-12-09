@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
@@ -16,17 +16,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 
-interface QuotaStatus {
-  plan: string;
-  quota: number;
-  used: number;
-  remaining: number;
-  canUseCompetitors: boolean;
-  month: string;
-}
-
 interface QuickArticleFormProps {
-  quotaStatus: QuotaStatus | null;
   websiteId: string | null;
   industry: string;
   region: string;
@@ -34,7 +24,6 @@ interface QuickArticleFormProps {
 }
 
 export function QuickArticleForm({
-  quotaStatus,
   websiteId,
   industry,
   region,
@@ -46,10 +35,30 @@ export function QuickArticleForm({
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [generatedKeyword, setGeneratedKeyword] = useState("");
   const [retryInfo, setRetryInfo] = useState<string | null>(null);
+  const [tokenBalance, setTokenBalance] = useState<number>(0);
+  const [isLoadingBalance, setIsLoadingBalance] = useState(true);
 
-  const hasRemainingQuota = quotaStatus
-    ? quotaStatus.remaining > 0 || quotaStatus.quota === -1
-    : true;
+  const TOKENS_PER_ARTICLE = 3000;
+
+  useEffect(() => {
+    const fetchTokenBalance = async () => {
+      try {
+        const response = await fetch("/api/token-balance");
+        if (response.ok) {
+          const data = await response.json();
+          setTokenBalance(data.balance?.available ?? data.balance?.total ?? 0);
+        }
+      } catch (error) {
+        console.error("獲取餘額失敗:", error);
+      } finally {
+        setIsLoadingBalance(false);
+      }
+    };
+    fetchTokenBalance();
+  }, []);
+
+  const hasRemainingQuota =
+    isLoadingBalance || tokenBalance >= TOKENS_PER_ARTICLE;
 
   const isFormDisabled = !hasRemainingQuota;
 
