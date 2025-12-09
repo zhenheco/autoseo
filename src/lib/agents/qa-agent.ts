@@ -1,5 +1,7 @@
 import { BaseAgent } from "./base-agent";
 import type { QAInput, QAOutput, ContentContext } from "@/types/agents";
+import { LOCALE_FULL_NAMES } from "@/lib/i18n/locales";
+import { FAQ_HEADERS, getTranslation } from "@/lib/i18n/article-translations";
 
 export class QAAgent extends BaseAgent<QAInput, QAOutput> {
   get agentName(): string {
@@ -30,29 +32,11 @@ export class QAAgent extends BaseAgent<QAInput, QAOutput> {
 
     console.log("[QAAgent] 開始生成 FAQ...");
 
-    // Language mapping
-    const languageNames: Record<string, string> = {
-      "zh-TW": "Traditional Chinese (繁體中文)",
-      "zh-CN": "Simplified Chinese (简体中文)",
-      en: "English",
-      ja: "Japanese (日本語)",
-      ko: "Korean (한국어)",
-      es: "Spanish (Español)",
-      fr: "French (Français)",
-      de: "German (Deutsch)",
-      pt: "Portuguese (Português)",
-      it: "Italian (Italiano)",
-      ru: "Russian (Русский)",
-      ar: "Arabic (العربية)",
-      th: "Thai (ไทย)",
-      vi: "Vietnamese (Tiếng Việt)",
-      id: "Indonesian (Bahasa Indonesia)",
-    };
-
     const targetLang =
       (input as QAInput & { targetLanguage?: string }).targetLanguage ||
       "zh-TW";
-    const languageName = languageNames[targetLang] || languageNames["zh-TW"];
+    const languageName =
+      LOCALE_FULL_NAMES[targetLang] || "Traditional Chinese (繁體中文)";
 
     const mainTopics = outline.mainSections.map((s) => s.heading).join(", ");
     const topicAlignmentSection =
@@ -134,7 +118,7 @@ Generate frequently asked questions (FAQ) for the article "${title}".
       console.log(`[QAAgent] 使用 fallback FAQ: ${faqs.length} 個`);
     }
 
-    const markdown = this.formatFAQsAsMarkdown(faqs);
+    const markdown = this.formatFAQsAsMarkdown(faqs, targetLang);
     const schemaJson = this.generateFAQSchema(faqs);
 
     return {
@@ -165,8 +149,10 @@ Generate frequently asked questions (FAQ) for the article "${title}".
 
   private formatFAQsAsMarkdown(
     faqs: Array<{ question: string; answer: string }>,
+    targetLanguage?: string,
   ): string {
-    const lines = ["## 常見問題", ""];
+    const faqHeader = getTranslation(FAQ_HEADERS, targetLanguage || "zh-TW");
+    const lines = [`## ${faqHeader}`, ""];
 
     faqs.forEach((faq, index) => {
       lines.push(`### ${index + 1}. ${faq.question}`, "");

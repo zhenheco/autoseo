@@ -93,6 +93,7 @@ export interface Keyword {
 export interface ResearchInput {
   title: string;
   region?: string;
+  targetLanguage?: string;
   competitorCount: number;
   model: string;
   temperature: number;
@@ -260,6 +261,8 @@ export interface WritingInput {
   model: string;
   temperature: number;
   maxTokens: number;
+  targetLanguage?: string;
+  targetRegion?: string;
 }
 
 export interface WritingOutput {
@@ -396,6 +399,7 @@ export interface MetaInput {
   model: string;
   temperature: number;
   maxTokens: number;
+  targetLanguage?: string;
 }
 
 export interface MetaOutput {

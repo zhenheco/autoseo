@@ -11,6 +11,12 @@ import type {
   AIClientConfig,
   UnifiedWritingInput,
 } from "@/types/agents";
+import { LOCALE_FULL_NAMES } from "@/lib/i18n/locales";
+import {
+  getSpecialBlockLabel,
+  getTranslation,
+  FAQ_HEADERS,
+} from "@/lib/i18n/article-translations";
 
 export type { UnifiedWritingInput };
 
@@ -37,24 +43,6 @@ export class UnifiedWritingAgent extends BaseAgent<
   UnifiedWritingInput,
   WritingOutput
 > {
-  private languageNames: Record<string, string> = {
-    "zh-TW": "Traditional Chinese (繁體中文)",
-    "zh-CN": "Simplified Chinese (简体中文)",
-    en: "English",
-    ja: "Japanese (日本語)",
-    ko: "Korean (한국어)",
-    es: "Spanish (Español)",
-    fr: "French (Français)",
-    de: "German (Deutsch)",
-    pt: "Portuguese (Português)",
-    it: "Italian (Italiano)",
-    ru: "Russian (Русский)",
-    ar: "Arabic (العربية)",
-    th: "Thai (ไทย)",
-    vi: "Vietnamese (Tiếng Việt)",
-    id: "Indonesian (Bahasa Indonesia)",
-  };
-
   constructor(config: AIClientConfig, context: AgentExecutionContext) {
     super(config, context);
   }
@@ -64,13 +52,13 @@ export class UnifiedWritingAgent extends BaseAgent<
   }
 
   protected async process(input: UnifiedWritingInput): Promise<WritingOutput> {
-    console.log("[UnifiedWritingAgent] 開始順序寫作流程...");
+    console.log("[UnifiedWritingAgent] Starting sequential writing flow...");
 
     const { strategy, contentPlan, brandVoice, imageOutput, primaryKeyword } =
       input;
     const targetLang = input.targetLanguage || "zh-TW";
     const languageName =
-      this.languageNames[targetLang] || this.languageNames["zh-TW"];
+      LOCALE_FULL_NAMES[targetLang] || "Traditional Chinese (繁體中文)";
 
     const contentContext: ContentContext = {
       primaryKeyword,
@@ -232,6 +220,7 @@ Output the introduction content in Markdown directly, without including a title.
     const specialBlockSection = this.buildSpecialBlockSection(
       specialBlock,
       contentContext.brandName,
+      input.targetLanguage,
     );
 
     const prompt = `${this.buildTopicAlignmentSection(contentContext)}
@@ -465,7 +454,7 @@ Generate frequently asked questions (FAQ) for the article "${title}".
       faqs = this.getFallbackFAQs(title, input.targetLanguage || "zh-TW");
     }
 
-    const markdown = this.formatFAQsAsMarkdown(faqs);
+    const markdown = this.formatFAQsAsMarkdown(faqs, input.targetLanguage);
     const schemaJson = this.generateFAQSchema(faqs);
 
     return { faqs, markdown, schemaJson };
@@ -623,52 +612,60 @@ ${contentContext.industryContext ? `**Industry Context**: ${contentContext.indus
   private buildSpecialBlockSection(
     specialBlock?: SpecialBlock,
     brandName?: string,
+    targetLanguage?: string,
   ): string {
     if (!specialBlock) return "";
 
     const brand = brandName || "";
+    const locale = targetLanguage || "zh-TW";
 
     switch (specialBlock.type) {
       case "expert_tip":
-      case "tip_block":
+      case "tip_block": {
+        const tipLabel = getSpecialBlockLabel("tip", locale);
         return `
 ## Special Block Requirement
-Include a "小提醒" block in this section.
+Include a "${tipLabel}" block in this section.
 - Content hint: ${specialBlock.content}
 - Format: Use a blockquote
 - Length: 50-80 words
 
 Example format:
-> **${brand ? brand + " " : ""}小提醒**
+> **${brand ? brand + " " : ""}${tipLabel}**
 >
 > [Your practical tip here, 50-80 words]`;
+      }
 
-      case "local_advantage":
+      case "local_advantage": {
+        const localAdvLabel = getSpecialBlockLabel("local_advantage", locale);
         return `
 ## Special Block Requirement
-Include a "本地優勢" block in this section.
+Include a "${localAdvLabel}" block in this section.
 - Content hint: ${specialBlock.content}
 - Format: Use a blockquote
 - Length: 80-120 words
 
 Example format:
-> **本地優勢**
+> **${localAdvLabel}**
 >
 > [Your local advantage description here, 80-120 words]`;
+      }
 
       case "expert_warning":
-      case "warning_block":
+      case "warning_block": {
+        const warningLabel = getSpecialBlockLabel("warning", locale);
         return `
 ## Special Block Requirement
-Include a "注意事項" block in this section.
+Include a "${warningLabel}" block in this section.
 - Content hint: ${specialBlock.content}
 - Format: Use a blockquote
 - Length: 50-80 words
 
 Example format:
-> **注意事項**
+> **${warningLabel}**
 >
 > [Your warning or caution here, 50-80 words]`;
+      }
 
       default:
         return "";
@@ -773,8 +770,10 @@ Example format:
 
   private formatFAQsAsMarkdown(
     faqs: Array<{ question: string; answer: string }>,
+    targetLanguage?: string,
   ): string {
-    const lines = ["## 常見問題", ""];
+    const faqHeader = getTranslation(FAQ_HEADERS, targetLanguage || "zh-TW");
+    const lines = [`## ${faqHeader}`, ""];
     faqs.forEach((faq, index) => {
       lines.push(`### ${index + 1}. ${faq.question}`, "");
       lines.push(faq.answer, "");

@@ -4,6 +4,7 @@ import type {
   IntroductionOutput,
   ContentContext,
 } from "@/types/agents";
+import { LOCALE_FULL_NAMES } from "@/lib/i18n/locales";
 
 export class IntroductionAgent extends BaseAgent<
   IntroductionInput,
@@ -37,26 +38,9 @@ export class IntroductionAgent extends BaseAgent<
   ): Promise<IntroductionOutput> {
     const { outline, brandVoice, contentContext } = input;
 
-    const languageNames: Record<string, string> = {
-      "zh-TW": "Traditional Chinese (繁體中文)",
-      "zh-CN": "Simplified Chinese (简体中文)",
-      en: "English",
-      ja: "Japanese (日本語)",
-      ko: "Korean (한국어)",
-      es: "Spanish (Español)",
-      fr: "French (Français)",
-      de: "German (Deutsch)",
-      pt: "Portuguese (Português)",
-      it: "Italian (Italiano)",
-      ru: "Russian (Русский)",
-      ar: "Arabic (العربية)",
-      th: "Thai (ไทย)",
-      vi: "Vietnamese (Tiếng Việt)",
-      id: "Indonesian (Bahasa Indonesia)",
-    };
-
     const targetLang = input.targetLanguage || "zh-TW";
-    const languageName = languageNames[targetLang] || languageNames["zh-TW"];
+    const languageName =
+      LOCALE_FULL_NAMES[targetLang] || "Traditional Chinese (繁體中文)";
 
     const topicAlignmentSection =
       this.buildTopicAlignmentSection(contentContext);

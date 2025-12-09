@@ -6,6 +6,8 @@ import type {
   ContentContext,
   SpecialBlock,
 } from "@/types/agents";
+import { LOCALE_FULL_NAMES } from "@/lib/i18n/locales";
+import { getSpecialBlockLabel } from "@/lib/i18n/article-translations";
 
 export class SectionAgent extends BaseAgent<SectionInput, SectionOutput> {
   private buildTopicAlignmentSection(contentContext?: ContentContext): string {
@@ -33,57 +35,65 @@ ${contentContext.industryContext ? `**Industry Context**: ${contentContext.indus
   private buildSpecialBlockSection(
     specialBlock?: SpecialBlock,
     brandName?: string,
+    targetLanguage?: string,
   ): string {
     if (!specialBlock) {
       return "";
     }
 
     const brand = brandName || "";
+    const locale = targetLanguage || "zh-TW";
 
     switch (specialBlock.type) {
       case "expert_tip":
-      case "tip_block":
+      case "tip_block": {
+        const tipLabel = getSpecialBlockLabel("tip", locale);
         return `
 ## Special Block Requirement
-Include a "小提醒" block in this section.
+Include a "${tipLabel}" block in this section.
 - Content hint: ${specialBlock.content}
 - Format: Use a blockquote
 - Length: 50-80 words
 - Place it after explaining a key concept or technique
 
 Example format:
-> **${brand ? brand + " " : ""}小提醒**
+> **${brand ? brand + " " : ""}${tipLabel}**
 >
 > [Your practical tip here, 50-80 words]`;
+      }
 
-      case "local_advantage":
+      case "local_advantage": {
+        const localAdvLabel = getSpecialBlockLabel("local_advantage", locale);
         return `
 ## Special Block Requirement
-Include a "本地優勢" block in this section.
+Include a "${localAdvLabel}" block in this section.
 - Content hint: ${specialBlock.content}
 - Format: Use a blockquote
 - Length: 80-120 words
 - Highlight regional/local advantages
 
 Example format:
-> **本地優勢**
+> **${localAdvLabel}**
 >
 > [Your local advantage description here, 80-120 words]`;
+      }
 
       case "expert_warning":
-      case "warning_block":
+      case "warning_block": {
+        const warningLabel = getSpecialBlockLabel("warning", locale);
         return `
 ## Special Block Requirement
-Include a "注意事項" block in this section.
+Include a "${warningLabel}" block in this section.
 - Content hint: ${specialBlock.content}
 - Format: Use a blockquote
 - Length: 50-80 words
 - Highlight important warnings or common mistakes
 
 Example format:
-> **注意事項**
+> **${warningLabel}**
 >
 > [Your warning or caution here, 50-80 words]`;
+      }
 
       default:
         return "";
@@ -105,32 +115,16 @@ Example format:
       specialBlock,
     } = input;
 
-    const languageNames: Record<string, string> = {
-      "zh-TW": "Traditional Chinese (繁體中文)",
-      "zh-CN": "Simplified Chinese (简体中文)",
-      en: "English",
-      ja: "Japanese (日本語)",
-      ko: "Korean (한국어)",
-      es: "Spanish (Español)",
-      fr: "French (Français)",
-      de: "German (Deutsch)",
-      pt: "Portuguese (Português)",
-      it: "Italian (Italiano)",
-      ru: "Russian (Русский)",
-      ar: "Arabic (العربية)",
-      th: "Thai (ไทย)",
-      vi: "Vietnamese (Tiếng Việt)",
-      id: "Indonesian (Bahasa Indonesia)",
-    };
-
     const targetLang = input.targetLanguage || "zh-TW";
-    const languageName = languageNames[targetLang] || languageNames["zh-TW"];
+    const languageName =
+      LOCALE_FULL_NAMES[targetLang] || "Traditional Chinese (繁體中文)";
 
     const topicAlignmentSection =
       this.buildTopicAlignmentSection(contentContext);
     const specialBlockSection = this.buildSpecialBlockSection(
       specialBlock,
       contentContext?.brandName,
+      targetLang,
     );
 
     const prompt = `${topicAlignmentSection}

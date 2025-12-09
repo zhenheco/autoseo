@@ -14,6 +14,10 @@ import {
   formatFileSize,
   calculateCompressionRatio,
 } from "@/lib/image-processor";
+import {
+  IMAGE_ALT_SUFFIXES,
+  getTranslation,
+} from "@/lib/i18n/article-translations";
 
 const DEFAULT_MODEL = "gpt-image-1-mini";
 
@@ -208,10 +212,15 @@ export class ArticleImageAgent extends BaseAgent<
 
     const [width, height] = input.size.split("x").map(Number);
 
+    const altSuffix = getTranslation(
+      IMAGE_ALT_SUFFIXES,
+      input.targetLanguage || "zh-TW",
+    );
+
     return {
       url: finalUrl,
       prompt,
-      altText: `${section.heading} - 說明圖片`,
+      altText: `${section.heading} - ${altSuffix}`,
       suggestedSection: section.heading,
       width,
       height,
