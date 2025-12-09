@@ -104,8 +104,8 @@ export function TiptapEditor({
   }
 
   return (
-    <div className="flex flex-col border rounded-lg">
-      <div className="border-b p-2 flex flex-wrap gap-1 items-center bg-muted/50">
+    <div className="flex flex-col border rounded-lg h-full overflow-hidden">
+      <div className="border-b p-2 flex flex-wrap gap-1 items-center bg-muted/50 shrink-0">
         <Toggle
           size="sm"
           pressed={editor.isActive("bold")}
@@ -214,7 +214,9 @@ export function TiptapEditor({
         </Button>
       </div>
 
-      <EditorContent editor={editor} />
+      <div className="flex-1 overflow-y-auto">
+        <EditorContent editor={editor} />
+      </div>
     </div>
   );
 }
