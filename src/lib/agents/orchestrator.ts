@@ -956,9 +956,10 @@ export class ParallelOrchestrator {
                   : String(tokenError);
               console.error("[Orchestrator] ❌ Token 扣除失敗:", tokenError);
               // 記錄錯誤到 metadata（供每日審計發現），但不中斷流程
+              // 注意：這裡先更新 billing 狀態，後面會再次讀取最新 metadata 來更新 saved_article_id
               const failMetadata =
                 (jobData?.metadata as Record<string, unknown>) || {};
-              await supabase
+              const { error: updateError } = await supabase
                 .from("article_jobs")
                 .update({
                   metadata: {
@@ -970,22 +971,51 @@ export class ParallelOrchestrator {
                   },
                 })
                 .eq("id", input.articleJobId);
+
+              if (updateError) {
+                console.error(
+                  "[Orchestrator] ⚠️ 記錄扣款失敗狀態時發生錯誤:",
+                  updateError,
+                );
+              } else {
+                console.log("[Orchestrator] ✅ 已記錄扣款失敗狀態到 metadata");
+              }
             }
           }
 
           // ✅ 修復問題 3: 更新 metadata.saved_article_id 防止重複生成
-          // 先取得最新的 metadata（包含可能的 token_deduction_error）
+          // 重要：先取得最新的 metadata，確保不會覆蓋上面寫入的 billing_status
           const { data: latestJobData } = await supabase
             .from("article_jobs")
             .select("metadata")
             .eq("id", input.articleJobId)
             .single();
 
+          // 確保 billing 相關欄位不會被覆蓋
+          const existingBillingFields = {
+            billing_status: (latestJobData?.metadata as Record<string, unknown>)
+              ?.billing_status,
+            billing_error: (latestJobData?.metadata as Record<string, unknown>)
+              ?.billing_error,
+            billing_error_notice: (
+              latestJobData?.metadata as Record<string, unknown>
+            )?.billing_error_notice,
+            billing_failed_at: (
+              latestJobData?.metadata as Record<string, unknown>
+            )?.billing_failed_at,
+            deducted_amount: (
+              latestJobData?.metadata as Record<string, unknown>
+            )?.deducted_amount,
+            deducted_at: (latestJobData?.metadata as Record<string, unknown>)
+              ?.deducted_at,
+          };
+
           await supabase
             .from("article_jobs")
             .update({
               metadata: {
                 ...(latestJobData?.metadata || jobData?.metadata || {}),
+                ...existingBillingFields, // 確保 billing 欄位不被覆蓋
                 saved_article_id: savedArticle.article.id,
                 generation_completed_at: new Date().toISOString(),
               },
