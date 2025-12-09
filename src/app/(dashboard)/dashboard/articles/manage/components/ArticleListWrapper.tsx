@@ -106,8 +106,8 @@ export function ArticleListWrapper({
                 deletableArticleIds={deletableArticleIds}
               />
             </div>
-            {/* 文章列表 - 可滾動 */}
-            <div className="flex-1 overflow-y-auto min-h-0">
+            {/* 文章列表 - 滾動在內部表格處理 */}
+            <div className="flex-1 min-h-0">
               <ArticleList
                 articles={articles}
                 selectableArticleIds={selectableArticleIds}

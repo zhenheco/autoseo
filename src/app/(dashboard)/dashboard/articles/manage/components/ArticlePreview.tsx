@@ -141,14 +141,12 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
           </Button>
         </div>
       </header>
-      <div className="flex-1 overflow-y-auto wordpress-preview">
-        <article>
-          <TiptapEditor
-            content={editedContent}
-            onChange={handleContentChange}
-            editable={true}
-          />
-        </article>
+      <div className="flex-1 min-h-0 wordpress-preview">
+        <TiptapEditor
+          content={editedContent}
+          onChange={handleContentChange}
+          editable={true}
+        />
       </div>
     </div>
   );
