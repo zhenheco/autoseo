@@ -44,15 +44,42 @@ export async function GET() {
     const orders = await refundService.getRefundableOrders(member.company_id);
 
     // 轉換訂單格式供前端使用
-    const formattedOrders = orders.map((order) => ({
-      id: order.id,
-      orderNo: order.order_no,
-      paymentType: order.payment_type,
-      amount: order.amount,
-      description: order.item_description,
-      paidAt: order.paid_at,
-      createdAt: order.created_at,
-    }));
+    const formattedOrders = orders.map((order) => {
+      // 計算購買天數
+      const paidAtDate = order.paid_at
+        ? new Date(order.paid_at)
+        : new Date(order.created_at);
+      const daysSincePurchase = Math.floor(
+        (Date.now() - paidAtDate.getTime()) / (1000 * 60 * 60 * 24),
+      );
+
+      // 判斷是否符合自動退款（7 天內）
+      const isAutoEligible = daysSincePurchase <= 7;
+
+      // 支付類型文字
+      const paymentTypeTextMap: Record<string, string> = {
+        token_package: "Token 加值包",
+        subscription: "訂閱方案",
+        lifetime: "終身方案",
+      };
+      const paymentTypeText =
+        paymentTypeTextMap[order.payment_type] || order.payment_type;
+
+      return {
+        id: order.id,
+        orderNo: order.order_no,
+        paymentType: order.payment_type,
+        paymentTypeText,
+        amount: order.amount,
+        tradeNo: order.newebpay_trade_no || "",
+        description: order.item_description,
+        paidAt: order.paid_at,
+        createdAt: order.created_at,
+        daysSincePurchase,
+        isAutoEligible,
+        creditsToDeduct: order.amount,
+      };
+    });
 
     return NextResponse.json({
       success: true,
