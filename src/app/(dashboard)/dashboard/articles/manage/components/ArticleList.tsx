@@ -194,9 +194,9 @@ export function ArticleList({
       </div>
 
       {/* 桌面版：表格 */}
-      <div className="hidden lg:block rounded-md border overflow-auto max-h-full">
+      <div className="hidden lg:block rounded-md border h-full overflow-auto">
         <Table>
-          <TableHeader className="sticky top-0 bg-background z-10">
+          <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
             <TableRow>
               <TableHead className="w-[32px] px-2">
                 {selectableArticleIds.length > 0 && (
