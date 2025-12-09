@@ -173,12 +173,19 @@
     "dialogs": {
       "confirmDelete": "Delete selected articles?",
       "deleteWarning": "This action cannot be undone. {count} articles will be permanently deleted.",
+      "deleteWithCancelWarning": "This will delete {total} articles. {cancelling} are still generating and will be cancelled with tokens refunded. This action cannot be undone.",
       "deleting": "Deleting...",
       "confirmDeleteBtn": "Delete",
       "confirmCancelGeneration": "Cancel generation for these articles?",
       "cancelGenerationWarning": "Generation will be cancelled for {count} articles. Used tokens will be deducted based on progress, unused tokens will be refunded.",
       "confirmCancelBtn": "Confirm Cancel",
       "goBack": "Go Back"
+    },
+    "pagination": {
+      "perPage": "Per page",
+      "page": "Page {current} / {total}",
+      "prev": "Previous",
+      "next": "Next"
     },
     "toasts": {
       "selectArticles": "Please select articles to schedule",

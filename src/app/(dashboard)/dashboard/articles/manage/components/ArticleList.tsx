@@ -10,7 +10,15 @@ import {
 } from "@/components/ui/table";
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Globe, CalendarClock } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { Globe, CalendarClock, ChevronLeft, ChevronRight } from "lucide-react";
 import { ArticleWithWebsite } from "../actions";
 import { useScheduleContext } from "./ScheduleContext";
 import { useTranslations, useLocale } from "next-intl";
@@ -64,7 +72,26 @@ export function ArticleList({
     selectedArticleIds,
     previewArticleId,
     setPreviewArticleId,
+    currentPage,
+    setCurrentPage,
+    pageSize,
+    setPageSize,
   } = useScheduleContext();
+
+  // 分頁計算
+  const totalPages = Math.ceil(articles.length / pageSize);
+  const startIndex = (currentPage - 1) * pageSize;
+  const paginatedArticles = articles.slice(startIndex, startIndex + pageSize);
+
+  // 當頁碼超出範圍時自動調整
+  if (currentPage > totalPages && totalPages > 0) {
+    setCurrentPage(totalPages);
+  }
+
+  const handlePageSizeChange = (newSize: string) => {
+    setPageSize(Number(newSize));
+    setCurrentPage(1);
+  };
 
   const allSelected =
     selectableArticleIds.length > 0 &&
@@ -82,11 +109,9 @@ export function ArticleList({
     return status === "pending" || status === "processing";
   };
 
-  // 可以刪除的狀態
-  const canDelete = (status: string) => {
-    return (
-      status === "cancelled" || status === "failed" || status === "published"
-    );
+  // 可以刪除的狀態（所有狀態都可刪除，pending/processing 會先取消再刪除）
+  const canDelete = (_status: string) => {
+    return true;
   };
 
   // 可以勾選的狀態（排程、取消或刪除）
@@ -187,101 +212,207 @@ export function ArticleList({
             {t("table.noArticles")}
           </div>
         ) : (
-          articles.map((article) => (
+          paginatedArticles.map((article) => (
             <MobileCard key={article.id} article={article} />
           ))
+        )}
+        {/* 手機版分頁控制 */}
+        {articles.length > 0 && (
+          <div className="flex flex-col gap-2 pt-2 border-t">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">
+                  {t("pagination.perPage")}
+                </span>
+                <Select
+                  value={pageSize.toString()}
+                  onValueChange={handlePageSizeChange}
+                >
+                  <SelectTrigger className="w-[70px] h-8">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="10">10</SelectItem>
+                    <SelectItem value="20">20</SelectItem>
+                    <SelectItem value="50">50</SelectItem>
+                    <SelectItem value="100">100</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <span className="text-sm text-muted-foreground">
+                {t("pagination.page", {
+                  current: currentPage,
+                  total: totalPages || 1,
+                })}
+              </span>
+            </div>
+            <div className="flex items-center justify-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage <= 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                {t("pagination.prev")}
+              </Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage >= totalPages}
+              >
+                {t("pagination.next")}
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
         )}
       </div>
 
       {/* 桌面版：表格 */}
-      <div className="hidden lg:block rounded-md border h-full overflow-auto">
-        <Table>
-          <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
-            <TableRow>
-              <TableHead className="w-[32px] px-2">
-                {selectableArticleIds.length > 0 && (
-                  <Checkbox
-                    checked={allSelected}
-                    onCheckedChange={() => selectAll(selectableArticleIds)}
-                    disabled={isScheduling}
-                  />
-                )}
-              </TableHead>
-              <TableHead className="px-2">{t("table.title")}</TableHead>
-              <TableHead className="w-[90px] px-2">
-                {t("table.targetWebsite")}
-              </TableHead>
-              <TableHead className="w-[70px] px-2">
-                {t("table.status")}
-              </TableHead>
-              <TableHead className="w-[85px] px-2">
-                {t("table.createdAt")}
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {articles.length === 0 ? (
+      <div className="hidden lg:flex lg:flex-col h-full">
+        <div className="flex-1 min-h-0 rounded-md border overflow-auto">
+          <Table>
+            <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
               <TableRow>
-                <TableCell colSpan={5} className="h-24 text-center">
-                  {t("table.noArticles")}
-                </TableCell>
+                <TableHead className="w-[32px] px-2">
+                  {selectableArticleIds.length > 0 && (
+                    <Checkbox
+                      checked={allSelected}
+                      onCheckedChange={() => selectAll(selectableArticleIds)}
+                      disabled={isScheduling}
+                    />
+                  )}
+                </TableHead>
+                <TableHead className="px-2">{t("table.title")}</TableHead>
+                <TableHead className="w-[90px] px-2">
+                  {t("table.targetWebsite")}
+                </TableHead>
+                <TableHead className="w-[70px] px-2">
+                  {t("table.status")}
+                </TableHead>
+                <TableHead className="w-[85px] px-2">
+                  {t("table.createdAt")}
+                </TableHead>
               </TableRow>
-            ) : (
-              articles.map((article) => (
-                <TableRow
-                  key={article.id}
-                  className={`cursor-pointer transition-colors ${previewArticleId === article.id ? "bg-muted" : "hover:bg-muted/50"}`}
-                  onClick={() => setPreviewArticleId(article.id)}
-                >
-                  <TableCell className="py-2 px-2">
-                    {canSelect(article.status) && (
-                      <Checkbox
-                        checked={isSelected(article.id)}
-                        onCheckedChange={() => toggleSelection(article.id)}
-                        disabled={isScheduling}
-                        onClick={(e) => e.stopPropagation()}
-                      />
-                    )}
-                  </TableCell>
-                  <TableCell className="py-2 px-2 text-sm font-medium">
-                    {article.generated_articles?.title ||
-                      article.keywords?.join(", ") ||
-                      t("table.untitled")}
-                  </TableCell>
-                  <TableCell className="py-2 px-2">
-                    {article.website_configs ? (
-                      <div className="flex items-center gap-1">
-                        <Globe className="h-3 w-3" />
-                        <span className="text-xs">
-                          {article.website_configs.website_name}
-                        </span>
-                      </div>
-                    ) : (
-                      <span className="text-muted-foreground text-xs">
-                        {t("table.unspecified")}
-                      </span>
-                    )}
-                  </TableCell>
-                  <TableCell className="py-2 px-2">
-                    <div className="flex flex-col gap-0.5">
-                      {getStatusBadge(article.status)}
-                      {article.status === "scheduled" &&
-                        article.scheduled_publish_at && (
-                          <span className="text-xs text-muted-foreground flex items-center gap-1">
-                            <CalendarClock className="h-3 w-3" />
-                            {formatScheduledDate(article.scheduled_publish_at)}
-                          </span>
-                        )}
-                    </div>
-                  </TableCell>
-                  <TableCell className="py-2 px-2 text-xs text-muted-foreground">
-                    {formatDate(article.created_at)}
+            </TableHeader>
+            <TableBody>
+              {articles.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={5} className="h-24 text-center">
+                    {t("table.noArticles")}
                   </TableCell>
                 </TableRow>
-              ))
-            )}
-          </TableBody>
-        </Table>
+              ) : (
+                paginatedArticles.map((article) => (
+                  <TableRow
+                    key={article.id}
+                    className={`cursor-pointer transition-colors ${previewArticleId === article.id ? "bg-muted" : "hover:bg-muted/50"}`}
+                    onClick={() => setPreviewArticleId(article.id)}
+                  >
+                    <TableCell className="py-2 px-2">
+                      {canSelect(article.status) && (
+                        <Checkbox
+                          checked={isSelected(article.id)}
+                          onCheckedChange={() => toggleSelection(article.id)}
+                          disabled={isScheduling}
+                          onClick={(e) => e.stopPropagation()}
+                        />
+                      )}
+                    </TableCell>
+                    <TableCell className="py-2 px-2 text-sm font-medium">
+                      {article.generated_articles?.title ||
+                        article.keywords?.join(", ") ||
+                        t("table.untitled")}
+                    </TableCell>
+                    <TableCell className="py-2 px-2">
+                      {article.website_configs ? (
+                        <div className="flex items-center gap-1">
+                          <Globe className="h-3 w-3" />
+                          <span className="text-xs">
+                            {article.website_configs.website_name}
+                          </span>
+                        </div>
+                      ) : (
+                        <span className="text-muted-foreground text-xs">
+                          {t("table.unspecified")}
+                        </span>
+                      )}
+                    </TableCell>
+                    <TableCell className="py-2 px-2">
+                      <div className="flex flex-col gap-0.5">
+                        {getStatusBadge(article.status)}
+                        {article.status === "scheduled" &&
+                          article.scheduled_publish_at && (
+                            <span className="text-xs text-muted-foreground flex items-center gap-1">
+                              <CalendarClock className="h-3 w-3" />
+                              {formatScheduledDate(
+                                article.scheduled_publish_at,
+                              )}
+                            </span>
+                          )}
+                      </div>
+                    </TableCell>
+                    <TableCell className="py-2 px-2 text-xs text-muted-foreground">
+                      {formatDate(article.created_at)}
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
+            </TableBody>
+          </Table>
+        </div>
+        {/* 桌面版分頁控制 */}
+        {articles.length > 0 && (
+          <div className="flex items-center justify-between pt-2 shrink-0">
+            <div className="flex items-center gap-2">
+              <span className="text-sm text-muted-foreground">
+                {t("pagination.perPage")}
+              </span>
+              <Select
+                value={pageSize.toString()}
+                onValueChange={handlePageSizeChange}
+              >
+                <SelectTrigger className="w-[70px] h-8">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="10">10</SelectItem>
+                  <SelectItem value="20">20</SelectItem>
+                  <SelectItem value="50">50</SelectItem>
+                  <SelectItem value="100">100</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(currentPage - 1)}
+                disabled={currentPage <= 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+                {t("pagination.prev")}
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                {t("pagination.page", {
+                  current: currentPage,
+                  total: totalPages || 1,
+                })}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(currentPage + 1)}
+                disabled={currentPage >= totalPages}
+              >
+                {t("pagination.next")}
+                <ChevronRight className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </>
   );

@@ -173,12 +173,19 @@
     "dialogs": {
       "confirmDelete": "¿Eliminar los artículos seleccionados?",
       "deleteWarning": "Esta acción no se puede deshacer. {count} artículos serán eliminados permanentemente.",
+      "deleteWithCancelWarning": "Se eliminarán {total} artículos. {cancelling} están en generación y serán cancelados con reembolso de tokens. Esta acción no se puede deshacer.",
       "deleting": "Eliminando...",
       "confirmDeleteBtn": "Eliminar",
       "confirmCancelGeneration": "¿Cancelar la generación de estos artículos?",
       "cancelGenerationWarning": "La generación será cancelada para {count} artículos. Los tokens usados se deducirán según el progreso, los tokens no usados serán reembolsados.",
       "confirmCancelBtn": "Confirmar cancelación",
       "goBack": "Volver"
+    },
+    "pagination": {
+      "perPage": "Por página",
+      "page": "Página {current} / {total}",
+      "prev": "Anterior",
+      "next": "Siguiente"
     },
     "toasts": {
       "selectArticles": "Por favor seleccione artículos para programar",

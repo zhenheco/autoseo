@@ -173,12 +173,19 @@
     "dialogs": {
       "confirmDelete": "Supprimer les articles sélectionnés ?",
       "deleteWarning": "Cette action est irréversible. {count} articles seront définitivement supprimés.",
+      "deleteWithCancelWarning": "{total} articles seront supprimés. {cancelling} sont en cours de génération et seront annulés avec remboursement des tokens. Cette action est irréversible.",
       "deleting": "Suppression...",
       "confirmDeleteBtn": "Supprimer",
       "confirmCancelGeneration": "Annuler la génération de ces articles ?",
       "cancelGenerationWarning": "La génération sera annulée pour {count} articles. Les tokens utilisés seront déduits selon la progression, les tokens non utilisés seront remboursés.",
       "confirmCancelBtn": "Confirmer l'annulation",
       "goBack": "Retour"
+    },
+    "pagination": {
+      "perPage": "Par page",
+      "page": "Page {current} / {total}",
+      "prev": "Précédent",
+      "next": "Suivant"
     },
     "toasts": {
       "selectArticles": "Veuillez sélectionner des articles à programmer",

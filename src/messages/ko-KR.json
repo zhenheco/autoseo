@@ -173,12 +173,19 @@
     "dialogs": {
       "confirmDelete": "선택한 글을 삭제하시겠습니까?",
       "deleteWarning": "이 작업은 되돌릴 수 없습니다. {count}개의 글이 영구 삭제됩니다.",
+      "deleteWithCancelWarning": "{total}개의 글을 삭제합니다. {cancelling}개는 생성 중이므로 취소 후 토큰이 환불됩니다. 이 작업은 되돌릴 수 없습니다.",
       "deleting": "삭제 중...",
       "confirmDeleteBtn": "삭제",
       "confirmCancelGeneration": "이 글들의 생성을 취소하시겠습니까?",
       "cancelGenerationWarning": "{count}개의 글 생성이 취소됩니다. 사용된 토큰은 진행도에 따라 차감되고 미사용분은 환불됩니다.",
       "confirmCancelBtn": "취소 확인",
       "goBack": "돌아가기"
+    },
+    "pagination": {
+      "perPage": "페이지당",
+      "page": "{current} / {total} 페이지",
+      "prev": "이전",
+      "next": "다음"
     },
     "toasts": {
       "selectArticles": "예약할 글을 선택해 주세요",
