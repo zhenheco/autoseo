@@ -16,11 +16,18 @@ import {
   Redo,
   Copy,
   Check,
+  ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Toggle } from "@/components/ui/toggle";
 import { Separator } from "@/components/ui/separator";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { useCallback, useEffect, useState } from "react";
 
 interface TiptapEditorProps {
@@ -104,7 +111,82 @@ export function TiptapEditor({
     editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
   }, [editor]);
 
-  const copyToClipboard = useCallback(async () => {
+  // HTML 轉 Markdown 函式
+  const htmlToMarkdown = useCallback((html: string): string => {
+    const tempDiv = document.createElement("div");
+    tempDiv.innerHTML = html;
+
+    const processNode = (node: Node): string => {
+      if (node.nodeType === Node.TEXT_NODE) {
+        return node.textContent || "";
+      }
+
+      if (node.nodeType !== Node.ELEMENT_NODE) {
+        return "";
+      }
+
+      const element = node as HTMLElement;
+      const tagName = element.tagName.toLowerCase();
+      const children = Array.from(element.childNodes).map(processNode).join("");
+
+      switch (tagName) {
+        case "h1":
+          return `# ${children}\n\n`;
+        case "h2":
+          return `## ${children}\n\n`;
+        case "h3":
+          return `### ${children}\n\n`;
+        case "p":
+          return `${children}\n\n`;
+        case "strong":
+        case "b":
+          return `**${children}**`;
+        case "em":
+        case "i":
+          return `*${children}*`;
+        case "a": {
+          const href = element.getAttribute("href") || "";
+          return `[${children}](${href})`;
+        }
+        case "img": {
+          const src = element.getAttribute("src") || "";
+          const alt = element.getAttribute("alt") || "";
+          return `![${alt}](${src})`;
+        }
+        case "ul":
+          return `${children}\n`;
+        case "ol":
+          return `${children}\n`;
+        case "li": {
+          const parent = element.parentElement;
+          if (parent?.tagName.toLowerCase() === "ol") {
+            const index = Array.from(parent.children).indexOf(element) + 1;
+            return `${index}. ${children}\n`;
+          }
+          return `- ${children}\n`;
+        }
+        case "br":
+          return "\n";
+        case "code":
+          return `\`${children}\``;
+        case "pre":
+          return `\`\`\`\n${children}\n\`\`\`\n\n`;
+        case "blockquote":
+          return (
+            children
+              .split("\n")
+              .map((line) => `> ${line}`)
+              .join("\n") + "\n\n"
+          );
+        default:
+          return children;
+      }
+    };
+
+    return processNode(tempDiv).trim();
+  }, []);
+
+  const copyAsHtml = useCallback(async () => {
     if (!editor) return;
 
     const html = editor.getHTML();
@@ -118,16 +200,27 @@ export function TiptapEditor({
         }),
       ]);
       setCopied(true);
-      toast.success("已複製到剪貼簿");
+      toast.success("已複製 HTML 到剪貼簿");
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // 降級方案：只複製 HTML 原始碼
       await navigator.clipboard.writeText(html);
       setCopied(true);
-      toast.success("已複製到剪貼簿");
+      toast.success("已複製 HTML 到剪貼簿");
       setTimeout(() => setCopied(false), 2000);
     }
   }, [editor]);
+
+  const copyAsMarkdown = useCallback(async () => {
+    if (!editor) return;
+
+    const html = editor.getHTML();
+    const markdown = htmlToMarkdown(html);
+
+    await navigator.clipboard.writeText(markdown);
+    setCopied(true);
+    toast.success("已複製 Markdown 到剪貼簿");
+    setTimeout(() => setCopied(false), 2000);
+  }, [editor, htmlToMarkdown]);
 
   if (!editor) {
     return null;
@@ -245,21 +338,27 @@ export function TiptapEditor({
 
         <div className="flex-1" />
 
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={copyToClipboard}
-          aria-label="複製內容"
-          title="複製內容到剪貼簿（可直接貼到 Medium、Blogger 等平台）"
-          className="gap-1.5"
-        >
-          {copied ? (
-            <Check className="h-4 w-4 text-green-500" />
-          ) : (
-            <Copy className="h-4 w-4" />
-          )}
-          <span>{copied ? "已複製" : "一鍵複製"}</span>
-        </Button>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button size="sm" variant="outline" className="gap-1.5">
+              {copied ? (
+                <Check className="h-4 w-4 text-green-500" />
+              ) : (
+                <Copy className="h-4 w-4" />
+              )}
+              <span>{copied ? "已複製" : "一鍵複製"}</span>
+              <ChevronDown className="h-3 w-3" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuItem onClick={copyAsHtml}>
+              複製 HTML（適合 Medium、Blogger）
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={copyAsMarkdown}>
+              複製 Markdown（適合 GitHub、Notion）
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       <div className="flex-1 overflow-y-auto">
