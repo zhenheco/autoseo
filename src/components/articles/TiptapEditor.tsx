@@ -247,16 +247,18 @@ export function TiptapEditor({
 
         <Button
           size="sm"
-          variant="ghost"
+          variant="outline"
           onClick={copyToClipboard}
           aria-label="複製內容"
           title="複製內容到剪貼簿（可直接貼到 Medium、Blogger 等平台）"
+          className="gap-1.5"
         >
           {copied ? (
             <Check className="h-4 w-4 text-green-500" />
           ) : (
             <Copy className="h-4 w-4" />
           )}
+          <span>{copied ? "已複製" : "一鍵複製"}</span>
         </Button>
       </div>
 
