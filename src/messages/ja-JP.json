@@ -173,12 +173,19 @@
     "dialogs": {
       "confirmDelete": "選択した記事を削除しますか？",
       "deleteWarning": "この操作は取り消せません。{count}件の記事が完全に削除されます。",
+      "deleteWithCancelWarning": "{total}件の記事を削除します。{cancelling}件は生成中のため、キャンセルしてトークンを返還します。この操作は取り消せません。",
       "deleting": "削除中...",
       "confirmDeleteBtn": "削除する",
       "confirmCancelGeneration": "これらの記事の生成をキャンセルしますか？",
       "cancelGenerationWarning": "{count}件の記事の生成がキャンセルされます。使用済みトークンは進捗に応じて差し引かれ、未使用分は返還されます。",
       "confirmCancelBtn": "キャンセルする",
       "goBack": "戻る"
+    },
+    "pagination": {
+      "perPage": "表示件数",
+      "page": "{current} / {total} ページ",
+      "prev": "前へ",
+      "next": "次へ"
     },
     "toasts": {
       "selectArticles": "予約する記事を選択してください",

@@ -19,19 +19,12 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  CalendarClock,
-  Loader2,
-  XCircle,
-  Trash2,
-  StopCircle,
-} from "lucide-react";
+import { CalendarClock, Loader2, XCircle, Trash2 } from "lucide-react";
 import { useScheduleContext } from "./ScheduleContext";
 import {
   scheduleArticlesForPublish,
   cancelArticleSchedule,
   batchDeleteArticles,
-  batchCancelArticleGeneration,
 } from "../actions";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -64,13 +57,15 @@ export function ScheduleControlBar({
 
   const [error, setError] = useState<string | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
-  const [cancelGenerationDialogOpen, setCancelGenerationDialogOpen] =
-    useState(false);
   const [isCancelling, setIsCancelling] = useState(false);
-  const [isCancellingGeneration, setIsCancellingGeneration] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
 
   const selectedCount = selectedArticleIds.size;
+
+  // 計算選中的可取消文章數量（用於刪除對話框提示）
+  const selectedCancellableCount = Array.from(selectedArticleIds).filter((id) =>
+    cancellableArticleIds.includes(id),
+  ).length;
 
   const handleSchedule = useCallback(async () => {
     if (selectedCount === 0) {
@@ -166,11 +161,22 @@ export function ScheduleControlBar({
       const result = await batchDeleteArticles(Array.from(selectedArticleIds));
 
       if (result.success) {
-        toast.success(
-          t("toasts.deleteSuccess", { count: result.deletedCount || 0 }),
-        );
+        let msg = t("toasts.deleteSuccess", {
+          count: result.deletedCount || 0,
+        });
+        // 如果有退還 tokens，顯示退款訊息
+        if (result.tokensRefunded && result.tokensRefunded > 0) {
+          msg += t("toasts.refundTokens", {
+            amount: result.tokensRefunded.toLocaleString(),
+          });
+        }
+        toast.success(msg);
         clearSelection();
         router.refresh();
+        // 如果有取消的文章，觸發餘額更新事件
+        if (result.cancelledCount && result.cancelledCount > 0) {
+          window.dispatchEvent(new CustomEvent("tokenReserved"));
+        }
       } else {
         toast.error(result.error || t("toasts.deleteFailed"));
       }
@@ -182,50 +188,6 @@ export function ScheduleControlBar({
       setDeleteDialogOpen(false);
     }
   }, [selectedCount, selectedArticleIds, clearSelection, router, t]);
-
-  // 計算選中的可取消文章數量
-  const selectedCancellableIds = Array.from(selectedArticleIds).filter((id) =>
-    cancellableArticleIds.includes(id),
-  );
-
-  const handleCancelGeneration = useCallback(async () => {
-    if (selectedCancellableIds.length === 0) {
-      toast.error(t("toasts.noCancellableArticles"));
-      return;
-    }
-
-    setIsCancellingGeneration(true);
-
-    try {
-      const result = await batchCancelArticleGeneration(selectedCancellableIds);
-
-      if (result.success) {
-        const refundMsg =
-          result.totalRefunded && result.totalRefunded > 0
-            ? t("toasts.refundTokens", {
-                amount: result.totalRefunded.toLocaleString(),
-              })
-            : "";
-        toast.success(
-          t("toasts.cancelGenerationSuccess", {
-            count: result.cancelledCount || 0,
-          }) + refundMsg,
-        );
-        clearSelection();
-        router.refresh();
-        // 觸發餘額更新事件
-        window.dispatchEvent(new CustomEvent("tokenReserved"));
-      } else {
-        toast.error(result.error || t("toasts.cancelGenerationFailed"));
-      }
-    } catch (err) {
-      console.error("Cancel generation error:", err);
-      toast.error(t("toasts.cancelGenerationError"));
-    } finally {
-      setIsCancellingGeneration(false);
-      setCancelGenerationDialogOpen(false);
-    }
-  }, [selectedCancellableIds, clearSelection, router, t]);
 
   // 如果沒有可管理的文章，不顯示控制欄
   if (
@@ -315,34 +277,6 @@ export function ScheduleControlBar({
             )}
           </Button>
 
-          {selectedCancellableIds.length > 0 && (
-            <Button
-              size="sm"
-              variant="outline"
-              onClick={() => setCancelGenerationDialogOpen(true)}
-              disabled={
-                isScheduling ||
-                isCancelling ||
-                isCancellingGeneration ||
-                isDeleting
-              }
-              className="whitespace-nowrap h-10 px-4 lg:h-8 lg:px-3 border-orange-300 text-orange-600 hover:bg-orange-50"
-            >
-              {isCancellingGeneration ? (
-                <>
-                  <Loader2 className="mr-1 h-4 w-4 lg:h-3 lg:w-3 animate-spin" />
-                  {t("schedule.cancelling")}
-                </>
-              ) : (
-                <>
-                  <StopCircle className="mr-1 h-4 w-4 lg:h-3 lg:w-3" />
-                  {t("schedule.cancelGeneration")} (
-                  {selectedCancellableIds.length})
-                </>
-              )}
-            </Button>
-          )}
-
           <Button
             size="sm"
             variant="destructive"
@@ -365,7 +299,12 @@ export function ScheduleControlBar({
           <AlertDialogHeader>
             <AlertDialogTitle>{t("dialogs.confirmDelete")}</AlertDialogTitle>
             <AlertDialogDescription>
-              {t("dialogs.deleteWarning", { count: selectedCount })}
+              {selectedCancellableCount > 0
+                ? t("dialogs.deleteWithCancelWarning", {
+                    total: selectedCount,
+                    cancelling: selectedCancellableCount,
+                  })
+                : t("dialogs.deleteWarning", { count: selectedCount })}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -380,38 +319,6 @@ export function ScheduleControlBar({
               {isDeleting
                 ? t("dialogs.deleting")
                 : t("dialogs.confirmDeleteBtn")}
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      <AlertDialog
-        open={cancelGenerationDialogOpen}
-        onOpenChange={setCancelGenerationDialogOpen}
-      >
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>
-              {t("dialogs.confirmCancelGeneration")}
-            </AlertDialogTitle>
-            <AlertDialogDescription>
-              {t("dialogs.cancelGenerationWarning", {
-                count: selectedCancellableIds.length,
-              })}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel disabled={isCancellingGeneration}>
-              {t("dialogs.goBack")}
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleCancelGeneration}
-              disabled={isCancellingGeneration}
-              className="bg-orange-600 text-white hover:bg-orange-700"
-            >
-              {isCancellingGeneration
-                ? t("schedule.cancelling")
-                : t("dialogs.confirmCancelBtn")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -173,12 +173,19 @@
     "dialogs": {
       "confirmDelete": "Ausgewählte Artikel löschen?",
       "deleteWarning": "Diese Aktion kann nicht rückgängig gemacht werden. {count} Artikel werden dauerhaft gelöscht.",
+      "deleteWithCancelWarning": "{total} Artikel werden gelöscht. {cancelling} werden noch generiert und werden abgebrochen mit Token-Erstattung. Diese Aktion kann nicht rückgängig gemacht werden.",
       "deleting": "Löschen...",
       "confirmDeleteBtn": "Löschen",
       "confirmCancelGeneration": "Generierung für diese Artikel abbrechen?",
       "cancelGenerationWarning": "Die Generierung wird für {count} Artikel abgebrochen. Verwendete Token werden entsprechend abgezogen, nicht verwendete Token werden erstattet.",
       "confirmCancelBtn": "Abbruch bestätigen",
       "goBack": "Zurück"
+    },
+    "pagination": {
+      "perPage": "Pro Seite",
+      "page": "Seite {current} / {total}",
+      "prev": "Zurück",
+      "next": "Weiter"
     },
     "toasts": {
       "selectArticles": "Bitte wählen Sie Artikel zum Planen",

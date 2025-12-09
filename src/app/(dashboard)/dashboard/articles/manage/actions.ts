@@ -513,9 +513,13 @@ export async function cancelArticleSchedule(
   return { success: true };
 }
 
-export async function batchDeleteArticles(
-  articleIds: string[],
-): Promise<{ success: boolean; error?: string; deletedCount?: number }> {
+export async function batchDeleteArticles(articleIds: string[]): Promise<{
+  success: boolean;
+  error?: string;
+  deletedCount?: number;
+  cancelledCount?: number;
+  tokensRefunded?: number;
+}> {
   const user = await getUser();
   if (!user) return { success: false, error: "未登入" };
 
@@ -536,11 +540,37 @@ export async function batchDeleteArticles(
     return { success: false, error: "無權限" };
   }
 
+  // 1. 查詢所有任務狀態
+  const { data: jobs } = await supabase
+    .from("article_jobs")
+    .select("id, status")
+    .in("id", articleIds)
+    .eq("company_id", membership.company_id);
+
+  // 2. 分類：需要先取消的 (pending/processing)
+  const needCancelIds = (jobs || [])
+    .filter((j) => j.status === "pending" || j.status === "processing")
+    .map((j) => j.id);
+
+  // 3. 先取消 pending/processing 狀態的（處理 token 退款）
+  let cancelledCount = 0;
+  let tokensRefunded = 0;
+  if (needCancelIds.length > 0) {
+    const cancelResult = await batchCancelArticleGeneration(needCancelIds);
+    if (cancelResult.success) {
+      cancelledCount = cancelResult.cancelledCount || 0;
+      tokensRefunded = cancelResult.totalRefunded || 0;
+    }
+  }
+
   console.log("[batchDeleteArticles] Deleting articles:", {
     articleIds,
     companyId: membership.company_id,
+    cancelledCount,
+    tokensRefunded,
   });
 
+  // 4. 執行刪除
   const { error, count } = await supabase
     .from("article_jobs")
     .delete({ count: "exact" })
@@ -562,7 +592,12 @@ export async function batchDeleteArticles(
   }
 
   revalidatePath("/dashboard/articles/manage");
-  return { success: true, deletedCount: count ?? articleIds.length };
+  return {
+    success: true,
+    deletedCount: count ?? articleIds.length,
+    cancelledCount,
+    tokensRefunded,
+  };
 }
 
 export async function cancelArticleGeneration(articleJobId: string): Promise<{
