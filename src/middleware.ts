@@ -55,16 +55,16 @@ export async function middleware(request: NextRequest) {
   const cspDirectives = [
     "default-src 'self'",
     // script-src: 開發環境需要 unsafe-eval (Next.js HMR)，生產環境移除
-    // 加入 Cloudflare Insights 域名
+    // 加入 Cloudflare Insights 和 Google Tag Manager 域名
     isDevelopment
-      ? "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://static.cloudflareinsights.com"
-      : "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com",
+      ? "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://static.cloudflareinsights.com https://www.googletagmanager.com https://www.google-analytics.com"
+      : "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://www.googletagmanager.com https://www.google-analytics.com",
     // style-src: 需要 unsafe-inline 支援 Tailwind CSS
     "style-src 'self' 'unsafe-inline'",
     // img-src: 允許所有 HTTPS 圖片來源（用於文章圖片）
     "img-src 'self' data: https:",
     "font-src 'self' data:",
-    // connect-src: 允許 API 連接和 WebSocket，加入 Cloudflare beacon 回報端點
+    // connect-src: 允許 API 連接和 WebSocket，加入 Cloudflare beacon 和 Google Analytics 回報端點
     [
       "connect-src 'self'",
       "https://*.supabase.co",
@@ -78,6 +78,12 @@ export async function middleware(request: NextRequest) {
       "https://oauth2.googleapis.com",
       "https://www.googleapis.com",
       "https://cloudflareinsights.com",
+      // Google Analytics 和 Search Console API
+      "https://www.google-analytics.com",
+      "https://analytics.google.com",
+      "https://searchconsole.googleapis.com",
+      "https://analyticsdata.googleapis.com",
+      "https://analyticsadmin.googleapis.com",
     ].join(" "),
     "frame-ancestors 'self'",
     "base-uri 'self'",
