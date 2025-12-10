@@ -191,9 +191,11 @@ ${langConfig.instruction}
     const titles = responseContent
       .split("\n")
       .map((line) => line.trim())
+      // 先移除列表前綴（如 "1. ", "* ", "- " 等）
+      .map((line) => line.replace(/^[\d\.\-\*]+[\.\)、\s]*/, "").trim())
       .filter((line) => line.length > 0 && line.length < 100)
-      .filter((line) => !line.match(/^[\d\.\-\*][\.\)、\s]/))
-      .map((line) => line.replace(/^[\d\.\-\*]+[\.\)、\s]*/, ""))
+      // 過濾掉看起來像是說明文字的行
+      .filter((line) => !line.match(/^(標題|範例|格式|要求|例如|以下|根據)/))
       .slice(0, 5);
 
     if (titles.length === 0) {
