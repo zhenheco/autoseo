@@ -1,11 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { RefundService } from "@/lib/payment/refund-service";
+import { isAdminEmail } from "@/lib/utils/admin-check";
 
 export const dynamic = "force-dynamic";
-
-// 管理員 email 白名單
-const ADMIN_EMAILS = ["avyshiu@gmail.com", "ace@marketermilk.com"];
 
 /**
  * GET /api/admin/refunds
@@ -29,7 +27,7 @@ export async function GET(request: NextRequest) {
     }
 
     // 驗證管理員權限
-    if (!ADMIN_EMAILS.includes(user.email || "")) {
+    if (!isAdminEmail(user.email)) {
       return NextResponse.json(
         { success: false, error: "無管理員權限" },
         { status: 403 },

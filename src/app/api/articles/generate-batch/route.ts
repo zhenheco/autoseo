@@ -6,6 +6,10 @@ import {
   TokenBillingService,
   ESTIMATED_TOKENS_PER_ARTICLE,
 } from "@/lib/billing/token-billing-service";
+import {
+  checkRateLimit,
+  RATE_LIMIT_CONFIGS,
+} from "@/lib/security/rate-limiter";
 
 // Vercel 無伺服器函數最大執行時間（增加以避免 504 超時）
 export const maxDuration = 25; // 增加到 25 秒
@@ -28,6 +32,33 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 輸入驗證：限制批量大小
+    const MAX_BATCH_SIZE = 20;
+    if (generationItems.length > MAX_BATCH_SIZE) {
+      return NextResponse.json(
+        { error: `批量生成最多 ${MAX_BATCH_SIZE} 篇文章` },
+        { status: 400 },
+      );
+    }
+
+    // 輸入驗證：檢查每個 keyword 的長度
+    const MAX_KEYWORD_LENGTH = 500;
+    for (const item of generationItems) {
+      const keyword = item.keyword || item.title;
+      if (!keyword || typeof keyword !== "string") {
+        return NextResponse.json(
+          { error: "每個項目都必須包含 keyword 或 title" },
+          { status: 400 },
+        );
+      }
+      if (keyword.length > MAX_KEYWORD_LENGTH) {
+        return NextResponse.json(
+          { error: `關鍵字長度不能超過 ${MAX_KEYWORD_LENGTH} 字元` },
+          { status: 400 },
+        );
+      }
+    }
+
     const supabase = await createClient();
     const {
       data: { user },
@@ -35,6 +66,15 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Rate limiting 檢查
+    const rateLimitResponse = await checkRateLimit(
+      `generate-batch:${user.id}`,
+      RATE_LIMIT_CONFIGS.ARTICLE_GENERATE_BATCH,
+    );
+    if (rateLimitResponse) {
+      return rateLimitResponse;
     }
 
     // 使用 Admin Client 繞過 RLS 進行公司/成員操作

@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { applyForAffiliate } from "@/lib/affiliate-service";
 import { generateReferralCode } from "@/lib/referral-service";
+import {
+  checkRateLimit,
+  RATE_LIMIT_CONFIGS,
+} from "@/lib/security/rate-limiter";
 import type { AffiliateApplyForm } from "@/types/referral.types";
 
 export async function POST(request: NextRequest) {
@@ -18,6 +22,15 @@ export async function POST(request: NextRequest) {
         { success: false, message: "請先登入" },
         { status: 401 },
       );
+    }
+
+    // Rate limiting 檢查
+    const rateLimitResponse = await checkRateLimit(
+      `affiliate-apply:${user.id}`,
+      RATE_LIMIT_CONFIGS.AFFILIATE_APPLY,
+    );
+    if (rateLimitResponse) {
+      return rateLimitResponse;
     }
 
     const body = await request.json();
