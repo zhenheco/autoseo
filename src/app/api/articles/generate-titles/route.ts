@@ -77,7 +77,7 @@ export async function POST(request: NextRequest) {
           website_id: newWebsite.id,
           research_model: "deepseek-reasoner",
           complex_processing_model: "deepseek-reasoner",
-          simple_processing_model: "google/gemini-2.5-flash-lite",
+          simple_processing_model: "google/gemini-2.0-flash-exp:free",
           image_model: "gemini-imagen",
           research_temperature: 0.7,
           research_max_tokens: 4000,
@@ -117,7 +117,8 @@ export async function POST(request: NextRequest) {
       .single();
 
     const model =
-      agentConfig?.simple_processing_model || "google/gemini-2.5-flash-lite";
+      agentConfig?.simple_processing_model ||
+      "google/gemini-2.0-flash-exp:free";
 
     const cachedTitles = await getTitlesFromCache(keyword, targetLanguage);
     if (cachedTitles && cachedTitles.length > 0) {
@@ -194,6 +195,7 @@ ${lang.example}
 
 IMPORTANT: Generate ALL 10 titles in ${lang.name} language only.`;
 
+    // 嘗試使用主要模型（OpenRouter）
     try {
       const apiProvider = detectAPIProvider(model);
       const response = await router.complete({
@@ -223,9 +225,43 @@ IMPORTANT: Generate ALL 10 titles in ${lang.name} language only.`;
       }
     } catch (aiError) {
       console.error(
-        "AI generation failed, falling back to templates:",
+        "Primary AI (OpenRouter) failed, trying OpenAI fallback:",
         aiError,
       );
+
+      // OpenAI Fallback
+      try {
+        const response = await router.complete({
+          model: "gpt-4o-mini",
+          apiProvider: "openai",
+          prompt,
+          temperature: 0.9,
+          maxTokens: 1000,
+        });
+
+        const titles = response.content
+          .split("\n")
+          .map((line) => line.trim())
+          .filter((line) => line.length > 0)
+          .filter((line) => !line.match(/^(標題|範例|格式|要求|例如)/))
+          .slice(0, 10);
+
+        if (titles.length > 0) {
+          await saveTitlesToCache(keyword, targetLanguage, titles);
+
+          return NextResponse.json({
+            success: true,
+            titles: titles.slice(0, 10),
+            keyword,
+            source: "ai-fallback",
+          });
+        }
+      } catch (fallbackError) {
+        console.error(
+          "OpenAI fallback also failed, falling back to templates:",
+          fallbackError,
+        );
+      }
     }
 
     const templateTitles = await getTitlesFromTemplates(
