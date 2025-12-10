@@ -4,6 +4,8 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { IntlProvider } from "@/providers/IntlProvider";
+import { CookieConsentProvider } from "@/components/consent";
+import { GoogleAnalytics } from "@/components/tracking/GoogleAnalytics";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -26,10 +28,13 @@ export default function RootLayout({
           enableSystem={false}
           disableTransitionOnChange
         >
-          <IntlProvider>
-            {children}
-            <Toaster richColors position="top-right" />
-          </IntlProvider>
+          <CookieConsentProvider>
+            <IntlProvider>
+              {children}
+              <GoogleAnalytics />
+              <Toaster richColors position="top-right" />
+            </IntlProvider>
+          </CookieConsentProvider>
         </ThemeProvider>
       </body>
     </html>
