@@ -453,7 +453,12 @@ export class APIRouter {
     ) {
       return "openai";
     }
-    if (model.startsWith("google/") || model.includes("gemini")) {
+    // google/* 前綴是 OpenRouter 模型識別格式
+    if (model.startsWith("google/")) {
+      return "openrouter";
+    }
+    // 純 gemini-* 模型（無前綴）用於 Direct Gemini API
+    if (model.includes("gemini")) {
       return "gemini";
     }
     if (model.includes("sonar")) {
@@ -531,7 +536,13 @@ export function detectAPIProvider(model: string): APIProvider {
   ) {
     return "openai";
   }
-  if (model.startsWith("google/") || model.includes("gemini")) {
+  // google/* 前綴是 OpenRouter 模型識別格式
+  if (model.startsWith("google/")) {
+    return "openrouter";
+  }
+  // 純 gemini-* 模型（無前綴）用於 Direct Gemini API
+  // 目前文字生成不使用，圖片生成在 ai-client.ts 處理
+  if (model.includes("gemini")) {
     return "gemini";
   }
   if (model.includes("sonar")) {

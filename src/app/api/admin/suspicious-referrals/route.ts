@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { isAdminEmail } from "@/lib/utils/admin-check";
 import type {
   ReviewStatus,
   SuspicionType,
@@ -24,9 +25,8 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "未授權" }, { status: 401 });
     }
 
-    // 檢查是否為管理員（這裡用 email 檢查，你可以改用其他方式）
-    const adminEmails = process.env.ADMIN_EMAILS?.split(",") || [];
-    if (!adminEmails.includes(user.email || "")) {
+    // 檢查是否為管理員
+    if (!isAdminEmail(user.email)) {
       return NextResponse.json({ error: "無權限" }, { status: 403 });
     }
 
@@ -125,8 +125,7 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: "未授權" }, { status: 401 });
     }
 
-    const adminEmails = process.env.ADMIN_EMAILS?.split(",") || [];
-    if (!adminEmails.includes(user.email || "")) {
+    if (!isAdminEmail(user.email)) {
       return NextResponse.json({ error: "無權限" }, { status: 403 });
     }
 

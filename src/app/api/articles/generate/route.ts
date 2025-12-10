@@ -3,6 +3,10 @@ import { createClient } from "@/lib/supabase/server";
 import { v4 as uuidv4 } from "uuid";
 import { TokenBillingService } from "@/lib/billing/token-billing-service";
 import { createSearchRouter } from "@/lib/search/search-router";
+import {
+  checkRateLimit,
+  RATE_LIMIT_CONFIGS,
+} from "@/lib/security/rate-limiter";
 
 export const maxDuration = 300;
 
@@ -101,6 +105,15 @@ export async function POST(request: NextRequest) {
 
     if (!user) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Rate limiting 檢查
+    const rateLimitResponse = await checkRateLimit(
+      `generate:${user.id}`,
+      RATE_LIMIT_CONFIGS.ARTICLE_GENERATE,
+    );
+    if (rateLimitResponse) {
+      return rateLimitResponse;
     }
 
     // 嘗試獲取 company_id（如果用戶有加入公司），否則使用 user_id
