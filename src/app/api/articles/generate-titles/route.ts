@@ -3,6 +3,52 @@ import { getAPIRouter, detectAPIProvider } from "@/lib/ai/api-router";
 import { createClient } from "@/lib/supabase/server";
 import { getTitlesFromCache, saveTitlesToCache } from "@/lib/cache/title-cache";
 import { getTitlesFromTemplates } from "@/lib/cache/title-templates";
+import {
+  buildGeminiApiUrl,
+  buildGeminiHeaders,
+  isGatewayEnabled,
+} from "@/lib/cloudflare/ai-gateway";
+
+/**
+ * 呼叫 Gemini Direct API（繞過 OpenRouter）
+ */
+async function callGeminiDirectAPI(prompt: string): Promise<string> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) {
+    throw new Error("GEMINI_API_KEY is not set");
+  }
+
+  const modelName = "gemini-2.0-flash";
+  // Gateway 模式使用 Gateway URL，直連模式使用官方 URL（帶 key 參數）
+  const geminiUrl = isGatewayEnabled()
+    ? buildGeminiApiUrl(modelName, "generateContent")
+    : `${buildGeminiApiUrl(modelName, "generateContent")}?key=${apiKey}`;
+  const headers = buildGeminiHeaders(apiKey);
+
+  const response = await fetch(geminiUrl, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({
+      contents: [{ parts: [{ text: prompt }] }],
+      generationConfig: {
+        temperature: 0.9,
+        maxOutputTokens: 1000,
+      },
+    }),
+  });
+
+  if (!response.ok) {
+    const error = await response.json();
+    throw new Error(`Gemini API error: ${JSON.stringify(error)}`);
+  }
+
+  const data = await response.json();
+  const content = data.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!content) {
+    throw new Error("Invalid Gemini response structure");
+  }
+  return content;
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -215,6 +261,7 @@ IMPORTANT: Generate ALL 10 titles in ${lang.name} language only.`;
 
       if (titles.length > 0) {
         await saveTitlesToCache(keyword, targetLanguage, titles);
+        console.log("[generate-titles] ✅ OpenRouter 成功");
 
         return NextResponse.json({
           success: true,
@@ -224,22 +271,15 @@ IMPORTANT: Generate ALL 10 titles in ${lang.name} language only.`;
         });
       }
     } catch (aiError) {
-      console.error(
-        "Primary AI (OpenRouter) failed, trying OpenAI fallback:",
-        aiError,
+      console.warn(
+        "[generate-titles] ⚠️ OpenRouter 失敗:",
+        (aiError as Error).message,
       );
 
-      // OpenAI Fallback
+      // Layer 2: Gemini Direct API（繞過 OpenRouter 限制）
       try {
-        const response = await router.complete({
-          model: "gpt-4o-mini",
-          apiProvider: "openai",
-          prompt,
-          temperature: 0.9,
-          maxTokens: 1000,
-        });
-
-        const titles = response.content
+        const responseContent = await callGeminiDirectAPI(prompt);
+        const titles = responseContent
           .split("\n")
           .map((line) => line.trim())
           .filter((line) => line.length > 0)
@@ -248,19 +288,55 @@ IMPORTANT: Generate ALL 10 titles in ${lang.name} language only.`;
 
         if (titles.length > 0) {
           await saveTitlesToCache(keyword, targetLanguage, titles);
+          console.log("[generate-titles] ✅ Gemini Direct 成功");
 
           return NextResponse.json({
             success: true,
             titles: titles.slice(0, 10),
             keyword,
-            source: "ai-fallback",
+            source: "ai-gemini-direct",
           });
         }
-      } catch (fallbackError) {
-        console.error(
-          "OpenAI fallback also failed, falling back to templates:",
-          fallbackError,
+      } catch (geminiError) {
+        console.warn(
+          "[generate-titles] ⚠️ Gemini Direct 失敗:",
+          (geminiError as Error).message,
         );
+
+        // Layer 3: OpenAI Fallback
+        try {
+          const response = await router.complete({
+            model: "gpt-4o-mini",
+            apiProvider: "openai",
+            prompt,
+            temperature: 0.9,
+            maxTokens: 1000,
+          });
+
+          const titles = response.content
+            .split("\n")
+            .map((line) => line.trim())
+            .filter((line) => line.length > 0)
+            .filter((line) => !line.match(/^(標題|範例|格式|要求|例如)/))
+            .slice(0, 10);
+
+          if (titles.length > 0) {
+            await saveTitlesToCache(keyword, targetLanguage, titles);
+            console.log("[generate-titles] ✅ OpenAI 成功");
+
+            return NextResponse.json({
+              success: true,
+              titles: titles.slice(0, 10),
+              keyword,
+              source: "ai-openai",
+            });
+          }
+        } catch (openaiError) {
+          console.warn(
+            "[generate-titles] ⚠️ OpenAI 失敗:",
+            (openaiError as Error).message,
+          );
+        }
       }
     }
 
