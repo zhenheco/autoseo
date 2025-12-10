@@ -246,69 +246,51 @@ IMPORTANT: Generate ALL 10 titles in ${lang.name} language only.`;
     let responseContent: string | null = null;
     let source = "ai";
 
-    // Layer 1: OpenRouter Grok free（透過 AI Gateway）
+    // Layer 1: OpenRouter Gemini free（透過 AI Gateway）
     try {
       const response = await openRouterClient.complete({
-        model: "x-ai/grok-4.1-fast:free",
+        model: "google/gemini-2.0-flash-exp:free",
         prompt,
         temperature: 0.9,
         max_tokens: 1000,
       });
       responseContent = response.content;
-      source = "ai-grok";
-      console.log("[generate-titles] ✅ Grok 成功");
-    } catch (grokError) {
+      source = "ai-gemini-openrouter";
+      console.log("[generate-titles] ✅ Gemini OpenRouter 成功");
+    } catch (geminiOpenRouterError) {
       console.warn(
-        "[generate-titles] ⚠️ Grok 失敗:",
-        (grokError as Error).message,
+        "[generate-titles] ⚠️ Gemini OpenRouter 失敗:",
+        (geminiOpenRouterError as Error).message,
       );
 
-      // Layer 2: OpenRouter Gemini free（透過 AI Gateway）
+      // Layer 2: Gemini Direct API（繞過 OpenRouter 限制）
       try {
-        const response = await openRouterClient.complete({
-          model: "google/gemini-2.0-flash-exp:free",
-          prompt,
-          temperature: 0.9,
-          max_tokens: 1000,
-        });
-        responseContent = response.content;
-        source = "ai-gemini-openrouter";
-        console.log("[generate-titles] ✅ Gemini OpenRouter 成功");
-      } catch (geminiOpenRouterError) {
+        responseContent = await callGeminiDirectAPI(prompt);
+        source = "ai-gemini-direct";
+        console.log("[generate-titles] ✅ Gemini Direct 成功");
+      } catch (geminiDirectError) {
         console.warn(
-          "[generate-titles] ⚠️ Gemini OpenRouter 失敗:",
-          (geminiOpenRouterError as Error).message,
+          "[generate-titles] ⚠️ Gemini Direct 失敗:",
+          (geminiDirectError as Error).message,
         );
 
-        // Layer 3: Gemini Direct API（繞過 OpenRouter 限制）
+        // Layer 3: OpenAI Fallback
         try {
-          responseContent = await callGeminiDirectAPI(prompt);
-          source = "ai-gemini-direct";
-          console.log("[generate-titles] ✅ Gemini Direct 成功");
-        } catch (geminiDirectError) {
+          const response = await router.complete({
+            model: "gpt-4o-mini",
+            apiProvider: "openai",
+            prompt,
+            temperature: 0.9,
+            maxTokens: 1000,
+          });
+          responseContent = response.content;
+          source = "ai-openai";
+          console.log("[generate-titles] ✅ OpenAI 成功");
+        } catch (openaiError) {
           console.warn(
-            "[generate-titles] ⚠️ Gemini Direct 失敗:",
-            (geminiDirectError as Error).message,
+            "[generate-titles] ⚠️ OpenAI 失敗:",
+            (openaiError as Error).message,
           );
-
-          // Layer 4: OpenAI Fallback
-          try {
-            const response = await router.complete({
-              model: "gpt-4o-mini",
-              apiProvider: "openai",
-              prompt,
-              temperature: 0.9,
-              maxTokens: 1000,
-            });
-            responseContent = response.content;
-            source = "ai-openai";
-            console.log("[generate-titles] ✅ OpenAI 成功");
-          } catch (openaiError) {
-            console.warn(
-              "[generate-titles] ⚠️ OpenAI 失敗:",
-              (openaiError as Error).message,
-            );
-          }
         }
       }
     }

@@ -132,59 +132,42 @@ ${langConfig.instruction}
     const openRouterClient = getOpenRouterClient();
     let responseContent: string;
 
+    // Layer 1: OpenRouter Gemini free（透過 AI Gateway）
     try {
       const response = await openRouterClient.complete({
-        model: "x-ai/grok-4.1-fast:free",
+        model: "google/gemini-2.0-flash-exp:free",
         prompt,
         temperature: 0.8,
         max_tokens: 500,
       });
       responseContent = response.content;
-      console.log("[preview-titles] ✅ Grok 成功");
-    } catch (grokError) {
+      console.log("[preview-titles] ✅ Gemini OpenRouter 成功");
+    } catch (geminiError) {
       console.warn(
-        "[preview-titles] ⚠️ Grok 失敗:",
-        (grokError as Error).message,
+        "[preview-titles] ⚠️ Gemini OpenRouter 失敗:",
+        (geminiError as Error).message,
       );
 
+      // Layer 2: Gemini Direct API
       try {
-        const response = await openRouterClient.complete({
-          model: "google/gemini-2.0-flash-exp:free",
+        responseContent = await callGeminiDirectAPI(prompt);
+        console.log("[preview-titles] ✅ Gemini Direct 成功");
+      } catch (geminiDirectError) {
+        console.warn(
+          "[preview-titles] ⚠️ Gemini Direct 失敗:",
+          (geminiDirectError as Error).message,
+        );
+
+        // Layer 3: DeepSeek Chat (透過 AI Gateway)
+        const deepseekClient = getDeepSeekClient();
+        const deepseekResponse = await deepseekClient.complete({
+          model: "deepseek-chat",
           prompt,
           temperature: 0.8,
           max_tokens: 500,
         });
-        responseContent = response.content;
-        console.log("[preview-titles] ✅ Gemini OpenRouter 成功");
-      } catch (geminiError) {
-        console.warn(
-          "[preview-titles] ⚠️ Gemini OpenRouter 失敗:",
-          (geminiError as Error).message,
-        );
-
-        // Layer 3: Gemini Direct API
-        try {
-          responseContent = await callGeminiDirectAPI(prompt);
-          console.log("[preview-titles] ✅ Gemini Direct 成功");
-        } catch (geminiDirectError) {
-          console.warn(
-            "[preview-titles] ⚠️ Gemini Direct 失敗:",
-            (geminiDirectError as Error).message,
-          );
-
-          // Layer 4: DeepSeek Chat (透過 AI Gateway)
-          const deepseekClient = getDeepSeekClient();
-          const deepseekResponse = await deepseekClient.complete({
-            model: "deepseek-chat",
-            prompt,
-            temperature: 0.8,
-            max_tokens: 500,
-          });
-          responseContent = deepseekResponse.content;
-          console.log(
-            "[preview-titles] ✅ DeepSeek Chat 成功 (via AI Gateway)",
-          );
-        }
+        responseContent = deepseekResponse.content;
+        console.log("[preview-titles] ✅ DeepSeek Chat 成功 (via AI Gateway)");
       }
     }
 
