@@ -36,9 +36,9 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    if (!serviceType || !["gsc", "ga4"].includes(serviceType)) {
+    if (serviceType !== "gsc") {
       return NextResponse.json(
-        { error: "service_type 必須是 gsc 或 ga4" },
+        { error: "目前僅支援 gsc 服務類型" },
         { status: 400 },
       );
     }
@@ -79,14 +79,8 @@ export async function GET(request: NextRequest) {
     // 生成 state token 防止 CSRF
     const state = crypto.randomBytes(32).toString("hex");
 
-    // 根據服務類型決定 scopes
-    const scopes =
-      serviceType === "gsc"
-        ? ["https://www.googleapis.com/auth/webmasters.readonly"]
-        : [
-            "https://www.googleapis.com/auth/analytics.readonly",
-            "https://www.googleapis.com/auth/analytics.edit", // 列出資源需要
-          ];
+    // GSC 所需的 scopes
+    const scopes = ["https://www.googleapis.com/auth/webmasters.readonly"];
 
     // 建立 OAuth URL
     const authParams = new URLSearchParams({

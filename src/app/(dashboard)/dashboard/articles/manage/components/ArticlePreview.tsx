@@ -2,10 +2,14 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useScheduleContext } from "./ScheduleContext";
-import { ArticleWithWebsite, updateArticleContent } from "../actions";
+import {
+  ArticleWithWebsite,
+  updateArticleContent,
+  getArticleHtml,
+} from "../actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FileText, Save, Check } from "lucide-react";
+import { FileText, Save, Check, Loader2 } from "lucide-react";
 import { TiptapEditor } from "@/components/articles/TiptapEditor";
 import { marked } from "marked";
 
@@ -39,33 +43,55 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
   const [editedTitle, setEditedTitle] = useState("");
   const [editedContent, setEditedContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
+  const [loadedFromCache, setLoadedFromCache] = useState(false);
   const prevArticleIdRef = useRef<string | null>(null);
 
   const article = articles.find((a) => a.id === previewArticleId);
 
   const generatedArticle = article?.generated_articles || null;
 
+  // 標題從列表資料取得（不需要額外請求）
   const originalTitle =
     generatedArticle?.title || article?.keywords?.join(", ") || "未命名文章";
-  const originalContent = generatedArticle?.html_content || "";
 
+  // 當選擇的文章改變時，從快取或 API 獲取 HTML 內容
   useEffect(() => {
     if (article && article.id !== prevArticleIdRef.current) {
       prevArticleIdRef.current = article.id;
 
       const loadContent = async () => {
-        const processedContent = await ensureHtml(originalContent);
+        setIsLoading(true);
         setEditedTitle(originalTitle);
-        setEditedContent(processedContent);
+        setEditedContent(""); // 先清空
         setHasChanges(false);
         setSaveSuccess(false);
+
+        try {
+          // 使用新的 API 獲取 HTML 內容（帶快取）
+          const result = await getArticleHtml(article.id);
+
+          if (result.error) {
+            console.error("Failed to load article HTML:", result.error);
+            setEditedContent("<p>無法載入文章內容</p>");
+          } else {
+            const processedContent = await ensureHtml(result.html || "");
+            setEditedContent(processedContent);
+            setLoadedFromCache(result.fromCache);
+          }
+        } catch (err) {
+          console.error("Error loading article:", err);
+          setEditedContent("<p>載入失敗</p>");
+        } finally {
+          setIsLoading(false);
+        }
       };
 
       loadContent();
     }
-  }, [article, originalTitle, originalContent]);
+  }, [article, originalTitle]);
 
   const handleTitleChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -96,6 +122,7 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
     if (result.success) {
       setSaveSuccess(true);
       setHasChanges(false);
+      setLoadedFromCache(false); // 儲存後快取已失效
       setTimeout(() => setSaveSuccess(false), 2000);
     }
   };
@@ -118,11 +145,12 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
             onChange={handleTitleChange}
             className="text-xl font-bold border-none shadow-none focus-visible:ring-0 p-0 h-auto lg:text-2xl"
             placeholder="輸入標題..."
+            disabled={isLoading}
           />
           <Button
             size="sm"
             onClick={handleSave}
-            disabled={isSaving || !hasChanges}
+            disabled={isSaving || !hasChanges || isLoading}
             variant={saveSuccess ? "outline" : "default"}
           >
             {isSaving ? (
@@ -139,14 +167,24 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
               </>
             )}
           </Button>
+          {loadedFromCache && (
+            <span className="text-xs text-muted-foreground">⚡ 快取</span>
+          )}
         </div>
       </header>
       <div className="flex-1 min-h-0 wordpress-preview">
-        <TiptapEditor
-          content={editedContent}
-          onChange={handleContentChange}
-          editable={true}
-        />
+        {isLoading ? (
+          <div className="flex h-full items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <span className="ml-2 text-muted-foreground">載入中...</span>
+          </div>
+        ) : (
+          <TiptapEditor
+            content={editedContent}
+            onChange={handleContentChange}
+            editable={true}
+          />
+        )}
       </div>
     </div>
   );
