@@ -148,13 +148,24 @@ export function SubscriptionPlans({
       }
 
       if (data.paymentForm) {
-        const formData = {
-          apiUrl: data.paymentForm.apiUrl,
-          tradeInfo: data.paymentForm.tradeInfo,
-          tradeSha: data.paymentForm.tradeSha,
-          version: data.paymentForm.version,
-          merchantId: data.paymentForm.merchantId,
-        };
+        // 判斷是定期定額（postData）還是單次付款（tradeInfo）
+        const isRecurring = !!data.paymentForm.postData;
+
+        const formData = isRecurring
+          ? {
+              // 定期定額使用 postData
+              apiUrl: data.paymentForm.apiUrl,
+              postData: data.paymentForm.postData,
+              merchantId: data.paymentForm.merchantId,
+            }
+          : {
+              // 單次付款使用 tradeInfo
+              apiUrl: data.paymentForm.apiUrl,
+              tradeInfo: data.paymentForm.tradeInfo,
+              tradeSha: data.paymentForm.tradeSha,
+              version: data.paymentForm.version,
+              merchantId: data.paymentForm.merchantId,
+            };
 
         const encodedForm = encodeURIComponent(JSON.stringify(formData));
         router.push(
@@ -320,7 +331,7 @@ export function SubscriptionPlans({
                   variant={isPopular ? "default" : "outline"}
                 >
                   {loading === plan.id
-                    ? "處理中..."
+                    ? t("processing") || "處理中..."
                     : isCurrentPlan
                       ? t("currentPlan") || "目前方案"
                       : t("subscribe") || "立即訂閱"}
