@@ -204,36 +204,38 @@ export function SubscriptionPlans({
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">
+      <div className="space-y-4">
+        <h2 className="text-2xl font-bold text-center">
           {t("subscriptionPlans") || "訂閱方案"}
         </h2>
 
-        {/* 月繳/年繳切換器 */}
-        <div className="inline-flex items-center gap-2 rounded-full bg-muted p-1">
-          <button
-            onClick={() => setBillingCycle("monthly")}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
-              billingCycle === "monthly"
-                ? "bg-primary text-primary-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t("monthlyBilling") || "月繳"}
-          </button>
-          <button
-            onClick={() => setBillingCycle("yearly")}
-            className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
-              billingCycle === "yearly"
-                ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
-                : "text-muted-foreground hover:text-foreground"
-            }`}
-          >
-            {t("yearlyBilling") || "年繳"}
-            <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-400 text-slate-900">
-              {t("yearlyBonus") || "送2個月"}
-            </span>
-          </button>
+        {/* 月繳/年繳切換器（置中） */}
+        <div className="flex justify-center">
+          <div className="inline-flex items-center gap-2 rounded-full bg-muted p-1">
+            <button
+              onClick={() => setBillingCycle("monthly")}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                billingCycle === "monthly"
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t("monthlyBilling") || "月繳"}
+            </button>
+            <button
+              onClick={() => setBillingCycle("yearly")}
+              className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
+                billingCycle === "yearly"
+                  ? "bg-gradient-to-r from-purple-600 to-pink-600 text-white"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t("yearlyBilling") || "年繳"}
+              <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-400 text-slate-900">
+                {t("yearlyBonus") || "送2個月"}
+              </span>
+            </button>
+          </div>
         </div>
       </div>
 

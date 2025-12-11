@@ -674,24 +674,20 @@
     "description": "Aquí están las preguntas más frecuentes",
     "questions": {
       "whatIsCredits": {
-        "question": "¿Qué son los créditos?",
-        "answer": "Los créditos son puntos de uso para 1WaySEO, utilizados para medir el consumo de computación de IA. Generar un artículo requiere aproximadamente 3,000-5,000 créditos, dependiendo de la longitud del artículo y el modelo de IA seleccionado."
+        "question": "¿Qué son las cuotas de artículos?",
+        "answer": "Las cuotas de artículos son la unidad de suscripción para 1WaySEO. Cada plan de suscripción incluye una cuota mensual fija de artículos. Un artículo incluye investigación de palabras clave completa, análisis de competencia, generación de contenido IA y generación de imágenes."
       },
       "creditsPerArticle": {
-        "question": "¿Cuántos créditos necesita un artículo?",
-        "answer": "Un artículo SEO típico de 2,000 palabras requiere aproximadamente 3,000-4,000 créditos, incluyendo investigación de palabras clave, análisis de competencia, generación de artículos y generación de imágenes. Los artículos más largos (5,000+ palabras) pueden necesitar 5,000-8,000 créditos."
-      },
-      "lifetimePlan": {
-        "question": "¿El plan de por vida es realmente permanente?",
-        "answer": "¡Sí! Después de un pago único por el plan de por vida, disfrutará permanentemente de una cuota de créditos que se restablece mensualmente. Mientras 1WaySEO continúe operando, su plan seguirá siendo válido para siempre."
+        "question": "¿Cómo funcionan los planes de suscripción?",
+        "answer": "Los planes de suscripción están disponibles en facturación mensual o anual. Cada mes proporciona una cuota fija de artículos. Los suscriptores anuales disfrutan de 2 meses de cuota adicional gratis. Puede actualizar su plan en cualquier momento para obtener más artículos mensuales."
       },
       "creditsAccumulate": {
-        "question": "¿Se acumulan los créditos mensuales no utilizados?",
-        "answer": "La cuota mensual se restablece automáticamente el día 1 de cada mes y no se transfiere. Sin embargo, los paquetes de créditos que compre adicionalmente son permanentes y nunca caducan."
+        "question": "¿Se acumulan las cuotas mensuales no utilizadas?",
+        "answer": "Las cuotas de suscripción mensual se restablecen al comienzo de cada ciclo de facturación y no se transfieren. Sin embargo, los paquetes de artículos que compre adicionalmente son permanentes y nunca caducan."
       },
       "getMoreCredits": {
-        "question": "¿Cómo puedo obtener más créditos?",
-        "answer": "Puede comprar paquetes de recarga de créditos en cualquier momento, que se agregan directamente al saldo de su cuenta. Si desea más cuota mensual, también puede comprar otro plan de por vida: la cuota mensual del nuevo plan se acumulará con su cuota existente."
+        "question": "¿Cómo puedo obtener más artículos?",
+        "answer": "Puede comprar paquetes de artículos adicionales, que se agregan directamente al saldo de su cuenta y nunca caducan. Si necesita más cuota mensual, recomendamos actualizar a un plan de suscripción superior."
       },
       "paymentMethods": {
         "question": "¿Qué métodos de pago se admiten?",

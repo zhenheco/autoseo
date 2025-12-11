@@ -80,10 +80,10 @@ export class PaymentService {
 
   private mapPlanSlugToTier(
     slug: string,
-  ): "free" | "starter" | "professional" | "business" | "agency" {
+  ): "free" | "starter" | "pro" | "business" | "agency" {
     const validTiers: Array<
-      "free" | "starter" | "professional" | "business" | "agency"
-    > = ["free", "starter", "professional", "business", "agency"];
+      "free" | "starter" | "pro" | "business" | "agency"
+    > = ["free", "starter", "pro", "business", "agency"];
     return validTiers.includes(slug as (typeof validTiers)[number])
       ? (slug as (typeof validTiers)[number])
       : "free";

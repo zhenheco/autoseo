@@ -674,24 +674,20 @@
     "description": "Hier sind die am häufigsten gestellten Fragen",
     "questions": {
       "whatIsCredits": {
-        "question": "Was sind Credits?",
-        "answer": "Credits sind Nutzungspunkte für 1WaySEO, die den KI-Rechenverbrauch messen. Die Generierung eines Artikels erfordert etwa 3.000-5.000 Credits, abhängig von der Artikellänge und dem gewählten KI-Modell."
+        "question": "Was sind Artikel-Kontingente?",
+        "answer": "Artikel-Kontingente sind die Abonnementeinheit für 1WaySEO. Jeder Abonnementplan enthält ein festes monatliches Artikelkontingent. Ein Artikel umfasst vollständige Keyword-Recherche, Wettbewerbsanalyse, KI-Inhaltsgenerierung und Bildgenerierung."
       },
       "creditsPerArticle": {
-        "question": "Wie viele Credits benötigt ein Artikel?",
-        "answer": "Ein typischer 2.000-Wörter-SEO-Artikel benötigt etwa 3.000-4.000 Credits, einschließlich Keyword-Recherche, Wettbewerbsanalyse, Artikelgenerierung und Bildgenerierung. Längere Artikel (5.000+ Wörter) können 5.000-8.000 Credits benötigen."
-      },
-      "lifetimePlan": {
-        "question": "Ist der lebenslange Plan wirklich dauerhaft?",
-        "answer": "Ja! Nach einer einmaligen Zahlung für den lebenslangen Plan genießen Sie dauerhaft ein monatlich zurückgesetztes Credit-Kontingent. Solange 1WaySEO weiter betrieben wird, bleibt Ihr Plan für immer gültig."
+        "question": "Wie funktionieren Abonnementpläne?",
+        "answer": "Abonnementpläne sind mit monatlicher oder jährlicher Abrechnung verfügbar. Jeden Monat wird ein festes Artikelkontingent bereitgestellt. Jahresabonnenten erhalten 2 zusätzliche Monate Kontingent kostenlos. Sie können Ihren Plan jederzeit upgraden, um mehr monatliche Artikel zu erhalten."
       },
       "creditsAccumulate": {
-        "question": "Sammeln sich ungenutzte monatliche Credits an?",
-        "answer": "Das monatliche Kontingent wird automatisch am 1. jedes Monats zurückgesetzt und wird nicht übertragen. Jedoch sind zusätzlich gekaufte Credit-Pakete dauerhaft und verfallen nie."
+        "question": "Sammeln sich ungenutzte monatliche Kontingente an?",
+        "answer": "Monatliche Abonnementkontingente werden zu Beginn jedes Abrechnungszyklus zurückgesetzt und werden nicht übertragen. Jedoch sind zusätzlich gekaufte Artikelpakete dauerhaft und verfallen nie."
       },
       "getMoreCredits": {
-        "question": "Wie kann ich mehr Credits bekommen?",
-        "answer": "Sie können jederzeit Credit-Aufladepakete kaufen, die direkt zu Ihrem Kontoguthaben hinzugefügt werden. Wenn Sie mehr monatliches Kontingent möchten, können Sie auch einen weiteren lebenslangen Plan kaufen - das monatliche Kontingent des neuen Plans wird mit Ihrem bestehenden Kontingent addiert."
+        "question": "Wie kann ich mehr Artikel bekommen?",
+        "answer": "Sie können Artikel-Zusatzpakete kaufen, die direkt zu Ihrem Kontoguthaben hinzugefügt werden und nie verfallen. Wenn Sie mehr monatliches Kontingent benötigen, empfehlen wir ein Upgrade auf einen höheren Abonnementplan."
       },
       "paymentMethods": {
         "question": "Welche Zahlungsmethoden werden unterstützt?",

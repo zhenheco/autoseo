@@ -453,12 +453,7 @@ export type Database = {
           name: string;
           slug: string;
           owner_id: string;
-          subscription_tier:
-            | "free"
-            | "starter"
-            | "professional"
-            | "business"
-            | "agency";
+          subscription_tier: "free" | "starter" | "pro" | "business" | "agency";
           subscription_ends_at: string | null;
           seo_token_balance: number;
           newebpay_customer_id: string | null;
@@ -473,7 +468,7 @@ export type Database = {
           subscription_tier?:
             | "free"
             | "starter"
-            | "professional"
+            | "pro"
             | "business"
             | "agency";
           subscription_ends_at?: string | null;
@@ -490,7 +485,7 @@ export type Database = {
           subscription_tier?:
             | "free"
             | "starter"
-            | "professional"
+            | "pro"
             | "business"
             | "agency";
           subscription_ends_at?: string | null;

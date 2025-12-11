@@ -10,7 +10,6 @@ import { GradientText } from "@/components/ui/shimmer-text";
 const faqKeys = [
   "whatIsCredits",
   "creditsPerArticle",
-  "lifetimePlan",
   "creditsAccumulate",
   "getMoreCredits",
   "paymentMethods",
