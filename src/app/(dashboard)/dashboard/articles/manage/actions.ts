@@ -4,6 +4,16 @@ import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { revalidatePath } from "next/cache";
 import { TokenBillingService } from "@/lib/billing/token-billing-service";
+import {
+  cacheGetOrSet,
+  articleListCacheKey,
+  articleHtmlCacheKey,
+  invalidateArticleListCache,
+  invalidateArticleCache,
+  CACHE_CONFIG,
+  cacheGet,
+  cacheSet,
+} from "@/lib/cache/redis-cache";
 
 const RESERVED_TOKENS = 4000; // 預扣額度
 
@@ -28,7 +38,8 @@ export interface ArticleWithWebsite {
   generated_articles: {
     id: string;
     title: string;
-    html_content: string;
+    /** @deprecated 列表查詢不再包含 html_content，請使用 getArticleHtml() */
+    html_content?: string;
     content_json: Record<string, unknown> | null;
   } | null;
 }
@@ -53,7 +64,7 @@ export async function getArticles(
   websiteId?: string | null,
 ) {
   const user = await getUser();
-  if (!user) return { articles: [], error: "未登入" };
+  if (!user) return { articles: [], error: "未登入", fromCache: false };
 
   const supabase = await createClient();
 
@@ -66,56 +77,129 @@ export async function getArticles(
 
   const companyId = membership?.company_id || user.id;
 
-  let query = supabase
-    .from("article_jobs")
-    .select(
-      `
-      *,
-      website_configs (
-        id,
-        website_name,
-        wordpress_url
-      ),
-      generated_articles (
-        id,
-        title,
-        html_content,
-        content_json
+  // 使用 Redis 快取
+  const cacheKey = articleListCacheKey(
+    companyId,
+    filter,
+    websiteId || undefined,
+  );
+
+  const { data: articles, fromCache } = await cacheGetOrSet<
+    ArticleWithWebsite[]
+  >(cacheKey, CACHE_CONFIG.ARTICLE_LIST.ttl, async () => {
+    // 查詢文章列表（不含 html_content，大幅減少資料傳輸）
+    let query = supabase
+      .from("article_jobs")
+      .select(
+        `
+          *,
+          website_configs (
+            id,
+            website_name,
+            wordpress_url
+          ),
+          generated_articles (
+            id,
+            title,
+            content_json
+          )
+        `,
       )
-    `,
-    )
-    .eq("company_id", companyId)
-    .order("scheduled_publish_at", { ascending: true, nullsFirst: false })
-    .order("created_at", { ascending: false });
+      .eq("company_id", companyId)
+      .order("scheduled_publish_at", { ascending: true, nullsFirst: false })
+      .order("created_at", { ascending: false });
 
-  // 網站篩選
-  if (websiteId) {
-    query = query.eq("website_id", websiteId);
+    // 網站篩選
+    if (websiteId) {
+      query = query.eq("website_id", websiteId);
+    }
+
+    if (filter === "unpublished") {
+      query = query.in("status", [
+        "pending",
+        "processing",
+        "draft",
+        "completed",
+        "cancelled",
+        "failed",
+      ]);
+    } else if (filter === "published") {
+      query = query.eq("status", "published");
+    } else if (filter === "scheduled") {
+      query = query.eq("status", "scheduled");
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      console.error("Failed to fetch articles:", error);
+      throw error;
+    }
+
+    return (data || []) as ArticleWithWebsite[];
+  });
+
+  return { articles, error: null, fromCache };
+}
+
+/**
+ * 取得單篇文章的 HTML 內容（帶快取）
+ * @param articleJobId 文章 Job ID
+ * @returns HTML 內容
+ */
+export async function getArticleHtml(articleJobId: string): Promise<{
+  html: string | null;
+  title: string | null;
+  error: string | null;
+  fromCache: boolean;
+}> {
+  const user = await getUser();
+  if (!user)
+    return { html: null, title: null, error: "未登入", fromCache: false };
+
+  const supabase = await createClient();
+
+  // 先驗證權限
+  const { data: membership } = await supabase
+    .from("company_members")
+    .select("company_id")
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .single();
+
+  if (!membership) {
+    return { html: null, title: null, error: "無權限", fromCache: false };
   }
 
-  if (filter === "unpublished") {
-    query = query.in("status", [
-      "pending",
-      "processing",
-      "draft",
-      "completed",
-      "cancelled",
-      "failed",
-    ]);
-  } else if (filter === "published") {
-    query = query.eq("status", "published");
-  } else if (filter === "scheduled") {
-    query = query.eq("status", "scheduled");
-  }
+  // 使用 Redis 快取
+  const cacheKey = articleHtmlCacheKey(articleJobId);
 
-  const { data, error } = await query;
+  const { data, fromCache } = await cacheGetOrSet<{
+    html: string;
+    title: string;
+  }>(cacheKey, CACHE_CONFIG.ARTICLE_HTML.ttl, async () => {
+    const { data: article, error } = await supabase
+      .from("generated_articles")
+      .select("html_content, title")
+      .eq("article_job_id", articleJobId)
+      .single();
 
-  if (error) {
-    console.error("Failed to fetch articles:", error);
-    return { articles: [], error: error.message };
-  }
+    if (error || !article) {
+      throw new Error("找不到文章");
+    }
 
-  return { articles: data as ArticleWithWebsite[], error: null };
+    return {
+      html: article.html_content || "",
+      title: article.title || "",
+    };
+  });
+
+  return {
+    html: data.html,
+    title: data.title,
+    error: null,
+    fromCache,
+  };
 }
 
 export async function getGeneratedArticle(articleJobId: string) {
@@ -240,6 +324,16 @@ export async function publishArticle(articleJobId: string, websiteId: string) {
       })
       .eq("id", articleJobId);
 
+    // 獲取 companyId 並使快取失效
+    const { data: job } = await supabase
+      .from("article_jobs")
+      .select("company_id")
+      .eq("id", articleJobId)
+      .single();
+    if (job?.company_id) {
+      await invalidateArticleCache(articleJobId, job.company_id);
+    }
+
     revalidatePath("/dashboard/articles/manage");
     return { success: true, error: null, url: result.url };
   } catch (err) {
@@ -287,6 +381,9 @@ export async function deleteArticle(articleJobId: string) {
     console.warn("[deleteArticle] Article not found or no permission");
     return { success: false, error: "找不到文章或無權刪除" };
   }
+
+  // 使快取失效
+  await invalidateArticleCache(articleJobId, membership.company_id);
 
   revalidatePath("/dashboard/articles/manage");
   return { success: true, error: null };
@@ -424,6 +521,17 @@ export async function scheduleArticlesForPublish(
       title,
       scheduledAt,
     });
+  }
+
+  // 獲取 companyId 並使快取失效
+  const { data: membership } = await supabase
+    .from("company_members")
+    .select("company_id")
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .single();
+  if (membership?.company_id) {
+    await invalidateArticleListCache(membership.company_id);
   }
 
   revalidatePath("/dashboard/articles/manage");
@@ -590,6 +698,9 @@ export async function batchDeleteArticles(articleIds: string[]): Promise<{
     );
     return { success: false, error: "找不到文章或無權刪除" };
   }
+
+  // 使快取失效（批量刪除只需失效列表快取）
+  await invalidateArticleListCache(membership.company_id);
 
   revalidatePath("/dashboard/articles/manage");
   return {
@@ -766,6 +877,14 @@ export async function updateArticleContent(
 
   const supabase = await createClient();
 
+  // 獲取 companyId 用於快取失效
+  const { data: membership } = await supabase
+    .from("company_members")
+    .select("company_id")
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .single();
+
   const { error } = await supabase
     .from("generated_articles")
     .update({
@@ -779,6 +898,9 @@ export async function updateArticleContent(
     console.error("Failed to update article:", error);
     return { success: false, error: error.message };
   }
+
+  // 使快取失效
+  await invalidateArticleCache(articleJobId, membership?.company_id);
 
   revalidatePath("/dashboard/articles/manage");
   return { success: true };

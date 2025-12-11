@@ -6,8 +6,8 @@
 // 資料庫類型
 // ================================================
 
-/** Google OAuth Token 服務類型 */
-export type GoogleServiceType = "gsc" | "ga4";
+/** Google OAuth Token 服務類型（目前僅支援 GSC） */
+export type GoogleServiceType = "gsc";
 
 /** OAuth Token 狀態 */
 export type GoogleOAuthStatus = "active" | "expired" | "revoked" | "error";
@@ -251,14 +251,11 @@ export interface GoogleUserInfo {
 // 網站 OAuth 狀態
 // ================================================
 
-/** 網站 OAuth 連接狀態 */
+/** 網站 OAuth 連接狀態（目前僅支援 GSC） */
 export interface WebsiteOAuthStatus {
   gsc_connected: boolean;
   gsc_email: string | null;
   gsc_site_url: string | null;
-  ga4_connected: boolean;
-  ga4_email: string | null;
-  ga4_property_id: string | null;
 }
 
 // ================================================

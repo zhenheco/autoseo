@@ -60,22 +60,10 @@ export async function GET(
       .eq("status", "active")
       .single();
 
-    // 取得 GA4 token
-    const { data: ga4Token } = await adminClient
-      .from("google_oauth_tokens")
-      .select("google_account_email, ga4_property_id, status")
-      .eq("website_id", websiteId)
-      .eq("service_type", "ga4")
-      .eq("status", "active")
-      .single();
-
     const status: WebsiteOAuthStatus = {
       gsc_connected: !!gscToken,
       gsc_email: gscToken?.google_account_email || null,
       gsc_site_url: gscToken?.gsc_site_url || null,
-      ga4_connected: !!ga4Token,
-      ga4_email: ga4Token?.google_account_email || null,
-      ga4_property_id: ga4Token?.ga4_property_id || null,
     };
 
     return NextResponse.json(status);
