@@ -387,10 +387,10 @@
     "quotaResetDate": "クォータリセット日",
     "creditPackagePurchase": "クレジットパッケージ購入",
     "plans": {
-      "starter": "個人版",
-      "professional": "チーム版",
-      "business": "組織版",
-      "agency": "企業パートナー版"
+      "free": "無料トライアル",
+      "starter": "スタータープラン",
+      "pro": "プロプラン",
+      "business": "ビジネスプラン"
     }
   },
   "payment": {

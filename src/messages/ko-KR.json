@@ -387,10 +387,10 @@
     "quotaResetDate": "할당량 리셋 날짜",
     "creditPackagePurchase": "크레딧 패키지 구매",
     "plans": {
-      "starter": "개인",
-      "professional": "팀",
-      "business": "조직",
-      "agency": "기업 파트너"
+      "free": "무료 체험",
+      "starter": "스타터",
+      "pro": "프로",
+      "business": "비즈니스"
     }
   },
   "payment": {

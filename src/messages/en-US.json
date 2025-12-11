@@ -387,10 +387,10 @@
     "quotaResetDate": "Quota Reset Date",
     "creditPackagePurchase": "Credit Package Purchase",
     "plans": {
-      "starter": "Personal",
-      "professional": "Team",
-      "business": "Organization",
-      "agency": "Enterprise Partner"
+      "free": "Free Trial",
+      "starter": "Starter",
+      "pro": "Pro",
+      "business": "Business"
     }
   },
   "payment": {
