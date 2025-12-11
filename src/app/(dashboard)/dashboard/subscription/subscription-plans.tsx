@@ -339,17 +339,23 @@ export function SubscriptionPlans({
               </CardContent>
               <CardFooter>
                 <Button
-                  className="w-full"
+                  className={`w-full ${
+                    !canSubscribe(plan) && !isCurrentPlan
+                      ? "bg-gray-400 text-white hover:bg-gray-400"
+                      : ""
+                  }`}
                   onClick={() => handleSubscribe(plan)}
                   disabled={
                     loading === plan.id || isCurrentPlan || !canSubscribe(plan)
                   }
                   variant={
-                    isCurrentPlan || !canSubscribe(plan)
-                      ? "secondary"
-                      : isPopular
-                        ? "default"
-                        : "outline"
+                    isCurrentPlan
+                      ? "outline"
+                      : !canSubscribe(plan)
+                        ? "secondary"
+                        : isPopular
+                          ? "default"
+                          : "outline"
                   }
                 >
                   {loading === plan.id
