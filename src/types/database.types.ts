@@ -15,7 +15,11 @@ export type Database = {
           company_id: string;
           order_no: string;
           order_type: "onetime" | "recurring_first" | "recurring_renewal";
-          payment_type: "subscription" | "token_package" | "lifetime";
+          payment_type:
+            | "subscription"
+            | "token_package"
+            | "lifetime"
+            | "article_package";
           amount: number;
           currency: string;
           item_description: string;
@@ -24,6 +28,7 @@ export type Database = {
           newebpay_message: string | null;
           newebpay_trade_no: string | null;
           newebpay_response: Json | null;
+          metadata: Json | null;
           status:
             | "pending"
             | "processing"
@@ -42,7 +47,11 @@ export type Database = {
           company_id: string;
           order_no: string;
           order_type: "onetime" | "recurring_first" | "recurring_renewal";
-          payment_type: "subscription" | "token_package" | "lifetime";
+          payment_type:
+            | "subscription"
+            | "token_package"
+            | "lifetime"
+            | "article_package";
           amount: number;
           currency?: string;
           item_description: string;
@@ -51,6 +60,7 @@ export type Database = {
           newebpay_message?: string | null;
           newebpay_trade_no?: string | null;
           newebpay_response?: Json | null;
+          metadata?: Json | null;
           status?:
             | "pending"
             | "processing"
@@ -69,7 +79,11 @@ export type Database = {
           company_id?: string;
           order_no?: string;
           order_type?: "onetime" | "recurring_first" | "recurring_renewal";
-          payment_type?: "subscription" | "token_package" | "lifetime";
+          payment_type?:
+            | "subscription"
+            | "token_package"
+            | "lifetime"
+            | "article_package";
           amount?: number;
           currency?: string;
           item_description?: string;
@@ -78,6 +92,7 @@ export type Database = {
           newebpay_message?: string | null;
           newebpay_trade_no?: string | null;
           newebpay_response?: Json | null;
+          metadata?: Json | null;
           status?:
             | "pending"
             | "processing"
@@ -531,6 +546,8 @@ export type Database = {
           lifetime_price: number | null;
           features: Json;
           limits: Json;
+          articles_per_month: number;
+          yearly_bonus_months: number;
           created_at: string;
           updated_at: string;
         };
@@ -541,11 +558,13 @@ export type Database = {
           monthly_price: number;
           yearly_price?: number | null;
           yearly_discount?: number | null;
-          base_tokens: number;
+          base_tokens?: number;
           is_lifetime?: boolean;
           lifetime_price?: number | null;
           features?: Json;
           limits?: Json;
+          articles_per_month?: number;
+          yearly_bonus_months?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -561,6 +580,8 @@ export type Database = {
           lifetime_price?: number | null;
           features?: Json;
           limits?: Json;
+          articles_per_month?: number;
+          yearly_bonus_months?: number;
           created_at?: string;
           updated_at?: string;
         };
@@ -605,6 +626,147 @@ export type Database = {
         };
         Relationships: [];
       };
+      article_packages: {
+        Row: {
+          id: string;
+          slug: string;
+          name: string;
+          price: number;
+          articles: number;
+          description: string | null;
+          is_active: boolean;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          slug: string;
+          name: string;
+          price: number;
+          articles: number;
+          description?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          slug?: string;
+          name?: string;
+          price?: number;
+          articles?: number;
+          description?: string | null;
+          is_active?: boolean;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      purchased_article_credits: {
+        Row: {
+          id: string;
+          company_id: string;
+          source_type: "package" | "bonus" | "referral" | "promo";
+          source_id: string | null;
+          original_articles: number;
+          remaining_articles: number;
+          price_per_article: number | null;
+          expires_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          source_type: "package" | "bonus" | "referral" | "promo";
+          source_id?: string | null;
+          original_articles: number;
+          remaining_articles: number;
+          price_per_article?: number | null;
+          expires_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          source_type?: "package" | "bonus" | "referral" | "promo";
+          source_id?: string | null;
+          original_articles?: number;
+          remaining_articles?: number;
+          price_per_article?: number | null;
+          expires_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "purchased_article_credits_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      article_usage_logs: {
+        Row: {
+          id: string;
+          company_id: string;
+          article_job_id: string | null;
+          deducted_from: "subscription" | "purchased";
+          credit_id: string | null;
+          article_title: string | null;
+          article_keywords: string[] | null;
+          deducted_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          article_job_id?: string | null;
+          deducted_from: "subscription" | "purchased";
+          credit_id?: string | null;
+          article_title?: string | null;
+          article_keywords?: string[] | null;
+          deducted_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          article_job_id?: string | null;
+          deducted_from?: "subscription" | "purchased";
+          credit_id?: string | null;
+          article_title?: string | null;
+          article_keywords?: string[] | null;
+          deducted_at?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "article_usage_logs_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "article_usage_logs_article_job_id_fkey";
+            columns: ["article_job_id"];
+            isOneToOne: false;
+            referencedRelation: "article_jobs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "article_usage_logs_credit_id_fkey";
+            columns: ["credit_id"];
+            isOneToOne: false;
+            referencedRelation: "purchased_article_credits";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       company_subscriptions: {
         Row: {
           id: string;
@@ -620,6 +782,11 @@ export type Database = {
           lifetime_discount: number;
           lifetime_free_articles_used: number;
           lifetime_free_articles_limit: number;
+          subscription_articles_remaining: number | null;
+          purchased_articles_remaining: number | null;
+          articles_per_month: number | null;
+          billing_cycle: "monthly" | "yearly" | null;
+          last_quota_reset_at: string | null;
           current_period_start: string | null;
           current_period_end: string | null;
           trial_end: string | null;
@@ -641,6 +808,11 @@ export type Database = {
           lifetime_discount?: number;
           lifetime_free_articles_used?: number;
           lifetime_free_articles_limit?: number;
+          subscription_articles_remaining?: number | null;
+          purchased_articles_remaining?: number | null;
+          articles_per_month?: number | null;
+          billing_cycle?: "monthly" | "yearly" | null;
+          last_quota_reset_at?: string | null;
           current_period_start?: string | null;
           current_period_end?: string | null;
           trial_end?: string | null;
@@ -662,6 +834,11 @@ export type Database = {
           lifetime_discount?: number;
           lifetime_free_articles_used?: number;
           lifetime_free_articles_limit?: number;
+          subscription_articles_remaining?: number | null;
+          purchased_articles_remaining?: number | null;
+          articles_per_month?: number | null;
+          billing_cycle?: "monthly" | "yearly" | null;
+          last_quota_reset_at?: string | null;
           current_period_start?: string | null;
           current_period_end?: string | null;
           trial_end?: string | null;

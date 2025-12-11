@@ -19,7 +19,7 @@ import {
   MainContent,
 } from "@/components/dashboard/dashboard-layout-client";
 import { LogoutButton } from "@/components/dashboard/logout-button";
-import { TokenBalanceDisplay } from "@/components/billing/TokenBalanceDisplay";
+import { ArticleQuotaDisplay } from "@/components/billing/ArticleQuotaDisplay";
 import { NewArticleButton } from "@/components/articles/NewArticleButton";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { MobileBottomNav } from "@/components/dashboard/mobile-bottom-nav";
@@ -75,7 +75,7 @@ export default async function DashboardLayout({
                     </Button>
                   </Link>
 
-                  <TokenBalanceDisplay compact />
+                  <ArticleQuotaDisplay compact />
 
                   <UILanguageSelector />
 

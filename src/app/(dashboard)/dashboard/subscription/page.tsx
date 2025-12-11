@@ -2,12 +2,57 @@ import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { SubscriptionPlans } from "./subscription-plans";
-import { TokenPackages } from "./token-packages";
+import { ArticlePackages } from "./article-packages";
 import { PaymentHistory } from "./payment-history";
 import { SubscriptionStatusChecker } from "@/components/subscription/SubscriptionStatusChecker";
 import type { Database } from "@/types/database.types";
 import { checkPagePermission } from "@/lib/permissions";
 import { getTranslations } from "next-intl/server";
+
+/**
+ * 篇數制方案資料類型
+ */
+interface ArticlePlan {
+  id: string;
+  name: string;
+  slug: string;
+  monthly_price: number;
+  yearly_price: number | null;
+  articles_per_month: number;
+  yearly_bonus_months: number;
+  features: unknown;
+}
+
+/**
+ * 文章加購包資料類型
+ */
+interface ArticlePackage {
+  id: string;
+  name: string;
+  slug: string;
+  articles: number;
+  price: number;
+  description: string | null;
+  is_active: boolean;
+}
+
+/**
+ * 公司訂閱資訊（篇數制）
+ */
+interface CompanySubscription {
+  plan_id: string;
+  subscription_articles_remaining: number;
+  purchased_articles_remaining: number;
+  articles_per_month: number;
+  billing_cycle: "monthly" | "yearly";
+  current_period_start: string | null;
+  current_period_end: string | null;
+  last_quota_reset_at: string | null;
+  subscription_plans: {
+    name: string;
+    slug: string;
+  } | null;
+}
 
 export default async function SubscriptionPage() {
   await checkPagePermission("canAccessSubscription");
@@ -39,28 +84,51 @@ export default async function SubscriptionPage() {
     .eq("id", member.company_id)
     .single();
 
-  // 從 company_subscriptions 表讀取訂閱資訊（包含 plan 資訊和疊加購買資訊）
-  const { data: companySubscription } = await supabase
+  // 從 company_subscriptions 表讀取訂閱資訊（篇數制）
+  const { data: companySubscriptionRaw } = await supabase
     .from("company_subscriptions")
     .select(
-      "plan_id, monthly_quota_balance, purchased_token_balance, monthly_token_quota, base_monthly_quota, purchased_count, current_period_end, is_lifetime, subscription_plans(name, slug)",
+      "plan_id, current_period_start, current_period_end, subscription_plans(name, slug)",
     )
     .eq("company_id", member.company_id)
     .eq("status", "active")
     .single();
 
-  const { data: plans } = await supabase
-    .from("subscription_plans")
-    .select<"*", Database["public"]["Tables"]["subscription_plans"]["Row"]>("*")
-    .eq("is_lifetime", true)
-    .neq("slug", "free")
-    .order("lifetime_price", { ascending: true });
+  // 類型斷言：新欄位在 migration 後才會被識別
+  const companySubscription =
+    companySubscriptionRaw as unknown as CompanySubscription | null;
 
-  const { data: tokenPackages } = await supabase
-    .from("token_packages")
-    .select<"*", Database["public"]["Tables"]["token_packages"]["Row"]>("*")
+  // 取得訂閱方案（篇數制，排除免費方案）
+  const { data: plansRaw } = await supabase
+    .from("subscription_plans")
+    .select("*")
+    .neq("slug", "free")
+    .order("monthly_price", { ascending: true });
+
+  // 類型斷言：新欄位在 migration 後才會被識別
+  const plans = (plansRaw || []) as unknown as ArticlePlan[];
+
+  // 取得文章加購包
+  const { data: articlePackagesRaw } = await (
+    supabase.from("article_packages" as "companies") as unknown as {
+      select: (columns: string) => {
+        eq: (
+          column: string,
+          value: boolean,
+        ) => {
+          order: (
+            column: string,
+            options: { ascending: boolean },
+          ) => Promise<{ data: ArticlePackage[] | null }>;
+        };
+      };
+    }
+  )
+    .select("*")
     .eq("is_active", true)
     .order("price", { ascending: true });
+
+  const articlePackages = articlePackagesRaw || [];
 
   const { data: paymentOrders } = await supabase
     .from("payment_orders")
@@ -84,44 +152,42 @@ export default async function SubscriptionPage() {
                 {t("planType")}
               </p>
               <p className="text-lg font-semibold">
-                {(
-                  companySubscription?.subscription_plans as {
-                    name?: string;
-                  } | null
-                )?.name ||
+                {companySubscription?.subscription_plans?.name ||
                   (company.subscription_tier === "free"
                     ? t("freePlan")
                     : t("unknownPlan"))}
-                {(companySubscription?.purchased_count || 1) > 1 && (
-                  <span className="ml-2 text-sm text-purple-600">
-                    (x{companySubscription?.purchased_count})
-                  </span>
-                )}
               </p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">
-                {t("monthlyResetCredits")}
-              </p>
-              <p className="text-lg font-semibold">
-                {companySubscription?.monthly_token_quota?.toLocaleString() ||
-                  0}
-              </p>
-              {(companySubscription?.purchased_count || 1) > 1 && (
+              {companySubscription?.billing_cycle && (
                 <p className="text-xs text-muted-foreground">
-                  {t("base")}{" "}
-                  {companySubscription?.base_monthly_quota?.toLocaleString()} x{" "}
-                  {companySubscription?.purchased_count}
+                  {companySubscription.billing_cycle === "yearly"
+                    ? t("yearlyBilling") || "年繳"
+                    : t("monthlyBilling") || "月繳"}
                 </p>
               )}
             </div>
             <div>
               <p className="text-sm text-muted-foreground mb-1">
-                {t("purchasedCredits")}
+                {t("subscriptionRemaining") || "本期剩餘"}
               </p>
               <p className="text-lg font-semibold">
-                {companySubscription?.purchased_token_balance?.toLocaleString() ||
-                  0}
+                {companySubscription?.subscription_articles_remaining?.toLocaleString() ||
+                  0}{" "}
+                /{" "}
+                {companySubscription?.articles_per_month?.toLocaleString() || 0}{" "}
+                {t("articles") || "篇"}
+              </p>
+              <p className="text-xs text-muted-foreground">
+                {t("monthlyQuota") || "每月配額"}
+              </p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">
+                {t("purchasedRemaining") || "加購剩餘"}
+              </p>
+              <p className="text-lg font-semibold">
+                {companySubscription?.purchased_articles_remaining?.toLocaleString() ||
+                  0}{" "}
+                {t("articles") || "篇"}
               </p>
               <p className="text-xs text-success mt-1">{t("neverExpires")}</p>
             </div>
@@ -147,7 +213,7 @@ export default async function SubscriptionPage() {
 
       <div id="plans" className="mb-12">
         <SubscriptionPlans
-          plans={plans || []}
+          plans={plans}
           companyId={member.company_id}
           userEmail={user.email || ""}
           currentTier={company?.subscription_tier || "free"}
@@ -155,13 +221,12 @@ export default async function SubscriptionPage() {
             companySubscription
               ? {
                   plan_id: companySubscription.plan_id,
-                  purchased_count: companySubscription.purchased_count || 1,
-                  base_monthly_quota:
-                    companySubscription.base_monthly_quota ||
-                    companySubscription.monthly_token_quota ||
-                    0,
-                  monthly_token_quota:
-                    companySubscription.monthly_token_quota || 0,
+                  billing_cycle: companySubscription.billing_cycle,
+                  articles_per_month: companySubscription.articles_per_month,
+                  subscription_articles_remaining:
+                    companySubscription.subscription_articles_remaining,
+                  purchased_articles_remaining:
+                    companySubscription.purchased_articles_remaining,
                 }
               : null
           }
@@ -170,10 +235,10 @@ export default async function SubscriptionPage() {
 
       <div className="mb-12">
         <h2 className="text-2xl font-bold mb-6">
-          {t("creditPackagePurchase")}
+          {t("articlePackagePurchase") || "文章加購包"}
         </h2>
-        <TokenPackages
-          packages={tokenPackages || []}
+        <ArticlePackages
+          packages={articlePackages}
           companyId={member.company_id}
           userEmail={user.email || ""}
         />

@@ -27,7 +27,11 @@ interface NewebPayPeriodCallback {
 
 export interface CreateOnetimeOrderParams {
   companyId: string;
-  paymentType: "subscription" | "token_package" | "lifetime";
+  paymentType:
+    | "subscription"
+    | "token_package"
+    | "lifetime"
+    | "article_package";
   relatedId: string;
   amount: number;
   description: string;
@@ -113,7 +117,10 @@ export class PaymentService {
         company_id: params.companyId,
         order_no: orderNo,
         order_type: "onetime",
-        payment_type: params.paymentType,
+        payment_type: params.paymentType as
+          | "subscription"
+          | "token_package"
+          | "lifetime", // 暫時類型斷言，待 migration 後更新
         amount: params.amount,
         item_description: params.description,
         related_id: params.relatedId,
@@ -554,6 +561,311 @@ export class PaymentService {
             tokens: packageData.tokens,
             balanceBefore: company.seo_token_balance,
             balanceAfter: newBalance,
+          });
+        } else if (
+          (orderData.payment_type as string) === "article_package" &&
+          orderData.related_id
+        ) {
+          // 處理篇數制加購包
+          // 類型定義（article_packages 表尚未在 database.types.ts 中）
+          interface ArticlePackageRow {
+            id: string;
+            slug: string;
+            name: string;
+            price: number;
+            articles: number;
+          }
+
+          const { data: rawPackageData, error: packageError } =
+            await this.supabase
+              .from("article_packages" as "token_packages") // 暫時類型斷言
+              .select("*")
+              .eq("id", orderData.related_id)
+              .single();
+
+          const packageData =
+            rawPackageData as unknown as ArticlePackageRow | null;
+
+          if (packageError || !packageData) {
+            console.error("[PaymentService] 加購包不存在:", packageError);
+            return { success: false, error: "加購包不存在" };
+          }
+
+          console.log("[PaymentService] 加購包資料:", {
+            packageId: packageData.id,
+            packageSlug: packageData.slug,
+            articles: packageData.articles,
+          });
+
+          // 查詢公司訂閱
+          const { data: rawSubscription, error: subError } = await this.supabase
+            .from("company_subscriptions")
+            .select("id, purchased_articles_remaining")
+            .eq("company_id", orderData.company_id)
+            .eq("status", "active")
+            .maybeSingle();
+
+          // 類型斷言（purchased_articles_remaining 欄位尚未在 database.types.ts 中）
+          const subscription = rawSubscription as unknown as {
+            id: string;
+            purchased_articles_remaining: number | null;
+          } | null;
+
+          if (subError) {
+            console.error("[PaymentService] 查詢訂閱失敗:", subError);
+            return { success: false, error: "查詢訂閱失敗" };
+          }
+
+          if (subscription) {
+            // 更新現有訂閱的加購篇數
+            const currentPurchased =
+              subscription.purchased_articles_remaining || 0;
+            const newPurchased = currentPurchased + packageData.articles;
+
+            const { error: updateSubError } = await this.supabase
+              .from("company_subscriptions")
+              .update({
+                purchased_articles_remaining: newPurchased,
+              } as Database["public"]["Tables"]["company_subscriptions"]["Update"])
+              .eq("id", subscription.id);
+
+            if (updateSubError) {
+              console.error(
+                "[PaymentService] 更新加購篇數失敗:",
+                updateSubError,
+              );
+              return { success: false, error: "更新加購篇數失敗" };
+            }
+
+            console.log("[PaymentService] 加購包處理成功:", {
+              packageSlug: packageData.slug,
+              articles: packageData.articles,
+              purchasedBefore: currentPurchased,
+              purchasedAfter: newPurchased,
+            });
+          } else {
+            // 沒有活躍訂閱，創建免費訂閱並加入加購篇數
+            const { data: freePlan } = await this.supabase
+              .from("subscription_plans")
+              .select("id")
+              .eq("slug", "free")
+              .single();
+
+            if (freePlan) {
+              const now = new Date();
+              const { error: createSubError } = await this.supabase
+                .from("company_subscriptions")
+                .insert({
+                  company_id: orderData.company_id,
+                  plan_id: freePlan.id,
+                  status: "active",
+                  subscription_articles_remaining: 0,
+                  purchased_articles_remaining: packageData.articles,
+                  articles_per_month: 0,
+                  billing_cycle: null,
+                  current_period_start: now.toISOString(),
+                  current_period_end: null,
+                  // 向後相容必填欄位
+                  monthly_token_quota: 0,
+                } as unknown as Database["public"]["Tables"]["company_subscriptions"]["Insert"]);
+
+              if (createSubError) {
+                console.error(
+                  "[PaymentService] 創建免費訂閱失敗:",
+                  createSubError,
+                );
+                return { success: false, error: "創建訂閱失敗" };
+              }
+
+              console.log("[PaymentService] 創建免費訂閱並加入加購篇數:", {
+                packageSlug: packageData.slug,
+                articles: packageData.articles,
+              });
+            }
+          }
+
+          // 記錄加購篇數到 purchased_article_credits（FIFO 追蹤）
+          // 暫時類型斷言（purchased_article_credits 表尚未在 database.types.ts 中）
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const { error: creditError } = await (this.supabase as any)
+            .from("purchased_article_credits")
+            .insert({
+              company_id: orderData.company_id,
+              package_id: packageData.id,
+              payment_order_id: orderData.id,
+              original_credits: packageData.articles,
+              remaining_credits: packageData.articles,
+              expires_at: null, // 加購包永久有效
+            });
+
+          if (creditError) {
+            console.error("[PaymentService] 記錄加購篇數失敗:", creditError);
+            // 不返回錯誤，因為主要邏輯已完成
+          }
+        } else if (
+          orderData.payment_type === "subscription" &&
+          orderData.related_id
+        ) {
+          // 處理年繳訂閱（篇數制）
+          const { data: planData, error: planError } = await this.supabase
+            .from("subscription_plans")
+            .select("*")
+            .eq("id", orderData.related_id)
+            .single();
+
+          if (planError || !planData) {
+            console.error("[PaymentService] 方案不存在:", planError);
+            return { success: false, error: "方案不存在" };
+          }
+
+          // 類型斷言為篇數制方案
+          const plan = planData as unknown as {
+            id: string;
+            name: string;
+            slug: string;
+            monthly_price: number;
+            yearly_price: number | null;
+            articles_per_month: number;
+            yearly_bonus_months: number;
+          };
+
+          console.log("[PaymentService] 年繳訂閱方案資料:", {
+            planId: plan.id,
+            planName: plan.name,
+            articlesPerMonth: plan.articles_per_month,
+            yearlyBonusMonths: plan.yearly_bonus_months,
+          });
+
+          // 讀取訂單的 metadata 確認是年繳
+          // 類型斷言（metadata 欄位需要在 migration 後更新類型）
+          const orderMetadata = (
+            orderData as unknown as {
+              metadata: { billingCycle?: string } | null;
+            }
+          ).metadata;
+          const isYearly = orderMetadata?.billingCycle === "yearly";
+
+          if (!isYearly) {
+            console.warn(
+              "[PaymentService] 非年繳訂閱走到 subscription 處理，應使用 recurring",
+            );
+          }
+
+          const now = new Date();
+          const periodStart = now.toISOString();
+          // 年繳：12 個月後到期
+          const periodEnd = new Date(
+            now.getFullYear() + 1,
+            now.getMonth(),
+            now.getDate(),
+          ).toISOString();
+
+          // 計算年繳贈送篇數（加到加購額度）
+          const bonusArticles =
+            plan.articles_per_month * (plan.yearly_bonus_months || 2);
+
+          // 查詢舊訂閱
+          const { data: rawOldSubscription } = await this.supabase
+            .from("company_subscriptions")
+            .select("id, purchased_articles_remaining")
+            .eq("company_id", orderData.company_id)
+            .eq("status", "active")
+            .maybeSingle();
+
+          // 類型斷言（purchased_articles_remaining 欄位尚未在 database.types.ts 中）
+          const oldSubscription = rawOldSubscription as unknown as {
+            id: string;
+            purchased_articles_remaining: number | null;
+          } | null;
+
+          // 保留舊的加購額度
+          const preservedPurchased =
+            oldSubscription?.purchased_articles_remaining || 0;
+          // 新的加購額度 = 保留的 + 年繳贈送
+          const newPurchasedArticles = preservedPurchased + bonusArticles;
+
+          // 刪除舊訂閱
+          if (oldSubscription) {
+            await this.supabase
+              .from("company_subscriptions")
+              .delete()
+              .eq("id", oldSubscription.id);
+          }
+
+          // 創建新的篇數制訂閱
+          const { error: subscriptionError } = await this.supabase
+            .from("company_subscriptions")
+            .insert({
+              company_id: orderData.company_id,
+              plan_id: plan.id,
+              status: "active",
+              subscription_articles_remaining: plan.articles_per_month,
+              purchased_articles_remaining: newPurchasedArticles,
+              articles_per_month: plan.articles_per_month,
+              billing_cycle: "yearly",
+              current_period_start: periodStart,
+              current_period_end: periodEnd,
+              last_quota_reset_at: periodStart,
+              // 向後相容必填欄位
+              monthly_token_quota: 0,
+            } as unknown as Database["public"]["Tables"]["company_subscriptions"]["Insert"]);
+
+          if (subscriptionError) {
+            console.error(
+              "[PaymentService] 創建年繳訂閱失敗:",
+              subscriptionError,
+            );
+            return { success: false, error: "創建訂閱失敗" };
+          }
+
+          // 更新公司的訂閱層級
+          const tier = this.mapPlanSlugToTier(plan.slug);
+          const { error: companyUpdateError } = await this.supabase
+            .from("companies")
+            .update({
+              subscription_tier: tier,
+              subscription_ends_at: periodEnd,
+              updated_at: now.toISOString(),
+            })
+            .eq("id", orderData.company_id);
+
+          if (companyUpdateError) {
+            console.error(
+              "[PaymentService] 更新公司訂閱資料失敗:",
+              companyUpdateError,
+            );
+          }
+
+          // 如果有年繳贈送，記錄到 purchased_article_credits（FIFO 追蹤）
+          if (bonusArticles > 0) {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            const { error: creditError } = await (this.supabase as any)
+              .from("purchased_article_credits")
+              .insert({
+                company_id: orderData.company_id,
+                package_id: null, // 年繳贈送，沒有 package_id
+                payment_order_id: orderData.id,
+                original_credits: bonusArticles,
+                remaining_credits: bonusArticles,
+                expires_at: null, // 贈送篇數永久有效
+              });
+
+            if (creditError) {
+              console.error(
+                "[PaymentService] 記錄年繳贈送篇數失敗:",
+                creditError,
+              );
+            }
+          }
+
+          console.log("[PaymentService] 年繳訂閱處理成功:", {
+            planName: plan.name,
+            tier,
+            articlesPerMonth: plan.articles_per_month,
+            bonusArticles,
+            preservedPurchased,
+            totalPurchased: newPurchasedArticles,
+            periodEnd,
           });
         } else if (
           orderData.payment_type === "lifetime" &&
@@ -1030,15 +1342,25 @@ export class PaymentService {
             now.getDate(),
           ).toISOString();
 
-          // 查詢舊的訂閱記錄，保留所有配額（包括 purchased_token_balance 和累積配額）
-          const { data: oldSubscription } = await this.supabase
+          // 查詢舊的訂閱記錄，保留所有配額（包括 purchased_token_balance、purchased_articles_remaining 和累積配額）
+          const { data: rawOldSubscription } = await this.supabase
             .from("company_subscriptions")
             .select(
-              "id, plan_id, purchased_token_balance, monthly_token_quota, monthly_quota_balance",
+              "id, plan_id, purchased_token_balance, monthly_token_quota, monthly_quota_balance, purchased_articles_remaining",
             )
             .eq("company_id", mandateData.company_id)
             .eq("status", "active")
             .single();
+
+          // 類型斷言（purchased_articles_remaining 欄位尚未在 database.types.ts 中）
+          const oldSubscription = rawOldSubscription as unknown as {
+            id: string;
+            plan_id: string | null;
+            purchased_token_balance: number | null;
+            monthly_token_quota: number | null;
+            monthly_quota_balance: number | null;
+            purchased_articles_remaining: number | null;
+          } | null;
 
           // 獲取舊方案的 tier 等級
           let oldTierLevel = 0;
@@ -1126,27 +1448,52 @@ export class PaymentService {
               preservedPurchasedBalance,
             });
 
+            // 保留舊訂閱的加購篇數（在刪除前取得）
+            const preservedPurchasedArticles =
+              oldSubscription?.purchased_articles_remaining || 0;
+
             // 刪除該公司的所有舊訂閱記錄
             await this.supabase
               .from("company_subscriptions")
               .delete()
               .eq("company_id", mandateData.company_id);
 
-            // 創建新的訂閱記錄，保留購買的 Token 和累積配額
+            // 類型斷言取得篇數制方案欄位
+            const planWithArticles = planData as unknown as {
+              articles_per_month?: number;
+            };
+            const articlesPerMonth = planWithArticles.articles_per_month || 0;
+
+            // 月繳週期結束日：下個月同一天
+            const monthlyPeriodEnd = new Date(
+              now.getFullYear(),
+              now.getMonth() + 1,
+              now.getDate(),
+            ).toISOString();
+
+            // 創建新的訂閱記錄，同時支援 Token 制和篇數制
             const { error: subscriptionError } = await this.supabase
               .from("company_subscriptions")
               .insert({
                 company_id: mandateData.company_id,
                 plan_id: mandateData.plan_id,
                 status: "active",
+                // Token 制欄位（向後相容）
                 purchased_token_balance: preservedPurchasedBalance,
                 monthly_quota_balance: newQuotaBalance,
                 monthly_token_quota: newMonthlyQuota,
+                // 篇數制欄位
+                subscription_articles_remaining: articlesPerMonth,
+                purchased_articles_remaining: preservedPurchasedArticles,
+                articles_per_month: articlesPerMonth,
+                billing_cycle: "monthly",
+                last_quota_reset_at: periodStart,
+                // 共用欄位
                 is_lifetime: false,
                 lifetime_discount: 1.0,
                 current_period_start: periodStart,
-                current_period_end: periodEnd,
-              });
+                current_period_end: monthlyPeriodEnd, // 月繳用月週期
+              } as Database["public"]["Tables"]["company_subscriptions"]["Insert"]);
 
             if (subscriptionError) {
               console.error(

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { v4 as uuidv4 } from "uuid";
-import { TokenBillingService } from "@/lib/billing/token-billing-service";
+import { ArticleQuotaService } from "@/lib/billing/article-quota-service";
 import { createSearchRouter } from "@/lib/search/search-router";
 import {
   checkRateLimit,
@@ -142,7 +142,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const billingService = new TokenBillingService(supabase);
+    const quotaService = new ArticleQuotaService(supabase);
     const articleJobId = uuidv4();
 
     // 處理 website_id：
@@ -200,26 +200,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 預扣 tokens（現在 article_job 已存在，FK 約束不會失敗）
-    const reservationResult = await billingService.checkAndReserveTokens(
+    // 預扣篇數（現在 article_job 已存在，FK 約束不會失敗）
+    const reservationResult = await quotaService.reserveArticles(
       billingId,
       articleJobId,
-      1,
+      1, // 1 篇文章
     );
 
     if (!reservationResult.success) {
       console.warn(
-        `餘額不足: 可用 ${reservationResult.availableBalance} tokens（已預扣 ${reservationResult.totalReserved}），需要 ${reservationResult.requiredAmount} tokens`,
+        `額度不足: 可用 ${reservationResult.availableArticles} 篇（已預扣 ${reservationResult.totalReserved} 篇）`,
       );
       await supabase.from("article_jobs").delete().eq("id", articleJobId);
       return NextResponse.json(
         {
-          error: "Insufficient balance",
-          message: `餘額不足：可用 ${reservationResult.availableBalance.toLocaleString()} tokens（已有 ${reservationResult.totalReserved.toLocaleString()} 進行中），預估需要 ${reservationResult.requiredAmount.toLocaleString()} tokens`,
-          availableBalance: reservationResult.availableBalance,
-          reservedBalance: reservationResult.totalReserved,
-          estimatedCost: reservationResult.requiredAmount,
-          upgradeUrl: "/dashboard/billing/upgrade",
+          error: "Insufficient quota",
+          message: `額度不足：可用 ${reservationResult.availableArticles} 篇（已有 ${reservationResult.totalReserved} 篇進行中）`,
+          availableArticles: reservationResult.availableArticles,
+          reservedArticles: reservationResult.totalReserved,
+          upgradeUrl: "/dashboard/subscription",
         },
         { status: 402 },
       );
@@ -238,7 +237,7 @@ export async function POST(request: NextRequest) {
         await searchRouter.analyzeCompetitors(competitors);
 
       if (!competitorAnalysisResult.allowed) {
-        await billingService.releaseReservation(articleJobId);
+        await quotaService.releaseReservation(articleJobId);
         await supabase.from("article_jobs").delete().eq("id", articleJobId);
         return NextResponse.json(
           {
