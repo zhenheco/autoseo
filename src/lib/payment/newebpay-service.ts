@@ -188,7 +188,7 @@ export class NewebPayService {
       RespondType: "JSON",
       TimeStamp: Math.floor(Date.now() / 1000).toString(),
       Version: "1.5",
-      MerchantOrderNo: params.orderNo,
+      MerOrderNo: params.orderNo,
       ProdDesc: params.description,
       PeriodAmt: params.amount.toString(),
       PeriodType: "M",
