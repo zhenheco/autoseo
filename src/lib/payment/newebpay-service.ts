@@ -184,11 +184,11 @@ export class NewebPayService {
     );
 
     const periodData: Record<string, string> = {
-      MerchantID_: this.config.merchantId,
+      MerchantID: this.config.merchantId,
       RespondType: "JSON",
       TimeStamp: Math.floor(Date.now() / 1000).toString(),
       Version: "1.5",
-      MerOrderNo: params.orderNo,
+      MerchantOrderNo: params.orderNo,
       ProdDesc: params.description,
       PeriodAmt: params.amount.toString(),
       PeriodType: "M",

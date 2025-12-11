@@ -387,10 +387,10 @@
     "quotaResetDate": "Fecha de reinicio de cuota",
     "creditPackagePurchase": "Comprar paquete de créditos",
     "plans": {
-      "starter": "Personal",
-      "professional": "Equipo",
-      "business": "Organización",
-      "agency": "Socio Empresarial"
+      "free": "Prueba Gratis",
+      "starter": "Inicial",
+      "pro": "Pro",
+      "business": "Business"
     }
   },
   "payment": {

@@ -387,10 +387,10 @@
     "quotaResetDate": "Kontingent-Reset-Datum",
     "creditPackagePurchase": "Credit-Paket kaufen",
     "plans": {
-      "starter": "Persönlich",
-      "professional": "Team",
-      "business": "Organisation",
-      "agency": "Unternehmenspartner"
+      "free": "Kostenlose Testversion",
+      "starter": "Starter",
+      "pro": "Pro",
+      "business": "Business"
     }
   },
   "payment": {

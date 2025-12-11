@@ -387,10 +387,10 @@
     "quotaResetDate": "配額重置日",
     "creditPackagePurchase": "Credit 包購買",
     "plans": {
-      "starter": "個人版",
-      "professional": "團隊版",
-      "business": "組織版",
-      "agency": "企業合作版"
+      "free": "免費試用",
+      "starter": "入門版",
+      "pro": "專業版",
+      "business": "團隊版"
     }
   },
   "payment": {
