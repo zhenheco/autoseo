@@ -88,7 +88,15 @@ export default async function SubscriptionPage() {
   const { data: companySubscriptionRaw } = await supabase
     .from("company_subscriptions")
     .select(
-      "plan_id, current_period_start, current_period_end, subscription_plans(name, slug)",
+      `plan_id,
+       subscription_articles_remaining,
+       purchased_articles_remaining,
+       articles_per_month,
+       billing_cycle,
+       current_period_start,
+       current_period_end,
+       last_quota_reset_at,
+       subscription_plans(name, slug)`,
     )
     .eq("company_id", member.company_id)
     .eq("status", "active")
@@ -196,15 +204,40 @@ export default async function SubscriptionPage() {
                 {t("quotaResetDate")}
               </p>
               <p className="text-lg font-semibold">
-                {companySubscription?.current_period_end
-                  ? new Date(
-                      companySubscription.current_period_end,
-                    ).toLocaleDateString("zh-TW", {
+                {(() => {
+                  // 計算下次月度配額重置日
+                  if (!companySubscription?.current_period_start) return "-";
+                  const startDate = new Date(
+                    companySubscription.current_period_start,
+                  );
+                  const resetDay = startDate.getDate(); // 重置日 = 訂閱開始日
+                  const now = new Date();
+                  const nextReset = new Date(
+                    now.getFullYear(),
+                    now.getMonth(),
+                    resetDay,
+                  );
+                  // 如果本月重置日已過，下次重置在下個月
+                  if (now.getDate() >= resetDay) {
+                    nextReset.setMonth(nextReset.getMonth() + 1);
+                  }
+                  // 確保不超過訂閱結束日
+                  const endDate = companySubscription.current_period_end
+                    ? new Date(companySubscription.current_period_end)
+                    : null;
+                  if (endDate && nextReset > endDate) {
+                    return endDate.toLocaleDateString("zh-TW", {
                       year: "numeric",
                       month: "short",
                       day: "numeric",
-                    })
-                  : "-"}
+                    });
+                  }
+                  return nextReset.toLocaleDateString("zh-TW", {
+                    year: "numeric",
+                    month: "short",
+                    day: "numeric",
+                  });
+                })()}
               </p>
             </div>
           </div>
