@@ -1,9 +1,9 @@
 /**
  * Rate Limiting 工具
- * 使用 Vercel KV 實現分散式速率限制
+ * 使用 Redis (Zeabur/自建) 實現分散式速率限制
  */
 
-import { kv } from "@vercel/kv";
+import Redis from "ioredis";
 import { NextResponse } from "next/server";
 
 export interface RateLimitResult {
@@ -36,12 +36,41 @@ export const RATE_LIMIT_CONFIGS = {
   DEFAULT: { limit: 60, window: 60 },
 } as const;
 
+/** Redis 客戶端單例 */
+let redisClient: Redis | null = null;
+
 /**
- * 檢查是否啟用 Vercel KV
- * 如果未配置，返回一個始終允許的結果（用於開發環境）
+ * 取得 Redis 客戶端
+ * 使用單例模式避免重複連線
  */
-function isKVEnabled(): boolean {
-  return !!(process.env.KV_REST_API_URL && process.env.KV_REST_API_TOKEN);
+function getRedisClient(): Redis | null {
+  if (!process.env.REDIS_URL) {
+    return null;
+  }
+
+  if (!redisClient) {
+    redisClient = new Redis(process.env.REDIS_URL, {
+      maxRetriesPerRequest: 3,
+      retryStrategy: (times) => {
+        if (times > 3) return null;
+        return Math.min(times * 100, 3000);
+      },
+      enableOfflineQueue: false,
+    });
+
+    redisClient.on("error", (err) => {
+      console.error("[RateLimit] Redis connection error:", err.message);
+    });
+  }
+
+  return redisClient;
+}
+
+/**
+ * 檢查 Redis 是否啟用
+ */
+function isRedisEnabled(): boolean {
+  return !!process.env.REDIS_URL;
 }
 
 /**
@@ -54,11 +83,19 @@ export async function rateLimit(
   identifier: string,
   config: RateLimitConfig = RATE_LIMIT_CONFIGS.DEFAULT,
 ): Promise<RateLimitResult> {
-  // 如果 KV 未啟用，在開發環境中始終允許
-  if (!isKVEnabled()) {
-    console.warn(
-      "[RateLimit] Vercel KV not configured, skipping rate limit check",
-    );
+  // 如果 Redis 未啟用，在開發環境中始終允許
+  if (!isRedisEnabled()) {
+    console.warn("[RateLimit] Redis not configured, skipping rate limit check");
+    return {
+      success: true,
+      remaining: config.limit,
+      reset: config.window,
+      limit: config.limit,
+    };
+  }
+
+  const redis = getRedisClient();
+  if (!redis) {
     return {
       success: true,
       remaining: config.limit,
@@ -70,14 +107,14 @@ export async function rateLimit(
   const key = `rate_limit:${identifier}`;
 
   try {
-    const current = await kv.incr(key);
+    const current = await redis.incr(key);
 
     // 如果是第一次請求，設定過期時間
     if (current === 1) {
-      await kv.expire(key, config.window);
+      await redis.expire(key, config.window);
     }
 
-    const ttl = await kv.ttl(key);
+    const ttl = await redis.ttl(key);
 
     return {
       success: current <= config.limit,
@@ -86,8 +123,8 @@ export async function rateLimit(
       limit: config.limit,
     };
   } catch (error) {
-    console.error("[RateLimit] Error:", error);
-    // 如果 KV 發生錯誤，預設允許請求（避免阻斷服務）
+    console.error("[RateLimit] Redis error:", error);
+    // 如果 Redis 發生錯誤，預設允許請求（避免阻斷服務）
     return {
       success: true,
       remaining: config.limit,
