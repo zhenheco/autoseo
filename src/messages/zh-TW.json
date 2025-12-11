@@ -397,6 +397,7 @@
     "wordpressIntegration": "WordPress 整合",
     "autoImageGen": "自動圖片生成",
     "subscribe": "立即訂閱",
+    "cannotDowngrade": "無法訂閱",
     "processing": "處理中...",
     "subscriptionRemaining": "本期剩餘",
     "monthlyQuota": "每月配額",

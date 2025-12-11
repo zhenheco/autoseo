@@ -58,6 +58,18 @@ export function SubscriptionPlans({
   const router = useRouter();
   const t = useTranslations("subscription");
 
+  // 獲取當前方案的價格（用於判斷是否可以降級）
+  const currentPlan = plans.find((p) => p.slug === currentTier);
+  const currentPlanPrice = currentPlan?.monthly_price || 0;
+
+  // 判斷是否可以訂閱（只能升級，不能降級）
+  const canSubscribe = (plan: ArticlePlan) => {
+    // 如果沒有當前方案（免費用戶），可以訂閱任何方案
+    if (!currentPlan || currentTier === "free") return true;
+    // 只能訂閱價格更高的方案（升級）
+    return plan.monthly_price > currentPlanPrice;
+  };
+
   // 獲取翻譯後的方案名稱
   const getPlanName = (plan: ArticlePlan) => {
     const slug = plan.slug || "";
@@ -327,14 +339,24 @@ export function SubscriptionPlans({
                 <Button
                   className="w-full"
                   onClick={() => handleSubscribe(plan)}
-                  disabled={loading === plan.id || isCurrentPlan}
-                  variant={isPopular ? "default" : "outline"}
+                  disabled={
+                    loading === plan.id || isCurrentPlan || !canSubscribe(plan)
+                  }
+                  variant={
+                    isCurrentPlan || !canSubscribe(plan)
+                      ? "secondary"
+                      : isPopular
+                        ? "default"
+                        : "outline"
+                  }
                 >
                   {loading === plan.id
                     ? t("processing") || "處理中..."
                     : isCurrentPlan
                       ? t("currentPlan") || "目前方案"
-                      : t("subscribe") || "立即訂閱"}
+                      : !canSubscribe(plan)
+                        ? t("cannotDowngrade") || "無法訂閱"
+                        : t("subscribe") || "立即訂閱"}
                 </Button>
               </CardFooter>
             </Card>
