@@ -674,24 +674,20 @@
     "description": "Voici les questions les plus fréquemment posées",
     "questions": {
       "whatIsCredits": {
-        "question": "Que sont les crédits ?",
-        "answer": "Les crédits sont des points d'utilisation pour 1WaySEO, utilisés pour mesurer la consommation de calcul IA. La génération d'un article nécessite environ 3 000 à 5 000 crédits, selon la longueur de l'article et le modèle IA sélectionné."
+        "question": "Qu'est-ce que le quota d'articles ?",
+        "answer": "Le quota d'articles est l'unité d'abonnement pour 1WaySEO. Chaque plan d'abonnement comprend un quota mensuel fixe d'articles. Un article comprend la recherche de mots-clés, l'analyse concurrentielle, la génération de contenu IA et la génération d'images."
       },
       "creditsPerArticle": {
-        "question": "Combien de crédits faut-il pour un article ?",
-        "answer": "Un article SEO typique de 2 000 mots nécessite environ 3 000 à 4 000 crédits, incluant la recherche de mots-clés, l'analyse de la concurrence, la génération d'articles et la génération d'images. Les articles plus longs (5 000+ mots) peuvent nécessiter 5 000 à 8 000 crédits."
-      },
-      "lifetimePlan": {
-        "question": "Le plan à vie est-il vraiment permanent ?",
-        "answer": "Oui ! Après un paiement unique pour le plan à vie, vous bénéficierez en permanence d'un quota de crédits réinitialisé mensuellement. Tant que 1WaySEO continue de fonctionner, votre plan reste valide pour toujours."
+        "question": "Comment fonctionnent les plans d'abonnement ?",
+        "answer": "Les plans d'abonnement sont disponibles en facturation mensuelle ou annuelle. Chaque mois fournit un quota d'articles fixe. Les abonnés annuels bénéficient de 2 mois de quota gratuit supplémentaire. Vous pouvez mettre à niveau votre plan à tout moment pour obtenir plus d'articles mensuels."
       },
       "creditsAccumulate": {
-        "question": "Les crédits mensuels non utilisés s'accumulent-ils ?",
-        "answer": "Le quota mensuel est automatiquement réinitialisé le 1er de chaque mois et n'est pas reporté. Cependant, les packs de crédits achetés en supplément sont permanents et n'expirent jamais."
+        "question": "Les quotas mensuels non utilisés s'accumulent-ils ?",
+        "answer": "Les quotas d'abonnement mensuels sont réinitialisés au début de chaque cycle de facturation et ne sont pas reportés. Cependant, les packs d'articles achetés en supplément sont permanents et n'expirent jamais."
       },
       "getMoreCredits": {
-        "question": "Comment puis-je obtenir plus de crédits ?",
-        "answer": "Vous pouvez acheter des packs de recharge de crédits à tout moment, qui sont ajoutés directement au solde de votre compte. Si vous souhaitez plus de quota mensuel, vous pouvez également acheter un autre plan à vie - le quota mensuel du nouveau plan s'additionnera à votre quota existant."
+        "question": "Comment puis-je obtenir plus d'articles ?",
+        "answer": "Vous pouvez acheter des packs d'articles supplémentaires, qui sont ajoutés directement au solde de votre compte et n'expirent jamais. Si vous avez besoin de plus de quota mensuel, nous vous recommandons de passer à un plan d'abonnement supérieur."
       },
       "paymentMethods": {
         "question": "Quels modes de paiement sont acceptés ?",

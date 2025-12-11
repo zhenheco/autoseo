@@ -674,24 +674,20 @@
     "description": "Here are the most frequently asked questions",
     "questions": {
       "whatIsCredits": {
-        "question": "What are Credits?",
-        "answer": "Credits are usage points for 1WaySEO, used to measure AI computation consumption. Generating one article requires approximately 3,000-5,000 Credits, depending on article length and the selected AI model."
+        "question": "What are article quotas?",
+        "answer": "Article quotas are the subscription unit for 1WaySEO. Each subscription plan includes a fixed monthly article quota. One article includes complete keyword research, competitor analysis, AI content generation, and image generation."
       },
       "creditsPerArticle": {
-        "question": "How many Credits does one article need?",
-        "answer": "A typical 2,000-word SEO article requires about 3,000-4,000 Credits, including keyword research, competitor analysis, article generation, and image generation. Longer articles (5,000+ words) may need 5,000-8,000 Credits."
-      },
-      "lifetimePlan": {
-        "question": "Is the lifetime plan really permanent?",
-        "answer": "Yes! After a one-time payment for the lifetime plan, you will permanently enjoy monthly auto-reset Credits quota. As long as 1WaySEO continues to operate, your plan remains valid forever."
+        "question": "How do subscription plans work?",
+        "answer": "Subscription plans are available in monthly or yearly billing. Each month provides a fixed article quota. Yearly subscribers enjoy 2 extra months of free quota. You can upgrade your plan anytime to get more monthly articles."
       },
       "creditsAccumulate": {
-        "question": "Do unused monthly credits accumulate?",
-        "answer": "Monthly quota resets automatically on the 1st of each month and does not carry over. However, Credit packages you purchase additionally are permanent and never expire."
+        "question": "Do unused monthly quotas accumulate?",
+        "answer": "Monthly subscription quotas reset at the start of each billing cycle and do not carry over. However, article packages you purchase additionally are permanent and never expire."
       },
       "getMoreCredits": {
-        "question": "How can I get more Credits?",
-        "answer": "You can purchase Credit top-up packages anytime, which are added directly to your account balance. If you want more monthly quota, you can also purchase another lifetime plan - the new plan's monthly quota will stack with your existing quota."
+        "question": "How can I get more articles?",
+        "answer": "You can purchase article add-on packages, which are added directly to your account balance and never expire. If you need more monthly quota, we recommend upgrading to a higher subscription plan."
       },
       "paymentMethods": {
         "question": "What payment methods are supported?",
