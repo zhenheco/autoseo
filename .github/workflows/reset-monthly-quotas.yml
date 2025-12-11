@@ -1,0 +1,37 @@
+name: 重置月配額
+
+on:
+  schedule:
+    # 每天凌晨 3:00 (UTC+8) 執行 = UTC 19:00 前一天
+    - cron: "0 19 * * *"
+  workflow_dispatch:
+    # 允許手動觸發
+
+jobs:
+  reset:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run reset quotas script
+        run: pnpm exec tsx scripts/reset-monthly-quotas.ts
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { StatCard } from "@/components/dashboard/stat-card";
-import { TokenBalanceCard } from "@/components/dashboard/TokenBalanceCard";
+import { ArticleQuotaCard } from "@/components/dashboard/ArticleQuotaCard";
 import { UpgradePromptCard } from "@/components/dashboard/UpgradePromptCard";
 import { FileText, Globe } from "lucide-react";
 
@@ -58,7 +58,7 @@ export function DashboardClient({
           iconBgColor="bg-success/10"
           iconColor="text-success"
         />
-        <TokenBalanceCard />
+        <ArticleQuotaCard />
       </div>
 
       {/* 免費用戶升級提示 */}

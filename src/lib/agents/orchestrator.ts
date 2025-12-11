@@ -878,57 +878,32 @@ export class ParallelOrchestrator {
             recommendationsCount: savedArticle.recommendations.length,
           };
 
-          // ✅ 修復問題 2: Token 扣除
-          const totalTokenUsage = this.calculateTotalTokenUsage(result);
-          console.log("[Orchestrator] 📊 Token usage calculated:", {
-            official: totalTokenUsage.official,
-            charged: totalTokenUsage.charged,
-            articleJobId: input.articleJobId,
-            articleId: savedArticle.article.id,
-            breakdown: {
-              research: result.research?.executionInfo.tokenUsage,
-              strategy: result.strategy?.executionInfo.tokenUsage,
-              writing: result.writing?.executionInfo.tokenUsage,
-              meta: result.meta?.executionInfo.tokenUsage,
-            },
-          });
-
-          console.log("[Orchestrator] 💳 Token deduction decision:", {
-            charged: totalTokenUsage.charged,
-            willDeduct: totalTokenUsage.charged > 0,
+          // ✅ 篇數制扣款（取代原有 Token 制）
+          console.log("[Orchestrator] 💳 Article quota deduction:", {
             jobId: input.articleJobId,
             companyId: input.companyId,
             articleId: savedArticle.article.id,
           });
 
-          if (totalTokenUsage.charged > 0) {
-            try {
-              const { TokenBillingService } = await import(
-                "@/lib/billing/token-billing-service"
-              );
-              const tokenBillingService = new TokenBillingService(supabase);
+          try {
+            const { ArticleQuotaService } = await import(
+              "@/lib/billing/article-quota-service"
+            );
+            const quotaService = new ArticleQuotaService(supabase);
 
-              await tokenBillingService.deductTokensIdempotent({
-                idempotencyKey: input.articleJobId,
-                companyId: input.companyId,
-                articleId: savedArticle.article.id,
-                amount: totalTokenUsage.charged,
-                metadata: {
-                  modelName: "multi-agent-generation",
-                  articleTitle: result.meta?.seo.title,
-                  breakdown: {
-                    research: result.research?.executionInfo.tokenUsage,
-                    strategy: result.strategy?.executionInfo.tokenUsage,
-                    writing: result.writing?.executionInfo.tokenUsage,
-                    meta: result.meta?.executionInfo.tokenUsage,
-                    image: undefined, // ImageAgent 沒有 tokenUsage
-                  },
-                  totalOfficialTokens: totalTokenUsage.official,
-                  totalChargedTokens: totalTokenUsage.charged,
-                },
-              });
+            // 扣除 1 篇文章額度
+            const deductResult = await quotaService.deductArticle(
+              input.companyId,
+              input.articleJobId,
+              {
+                title: result.meta?.seo.title,
+                keywords: input.title ? [input.title] : undefined,
+              },
+            );
 
-              await tokenBillingService.consumeReservation(input.articleJobId);
+            if (deductResult.success) {
+              // 消耗預扣
+              await quotaService.consumeReservation(input.articleJobId);
 
               // 記錄扣款成功到 metadata（供審計追蹤）
               const successMetadata =
@@ -939,47 +914,53 @@ export class ParallelOrchestrator {
                   metadata: {
                     ...successMetadata,
                     billing_status: "success",
-                    deducted_amount: totalTokenUsage.charged,
+                    deducted_from: deductResult.deductedFrom,
+                    usage_log_id: deductResult.logId,
+                    subscription_remaining: deductResult.subscriptionRemaining,
+                    purchased_remaining: deductResult.purchasedRemaining,
                     deducted_at: new Date().toISOString(),
                   },
                 })
                 .eq("id", input.articleJobId);
 
-              console.log("[Orchestrator] ✅ Token 已扣除，預扣已消耗:", {
-                official: totalTokenUsage.official,
-                charged: totalTokenUsage.charged,
+              console.log("[Orchestrator] ✅ 文章額度已扣除:", {
+                deductedFrom: deductResult.deductedFrom,
+                subscriptionRemaining: deductResult.subscriptionRemaining,
+                purchasedRemaining: deductResult.purchasedRemaining,
+                totalRemaining: deductResult.totalRemaining,
               });
-            } catch (tokenError) {
-              const errorMsg =
-                tokenError instanceof Error
-                  ? tokenError.message
-                  : String(tokenError);
-              console.error("[Orchestrator] ❌ Token 扣除失敗:", tokenError);
-              // 記錄錯誤到 metadata（供每日審計發現），但不中斷流程
-              // 注意：這裡先更新 billing 狀態，後面會再次讀取最新 metadata 來更新 saved_article_id
-              const failMetadata =
-                (jobData?.metadata as Record<string, unknown>) || {};
-              const { error: updateError } = await supabase
-                .from("article_jobs")
-                .update({
-                  metadata: {
-                    ...failMetadata,
-                    billing_status: "failed",
-                    billing_error: errorMsg,
-                    billing_error_notice: "扣款失敗，請聯絡客服信箱處理",
-                    billing_failed_at: new Date().toISOString(),
-                  },
-                })
-                .eq("id", input.articleJobId);
+            } else {
+              throw new Error(deductResult.error || "扣款失敗");
+            }
+          } catch (quotaError) {
+            const errorMsg =
+              quotaError instanceof Error
+                ? quotaError.message
+                : String(quotaError);
+            console.error("[Orchestrator] ❌ 文章額度扣除失敗:", quotaError);
+            // 記錄錯誤到 metadata（供每日審計發現），但不中斷流程
+            const failMetadata =
+              (jobData?.metadata as Record<string, unknown>) || {};
+            const { error: updateError } = await supabase
+              .from("article_jobs")
+              .update({
+                metadata: {
+                  ...failMetadata,
+                  billing_status: "failed",
+                  billing_error: errorMsg,
+                  billing_error_notice: "扣款失敗，請聯絡客服信箱處理",
+                  billing_failed_at: new Date().toISOString(),
+                },
+              })
+              .eq("id", input.articleJobId);
 
-              if (updateError) {
-                console.error(
-                  "[Orchestrator] ⚠️ 記錄扣款失敗狀態時發生錯誤:",
-                  updateError,
-                );
-              } else {
-                console.log("[Orchestrator] ✅ 已記錄扣款失敗狀態到 metadata");
-              }
+            if (updateError) {
+              console.error(
+                "[Orchestrator] ⚠️ 記錄扣款失敗狀態時發生錯誤:",
+                updateError,
+              );
+            } else {
+              console.log("[Orchestrator] ✅ 已記錄扣款失敗狀態到 metadata");
             }
           }
 
@@ -991,23 +972,18 @@ export class ParallelOrchestrator {
             .eq("id", input.articleJobId)
             .single();
 
-          // 確保 billing 相關欄位不會被覆蓋
+          // 確保 billing 相關欄位不會被覆蓋（篇數制欄位）
+          const latestMeta = latestJobData?.metadata as Record<string, unknown>;
           const existingBillingFields = {
-            billing_status: (latestJobData?.metadata as Record<string, unknown>)
-              ?.billing_status,
-            billing_error: (latestJobData?.metadata as Record<string, unknown>)
-              ?.billing_error,
-            billing_error_notice: (
-              latestJobData?.metadata as Record<string, unknown>
-            )?.billing_error_notice,
-            billing_failed_at: (
-              latestJobData?.metadata as Record<string, unknown>
-            )?.billing_failed_at,
-            deducted_amount: (
-              latestJobData?.metadata as Record<string, unknown>
-            )?.deducted_amount,
-            deducted_at: (latestJobData?.metadata as Record<string, unknown>)
-              ?.deducted_at,
+            billing_status: latestMeta?.billing_status,
+            billing_error: latestMeta?.billing_error,
+            billing_error_notice: latestMeta?.billing_error_notice,
+            billing_failed_at: latestMeta?.billing_failed_at,
+            deducted_from: latestMeta?.deducted_from,
+            usage_log_id: latestMeta?.usage_log_id,
+            subscription_remaining: latestMeta?.subscription_remaining,
+            purchased_remaining: latestMeta?.purchased_remaining,
+            deducted_at: latestMeta?.deducted_at,
           };
 
           await supabase

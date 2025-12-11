@@ -965,34 +965,39 @@ export class LinearOrchestrator {
         recommendationsCount: savedArticle.recommendations.length,
       };
 
-      const totalTokenUsage = this.calculateTotalTokenUsage(result);
-      if (totalTokenUsage.charged > 0) {
-        try {
-          const { TokenBillingService } = await import(
-            "@/lib/billing/token-billing-service"
-          );
-          const tokenBillingService = new TokenBillingService(supabase);
+      // 篇數制扣款
+      try {
+        const { ArticleQuotaService } = await import(
+          "@/lib/billing/article-quota-service"
+        );
+        const quotaService = new ArticleQuotaService(supabase);
 
-          await tokenBillingService.deductTokensIdempotent({
-            idempotencyKey: input.articleJobId,
-            companyId: input.companyId,
-            articleId: savedArticle.article.id,
-            amount: totalTokenUsage.charged,
-            metadata: {
-              modelName: "linear-orchestrator",
-              articleTitle: result.meta?.seo.title,
-              totalOfficialTokens: totalTokenUsage.official,
-              totalChargedTokens: totalTokenUsage.charged,
-            },
+        const deductResult = await quotaService.deductArticle(
+          input.companyId,
+          input.articleJobId,
+          {
+            title: result.meta?.seo.title,
+            keywords: input.title ? [input.title] : undefined,
+          },
+        );
+
+        if (deductResult.success) {
+          await quotaService.consumeReservation(input.articleJobId);
+          console.log("[LinearOrchestrator] ✅ 文章額度已扣除:", {
+            deductedFrom: deductResult.deductedFrom,
+            totalRemaining: deductResult.totalRemaining,
           });
-
-          await tokenBillingService.consumeReservation(input.articleJobId);
-        } catch (tokenError) {
+        } else {
           console.error(
-            "[LinearOrchestrator] Token deduction failed:",
-            tokenError,
+            "[LinearOrchestrator] 文章額度扣除失敗:",
+            deductResult.error,
           );
         }
+      } catch (quotaError) {
+        console.error(
+          "[LinearOrchestrator] Article quota deduction failed:",
+          quotaError,
+        );
       }
 
       await supabase

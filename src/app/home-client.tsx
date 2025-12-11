@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Navbar } from "@/components/layout/navbar";
@@ -34,20 +35,38 @@ import {
   Brain,
   Clock,
   DollarSign,
+  Gift,
 } from "lucide-react";
-import type { Database } from "@/types/database.types";
 import { TestimonialsCarousel } from "@/components/home/TestimonialsCarousel";
 import { CostComparison } from "@/components/home/CostComparison";
 import { FAQSection } from "@/components/home/FAQSection";
 import { useTranslations } from "next-intl";
 
-type SubscriptionPlan =
-  Database["public"]["Tables"]["subscription_plans"]["Row"];
-type TokenPackage = Database["public"]["Tables"]["token_packages"]["Row"];
+/** 篇數制方案資料類型 */
+interface ArticlePlan {
+  id: string;
+  name: string;
+  slug: string;
+  monthly_price: number;
+  yearly_price: number | null;
+  articles_per_month: number;
+  yearly_bonus_months: number;
+  features: unknown;
+}
+
+/** 文章加購包資料類型 */
+interface ArticlePackage {
+  id: string;
+  name: string;
+  slug: string;
+  articles: number;
+  price: number;
+  description: string | null;
+}
 
 interface HomeClientProps {
-  plans: SubscriptionPlan[] | null;
-  tokenPackages: TokenPackage[] | null;
+  plans: ArticlePlan[];
+  articlePackages: ArticlePackage[];
 }
 
 // Feature icon mapping
@@ -89,15 +108,25 @@ const STATS = [
 
 const AI_MODEL_KEYS = ["gpt5", "claude45", "gemini3"] as const;
 
-export function HomeClient({ plans, tokenPackages }: HomeClientProps) {
+export function HomeClient({ plans, articlePackages }: HomeClientProps) {
   const t = useTranslations("home");
   const tSub = useTranslations("subscription");
 
+  // 計費週期狀態（預設年繳）
+  const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">(
+    "yearly",
+  );
+
   // 獲取翻譯後的方案名稱
-  const getPlanName = (plan: SubscriptionPlan) => {
-    const slug = plan.slug?.replace("-lifetime", "") || "";
+  const getPlanName = (plan: ArticlePlan) => {
+    const slug = plan.slug || "";
     const translatedName = tSub.raw(`plans.${slug}`);
     return typeof translatedName === "string" ? translatedName : plan.name;
+  };
+
+  // 計算年繳贈送的篇數
+  const getYearlyBonus = (plan: ArticlePlan) => {
+    return plan.articles_per_month * (plan.yearly_bonus_months || 2);
   };
 
   return (
@@ -355,7 +384,7 @@ export function HomeClient({ plans, tokenPackages }: HomeClientProps) {
           <div className="container relative z-10 mx-auto px-4">
             <div className="text-center mb-12">
               <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white dark:bg-transparent dark:glass shadow-md dark:shadow-none border border-slate-200 dark:border-transparent px-4 py-2 text-sm font-medium text-cyber-magenta-600 dark:text-cyber-magenta-400">
-                <Infinity className="h-4 w-4" />
+                <Sparkles className="h-4 w-4" />
                 <span>{t("pricingPlan")}</span>
               </div>
               <h2 className="font-bold mb-4">
@@ -364,29 +393,59 @@ export function HomeClient({ plans, tokenPackages }: HomeClientProps) {
                   gradient="violet-magenta"
                   className="text-4xl md:text-5xl"
                 >
-                  {t("lifetimePurchase")}
+                  {t("subscriptionPlans") || "訂閱方案"}
                 </GradientText>
                 <span className="text-slate-900 dark:text-white text-xl md:text-2xl ml-2">
-                  {t("foreverUse")}
+                  {t("chooseYourPlan") || "選擇適合您的方案"}
                 </span>
               </h2>
               <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-6">
-                {t("oneTimePay")}
+                {t("subscriptionDesc") ||
+                  "每月自動重置文章額度，讓您持續產出高品質內容"}
               </p>
-              <div className="inline-flex items-center gap-3 rounded-full bg-white dark:bg-transparent dark:glass shadow-md dark:shadow-none border border-slate-200 dark:border-cyber-cyan-500/30 px-6 py-3">
-                <CheckCircle2 className="h-5 w-5 text-cyber-cyan-600 dark:text-cyber-cyan-400" />
-                <span className="text-cyber-cyan-600 dark:text-cyber-cyan-400 font-medium">
-                  {t("freePlanBanner")}
-                </span>
+
+              {/* 月繳/年繳切換器 */}
+              <div className="inline-flex items-center gap-2 rounded-full bg-white dark:bg-slate-800/50 shadow-md border border-slate-200 dark:border-white/10 p-1 mb-8">
+                <button
+                  onClick={() => setBillingCycle("monthly")}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+                    billingCycle === "monthly"
+                      ? "bg-slate-900 dark:bg-cyber-violet-600 text-white"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                  }`}
+                >
+                  {t("monthlyBilling") || "月繳"}
+                </button>
+                <button
+                  onClick={() => setBillingCycle("yearly")}
+                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
+                    billingCycle === "yearly"
+                      ? "bg-gradient-to-r from-cyber-violet-600 to-cyber-magenta-600 text-white"
+                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                  }`}
+                >
+                  {t("yearlyBilling") || "年繳"}
+                  <span
+                    className={`text-xs px-2 py-0.5 rounded-full ${
+                      billingCycle === "yearly"
+                        ? "bg-yellow-400 text-slate-900"
+                        : "bg-yellow-400/80 text-slate-900"
+                    }`}
+                  >
+                    {t("yearlyBonus") || "送2個月"}
+                  </span>
+                </button>
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto mb-16">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto mb-16">
               {plans?.map((plan) => {
-                const isPopular = plan.slug.includes("professional");
-                const originalPrice = Math.round(
-                  (plan.lifetime_price || 0) * 1.5,
-                );
+                const isPopular = plan.slug === "pro";
+                const price =
+                  billingCycle === "yearly"
+                    ? plan.yearly_price
+                    : plan.monthly_price;
+                const yearlyBonus = getYearlyBonus(plan);
 
                 return (
                   <Card
@@ -402,65 +461,103 @@ export function HomeClient({ plans, tokenPackages }: HomeClientProps) {
                         {t("mostPopular")}
                       </div>
                     )}
-                    <CardContent className="p-5 flex flex-col h-full">
-                      <div className="mb-2">
+                    <CardContent className="p-6 flex flex-col h-full">
+                      <div className="mb-3">
                         <h3
-                          className={`text-lg font-bold ${isPopular ? "text-slate-900 dark:text-white" : "text-slate-900 dark:text-white"}`}
+                          className={`text-xl font-bold ${isPopular ? "text-white" : "text-slate-900 dark:text-white"}`}
                         >
                           {getPlanName(plan)}
                         </h3>
                       </div>
-                      <div className="mb-4">
-                        <div
-                          className={`text-sm line-through ${isPopular ? "text-white/60" : "text-slate-500"}`}
-                        >
-                          NT${originalPrice.toLocaleString()}
-                        </div>
+                      <div className="mb-5">
                         <div className="flex items-baseline gap-1">
                           <span
-                            className={`text-2xl font-bold ${isPopular ? "text-slate-900 dark:text-white" : "text-slate-900 dark:text-white"}`}
+                            className={`text-3xl font-bold ${isPopular ? "text-white" : "text-slate-900 dark:text-white"}`}
                           >
-                            NT${plan.lifetime_price?.toLocaleString()}
+                            NT${price?.toLocaleString()}
                           </span>
                           <span
-                            className={`text-xs ${isPopular ? "text-white/70" : "text-slate-600 dark:text-slate-400"}`}
+                            className={`text-sm ${isPopular ? "text-white/70" : "text-slate-600 dark:text-slate-400"}`}
                           >
-                            {t("lifetime")}
+                            /
+                            {billingCycle === "yearly"
+                              ? t("year") || "年"
+                              : t("month") || "月"}
                           </span>
                         </div>
+                        {billingCycle === "yearly" && (
+                          <div
+                            className={`text-sm mt-1 ${isPopular ? "text-white/80" : "text-slate-500 dark:text-slate-400"}`}
+                          >
+                            {t("equivalentMonthly") || "約"} NT$
+                            {Math.round((price || 0) / 12).toLocaleString()}/
+                            {t("month") || "月"}
+                          </div>
+                        )}
                       </div>
+
+                      {/* 每月篇數 */}
+                      <div
+                        className={`rounded-lg p-3 mb-4 ${
+                          isPopular
+                            ? "bg-white/10"
+                            : "bg-slate-100 dark:bg-white/5"
+                        }`}
+                      >
+                        <div className="flex items-center justify-center gap-2">
+                          <FileText
+                            className={`h-5 w-5 ${isPopular ? "text-white" : "text-cyber-violet-500"}`}
+                          />
+                          <span
+                            className={`text-lg font-bold ${isPopular ? "text-white" : "text-slate-900 dark:text-white"}`}
+                          >
+                            {t("monthly") || "每月"}{" "}
+                            {plan.articles_per_month?.toLocaleString()}{" "}
+                            {t("articles") || "篇"}
+                          </span>
+                        </div>
+                        {billingCycle === "yearly" && yearlyBonus > 0 && (
+                          <div
+                            className={`flex items-center justify-center gap-1 mt-2 text-sm ${
+                              isPopular
+                                ? "text-yellow-300"
+                                : "text-cyber-magenta-500 dark:text-cyber-magenta-400"
+                            }`}
+                          >
+                            <Gift className="h-4 w-4" />
+                            <span className="font-medium">
+                              {t("bonusArticles") || "再送"} {yearlyBonus}{" "}
+                              {t("articles") || "篇"}
+                            </span>
+                          </div>
+                        )}
+                      </div>
+
                       <div className="flex-1">
                         <ul
-                          className={`space-y-2 text-sm mb-4 ${isPopular ? "text-slate-900 dark:text-white" : "text-slate-700 dark:text-slate-300"}`}
+                          className={`space-y-2 text-sm mb-4 ${isPopular ? "text-white/90" : "text-slate-700 dark:text-slate-300"}`}
                         >
                           <li className="flex items-center gap-2">
                             <CheckCircle2
-                              className={`h-4 w-4 flex-shrink-0 ${isPopular ? "text-slate-900 dark:text-white" : "text-cyber-cyan-400"}`}
-                            />
-                            {t("monthly")} {plan.base_tokens?.toLocaleString()}{" "}
-                            Credits
-                          </li>
-                          <li className="flex items-center gap-2">
-                            <CheckCircle2
-                              className={`h-4 w-4 flex-shrink-0 ${isPopular ? "text-slate-900 dark:text-white" : "text-cyber-cyan-400"}`}
+                              className={`h-4 w-4 flex-shrink-0 ${isPopular ? "text-white" : "text-cyber-cyan-400"}`}
                             />
                             {t("allAIModels")}
                           </li>
                           <li className="flex items-center gap-2">
                             <CheckCircle2
-                              className={`h-4 w-4 flex-shrink-0 ${isPopular ? "text-slate-900 dark:text-white" : "text-cyber-cyan-400"}`}
+                              className={`h-4 w-4 flex-shrink-0 ${isPopular ? "text-white" : "text-cyber-cyan-400"}`}
                             />
                             {t("wordpressIntegration")}
                           </li>
                           <li className="flex items-center gap-2">
                             <CheckCircle2
-                              className={`h-4 w-4 flex-shrink-0 ${isPopular ? "text-slate-900 dark:text-white" : "text-cyber-cyan-400"}`}
+                              className={`h-4 w-4 flex-shrink-0 ${isPopular ? "text-white" : "text-cyber-cyan-400"}`}
                             />
                             {t("autoImageGen")}
                           </li>
                           <li className="flex items-center gap-2">
                             <CheckCircle2
-                              className={`h-4 w-4 flex-shrink-0 ${isPopular ? "text-slate-900 dark:text-white" : "text-cyber-cyan-400"}`}
+                              className={`h-4 w-4 flex-shrink-0 ${isPopular ? "text-white" : "text-cyber-cyan-400"}`}
                             />
                             {t("scheduledPublish")}
                           </li>
@@ -469,7 +566,11 @@ export function HomeClient({ plans, tokenPackages }: HomeClientProps) {
                       <Button
                         asChild
                         size="sm"
-                        className="w-full mt-auto bg-slate-900 text-white hover:bg-slate-800 dark:bg-gradient-to-r dark:from-cyber-violet-600 dark:to-cyber-magenta-600 dark:hover:from-cyber-violet-500 dark:hover:to-cyber-magenta-500 shadow-lg font-bold"
+                        className={`w-full mt-auto font-bold ${
+                          isPopular
+                            ? "bg-white text-cyber-violet-600 hover:bg-slate-100"
+                            : "bg-slate-900 text-white hover:bg-slate-800 dark:bg-gradient-to-r dark:from-cyber-violet-600 dark:to-cyber-magenta-600 dark:hover:from-cyber-violet-500 dark:hover:to-cyber-magenta-500"
+                        } shadow-lg`}
                       >
                         <Link href="/login">{t("startUsing")}</Link>
                       </Button>
@@ -479,23 +580,25 @@ export function HomeClient({ plans, tokenPackages }: HomeClientProps) {
               })}
             </div>
 
+            {/* 加購包區塊 */}
             <div className="max-w-4xl mx-auto">
               <div className="text-center mb-8">
                 <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white dark:bg-transparent dark:glass shadow-md dark:shadow-none border border-slate-200 dark:border-cyber-cyan-500/30 px-4 py-2 text-sm font-medium text-cyber-cyan-600 dark:text-cyber-cyan-400">
                   <CreditCard className="h-4 w-4" />
-                  <span>{t("creditsPackage")}</span>
+                  <span>{t("articlePackage") || "文章加購包"}</span>
                 </div>
                 <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">
-                  {t("needMoreCredits")}
+                  {t("needMoreArticles") || "需要更多文章額度？"}
                 </h3>
                 <p className="text-sm text-slate-600 dark:text-slate-400">
-                  {t("packageDesc")}
+                  {t("packageDescArticle") ||
+                    "加購額度永久有效，不受訂閱週期限制"}
                 </p>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto items-stretch">
-                {tokenPackages?.map((pkg) => {
-                  const isPopular = pkg.tokens === 50000;
+                {articlePackages?.map((pkg) => {
+                  const isPopular = pkg.slug === "pack_5";
                   return (
                     <Card
                       key={pkg.id}
@@ -516,8 +619,14 @@ export function HomeClient({ plans, tokenPackages }: HomeClientProps) {
                           gradient="cyan-violet"
                           className="text-lg font-bold block mb-1"
                         >
-                          {pkg.tokens?.toLocaleString()} Credits
+                          {pkg.articles?.toLocaleString()}{" "}
+                          {t("articles") || "篇"}
                         </GradientText>
+                        {pkg.description && (
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
+                            {pkg.description}
+                          </p>
+                        )}
                         <div className="text-xl font-bold text-slate-900 dark:text-white mb-4">
                           NT${pkg.price?.toLocaleString()}
                         </div>
