@@ -182,7 +182,101 @@ export default function PrivacyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4">六、Cookies</h2>
+              <h2 className="text-2xl font-semibold mb-4">
+                六、Google API 服務使用揭露
+              </h2>
+              <p className="text-slate-600 dark:text-slate-300 mb-3">
+                1waySEO 使用 Google API 服務來幫助您分析網站在 Google
+                搜尋結果中的表現。以下是我們如何使用這些服務的詳細說明：
+              </p>
+
+              <h3 className="text-xl font-semibold mt-4 mb-2">
+                6.1 我們存取的 Google 資料
+              </h3>
+              <p className="text-slate-600 dark:text-slate-300 mb-3">
+                當您授權連接 Google Search Console 時，我們會存取以下資料：
+              </p>
+              <ul className="list-disc pl-6 text-slate-600 dark:text-slate-300 space-y-2">
+                <li>您網站在 Google 搜尋結果中的曝光次數和點擊次數</li>
+                <li>搜尋關鍵字的排名位置和點擊率 (CTR)</li>
+                <li>網站頁面的搜尋效能數據</li>
+              </ul>
+              <p className="text-slate-600 dark:text-slate-300 mt-3">
+                我們使用的 API 權限範圍
+                (scope)：https://www.googleapis.com/auth/webmasters.readonly（僅限讀取）
+              </p>
+
+              <h3 className="text-xl font-semibold mt-4 mb-2">
+                6.2 我們如何使用這些資料
+              </h3>
+              <ul className="list-disc pl-6 text-slate-600 dark:text-slate-300 space-y-2">
+                <li>在 1waySEO 儀表板中顯示您的網站搜尋效能摘要</li>
+                <li>幫助您了解哪些關鍵字為您的網站帶來流量</li>
+                <li>分析網站 SEO 表現趨勢</li>
+                <li>提供 SEO 優化建議</li>
+              </ul>
+              <p className="text-slate-600 dark:text-slate-300 mt-3">
+                我們不會將您的 Google Search Console
+                資料用於廣告投放、轉售給第三方，或任何與提供 1waySEO
+                服務無關的目的。
+              </p>
+
+              <h3 className="text-xl font-semibold mt-4 mb-2">
+                6.3 資料儲存與保護
+              </h3>
+              <ul className="list-disc pl-6 text-slate-600 dark:text-slate-300 space-y-2">
+                <li>
+                  您的 Google OAuth 授權憑證以加密方式儲存在我們的安全伺服器中
+                </li>
+                <li>搜尋效能資料會快取最多 6 小時以提升載入速度</li>
+                <li>當您撤銷授權或刪除帳號時，所有相關資料將被永久刪除</li>
+              </ul>
+
+              <h3 className="text-xl font-semibold mt-4 mb-2">
+                6.4 撤銷 Google 授權
+              </h3>
+              <p className="text-slate-600 dark:text-slate-300 mb-3">
+                您可以隨時撤銷 1waySEO 對您 Google 帳號的存取權限：
+              </p>
+              <ul className="list-disc pl-6 text-slate-600 dark:text-slate-300 space-y-2">
+                <li>在 1waySEO 網站詳情頁面點擊「斷開連接」按鈕</li>
+                <li>
+                  或前往{" "}
+                  <a
+                    href="https://myaccount.google.com/permissions"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-blue-600 hover:underline"
+                  >
+                    Google 帳號權限設定
+                  </a>{" "}
+                  移除 1waySEO 的存取權限
+                </li>
+              </ul>
+              <p className="text-slate-600 dark:text-slate-300 mt-3">
+                撤銷授權後，我們將無法再存取您的 Google Search Console
+                資料，且會刪除已儲存的相關資料。
+              </p>
+
+              <h3 className="text-xl font-semibold mt-4 mb-2">
+                6.5 Google API 服務條款
+              </h3>
+              <p className="text-slate-600 dark:text-slate-300">
+                1waySEO 對 Google API 的使用遵守{" "}
+                <a
+                  href="https://developers.google.com/terms"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-600 hover:underline"
+                >
+                  Google API 服務條款
+                </a>
+                。
+              </p>
+            </section>
+
+            <section className="mb-8">
+              <h2 className="text-2xl font-semibold mb-4">七、Cookies</h2>
               <p className="text-slate-600 dark:text-slate-300 mb-3">
                 我們使用 Cookies 來：
               </p>
@@ -197,7 +291,7 @@ export default function PrivacyPage() {
 
             <section className="mb-8">
               <h2 className="text-2xl font-semibold mb-4">
-                七、隱私權與個人資料保護政策之修訂與效力
+                八、隱私權與個人資料保護政策之修訂與效力
               </h2>
               <ul className="list-disc pl-6 text-slate-600 dark:text-slate-300 space-y-2">
                 <li>
@@ -212,7 +306,7 @@ export default function PrivacyPage() {
             </section>
 
             <section className="mb-8">
-              <h2 className="text-2xl font-semibold mb-4">八、聯絡我們</h2>
+              <h2 className="text-2xl font-semibold mb-4">九、聯絡我們</h2>
               <p className="text-slate-600 dark:text-slate-300">
                 如果您對我們的隱私權或個人資料保護政策有任何問題，請聯絡：
               </p>
@@ -223,7 +317,7 @@ export default function PrivacyPage() {
 
             <section>
               <p className="text-sm text-slate-500 dark:text-slate-400">
-                最後更新日期：2025-11-05
+                最後更新日期：2025-12-11
               </p>
             </section>
           </div>
