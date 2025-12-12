@@ -418,11 +418,7 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
                 </button>
                 <button
                   onClick={() => setBillingCycle("yearly")}
-                  className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
-                    billingCycle === "yearly"
-                      ? "bg-gradient-to-r from-cyber-violet-600 to-cyber-magenta-600 text-white"
-                      : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
-                  }`}
+                  className="px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 bg-gradient-to-r from-cyber-violet-600 to-cyber-magenta-600 text-white"
                 >
                   {t("yearlyBilling") || "年繳"}
                   <span
