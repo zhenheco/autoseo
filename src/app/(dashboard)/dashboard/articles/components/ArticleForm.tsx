@@ -43,30 +43,31 @@ export function ArticleForm({
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [generatedTitles, setGeneratedTitles] = useState<string[]>([]);
 
-  const [tokenBalance, setTokenBalance] = useState<number>(0);
+  const [articleBalance, setArticleBalance] = useState<number>(0);
   const [articleCount, setArticleCount] = useState<number>(1);
   const [isLoadingBalance, setIsLoadingBalance] = useState(true);
 
-  const TOKENS_PER_ARTICLE = 3000;
-  const maxArticles = Math.floor(tokenBalance / TOKENS_PER_ARTICLE);
+  // 篇數制：最多可生成篇數 = 剩餘額度
+  const maxArticles = articleBalance;
   const isInsufficientCredits = articleCount > maxArticles;
 
   useEffect(() => {
-    const fetchTokenBalance = async () => {
+    // 使用篇數制 API
+    const fetchArticleQuota = async () => {
       try {
-        const response = await fetch("/api/token-balance");
+        const response = await fetch("/api/article-quota");
         if (response.ok) {
           const data = await response.json();
-          setTokenBalance(data.balance?.available ?? data.balance?.total ?? 0);
+          setArticleBalance(data.balance?.available ?? 0);
         }
       } catch (error) {
-        console.error("獲取餘額失敗:", error);
+        console.error("獲取額度失敗:", error);
       } finally {
         setIsLoadingBalance(false);
       }
     };
 
-    fetchTokenBalance();
+    fetchArticleQuota();
   }, []);
 
   const handlePreviewTitles = async () => {
@@ -231,7 +232,7 @@ export function ArticleForm({
       await handlePreviewTitles();
     } else {
       if (isInsufficientCredits) {
-        alert(`Credits 不足！您目前只能生成 ${maxArticles} 篇文章`);
+        alert(`額度不足！您目前只能生成 ${maxArticles} 篇文章`);
         return;
       }
       if (articleCount > 1) {
@@ -290,12 +291,12 @@ export function ArticleForm({
               <span className="text-sm text-muted-foreground">
                 {isLoadingBalance
                   ? "載入中..."
-                  : `最多可生成 ${maxArticles} 篇（餘額 ${tokenBalance.toLocaleString()} credits）`}
+                  : `最多可生成 ${maxArticles} 篇（剩餘 ${articleBalance} 篇額度）`}
               </span>
             </div>
             {isInsufficientCredits && !isLoadingBalance && (
               <p className="text-sm text-red-500">
-                ⚠️ Credits 不足！您目前只能生成 {maxArticles} 篇文章
+                ⚠️ 額度不足！您目前只能生成 {maxArticles} 篇文章
               </p>
             )}
           </div>

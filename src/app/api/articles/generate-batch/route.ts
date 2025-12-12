@@ -2,10 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { v4 as uuidv4 } from "uuid";
 import slugify from "slugify";
-import {
-  TokenBillingService,
-  ESTIMATED_TOKENS_PER_ARTICLE,
-} from "@/lib/billing/token-billing-service";
+import { ArticleQuotaService } from "@/lib/billing/article-quota-service";
 import {
   checkRateLimit,
   RATE_LIMIT_CONFIGS,
@@ -263,28 +260,26 @@ export async function POST(request: NextRequest) {
       console.log("[Batch] 自動使用現有網站配置:", websiteId);
     }
 
-    // ===== 配額檢查：確保有足夠的 credits =====
+    // ===== 配額檢查：確保有足夠的篇數額度 =====
     // 此時 billingId 一定有值（前面邏輯會創建公司）
-    const billingService = new TokenBillingService(adminClient);
-    const balanceInfo =
-      await billingService.getAvailableBalanceWithReservations(billingId!);
-    const requiredTokens =
-      generationItems.length * ESTIMATED_TOKENS_PER_ARTICLE;
+    const quotaService = new ArticleQuotaService(adminClient);
+    const requiredArticles = generationItems.length; // 篇數制：1 篇 = 1 額度
+    const quotaCheck = await quotaService.hasEnoughQuota(
+      billingId!,
+      requiredArticles,
+    );
 
-    if (balanceInfo.available < requiredTokens) {
-      const maxArticles = Math.floor(
-        balanceInfo.available / ESTIMATED_TOKENS_PER_ARTICLE,
-      );
+    if (!quotaCheck.sufficient) {
+      const maxArticles = quotaCheck.balance.totalAvailable;
       console.log(
-        `[Batch] ❌ 餘額不足: 需要 ${requiredTokens}, 可用 ${balanceInfo.available}`,
+        `[Batch] ❌ 額度不足: 需要 ${requiredArticles} 篇, 可用 ${maxArticles} 篇`,
       );
       return NextResponse.json(
         {
           error: "Insufficient balance",
-          message: `餘額不足：需要 ${requiredTokens.toLocaleString()} credits，可用 ${balanceInfo.available.toLocaleString()} credits`,
-          requiredCredits: requiredTokens,
-          availableCredits: balanceInfo.available,
-          reservedCredits: balanceInfo.reserved,
+          message: `額度不足：需要 ${requiredArticles} 篇，可用 ${maxArticles} 篇`,
+          requiredCredits: requiredArticles, // 保留舊的欄位名稱，供前端兼容
+          availableCredits: maxArticles, // 保留舊的欄位名稱，供前端兼容
           maxArticles,
         },
         { status: 402 },
@@ -292,7 +287,7 @@ export async function POST(request: NextRequest) {
     }
 
     console.log(
-      `[Batch] ✅ 配額檢查通過: 需要 ${requiredTokens}, 可用 ${balanceInfo.available}`,
+      `[Batch] ✅ 配額檢查通過: 需要 ${requiredArticles} 篇, 可用 ${quotaCheck.balance.totalAvailable} 篇`,
     );
 
     const newJobIds: string[] = [];

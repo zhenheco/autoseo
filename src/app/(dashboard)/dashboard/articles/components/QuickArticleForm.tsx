@@ -36,44 +36,45 @@ export function QuickArticleForm({
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [generatedKeyword, setGeneratedKeyword] = useState("");
   const [retryInfo, setRetryInfo] = useState<string | null>(null);
-  const [tokenBalance, setTokenBalance] = useState<number>(0);
+  const [articleBalance, setArticleBalance] = useState<number>(0);
   const [isLoadingBalance, setIsLoadingBalance] = useState(true);
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [errorDialogData, setErrorDialogData] = useState<{
     maxArticles: number;
-    requiredCredits: number;
-    availableCredits: number;
+    requiredArticles: number;
+    availableArticles: number;
   } | null>(null);
 
-  const TOKENS_PER_ARTICLE = 3000;
-
   useEffect(() => {
-    const fetchTokenBalance = async () => {
+    // 使用篇數制 API
+    const fetchArticleQuota = async () => {
       try {
-        const response = await fetch("/api/token-balance");
+        const response = await fetch("/api/article-quota");
         if (response.ok) {
           const data = await response.json();
-          setTokenBalance(data.balance?.available ?? data.balance?.total ?? 0);
+          setArticleBalance(data.balance?.available ?? 0);
         }
       } catch (error) {
-        console.error("獲取餘額失敗:", error);
+        console.error("獲取額度失敗:", error);
       } finally {
         setIsLoadingBalance(false);
       }
     };
-    fetchTokenBalance();
+    fetchArticleQuota();
   }, []);
 
-  // 計算關鍵字數量和所需 credits
+  // 計算關鍵字數量（篇數制：1 篇 = 1 篇額度）
   const keywordCount = batchKeywords.split("\n").filter((k) => k.trim()).length;
-  const requiredCredits = keywordCount * TOKENS_PER_ARTICLE;
-  const maxArticles = Math.floor(tokenBalance / TOKENS_PER_ARTICLE);
+  const requiredArticles = keywordCount; // 篇數制：需要的篇數 = 關鍵字數量
+  const maxArticles = articleBalance; // 篇數制：最多可生成篇數 = 剩餘額度
 
   // 根據關鍵字數量檢查配額
   const hasRemainingQuota =
-    isLoadingBalance || keywordCount === 0 || tokenBalance >= requiredCredits;
+    isLoadingBalance ||
+    keywordCount === 0 ||
+    articleBalance >= requiredArticles;
 
-  const isFormDisabled = tokenBalance < TOKENS_PER_ARTICLE && !isLoadingBalance;
+  const isFormDisabled = articleBalance < 1 && !isLoadingBalance;
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -136,8 +137,8 @@ export function QuickArticleForm({
       if (response.status === 402 && data.maxArticles !== undefined) {
         setErrorDialogData({
           maxArticles: data.maxArticles,
-          requiredCredits: data.requiredCredits || 0,
-          availableCredits: data.availableCredits || 0,
+          requiredArticles: data.requiredCredits || 0, // API 暫時還是返回 requiredCredits
+          availableArticles: data.availableCredits || 0, // API 暫時還是返回 availableCredits
         });
         setShowErrorDialog(true);
         return;
@@ -198,15 +199,12 @@ export function QuickArticleForm({
           每行輸入一個關鍵字，系統會為每個關鍵字生成一篇文章（輸入單一關鍵字也可以）
         </p>
         {batchKeywords.trim() && (
-          <p className="text-sm text-primary">
-            將生成 {keywordCount} 篇文章（需要{" "}
-            {requiredCredits.toLocaleString()} credits）
-          </p>
+          <p className="text-sm text-primary">將生成 {keywordCount} 篇文章</p>
         )}
         {!isLoadingBalance && keywordCount > 0 && !hasRemainingQuota && (
           <p className="text-sm text-red-500">
-            ⚠️ Credits 不足！您目前只能生成 {maxArticles} 篇文章（餘額{" "}
-            {tokenBalance.toLocaleString()} credits）
+            ⚠️ 額度不足！您目前只能生成 {maxArticles} 篇文章（剩餘{" "}
+            {articleBalance} 篇額度）
           </p>
         )}
       </div>
@@ -264,13 +262,13 @@ export function QuickArticleForm({
         </DialogContent>
       </Dialog>
 
-      {/* Credits 不足錯誤彈跳視窗 */}
+      {/* 額度不足錯誤彈跳視窗 */}
       <Dialog open={showErrorDialog} onOpenChange={setShowErrorDialog}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-red-600">
               <AlertCircle className="h-5 w-5" />
-              Credits 不足
+              額度不足
             </DialogTitle>
             <DialogDescription className="pt-2 space-y-2">
               {errorDialogData && (
@@ -279,9 +277,8 @@ export function QuickArticleForm({
                     您目前的額度只能生成 {errorDialogData.maxArticles} 篇文章
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    需要 {errorDialogData.requiredCredits.toLocaleString()}{" "}
-                    credits，可用{" "}
-                    {errorDialogData.availableCredits.toLocaleString()} credits
+                    需要 {errorDialogData.requiredArticles} 篇額度，可用{" "}
+                    {errorDialogData.availableArticles} 篇
                   </p>
                 </>
               )}
