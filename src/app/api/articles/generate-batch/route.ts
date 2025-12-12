@@ -29,15 +29,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 輸入驗證：限制批量大小
-    const MAX_BATCH_SIZE = 20;
-    if (generationItems.length > MAX_BATCH_SIZE) {
-      return NextResponse.json(
-        { error: `批量生成最多 ${MAX_BATCH_SIZE} 篇文章` },
-        { status: 400 },
-      );
-    }
-
     // 輸入驗證：檢查每個 keyword 的長度
     const MAX_KEYWORD_LENGTH = 500;
     for (const item of generationItems) {
