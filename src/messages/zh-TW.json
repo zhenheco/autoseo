@@ -686,7 +686,20 @@
         "wordpressPublish": "WordPress 一鍵發布",
         "scheduledPost": "排程自動發文"
       }
-    }
+    },
+    "chooseYourPlan": "選擇適合您的方案",
+    "subscriptionDesc": "每月自動重置文章額度，讓您持續產出高品質內容",
+    "monthlyBilling": "月繳",
+    "yearlyBilling": "年繳",
+    "yearlyBonus": "送2個月",
+    "year": "年",
+    "month": "月",
+    "equivalentMonthly": "約",
+    "articles": "篇",
+    "bonusArticles": "再送",
+    "articlePackage": "文章加購包",
+    "needMoreArticles": "需要更多文章額度？",
+    "packageDescArticle": "加購額度永久有效，不受訂閱週期限制"
   },
   "faq": {
     "title": "常見問題",
