@@ -666,7 +666,20 @@
         "wordpressPublish": "One-Click WordPress Publish",
         "scheduledPost": "Scheduled Auto-Posting"
       }
-    }
+    },
+    "chooseYourPlan": "Choose Your Plan",
+    "subscriptionDesc": "Monthly article quota resets automatically for continuous quality content",
+    "monthlyBilling": "Monthly",
+    "yearlyBilling": "Yearly",
+    "yearlyBonus": "2 Months Free",
+    "year": "year",
+    "month": "month",
+    "equivalentMonthly": "approx.",
+    "articles": "articles",
+    "bonusArticles": "Bonus",
+    "articlePackage": "Article Add-on Pack",
+    "needMoreArticles": "Need More Articles?",
+    "packageDescArticle": "Add-on quota never expires, not limited by subscription cycle"
   },
   "faq": {
     "title": "FAQ",
