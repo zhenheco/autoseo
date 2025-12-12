@@ -667,6 +667,7 @@
         "scheduledPost": "Scheduled Auto-Posting"
       }
     },
+    "subscriptionPlans": "Subscription Plans",
     "chooseYourPlan": "Choose Your Plan",
     "subscriptionDesc": "Monthly article quota resets automatically for continuous quality content",
     "monthlyBilling": "Monthly",
