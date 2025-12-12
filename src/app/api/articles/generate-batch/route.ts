@@ -14,7 +14,15 @@ export const maxDuration = 25; // 增加到 25 秒
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { keywords, items, options, website_id } = body;
+    const {
+      keywords,
+      items,
+      options,
+      website_id,
+      targetLanguage,
+      region,
+      industry,
+    } = body;
     const hasWebsiteIdField = "website_id" in body;
 
     const generationItems =
@@ -343,7 +351,9 @@ export async function POST(request: NextRequest) {
           title,
           batchIndex: i,
           totalBatch: generationItems.length,
-          targetLanguage: options?.targetLanguage || "zh-TW",
+          targetLanguage: targetLanguage || options?.targetLanguage || "zh-TW",
+          region: region || options?.region || null,
+          industry: industry || options?.industry || null,
           wordCount: options?.wordCount || "1500",
         },
       });
