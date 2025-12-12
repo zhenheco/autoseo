@@ -600,6 +600,7 @@ export class ParallelOrchestrator {
         model: metaModel,
         temperature: agentConfig.meta_temperature,
         maxTokens: agentConfig.meta_max_tokens,
+        targetLanguage: targetLanguage,
       });
       phaseTimings.metaGeneration = Date.now() - phase4Start;
       result.meta = metaOutput;
