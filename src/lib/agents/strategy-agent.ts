@@ -121,7 +121,10 @@ ${searchIntent}
 
       if (!response.content || response.content.trim() === "") {
         console.warn("[StrategyAgent] Empty response, using fallback titles");
-        return this.getFallbackTitles(input.researchData.title);
+        return this.getFallbackTitles(
+          input.researchData.title,
+          input.targetLanguage,
+        );
       }
 
       const content = response.content.trim();
@@ -134,6 +137,7 @@ ${searchIntent}
             const validTitles = this.filterValidTitles(
               parsed.slice(0, 3),
               input.researchData.title,
+              input.targetLanguage,
             );
             console.log(
               "[StrategyAgent] Successfully parsed titles from array match",
@@ -151,6 +155,7 @@ ${searchIntent}
           const validTitles = this.filterValidTitles(
             parsed.slice(0, 3),
             input.researchData.title,
+            input.targetLanguage,
           );
           console.log(
             "[StrategyAgent] Successfully parsed titles from full content",
@@ -165,6 +170,7 @@ ${searchIntent}
           const validTitles = this.filterValidTitles(
             parsed.titles.slice(0, 3),
             input.researchData.title,
+            input.targetLanguage,
           );
           console.log(
             "[StrategyAgent] Successfully parsed titles from .titles property",
@@ -190,9 +196,13 @@ ${searchIntent}
           input.researchData.title,
           input.researchData.deepResearch,
           input.model,
+          input.targetLanguage,
         );
       }
-      return this.getFallbackTitles(input.researchData.title);
+      return this.getFallbackTitles(
+        input.researchData.title,
+        input.targetLanguage,
+      );
     } catch (error) {
       console.error("[StrategyAgent] Title generation failed:", error);
       if (input.researchData.deepResearch) {
@@ -200,33 +210,61 @@ ${searchIntent}
           input.researchData.title,
           input.researchData.deepResearch,
           input.model,
+          input.targetLanguage,
         );
       }
-      return this.getFallbackTitles(input.researchData.title);
+      return this.getFallbackTitles(
+        input.researchData.title,
+        input.targetLanguage,
+      );
     }
   }
 
-  private getFallbackTitles(keyword: string): string[] {
-    const templates = [
-      [
-        `為什麼${keyword}如此重要？專家這樣說`,
-        `${keyword}背後的秘密：你不知道的5件事`,
-        `${keyword}新手必讀：少走彎路的關鍵`,
-      ],
-      [
-        `${keyword}的真相：打破常見迷思`,
-        `這樣做${keyword}效果翻倍`,
-        `${keyword}達人的私房心得`,
-      ],
-      [
-        `${keyword}怎麼選？專業評測報告`,
-        `${keyword}省錢攻略：聰明消費者必看`,
-        `${keyword}趨勢觀察：未來發展方向`,
-      ],
-    ];
+  private getFallbackTitles(
+    keyword: string,
+    targetLanguage?: string,
+  ): string[] {
+    const isEnglish = targetLanguage?.startsWith("en") || false;
+
+    const templates = isEnglish
+      ? [
+          [
+            `Why ${keyword} Matters: Expert Insights`,
+            `The Truth About ${keyword}: 5 Things You Should Know`,
+            `${keyword} for Beginners: Essential Tips`,
+          ],
+          [
+            `${keyword} Myths Debunked: What Really Works`,
+            `How to Get Better Results with ${keyword}`,
+            `${keyword} Pro Tips: Insider Secrets`,
+          ],
+          [
+            `How to Choose the Right ${keyword}: Expert Guide`,
+            `${keyword} on a Budget: Smart Strategies`,
+            `${keyword} Trends: What's Next`,
+          ],
+        ]
+      : [
+          [
+            `為什麼${keyword}如此重要？專家這樣說`,
+            `${keyword}背後的秘密：你不知道的5件事`,
+            `${keyword}新手必讀：少走彎路的關鍵`,
+          ],
+          [
+            `${keyword}的真相：打破常見迷思`,
+            `這樣做${keyword}效果翻倍`,
+            `${keyword}達人的私房心得`,
+          ],
+          [
+            `${keyword}怎麼選？專業評測報告`,
+            `${keyword}省錢攻略：聰明消費者必看`,
+            `${keyword}趨勢觀察：未來發展方向`,
+          ],
+        ];
+
     const templateSet = templates[Math.floor(Math.random() * templates.length)];
     console.log(
-      "[StrategyAgent] Using creative fallback titles (not template patterns)",
+      `[StrategyAgent] Using fallback titles (language: ${targetLanguage || "zh-TW"})`,
     );
     return templateSet;
   }
@@ -238,38 +276,47 @@ ${searchIntent}
       userQuestions?: { content: string };
     },
     model: string,
+    targetLanguage?: string,
   ): Promise<string[]> {
     const trendsContent = researchData.trends?.content || "";
     const questionsContent = researchData.userQuestions?.content || "";
 
     if (!trendsContent && !questionsContent) {
-      return this.getFallbackTitles(keyword);
+      return this.getFallbackTitles(keyword, targetLanguage);
     }
 
-    const prompt = `根據以下研究資料，為關鍵字「${keyword}」生成 3 個吸引人的文章標題。
+    const languageName =
+      LOCALE_FULL_NAMES[targetLanguage || "zh-TW"] ||
+      "Traditional Chinese (繁體中文)";
+    const isEnglish = targetLanguage?.startsWith("en") || false;
+    const lengthGuide = isEnglish ? "50-80 characters" : "20-40 個中文字";
 
-## 研究資料
-### 最新趨勢
-${trendsContent.substring(0, 500) || "無趨勢資料"}
+    const prompt = `Based on the following research data, generate 3 compelling article titles for the keyword "${keyword}".
 
-### 用戶常見問題
-${questionsContent.substring(0, 500) || "無問題資料"}
+**CRITICAL: ALL titles MUST be written in ${languageName}**
 
-## 標題生成要求
-1. 標題應反映文章的核心價值和研究發現
-2. 使用自然語言，避免公式化表達
-3. 包含關鍵字但不生硬
-4. 吸引目標讀者點擊
-5. 長度控制在 20-40 個中文字
+## Research Data
+### Latest Trends
+${trendsContent.substring(0, 500) || "No trend data available"}
 
-## 禁止使用
-- 年份（如 2024、2025）
-- 模板詞彙（如「完整指南」「全攻略」「懶人包」）
-- 過度誇張的詞彙
+### Common User Questions
+${questionsContent.substring(0, 500) || "No question data available"}
 
-## 輸出格式
-直接輸出 JSON 陣列：
-["標題一", "標題二", "標題三"]`;
+## Title Requirements
+1. Titles should reflect the core value and research findings
+2. Use natural language, avoid formulaic expressions
+3. Include keywords naturally without being forced
+4. Appeal to target readers
+5. Length: ${lengthGuide}
+
+## DO NOT USE
+- Years (e.g., 2024, 2025)
+- Template phrases (e.g., "Complete Guide", "Ultimate", "Everything You Need")
+- Exaggerated words
+
+## Output Format
+Output JSON array directly:
+["First title in ${languageName}", "Second title in ${languageName}", "Third title in ${languageName}"]`;
 
     try {
       const response = await this.complete(prompt, {
@@ -280,7 +327,7 @@ ${questionsContent.substring(0, 500) || "無問題資料"}
       });
 
       if (!response.content) {
-        return this.getFallbackTitles(keyword);
+        return this.getFallbackTitles(keyword, targetLanguage);
       }
 
       const content = response.content.trim();
@@ -300,10 +347,13 @@ ${questionsContent.substring(0, 500) || "無問題資料"}
         }
       }
 
-      return this.getFallbackTitles(keyword);
+      return this.getFallbackTitles(keyword, targetLanguage);
     } catch (error) {
-      console.warn("[StrategyAgent] AI 標題生成失敗，使用 fallback:", error);
-      return this.getFallbackTitles(keyword);
+      console.warn(
+        "[StrategyAgent] AI title generation failed, using fallback:",
+        error,
+      );
+      return this.getFallbackTitles(keyword, targetLanguage);
     }
   }
 
@@ -325,7 +375,11 @@ ${questionsContent.substring(0, 500) || "無問題資料"}
     return placeholderPatterns.some((pattern) => pattern.test(text));
   }
 
-  private filterValidTitles(titles: string[], fallbackTitle: string): string[] {
+  private filterValidTitles(
+    titles: string[],
+    fallbackTitle: string,
+    targetLanguage?: string,
+  ): string[] {
     const validTitles = titles.filter((t) => {
       if (!t || typeof t !== "string" || t.trim().length < 5) return false;
       if (this.containsPlaceholder(t)) {
@@ -340,7 +394,7 @@ ${questionsContent.substring(0, 500) || "無問題資料"}
         valid: validTitles.length,
         original: titles.length,
       });
-      return this.getFallbackTitles(fallbackTitle);
+      return this.getFallbackTitles(fallbackTitle, targetLanguage);
     }
 
     return validTitles;
