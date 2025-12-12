@@ -448,7 +448,7 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
                     key={plan.id}
                     className={`relative flex flex-col h-full transition-all duration-300 ${
                       isPopular
-                        ? "!bg-transparent bg-gradient-to-b from-cyber-violet-600 to-cyber-magenta-600 text-white border-cyber-violet-500 shadow-lg scale-105 glow-button"
+                        ? "bg-gradient-to-b from-cyber-violet-600 to-cyber-magenta-600 text-white border-cyber-violet-500 shadow-lg scale-105 glow-button"
                         : "bg-white dark:bg-transparent dark:glass shadow-md dark:shadow-none border-slate-200 dark:border-white/10 hover:border-cyber-violet-500/50"
                     }`}
                   >
@@ -564,7 +564,7 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
                         size="sm"
                         className={`w-full mt-auto font-bold ${
                           isPopular
-                            ? "bg-white text-cyber-violet-600 hover:bg-slate-100"
+                            ? "bg-gradient-to-r from-cyber-violet-500 to-cyber-magenta-500 text-white hover:from-cyber-violet-400 hover:to-cyber-magenta-400"
                             : "bg-slate-900 text-white hover:bg-slate-800 dark:bg-gradient-to-r dark:from-cyber-violet-600 dark:to-cyber-magenta-600 dark:hover:from-cyber-violet-500 dark:hover:to-cyber-magenta-500"
                         } shadow-lg`}
                       >
