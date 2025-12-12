@@ -57,8 +57,8 @@ export async function middleware(request: NextRequest) {
     // script-src: 開發環境需要 unsafe-eval (Next.js HMR)，生產環境移除
     // 加入 Cloudflare Insights 和 Google Tag Manager 域名
     isDevelopment
-      ? "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://static.cloudflareinsights.com https://www.googletagmanager.com https://www.google-analytics.com"
-      : "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://www.googletagmanager.com https://www.google-analytics.com",
+      ? "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://static.cloudflareinsights.com https://www.googletagmanager.com https://www.google-analytics.com https://ssl.google-analytics.com https://tagmanager.google.com"
+      : "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://www.googletagmanager.com https://www.google-analytics.com https://ssl.google-analytics.com https://tagmanager.google.com",
     // style-src: 需要 unsafe-inline 支援 Tailwind CSS
     "style-src 'self' 'unsafe-inline'",
     // img-src: 允許所有 HTTPS 圖片來源（用於文章圖片）
@@ -80,7 +80,10 @@ export async function middleware(request: NextRequest) {
       "https://cloudflareinsights.com",
       // Google Analytics 和 Search Console API
       "https://www.google-analytics.com",
+      "https://ssl.google-analytics.com",
       "https://analytics.google.com",
+      "https://region1.google-analytics.com",
+      "https://stats.g.doubleclick.net",
       "https://searchconsole.googleapis.com",
       "https://analyticsdata.googleapis.com",
       "https://analyticsadmin.googleapis.com",
