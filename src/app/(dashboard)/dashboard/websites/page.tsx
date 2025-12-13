@@ -84,7 +84,12 @@ export default async function WebsitesPage({
     redirect("/login");
   }
 
-  const company = await getUserPrimaryCompany(user.id);
+  let company = null;
+  try {
+    company = await getUserPrimaryCompany(user.id);
+  } catch (err) {
+    console.error("Error fetching user company:", err);
+  }
 
   if (!company) {
     return (
