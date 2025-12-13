@@ -391,7 +391,24 @@
       "starter": "スタータープラン",
       "pro": "プロプラン",
       "business": "ビジネスプラン"
-    }
+    },
+    "subscriptionPlans": "サブスクリプションプラン",
+    "monthlyBilling": "月払い",
+    "yearlyBilling": "年払い",
+    "yearlyBonus": "+2ヶ月無料",
+    "year": "年",
+    "month": "月",
+    "equivalentMonthly": "約",
+    "articles": "記事",
+    "bonusArticles": "ボーナス",
+    "allAIModels": "全AIモデル",
+    "wordpressIntegration": "WordPress連携",
+    "autoImageGen": "自動画像生成",
+    "scheduledPublish": "予約投稿",
+    "subscribe": "今すぐ登録",
+    "cannotDowngrade": "登録不可",
+    "processing": "処理中...",
+    "mostPopular": "最も人気"
   },
   "payment": {
     "failed": "決済失敗",

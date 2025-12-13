@@ -391,7 +391,24 @@
       "starter": "Starter",
       "pro": "Pro",
       "business": "Business"
-    }
+    },
+    "subscriptionPlans": "Subscription Plans",
+    "monthlyBilling": "Monthly",
+    "yearlyBilling": "Yearly",
+    "yearlyBonus": "+2 months free",
+    "year": "year",
+    "month": "month",
+    "equivalentMonthly": "≈",
+    "articles": "articles",
+    "bonusArticles": "bonus",
+    "allAIModels": "All AI Models",
+    "wordpressIntegration": "WordPress Integration",
+    "autoImageGen": "Auto Image Generation",
+    "scheduledPublish": "Scheduled Publishing",
+    "subscribe": "Subscribe Now",
+    "cannotDowngrade": "Cannot Subscribe",
+    "processing": "Processing...",
+    "mostPopular": "Most Popular"
   },
   "payment": {
     "failed": "Payment Failed",

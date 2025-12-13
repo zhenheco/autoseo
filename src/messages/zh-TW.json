@@ -411,7 +411,24 @@
       "starter": "入門版",
       "pro": "專業版",
       "business": "團隊版"
-    }
+    },
+    "subscriptionPlans": "訂閱方案",
+    "monthlyBilling": "月繳",
+    "yearlyBilling": "年繳",
+    "yearlyBonus": "送2個月",
+    "year": "年",
+    "month": "月",
+    "equivalentMonthly": "約",
+    "articles": "篇",
+    "bonusArticles": "再送",
+    "allAIModels": "所有 AI 模型",
+    "wordpressIntegration": "WordPress 整合",
+    "autoImageGen": "自動圖片生成",
+    "scheduledPublish": "排程發布",
+    "subscribe": "立即訂閱",
+    "cannotDowngrade": "無法訂閱",
+    "processing": "處理中...",
+    "mostPopular": "最熱門"
   },
   "payment": {
     "failed": "付款失敗",
