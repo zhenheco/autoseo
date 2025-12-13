@@ -1,11 +1,24 @@
 "use client";
 
-import { useState } from "react";
-import { signInWithGoogle } from "./actions";
+import { useState, useEffect } from "react";
+import { useSearchParams, useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import {
+  signInWithGoogle,
+  signInWithEmail,
+  signUpWithEmail,
+  resetPasswordRequest,
+  resendVerificationEmail,
+} from "./actions";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import { FingerprintCollector } from "@/components/fingerprint-collector";
 
+/**
+ * Google 圖示元件
+ */
 function GoogleIcon({ className }: { className?: string }) {
   return (
     <svg className={className} viewBox="0 0 24 24">
@@ -29,49 +42,354 @@ function GoogleIcon({ className }: { className?: string }) {
   );
 }
 
+type AuthMode = "signin" | "signup" | "forgot";
+
 interface LoginFormProps {
   error?: string;
   success?: string;
+  initialMode?: AuthMode;
 }
 
-export function LoginForm({ error, success }: LoginFormProps) {
+/**
+ * 登入/註冊/忘記密碼表單元件
+ * 支援 Google OAuth 和 Email + 密碼認證
+ */
+export function LoginForm({
+  error: initialError,
+  success: initialSuccess,
+  initialMode = "signin",
+}: LoginFormProps) {
+  const t = useTranslations("auth");
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // 從 URL 參數讀取初始模式
+  const modeFromUrl = searchParams.get("mode") as AuthMode | null;
+
+  const [mode, setMode] = useState<AuthMode>(modeFromUrl || initialMode);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isEmailLoading, setIsEmailLoading] = useState(false);
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [error, setError] = useState(initialError || "");
+  const [success, setSuccess] = useState(initialSuccess || "");
+  const [needsVerification, setNeedsVerification] = useState(false);
+
+  // 當 URL 參數變化時更新模式
+  useEffect(() => {
+    if (modeFromUrl && modeFromUrl !== mode) {
+      setMode(modeFromUrl);
+    }
+  }, [modeFromUrl, mode]);
+
+  /**
+   * 處理 Google 登入
+   */
+  const handleGoogleSignIn = async () => {
+    setError("");
+    setSuccess("");
+    setIsGoogleLoading(true);
+
+    try {
+      await signInWithGoogle();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("loginFailed"));
+      setIsGoogleLoading(false);
+    }
+  };
+
+  /**
+   * 處理 Email 表單提交
+   */
+  const handleEmailSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setSuccess("");
+    setNeedsVerification(false);
+    setIsEmailLoading(true);
+
+    try {
+      // 忘記密碼模式
+      if (mode === "forgot") {
+        const result = await resetPasswordRequest(email);
+        if (result.error) {
+          setError(result.error);
+        } else {
+          setSuccess(t("emailSent"));
+        }
+        setIsEmailLoading(false);
+        return;
+      }
+
+      // 註冊模式
+      if (mode === "signup") {
+        // 前端驗證
+        if (password !== confirmPassword) {
+          setError(t("passwordMismatch"));
+          setIsEmailLoading(false);
+          return;
+        }
+        if (password.length < 6) {
+          setError(t("passwordTooShort"));
+          setIsEmailLoading(false);
+          return;
+        }
+
+        const result = await signUpWithEmail(email, password);
+        if (result.error) {
+          setError(result.error);
+        } else if (result.needsVerification) {
+          setSuccess(t("registerSuccess"));
+          setNeedsVerification(true);
+        } else {
+          router.push("/dashboard");
+        }
+      } else {
+        // 登入模式
+        const result = await signInWithEmail(email, password);
+        if (result.error) {
+          // 檢查是否需要驗證郵件
+          if (
+            result.error.includes("not confirmed") ||
+            result.error.includes("Email not confirmed")
+          ) {
+            setError(t("emailNotVerified"));
+            setNeedsVerification(true);
+          } else if (result.error.includes("Invalid login credentials")) {
+            setError(t("invalidCredentials"));
+          } else {
+            setError(result.error);
+          }
+        } else {
+          router.push("/dashboard");
+        }
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : t("loginFailed"));
+    } finally {
+      setIsEmailLoading(false);
+    }
+  };
+
+  /**
+   * 處理重發驗證郵件
+   */
+  const handleResendVerification = async () => {
+    setError("");
+    setIsEmailLoading(true);
+    try {
+      const result = await resendVerificationEmail(email);
+      if (result.error) {
+        setError(result.error);
+      } else {
+        setSuccess(t("verificationEmailSent"));
+      }
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "發送驗證信失敗");
+    } finally {
+      setIsEmailLoading(false);
+    }
+  };
+
+  /**
+   * 切換模式
+   */
+  const switchMode = (newMode: AuthMode) => {
+    setMode(newMode);
+    setError("");
+    setSuccess("");
+    setNeedsVerification(false);
+    // 更新 URL 但不重新載入頁面
+    const url = new URL(window.location.href);
+    if (newMode === "signin") {
+      url.searchParams.delete("mode");
+    } else {
+      url.searchParams.set("mode", newMode);
+    }
+    window.history.replaceState({}, "", url.toString());
+  };
+
+  const isLoading = isGoogleLoading || isEmailLoading;
 
   return (
     <>
       {/* 收集裝置指紋（不可見元件） */}
-      <FingerprintCollector eventType="login" />
+      <FingerprintCollector
+        eventType={mode === "signup" ? "register" : "login"}
+      />
+
+      {/* 成功訊息 */}
       {success && (
         <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded-xl text-sm font-medium animate-in fade-in slide-in-from-top-2 duration-300">
           {success}
         </div>
       )}
 
+      {/* 錯誤訊息 */}
       {error && (
         <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400 rounded-xl text-sm font-medium animate-in fade-in slide-in-from-top-2 duration-300">
           <p>{error}</p>
+          {needsVerification && email && (
+            <button
+              onClick={handleResendVerification}
+              disabled={isLoading}
+              className="mt-2 text-sm underline hover:no-underline"
+            >
+              {t("resendVerification")}
+            </button>
+          )}
         </div>
       )}
 
-      <form
-        action={async () => {
-          setIsGoogleLoading(true);
-          await signInWithGoogle();
-        }}
-      >
-        <Button
-          type="submit"
-          disabled={isGoogleLoading}
-          className="w-full h-12 text-sm font-semibold bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 transition-colors"
-        >
-          {isGoogleLoading ? (
-            <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-          ) : (
-            <GoogleIcon className="mr-2 h-5 w-5" />
-          )}
-          使用 Google 帳號登入
+      {/* Google 登入按鈕（忘記密碼模式不顯示） */}
+      {mode !== "forgot" && (
+        <>
+          <form
+            action={async () => {
+              await handleGoogleSignIn();
+            }}
+          >
+            <Button
+              type="submit"
+              disabled={isLoading}
+              className="w-full h-12 text-sm font-semibold bg-white hover:bg-gray-50 text-gray-700 border border-gray-300 transition-colors"
+            >
+              {isGoogleLoading ? (
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+              ) : (
+                <GoogleIcon className="mr-2 h-5 w-5" />
+              )}
+              {mode === "signup" ? t("signupWithGoogle") : t("loginWithGoogle")}
+            </Button>
+          </form>
+
+          {/* 分隔線 */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-border"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-4 bg-card text-muted-foreground">
+                {t("orLoginWithEmail")}
+              </span>
+            </div>
+          </div>
+        </>
+      )}
+
+      {/* Email 表單 */}
+      <form onSubmit={handleEmailSubmit} className="space-y-4">
+        {/* Email 輸入 */}
+        <div className="space-y-2">
+          <Label htmlFor="email">{t("emailLabel")}</Label>
+          <Input
+            type="email"
+            id="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            required
+            placeholder="you@example.com"
+            disabled={isLoading}
+            className="h-11"
+          />
+        </div>
+
+        {/* 密碼輸入（忘記密碼模式不顯示） */}
+        {mode !== "forgot" && (
+          <div className="space-y-2">
+            <Label htmlFor="password">{t("password")}</Label>
+            <Input
+              type="password"
+              id="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={6}
+              placeholder="••••••••"
+              disabled={isLoading}
+              className="h-11"
+            />
+          </div>
+        )}
+
+        {/* 確認密碼輸入（僅註冊模式顯示） */}
+        {mode === "signup" && (
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">{t("confirmPassword")}</Label>
+            <Input
+              type="password"
+              id="confirmPassword"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              required
+              minLength={6}
+              placeholder="••••••••"
+              disabled={isLoading}
+              className="h-11"
+            />
+          </div>
+        )}
+
+        {/* 忘記密碼連結（僅登入模式顯示） */}
+        {mode === "signin" && (
+          <div className="text-right">
+            <button
+              type="button"
+              onClick={() => switchMode("forgot")}
+              className="text-sm text-primary hover:underline"
+            >
+              {t("forgotPassword")}
+            </button>
+          </div>
+        )}
+
+        {/* 提交按鈕 */}
+        <Button type="submit" disabled={isLoading} className="w-full h-11">
+          {isEmailLoading ? (
+            <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+          ) : null}
+          {isLoading
+            ? t("processing")
+            : mode === "forgot"
+              ? t("sendResetLink")
+              : mode === "signup"
+                ? t("register")
+                : t("login")}
         </Button>
       </form>
+
+      {/* 模式切換連結 */}
+      <div className="mt-6 text-center text-sm text-muted-foreground">
+        {mode === "forgot" ? (
+          <button
+            onClick={() => switchMode("signin")}
+            className="text-primary hover:underline"
+          >
+            {t("backToLogin")}
+          </button>
+        ) : mode === "signin" ? (
+          <p>
+            {t("noAccount")}{" "}
+            <button
+              onClick={() => switchMode("signup")}
+              className="text-primary hover:underline font-medium"
+            >
+              {t("signUpNow")}
+            </button>
+          </p>
+        ) : (
+          <p>
+            {t("hasAccount")}{" "}
+            <button
+              onClick={() => switchMode("signin")}
+              className="text-primary hover:underline font-medium"
+            >
+              {t("signInNow")}
+            </button>
+          </p>
+        )}
+      </div>
     </>
   );
 }
