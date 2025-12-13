@@ -19,28 +19,54 @@ export const CACHE_CONFIG = {
 
 /** Redis 客戶端單例 */
 let redisClient: Redis | null = null;
+/** 最後一次連線錯誤時間 */
+let lastConnectionError: number = 0;
+/** 連線錯誤後的冷卻時間（毫秒） */
+const CONNECTION_COOLDOWN = 5000;
 
 /**
  * 取得 Redis 客戶端
+ * 在 serverless 環境中優化連線處理
  */
 function getRedis(): Redis | null {
   if (!process.env.REDIS_URL) {
     return null;
   }
 
+  // 如果最近有連線錯誤，暫時跳過 Redis（冷卻機制）
+  if (
+    lastConnectionError &&
+    Date.now() - lastConnectionError < CONNECTION_COOLDOWN
+  ) {
+    return null;
+  }
+
   if (!redisClient) {
     redisClient = new Redis(process.env.REDIS_URL, {
-      maxRetriesPerRequest: 3,
+      maxRetriesPerRequest: 1, // 減少重試次數，避免阻塞
       retryStrategy: (times) => {
-        if (times > 3) return null;
-        return Math.min(times * 100, 3000);
+        if (times > 2) {
+          // 超過重試次數，記錄錯誤時間並返回 null
+          lastConnectionError = Date.now();
+          return null;
+        }
+        return Math.min(times * 100, 1000);
       },
-      enableOfflineQueue: false,
+      enableOfflineQueue: false, // serverless 環境不使用離線佇列
       lazyConnect: true,
+      connectTimeout: 3000, // 3 秒連線超時
+      commandTimeout: 2000, // 2 秒命令超時
     });
 
     redisClient.on("error", (err) => {
+      // 記錄連線錯誤時間，觸發冷卻機制
+      lastConnectionError = Date.now();
       console.error("[RedisCache] Connection error:", err.message);
+    });
+
+    redisClient.on("close", () => {
+      // 連線關閉時清理客戶端，下次會重新建立
+      redisClient = null;
     });
   }
 

@@ -174,31 +174,47 @@ export async function getArticleHtml(articleJobId: string): Promise<{
   // 使用 Redis 快取
   const cacheKey = articleHtmlCacheKey(articleJobId);
 
-  const { data, fromCache } = await cacheGetOrSet<{
-    html: string;
-    title: string;
-  }>(cacheKey, CACHE_CONFIG.ARTICLE_HTML.ttl, async () => {
-    const { data: article, error } = await supabase
-      .from("generated_articles")
-      .select("html_content, title")
-      .eq("article_job_id", articleJobId)
-      .single();
-
-    if (error || !article) {
-      throw new Error("找不到文章");
-    }
-
+  // 先嘗試從快取獲取
+  const cached = await cacheGet<{ html: string; title: string }>(cacheKey);
+  if (cached) {
     return {
-      html: article.html_content || "",
-      title: article.title || "",
+      html: cached.html,
+      title: cached.title,
+      error: null,
+      fromCache: true,
     };
-  });
+  }
+
+  // 快取未命中，查詢資料庫
+  const { data: article, error: dbError } = await supabase
+    .from("generated_articles")
+    .select("html_content, title")
+    .eq("article_job_id", articleJobId)
+    .single();
+
+  // 文章不存在時返回錯誤訊息而非拋出錯誤
+  if (dbError || !article) {
+    return {
+      html: null,
+      title: null,
+      error: "文章尚未生成完成或不存在",
+      fromCache: false,
+    };
+  }
+
+  const data = {
+    html: article.html_content || "",
+    title: article.title || "",
+  };
+
+  // 非同步存入快取
+  cacheSet(cacheKey, data, CACHE_CONFIG.ARTICLE_HTML.ttl).catch(() => {});
 
   return {
     html: data.html,
     title: data.title,
     error: null,
-    fromCache,
+    fromCache: false,
   };
 }
 
