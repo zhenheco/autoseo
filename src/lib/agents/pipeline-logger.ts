@@ -272,10 +272,22 @@ export class PipelineLogger {
         summary: this.log.summary,
       };
 
+      // 先讀取現有的 metadata，避免覆蓋其他欄位
+      const { data: existingJob } = await supabase
+        .from("article_jobs")
+        .select("metadata")
+        .eq("id", this.options.jobId)
+        .single();
+
+      const existingMetadata =
+        (existingJob?.metadata as Record<string, unknown>) || {};
+
+      // 合併現有 metadata 和新的 pipeline 資料
       const { error } = await supabase
         .from("article_jobs")
         .update({
           metadata: {
+            ...existingMetadata,
             pipeline_log: pipelineLog,
             phases: this.log.phases.map((p) => ({
               phase: p.phase,
