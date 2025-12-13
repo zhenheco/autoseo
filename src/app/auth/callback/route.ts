@@ -59,19 +59,37 @@ export async function GET(request: Request) {
 
           const { data: freePlan } = await adminClient
             .from("subscription_plans")
-            .select("id")
+            .select("id, articles_per_month")
             .eq("name", "FREE")
             .single();
 
-          await adminClient.from("company_subscriptions").insert({
-            company_id: company.id,
-            plan_id: freePlan?.id || null,
-            status: "active",
-            monthly_token_quota: 0,
-            monthly_quota_balance: 0,
-            purchased_token_balance: 10000,
-            is_lifetime: false,
-          });
+          const articlesPerMonth = freePlan?.articles_per_month || 3;
+          const now = new Date();
+          const periodEnd = new Date(now);
+          periodEnd.setMonth(periodEnd.getMonth() + 1);
+
+          const { error: subscriptionError } = await adminClient
+            .from("company_subscriptions")
+            .insert({
+              company_id: company.id,
+              plan_id: freePlan?.id || null,
+              status: "active",
+              monthly_token_quota: 0,
+              monthly_quota_balance: 0,
+              purchased_token_balance: 0,
+              is_lifetime: false,
+              // 篇數制欄位
+              subscription_articles_remaining: articlesPerMonth,
+              purchased_articles_remaining: 0,
+              articles_per_month: articlesPerMonth,
+              lifetime_free_articles_limit: articlesPerMonth,
+              current_period_start: now.toISOString(),
+              current_period_end: periodEnd.toISOString(),
+            });
+
+          if (subscriptionError) {
+            console.error("[OAuth] 建立訂閱失敗:", subscriptionError);
+          }
 
           const cookieStore = await cookies();
           const affiliateRef = cookieStore.get("affiliate_ref")?.value;
