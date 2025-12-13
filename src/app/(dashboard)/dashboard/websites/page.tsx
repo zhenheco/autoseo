@@ -23,32 +23,50 @@ import { WebsiteStatusToggle } from "./website-status-toggle";
 import { Globe, ExternalLink } from "lucide-react";
 
 async function getCompanyWebsites(companyId: string) {
-  const supabase = await createClient();
+  try {
+    const supabase = await createClient();
 
-  const { data, error } = await supabase
-    .from("website_configs")
-    .select("*")
-    .eq("company_id", companyId)
-    .order("created_at", { ascending: false });
+    const { data, error } = await supabase
+      .from("website_configs")
+      .select("*")
+      .eq("company_id", companyId)
+      .order("created_at", { ascending: false });
 
-  if (error) throw error;
+    if (error) {
+      console.error("Failed to fetch websites:", error);
+      return [];
+    }
 
-  return data;
+    return data || [];
+  } catch (err) {
+    console.error("Unexpected error in getCompanyWebsites:", err);
+    return [];
+  }
 }
 
 /**
  * 檢查是否已存在官方 Blog（全域檢查）
  */
 async function checkPlatformBlogExists() {
-  const supabase = await createClient();
+  try {
+    const supabase = await createClient();
 
-  const { data } = await supabase
-    .from("website_configs")
-    .select("id")
-    .eq("is_platform_blog", true)
-    .maybeSingle();
+    const { data, error } = await supabase
+      .from("website_configs")
+      .select("id")
+      .eq("is_platform_blog", true)
+      .maybeSingle();
 
-  return !!data;
+    if (error) {
+      console.error("Error checking platform blog:", error);
+      return false;
+    }
+
+    return !!data;
+  } catch (err) {
+    console.error("Unexpected error in checkPlatformBlogExists:", err);
+    return false;
+  }
 }
 
 export default async function WebsitesPage({
