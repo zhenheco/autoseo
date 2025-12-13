@@ -391,7 +391,24 @@
       "starter": "스타터",
       "pro": "프로",
       "business": "비즈니스"
-    }
+    },
+    "subscriptionPlans": "구독 플랜",
+    "monthlyBilling": "월간",
+    "yearlyBilling": "연간",
+    "yearlyBonus": "+2개월 무료",
+    "year": "년",
+    "month": "월",
+    "equivalentMonthly": "약",
+    "articles": "개",
+    "bonusArticles": "보너스",
+    "allAIModels": "모든 AI 모델",
+    "wordpressIntegration": "WordPress 연동",
+    "autoImageGen": "자동 이미지 생성",
+    "scheduledPublish": "예약 게시",
+    "subscribe": "지금 구독",
+    "cannotDowngrade": "구독 불가",
+    "processing": "처리 중...",
+    "mostPopular": "가장 인기"
   },
   "payment": {
     "failed": "결제 실패",

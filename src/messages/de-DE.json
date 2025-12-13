@@ -391,7 +391,24 @@
       "starter": "Starter",
       "pro": "Pro",
       "business": "Business"
-    }
+    },
+    "subscriptionPlans": "Abonnementpläne",
+    "monthlyBilling": "Monatlich",
+    "yearlyBilling": "Jährlich",
+    "yearlyBonus": "+2 Monate gratis",
+    "year": "Jahr",
+    "month": "Monat",
+    "equivalentMonthly": "≈",
+    "articles": "Artikel",
+    "bonusArticles": "Bonus",
+    "allAIModels": "Alle KI-Modelle",
+    "wordpressIntegration": "WordPress-Integration",
+    "autoImageGen": "Auto-Bildgenerierung",
+    "scheduledPublish": "Geplante Veröffentlichung",
+    "subscribe": "Jetzt abonnieren",
+    "cannotDowngrade": "Abonnement nicht möglich",
+    "processing": "Verarbeitung...",
+    "mostPopular": "Am beliebtesten"
   },
   "payment": {
     "failed": "Zahlung fehlgeschlagen",
