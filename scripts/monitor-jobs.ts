@@ -23,6 +23,7 @@ async function main() {
 
   const stats = {
     totalProcessing: 0,
+    totalPending: 0,
     timedOut: 0,
     stuck: 0,
     retried: 0,
@@ -43,6 +44,22 @@ async function main() {
 
   stats.totalProcessing = processingJobs?.length || 0;
   console.log(`[Monitor] 📊 發現 ${stats.totalProcessing} 個處理中任務`);
+
+  // 檢查 pending/scheduled 任務積壓
+  const { count: pendingCount } = await supabase
+    .from("article_jobs")
+    .select("*", { count: "exact", head: true })
+    .in("status", ["pending", "scheduled"]);
+
+  stats.totalPending = pendingCount || 0;
+  console.log(`[Monitor] 📊 發現 ${stats.totalPending} 個等待中任務`);
+
+  // 如果積壓超過 100 個任務，發出警告
+  if (stats.totalPending > 100) {
+    console.log(
+      `[Monitor] ⚠️ 警告：${stats.totalPending} 個任務積壓！可能需要檢查 process workflow`,
+    );
+  }
 
   // 處理每個任務
   for (const job of processingJobs || []) {
@@ -139,6 +156,7 @@ async function main() {
 
   // 輸出執行摘要
   console.log("\n[Monitor] 📈 監控摘要:");
+  console.log(`  - 等待中任務: ${stats.totalPending}`);
   console.log(`  - 處理中任務: ${stats.totalProcessing}`);
   console.log(`  - 超時任務: ${stats.timedOut}`);
   console.log(`  - 卡住任務: ${stats.stuck}`);
