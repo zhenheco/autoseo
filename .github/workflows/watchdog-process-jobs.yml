@@ -1,0 +1,57 @@
+name: Watchdog - Auto Recovery
+
+on:
+  schedule:
+    # 每 10 分鐘檢查一次（比主 workflow 頻率低，避免資源競爭）
+    - cron: "*/10 * * * *"
+  workflow_dispatch:
+
+jobs:
+  watchdog:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+
+    steps:
+      - name: Check last process workflow run
+        id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # 獲取最後一次 process workflow 的執行時間
+          LAST_RUN=$(gh run list \
+            --repo ${{ github.repository }} \
+            --workflow "Process Article Jobs" \
+            --limit 1 \
+            --json createdAt \
+            --jq '.[0].createdAt')
+
+          if [ -z "$LAST_RUN" ]; then
+            echo "needs_trigger=true" >> $GITHUB_OUTPUT
+            echo "⚠️ No recent runs found"
+            exit 0
+          fi
+
+          # 計算距離上次執行的分鐘數
+          LAST_RUN_EPOCH=$(date -d "$LAST_RUN" +%s)
+          NOW_EPOCH=$(date +%s)
+          DIFF_MINUTES=$(( (NOW_EPOCH - LAST_RUN_EPOCH) / 60 ))
+
+          echo "Last run: $LAST_RUN ($DIFF_MINUTES minutes ago)"
+
+          # 如果超過 15 分鐘沒執行，觸發恢復
+          if [ $DIFF_MINUTES -gt 15 ]; then
+            echo "needs_trigger=true" >> $GITHUB_OUTPUT
+            echo "⚠️ Process workflow hasn't run in $DIFF_MINUTES minutes - will trigger recovery"
+          else
+            echo "needs_trigger=false" >> $GITHUB_OUTPUT
+            echo "✅ Process workflow is running normally"
+          fi
+
+      - name: Trigger process workflow if needed
+        if: steps.check.outputs.needs_trigger == 'true'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "🚀 Triggering Process Article Jobs workflow..."
+          gh workflow run "Process Article Jobs" --repo ${{ github.repository }}
+          echo "✅ Recovery triggered successfully"

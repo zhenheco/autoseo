@@ -12,6 +12,11 @@ on:
   repository_dispatch:
     types: [article-jobs-created]
 
+# 避免多個實例同時運行（防止排隊阻塞）
+concurrency:
+  group: process-article-jobs
+  cancel-in-progress: false
+
 jobs:
   process-jobs:
     runs-on: ubuntu-latest
