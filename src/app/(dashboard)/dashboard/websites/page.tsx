@@ -36,6 +36,21 @@ async function getCompanyWebsites(companyId: string) {
   return data;
 }
 
+/**
+ * 檢查是否已存在官方 Blog（全域檢查）
+ */
+async function checkPlatformBlogExists() {
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from("website_configs")
+    .select("id")
+    .eq("is_platform_blog", true)
+    .maybeSingle();
+
+  return !!data;
+}
+
 export default async function WebsitesPage({
   searchParams,
 }: {
@@ -61,7 +76,10 @@ export default async function WebsitesPage({
     );
   }
 
-  const websites = await getCompanyWebsites(company.id);
+  const [websites, platformBlogExists] = await Promise.all([
+    getCompanyWebsites(company.id),
+    checkPlatformBlogExists(),
+  ]);
   const params = await searchParams;
 
   return (
@@ -88,8 +106,8 @@ export default async function WebsitesPage({
         </div>
       )}
 
-      {/* 官方 Blog 提示區（如果還沒有建立） */}
-      {websites && !websites.some((w: WebsiteConfig) => w.is_platform_blog) && (
+      {/* 官方 Blog 提示區（如果全域還沒有建立） */}
+      {!platformBlogExists && (
         <Card className="mb-6 border-dashed border-2 border-primary/30 bg-primary/5">
           <CardContent className="flex items-center justify-between py-4">
             <div className="flex items-center gap-3">
