@@ -14,6 +14,7 @@ import {
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
 const navLinks = [
+  { href: "/blog", label: "Blog" },
   { href: "/pricing", label: "定價方案" },
   { href: "/terms", label: "服務條款" },
   { href: "/privacy", label: "隱私政策" },

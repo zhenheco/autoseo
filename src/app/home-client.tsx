@@ -660,6 +660,12 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
               </div>
               <div className="flex gap-6 text-sm text-slate-600 dark:text-slate-400">
                 <Link
+                  href="/blog"
+                  className="hover:text-cyber-cyan-400 transition-colors"
+                >
+                  {t("blog")}
+                </Link>
+                <Link
                   href="/terms"
                   className="hover:text-cyber-cyan-400 transition-colors"
                 >

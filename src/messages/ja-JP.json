@@ -47,7 +47,8 @@
     "withdrawalReview": "出金審査",
     "affiliateManagement": "アフィリエイト管理",
     "suspiciousReferrals": "不審な紹介",
-    "customerService": "サポート"
+    "customerService": "サポート",
+    "blog": "ブログ"
   },
   "auth": {
     "welcomeTitle": "1waySEOへようこそ",
@@ -642,6 +643,7 @@
     "freeStartUsing": "無料で始める",
     "terms": "利用規約",
     "privacy": "プライバシーポリシー",
+    "blog": "ブログ",
     "costComparison": {
       "badge": "コスト比較",
       "whyChoose": "なぜ",

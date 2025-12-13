@@ -47,7 +47,8 @@
     "withdrawalReview": "출금 심사",
     "affiliateManagement": "제휴 관리",
     "suspiciousReferrals": "의심스러운 추천",
-    "customerService": "고객지원"
+    "customerService": "고객지원",
+    "blog": "블로그"
   },
   "auth": {
     "welcomeTitle": "1waySEO에 오신 것을 환영합니다",
@@ -642,6 +643,7 @@
     "freeStartUsing": "무료로 시작하기",
     "terms": "이용약관",
     "privacy": "개인정보 처리방침",
+    "blog": "블로그",
     "costComparison": {
       "badge": "비용 비교",
       "whyChoose": "왜",
