@@ -448,7 +448,7 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
                     key={plan.id}
                     className={`relative flex flex-col h-full transition-all duration-300 ${
                       isPopular
-                        ? "bg-gradient-to-b from-cyber-violet-600 to-cyber-magenta-600 text-white border-cyber-violet-500 shadow-lg scale-105 glow-button"
+                        ? "bg-white text-slate-900 border-cyber-violet-500 shadow-lg scale-105"
                         : "bg-white dark:bg-transparent dark:glass shadow-md dark:shadow-none border-slate-200 dark:border-white/10 hover:border-cyber-violet-500/50"
                     }`}
                   >
@@ -459,22 +459,16 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
                     )}
                     <CardContent className="p-6 flex flex-col h-full">
                       <div className="mb-3">
-                        <h3
-                          className={`text-xl font-bold ${isPopular ? "text-white" : "text-slate-900 dark:text-white"}`}
-                        >
+                        <h3 className="text-xl font-bold text-slate-900 dark:text-white">
                           {getPlanName(plan)}
                         </h3>
                       </div>
                       <div className="mb-5">
                         <div className="flex items-baseline gap-1">
-                          <span
-                            className={`text-3xl font-bold ${isPopular ? "text-white" : "text-slate-900 dark:text-white"}`}
-                          >
+                          <span className="text-3xl font-bold text-slate-900 dark:text-white">
                             NT${price?.toLocaleString()}
                           </span>
-                          <span
-                            className={`text-sm ${isPopular ? "text-white/70" : "text-slate-600 dark:text-slate-400"}`}
-                          >
+                          <span className="text-sm text-slate-600 dark:text-slate-400">
                             /
                             {billingCycle === "yearly"
                               ? t("year") || "年"
@@ -482,9 +476,7 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
                           </span>
                         </div>
                         {billingCycle === "yearly" && (
-                          <div
-                            className={`text-sm mt-1 ${isPopular ? "text-white/80" : "text-slate-500 dark:text-slate-400"}`}
-                          >
+                          <div className="text-sm mt-1 text-slate-500 dark:text-slate-400">
                             {t("equivalentMonthly") || "約"} NT$
                             {Math.round((price || 0) / 12).toLocaleString()}/
                             {t("month") || "月"}
@@ -493,33 +485,17 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
                       </div>
 
                       {/* 每月篇數 */}
-                      <div
-                        className={`rounded-lg p-3 mb-4 ${
-                          isPopular
-                            ? "bg-white/10"
-                            : "bg-slate-100 dark:bg-white/5"
-                        }`}
-                      >
+                      <div className="rounded-lg p-3 mb-4 bg-slate-100 dark:bg-white/5">
                         <div className="flex items-center justify-center gap-2">
-                          <FileText
-                            className={`h-5 w-5 ${isPopular ? "text-white" : "text-cyber-violet-500"}`}
-                          />
-                          <span
-                            className={`text-lg font-bold ${isPopular ? "text-white" : "text-slate-900 dark:text-white"}`}
-                          >
+                          <FileText className="h-5 w-5 text-cyber-violet-500" />
+                          <span className="text-lg font-bold text-slate-900 dark:text-white">
                             {t("monthly") || "每月"}{" "}
                             {plan.articles_per_month?.toLocaleString()}{" "}
                             {t("articles") || "篇"}
                           </span>
                         </div>
                         {billingCycle === "yearly" && yearlyBonus > 0 && (
-                          <div
-                            className={`flex items-center justify-center gap-1 mt-2 text-sm ${
-                              isPopular
-                                ? "text-yellow-300"
-                                : "text-cyber-magenta-500 dark:text-cyber-magenta-400"
-                            }`}
-                          >
+                          <div className="flex items-center justify-center gap-1 mt-2 text-sm text-cyber-magenta-500 dark:text-cyber-magenta-400">
                             <Gift className="h-4 w-4" />
                             <span className="font-medium">
                               {t("bonusArticles") || "再送"} {yearlyBonus}{" "}
@@ -530,31 +506,21 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
                       </div>
 
                       <div className="flex-1">
-                        <ul
-                          className={`space-y-2 text-sm mb-4 ${isPopular ? "text-white/90" : "text-slate-700 dark:text-slate-300"}`}
-                        >
+                        <ul className="space-y-2 text-sm mb-4 text-slate-700 dark:text-slate-300">
                           <li className="flex items-center gap-2">
-                            <CheckCircle2
-                              className={`h-4 w-4 flex-shrink-0 ${isPopular ? "text-white" : "text-cyber-cyan-400"}`}
-                            />
+                            <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-cyber-cyan-400" />
                             {t("allAIModels")}
                           </li>
                           <li className="flex items-center gap-2">
-                            <CheckCircle2
-                              className={`h-4 w-4 flex-shrink-0 ${isPopular ? "text-white" : "text-cyber-cyan-400"}`}
-                            />
+                            <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-cyber-cyan-400" />
                             {t("wordpressIntegration")}
                           </li>
                           <li className="flex items-center gap-2">
-                            <CheckCircle2
-                              className={`h-4 w-4 flex-shrink-0 ${isPopular ? "text-white" : "text-cyber-cyan-400"}`}
-                            />
+                            <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-cyber-cyan-400" />
                             {t("autoImageGen")}
                           </li>
                           <li className="flex items-center gap-2">
-                            <CheckCircle2
-                              className={`h-4 w-4 flex-shrink-0 ${isPopular ? "text-white" : "text-cyber-cyan-400"}`}
-                            />
+                            <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-cyber-cyan-400" />
                             {t("scheduledPublish")}
                           </li>
                         </ul>
@@ -564,7 +530,7 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
                         size="sm"
                         className={`w-full mt-auto font-bold ${
                           isPopular
-                            ? "bg-gradient-to-r from-cyber-violet-500 to-cyber-magenta-500 text-white hover:from-cyber-violet-400 hover:to-cyber-magenta-400"
+                            ? "bg-gradient-to-r from-cyber-violet-600 to-cyber-magenta-600 text-white hover:from-cyber-violet-500 hover:to-cyber-magenta-500"
                             : "bg-slate-900 text-white hover:bg-slate-800 dark:bg-gradient-to-r dark:from-cyber-violet-600 dark:to-cyber-magenta-600 dark:hover:from-cyber-violet-500 dark:hover:to-cyber-magenta-500"
                         } shadow-lg`}
                       >

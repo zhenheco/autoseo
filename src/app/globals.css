@@ -26,6 +26,17 @@
   --color-warning: oklch(68.63% 0.19 56.75);
   --color-danger: oklch(62.77% 0.226 27.33);
 
+  /* Cyberpunk 顏色 */
+  --color-cyber-cyan-400: #22d3ee;
+  --color-cyber-cyan-500: #06b6d4;
+  --color-cyber-cyan-600: #0891b2;
+  --color-cyber-violet-400: #a78bfa;
+  --color-cyber-violet-500: #8b5cf6;
+  --color-cyber-violet-600: #7c3aed;
+  --color-cyber-magenta-400: #f472b6;
+  --color-cyber-magenta-500: #ec4899;
+  --color-cyber-magenta-600: #db2777;
+
   --radius: 0.5rem;
 }
 
