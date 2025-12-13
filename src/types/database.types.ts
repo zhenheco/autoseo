@@ -1571,6 +1571,7 @@ export type Database = {
           wp_username: string | null;
           wp_app_password: string | null;
           wp_enabled: boolean | null;
+          is_platform_blog: boolean | null;
         };
         Insert: {
           id?: string;
@@ -1592,6 +1593,7 @@ export type Database = {
           wp_username?: string | null;
           wp_app_password?: string | null;
           wp_enabled?: boolean | null;
+          is_platform_blog?: boolean | null;
         };
         Update: {
           id?: string;
@@ -1613,6 +1615,7 @@ export type Database = {
           wp_username?: string | null;
           wp_app_password?: string | null;
           wp_enabled?: boolean | null;
+          is_platform_blog?: boolean | null;
         };
         Relationships: [
           {
@@ -1620,6 +1623,53 @@ export type Database = {
             columns: ["company_id"];
             isOneToOne: false;
             referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      article_views: {
+        Row: {
+          id: string;
+          article_id: string;
+          total_views: number;
+          unique_views: number;
+          views_today: number;
+          views_this_week: number;
+          views_this_month: number;
+          last_viewed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          article_id: string;
+          total_views?: number;
+          unique_views?: number;
+          views_today?: number;
+          views_this_week?: number;
+          views_this_month?: number;
+          last_viewed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          article_id?: string;
+          total_views?: number;
+          unique_views?: number;
+          views_today?: number;
+          views_this_week?: number;
+          views_this_month?: number;
+          last_viewed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "article_views_article_id_fkey";
+            columns: ["article_id"];
+            isOneToOne: true;
+            referencedRelation: "generated_articles";
             referencedColumns: ["id"];
           },
         ];
