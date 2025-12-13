@@ -1,54 +1,31 @@
-import Link from "next/link";
-import { Sparkles } from "lucide-react";
-import { getTranslations } from "next-intl/server";
-import { SignupForm } from "./signup-form";
+import { redirect } from "next/navigation";
 
+/**
+ * 註冊頁面重定向
+ * 將舊的 /signup URL 重定向到新的 /login?mode=signup
+ */
 export default async function SignupPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; success?: string }>;
+  searchParams: Promise<{ error?: string; success?: string; ref?: string }>;
 }) {
   const params = await searchParams;
-  const t = await getTranslations("auth");
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden p-4">
-      <div className="w-full max-w-md relative z-10">
-        <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center gap-3 mb-6">
-            <div className="h-14 w-14 rounded-xl bg-primary/10 flex items-center justify-center">
-              <Sparkles className="h-7 w-7 text-primary" />
-            </div>
-          </div>
-          <h1 className="text-3xl font-bold tracking-tight mb-2 text-foreground">
-            {t("signupTitle")}
-          </h1>
-          <p className="text-base text-muted-foreground">
-            {t("googleSignupDesc")}
-          </p>
-        </div>
+  // 構建重定向 URL
+  const url = new URL("/login", "https://placeholder.com");
+  url.searchParams.set("mode", "signup");
 
-        <div className="bg-card border border-border rounded-2xl p-8 shadow-lg">
-          <SignupForm error={params.error} success={params.success} />
-        </div>
+  // 保留原有的 query parameters
+  if (params.error) {
+    url.searchParams.set("error", params.error);
+  }
+  if (params.success) {
+    url.searchParams.set("success", params.success);
+  }
+  if (params.ref) {
+    url.searchParams.set("ref", params.ref);
+  }
 
-        <p className="text-xs text-center text-muted-foreground mt-8 px-8">
-          {t("signupTermsAgreement")}{" "}
-          <Link
-            href="/terms"
-            className="underline underline-offset-2 hover:text-foreground transition-all"
-          >
-            {t("termsOfService")}
-          </Link>{" "}
-          {t("and")}{" "}
-          <Link
-            href="/privacy"
-            className="underline underline-offset-2 hover:text-foreground transition-all"
-          >
-            {t("privacyPolicy")}
-          </Link>
-        </p>
-      </div>
-    </div>
-  );
+  // 重定向到登入頁面的註冊模式
+  redirect(url.pathname + url.search);
 }

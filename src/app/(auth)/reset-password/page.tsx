@@ -2,43 +2,15 @@ import Link from "next/link";
 import { Sparkles } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 import { Suspense } from "react";
-import { LoginForm } from "./login-form";
+import { ResetPasswordForm } from "./reset-password-form";
 
-type AuthMode = "signin" | "signup" | "forgot";
-
-export default async function LoginPage({
+export default async function ResetPasswordPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; success?: string; mode?: string }>;
+  searchParams: Promise<{ error?: string; success?: string }>;
 }) {
   const params = await searchParams;
   const t = await getTranslations("auth");
-
-  // 從 URL 參數獲取模式
-  const mode = (params.mode as AuthMode) || "signin";
-
-  // 根據模式選擇標題和描述
-  const getTitleAndDesc = () => {
-    switch (mode) {
-      case "signup":
-        return {
-          title: t("createAccount"),
-          desc: t("createAccountDesc"),
-        };
-      case "forgot":
-        return {
-          title: t("forgotPassword"),
-          desc: t("forgotPasswordDesc"),
-        };
-      default:
-        return {
-          title: t("welcomeBack"),
-          desc: t("welcomeBackDesc"),
-        };
-    }
-  };
-
-  const { title, desc } = getTitleAndDesc();
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-background relative overflow-hidden p-4">
@@ -50,9 +22,11 @@ export default async function LoginPage({
             </div>
           </div>
           <h1 className="text-3xl font-bold tracking-tight mb-2 text-foreground">
-            {title}
+            {t("resetPassword")}
           </h1>
-          <p className="text-base text-muted-foreground">{desc}</p>
+          <p className="text-base text-muted-foreground">
+            {t("resetPasswordDesc")}
+          </p>
         </div>
 
         <div className="bg-card border border-border rounded-2xl p-8 shadow-lg">
@@ -61,28 +35,16 @@ export default async function LoginPage({
               <div className="text-center text-muted-foreground">載入中...</div>
             }
           >
-            <LoginForm
-              error={params.error}
-              success={params.success}
-              initialMode={mode}
-            />
+            <ResetPasswordForm error={params.error} success={params.success} />
           </Suspense>
         </div>
 
         <p className="text-xs text-center text-muted-foreground mt-8 px-8">
-          {t("termsAgreement")}{" "}
           <Link
-            href="/terms"
+            href="/login"
             className="underline underline-offset-2 hover:text-foreground transition-all"
           >
-            {t("termsOfService")}
-          </Link>{" "}
-          {t("and")}{" "}
-          <Link
-            href="/privacy"
-            className="underline underline-offset-2 hover:text-foreground transition-all"
-          >
-            {t("privacyPolicy")}
+            {t("backToLogin")}
           </Link>
         </p>
       </div>
