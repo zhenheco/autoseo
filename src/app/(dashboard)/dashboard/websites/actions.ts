@@ -397,3 +397,80 @@ export async function updateWebsiteBrandVoice(formData: FormData) {
       encodeURIComponent("品牌設定已更新"),
   );
 }
+
+/**
+ * 建立平台官方 Blog 站點
+ */
+export async function createPlatformBlog(formData: FormData) {
+  const user = await getUser();
+  if (!user) {
+    redirect("/login");
+  }
+
+  const companyId = formData.get("companyId") as string;
+
+  if (!companyId) {
+    redirect("/dashboard/websites?error=" + encodeURIComponent("缺少公司 ID"));
+  }
+
+  const supabase = await createClient();
+
+  // 檢查使用者是否有權限
+  const { data: membership } = await supabase
+    .from("company_members")
+    .select("role")
+    .eq("company_id", companyId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (
+    !membership ||
+    (membership.role !== "owner" && membership.role !== "admin")
+  ) {
+    redirect(
+      "/dashboard/websites?error=" +
+        encodeURIComponent("您沒有權限建立官方 Blog"),
+    );
+  }
+
+  // 檢查是否已經存在官方 Blog
+  const { data: existingBlog } = await supabase
+    .from("website_configs")
+    .select("id")
+    .eq("is_platform_blog", true)
+    .single();
+
+  if (existingBlog) {
+    redirect(
+      "/dashboard/websites?error=" +
+        encodeURIComponent("官方 Blog 已存在，無法重複建立"),
+    );
+  }
+
+  // 建立官方 Blog 站點
+  const { error } = await supabase.from("website_configs").insert({
+    company_id: companyId,
+    website_name: "1waySEO 官方 Blog",
+    wordpress_url: "https://1wayseo.com/blog",
+    is_platform_blog: true,
+    is_active: true,
+    language: "zh-TW",
+    brand_voice: {
+      brand_name: "1waySEO",
+      tone_of_voice: "專業親切",
+      target_audience: "SEO 初學者、內容行銷人員、網站經營者",
+      writing_style: "教學導向、實用案例分享",
+    },
+    created_by: user.id,
+  });
+
+  if (error) {
+    redirect("/dashboard/websites?error=" + encodeURIComponent(error.message));
+  }
+
+  revalidatePath("/dashboard/websites");
+  redirect(
+    "/dashboard/websites?success=" +
+      encodeURIComponent("官方 Blog 已建立成功！現在可以開始發布文章了。"),
+  );
+}
