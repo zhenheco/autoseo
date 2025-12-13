@@ -402,75 +402,117 @@ export async function updateWebsiteBrandVoice(formData: FormData) {
  * 建立平台官方 Blog 站點
  */
 export async function createPlatformBlog(formData: FormData) {
-  const user = await getUser();
-  if (!user) {
-    redirect("/login");
-  }
+  try {
+    const user = await getUser();
+    if (!user) {
+      redirect("/login");
+    }
 
-  const companyId = formData.get("companyId") as string;
+    const companyId = formData.get("companyId") as string;
 
-  if (!companyId) {
-    redirect("/dashboard/websites?error=" + encodeURIComponent("缺少公司 ID"));
-  }
+    if (!companyId) {
+      redirect(
+        "/dashboard/websites?error=" + encodeURIComponent("缺少公司 ID"),
+      );
+    }
 
-  const supabase = await createClient();
+    const supabase = await createClient();
 
-  // 檢查使用者是否有權限
-  const { data: membership } = await supabase
-    .from("company_members")
-    .select("role")
-    .eq("company_id", companyId)
-    .eq("user_id", user.id)
-    .single();
+    // 檢查使用者是否有權限
+    const { data: membership, error: membershipError } = await supabase
+      .from("company_members")
+      .select("role")
+      .eq("company_id", companyId)
+      .eq("user_id", user.id)
+      .single();
 
-  if (
-    !membership ||
-    (membership.role !== "owner" && membership.role !== "admin")
-  ) {
+    if (membershipError) {
+      console.error("Membership check error:", membershipError);
+      redirect(
+        "/dashboard/websites?error=" +
+          encodeURIComponent("權限檢查失敗：" + membershipError.message),
+      );
+    }
+
+    if (
+      !membership ||
+      (membership.role !== "owner" && membership.role !== "admin")
+    ) {
+      redirect(
+        "/dashboard/websites?error=" +
+          encodeURIComponent("您沒有權限建立官方 Blog"),
+      );
+    }
+
+    // 檢查是否已經存在官方 Blog（使用 maybeSingle 避免錯誤）
+    const { data: existingBlog, error: checkError } = await supabase
+      .from("website_configs")
+      .select("id")
+      .eq("is_platform_blog", true)
+      .maybeSingle();
+
+    if (checkError) {
+      console.error("Platform blog check error:", checkError);
+      redirect(
+        "/dashboard/websites?error=" +
+          encodeURIComponent("檢查官方 Blog 失敗：" + checkError.message),
+      );
+    }
+
+    if (existingBlog) {
+      redirect(
+        "/dashboard/websites?error=" +
+          encodeURIComponent("官方 Blog 已存在，無法重複建立"),
+      );
+    }
+
+    // 建立官方 Blog 站點
+    const { error } = await supabase.from("website_configs").insert({
+      company_id: companyId,
+      website_name: "1waySEO 官方 Blog",
+      wordpress_url: "https://1wayseo.com/blog",
+      is_platform_blog: true,
+      is_active: true,
+      language: "zh-TW",
+      brand_voice: {
+        brand_name: "1waySEO",
+        tone_of_voice: "專業親切",
+        target_audience: "SEO 初學者、內容行銷人員、網站經營者",
+        writing_style: "教學導向、實用案例分享",
+      },
+      created_by: user.id,
+    });
+
+    if (error) {
+      console.error("Create platform blog error:", error);
+      redirect(
+        "/dashboard/websites?error=" + encodeURIComponent(error.message),
+      );
+    }
+
+    revalidatePath("/dashboard/websites");
+    redirect(
+      "/dashboard/websites?success=" +
+        encodeURIComponent("官方 Blog 已建立成功！現在可以開始發布文章了。"),
+    );
+  } catch (err) {
+    // 如果是 redirect 錯誤，重新拋出
+    if (
+      err &&
+      typeof err === "object" &&
+      "digest" in err &&
+      typeof (err as { digest: string }).digest === "string" &&
+      (err as { digest: string }).digest.startsWith("NEXT_REDIRECT")
+    ) {
+      throw err;
+    }
+    // 其他錯誤，記錄並返回錯誤頁面
+    console.error("Unexpected error in createPlatformBlog:", err);
     redirect(
       "/dashboard/websites?error=" +
-        encodeURIComponent("您沒有權限建立官方 Blog"),
+        encodeURIComponent(
+          "發生未預期的錯誤：" + (err instanceof Error ? err.message : "未知"),
+        ),
     );
   }
-
-  // 檢查是否已經存在官方 Blog
-  const { data: existingBlog } = await supabase
-    .from("website_configs")
-    .select("id")
-    .eq("is_platform_blog", true)
-    .single();
-
-  if (existingBlog) {
-    redirect(
-      "/dashboard/websites?error=" +
-        encodeURIComponent("官方 Blog 已存在，無法重複建立"),
-    );
-  }
-
-  // 建立官方 Blog 站點
-  const { error } = await supabase.from("website_configs").insert({
-    company_id: companyId,
-    website_name: "1waySEO 官方 Blog",
-    wordpress_url: "https://1wayseo.com/blog",
-    is_platform_blog: true,
-    is_active: true,
-    language: "zh-TW",
-    brand_voice: {
-      brand_name: "1waySEO",
-      tone_of_voice: "專業親切",
-      target_audience: "SEO 初學者、內容行銷人員、網站經營者",
-      writing_style: "教學導向、實用案例分享",
-    },
-    created_by: user.id,
-  });
-
-  if (error) {
-    redirect("/dashboard/websites?error=" + encodeURIComponent(error.message));
-  }
-
-  revalidatePath("/dashboard/websites");
-  redirect(
-    "/dashboard/websites?success=" +
-      encodeURIComponent("官方 Blog 已建立成功！現在可以開始發布文章了。"),
-  );
 }
