@@ -1,10 +1,15 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
-import { TokenBillingService } from "@/lib/billing/token-billing-service";
+import { ArticleQuotaService } from "@/lib/billing/article-quota-service";
 
-const RESERVED_TOKENS = 4000; // 預扣額度
-
+/**
+ * 取消文章生成任務
+ *
+ * 篇數制計費邏輯：
+ * - 文章只有在「完成」時才會被扣篇
+ * - 取消任務時只需釋放預扣，不會扣篇
+ */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
@@ -51,20 +56,14 @@ export async function POST(
       );
     }
 
-    // 4. 計算扣款金額（按進度百分比）
     const progress = job.progress || 0;
-    const tokensToDeduct =
-      job.status === "pending"
-        ? 0 // pending 狀態未開始，不扣款
-        : Math.ceil((progress / 100) * RESERVED_TOKENS); // processing 狀態按進度扣款
-    const tokensToRefund = RESERVED_TOKENS - tokensToDeduct;
 
-    // 5. 更新任務狀態為 cancelled
+    // 4. 更新任務狀態為 cancelled
     const { error: updateError } = await supabase
       .from("article_jobs")
       .update({
         status: "cancelled",
-        error_message: `用戶取消生成（進度 ${progress}%，扣除 ${tokensToDeduct} tokens）`,
+        error_message: `用戶取消生成（進度 ${progress}%）`,
         completed_at: new Date().toISOString(),
       })
       .eq("id", jobId);
@@ -74,58 +73,16 @@ export async function POST(
       return NextResponse.json({ error: "更新狀態失敗" }, { status: 500 });
     }
 
-    // 6. 處理預扣退還
-    const billingService = new TokenBillingService(supabase);
-
-    if (tokensToDeduct > 0) {
-      // 有部分使用，需要扣款後釋放剩餘
-      // 先釋放預扣（這會把預扣額度返還）
-      await billingService.releaseReservation(jobId);
-
-      // 然後扣除實際使用的 tokens
-      const { data: subscription } = await supabase
-        .from("company_subscriptions")
-        .select("monthly_quota_balance, purchased_token_balance")
-        .eq("company_id", membership.company_id)
-        .single();
-
-      if (subscription) {
-        // 優先從購買的 tokens 扣除
-        let remainingToDeduct = tokensToDeduct;
-        let newPurchased = subscription.purchased_token_balance || 0;
-        let newMonthly = subscription.monthly_quota_balance || 0;
-
-        if (newPurchased > 0) {
-          const deductFromPurchased = Math.min(remainingToDeduct, newPurchased);
-          newPurchased -= deductFromPurchased;
-          remainingToDeduct -= deductFromPurchased;
-        }
-
-        if (remainingToDeduct > 0) {
-          newMonthly = Math.max(0, newMonthly - remainingToDeduct);
-        }
-
-        await supabase
-          .from("company_subscriptions")
-          .update({
-            purchased_token_balance: newPurchased,
-            monthly_quota_balance: newMonthly,
-          })
-          .eq("company_id", membership.company_id);
-      }
-    } else {
-      // pending 狀態，全額退還預扣
-      await billingService.releaseReservation(jobId);
-    }
+    // 5. 釋放預扣（篇數制：文章未完成就不扣篇）
+    const quotaService = new ArticleQuotaService(supabase);
+    await quotaService.releaseReservation(jobId);
 
     // 注意：不刪除任務記錄，讓 orchestrator 可以檢查取消狀態
     // 任務會保留在列表中顯示「已取消」狀態
 
     return NextResponse.json({
       success: true,
-      message: `任務已取消`,
-      tokensDeducted: tokensToDeduct,
-      tokensRefunded: tokensToRefund,
+      message: "任務已取消，額度已退還",
     });
   } catch (error) {
     console.error("Error cancelling article:", error);

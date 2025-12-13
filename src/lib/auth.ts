@@ -73,7 +73,7 @@ export async function signUp(email: string, password: string) {
   console.log("[註冊] Step 4: 查詢免費方案...");
   const { data: freePlan, error: planError } = await adminClient
     .from("subscription_plans")
-    .select("id, base_tokens")
+    .select("id, base_tokens, articles_per_month")
     .eq("slug", "free")
     .single();
 
@@ -86,17 +86,26 @@ export async function signUp(email: string, password: string) {
   }
   console.log("[註冊] Step 4 完成: 免費方案查詢成功", freePlan);
 
-  // 5. 建立免費訂閱（一次性給 10k tokens，不再每月重置）
+  // 5. 建立免費訂閱（篇數制 - 一次性 3 篇，不會每月重置）
+  const freeArticles =
+    (freePlan as unknown as { articles_per_month: number | null })
+      .articles_per_month || 3;
   const { error: subscriptionError } = await adminClient
     .from("company_subscriptions")
     .insert({
       company_id: company.id,
       plan_id: freePlan.id,
       status: "active",
-      monthly_token_quota: 0, // 免費方案不使用月配額
+      // Token 制（向後相容，已棄用）
+      monthly_token_quota: 0,
       monthly_quota_balance: 0,
-      purchased_token_balance: freePlan.base_tokens, // 一次性給 10,000 tokens
-      current_period_start: null,
+      purchased_token_balance: 0,
+      // 篇數制（FREE 方案為一次性額度，不重置）
+      subscription_articles_remaining: freeArticles,
+      purchased_articles_remaining: 0,
+      articles_per_month: 0, // 0 表示一次性，不會每月重置
+      lifetime_free_articles_limit: freeArticles,
+      current_period_start: null, // 無週期（一次性）
       current_period_end: null,
       is_lifetime: false,
       lifetime_discount: 1.0,
