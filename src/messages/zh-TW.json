@@ -47,7 +47,8 @@
     "withdrawalReview": "提領審核",
     "affiliateManagement": "聯盟管理",
     "suspiciousReferrals": "可疑推薦",
-    "customerService": "客服信箱"
+    "customerService": "客服信箱",
+    "blog": "部落格"
   },
   "auth": {
     "welcomeTitle": "歡迎使用 1waySEO",
@@ -688,6 +689,7 @@
     "freeStartUsing": "免費開始使用",
     "terms": "服務條款",
     "privacy": "隱私政策",
+    "blog": "部落格",
     "costComparison": {
       "badge": "成本對比",
       "whyChoose": "為什麼選擇",

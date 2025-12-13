@@ -47,7 +47,8 @@
     "withdrawalReview": "Examen des retraits",
     "affiliateManagement": "Gestion des affiliés",
     "suspiciousReferrals": "Parrainages suspects",
-    "customerService": "Support"
+    "customerService": "Support",
+    "blog": "Blog"
   },
   "auth": {
     "welcomeTitle": "Bienvenue sur 1waySEO",
@@ -642,6 +643,7 @@
     "freeStartUsing": "Commencer gratuitement",
     "terms": "Conditions d'utilisation",
     "privacy": "Politique de confidentialité",
+    "blog": "Blog",
     "costComparison": {
       "badge": "Comparaison des coûts",
       "whyChoose": "Pourquoi choisir",
