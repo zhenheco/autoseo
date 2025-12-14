@@ -16,14 +16,27 @@ import { TRANSLATION_LANGUAGES } from "@/types/translations";
 import slugify from "slugify";
 
 /**
- * 語言完整名稱對照表
+ * 語言完整名稱對照表（18 種語系）
  */
 const LOCALE_FULL_NAMES: Record<string, string> = {
   "zh-TW": "Traditional Chinese (繁體中文)",
+  "zh-CN": "Simplified Chinese (简体中文)",
   "en-US": "English (US)",
-  "de-DE": "German (Deutsch)",
+  "ja-JP": "Japanese (日本語)",
+  "ko-KR": "Korean (한국어)",
+  "vi-VN": "Vietnamese (Tiếng Việt)",
+  "ms-MY": "Malay (Bahasa Melayu)",
+  "th-TH": "Thai (ไทย)",
+  "id-ID": "Indonesian (Bahasa Indonesia)",
+  "tl-PH": "Filipino",
   "fr-FR": "French (Français)",
+  "de-DE": "German (Deutsch)",
   "es-ES": "Spanish (Español)",
+  "pt-PT": "Portuguese (Português)",
+  "it-IT": "Italian (Italiano)",
+  "ru-RU": "Russian (Русский)",
+  "ar-SA": "Arabic (العربية)",
+  "hi-IN": "Hindi (हिन्दी)",
 };
 
 /**

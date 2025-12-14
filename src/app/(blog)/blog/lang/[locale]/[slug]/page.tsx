@@ -380,15 +380,28 @@ async function getRelatedArticles(
 }
 
 /**
- * 取得語言標籤
+ * 取得語言標籤（18 種語系）
  */
 function getLocaleLabel(locale: SupportedLocale): string {
   const labels: Record<SupportedLocale, string> = {
     "zh-TW": "返回文章列表",
+    "zh-CN": "返回文章列表",
     "en-US": "Back to Articles",
-    "de-DE": "Zurück zur Artikelliste",
+    "ja-JP": "記事一覧に戻る",
+    "ko-KR": "기사 목록으로",
+    "vi-VN": "Quay lại danh sách",
+    "ms-MY": "Kembali ke senarai",
+    "th-TH": "กลับไปที่รายการ",
+    "id-ID": "Kembali ke daftar",
+    "tl-PH": "Bumalik sa listahan",
     "fr-FR": "Retour aux articles",
+    "de-DE": "Zurück zur Artikelliste",
     "es-ES": "Volver a artículos",
+    "pt-PT": "Voltar aos artigos",
+    "it-IT": "Torna agli articoli",
+    "ru-RU": "Назад к статьям",
+    "ar-SA": "العودة للمقالات",
+    "hi-IN": "लेखों पर वापस जाएं",
   };
   return labels[locale] || labels["en-US"];
 }
@@ -396,10 +409,23 @@ function getLocaleLabel(locale: SupportedLocale): string {
 function getTagLabel(locale: SupportedLocale): string {
   const labels: Record<SupportedLocale, string> = {
     "zh-TW": "標籤：",
+    "zh-CN": "标签：",
     "en-US": "Tags:",
-    "de-DE": "Tags:",
+    "ja-JP": "タグ：",
+    "ko-KR": "태그:",
+    "vi-VN": "Thẻ:",
+    "ms-MY": "Tag:",
+    "th-TH": "แท็ก:",
+    "id-ID": "Tag:",
+    "tl-PH": "Mga Tag:",
     "fr-FR": "Tags:",
+    "de-DE": "Tags:",
     "es-ES": "Etiquetas:",
+    "pt-PT": "Tags:",
+    "it-IT": "Tag:",
+    "ru-RU": "Теги:",
+    "ar-SA": "الوسوم:",
+    "hi-IN": "टैग:",
   };
   return labels[locale] || labels["en-US"];
 }
@@ -469,13 +495,26 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function LocalizedArticlePage({ params }: Props) {
   const { locale, slug } = await params;
 
-  // 驗證 locale
+  // 驗證 locale（18 種語系）
   const validLocales: SupportedLocale[] = [
     "zh-TW",
+    "zh-CN",
     "en-US",
-    "de-DE",
+    "ja-JP",
+    "ko-KR",
+    "vi-VN",
+    "ms-MY",
+    "th-TH",
+    "id-ID",
+    "tl-PH",
     "fr-FR",
+    "de-DE",
     "es-ES",
+    "pt-PT",
+    "it-IT",
+    "ru-RU",
+    "ar-SA",
+    "hi-IN",
   ];
   if (!validLocales.includes(locale)) {
     notFound();

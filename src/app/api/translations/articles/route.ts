@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
     const limit = parseInt(searchParams.get("limit") || "20");
     const offset = parseInt(searchParams.get("offset") || "0");
     const search = searchParams.get("search");
+    const websiteId = searchParams.get("website_id");
 
     // 使用 service role client
     const { createClient: createSupabaseClient } = await import(
@@ -94,6 +95,11 @@ export async function GET(request: NextRequest) {
     // 搜尋
     if (search) {
       articlesQuery = articlesQuery.ilike("title", `%${search}%`);
+    }
+
+    // 按網站過濾
+    if (websiteId) {
+      articlesQuery = articlesQuery.eq("published_to_website_id", websiteId);
     }
 
     const { data: articles, error, count } = await articlesQuery;
