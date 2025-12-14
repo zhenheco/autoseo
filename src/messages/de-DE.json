@@ -92,7 +92,12 @@
     "trafficTrend": "7-Tage-Traffic-Trend",
     "featureInDevelopment": "Diese Funktion ist in Entwicklung",
     "underDevelopment": "Demnächst",
-    "trafficChartComingSoon": "Wöchentliches Traffic-Diagramm kommt bald"
+    "trafficChartComingSoon": "Wöchentliches Traffic-Diagramm kommt bald",
+    "searchConsoleData": "Search Console Daten",
+    "searchConsoleDescription": "Sehen Sie die Leistung Ihrer Website in der Google-Suche",
+    "selectWebsite": "Website auswählen",
+    "noWebsites": "Keine Websites",
+    "addWebsiteFirst": "Bitte fügen Sie zuerst eine Website hinzu, um Daten anzuzeigen"
   },
   "articles": {
     "title": "Artikelverwaltung",

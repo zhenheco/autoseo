@@ -24,13 +24,18 @@ const fetcher = (url: string) => fetch(url).then((res) => res.json());
 
 interface AnalyticsDashboardProps {
   websiteId: string;
+  /** 嵌入模式：不渲染外層 Card */
+  embedded?: boolean;
 }
 
 /**
  * 分析儀表板
  * 顯示 GSC 搜尋數據
  */
-export function AnalyticsDashboard({ websiteId }: AnalyticsDashboardProps) {
+export function AnalyticsDashboard({
+  websiteId,
+  embedded = false,
+}: AnalyticsDashboardProps) {
   // 取得 OAuth 連接狀態
   const {
     data: oauthStatus,
@@ -67,11 +72,57 @@ export function AnalyticsDashboard({ websiteId }: AnalyticsDashboardProps) {
   }, [mutateOAuthStatus, mutateGsc]);
 
   if (isLoadingStatus) {
-    return <AnalyticsDashboardSkeleton />;
+    return embedded ? <MetricsSkeleton /> : <AnalyticsDashboardSkeleton />;
   }
 
   const gscConnected = oauthStatus?.gsc_connected ?? false;
 
+  // 內容渲染
+  const renderContent = () => (
+    <>
+      {gscConnected ? (
+        isLoadingGsc ? (
+          <MetricsSkeleton />
+        ) : gscData?.success ? (
+          <GSCMetricsDisplay data={gscData} />
+        ) : (
+          <ErrorDisplay message={gscData?.error || "無法載入數據"} />
+        )
+      ) : (
+        <EmptyState
+          icon={Search}
+          title="尚未連接 Search Console"
+          description="連接 Google Search Console 以查看網站在搜尋引擎中的表現"
+        />
+      )}
+    </>
+  );
+
+  // 嵌入模式：不渲染外層 Card
+  if (embedded) {
+    return (
+      <div>
+        {renderContent()}
+        <div className="mt-4 flex items-center justify-end gap-2">
+          {gscConnected && (
+            <Button variant="ghost" size="sm" onClick={handleRefresh}>
+              <RefreshCw className="h-4 w-4" />
+            </Button>
+          )}
+          <GoogleConnectButton
+            websiteId={websiteId}
+            serviceType="gsc"
+            isConnected={gscConnected}
+            connectedEmail={oauthStatus?.gsc_email}
+            onDisconnect={handleDisconnect}
+            size="sm"
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // 原有的 Card 包裝版本
   return (
     <Card>
       <CardHeader className="pb-2">
@@ -97,23 +148,7 @@ export function AnalyticsDashboard({ websiteId }: AnalyticsDashboardProps) {
           </div>
         </div>
       </CardHeader>
-      <CardContent>
-        {gscConnected ? (
-          isLoadingGsc ? (
-            <MetricsSkeleton />
-          ) : gscData?.success ? (
-            <GSCMetricsDisplay data={gscData} />
-          ) : (
-            <ErrorDisplay message={gscData?.error || "無法載入數據"} />
-          )
-        ) : (
-          <EmptyState
-            icon={Search}
-            title="尚未連接 Search Console"
-            description="連接 Google Search Console 以查看網站在搜尋引擎中的表現"
-          />
-        )}
-      </CardContent>
+      <CardContent>{renderContent()}</CardContent>
     </Card>
   );
 }

@@ -31,28 +31,47 @@ export default async function DashboardPage() {
   let articlesCount = 0;
   let websitesCount = 0;
 
+  // 網站列表（給 GSC 選擇器用）
+  let websites: {
+    id: string;
+    website_name: string;
+    wordpress_url: string;
+    is_platform_blog: boolean | null;
+  }[] = [];
+
   if (membership) {
     // 並行執行所有查詢，提升頁面載入速度
-    const [subscriptionResult, articlesResult, websitesResult] =
-      await Promise.all([
-        supabase
-          .from("company_subscriptions")
-          .select(
-            "monthly_quota_balance, purchased_token_balance, monthly_token_quota",
-          )
-          .eq("company_id", membership.company_id)
-          .eq("status", "active")
-          .single(),
-        supabase
-          .from("generated_articles")
-          .select("*", { count: "exact", head: true })
-          .eq("company_id", membership.company_id),
-        supabase
-          .from("website_configs")
-          .select("*", { count: "exact", head: true })
-          .eq("company_id", membership.company_id)
-          .eq("is_active", true),
-      ]);
+    const [
+      subscriptionResult,
+      articlesResult,
+      websitesResult,
+      websiteListResult,
+    ] = await Promise.all([
+      supabase
+        .from("company_subscriptions")
+        .select(
+          "monthly_quota_balance, purchased_token_balance, monthly_token_quota",
+        )
+        .eq("company_id", membership.company_id)
+        .eq("status", "active")
+        .single(),
+      supabase
+        .from("generated_articles")
+        .select("*", { count: "exact", head: true })
+        .eq("company_id", membership.company_id),
+      supabase
+        .from("website_configs")
+        .select("*", { count: "exact", head: true })
+        .eq("company_id", membership.company_id)
+        .eq("is_active", true),
+      // 取得完整網站列表（給 GSC 選擇器用）
+      supabase
+        .from("website_configs")
+        .select("id, website_name, wordpress_url, is_platform_blog")
+        .eq("company_id", membership.company_id)
+        .eq("is_active", true)
+        .order("created_at", { ascending: false }),
+    ]);
 
     const subscription = subscriptionResult.data;
     if (subscription) {
@@ -65,6 +84,7 @@ export default async function DashboardPage() {
 
     articlesCount = articlesResult.count || 0;
     websitesCount = websitesResult.count || 0;
+    websites = websiteListResult.data || [];
   }
 
   return (
@@ -74,6 +94,7 @@ export default async function DashboardPage() {
       websitesCount={websitesCount}
       subscriptionTier={subscriptionTier || "free"}
       tokenBalance={tokenBalance}
+      websites={websites}
     />
   );
 }

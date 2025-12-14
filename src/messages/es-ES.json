@@ -92,7 +92,12 @@
     "trafficTrend": "Tendencia de tráfico de 7 días",
     "featureInDevelopment": "Esta función está en desarrollo",
     "underDevelopment": "Próximamente",
-    "trafficChartComingSoon": "Gráfico de tráfico semanal próximamente"
+    "trafficChartComingSoon": "Gráfico de tráfico semanal próximamente",
+    "searchConsoleData": "Datos de Search Console",
+    "searchConsoleDescription": "Vea el rendimiento de su sitio web en la búsqueda de Google",
+    "selectWebsite": "Seleccionar sitio",
+    "noWebsites": "Sin sitios web",
+    "addWebsiteFirst": "Por favor, agregue un sitio web primero para ver los datos"
   },
   "articles": {
     "title": "Gestión de artículos",

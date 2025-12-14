@@ -92,7 +92,12 @@
     "trafficTrend": "7日間のトラフィック傾向",
     "featureInDevelopment": "この機能は開発中です",
     "underDevelopment": "近日公開",
-    "trafficChartComingSoon": "週間トラフィックグラフは近日公開予定"
+    "trafficChartComingSoon": "週間トラフィックグラフは近日公開予定",
+    "searchConsoleData": "Search Console データ",
+    "searchConsoleDescription": "Google検索でのウェブサイトのパフォーマンスを確認",
+    "selectWebsite": "ウェブサイトを選択",
+    "noWebsites": "ウェブサイトがありません",
+    "addWebsiteFirst": "データを表示するには、まずウェブサイトを追加してください"
   },
   "articles": {
     "title": "記事管理",

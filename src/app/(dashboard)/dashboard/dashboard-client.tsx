@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useTranslations } from "next-intl";
 import {
   Card,
@@ -8,10 +9,25 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { ArticleQuotaCard } from "@/components/dashboard/ArticleQuotaCard";
 import { UpgradePromptCard } from "@/components/dashboard/UpgradePromptCard";
-import { FileText, Globe } from "lucide-react";
+import { AnalyticsDashboard } from "@/components/analytics/AnalyticsDashboard";
+import { FileText, Globe, Search } from "lucide-react";
+
+interface Website {
+  id: string;
+  website_name: string;
+  wordpress_url: string;
+  is_platform_blog: boolean | null;
+}
 
 interface DashboardClientProps {
   userEmail: string;
@@ -19,6 +35,7 @@ interface DashboardClientProps {
   websitesCount: number;
   subscriptionTier: string;
   tokenBalance: number;
+  websites: Website[];
 }
 
 export function DashboardClient({
@@ -27,8 +44,12 @@ export function DashboardClient({
   websitesCount,
   subscriptionTier,
   tokenBalance,
+  websites,
 }: DashboardClientProps) {
   const t = useTranslations("dashboard");
+  const [selectedWebsiteId, setSelectedWebsiteId] = useState<string>(
+    websites.length > 0 ? websites[0].id : "",
+  );
 
   return (
     <div className="space-y-6">
@@ -71,24 +92,48 @@ export function DashboardClient({
         </div>
       )}
 
-      <Card className="border-border/30 bg-muted/30 backdrop-blur-sm rounded-xl opacity-60">
-        <CardHeader>
-          <CardTitle className="text-2xl font-bold text-muted-foreground flex items-center gap-2">
-            🚧 {t("trafficTrend")}
-          </CardTitle>
-          <CardDescription className="text-base text-muted-foreground">
-            {t("featureInDevelopment")}
+      {/* Search Console 數據面板 */}
+      <Card className="border-border/30 bg-card/50 backdrop-blur-sm rounded-xl">
+        <CardHeader className="pb-4">
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <CardTitle className="text-2xl font-bold flex items-center gap-2">
+              <Search className="h-6 w-6" />
+              {t("searchConsoleData")}
+            </CardTitle>
+            {websites.length > 0 && (
+              <Select
+                value={selectedWebsiteId}
+                onValueChange={setSelectedWebsiteId}
+              >
+                <SelectTrigger className="w-[240px]">
+                  <SelectValue placeholder={t("selectWebsite")} />
+                </SelectTrigger>
+                <SelectContent>
+                  {websites.map((website) => (
+                    <SelectItem key={website.id} value={website.id}>
+                      {website.website_name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            )}
+          </div>
+          <CardDescription className="text-base">
+            {t("searchConsoleDescription")}
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px] flex items-center justify-center text-muted-foreground bg-muted/20 rounded-xl border border-dashed border-muted-foreground/30">
-            <div className="text-center space-y-2">
-              <p className="text-lg font-semibold">
-                🚧 {t("underDevelopment")}
-              </p>
-              <p className="text-sm">{t("trafficChartComingSoon")}</p>
+          {websites.length === 0 ? (
+            <div className="h-[200px] flex items-center justify-center text-muted-foreground">
+              <div className="text-center space-y-2">
+                <Globe className="h-12 w-12 mx-auto text-muted-foreground/50" />
+                <p className="text-lg font-semibold">{t("noWebsites")}</p>
+                <p className="text-sm">{t("addWebsiteFirst")}</p>
+              </div>
             </div>
-          </div>
+          ) : (
+            <AnalyticsDashboard websiteId={selectedWebsiteId} embedded={true} />
+          )}
         </CardContent>
       </Card>
     </div>
