@@ -28,6 +28,58 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 ---
 
+# 🆕 新功能開發規範
+
+## 1. 分支策略
+
+**開發新功能時，必須使用新的 branch：**
+
+```bash
+# ✅ 正確流程
+git checkout -b feature/新功能名稱
+# 開發完成後
+git push origin feature/新功能名稱
+# 建立 Pull Request 合併到 main
+
+# ❌ 禁止直接在 main 開發新功能
+git checkout main
+# 直接修改...（錯誤！）
+```
+
+**命名規範**：
+
+- 新功能：`feature/功能名稱`
+- Bug 修復：`fix/問題描述`
+- 優化改進：`improve/改進描述`
+
+## 2. 頁面可見性
+
+**新功能頁面必須放在系統管理員專區：**
+
+| 類型     | 放置位置       | 路徑範例                     |
+| -------- | -------------- | ---------------------------- |
+| 管理功能 | 系統管理員專區 | `/admin/新功能`              |
+| 測試功能 | 系統管理員專區 | `/admin/experimental/新功能` |
+| 夥伴功能 | 夥伴管理區     | `/admin/partners/新功能`     |
+
+**原則**：
+
+- 新開發的功能頁面**不要**直接暴露給一般用戶
+- 先在管理員專區測試穩定後，再移至正式位置
+- 使用權限檢查確保只有管理員可訪問
+
+**範例檢查**：
+
+```typescript
+// 在頁面中檢查管理員權限
+const { user } = await getUser();
+if (user?.role !== "admin") {
+  redirect("/dashboard");
+}
+```
+
+---
+
 # 🔗 Supabase UNIQUE 約束與 JOIN 返回格式（重要！）
 
 > **⚠️ 2025-12-07 重大教訓**：添加 UNIQUE 約束會改變 Supabase JOIN 返回格式！
