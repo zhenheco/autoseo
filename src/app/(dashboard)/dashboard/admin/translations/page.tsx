@@ -17,7 +17,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
@@ -166,31 +165,6 @@ export default function AdminTranslationsPage() {
     }
   };
 
-  const getStatusBadge = (
-    status: "draft" | "reviewed" | "published" | "archived" | "not_translated",
-  ) => {
-    switch (status) {
-      case "published":
-        return (
-          <Badge variant="default" className="bg-green-500">
-            已發布
-          </Badge>
-        );
-      case "reviewed":
-        return <Badge variant="secondary">已審核</Badge>;
-      case "draft":
-        return <Badge variant="outline">草稿</Badge>;
-      case "not_translated":
-        return (
-          <Badge variant="outline" className="text-muted-foreground">
-            未翻譯
-          </Badge>
-        );
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
-  };
-
   if (accessDenied) {
     return (
       <div className="container mx-auto py-8">
@@ -284,7 +258,7 @@ export default function AdminTranslationsPage() {
       </div>
 
       {/* 文章列表 */}
-      <Card>
+      <Card className="min-h-[80vh]">
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
@@ -346,12 +320,7 @@ export default function AdminTranslationsPage() {
                       }
                     />
                   </TableHead>
-                  <TableHead>文章標題</TableHead>
-                  {TRANSLATION_LOCALES.map((locale) => (
-                    <TableHead key={locale} className="text-center w-24">
-                      {TRANSLATION_LANGUAGES[locale].flagEmoji}
-                    </TableHead>
-                  ))}
+                  <TableHead>文章資訊</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -369,13 +338,25 @@ export default function AdminTranslationsPage() {
                       />
                     </TableCell>
                     <TableCell className="font-medium">
-                      {article.article_title}
+                      <div>
+                        <div>{article.article_title}</div>
+                        <div className="flex flex-wrap gap-1 mt-1">
+                          {article.translations
+                            .filter((t) => t.status === "published")
+                            .map((t) => (
+                              <span
+                                key={t.locale}
+                                title={
+                                  TRANSLATION_LANGUAGES[t.locale].nativeName
+                                }
+                                className="text-lg"
+                              >
+                                {TRANSLATION_LANGUAGES[t.locale].flagEmoji}
+                              </span>
+                            ))}
+                        </div>
+                      </div>
                     </TableCell>
-                    {article.translations.map((t) => (
-                      <TableCell key={t.locale} className="text-center">
-                        {getStatusBadge(t.status)}
-                      </TableCell>
-                    ))}
                   </TableRow>
                 ))}
               </TableBody>
