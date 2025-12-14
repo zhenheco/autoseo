@@ -579,9 +579,13 @@ export class ArticleStorageService {
       },
       cost_breakdown: result.costBreakdown,
 
-      // 狀態
-      status: result.wordpress ? "published" : "generated",
-      published_at: result.wordpress ? new Date().toISOString() : null,
+      // 狀態：只有真正發布（status === 'publish'）才標記為 published
+      status:
+        result.wordpress?.status === "publish" ? "published" : "generated",
+      published_at:
+        result.wordpress?.status === "publish"
+          ? new Date().toISOString()
+          : null,
     };
 
     console.log("[ArticleStorage] 儲存文章:", {

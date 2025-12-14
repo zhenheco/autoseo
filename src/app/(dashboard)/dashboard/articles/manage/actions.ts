@@ -613,16 +613,18 @@ function calculateScheduleTimes(
 
 export async function cancelArticleSchedule(
   articleId: string,
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; hasWordPressDraft?: boolean }> {
   const user = await getUser();
   if (!user) return { success: false, error: "未登入" };
 
   const supabase = await createClient();
 
-  // 1. 先查詢 article_job 取得關聯的 generated_article id
+  // 1. 先查詢 article_job 取得關聯的 generated_article 資訊
   const { data: job, error: jobQueryError } = await supabase
     .from("article_jobs")
-    .select("id, generated_articles(id)")
+    .select(
+      "id, generated_articles(id, status, wordpress_post_id, wordpress_status)",
+    )
     .eq("id", articleId)
     .eq("status", "scheduled")
     .single();
@@ -648,8 +650,19 @@ export async function cancelArticleSchedule(
   // 3. 更新 generated_articles 表（狀態回到待發布、清除排程時間）
   const generatedArticle = job.generated_articles as unknown as {
     id: string;
+    status: string;
+    wordpress_post_id: number | null;
+    wordpress_status: string | null;
   } | null;
+
+  let hasWordPressDraft = false;
+
   if (generatedArticle?.id) {
+    // 檢查是否有 WordPress 草稿
+    hasWordPressDraft =
+      !!generatedArticle.wordpress_post_id &&
+      generatedArticle.wordpress_status === "draft";
+
     const { error: articleError } = await supabase
       .from("generated_articles")
       .update({
@@ -665,7 +678,9 @@ export async function cancelArticleSchedule(
   }
 
   revalidatePath("/dashboard/articles/manage");
-  return { success: true };
+
+  // 如果有 WordPress 草稿，返回提示（草稿仍存在於 WordPress 中）
+  return { success: true, hasWordPressDraft };
 }
 
 export async function batchDeleteArticles(articleIds: string[]): Promise<{
