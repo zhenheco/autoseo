@@ -51,6 +51,7 @@ export function LanguageSwitcher({
             <DropdownMenuItem key={translation.locale} asChild>
               <Link
                 href={translation.url}
+                hrefLang={translation.locale}
                 className={cn(
                   "flex items-center gap-2",
                   isActive && "bg-accent font-medium",

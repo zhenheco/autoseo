@@ -1,15 +1,17 @@
 import type { BlogArticle } from "@/types/blog";
+import type { SupportedLocale } from "@/types/translations";
 
 interface ArticleSchemaProps {
   article: BlogArticle;
   url: string;
+  locale: SupportedLocale;
 }
 
 /**
  * 文章結構化資料組件 (JSON-LD)
  * 用於 SEO，幫助搜尋引擎理解文章內容
  */
-export function ArticleSchema({ article, url }: ArticleSchemaProps) {
+export function ArticleSchema({ article, url, locale }: ArticleSchemaProps) {
   const schema = {
     "@context": "https://schema.org",
     "@type": "Article",
@@ -39,7 +41,7 @@ export function ArticleSchema({ article, url }: ArticleSchemaProps) {
     keywords: article.keywords?.join(", ") || article.focus_keyword || "",
     wordCount: article.word_count,
     articleSection: article.categories?.[0] || "Blog",
-    inLanguage: "zh-TW",
+    inLanguage: locale,
   };
 
   return (

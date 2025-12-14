@@ -11,6 +11,7 @@ import {
   RelatedArticles,
   ViewCounter,
   ArticleSchema,
+  BreadcrumbSchema,
 } from "@/components/blog";
 import type { BlogArticle, BlogArticleListItem } from "@/types/blog";
 
@@ -233,7 +234,13 @@ export default async function ArticlePage({ params }: Props) {
   return (
     <>
       {/* Schema.org 結構化資料 */}
-      <ArticleSchema article={article} url={articleUrl} />
+      <ArticleSchema article={article} url={articleUrl} locale="zh-TW" />
+      <BreadcrumbSchema
+        title={article.title}
+        url={articleUrl}
+        locale="zh-TW"
+        category={article.categories?.[0]}
+      />
 
       <article className="container mx-auto px-4 py-8">
         {/* 返回按鈕 */}

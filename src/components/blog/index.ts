@@ -11,4 +11,5 @@ export { PopularArticles } from "./PopularArticles";
 export { RelatedArticles } from "./RelatedArticles";
 export { ViewCounter } from "./ViewCounter";
 export { ArticleSchema } from "./ArticleSchema";
+export { BreadcrumbSchema } from "./BreadcrumbSchema";
 export { LanguageSwitcher } from "./language-switcher";
