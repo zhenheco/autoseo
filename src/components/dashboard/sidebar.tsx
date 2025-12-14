@@ -16,6 +16,7 @@ import {
   Users,
   Mail,
   AlertTriangle,
+  Languages,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -70,6 +71,11 @@ const adminItems = [
     titleKey: "suspiciousReferrals",
     href: "/dashboard/admin/suspicious-referrals",
     icon: AlertTriangle,
+  },
+  {
+    titleKey: "translations",
+    href: "/dashboard/admin/translations",
+    icon: Languages,
   },
 ];
 
