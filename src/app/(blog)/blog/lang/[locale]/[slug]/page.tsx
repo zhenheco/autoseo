@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@supabase/supabase-js";
-import { ArrowLeft, Globe } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -16,7 +16,6 @@ import {
 import { LanguageSwitcher } from "@/components/blog/language-switcher";
 import type { BlogArticle, BlogArticleListItem } from "@/types/blog";
 import type { SupportedLocale, HreflangEntry } from "@/types/translations";
-import { TRANSLATION_LANGUAGES } from "@/types/translations";
 
 // 使用 service role 取得資料
 const supabase = createClient(
@@ -195,6 +194,7 @@ function formatArticle(data: any): BlogArticle {
 
 /**
  * 取得文章的所有語言版本
+ * 注意：URL 使用 /blog/lang/{locale}/{slug} 格式
  */
 async function getAvailableTranslations(
   locale: SupportedLocale,
@@ -245,10 +245,10 @@ async function getAvailableTranslations(
     return entries;
   }
 
-  // 加入原文（中文）
+  // 加入原文（中文）- 使用舊路由 /blog/{slug} 保持向後兼容
   entries.push({
     locale: "zh-TW",
-    url: `${baseUrl}/blog/zh-TW/${originalSlug}`,
+    url: `${baseUrl}/blog/${originalSlug}`,
   });
 
   // 查詢所有翻譯版本
@@ -260,9 +260,10 @@ async function getAvailableTranslations(
 
   if (translations) {
     for (const t of translations) {
+      // 翻譯版本使用新路由 /blog/lang/{locale}/{slug}
       entries.push({
         locale: t.target_language as SupportedLocale,
-        url: `${baseUrl}/blog/${t.target_language}/${t.slug}`,
+        url: `${baseUrl}/blog/lang/${t.target_language}/${t.slug}`,
       });
     }
   }
@@ -438,7 +439,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description,
     keywords: article.keywords?.join(", ") || article.focus_keyword,
     alternates: {
-      canonical: `https://1wayseo.com/blog/${locale}/${slug}`,
+      canonical: `https://1wayseo.com/blog/lang/${locale}/${slug}`,
       languages,
     },
     openGraph: {
@@ -491,7 +492,7 @@ export default async function LocalizedArticlePage({ params }: Props) {
     getAvailableTranslations(locale, slug),
   ]);
 
-  const articleUrl = `https://1wayseo.com/blog/${locale}/${article.slug}`;
+  const articleUrl = `https://1wayseo.com/blog/lang/${locale}/${article.slug}`;
 
   return (
     <>

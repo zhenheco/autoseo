@@ -66,20 +66,23 @@ async function getBlogArticles() {
 
 /**
  * 建立多語系 hreflang 對照表
+ * 注意：中文使用 /blog/{slug}，翻譯版本使用 /blog/lang/{locale}/{slug}
  */
 function buildLanguageAlternates(
   baseUrl: string,
   originalSlug: string,
   translations: Array<{ target_language: string; slug: string }>,
 ): Record<string, string> {
+  // 中文原文使用舊路由 /blog/{slug}
   const languages: Record<string, string> = {
-    "zh-TW": `${baseUrl}/blog/zh-TW/${originalSlug}`,
-    "x-default": `${baseUrl}/blog/zh-TW/${originalSlug}`,
+    "zh-TW": `${baseUrl}/blog/${originalSlug}`,
+    "x-default": `${baseUrl}/blog/${originalSlug}`,
   };
 
+  // 翻譯版本使用新路由 /blog/lang/{locale}/{slug}
   for (const t of translations || []) {
     languages[t.target_language] =
-      `${baseUrl}/blog/${t.target_language}/${t.slug}`;
+      `${baseUrl}/blog/lang/${t.target_language}/${t.slug}`;
   }
 
   return languages;
@@ -156,9 +159,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       translations,
     );
 
-    // 中文原文
+    // 中文原文 - 使用 /blog/{slug}
     blogArticles.push({
-      url: `${baseUrl}/blog/zh-TW/${article.slug}`,
+      url: `${baseUrl}/blog/${article.slug}`,
       lastModified: new Date(article.updated_at),
       changeFrequency: "weekly" as const,
       priority: 0.7,
@@ -167,10 +170,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       },
     });
 
-    // 翻譯版本
+    // 翻譯版本 - 使用 /blog/lang/{locale}/{slug}
     for (const translation of translations) {
       blogArticles.push({
-        url: `${baseUrl}/blog/${translation.target_language}/${translation.slug}`,
+        url: `${baseUrl}/blog/lang/${translation.target_language}/${translation.slug}`,
         lastModified: new Date(translation.updated_at),
         changeFrequency: "weekly" as const,
         priority: 0.7,
