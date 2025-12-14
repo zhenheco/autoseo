@@ -738,8 +738,9 @@ export class ParallelOrchestrator {
         category: categoryOutput,
       });
 
-      // Phase 7: WordPress Direct Publish (如果配置了)
-      if (wordpressConfig?.enabled) {
+      // Phase 7: WordPress Direct Publish (只有 auto_publish=true 時才直接發布)
+      // 方案 B：auto_publish=false 時，不發送到 WordPress，由 cron job 在排程時間到時處理
+      if (wordpressConfig?.enabled && workflowSettings.auto_publish) {
         try {
           const wordpressClient = new WordPressClient(wordpressConfig);
           const publishResult = await wordpressClient.publishArticle(
@@ -755,7 +756,7 @@ export class ParallelOrchestrator {
               seoDescription: metaOutput.seo.description,
               focusKeyword: categoryOutput.focusKeywords[0] || input.title,
             },
-            workflowSettings.auto_publish ? "publish" : "draft",
+            "publish", // auto_publish=true 時直接發布
           );
 
           result.wordpress = {
