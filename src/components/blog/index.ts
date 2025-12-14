@@ -11,3 +11,4 @@ export { PopularArticles } from "./PopularArticles";
 export { RelatedArticles } from "./RelatedArticles";
 export { ViewCounter } from "./ViewCounter";
 export { ArticleSchema } from "./ArticleSchema";
+export { LanguageSwitcher } from "./language-switcher";
