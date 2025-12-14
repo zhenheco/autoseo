@@ -619,6 +619,14 @@ export async function cancelArticleSchedule(
 
   const supabase = await createClient();
 
+  // 獲取 companyId 用於快取失效
+  const { data: membership } = await supabase
+    .from("company_members")
+    .select("company_id")
+    .eq("user_id", user.id)
+    .eq("status", "active")
+    .single();
+
   // 1. 先查詢 article_job 取得關聯的 generated_article 資訊
   const { data: job, error: jobQueryError } = await supabase
     .from("article_jobs")
@@ -678,6 +686,11 @@ export async function cancelArticleSchedule(
   }
 
   revalidatePath("/dashboard/articles/manage");
+
+  // 使文章列表快取失效
+  if (membership?.company_id) {
+    await invalidateArticleListCache(membership.company_id);
+  }
 
   // 如果有 WordPress 草稿，返回提示（草稿仍存在於 WordPress 中）
   return { success: true, hasWordPressDraft };
