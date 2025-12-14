@@ -3,12 +3,29 @@
 // ===========================================
 
 /**
- * 支援的翻譯目標語言
+ * 支援的翻譯目標語言（17 種，不含原始語言 zh-TW）
  */
-export type TranslationLocale = "en-US" | "de-DE" | "fr-FR" | "es-ES";
+export type TranslationLocale =
+  | "zh-CN"
+  | "en-US"
+  | "ja-JP"
+  | "ko-KR"
+  | "vi-VN"
+  | "ms-MY"
+  | "th-TH"
+  | "id-ID"
+  | "tl-PH"
+  | "fr-FR"
+  | "de-DE"
+  | "es-ES"
+  | "pt-PT"
+  | "it-IT"
+  | "ru-RU"
+  | "ar-SA"
+  | "hi-IN";
 
 /**
- * 所有支援的語言（包含原始語言）
+ * 所有支援的語言（18 種，包含原始語言 zh-TW）
  */
 export type SupportedLocale = "zh-TW" | TranslationLocale;
 
@@ -25,7 +42,7 @@ export interface TranslationLanguageConfig {
 }
 
 /**
- * 預設的語言配置
+ * 預設的語言配置（18 種語言）
  */
 export const TRANSLATION_LANGUAGES: Record<
   SupportedLocale,
@@ -39,21 +56,77 @@ export const TRANSLATION_LANGUAGES: Record<
     isEnabled: true,
     displayOrder: 0,
   },
+  "zh-CN": {
+    locale: "zh-CN",
+    name: "Simplified Chinese",
+    nativeName: "简体中文",
+    flagEmoji: "🇨🇳",
+    isEnabled: true,
+    displayOrder: 1,
+  },
   "en-US": {
     locale: "en-US",
     name: "English (US)",
     nativeName: "English",
     flagEmoji: "🇺🇸",
     isEnabled: true,
-    displayOrder: 1,
-  },
-  "de-DE": {
-    locale: "de-DE",
-    name: "German",
-    nativeName: "Deutsch",
-    flagEmoji: "🇩🇪",
-    isEnabled: true,
     displayOrder: 2,
+  },
+  "ja-JP": {
+    locale: "ja-JP",
+    name: "Japanese",
+    nativeName: "日本語",
+    flagEmoji: "🇯🇵",
+    isEnabled: true,
+    displayOrder: 3,
+  },
+  "ko-KR": {
+    locale: "ko-KR",
+    name: "Korean",
+    nativeName: "한국어",
+    flagEmoji: "🇰🇷",
+    isEnabled: true,
+    displayOrder: 4,
+  },
+  "vi-VN": {
+    locale: "vi-VN",
+    name: "Vietnamese",
+    nativeName: "Tiếng Việt",
+    flagEmoji: "🇻🇳",
+    isEnabled: true,
+    displayOrder: 5,
+  },
+  "ms-MY": {
+    locale: "ms-MY",
+    name: "Malay",
+    nativeName: "Bahasa Melayu",
+    flagEmoji: "🇲🇾",
+    isEnabled: true,
+    displayOrder: 6,
+  },
+  "th-TH": {
+    locale: "th-TH",
+    name: "Thai",
+    nativeName: "ไทย",
+    flagEmoji: "🇹🇭",
+    isEnabled: true,
+    displayOrder: 7,
+  },
+  "id-ID": {
+    locale: "id-ID",
+    name: "Indonesian",
+    nativeName: "Bahasa Indonesia",
+    flagEmoji: "🇮🇩",
+    isEnabled: true,
+    displayOrder: 8,
+  },
+  "tl-PH": {
+    locale: "tl-PH",
+    name: "Filipino",
+    nativeName: "Filipino",
+    flagEmoji: "🇵🇭",
+    isEnabled: true,
+    displayOrder: 9,
   },
   "fr-FR": {
     locale: "fr-FR",
@@ -61,7 +134,15 @@ export const TRANSLATION_LANGUAGES: Record<
     nativeName: "Français",
     flagEmoji: "🇫🇷",
     isEnabled: true,
-    displayOrder: 3,
+    displayOrder: 10,
+  },
+  "de-DE": {
+    locale: "de-DE",
+    name: "German",
+    nativeName: "Deutsch",
+    flagEmoji: "🇩🇪",
+    isEnabled: true,
+    displayOrder: 11,
   },
   "es-ES": {
     locale: "es-ES",
@@ -69,18 +150,71 @@ export const TRANSLATION_LANGUAGES: Record<
     nativeName: "Español",
     flagEmoji: "🇪🇸",
     isEnabled: true,
-    displayOrder: 4,
+    displayOrder: 12,
+  },
+  "pt-PT": {
+    locale: "pt-PT",
+    name: "Portuguese",
+    nativeName: "Português",
+    flagEmoji: "🇵🇹",
+    isEnabled: true,
+    displayOrder: 13,
+  },
+  "it-IT": {
+    locale: "it-IT",
+    name: "Italian",
+    nativeName: "Italiano",
+    flagEmoji: "🇮🇹",
+    isEnabled: true,
+    displayOrder: 14,
+  },
+  "ru-RU": {
+    locale: "ru-RU",
+    name: "Russian",
+    nativeName: "Русский",
+    flagEmoji: "🇷🇺",
+    isEnabled: true,
+    displayOrder: 15,
+  },
+  "ar-SA": {
+    locale: "ar-SA",
+    name: "Arabic",
+    nativeName: "العربية",
+    flagEmoji: "🇸🇦",
+    isEnabled: true,
+    displayOrder: 16,
+  },
+  "hi-IN": {
+    locale: "hi-IN",
+    name: "Hindi",
+    nativeName: "हिन्दी",
+    flagEmoji: "🇮🇳",
+    isEnabled: true,
+    displayOrder: 17,
   },
 };
 
 /**
- * 翻譯目標語言陣列
+ * 翻譯目標語言陣列（17 種，不含原始語言 zh-TW）
  */
 export const TRANSLATION_LOCALES: TranslationLocale[] = [
+  "zh-CN",
   "en-US",
-  "de-DE",
+  "ja-JP",
+  "ko-KR",
+  "vi-VN",
+  "ms-MY",
+  "th-TH",
+  "id-ID",
+  "tl-PH",
   "fr-FR",
+  "de-DE",
   "es-ES",
+  "pt-PT",
+  "it-IT",
+  "ru-RU",
+  "ar-SA",
+  "hi-IN",
 ];
 
 // ===========================================

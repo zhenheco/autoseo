@@ -20,13 +20,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import { toast } from "sonner";
 import { Globe, Languages, Loader2, RefreshCw, Search } from "lucide-react";
 import type {
@@ -37,6 +30,7 @@ import {
   TRANSLATION_LANGUAGES,
   TRANSLATION_LOCALES,
 } from "@/types/translations";
+import { WebsiteSelector } from "@/components/articles/WebsiteSelector";
 
 /**
  * 翻譯管理頁面
@@ -49,6 +43,7 @@ export default function AdminTranslationsPage() {
   const [articles, setArticles] = useState<ArticleTranslationSummary[]>([]);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
+  const [websiteId, setWebsiteId] = useState<string | null>(null);
   const [selectedArticles, setSelectedArticles] = useState<Set<string>>(
     new Set(),
   );
@@ -59,7 +54,7 @@ export default function AdminTranslationsPage() {
 
   useEffect(() => {
     fetchArticles();
-  }, [search]);
+  }, [search, websiteId]);
 
   const fetchArticles = async () => {
     try {
@@ -69,6 +64,9 @@ export default function AdminTranslationsPage() {
       });
       if (search) {
         params.set("search", search);
+      }
+      if (websiteId) {
+        params.set("website_id", websiteId);
       }
 
       const response = await fetch(
@@ -233,34 +231,57 @@ export default function AdminTranslationsPage() {
         </Button>
       </div>
 
-      {/* 語言選擇 */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-lg">目標語言</CardTitle>
-          <CardDescription>選擇要翻譯成的語言</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex flex-wrap gap-3">
-            {TRANSLATION_LOCALES.map((locale) => {
-              const lang = TRANSLATION_LANGUAGES[locale];
-              const isSelected = selectedLanguages.has(locale);
+      {/* 篩選區：網站選擇 + 目標語言 */}
+      <div className="grid gap-6 md:grid-cols-2">
+        {/* 網站選擇 */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">選擇網站</CardTitle>
+            <CardDescription>篩選特定網站的已發布文章</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="w-full max-w-sm">
+              <WebsiteSelector
+                value={websiteId}
+                onChange={setWebsiteId}
+                placeholder="全部網站"
+                allowNoWebsite={false}
+              />
+            </div>
+          </CardContent>
+        </Card>
 
-              return (
-                <Button
-                  key={locale}
-                  variant={isSelected ? "default" : "outline"}
-                  size="sm"
-                  onClick={() => handleToggleLanguage(locale)}
-                  className="gap-2"
-                >
-                  <span>{lang.flagEmoji}</span>
-                  <span>{lang.nativeName}</span>
-                </Button>
-              );
-            })}
-          </div>
-        </CardContent>
-      </Card>
+        {/* 語言選擇 */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-lg">目標語言</CardTitle>
+            <CardDescription>
+              選擇要翻譯成的語言（{selectedLanguages.size} 種已選）
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex flex-wrap gap-2">
+              {TRANSLATION_LOCALES.map((locale) => {
+                const lang = TRANSLATION_LANGUAGES[locale];
+                const isSelected = selectedLanguages.has(locale);
+
+                return (
+                  <Button
+                    key={locale}
+                    variant={isSelected ? "default" : "outline"}
+                    size="sm"
+                    onClick={() => handleToggleLanguage(locale)}
+                    className="gap-1"
+                  >
+                    <span>{lang.flagEmoji}</span>
+                    <span className="hidden sm:inline">{lang.nativeName}</span>
+                  </Button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       {/* 文章列表 */}
       <Card>
