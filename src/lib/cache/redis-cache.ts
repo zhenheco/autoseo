@@ -1,6 +1,10 @@
 /**
  * Redis 快取工具
  * 用於文章列表和內容的分散式快取
+ *
+ * 針對 Vercel serverless 環境優化：
+ * - 連線狀態檢查和自動重連
+ * - 優雅降級（Redis 不可用時 fallback 到資料庫）
  */
 
 import Redis from "ioredis";
@@ -25,6 +29,66 @@ let lastConnectionError: number = 0;
 const CONNECTION_COOLDOWN = 5000;
 
 /**
+ * 檢查 Redis 連線是否可用
+ */
+function isConnectionReady(redis: Redis): boolean {
+  return redis.status === "ready";
+}
+
+/**
+ * 建立新的 Redis 客戶端
+ */
+function createRedisClient(): Redis {
+  const client = new Redis(process.env.REDIS_URL!, {
+    maxRetriesPerRequest: 1,
+    retryStrategy: (times) => {
+      if (times > 2) {
+        lastConnectionError = Date.now();
+        return null;
+      }
+      return Math.min(times * 100, 1000);
+    },
+    enableOfflineQueue: false,
+    lazyConnect: true,
+    connectTimeout: 3000,
+    commandTimeout: 2000,
+  });
+
+  client.on("error", (err) => {
+    lastConnectionError = Date.now();
+    // 只在非預期錯誤時記錄
+    if (!err.message.includes("Stream isn't writeable")) {
+      console.error("[RedisCache] Connection error:", err.message);
+    }
+  });
+
+  client.on("close", () => {
+    // 連線關閉時清理客戶端
+    if (redisClient === client) {
+      redisClient = null;
+    }
+  });
+
+  return client;
+}
+
+/**
+ * 強制重新建立連線
+ */
+function reconnect(): Redis | null {
+  if (redisClient) {
+    try {
+      redisClient.disconnect();
+    } catch {
+      // 忽略斷開連線時的錯誤
+    }
+    redisClient = null;
+  }
+  // 不重置冷卻時間，讓系統有時間恢復
+  return getRedis();
+}
+
+/**
  * 取得 Redis 客戶端
  * 在 serverless 環境中優化連線處理
  */
@@ -33,7 +97,7 @@ function getRedis(): Redis | null {
     return null;
   }
 
-  // 如果最近有連線錯誤，暫時跳過 Redis（冷卻機制）
+  // 冷卻機制：如果最近有連線錯誤，暫時跳過 Redis
   if (
     lastConnectionError &&
     Date.now() - lastConnectionError < CONNECTION_COOLDOWN
@@ -41,36 +105,54 @@ function getRedis(): Redis | null {
     return null;
   }
 
-  if (!redisClient) {
-    redisClient = new Redis(process.env.REDIS_URL, {
-      maxRetriesPerRequest: 1, // 減少重試次數，避免阻塞
-      retryStrategy: (times) => {
-        if (times > 2) {
-          // 超過重試次數，記錄錯誤時間並返回 null
-          lastConnectionError = Date.now();
-          return null;
-        }
-        return Math.min(times * 100, 1000);
-      },
-      enableOfflineQueue: false, // serverless 環境不使用離線佇列
-      lazyConnect: true,
-      connectTimeout: 3000, // 3 秒連線超時
-      commandTimeout: 2000, // 2 秒命令超時
-    });
-
-    redisClient.on("error", (err) => {
-      // 記錄連線錯誤時間，觸發冷卻機制
-      lastConnectionError = Date.now();
-      console.error("[RedisCache] Connection error:", err.message);
-    });
-
-    redisClient.on("close", () => {
-      // 連線關閉時清理客戶端，下次會重新建立
+  // 檢查現有連線狀態
+  if (redisClient) {
+    const status = redisClient.status;
+    // 如果連線已斷開或錯誤狀態，清理並重建
+    if (status === "end" || status === "close") {
       redisClient = null;
-    });
+    }
+  }
+
+  if (!redisClient) {
+    redisClient = createRedisClient();
   }
 
   return redisClient;
+}
+
+/**
+ * 安全執行 Redis 命令
+ * 失敗時自動重試一次，最終失敗則返回 fallback 值
+ */
+async function safeExecute<T>(
+  operation: (redis: Redis) => Promise<T>,
+  fallback: T,
+): Promise<T> {
+  let redis = getRedis();
+  if (!redis) return fallback;
+
+  try {
+    // 確保連線已建立
+    if (!isConnectionReady(redis)) {
+      await redis.connect();
+    }
+    return await operation(redis);
+  } catch {
+    // 第一次失敗，嘗試重建連線
+    redis = reconnect();
+    if (!redis) return fallback;
+
+    try {
+      await redis.connect();
+      return await operation(redis);
+    } catch (retryError) {
+      // 重試也失敗，進入冷卻期
+      lastConnectionError = Date.now();
+      console.error("[RedisCache] Retry failed:", retryError);
+      return fallback;
+    }
+  }
 }
 
 /**
@@ -86,17 +168,11 @@ export function isRedisAvailable(): boolean {
  * @returns 快取的資料，如果不存在則返回 null
  */
 export async function cacheGet<T>(key: string): Promise<T | null> {
-  const redis = getRedis();
-  if (!redis) return null;
-
-  try {
+  return safeExecute(async (redis) => {
     const data = await redis.get(key);
     if (!data) return null;
     return JSON.parse(data) as T;
-  } catch (error) {
-    console.error("[RedisCache] Get error:", error);
-    return null;
-  }
+  }, null);
 }
 
 /**
@@ -110,16 +186,10 @@ export async function cacheSet<T>(
   value: T,
   ttlSeconds: number,
 ): Promise<boolean> {
-  const redis = getRedis();
-  if (!redis) return false;
-
-  try {
+  return safeExecute(async (redis) => {
     await redis.setex(key, ttlSeconds, JSON.stringify(value));
     return true;
-  } catch (error) {
-    console.error("[RedisCache] Set error:", error);
-    return false;
-  }
+  }, false);
 }
 
 /**
@@ -127,10 +197,7 @@ export async function cacheSet<T>(
  * @param key 快取 key（支援萬用字元）
  */
 export async function cacheDelete(key: string): Promise<boolean> {
-  const redis = getRedis();
-  if (!redis) return false;
-
-  try {
+  return safeExecute(async (redis) => {
     if (key.includes("*")) {
       // 使用 SCAN 刪除匹配的 keys（避免 KEYS 命令阻塞）
       let cursor = "0";
@@ -151,10 +218,7 @@ export async function cacheDelete(key: string): Promise<boolean> {
       await redis.del(key);
     }
     return true;
-  } catch (error) {
-    console.error("[RedisCache] Delete error:", error);
-    return false;
-  }
+  }, false);
 }
 
 /**
@@ -249,28 +313,29 @@ export async function invalidateArticleCache(
   console.log(`[RedisCache] Invalidated cache for article: ${articleId}`);
 }
 
-/**
- * 快取統計資訊
- */
-export async function getCacheStats(): Promise<{
+/** 快取統計資訊類型 */
+interface CacheStats {
   connected: boolean;
   keyCount: number;
   memoryUsage: string;
-} | null> {
-  const redis = getRedis();
-  if (!redis) return null;
+}
 
-  try {
-    const info = await redis.info("memory");
-    const keyCount = await redis.dbsize();
-    const memoryMatch = info.match(/used_memory_human:(\S+)/);
+/**
+ * 快取統計資訊
+ */
+export async function getCacheStats(): Promise<CacheStats> {
+  return safeExecute<CacheStats>(
+    async (redis) => {
+      const info = await redis.info("memory");
+      const keyCount = await redis.dbsize();
+      const memoryMatch = info.match(/used_memory_human:(\S+)/);
 
-    return {
-      connected: true,
-      keyCount,
-      memoryUsage: memoryMatch ? memoryMatch[1] : "unknown",
-    };
-  } catch {
-    return { connected: false, keyCount: 0, memoryUsage: "0" };
-  }
+      return {
+        connected: true,
+        keyCount,
+        memoryUsage: memoryMatch ? memoryMatch[1] : "unknown",
+      };
+    },
+    { connected: false, keyCount: 0, memoryUsage: "0" },
+  );
 }
