@@ -8,7 +8,6 @@ import { checkPagePermission } from "@/lib/permissions";
 import { ArrowLeft, ExternalLink, FileText, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { WebsiteArticleManager } from "./components/WebsiteArticleManager";
-import { AnalyticsDashboard } from "@/components/analytics/AnalyticsDashboard";
 
 export const dynamic = "force-dynamic";
 
@@ -281,11 +280,6 @@ export default async function WebsiteDetailPage({
               </div>
             </CardContent>
           </Card>
-        </div>
-
-        {/* 分析儀表板 - GSC 和 GA4 */}
-        <div className="mt-4">
-          <AnalyticsDashboard websiteId={id} />
         </div>
       </div>
 

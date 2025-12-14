@@ -118,7 +118,12 @@
     "trafficTrend": "7 天流量趨勢",
     "featureInDevelopment": "此功能正在開發中",
     "underDevelopment": "待開發",
-    "trafficChartComingSoon": "近一週的網站訪問數據圖表即將推出"
+    "trafficChartComingSoon": "近一週的網站訪問數據圖表即將推出",
+    "searchConsoleData": "Search Console 數據",
+    "searchConsoleDescription": "查看網站在 Google 搜尋中的表現",
+    "selectWebsite": "選擇網站",
+    "noWebsites": "尚無網站",
+    "addWebsiteFirst": "請先新增網站以查看數據"
   },
   "articles": {
     "title": "文章管理",

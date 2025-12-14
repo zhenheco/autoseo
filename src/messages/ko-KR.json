@@ -92,7 +92,12 @@
     "trafficTrend": "7일간 트래픽 추이",
     "featureInDevelopment": "이 기능은 개발 중입니다",
     "underDevelopment": "곧 출시 예정",
-    "trafficChartComingSoon": "주간 트래픽 차트가 곧 제공됩니다"
+    "trafficChartComingSoon": "주간 트래픽 차트가 곧 제공됩니다",
+    "searchConsoleData": "Search Console 데이터",
+    "searchConsoleDescription": "Google 검색에서 웹사이트 성과 확인",
+    "selectWebsite": "웹사이트 선택",
+    "noWebsites": "웹사이트 없음",
+    "addWebsiteFirst": "데이터를 보려면 먼저 웹사이트를 추가하세요"
   },
   "articles": {
     "title": "글 관리",

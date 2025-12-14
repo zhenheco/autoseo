@@ -118,7 +118,12 @@
     "trafficTrend": "7-Day Traffic Trend",
     "featureInDevelopment": "This feature is under development",
     "underDevelopment": "Coming Soon",
-    "trafficChartComingSoon": "Weekly website traffic chart coming soon"
+    "trafficChartComingSoon": "Weekly website traffic chart coming soon",
+    "searchConsoleData": "Search Console Data",
+    "searchConsoleDescription": "View your website's performance in Google Search",
+    "selectWebsite": "Select Website",
+    "noWebsites": "No Websites",
+    "addWebsiteFirst": "Please add a website first to view data"
   },
   "articles": {
     "title": "Article Management",
