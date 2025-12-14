@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import { ReferralLinkCard } from "@/components/referrals/ReferralLinkCard";
 import { ReferralHistoryTable } from "@/components/referrals/ReferralHistoryTable";
-import { REFERRAL_CREDIT_REWARD } from "@/types/referral.types";
+import { REFERRAL_ARTICLE_REWARD } from "@/types/referral.types";
 
 export default async function ReferralsPage() {
   const user = await getUser();
@@ -71,14 +71,15 @@ export default async function ReferralsPage() {
     { p_referrer_company_id: membership.company_id },
   );
 
-  const { data: tokenRewards } = await supabase
+  const { data: articleRewards } = await supabase
     .from("referral_token_rewards")
-    .select("referrer_tokens")
+    .select("referrer_articles")
     .eq("referrer_company_id", membership.company_id)
     .not("referrer_credited_at", "is", null);
 
-  const totalRewardTokens =
-    tokenRewards?.reduce((sum, r) => sum + (r.referrer_tokens || 0), 0) || 0;
+  const totalRewardArticles =
+    articleRewards?.reduce((sum, r) => sum + (r.referrer_articles || 0), 0) ||
+    0;
 
   const { data: myReferrer } = await supabase
     .from("referrals")
@@ -92,7 +93,7 @@ export default async function ReferralsPage() {
         <h1 className="text-3xl font-bold">好友推薦計畫</h1>
         <p className="text-muted-foreground mt-2">
           分享您的推薦連結，朋友註冊並付款後，雙方都將獲得{" "}
-          {REFERRAL_CREDIT_REWARD.toLocaleString()} credits 獎勵
+          {REFERRAL_ARTICLE_REWARD} 篇文章獎勵
         </p>
       </div>
 
@@ -114,7 +115,7 @@ export default async function ReferralsPage() {
               )}
               {myReferrer.status === "rewarded" && (
                 <span className="ml-2 text-green-600">
-                  ✓ 已獲得 {REFERRAL_CREDIT_REWARD.toLocaleString()} credits
+                  ✓ 已獲得 {REFERRAL_ARTICLE_REWARD} 篇文章
                 </span>
               )}
             </p>
@@ -169,9 +170,9 @@ export default async function ReferralsPage() {
           </CardHeader>
           <CardContent>
             <div className="text-2xl font-bold text-primary">
-              {totalRewardTokens.toLocaleString()}
+              {totalRewardArticles}
             </div>
-            <p className="text-xs text-muted-foreground">credits 獎勵總額</p>
+            <p className="text-xs text-muted-foreground">篇文章獎勵</p>
           </CardContent>
         </Card>
       </div>
@@ -232,7 +233,7 @@ export default async function ReferralsPage() {
               <p className="text-sm text-muted-foreground">
                 朋友完成首次付款後，您和朋友都將獲得{" "}
                 <span className="font-bold text-primary">
-                  {REFERRAL_CREDIT_REWARD.toLocaleString()} credits
+                  {REFERRAL_ARTICLE_REWARD} 篇文章
                 </span>{" "}
                 獎勵
               </p>

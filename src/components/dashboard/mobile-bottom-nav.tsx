@@ -17,7 +17,14 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { Handshake, Shield, Users, Mail, LogOut } from "lucide-react";
+import {
+  Handshake,
+  Shield,
+  Users,
+  Mail,
+  LogOut,
+  Languages,
+} from "lucide-react";
 import { useState } from "react";
 
 const SUPER_ADMIN_EMAILS = (process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAILS || "")
@@ -68,6 +75,11 @@ const adminItems = [
     title: "聯盟管理",
     href: "/dashboard/admin/affiliates",
     icon: Users,
+  },
+  {
+    title: "翻譯管理",
+    href: "/dashboard/admin/translations",
+    icon: Languages,
   },
 ];
 

@@ -5,6 +5,7 @@ import type {
   ReferralStats,
   ReferralTokenReward,
 } from "@/types/referral.types";
+import { REFERRAL_ARTICLE_REWARD } from "@/types/referral.types";
 
 export async function generateReferralCode(
   companyId: string,
@@ -188,12 +189,15 @@ export async function getReferralStats(
 
   const { data: tokenRewards } = await supabase
     .from("referral_token_rewards")
-    .select("referrer_tokens")
+    .select("referrer_tokens, referrer_articles")
     .eq("referrer_company_id", companyId)
     .not("referrer_credited_at", "is", null);
 
   const totalTokensEarned =
     tokenRewards?.reduce((sum, r) => sum + (r.referrer_tokens || 0), 0) || 0;
+
+  const totalArticlesEarned =
+    tokenRewards?.reduce((sum, r) => sum + (r.referrer_articles || 0), 0) || 0;
 
   const conversionRate =
     referralCode.total_referrals > 0
@@ -210,6 +214,7 @@ export async function getReferralStats(
     successfulReferrals: referralCode.successful_referrals,
     conversionRate: Math.round(conversionRate * 100) / 100,
     totalTokensEarned,
+    totalArticlesEarned,
   };
 }
 
@@ -289,14 +294,20 @@ export async function processFirstPaymentReward(
   return { success: true, rewardType };
 }
 
+/**
+ * 處理推薦獎勵
+ * 2024-12 更新：從 Token 改為文章篇數獎勵
+ * 推薦人和被推薦人各獲得 REFERRAL_ARTICLE_REWARD 篇文章
+ */
 async function processTokenReward(
   referralId: string,
   referrerCompanyId: string,
   referredCompanyId: string,
 ): Promise<void> {
   const supabase = createAdminClient();
-  const tokenAmount = 10000;
+  const articleReward = REFERRAL_ARTICLE_REWARD; // 5 篇文章
 
+  // 檢查是否已發放過獎勵
   const { data: existingReward } = await supabase
     .from("referral_token_rewards")
     .select("id")
@@ -307,36 +318,58 @@ async function processTokenReward(
     return;
   }
 
+  // 建立獎勵記錄（tokens 設為 0，使用 articles 欄位）
   await supabase.from("referral_token_rewards").insert({
     referral_id: referralId,
     referrer_company_id: referrerCompanyId,
-    referrer_tokens: tokenAmount,
+    referrer_tokens: 0,
+    referrer_articles: articleReward,
     referred_company_id: referredCompanyId,
-    referred_tokens: tokenAmount,
+    referred_tokens: 0,
+    referred_articles: articleReward,
   });
 
-  await supabase.rpc("add_company_tokens", {
-    p_company_id: referrerCompanyId,
-    p_tokens: tokenAmount,
-    p_reason: "referral_reward",
-  });
+  // 發放推薦人獎勵（文章篇數）
+  const { data: referrerResult } = await supabase.rpc(
+    "add_referral_article_reward",
+    {
+      p_company_id: referrerCompanyId,
+      p_articles: articleReward,
+      p_reason: "referral_reward_referrer",
+    },
+  );
+
+  console.log(
+    `[推薦獎勵] 推薦人 ${referrerCompanyId} 獲得 ${articleReward} 篇文章`,
+    referrerResult,
+  );
 
   await supabase
     .from("referral_token_rewards")
     .update({ referrer_credited_at: new Date().toISOString() })
     .eq("referral_id", referralId);
 
-  await supabase.rpc("add_company_tokens", {
-    p_company_id: referredCompanyId,
-    p_tokens: tokenAmount,
-    p_reason: "referred_reward",
-  });
+  // 發放被推薦人獎勵（文章篇數）
+  const { data: referredResult } = await supabase.rpc(
+    "add_referral_article_reward",
+    {
+      p_company_id: referredCompanyId,
+      p_articles: articleReward,
+      p_reason: "referral_reward_referred",
+    },
+  );
+
+  console.log(
+    `[推薦獎勵] 被推薦人 ${referredCompanyId} 獲得 ${articleReward} 篇文章`,
+    referredResult,
+  );
 
   await supabase
     .from("referral_token_rewards")
     .update({ referred_credited_at: new Date().toISOString() })
     .eq("referral_id", referralId);
 
+  // 更新推薦狀態為已發放
   await supabase
     .from("referrals")
     .update({

@@ -121,9 +121,11 @@ export interface ReferralTokenReward {
   referral_id: string;
   referrer_company_id: string;
   referrer_tokens: number;
+  referrer_articles: number;
   referrer_credited_at: string | null;
   referred_company_id: string;
   referred_tokens: number;
+  referred_articles: number;
   referred_credited_at: string | null;
   created_at: string | null;
 }
@@ -162,6 +164,7 @@ export interface ReferralStats {
   successfulReferrals: number;
   conversionRate: number;
   totalTokensEarned: number;
+  totalArticlesEarned: number;
 }
 
 export interface AffiliateStats {
@@ -188,7 +191,11 @@ export interface AffiliateApplyForm {
   is_resident: boolean;
 }
 
+/** @deprecated 使用 REFERRAL_ARTICLE_REWARD 取代 */
 export const REFERRAL_CREDIT_REWARD = 10000;
+
+/** 推薦獎勵：文章篇數（推薦人和被推薦人各獲得此數量） */
+export const REFERRAL_ARTICLE_REWARD = 5;
 
 export const AFFILIATE_TIERS: AffiliateTier[] = [
   {
