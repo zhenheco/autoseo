@@ -11,6 +11,7 @@ import {
   RelatedArticles,
   ViewCounter,
   ArticleSchema,
+  BreadcrumbSchema,
 } from "@/components/blog";
 import { LanguageSwitcher } from "@/components/blog/language-switcher";
 import type { BlogArticle, BlogArticleListItem } from "@/types/blog";
@@ -495,7 +496,13 @@ export default async function LocalizedArticlePage({ params }: Props) {
   return (
     <>
       {/* Schema.org 結構化資料 */}
-      <ArticleSchema article={article} url={articleUrl} />
+      <ArticleSchema article={article} url={articleUrl} locale={locale} />
+      <BreadcrumbSchema
+        title={article.title}
+        url={articleUrl}
+        locale={locale}
+        category={article.categories?.[0]}
+      />
 
       <article className="container mx-auto px-4 py-8">
         {/* 頂部導航 */}
