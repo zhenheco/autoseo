@@ -619,18 +619,49 @@ export async function cancelArticleSchedule(
 
   const supabase = await createClient();
 
-  const { error } = await supabase
+  // 1. 先查詢 article_job 取得關聯的 generated_article id
+  const { data: job, error: jobQueryError } = await supabase
+    .from("article_jobs")
+    .select("id, generated_articles(id)")
+    .eq("id", articleId)
+    .eq("status", "scheduled")
+    .single();
+
+  if (jobQueryError || !job) {
+    return { success: false, error: "找不到排程文章或已取消" };
+  }
+
+  // 2. 更新 article_jobs 表
+  const { error: jobError } = await supabase
     .from("article_jobs")
     .update({
       status: "completed",
       scheduled_publish_at: null,
       auto_publish: false,
     })
-    .eq("id", articleId)
-    .eq("status", "scheduled");
+    .eq("id", articleId);
 
-  if (error) {
+  if (jobError) {
     return { success: false, error: "取消排程失敗" };
+  }
+
+  // 3. 更新 generated_articles 表（狀態回到待發布、清除排程時間）
+  const generatedArticle = job.generated_articles as unknown as {
+    id: string;
+  } | null;
+  if (generatedArticle?.id) {
+    const { error: articleError } = await supabase
+      .from("generated_articles")
+      .update({
+        status: "generated",
+        scheduled_publish_at: null,
+      })
+      .eq("id", generatedArticle.id);
+
+    if (articleError) {
+      console.error("更新 generated_articles 失敗:", articleError);
+      // 不中斷流程，因為 article_jobs 已更新成功
+    }
   }
 
   revalidatePath("/dashboard/articles/manage");
