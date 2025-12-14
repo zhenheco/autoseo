@@ -1,5 +1,6 @@
 import { MetadataRoute } from "next";
 import { createClient } from "@supabase/supabase-js";
+import type { SupportedLocale } from "@/types/translations";
 
 // 使用 service role 取得資料
 const supabase = createClient(
@@ -8,7 +9,7 @@ const supabase = createClient(
 );
 
 /**
- * 取得公開 Blog 文章
+ * 取得公開 Blog 文章（包含翻譯版本）
  */
 async function getBlogArticles() {
   // 先取得平台 Blog 站點 ID
@@ -26,10 +27,23 @@ async function getBlogArticles() {
     };
   }
 
-  // 取得所有已發布文章
+  // 取得所有已發布文章（包含翻譯資訊）
   const { data } = await supabase
     .from("generated_articles")
-    .select("slug, updated_at, categories, tags")
+    .select(
+      `
+      id,
+      slug,
+      updated_at,
+      categories,
+      tags,
+      article_translations (
+        target_language,
+        slug,
+        updated_at
+      )
+    `,
+    )
     .eq("published_to_website_id", platformBlog.id)
     .eq("status", "published")
     .not("slug", "is", null);
@@ -48,6 +62,27 @@ async function getBlogArticles() {
   }
 
   return { articles, categories, tags };
+}
+
+/**
+ * 建立多語系 hreflang 對照表
+ */
+function buildLanguageAlternates(
+  baseUrl: string,
+  originalSlug: string,
+  translations: Array<{ target_language: string; slug: string }>,
+): Record<string, string> {
+  const languages: Record<string, string> = {
+    "zh-TW": `${baseUrl}/blog/zh-TW/${originalSlug}`,
+    "x-default": `${baseUrl}/blog/zh-TW/${originalSlug}`,
+  };
+
+  for (const t of translations || []) {
+    languages[t.target_language] =
+      `${baseUrl}/blog/${t.target_language}/${t.slug}`;
+  }
+
+  return languages;
 }
 
 /**
@@ -104,13 +139,47 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
   ];
 
-  // Blog 文章頁面
-  const blogArticles: MetadataRoute.Sitemap = articles.map((article) => ({
-    url: `${baseUrl}/blog/${article.slug}`,
-    lastModified: new Date(article.updated_at),
-    changeFrequency: "weekly" as const,
-    priority: 0.7,
-  }));
+  // Blog 文章頁面（中文原文 + 翻譯版本）
+  const blogArticles: MetadataRoute.Sitemap = [];
+
+  for (const article of articles) {
+    const translations = (article.article_translations || []) as Array<{
+      target_language: string;
+      slug: string;
+      updated_at: string;
+    }>;
+
+    // 建立 hreflang 對照表
+    const alternates = buildLanguageAlternates(
+      baseUrl,
+      article.slug,
+      translations,
+    );
+
+    // 中文原文
+    blogArticles.push({
+      url: `${baseUrl}/blog/zh-TW/${article.slug}`,
+      lastModified: new Date(article.updated_at),
+      changeFrequency: "weekly" as const,
+      priority: 0.7,
+      alternates: {
+        languages: alternates,
+      },
+    });
+
+    // 翻譯版本
+    for (const translation of translations) {
+      blogArticles.push({
+        url: `${baseUrl}/blog/${translation.target_language}/${translation.slug}`,
+        lastModified: new Date(translation.updated_at),
+        changeFrequency: "weekly" as const,
+        priority: 0.7,
+        alternates: {
+          languages: alternates,
+        },
+      });
+    }
+  }
 
   // 分類頁面
   const categoryPages: MetadataRoute.Sitemap = Array.from(categories).map(
