@@ -48,44 +48,51 @@ let lastConnectionError: number = 0;
 const CONNECTION_COOLDOWN = 5000;
 
 /**
- * 檢查 Redis 連線是否可用
- */
-function isConnectionReady(redis: Redis): boolean {
-  return redis.status === "ready";
-}
-
-/**
  * 建立新的 Redis 客戶端
+ * 不使用 lazyConnect，讓 ioredis 自動管理連接
  */
 function createRedisClient(): Redis {
   const client = new Redis(process.env.REDIS_URL!, {
     maxRetriesPerRequest: 1,
     retryStrategy: (times) => {
-      if (times > 2) {
+      if (times > 3) {
         lastConnectionError = Date.now();
-        return null;
+        return null; // 停止重試
       }
-      return Math.min(times * 100, 1000);
+      return Math.min(times * 200, 2000);
     },
-    enableOfflineQueue: false,
-    lazyConnect: true,
-    connectTimeout: 3000,
-    commandTimeout: 2000,
+    enableOfflineQueue: false, // serverless 環境不使用離線佇列
+    connectTimeout: 5000,
+    commandTimeout: 3000,
+    // 不使用 lazyConnect，讓 ioredis 自動連接
   });
 
   client.on("error", (err) => {
-    lastConnectionError = Date.now();
-    // 只在非預期錯誤時記錄
-    if (!err.message.includes("Stream isn't writeable")) {
+    // 只有真正的連接錯誤才觸發冷卻（排除 Stream isn't writeable）
+    const isStreamError = err.message.includes("Stream isn't writeable");
+    if (!isStreamError) {
       console.error("[RateLimit] Redis connection error:", err.message);
+      // 只在嚴重錯誤時觸發冷卻
+      if (
+        err.message.includes("ECONNREFUSED") ||
+        err.message.includes("ETIMEDOUT") ||
+        err.message.includes("ENOTFOUND")
+      ) {
+        lastConnectionError = Date.now();
+      }
     }
   });
 
   client.on("close", () => {
-    // 連線關閉時清理客戶端
+    // 連線關閉時清理客戶端，下次會重新建立
     if (redisClient === client) {
       redisClient = null;
     }
+  });
+
+  client.on("ready", () => {
+    // 連接成功，重置錯誤計時
+    lastConnectionError = 0;
   });
 
   return client;
@@ -115,7 +122,7 @@ function getRedisClient(): Redis | null {
     return null;
   }
 
-  // 冷卻機制：如果最近有連線錯誤，暫時跳過 Redis
+  // 冷卻機制：如果最近有嚴重連線錯誤，暫時跳過 Redis
   if (
     lastConnectionError &&
     Date.now() - lastConnectionError < CONNECTION_COOLDOWN
@@ -140,6 +147,38 @@ function getRedisClient(): Redis | null {
 }
 
 /**
+ * 等待 Redis 連接就緒
+ */
+async function waitForReady(
+  redis: Redis,
+  timeoutMs: number = 3000,
+): Promise<boolean> {
+  if (redis.status === "ready") return true;
+  if (redis.status === "end" || redis.status === "close") return false;
+
+  return new Promise((resolve) => {
+    const timeout = setTimeout(() => {
+      resolve(false);
+    }, timeoutMs);
+
+    const onReady = () => {
+      clearTimeout(timeout);
+      redis.removeListener("error", onError);
+      resolve(true);
+    };
+
+    const onError = () => {
+      clearTimeout(timeout);
+      redis.removeListener("ready", onReady);
+      resolve(false);
+    };
+
+    redis.once("ready", onReady);
+    redis.once("error", onError);
+  });
+}
+
+/**
  * 安全執行 Redis 命令
  * 失敗時自動重試一次，最終失敗則返回 fallback 值
  */
@@ -151,25 +190,46 @@ async function safeExecute<T>(
   if (!redis) return fallback;
 
   try {
-    // 確保連線已建立
-    if (!isConnectionReady(redis)) {
-      await redis.connect();
+    // 等待連接就緒（如果正在連接中）
+    if (redis.status !== "ready") {
+      const isReady = await waitForReady(redis);
+      if (!isReady) {
+        // 連接失敗，嘗試重建
+        redis = reconnect();
+        if (!redis) return fallback;
+        const retryReady = await waitForReady(redis);
+        if (!retryReady) {
+          lastConnectionError = Date.now();
+          return fallback;
+        }
+      }
     }
     return await operation(redis);
-  } catch {
-    // 第一次失敗，嘗試重建連線
-    redis = reconnect();
-    if (!redis) return fallback;
+  } catch (error) {
+    // 檢查是否為連線斷開錯誤
+    const isConnectionError =
+      error instanceof Error &&
+      (error.message.includes("Stream isn't writeable") ||
+        error.message.includes("Connection is closed"));
 
-    try {
-      await redis.connect();
-      return await operation(redis);
-    } catch (retryError) {
-      // 重試也失敗，進入冷卻期
-      lastConnectionError = Date.now();
-      console.error("[RateLimit] Redis retry failed:", retryError);
-      return fallback;
+    if (isConnectionError) {
+      // 連線斷開，嘗試重建
+      redis = reconnect();
+      if (!redis) return fallback;
+
+      try {
+        const isReady = await waitForReady(redis);
+        if (!isReady) return fallback;
+        return await operation(redis);
+      } catch {
+        // 重試也失敗
+        return fallback;
+      }
     }
+
+    // 其他錯誤，直接返回 fallback
+    console.error("[RateLimit] Operation error:", error);
+    return fallback;
   }
 }
 
