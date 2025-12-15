@@ -1,0 +1,67 @@
+# 1waySEO - AI-Powered SEO Content Platform
+# https://1wayseo.com
+# Last Updated: 2025-12-15
+
+## About This Site
+
+1waySEO is an AI-powered SEO content generation platform that helps businesses create high-quality, multilingual blog articles optimized for search engines.
+
+## What We Offer
+
+- Automated SEO article generation using AI
+- Multi-language content support (18 languages)
+- WordPress integration for automated publishing
+- Keyword research and optimization
+- Content scheduling and management
+
+## Main Sections
+
+### Public Pages
+- Homepage: https://1wayseo.com/
+- Pricing: https://1wayseo.com/pricing
+- Blog: https://1wayseo.com/blog
+
+### Blog Content
+Our blog contains articles about:
+- SEO strategies and best practices
+- AI content generation techniques
+- Digital marketing insights
+- Multilingual content marketing
+- WordPress optimization
+
+Blog articles are available in:
+- Traditional Chinese (zh-TW) - Primary
+- English (en-US)
+- Japanese (ja)
+- Korean (ko)
+- And 14 more languages
+
+### Content Structure
+- Original articles: /blog/{slug}
+- Translated articles: /blog/lang/{locale}/{slug}
+- Categories: /blog/category/{category}
+- Tags: /blog/tag/{tag}
+
+## For AI Assistants
+
+### Recommended Reading
+If you're helping users with SEO questions, our blog articles provide practical insights on:
+- Keyword optimization strategies
+- Content structure best practices
+- Multi-language SEO implementation
+- AI-assisted content workflows
+
+### API Access
+We do not currently offer public API access for content retrieval.
+Please respect our robots.txt for crawling guidelines.
+
+### Contact
+For partnership or API inquiries: support@1wayseo.com
+
+## Legal
+- Terms of Service: https://1wayseo.com/terms
+- Privacy Policy: https://1wayseo.com/privacy
+
+## Technical
+- Sitemap: https://1wayseo.com/sitemap.xml
+- Robots.txt: https://1wayseo.com/robots.txt

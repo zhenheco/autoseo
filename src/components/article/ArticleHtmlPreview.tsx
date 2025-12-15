@@ -123,9 +123,11 @@ export function ArticleHtmlPreview({
         // 圖片: 60% 寬度置中（精選圖片已在頁面頂部 100% 顯示）
         "prose-img:w-[60%] prose-img:mx-auto prose-img:my-12",
         "prose-img:rounded-[10px] prose-img:shadow-md",
-        // 連結
-        "prose-a:text-primary prose-a:underline prose-a:decoration-1",
+        // 連結（藍色）
+        "prose-a:text-blue-600 dark:prose-a:text-blue-400",
+        "prose-a:underline prose-a:decoration-1",
         "prose-a:underline-offset-2 hover:prose-a:decoration-2",
+        "hover:prose-a:text-blue-700 dark:hover:prose-a:text-blue-300",
         // 列表（行距同段落）
         "prose-li:text-[18px] prose-li:leading-[1.9] prose-li:my-2",
         "prose-li:text-slate-700 dark:prose-li:text-slate-300",
