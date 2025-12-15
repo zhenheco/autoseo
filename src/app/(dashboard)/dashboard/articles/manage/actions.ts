@@ -465,7 +465,7 @@ export async function scheduleArticlesForPublish(
     `,
     )
     .in("id", articleIds)
-    .in("status", ["completed", "draft"]);
+    .in("status", ["completed", "draft", "schedule_failed"]);
 
   if (fetchError) {
     return { success: false, error: "無法取得文章資料" };
@@ -474,6 +474,10 @@ export async function scheduleArticlesForPublish(
   if (!articles || articles.length === 0) {
     return { success: false, error: "沒有符合條件的文章可排程" };
   }
+
+  // 分離失敗重新排程的文章和一般文章
+  const failedArticles = articles.filter((a) => a.status === "schedule_failed");
+  const normalArticles = articles.filter((a) => a.status !== "schedule_failed");
 
   // 查詢該網站已有的最後排程時間，讓新排程接續而非重疊
   const { data: lastScheduled } = await supabase
@@ -490,16 +494,68 @@ export async function scheduleArticlesForPublish(
     ? new Date(lastScheduled.scheduled_publish_at)
     : null;
 
+  // 只為一般文章計算黃金時段排程
   const scheduleTimes = calculateScheduleTimes(
-    articles.length,
+    normalArticles.length,
     articlesPerDay,
     lastScheduledDate,
   );
 
   const scheduledArticles: ScheduleResult[] = [];
 
-  for (let i = 0; i < articles.length; i++) {
-    const article = articles[i];
+  // 處理失敗重新排程的文章：立即發布（+15~30 分鐘）
+  for (const article of failedArticles) {
+    // 隨機 15~30 分鐘後發布
+    const delayMinutes = 15 + Math.floor(Math.random() * 16);
+    const immediateSchedule = new Date();
+    immediateSchedule.setMinutes(immediateSchedule.getMinutes() + delayMinutes);
+    const scheduledAt = immediateSchedule.toISOString();
+
+    const { error: updateError } = await supabase
+      .from("article_jobs")
+      .update({
+        status: "scheduled",
+        website_id: websiteId,
+        scheduled_publish_at: scheduledAt,
+        auto_publish: true,
+        // 重新排程時重置重試計數和錯誤訊息
+        publish_retry_count: 0,
+        last_publish_error: null,
+      })
+      .eq("id", article.id);
+
+    if (updateError) {
+      console.error(
+        `Failed to reschedule failed article ${article.id}:`,
+        updateError,
+      );
+      continue;
+    }
+
+    const generatedArticle = article.generated_articles as unknown as {
+      id: string;
+      title: string;
+    } | null;
+    const generatedArticleId = generatedArticle?.id;
+    const title = generatedArticle?.title || null;
+
+    if (generatedArticleId) {
+      await supabase
+        .from("generated_articles")
+        .update({ website_id: websiteId })
+        .eq("id", generatedArticleId);
+    }
+
+    scheduledArticles.push({
+      articleId: article.id,
+      title,
+      scheduledAt,
+    });
+  }
+
+  // 處理一般文章：使用黃金時段排程
+  for (let i = 0; i < normalArticles.length; i++) {
+    const article = normalArticles[i];
     const scheduledAt = scheduleTimes[i].toISOString();
 
     const { error: updateError } = await supabase
@@ -509,6 +565,9 @@ export async function scheduleArticlesForPublish(
         website_id: websiteId,
         scheduled_publish_at: scheduledAt,
         auto_publish: true,
+        // 重新排程時重置重試計數和錯誤訊息
+        publish_retry_count: 0,
+        last_publish_error: null,
       })
       .eq("id", article.id);
 

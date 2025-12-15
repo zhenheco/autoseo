@@ -604,17 +604,22 @@ async function handlePublishError(
   const newRetryCount = currentRetryCount + 1;
 
   if (newRetryCount >= MAX_RETRY_COUNT) {
+    // 達到最大重試次數後，重置計數並延後 2 小時自動重新排程
+    const autoRescheduleTime = new Date();
+    autoRescheduleTime.setHours(autoRescheduleTime.getHours() + 2);
+
     await supabase
       .from("article_jobs")
       .update({
-        status: "schedule_failed",
-        last_publish_error: errorMessage,
-        publish_retry_count: newRetryCount,
+        status: "scheduled", // 保持 scheduled 狀態以便自動重試
+        scheduled_publish_at: autoRescheduleTime.toISOString(),
+        last_publish_error: `${errorMessage} (已重試 ${newRetryCount} 次，自動重新排程)`,
+        publish_retry_count: 0, // 重置重試計數
       })
       .eq("id", articleId);
 
     console.log(
-      `[Process Scheduled Articles] Max retries reached for ${articleId}, marked as schedule_failed`,
+      `[Process Scheduled Articles] Max retries reached for ${articleId}, auto-rescheduled to ${autoRescheduleTime.toISOString()}`,
     );
     return false;
   }
