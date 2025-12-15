@@ -3,8 +3,6 @@ import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
 import { createClient } from "@supabase/supabase-js";
-import { ArrowLeft } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
   ArticleMeta,
@@ -12,10 +10,12 @@ import {
   ViewCounter,
   ArticleSchema,
   BreadcrumbSchema,
+  LanguageSwitcher,
 } from "@/components/blog";
 import { ArticleHtmlPreview } from "@/components/article/ArticleHtmlPreview";
 import { ArticleTOC } from "@/components/article/ArticleTOC";
 import type { BlogArticle, BlogArticleListItem } from "@/types/blog";
+import type { HreflangEntry, SupportedLocale } from "@/types/translations";
 
 // 🔧 優化：ISR 快取 - 每小時重新驗證
 export const revalidate = 3600;
@@ -177,6 +177,40 @@ async function getRelatedArticles(
 }
 
 /**
+ * 取得文章的翻譯版本
+ */
+async function getArticleTranslations(
+  articleId: string,
+  originalSlug: string,
+): Promise<HreflangEntry[]> {
+  const { data } = await supabase
+    .from("article_translations")
+    .select("target_language, slug")
+    .eq("source_article_id", articleId)
+    .eq("status", "published");
+
+  if (!data || data.length === 0) {
+    return [];
+  }
+
+  // 構建 hreflang 項目
+  const translations: HreflangEntry[] = [
+    // 原文（繁體中文）
+    { locale: "zh-TW" as SupportedLocale, url: `/blog/${originalSlug}` },
+  ];
+
+  // 添加翻譯版本
+  data.forEach((t) => {
+    translations.push({
+      locale: t.target_language as SupportedLocale,
+      url: `/blog/lang/${t.target_language}/${t.slug}`,
+    });
+  });
+
+  return translations;
+}
+
+/**
  * 動態生成 Metadata
  */
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
@@ -234,6 +268,9 @@ export default async function ArticlePage({ params }: Props) {
     article.categories,
   );
 
+  // 取得翻譯版本（用於語系切換）
+  const translations = await getArticleTranslations(article.id, article.slug);
+
   const articleUrl = `https://1wayseo.com/blog/${article.slug}`;
 
   return (
@@ -247,27 +284,19 @@ export default async function ArticlePage({ params }: Props) {
         category={article.categories?.[0]}
       />
 
-      {/* Sticky Header */}
-      <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
-        <nav className="container mx-auto px-4 py-3 flex items-center justify-between">
-          <Link
-            href="/"
-            className="text-xl font-bold text-[#8b5cf6] transition-colors hover:text-[#7c3aed]"
-          >
-            1Way<span className="text-slate-900 dark:text-white">SEO</span>
-          </Link>
-          <Link
-            href="/blog"
-            className="text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
-          >
-            ← 返回 Blog
-          </Link>
-        </nav>
-      </header>
-
       <article className="container mx-auto px-4 py-12">
         {/* 文章頭部 */}
         <header className="mx-auto mb-12 max-w-3xl">
+          {/* 語系切換（只有存在翻譯版本時才顯示）*/}
+          {translations.length > 1 && (
+            <div className="mb-6 flex justify-end">
+              <LanguageSwitcher
+                currentLocale="zh-TW"
+                translations={translations}
+              />
+            </div>
+          )}
+
           {/* 分類 */}
           {article.categories.length > 0 && (
             <div className="mb-4 flex flex-wrap gap-2">
@@ -358,7 +387,7 @@ export default async function ArticlePage({ params }: Props) {
           </div>
 
           {/* TOC 側邊欄（xl 以上顯示）*/}
-          <aside className="hidden xl:block w-64 shrink-0">
+          <aside className="hidden xl:block w-64 shrink-0 self-start">
             <div className="sticky top-24">
               <ArticleTOC htmlContent={article.html_content} />
             </div>
