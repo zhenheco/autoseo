@@ -2,8 +2,8 @@ name: Monitor Article Jobs
 
 on:
   schedule:
-    # 每 5 分鐘執行一次
-    - cron: "*/5 * * * *"
+    # 🔧 優化：從每 5 分鐘改為每 15 分鐘（減少 egress）
+    - cron: "*/15 * * * *"
   workflow_dispatch: # 允許手動觸發
 
 jobs:
@@ -44,4 +44,4 @@ jobs:
         if: always()
         run: |
           echo "Monitoring job executed at: $(date -u +"%Y-%m-%d %H:%M:%S UTC")"
-          echo "Next execution in 5 minutes"
+          echo "Next execution in 15 minutes"

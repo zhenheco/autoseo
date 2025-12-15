@@ -31,10 +31,19 @@ async function main() {
     errors: [] as string[],
   };
 
-  // 查詢所有處理中的任務
+  // 🔧 優化：只查詢監控需要的欄位
   const { data: processingJobs, error: jobsError } = await supabase
     .from("article_jobs")
-    .select("*")
+    .select(
+      `
+      id,
+      status,
+      started_at,
+      created_at,
+      updated_at,
+      metadata
+    `,
+    )
     .eq("status", "processing");
 
   if (jobsError) {
@@ -129,10 +138,10 @@ async function main() {
     }
   }
 
-  // 檢查已完成但未儲存到 generated_articles 的任務
+  // 🔧 優化：只查詢檢查需要的欄位
   const { data: completedJobs, error: completedError } = await supabase
     .from("article_jobs")
-    .select("*")
+    .select("id, result")
     .eq("status", "completed")
     .gte("updated_at", thirtyMinutesAgo.toISOString());
 

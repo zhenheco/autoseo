@@ -7,8 +7,58 @@ import {
   checkRateLimit,
   RATE_LIMIT_CONFIGS,
 } from "@/lib/security/rate-limiter";
+import {
+  cacheSet,
+  isRedisAvailable,
+  CACHE_CONFIG,
+} from "@/lib/cache/redis-cache";
 
 export const maxDuration = 300;
+
+/**
+ * 觸發 GitHub Actions workflow 立即處理任務（非阻塞）
+ * 失敗時不影響主流程，輪詢機制會作為備援
+ */
+async function triggerGitHubWorkflow(jobId: string): Promise<void> {
+  const githubToken = process.env.GH_PAT; // Personal Access Token with repo scope
+  const githubRepo = process.env.GH_REPO; // 格式：owner/repo
+
+  if (!githubToken || !githubRepo) {
+    console.log(
+      "[Generate API] GH_PAT 或 GH_REPO 未設置，跳過立即觸發（輪詢會處理）",
+    );
+    return;
+  }
+
+  try {
+    const response = await fetch(
+      `https://api.github.com/repos/${githubRepo}/dispatches`,
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${githubToken}`,
+          Accept: "application/vnd.github.v3+json",
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          event_type: "article-jobs-created",
+          client_payload: { job_id: jobId },
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      console.warn(
+        `[Generate API] GitHub dispatch 失敗: ${response.status}（輪詢會處理）`,
+      );
+    } else {
+      console.log(`[Generate API] ✅ GitHub Actions 已觸發，任務將立即處理`);
+    }
+  } catch (error) {
+    console.warn("[Generate API] GitHub dispatch 錯誤:", error);
+    // 失敗不影響主流程，輪詢會處理
+  }
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -270,6 +320,21 @@ export async function POST(request: NextRequest) {
     console.log(
       `[Generate API] 任務已創建: ${articleJobId}，等待 GitHub Actions 處理`,
     );
+
+    // 🔧 優化：設置 Redis flag 通知有待處理任務
+    if (isRedisAvailable()) {
+      await cacheSet(
+        CACHE_CONFIG.PENDING_ARTICLE_JOBS.prefix,
+        true,
+        CACHE_CONFIG.PENDING_ARTICLE_JOBS.ttl,
+      ).catch((err) => {
+        // Redis 失敗不影響主流程
+        console.warn("[Generate API] Redis flag 設置失敗:", err);
+      });
+    }
+
+    // 🔧 優化：觸發 GitHub Actions 立即處理（非阻塞）
+    triggerGitHubWorkflow(articleJobId).catch(() => {});
 
     return NextResponse.json({
       success: true,

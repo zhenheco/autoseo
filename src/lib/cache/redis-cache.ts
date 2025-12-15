@@ -19,6 +19,12 @@ export const CACHE_CONFIG = {
   ARTICLE_META: { prefix: "cache:articles:meta", ttl: 120 },
   /** 網站文章統計 - 1 分鐘 */
   WEBSITE_STATS: { prefix: "cache:website:stats", ttl: 60 },
+  /** 待處理文章任務 flag - 5 分鐘（Cron Job 優化用） */
+  PENDING_ARTICLE_JOBS: { prefix: "jobs:pending:article", ttl: 300 },
+  /** 待處理翻譯任務 flag - 5 分鐘（Cron Job 優化用） */
+  PENDING_TRANSLATION_JOBS: { prefix: "jobs:pending:translation", ttl: 300 },
+  /** 文章完整內容快取 - 10 分鐘（供翻譯使用） */
+  ARTICLE_FULL_CONTENT: { prefix: "cache:article:full", ttl: 600 },
 } as const;
 
 /** Redis 客戶端單例 */

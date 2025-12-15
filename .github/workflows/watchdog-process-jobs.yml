@@ -2,8 +2,8 @@ name: Watchdog - Auto Recovery
 
 on:
   schedule:
-    # 每 10 分鐘檢查一次（比主 workflow 頻率低，避免資源競爭）
-    - cron: "*/10 * * * *"
+    # 🔧 優化：從每 10 分鐘改為每 30 分鐘（減少 egress）
+    - cron: "*/30 * * * *"
   workflow_dispatch:
 
 permissions:
@@ -42,8 +42,8 @@ jobs:
 
           echo "Last run: $LAST_RUN ($DIFF_MINUTES minutes ago)"
 
-          # 如果超過 15 分鐘沒執行，觸發恢復
-          if [ $DIFF_MINUTES -gt 15 ]; then
+          # 如果超過 30 分鐘沒執行，觸發恢復（配合新的檢查頻率）
+          if [ $DIFF_MINUTES -gt 30 ]; then
             echo "needs_trigger=true" >> $GITHUB_OUTPUT
             echo "⚠️ Process workflow hasn't run in $DIFF_MINUTES minutes - will trigger recovery"
           else

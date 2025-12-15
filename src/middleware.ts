@@ -9,6 +9,30 @@ import {
 export const runtime = "nodejs";
 
 export async function middleware(request: NextRequest) {
+  const url = request.nextUrl.clone();
+  const host = request.headers.get("host") || "";
+
+  // ========== 生產環境：HTTP → HTTPS + www → non-www 301 重導向 ==========
+  if (process.env.NODE_ENV === "production") {
+    // 檢查 x-forwarded-proto header（Vercel/Cloudflare 會設置）
+    const proto = request.headers.get("x-forwarded-proto");
+    const isHttp = proto === "http";
+    const hasWww = host.startsWith("www.");
+
+    if (isHttp || hasWww) {
+      // 構建新的 URL
+      const newHost = hasWww ? host.slice(4) : host; // 移除 www.
+      const redirectUrl = `https://${newHost}${url.pathname}${url.search}`;
+
+      return NextResponse.redirect(redirectUrl, {
+        status: 301,
+        headers: {
+          "Cache-Control": "public, max-age=31536000, immutable",
+        },
+      });
+    }
+  }
+
   // Debug 端點：生產環境完全禁用，開發環境允許訪問
   if (request.nextUrl.pathname.startsWith("/api/debug")) {
     if (process.env.NODE_ENV === "production") {

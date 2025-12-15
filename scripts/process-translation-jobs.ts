@@ -4,11 +4,21 @@
  * 翻譯任務批量處理腳本
  *
  * 由 GitHub Actions 定時執行，處理 pending 的翻譯任務
+ *
+ * 🔧 優化：
+ * - 兩階段查詢：先查任務列表，再查文章內容
+ * - Redis 快取：減少重複查詢文章內容
  */
 
 import { createClient } from "@supabase/supabase-js";
 import { TranslationAgent } from "../src/lib/agents/translation-agent";
 import { getNextGoldenSlotISO } from "../src/lib/scheduling/golden-slots";
+import {
+  cacheGet,
+  cacheSet,
+  cacheDelete,
+  isRedisAvailable,
+} from "../src/lib/cache/redis-cache";
 import type { Database } from "../src/types/database.types";
 import type {
   TranslationLocale,
@@ -16,6 +26,8 @@ import type {
 } from "../src/types/translations";
 
 const MAX_RETRIES = 2;
+const CACHE_KEY_PENDING_TRANSLATION = "jobs:pending:translation";
+const CACHE_KEY_ARTICLE_PREFIX = "cache:article:full";
 
 /**
  * 判斷錯誤是否可重試
@@ -30,6 +42,76 @@ function isRetryableError(errorMessage: string): boolean {
   return !nonRetryablePatterns.some((p) =>
     errorMessage.toLowerCase().includes(p.toLowerCase()),
   );
+}
+
+/**
+ * 從 Redis 或資料庫取得文章內容
+ * 優化：同一篇文章的多語系翻譯只查詢一次資料庫
+ */
+async function getArticleContent(
+  supabase: ReturnType<typeof createClient<Database>>,
+  articleId: string,
+): Promise<TranslationJobWithSource["generated_articles"] | null> {
+  const cacheKey = `${CACHE_KEY_ARTICLE_PREFIX}:${articleId}`;
+
+  // 嘗試從 Redis 取得
+  if (isRedisAvailable()) {
+    try {
+      const cached =
+        await cacheGet<TranslationJobWithSource["generated_articles"]>(
+          cacheKey,
+        );
+      if (cached) {
+        console.log(
+          `[Translation Jobs] ✅ 從 Redis 取得文章內容: ${articleId}`,
+        );
+        return cached;
+      }
+    } catch (error) {
+      console.warn("[Translation Jobs] ⚠️ Redis 讀取失敗，查詢資料庫");
+    }
+  }
+
+  // Redis 沒有或不可用，查詢資料庫
+  const { data: article, error } = await supabase
+    .from("generated_articles")
+    .select(
+      `
+      id,
+      title,
+      slug,
+      html_content,
+      markdown_content,
+      excerpt,
+      seo_title,
+      seo_description,
+      focus_keyword,
+      keywords,
+      categories,
+      tags,
+      og_title,
+      og_description
+    `,
+    )
+    .eq("id", articleId)
+    .single();
+
+  if (error || !article) {
+    console.error(`[Translation Jobs] ❌ 查詢文章失敗: ${articleId}`, error);
+    return null;
+  }
+
+  // 存入 Redis（10 分鐘 TTL）
+  if (isRedisAvailable()) {
+    try {
+      await cacheSet(cacheKey, article, 600);
+      console.log(`[Translation Jobs] 💾 文章內容已快取: ${articleId}`);
+    } catch {
+      // 快取失敗不影響主流程
+    }
+  }
+
+  return article as TranslationJobWithSource["generated_articles"];
 }
 
 async function main() {
@@ -52,34 +134,63 @@ async function main() {
     },
   );
 
+  // ========== 🔧 優化：先檢查 Redis flag ==========
+  let shouldQueryDb = true;
+  if (isRedisAvailable()) {
+    try {
+      const hasPendingJobs = await cacheGet<boolean>(
+        CACHE_KEY_PENDING_TRANSLATION,
+      );
+      if (hasPendingJobs === false) {
+        console.log(
+          "[Translation Jobs] ✅ Redis 顯示沒有待處理翻譯任務，跳過查詢",
+        );
+        shouldQueryDb = false;
+      }
+      // hasPendingJobs === null (key 不存在) → 保守處理，查詢資料庫
+    } catch (error) {
+      console.warn(
+        "[Translation Jobs] ⚠️ Redis 檢查失敗，fallback 到資料庫查詢",
+      );
+    }
+  }
+
+  // 防呆：每 30 分鐘強制檢查一次資料庫
+  if (!shouldQueryDb) {
+    const currentMinute = new Date().getMinutes();
+    if (currentMinute % 30 === 0) {
+      console.log("[Translation Jobs] 🔄 定期強制檢查資料庫");
+      shouldQueryDb = true;
+    }
+  }
+
+  if (!shouldQueryDb) {
+    return;
+  }
+
   console.log("[Translation Jobs] 🔍 查詢待處理翻譯任務...");
 
-  // 查詢待處理任務：
-  // 1. status 為 pending 或 processing
-  // 2. started_at 為 null（未開始）或超過 5 分鐘（卡住的任務）
+  // ========== 🔧 優化：第一階段 - 只查詢任務列表（不含文章內容） ==========
   const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000).toISOString();
 
   const { data: jobs, error } = await supabase
     .from("translation_jobs")
     .select(
       `
-      *,
-      generated_articles!source_article_id (
-        id,
-        title,
-        slug,
-        html_content,
-        markdown_content,
-        excerpt,
-        seo_title,
-        seo_description,
-        focus_keyword,
-        keywords,
-        categories,
-        tags,
-        og_title,
-        og_description
-      )
+      id,
+      source_article_id,
+      target_languages,
+      completed_languages,
+      failed_languages,
+      status,
+      started_at,
+      created_at,
+      company_id,
+      website_id,
+      user_id,
+      retry_count,
+      progress,
+      current_language
     `,
     )
     .in("status", ["pending", "processing"])
@@ -94,18 +205,53 @@ async function main() {
 
   if (!jobs || jobs.length === 0) {
     console.log("[Translation Jobs] ✅ 沒有待處理翻譯任務");
+    // 更新 Redis flag：確定沒有任務
+    if (isRedisAvailable()) {
+      await cacheSet(CACHE_KEY_PENDING_TRANSLATION, false, 300).catch(() => {});
+    }
     return;
   }
 
   console.log(`[Translation Jobs] 🔄 發現 ${jobs.length} 個翻譯任務`);
 
-  // 逐個處理任務（翻譯任務較重，避免並行太多）
+  // ========== 🔧 優化：第二階段 - 對每個任務單獨取得文章內容 ==========
   for (const job of jobs) {
-    await processTranslationJob(
+    // 取得文章內容（優先從 Redis 快取）
+    const sourceArticle = await getArticleContent(
       supabase,
-      job as unknown as TranslationJobWithSource,
-      fiveMinutesAgo,
+      job.source_article_id,
     );
+
+    if (!sourceArticle) {
+      console.error(
+        `[Translation Jobs] ❌ 找不到來源文章 ${job.source_article_id}`,
+      );
+      await markJobFailed(supabase, job.id, "Source article not found");
+      continue;
+    }
+
+    // 組合成完整的 job 物件
+    const fullJob: TranslationJobWithSource = {
+      ...job,
+      generated_articles: sourceArticle,
+    } as TranslationJobWithSource;
+
+    await processTranslationJob(supabase, fullJob, fiveMinutesAgo);
+  }
+
+  // 處理完畢後，檢查是否還有待處理任務
+  const { count: remainingCount } = await supabase
+    .from("translation_jobs")
+    .select("id", { count: "exact", head: true })
+    .in("status", ["pending"]);
+
+  if (isRedisAvailable()) {
+    if (remainingCount === 0) {
+      await cacheDelete(CACHE_KEY_PENDING_TRANSLATION).catch(() => {});
+    } else {
+      // 還有任務，刷新 TTL
+      await cacheSet(CACHE_KEY_PENDING_TRANSLATION, true, 300).catch(() => {});
+    }
   }
 
   console.log("[Translation Jobs] ✅ 所有翻譯任務處理完成");
@@ -141,10 +287,10 @@ async function processTranslationJob(
     return;
   }
 
-  // 驗證鎖定
+  // 驗證鎖定（只查詢必要欄位）
   const { data: locked } = await supabase
     .from("translation_jobs")
-    .select("*")
+    .select("id")
     .eq("id", job.id)
     .eq("started_at", lockTimestamp)
     .single();
