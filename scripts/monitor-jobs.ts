@@ -40,7 +40,6 @@ async function main() {
       status,
       started_at,
       created_at,
-      updated_at,
       metadata
     `,
     )
@@ -74,7 +73,8 @@ async function main() {
   for (const job of processingJobs || []) {
     try {
       const startedAt = new Date(job.started_at || job.created_at);
-      const lastUpdated = new Date(job.updated_at);
+      // 使用 started_at 作為最後更新時間的參考（因為資料表沒有 updated_at 欄位）
+      const lastUpdated = new Date(job.started_at || job.created_at);
       const metadata = (job.metadata as Record<string, unknown>) || {};
 
       // 檢查是否超時（> 30 分鐘）
@@ -100,7 +100,6 @@ async function main() {
                 last_retry_at: new Date().toISOString(),
               },
               started_at: null,
-              updated_at: new Date().toISOString(),
             })
             .eq("id", job.id);
 
@@ -117,7 +116,6 @@ async function main() {
               status: "failed",
               error_message: "任務執行超時（超過 30 分鐘）",
               completed_at: new Date().toISOString(),
-              updated_at: new Date().toISOString(),
             })
             .eq("id", job.id);
         }
@@ -143,7 +141,7 @@ async function main() {
     .from("article_jobs")
     .select("id, result")
     .eq("status", "completed")
-    .gte("updated_at", thirtyMinutesAgo.toISOString());
+    .gte("completed_at", thirtyMinutesAgo.toISOString());
 
   if (!completedError && completedJobs) {
     for (const job of completedJobs) {
