@@ -1,10 +1,26 @@
 #!/usr/bin/env tsx
 
+/**
+ * 文章生成任務處理腳本
+ *
+ * 🔧 優化：
+ * - Redis flag 檢查：沒有任務時跳過資料庫查詢
+ * - 精簡 select 欄位：減少數據傳輸量
+ * - 完整 fallback：Redis 失敗時降級到資料庫查詢
+ */
+
 import { createClient } from "@supabase/supabase-js";
 import { ParallelOrchestrator } from "../src/lib/agents/orchestrator";
+import {
+  cacheGet,
+  cacheSet,
+  cacheDelete,
+  isRedisAvailable,
+} from "../src/lib/cache/redis-cache";
 import type { Database } from "../src/types/database.types";
 
 const MAX_RETRIES = 2;
+const CACHE_KEY_PENDING_ARTICLE = "jobs:pending:article";
 
 /**
  * 判斷錯誤是否可重試
@@ -35,18 +51,58 @@ async function main() {
     },
   );
 
+  // ========== 🔧 優化：先檢查 Redis flag ==========
+  let shouldQueryDb = true;
+  if (isRedisAvailable()) {
+    try {
+      const hasPendingJobs = await cacheGet<boolean>(CACHE_KEY_PENDING_ARTICLE);
+      if (hasPendingJobs === false) {
+        console.log(
+          "[Process Jobs] ✅ Redis 顯示沒有待處理任務，跳過資料庫查詢",
+        );
+        shouldQueryDb = false;
+      }
+      // hasPendingJobs === null (key 不存在) → 保守處理，查詢資料庫
+    } catch (error) {
+      console.warn("[Process Jobs] ⚠️ Redis 檢查失敗，fallback 到資料庫查詢");
+    }
+  }
+
+  // 防呆：每 30 分鐘強制檢查一次資料庫
+  if (!shouldQueryDb) {
+    const currentMinute = new Date().getMinutes();
+    if (currentMinute % 30 === 0) {
+      console.log("[Process Jobs] 🔄 定期強制檢查資料庫");
+      shouldQueryDb = true;
+    }
+  }
+
+  if (!shouldQueryDb) {
+    return;
+  }
+
   console.log("[Process Jobs] 🔍 查詢待處理任務...");
 
-  // 查詢待處理任務：
-  // 1. status 為 pending 或 processing
-  // 2. started_at 為 null（未開始）或超過 3 分鐘（卡住的任務）
+  const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000).toISOString();
+
+  // ========== 🔧 優化：精簡 select 欄位 ==========
+  // 只查詢 orchestrator.execute() 需要的欄位
   const { data: jobs, error } = await supabase
     .from("article_jobs")
-    .select("*")
-    .in("status", ["pending", "processing"])
-    .or(
-      `started_at.is.null,started_at.lt.${new Date(Date.now() - 3 * 60 * 1000).toISOString()}`,
+    .select(
+      `
+      id,
+      company_id,
+      website_id,
+      status,
+      keywords,
+      metadata,
+      started_at,
+      created_at
+    `,
     )
+    .in("status", ["pending", "processing"])
+    .or(`started_at.is.null,started_at.lt.${threeMinutesAgo}`)
     .order("created_at", { ascending: true })
     .limit(20); // 最多同時處理 20 個任務
 
@@ -57,14 +113,15 @@ async function main() {
 
   if (!jobs || jobs.length === 0) {
     console.log("[Process Jobs] ✅ 沒有待處理任務");
+    // 更新 Redis flag：確定沒有任務
+    if (isRedisAvailable()) {
+      await cacheSet(CACHE_KEY_PENDING_ARTICLE, false, 300).catch(() => {});
+    }
     return;
   }
 
   console.log(`[Process Jobs] 🔄 發現 ${jobs.length} 個任務`);
   console.log(`[Process Jobs] ⚡ 使用並行處理模式`);
-
-  // 樂觀鎖定時間戳（與查詢條件一致）
-  const threeMinutesAgo = new Date(Date.now() - 3 * 60 * 1000).toISOString();
 
   // 並行處理所有任務
   const processPromises = jobs.map(async (job) => {
@@ -93,9 +150,10 @@ async function main() {
     }
 
     // Step 2: 驗證是否成功取得鎖定（檢查 started_at 是否為我們設定的值）
+    // 🔧 優化：只需要 id 欄位驗證鎖定
     const { data: locked } = await supabase
       .from("article_jobs")
-      .select("*")
+      .select("id")
       .eq("id", job.id)
       .eq("started_at", lockTimestamp)
       .single();
@@ -196,6 +254,32 @@ async function main() {
   results.forEach((result) => {
     console.log(`  - ${result.jobId}: ${result.success ? "✅" : "❌"}`);
   });
+
+  // ========== 🔧 優化：更新 Redis flag ==========
+  if (isRedisAvailable()) {
+    try {
+      // 檢查是否還有其他待處理任務
+      const { count: remainingCount } = await supabase
+        .from("article_jobs")
+        .select("id", { count: "exact", head: true })
+        .eq("status", "pending");
+
+      if (remainingCount === 0) {
+        // 沒有剩餘任務，設置 flag 為 false
+        await cacheSet(CACHE_KEY_PENDING_ARTICLE, false, 300);
+        console.log("[Process Jobs] ✅ Redis flag 已設為 false（無剩餘任務）");
+      } else {
+        // 還有任務，刷新 TTL
+        await cacheSet(CACHE_KEY_PENDING_ARTICLE, true, 300);
+        console.log(
+          `[Process Jobs] ℹ️ 還有 ${remainingCount} 個待處理任務，刷新 Redis flag`,
+        );
+      }
+    } catch {
+      // Redis 更新失敗不影響主流程
+      console.warn("[Process Jobs] ⚠️ Redis flag 更新失敗，忽略");
+    }
+  }
 
   console.log("[Process Jobs] 🎉 所有任務處理完成");
 }

@@ -17,6 +17,9 @@ import type { BlogArticleListItem } from "@/types/blog";
 import type { SupportedLocale } from "@/types/translations";
 import { TRANSLATION_LANGUAGES } from "@/types/translations";
 
+// 🔧 優化：ISR 快取 - 每小時重新驗證
+export const revalidate = 3600;
+
 // 使用 service role 取得資料
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

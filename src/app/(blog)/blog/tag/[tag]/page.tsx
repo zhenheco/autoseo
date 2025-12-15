@@ -9,6 +9,9 @@ import type {
   TagCount,
 } from "@/types/blog";
 
+// 🔧 優化：ISR 快取 - 每小時重新驗證
+export const revalidate = 3600;
+
 // 使用 service role 取得資料
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

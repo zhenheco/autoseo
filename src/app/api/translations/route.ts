@@ -12,6 +12,11 @@ import {
   canAccessTranslation,
   requireTranslationAccess,
 } from "@/lib/translations/access-control";
+import {
+  cacheSet,
+  isRedisAvailable,
+  CACHE_CONFIG,
+} from "@/lib/cache/redis-cache";
 import type {
   TranslationLocale,
   CreateTranslationJobRequest,
@@ -163,15 +168,27 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // 🔧 優化：設置 Redis flag 通知有待處理翻譯任務
+    if (isRedisAvailable()) {
+      await cacheSet(
+        CACHE_CONFIG.PENDING_TRANSLATION_JOBS.prefix,
+        true,
+        CACHE_CONFIG.PENDING_TRANSLATION_JOBS.ttl,
+      ).catch((err) => {
+        // Redis 失敗不影響主流程
+        console.warn("[Translation API] Redis flag 設置失敗:", err);
+      });
+    }
+
     // 可選：觸發 GitHub Actions 立即處理
-    if (process.env.GITHUB_TOKEN && process.env.GITHUB_REPO) {
+    if (process.env.GH_PAT && process.env.GH_REPO) {
       try {
         await fetch(
-          `https://api.github.com/repos/${process.env.GITHUB_REPO}/dispatches`,
+          `https://api.github.com/repos/${process.env.GH_REPO}/dispatches`,
           {
             method: "POST",
             headers: {
-              Authorization: `Bearer ${process.env.GITHUB_TOKEN}`,
+              Authorization: `Bearer ${process.env.GH_PAT}`,
               Accept: "application/vnd.github.v3+json",
               "Content-Type": "application/json",
             },
@@ -180,9 +197,10 @@ export async function POST(request: NextRequest) {
             }),
           },
         );
+        console.log("[Translation API] ✅ GitHub Actions 已觸發");
       } catch (e) {
         // 忽略錯誤，GitHub Actions 會定時處理
-        console.warn("Failed to trigger GitHub Actions:", e);
+        console.warn("[Translation API] GitHub dispatch 失敗:", e);
       }
     }
 
