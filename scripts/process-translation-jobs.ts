@@ -10,6 +10,10 @@
  * - Redis 快取：減少重複查詢文章內容
  */
 
+// 載入環境變數（本地開發用）
+import { config } from "dotenv";
+config({ path: ".env.local" });
+
 import { createClient } from "@supabase/supabase-js";
 import { TranslationAgent } from "../src/lib/agents/translation-agent";
 import { getNextGoldenSlotISO } from "../src/lib/scheduling/golden-slots";
@@ -117,22 +121,22 @@ async function getArticleContent(
 async function main() {
   console.log("[Translation Jobs] 🚀 啟動翻譯任務處理器");
 
-  // 檢查必要的環境變數
-  if (!process.env.SUPABASE_URL || !process.env.SUPABASE_SERVICE_ROLE_KEY) {
+  // 檢查必要的環境變數（支援兩種命名方式）
+  const supabaseUrl =
+    process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
     console.error("[Translation Jobs] ❌ 缺少必要的環境變數");
     process.exit(1);
   }
 
-  const supabase = createClient<Database>(
-    process.env.SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
+  const supabase = createClient<Database>(supabaseUrl, supabaseKey, {
+    auth: {
+      autoRefreshToken: false,
+      persistSession: false,
     },
-  );
+  });
 
   // ========== 🔧 優化：先檢查 Redis flag ==========
   let shouldQueryDb = true;
@@ -188,7 +192,6 @@ async function main() {
       company_id,
       website_id,
       user_id,
-      retry_count,
       progress,
       current_language
     `,
