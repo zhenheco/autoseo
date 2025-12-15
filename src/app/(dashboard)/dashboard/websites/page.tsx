@@ -20,7 +20,7 @@ import Link from "next/link";
 import { deleteWebsite, createPlatformBlog } from "./actions";
 import { checkPagePermission } from "@/lib/permissions";
 import { WebsiteStatusToggle } from "./website-status-toggle";
-import { Globe, ExternalLink } from "lucide-react";
+import { Globe, ExternalLink, Clock } from "lucide-react";
 
 async function getCompanyWebsites(companyId: string) {
   try {
@@ -171,14 +171,22 @@ export default async function WebsitesPage({
                     <CardTitle className="text-lg">
                       {website.website_name}
                     </CardTitle>
-                    {website.is_platform_blog && (
-                      <Badge
-                        variant="default"
-                        className="bg-gradient-to-r from-blue-600 to-purple-600"
-                      >
-                        官方 Blog
-                      </Badge>
-                    )}
+                    <div className="flex gap-1">
+                      {website.auto_schedule_enabled && (
+                        <Badge variant="secondary" className="text-xs">
+                          <Clock className="h-3 w-3 mr-1" />
+                          自動排程
+                        </Badge>
+                      )}
+                      {website.is_platform_blog && (
+                        <Badge
+                          variant="default"
+                          className="bg-gradient-to-r from-blue-600 to-purple-600"
+                        >
+                          官方 Blog
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                   <CardDescription className="break-all">
                     {website.is_platform_blog ? (

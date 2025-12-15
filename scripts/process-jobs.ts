@@ -193,6 +193,34 @@ async function main() {
       });
 
       console.log(`[Process Jobs] ✅ 任務 ${job.id} 處理成功`);
+
+      // 文章生成完成後，檢查是否要自動排程
+      if (job.website_id) {
+        try {
+          const { autoScheduleArticle } = await import(
+            "../src/lib/scheduling/auto-schedule"
+          );
+          const scheduleResult = await autoScheduleArticle(
+            supabase,
+            job.id,
+            job.website_id,
+          );
+
+          if (scheduleResult.success) {
+            console.log(
+              `[Process Jobs] 📅 已自動排程到 ${scheduleResult.scheduledAt}`,
+            );
+          } else {
+            console.log(
+              `[Process Jobs] ⏭️  自動排程跳過: ${scheduleResult.error}`,
+            );
+          }
+        } catch (scheduleErr) {
+          // 自動排程失敗不影響文章生成結果
+          console.error(`[Process Jobs] ⚠️ 自動排程錯誤:`, scheduleErr);
+        }
+      }
+
       return { success: true, jobId: job.id };
     } catch (err) {
       console.error(`[Process Jobs] ❌ 任務 ${job.id} 失敗:`, err);

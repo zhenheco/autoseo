@@ -1581,6 +1581,8 @@ export type Database = {
           wp_app_password: string | null;
           wp_enabled: boolean | null;
           is_platform_blog: boolean | null;
+          daily_article_limit: number | null;
+          auto_schedule_enabled: boolean | null;
         };
         Insert: {
           id?: string;
@@ -1603,6 +1605,8 @@ export type Database = {
           wp_app_password?: string | null;
           wp_enabled?: boolean | null;
           is_platform_blog?: boolean | null;
+          daily_article_limit?: number | null;
+          auto_schedule_enabled?: boolean | null;
         };
         Update: {
           id?: string;
@@ -1625,6 +1629,8 @@ export type Database = {
           wp_app_password?: string | null;
           wp_enabled?: boolean | null;
           is_platform_blog?: boolean | null;
+          daily_article_limit?: number | null;
+          auto_schedule_enabled?: boolean | null;
         };
         Relationships: [
           {
