@@ -6,6 +6,7 @@ import {
   UI_LOCALES,
   DEFAULT_UI_LOCALE,
   UI_LOCALE_STORAGE_KEY,
+  UI_LOCALE_COOKIE_KEY,
 } from "@/lib/i18n/locales";
 
 // 同步載入預設語系的翻譯檔案（用於 SSR）
@@ -22,6 +23,15 @@ async function loadMessages(locale: string) {
   }
 }
 
+// 輔助函數：讀取 cookie
+function getCookie(name: string): string | null {
+  if (typeof document === "undefined") return null;
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop()?.split(";").shift() || null;
+  return null;
+}
+
 interface IntlProviderProps {
   children: ReactNode;
 }
@@ -32,25 +42,24 @@ export function IntlProvider({ children }: IntlProviderProps) {
   const [messages, setMessages] =
     useState<Record<string, unknown>>(defaultMessages);
 
-  // 初始化：讀取 localStorage 中的語系設定（只在 client 端）
+  // 初始化：讀取語系設定（優先順序：localStorage > cookie > 預設值）
   useEffect(() => {
-    const stored = localStorage.getItem(UI_LOCALE_STORAGE_KEY);
+    const storedLocale = localStorage.getItem(UI_LOCALE_STORAGE_KEY);
+    const cookieLocale = getCookie(UI_LOCALE_COOKIE_KEY);
     const validLocales: string[] = UI_LOCALES.map((l) => l.code);
 
     let targetLocale = DEFAULT_UI_LOCALE;
 
-    if (stored && validLocales.includes(stored)) {
-      targetLocale = stored;
-    } else {
-      // 嘗試從瀏覽器語言設定推斷
-      const browserLang = navigator.language;
-      const match = validLocales.find(
-        (l) => l === browserLang || l.startsWith(browserLang.split("-")[0]),
-      );
-      if (match) {
-        targetLocale = match;
-      }
+    if (storedLocale && validLocales.includes(storedLocale)) {
+      // 優先使用 localStorage（用戶手動選擇的語系）
+      targetLocale = storedLocale;
+    } else if (cookieLocale && validLocales.includes(cookieLocale)) {
+      // 其次使用 cookie（IP 偵測的語系）
+      targetLocale = cookieLocale;
+      // 同步到 localStorage，避免下次還要讀 cookie
+      localStorage.setItem(UI_LOCALE_STORAGE_KEY, cookieLocale);
     }
+    // 移除 navigator.language 邏輯，改由 middleware IP 偵測處理
 
     // 如果目標語系不是預設語系，載入對應的翻譯檔案
     if (targetLocale !== DEFAULT_UI_LOCALE) {

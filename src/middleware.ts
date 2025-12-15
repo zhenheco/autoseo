@@ -1,5 +1,10 @@
 import { type NextRequest, NextResponse } from "next/server";
 import { updateSession } from "@/lib/supabase/middleware";
+import {
+  COUNTRY_TO_LOCALE,
+  DEFAULT_UI_LOCALE,
+  UI_LOCALE_COOKIE_KEY,
+} from "@/lib/i18n/locales";
 
 export const runtime = "nodejs";
 
@@ -94,6 +99,29 @@ export async function middleware(request: NextRequest) {
   ];
 
   response.headers.set("Content-Security-Policy", cspDirectives.join("; "));
+
+  // IP 偵測語系：只有首次訪問（沒有 ui-locale cookie）時才設定
+  const existingLocale = request.cookies.get(UI_LOCALE_COOKIE_KEY)?.value;
+
+  if (!existingLocale) {
+    // 讀取 IP 國家代碼（Cloudflare 或 Vercel 提供）
+    const ipCountry =
+      request.headers.get("cf-ipcountry") ||
+      request.headers.get("x-vercel-ip-country");
+
+    // 根據國家代碼決定語系，找不到則使用預設值
+    const detectedLocale = ipCountry
+      ? COUNTRY_TO_LOCALE[ipCountry] || DEFAULT_UI_LOCALE
+      : DEFAULT_UI_LOCALE;
+
+    // 設定 cookie（有效期 1 年）
+    response.cookies.set(UI_LOCALE_COOKIE_KEY, detectedLocale, {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365, // 1 年
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    });
+  }
 
   return response;
 }
