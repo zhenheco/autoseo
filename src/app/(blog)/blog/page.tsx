@@ -1,12 +1,12 @@
 /**
- * Blog 首頁 - Adventure.com 風格
+ * Blog 首頁 - 簡約風格
  *
- * 多語系 SEO 優化 + 現代極簡設計
+ * 多語系 SEO 優化 + 參考 todaymade.com 設計
  */
 
 import { Metadata } from "next";
 import { createClient } from "@supabase/supabase-js";
-import { BlogHeader, ArticleGrid } from "@/components/blog";
+import { BlogHeader, ArticleGrid, BlogHero } from "@/components/blog";
 import {
   getBlogMeta,
   generateBlogHreflangAlternates,
@@ -128,16 +128,15 @@ export default async function BlogPage() {
   const meta = getBlogMeta("zh-TW");
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950">
-      <div className="container mx-auto px-4 py-8">
-        {/* Header with Language Selector */}
-        <BlogHeader
-          currentLocale="zh-TW"
-          title={meta.pageTitle}
-          subtitle={meta.pageSubtitle}
-        />
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+      {/* Sticky Header */}
+      <BlogHeader currentLocale="zh-TW" />
 
-        {/* Article Grid with Hero */}
+      {/* Hero 區塊 */}
+      <BlogHero title={meta.pageTitle} subtitle={meta.pageSubtitle} />
+
+      {/* 文章列表 */}
+      <div className="container mx-auto px-4 py-12">
         <ArticleGrid
           articles={articles}
           locale="zh-TW"

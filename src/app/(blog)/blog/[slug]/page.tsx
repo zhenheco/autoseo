@@ -13,6 +13,8 @@ import {
   ArticleSchema,
   BreadcrumbSchema,
 } from "@/components/blog";
+import { ArticleHtmlPreview } from "@/components/article/ArticleHtmlPreview";
+import { ArticleTOC } from "@/components/article/ArticleTOC";
 import type { BlogArticle, BlogArticleListItem } from "@/types/blog";
 
 // 使用 service role 取得資料
@@ -242,19 +244,27 @@ export default async function ArticlePage({ params }: Props) {
         category={article.categories?.[0]}
       />
 
-      <article className="container mx-auto px-4 py-8">
-        {/* 返回按鈕 */}
-        <div className="mb-6">
-          <Link href="/blog">
-            <Button variant="ghost" size="sm" className="gap-2">
-              <ArrowLeft className="h-4 w-4" />
-              返回文章列表
-            </Button>
+      {/* Sticky Header */}
+      <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+        <nav className="container mx-auto px-4 py-3 flex items-center justify-between">
+          <Link
+            href="/"
+            className="text-xl font-bold text-[#8b5cf6] transition-colors hover:text-[#7c3aed]"
+          >
+            1Way<span className="text-slate-900 dark:text-white">SEO</span>
           </Link>
-        </div>
+          <Link
+            href="/blog"
+            className="text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
+          >
+            ← 返回 Blog
+          </Link>
+        </nav>
+      </header>
 
+      <article className="container mx-auto px-4 py-12">
         {/* 文章頭部 */}
-        <header className="mx-auto mb-8 max-w-4xl">
+        <header className="mx-auto mb-12 max-w-3xl">
           {/* 分類 */}
           {article.categories.length > 0 && (
             <div className="mb-4 flex flex-wrap gap-2">
@@ -263,19 +273,24 @@ export default async function ArticlePage({ params }: Props) {
                   key={category}
                   href={`/blog/category/${encodeURIComponent(category)}`}
                 >
-                  <Badge variant="secondary">{category}</Badge>
+                  <Badge
+                    variant="secondary"
+                    className="bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-300"
+                  >
+                    {category}
+                  </Badge>
                 </Link>
               ))}
             </div>
           )}
 
           {/* 標題 */}
-          <h1 className="mb-4 text-3xl font-bold leading-tight sm:text-4xl lg:text-5xl">
+          <h1 className="mb-6 text-3xl font-bold leading-tight text-slate-900 dark:text-white sm:text-4xl lg:text-[42px]">
             {article.title}
           </h1>
 
           {/* 元資訊 */}
-          <div className="mb-6 flex flex-wrap items-center gap-4 text-muted-foreground">
+          <div className="flex flex-wrap items-center gap-4 text-slate-500 dark:text-slate-400">
             <ArticleMeta
               publishedAt={article.published_at}
               readingTime={article.reading_time}
@@ -287,10 +302,12 @@ export default async function ArticlePage({ params }: Props) {
               className="text-sm"
             />
           </div>
+        </header>
 
-          {/* 封面圖片 */}
-          {article.featured_image_url && (
-            <div className="relative mb-8 aspect-video overflow-hidden rounded-xl">
+        {/* 封面圖片 - 滿版 */}
+        {article.featured_image_url && (
+          <div className="mx-auto mb-12 max-w-4xl">
+            <div className="relative aspect-video overflow-hidden rounded-xl shadow-lg">
               <Image
                 src={article.featured_image_url}
                 alt={article.featured_image_alt || article.title}
@@ -300,36 +317,51 @@ export default async function ArticlePage({ params }: Props) {
                 sizes="(max-width: 768px) 100vw, (max-width: 1200px) 80vw, 60vw"
               />
             </div>
-          )}
-        </header>
-
-        {/* 文章內容 */}
-        <div className="mx-auto max-w-4xl">
-          <div
-            className="prose prose-lg dark:prose-invert max-w-none prose-headings:scroll-mt-20 prose-a:text-primary prose-img:rounded-lg"
-            dangerouslySetInnerHTML={{ __html: article.html_content }}
-          />
-        </div>
-
-        {/* 標籤 */}
-        {article.tags.length > 0 && (
-          <div className="mx-auto mt-8 max-w-4xl border-t pt-6">
-            <div className="flex flex-wrap items-center gap-2">
-              <span className="text-sm text-muted-foreground">標籤：</span>
-              {article.tags.map((tag) => (
-                <Link key={tag} href={`/blog/tag/${encodeURIComponent(tag)}`}>
-                  <Badge variant="outline" className="cursor-pointer">
-                    {tag}
-                  </Badge>
-                </Link>
-              ))}
-            </div>
           </div>
         )}
 
+        {/* 內文 + TOC */}
+        <div className="relative flex justify-center gap-12">
+          {/* 主內容 */}
+          <div className="max-w-3xl flex-1 min-w-0">
+            <ArticleHtmlPreview htmlContent={article.html_content} />
+
+            {/* 標籤 */}
+            {article.tags.length > 0 && (
+              <div className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-700">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm text-slate-500 dark:text-slate-400">
+                    標籤：
+                  </span>
+                  {article.tags.map((tag) => (
+                    <Link
+                      key={tag}
+                      href={`/blog/tag/${encodeURIComponent(tag)}`}
+                    >
+                      <Badge
+                        variant="outline"
+                        className="cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-800"
+                      >
+                        {tag}
+                      </Badge>
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* TOC 側邊欄（xl 以上顯示）*/}
+          <aside className="hidden xl:block w-64 shrink-0">
+            <div className="sticky top-24">
+              <ArticleTOC htmlContent={article.html_content} />
+            </div>
+          </aside>
+        </div>
+
         {/* 相關文章 */}
         {relatedArticles.length > 0 && (
-          <div className="mx-auto mt-12 max-w-6xl border-t pt-12">
+          <div className="mx-auto mt-16 max-w-6xl border-t border-slate-200 dark:border-slate-700 pt-12">
             <RelatedArticles articles={relatedArticles} />
           </div>
         )}

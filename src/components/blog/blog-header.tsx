@@ -7,7 +7,7 @@
  */
 
 import Link from "next/link";
-import { Globe, Search } from "lucide-react";
+import { Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -64,80 +64,99 @@ export function BlogHeader({
   const alternates = generateBlogHreflangAlternates();
 
   return (
-    <header className={cn("mb-8", className)}>
-      {/* 導覽列 */}
-      <nav className="mb-6 flex items-center justify-between">
-        {/* Logo / 返回首頁 */}
-        <Link
-          href="/"
-          className="text-2xl font-bold text-[#E75656] transition-colors hover:text-[#d14a4a]"
-        >
-          1Way<span className="text-slate-900 dark:text-white">SEO</span>
-        </Link>
+    <>
+      {/* Sticky 導覽列 */}
+      <header
+        className={cn(
+          "sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800",
+          className,
+        )}
+      >
+        <nav className="container mx-auto px-4 py-3 flex items-center justify-between">
+          {/* Logo / 返回首頁 */}
+          <Link
+            href="/"
+            className="text-2xl font-bold text-[#8b5cf6] transition-colors hover:text-[#7c3aed]"
+          >
+            1Way<span className="text-slate-900 dark:text-white">SEO</span>
+          </Link>
 
-        {/* 右側工具 */}
-        <div className="flex items-center gap-2">
-          {/* 語言選擇器 */}
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="outline" size="sm" className="gap-2">
-                <Globe className="h-4 w-4" />
-                <span>{currentLanguage?.flagEmoji}</span>
-                <span className="hidden sm:inline">
-                  {currentLanguage?.nativeName}
-                </span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent
-              align="end"
-              className="max-h-80 overflow-y-auto"
+          {/* 右側工具 */}
+          <div className="flex items-center gap-3">
+            {/* Blog 連結 */}
+            <Link
+              href="/blog"
+              className="text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
             >
-              {ALL_LOCALES.map((locale) => {
-                const lang = TRANSLATION_LANGUAGES[locale];
-                const isActive = locale === currentLocale;
-                const url = alternates[locale];
+              Blog
+            </Link>
 
-                return (
-                  <DropdownMenuItem key={locale} asChild>
-                    <Link
-                      href={url}
-                      hrefLang={locale}
-                      className={cn(
-                        "flex items-center gap-2",
-                        isActive && "bg-accent font-medium",
-                      )}
-                    >
-                      <span>{lang?.flagEmoji}</span>
-                      <span>{lang?.nativeName}</span>
-                      {isActive && (
-                        <span className="ml-auto text-xs text-muted-foreground">
-                          ✓
-                        </span>
-                      )}
-                    </Link>
-                  </DropdownMenuItem>
-                );
-              })}
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </div>
-      </nav>
+            {/* 語言選擇器 */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 border-slate-200 dark:border-slate-700"
+                >
+                  <Globe className="h-4 w-4" />
+                  <span>{currentLanguage?.flagEmoji}</span>
+                  <span className="hidden sm:inline">
+                    {currentLanguage?.nativeName}
+                  </span>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent
+                align="end"
+                className="max-h-80 overflow-y-auto"
+              >
+                {ALL_LOCALES.map((locale) => {
+                  const lang = TRANSLATION_LANGUAGES[locale];
+                  const isActive = locale === currentLocale;
+                  const url = alternates[locale];
 
-      {/* 頁面標題區 */}
+                  return (
+                    <DropdownMenuItem key={locale} asChild>
+                      <Link
+                        href={url}
+                        hrefLang={locale}
+                        className={cn(
+                          "flex items-center gap-2",
+                          isActive && "bg-accent font-medium",
+                        )}
+                      >
+                        <span>{lang?.flagEmoji}</span>
+                        <span>{lang?.nativeName}</span>
+                        {isActive && (
+                          <span className="ml-auto text-xs text-muted-foreground">
+                            ✓
+                          </span>
+                        )}
+                      </Link>
+                    </DropdownMenuItem>
+                  );
+                })}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
+        </nav>
+      </header>
+
+      {/* 頁面標題區（非 sticky）*/}
       {(title || subtitle) && (
-        <div className="text-center">
+        <div className="text-center py-12 px-4">
           {title && (
             <h1 className="mb-3 text-3xl font-bold text-slate-900 dark:text-white md:text-4xl lg:text-5xl">
               {title}
             </h1>
           )}
           {subtitle && (
-            <p className="text-lg text-slate-600 dark:text-slate-400">
+            <p className="text-lg text-slate-600 dark:text-slate-400 max-w-2xl mx-auto">
               {subtitle}
             </p>
           )}
         </div>
       )}
-    </header>
+    </>
   );
 }

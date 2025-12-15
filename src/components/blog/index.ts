@@ -15,8 +15,9 @@ export { ArticleSchema } from "./ArticleSchema";
 export { BreadcrumbSchema } from "./BreadcrumbSchema";
 export { LanguageSwitcher } from "./language-switcher";
 
-// Adventure.com 風格組件（新設計）
+// 簡約風格組件（todaymade 風格）
 export { ArticleCard as AdventureArticleCard } from "./article-card";
 export { HeroArticle } from "./hero-article";
 export { ArticleGrid } from "./article-grid";
 export { BlogHeader } from "./blog-header";
+export { BlogHero } from "./blog-hero";
