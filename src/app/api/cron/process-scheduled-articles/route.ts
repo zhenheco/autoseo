@@ -368,11 +368,128 @@ export async function GET(request: NextRequest) {
     `[Process Scheduled Articles] Completed: ${results.published} published, ${results.retried} retried, ${results.failed} failed`,
   );
 
+  // 同時處理排程的翻譯版本發布
+  const translationResults = await processScheduledTranslations(supabase);
+
   return NextResponse.json({
     success: true,
     ...results,
+    translations: translationResults,
     completedAt: new Date().toISOString(),
   });
+}
+
+/**
+ * 處理排程的翻譯版本發布
+ * 翻譯版本發布到 Platform Blog 只需更新資料庫
+ */
+async function processScheduledTranslations(
+  supabase: ReturnType<typeof createAdminClient>,
+) {
+  const now = new Date().toISOString();
+
+  console.log("[Process Scheduled Translations] Starting...");
+
+  // 查詢待發布的翻譯（到達排程時間且 auto_publish = true）
+  const { data: translations, error: fetchError } = await supabase
+    .from("article_translations")
+    .select(
+      `
+      id,
+      source_article_id,
+      target_language,
+      title,
+      slug,
+      status,
+      scheduled_publish_at,
+      publish_website_id
+    `,
+    )
+    .in("status", ["draft", "reviewed"])
+    .lte("scheduled_publish_at", now)
+    .eq("auto_publish", true)
+    .order("scheduled_publish_at", { ascending: true })
+    .limit(20);
+
+  if (fetchError) {
+    console.error("[Process Scheduled Translations] Fetch error:", fetchError);
+    return { processed: 0, published: 0, failed: 0, error: fetchError.message };
+  }
+
+  if (!translations || translations.length === 0) {
+    console.log("[Process Scheduled Translations] No translations to process");
+    return { processed: 0, published: 0, failed: 0 };
+  }
+
+  console.log(
+    `[Process Scheduled Translations] Found ${translations.length} translations to process`,
+  );
+
+  const results = {
+    processed: 0,
+    published: 0,
+    failed: 0,
+    details: [] as Array<{
+      translationId: string;
+      language: string;
+      title: string;
+      status: "published" | "failed";
+      error?: string;
+    }>,
+  };
+
+  for (const translation of translations) {
+    results.processed++;
+
+    try {
+      const publishedAt = new Date().toISOString();
+
+      // 翻譯版本發布只需更新狀態
+      const { error: updateError } = await supabase
+        .from("article_translations")
+        .update({
+          status: "published",
+          published_at: publishedAt,
+          auto_publish: false, // 發布後關閉自動發布
+        })
+        .eq("id", translation.id);
+
+      if (updateError) {
+        throw new Error(updateError.message);
+      }
+
+      console.log(
+        `[Process Scheduled Translations] Published: ${translation.id} (${translation.target_language}) - ${translation.title}`,
+      );
+      results.published++;
+      results.details.push({
+        translationId: translation.id,
+        language: translation.target_language,
+        title: translation.title,
+        status: "published",
+      });
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "發布失敗";
+      console.error(
+        `[Process Scheduled Translations] Error publishing ${translation.id}:`,
+        error,
+      );
+      results.failed++;
+      results.details.push({
+        translationId: translation.id,
+        language: translation.target_language,
+        title: translation.title,
+        status: "failed",
+        error: errorMessage,
+      });
+    }
+  }
+
+  console.log(
+    `[Process Scheduled Translations] Completed: ${results.published} published, ${results.failed} failed`,
+  );
+
+  return results;
 }
 
 async function handlePublishError(

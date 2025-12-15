@@ -16,9 +16,9 @@ export async function POST(
   const body = await request.json();
   const { target, website_id, status: publishStatus = "publish" } = body;
 
-  if (target !== "wordpress") {
+  if (target !== "wordpress" && target !== "platform") {
     return NextResponse.json(
-      { error: "目前僅支援 WordPress" },
+      { error: "目前支援 WordPress 和 Platform Blog" },
       { status: 400 },
     );
   }
@@ -68,6 +68,64 @@ export async function POST(
     );
   }
 
+  // 檢查是否為 Platform Blog（1wayseo.com 自營部落格）
+  const isPlatformBlog = website.is_platform_blog === true;
+
+  // Platform Blog 發布：只需更新資料庫，不需要 WordPress API
+  if (target === "platform" || isPlatformBlog) {
+    try {
+      const now = new Date().toISOString();
+
+      const { error: updateError } = await supabase
+        .from("generated_articles")
+        .update({
+          published_at: now,
+          status: "published",
+          published_to_website_id: website_id,
+          published_to_website_at: now,
+        })
+        .eq("id", id)
+        .eq("company_id", membership.company_id);
+
+      if (updateError) {
+        return NextResponse.json(
+          { error: `發布失敗: ${updateError.message}` },
+          { status: 500 },
+        );
+      }
+
+      // 同步更新 article_jobs 狀態（如果有關聯）
+      if (article.article_job_id) {
+        await supabase
+          .from("article_jobs")
+          .update({
+            status: "published",
+            published_at: now,
+          })
+          .eq("id", article.article_job_id);
+      }
+
+      return NextResponse.json({
+        success: true,
+        published_at: now,
+        published_to_website_id: website_id,
+        published_to_website_at: now,
+        platform_url: `/blog/${article.slug}`,
+      });
+    } catch (error) {
+      console.error("Error publishing to Platform Blog:", error);
+      return NextResponse.json(
+        {
+          error:
+            "發布失敗：" +
+            (error instanceof Error ? error.message : "未知錯誤"),
+        },
+        { status: 500 },
+      );
+    }
+  }
+
+  // WordPress 發布：需要檢查 WordPress 設定
   if (!website.wp_enabled) {
     return NextResponse.json(
       { error: "WordPress 發佈功能未啟用，請先在網站設定中啟用" },

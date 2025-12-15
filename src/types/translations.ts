@@ -297,6 +297,11 @@ export interface ArticleTranslation {
   published_at: string | null;
   created_at: string;
   updated_at: string;
+
+  // 排程發布（與原文同步發布）
+  scheduled_publish_at: string | null;
+  auto_publish: boolean;
+  publish_website_id: string | null;
 }
 
 /**

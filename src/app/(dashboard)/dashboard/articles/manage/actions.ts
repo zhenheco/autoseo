@@ -526,6 +526,7 @@ export async function scheduleArticlesForPublish(
     const title = generatedArticle?.title || null;
 
     if (generatedArticleId) {
+      // 更新原文的 website_id
       await supabase
         .from("generated_articles")
         .update({ website_id: websiteId })
@@ -566,13 +567,16 @@ function calculateScheduleTimes(
 ): Date[] {
   const times: Date[] = [];
 
-  // 台灣時間 (UTC+8) 的工作時段：09:00-21:00 = UTC 01:00-13:00
-  const START_HOUR_UTC = 1; // 台灣 09:00
-  const END_HOUR_UTC = 13; // 台灣 21:00
-  const WORKING_HOURS = END_HOUR_UTC - START_HOUR_UTC; // 12 小時
+  // 固定黃金時段（UTC 時間）：對應台灣時間 09:00, 14:00, 20:00
+  // UTC 01:00 = 台灣 09:00（早上）
+  // UTC 06:00 = 台灣 14:00（下午）
+  // UTC 12:00 = 台灣 20:00（晚上）
+  const FIXED_SLOTS_UTC = [1, 6, 12];
 
-  // 計算每篇文章的間隔（分鐘）
-  const intervalMinutes = Math.floor((WORKING_HOURS * 60) / articlesPerDay);
+  // 如果每日篇數超過 3 篇，則在 08:00-22:00 間平均分散（fallback）
+  const START_HOUR_UTC = 0; // 台灣 08:00
+  const END_HOUR_UTC = 14; // 台灣 22:00
+  const WORKING_HOURS = END_HOUR_UTC - START_HOUR_UTC; // 14 小時
 
   const now = new Date();
   let startDate: Date;
@@ -581,13 +585,12 @@ function calculateScheduleTimes(
     // 有已有排程：從最後排程的下一天開始
     startDate = new Date(lastScheduledDate);
     startDate.setUTCDate(startDate.getUTCDate() + 1);
-    startDate.setUTCHours(START_HOUR_UTC, 0, 0, 0);
   } else {
     // 沒有已有排程：從明天開始
     startDate = new Date(now);
     startDate.setUTCDate(startDate.getUTCDate() + 1);
-    startDate.setUTCHours(START_HOUR_UTC, 0, 0, 0);
   }
+  startDate.setUTCHours(0, 0, 0, 0);
 
   for (let i = 0; i < articleCount; i++) {
     const dayIndex = Math.floor(i / articlesPerDay);
@@ -596,14 +599,22 @@ function calculateScheduleTimes(
     const scheduleTime = new Date(startDate);
     scheduleTime.setUTCDate(scheduleTime.getUTCDate() + dayIndex);
 
-    // 基準時間 + 時段偏移
-    const baseMinutes = slotIndex * intervalMinutes;
     // 加入隨機偏移 (±15 分鐘)，讓時間更自然
     const randomOffset = Math.floor(Math.random() * 31) - 15;
-    const totalMinutes = Math.max(0, baseMinutes + randomOffset);
 
-    scheduleTime.setUTCHours(START_HOUR_UTC);
-    scheduleTime.setUTCMinutes(totalMinutes);
+    if (articlesPerDay <= 3) {
+      // 使用固定黃金時段：09:00, 14:00, 20:00
+      const slotHourUTC = FIXED_SLOTS_UTC[slotIndex];
+      scheduleTime.setUTCHours(slotHourUTC);
+      scheduleTime.setUTCMinutes(Math.max(0, randomOffset + 15)); // 確保正數分鐘
+    } else {
+      // 超過 3 篇：在 08:00-22:00 間平均分散
+      const intervalMinutes = Math.floor((WORKING_HOURS * 60) / articlesPerDay);
+      const baseMinutes = slotIndex * intervalMinutes;
+      const totalMinutes = Math.max(0, baseMinutes + randomOffset);
+      scheduleTime.setUTCHours(START_HOUR_UTC);
+      scheduleTime.setUTCMinutes(totalMinutes);
+    }
 
     times.push(scheduleTime);
   }
@@ -682,6 +693,22 @@ export async function cancelArticleSchedule(
     if (articleError) {
       console.error("更新 generated_articles 失敗:", articleError);
       // 不中斷流程，因為 article_jobs 已更新成功
+    }
+
+    // 同時取消該文章所有翻譯版本的排程
+    const { error: translationCancelError } = await supabase
+      .from("article_translations")
+      .update({
+        scheduled_publish_at: null,
+        auto_publish: false,
+        publish_website_id: null,
+      })
+      .eq("source_article_id", generatedArticle.id)
+      .not("scheduled_publish_at", "is", null);
+
+    if (translationCancelError) {
+      console.error("取消翻譯排程失敗:", translationCancelError);
+      // 不中斷流程
     }
   }
 
