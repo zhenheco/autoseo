@@ -2,6 +2,7 @@ import {
   UI_LOCALES,
   DEFAULT_UI_LOCALE,
   UI_LOCALE_STORAGE_KEY,
+  UI_LOCALE_COOKIE_KEY,
   type UILocaleCode,
 } from "./locales";
 
@@ -39,7 +40,12 @@ export function setUILocale(locale: string): void {
   if (typeof window === "undefined") return;
 
   if (locales.includes(locale)) {
+    // 設定 localStorage
     localStorage.setItem(UI_LOCALE_STORAGE_KEY, locale);
+
+    // 設定 cookie（確保伺服器端也知道用戶偏好，有效期 1 年）
+    document.cookie = `${UI_LOCALE_COOKIE_KEY}=${locale}; path=/; max-age=${60 * 60 * 24 * 365}; SameSite=Lax`;
+
     // 觸發自訂事件通知其他組件
     window.dispatchEvent(
       new CustomEvent("uiLocaleChanged", { detail: locale }),
