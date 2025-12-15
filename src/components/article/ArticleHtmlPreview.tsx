@@ -120,9 +120,9 @@ export function ArticleHtmlPreview({
         // H4
         "prose-h4:text-[18px] prose-h4:font-semibold prose-h4:mt-8 prose-h4:mb-3",
         "prose-h4:text-slate-800 dark:prose-h4:text-slate-200",
-        // 圖片: 60% 寬度置中（精選圖片已在頁面頂部 100% 顯示）
-        "prose-img:w-[60%] prose-img:mx-auto prose-img:my-12",
-        "prose-img:rounded-[10px] prose-img:shadow-md",
+        // 圖片: 60% 寬度置中，等比縮放不裁切
+        "prose-img:w-[60%] prose-img:h-auto prose-img:mx-auto prose-img:my-12",
+        "prose-img:rounded-[10px] prose-img:shadow-md prose-img:object-contain",
         // 連結（藍色）
         "prose-a:text-blue-600 dark:prose-a:text-blue-400",
         "prose-a:underline prose-a:decoration-1",
