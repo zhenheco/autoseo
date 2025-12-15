@@ -592,3 +592,159 @@ echo "✅ 備份完成: $BACKUP_DIR/backup-$(date +%Y%m%d-%H%M%S).sql"
   2. 缺乏操作記錄，無法追溯實際執行的命令
   3. 沒有備份，資料無法恢復
 - **改進**：制定本安全規範，避免重蹈覆轍
+
+---
+
+# 🌐 Platform Blog (1wayseo.com) 說明
+
+## 什麼是 Platform Blog
+
+1wayseo.com 是本專案的**自營官方部落格**，與一般用戶的 WordPress 網站不同：
+
+| 特性             | WordPress 網站        | Platform Blog (1wayseo.com) |
+| ---------------- | --------------------- | --------------------------- |
+| 類型             | 用戶自有網站          | 平台自營部落格              |
+| 發布方式         | 透過 WordPress API    | 直接更新資料庫              |
+| wp_enabled       | 必須為 true           | 不需要（false）             |
+| is_platform_blog | false 或 null         | **true**                    |
+| 文章顯示位置     | 用戶的 WordPress 網站 | /blog/[slug] 路由           |
+
+## 關鍵資料庫欄位
+
+- `website_configs.is_platform_blog = true` → 標記為平台自營部落格
+- `generated_articles.published_to_website_id` → 指向 Platform Blog 的 ID
+- `generated_articles.status = "published"` → 才會在 /blog 頁面顯示
+
+## 文章顯示邏輯
+
+文章在 1wayseo.com/blog 顯示需要同時滿足三個條件：
+
+1. `status = "published"`
+2. `published_to_website_id = <platform-blog-id>`
+3. `slug IS NOT NULL`
+
+## 發布到 Platform Blog
+
+使用 API：
+
+```typescript
+POST /api/articles/[id]/publish
+{
+  "target": "platform",
+  "website_id": "<platform-blog-id>"
+}
+```
+
+## Platform Blog 資訊
+
+- **Website ID**: `d3d18bd5-ebb5-4a7f-8cba-97bed4a19168`
+- **Website Name**: 1waySEO 官方 Blog
+- **URL**: https://1wayseo.com/blog
+- **公司 ID**: `1c9c2d1d-3b26-4ab1-971f-98a980fdbce9`（Ace的公司）
+
+---
+
+# 📅 文章排程時間邏輯
+
+## 固定黃金時段
+
+每日發布文章數 ≤ 3 篇時，使用固定黃金時段：
+
+| 時段 | 台灣時間 | UTC 時間  |
+| ---- | -------- | --------- |
+| 早上 | 09:00    | UTC 01:00 |
+| 下午 | 14:00    | UTC 06:00 |
+| 晚上 | 20:00    | UTC 12:00 |
+
+- 每天 1 篇 → 09:00
+- 每天 2 篇 → 09:00, 14:00
+- 每天 3 篇 → 09:00, 14:00, 20:00
+
+## 平均分散模式
+
+每日發布文章數 > 3 篇時，在 08:00-22:00 間平均分散。
+
+## 隨機偏移
+
+所有排程時間都有 ±15 分鐘的隨機偏移，讓發布時間更自然。
+
+## 相關程式碼
+
+排程計算函數位於：`src/app/(dashboard)/dashboard/articles/manage/actions.ts` 的 `calculateScheduleTimes()`
+
+---
+
+# 🌍 多語系文章排程發布
+
+## 運作原理
+
+原文和翻譯版本是**獨立排程**的。翻譯必須在原文發布後才能執行，因此：
+
+1. **原文排程發布**（例如 Day 1 09:00）
+2. **原文發布後觸發翻譯**（Day 1 09:00 後開始翻譯）
+3. **翻譯完成後自動排程**到**下一個黃金時段**發布
+
+### 範例流程
+
+```
+Day 1 09:00 → zh-TW 原文發布
+Day 1 10:30 → 翻譯完成（en-US, ja-JP）
+Day 1 14:00 → en-US, ja-JP 自動發布（下一個黃金時段）
+```
+
+### 黃金時段計算規則
+
+翻譯完成時，自動計算最近的下一個黃金時段：
+
+| 翻譯完成時間 | 排程發布時間 |
+| ------------ | ------------ |
+| 08:00        | 當天 09:00   |
+| 10:30        | 當天 14:00   |
+| 15:00        | 當天 20:00   |
+| 21:00        | 隔天 09:00   |
+
+## 資料庫欄位（article_translations）
+
+| 欄位                   | 類型                     | 說明                               |
+| ---------------------- | ------------------------ | ---------------------------------- |
+| `scheduled_publish_at` | TIMESTAMP WITH TIME ZONE | 排程發布時間（翻譯完成時自動設定） |
+| `auto_publish`         | BOOLEAN                  | 是否自動發布（cron job 處理）      |
+| `publish_website_id`   | UUID                     | 發布目標網站 ID                    |
+
+## 翻譯排程流程
+
+```typescript
+// 在 process-translation-jobs.ts 中
+// 翻譯完成時自動計算下一個黃金時段
+
+import { getNextGoldenSlotISO } from "@/lib/scheduling/golden-slots";
+
+const scheduledPublishAt = getNextGoldenSlotISO(); // 計算下一個黃金時段
+
+await supabase.from("article_translations").upsert({
+  // ... 翻譯內容 ...
+  status: "draft",
+  scheduled_publish_at: scheduledPublishAt, // 自動排程
+  auto_publish: true,
+  publish_website_id: job.website_id,
+});
+```
+
+## Cron Job 處理
+
+`/api/cron/process-scheduled-articles` 每小時執行，處理：
+
+1. 原文發布（到 WordPress 或 Platform Blog）
+2. 翻譯版本發布（到 Platform Blog）
+
+## 取消排程
+
+取消原文排程時，可選擇同時取消該文章所有翻譯版本的排程。
+
+## 相關程式碼
+
+- 黃金時段計算：`src/lib/scheduling/golden-slots.ts`
+- 翻譯排程：`scripts/process-translation-jobs.ts`
+- 取消排程：`actions.ts` → `cancelArticleSchedule()`
+- Cron 處理：`/api/cron/process-scheduled-articles/route.ts`
+- Migration：`supabase/migrations/20251215000000_translation_scheduling.sql`

@@ -8,6 +8,7 @@
 
 import { createClient } from "@supabase/supabase-js";
 import { TranslationAgent } from "../src/lib/agents/translation-agent";
+import { getNextGoldenSlotISO } from "../src/lib/scheduling/golden-slots";
 import type { Database } from "../src/types/database.types";
 import type {
   TranslationLocale,
@@ -306,7 +307,14 @@ async function translateToLanguage(
     temperature: 0.3,
   });
 
-  // 儲存翻譯結果
+  // 計算下一個黃金時段作為排程發布時間
+  const scheduledPublishAt = getNextGoldenSlotISO();
+
+  console.log(
+    `[Translation Jobs] 📅 翻譯完成，排程發布時間: ${scheduledPublishAt}`,
+  );
+
+  // 儲存翻譯結果（排程到下一個黃金時段發布）
   const { error: insertError } = await supabase
     .from("article_translations")
     .upsert(
@@ -338,8 +346,11 @@ async function translateToLanguage(
         translation_tokens: result.executionInfo.tokenUsage,
         translation_cost: result.executionInfo.cost,
         translation_time: Math.round(result.executionInfo.executionTime / 1000),
-        status: "published", // 自動發布
-        published_at: new Date().toISOString(),
+        // 排程發布：翻譯完成後排到下一個黃金時段
+        status: "draft",
+        scheduled_publish_at: scheduledPublishAt,
+        auto_publish: true,
+        publish_website_id: job.website_id,
       },
       {
         onConflict: "source_article_id,target_language",
