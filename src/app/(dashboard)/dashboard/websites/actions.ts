@@ -516,3 +516,87 @@ export async function createPlatformBlog(formData: FormData) {
     );
   }
 }
+
+/**
+ * 更新網站自動排程設定
+ */
+export async function updateWebsiteAutoSchedule(formData: FormData) {
+  const user = await getUser();
+  if (!user) {
+    redirect("/login");
+  }
+
+  const websiteId = formData.get("websiteId") as string;
+  const dailyArticleLimit = parseInt(
+    formData.get("dailyArticleLimit") as string,
+  );
+  const autoScheduleEnabled = formData.get("autoScheduleEnabled") === "true";
+
+  if (!websiteId) {
+    redirect("/dashboard/websites?error=" + encodeURIComponent("缺少網站 ID"));
+  }
+
+  // 驗證數值範圍（1-3 篇）
+  if (
+    isNaN(dailyArticleLimit) ||
+    dailyArticleLimit < 1 ||
+    dailyArticleLimit > 3
+  ) {
+    redirect(
+      `/dashboard/websites/${websiteId}/edit?error=` +
+        encodeURIComponent("每日發布數量必須在 1-3 之間"),
+    );
+  }
+
+  const supabase = await createClient();
+
+  // 取得網站資訊以檢查權限
+  const { data: website } = await supabase
+    .from("website_configs")
+    .select("company_id")
+    .eq("id", websiteId)
+    .single();
+
+  if (!website) {
+    redirect("/dashboard/websites?error=" + encodeURIComponent("找不到網站"));
+  }
+
+  // 檢查使用者是否有權限
+  const { data: membership } = await supabase
+    .from("company_members")
+    .select("role")
+    .eq("company_id", website.company_id)
+    .eq("user_id", user.id)
+    .single();
+
+  if (
+    !membership ||
+    (membership.role !== "owner" && membership.role !== "admin")
+  ) {
+    redirect(
+      "/dashboard/websites?error=" + encodeURIComponent("您沒有權限編輯此網站"),
+    );
+  }
+
+  // 更新自動排程設定
+  const { error } = await supabase
+    .from("website_configs")
+    .update({
+      daily_article_limit: dailyArticleLimit,
+      auto_schedule_enabled: autoScheduleEnabled,
+    })
+    .eq("id", websiteId);
+
+  if (error) {
+    redirect(
+      `/dashboard/websites/${websiteId}/edit?error=` +
+        encodeURIComponent(error.message),
+    );
+  }
+
+  revalidatePath("/dashboard/websites");
+  redirect(
+    `/dashboard/websites/${websiteId}/edit?success=` +
+      encodeURIComponent("自動排程設定已更新"),
+  );
+}

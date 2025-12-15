@@ -15,6 +15,7 @@ import Link from "next/link";
 import { updateWebsite } from "../../actions";
 import { BrandVoiceForm } from "./BrandVoiceForm";
 import { WebsiteSettingsForm } from "./WebsiteSettingsForm";
+import { AutoScheduleForm } from "./AutoScheduleForm";
 
 interface BrandVoice {
   brand_name?: string;
@@ -29,7 +30,7 @@ async function getWebsite(websiteId: string, companyId: string) {
   const { data, error } = await supabase
     .from("website_configs")
     .select(
-      "id, website_name, wordpress_url, wp_username, company_id, brand_voice, industry, region, language",
+      "id, website_name, wordpress_url, wp_username, company_id, brand_voice, industry, region, language, daily_article_limit, auto_schedule_enabled",
     )
     .eq("id", websiteId)
     .eq("company_id", companyId)
@@ -47,6 +48,8 @@ async function getWebsite(websiteId: string, companyId: string) {
     industry: string | null;
     region: string | null;
     language: string | null;
+    daily_article_limit: number | null;
+    auto_schedule_enabled: boolean | null;
   };
 }
 
@@ -176,6 +179,12 @@ export default async function EditWebsitePage({
         <BrandVoiceForm
           websiteId={website.id}
           brandVoice={website.brand_voice}
+        />
+
+        <AutoScheduleForm
+          websiteId={website.id}
+          dailyArticleLimit={website.daily_article_limit}
+          autoScheduleEnabled={website.auto_schedule_enabled}
         />
       </div>
     </div>
