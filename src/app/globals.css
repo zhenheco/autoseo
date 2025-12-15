@@ -741,9 +741,9 @@
 
   /* ===== 部落格文章樣式 ===== */
 
-  /* 文章內文圖片置中（80% 寬度）*/
+  /* 文章內文圖片置中（60% 寬度）*/
   .article-image {
-    @apply w-4/5 mx-auto my-10;
+    @apply w-[60%] mx-auto my-12;
   }
 
   .article-image img {

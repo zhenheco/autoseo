@@ -324,7 +324,10 @@ export default async function ArticlePage({ params }: Props) {
         <div className="relative flex justify-center gap-12">
           {/* 主內容 */}
           <div className="max-w-3xl flex-1 min-w-0">
-            <ArticleHtmlPreview htmlContent={article.html_content} />
+            <ArticleHtmlPreview
+              htmlContent={article.html_content}
+              featuredImageUrl={article.featured_image_url ?? undefined}
+            />
 
             {/* 標籤 */}
             {article.tags.length > 0 && (
