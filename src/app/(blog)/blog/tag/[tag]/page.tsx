@@ -1,9 +1,8 @@
 import { Metadata } from "next";
 import Link from "next/link";
 import { createClient } from "@supabase/supabase-js";
-import { ArrowLeft, Tags } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { ArticleList, CategoryList, TagCloud } from "@/components/blog";
+import { Tags } from "lucide-react";
+import { ArticleGrid, CategoryList, TagCloud } from "@/components/blog";
 import type {
   BlogArticleListItem,
   CategoryCount,
@@ -175,47 +174,62 @@ export default async function TagPage({ params }: Props) {
   ]);
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      {/* 返回按鈕 */}
-      <div className="mb-6">
-        <Link href="/blog">
-          <Button variant="ghost" size="sm" className="gap-2">
-            <ArrowLeft className="h-4 w-4" />
-            返回文章列表
-          </Button>
-        </Link>
-      </div>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
+      {/* Sticky Header */}
+      <header className="sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+        <nav className="container mx-auto px-4 py-3 flex items-center justify-between">
+          <Link
+            href="/"
+            className="text-xl font-bold text-[#8b5cf6] transition-colors hover:text-[#7c3aed]"
+          >
+            1Way<span className="text-slate-900 dark:text-white">SEO</span>
+          </Link>
+          <Link
+            href="/blog"
+            className="text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
+          >
+            ← 返回 Blog
+          </Link>
+        </nav>
+      </header>
 
       {/* 頁面標題 */}
-      <div className="mb-8">
-        <div className="flex items-center gap-2 text-muted-foreground mb-2">
-          <Tags className="h-5 w-5" />
-          <span>標籤</span>
+      <div className="py-12 bg-gradient-to-b from-slate-100 to-slate-50 dark:from-slate-900 dark:to-slate-950">
+        <div className="container mx-auto px-4 text-center">
+          <div className="flex items-center justify-center gap-2 text-purple-600 dark:text-purple-400 mb-3">
+            <Tags className="h-5 w-5" />
+            <span className="text-sm font-medium">標籤</span>
+          </div>
+          <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-2">
+            #{decodedTag}
+          </h1>
+          <p className="text-slate-500 dark:text-slate-400">
+            共 {articles.length} 篇文章
+          </p>
         </div>
-        <h1 className="text-3xl font-bold">#{decodedTag}</h1>
-        <p className="mt-2 text-muted-foreground">
-          共 {articles.length} 篇文章
-        </p>
       </div>
 
-      <div className="flex flex-col gap-8 lg:flex-row">
-        {/* 主要內容區 */}
-        <div className="flex-1">
-          <ArticleList
-            articles={articles}
-            emptyMessage={`標籤「${decodedTag}」目前沒有文章`}
-          />
-        </div>
+      <div className="container mx-auto px-4 py-12">
+        <div className="flex flex-col gap-12 lg:flex-row">
+          {/* 主要內容區 */}
+          <div className="flex-1">
+            <ArticleGrid
+              articles={articles}
+              showHero={false}
+              emptyMessage={`標籤「${decodedTag}」目前沒有文章`}
+            />
+          </div>
 
-        {/* 側邊欄 */}
-        <aside className="w-full space-y-8 lg:w-72">
-          <div className="rounded-lg bg-white p-4 shadow-sm dark:bg-slate-900">
-            <CategoryList categories={categories} />
-          </div>
-          <div className="rounded-lg bg-white p-4 shadow-sm dark:bg-slate-900">
-            <TagCloud tags={tags} />
-          </div>
-        </aside>
+          {/* 側邊欄 */}
+          <aside className="w-full space-y-6 lg:w-72 shrink-0">
+            <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
+              <CategoryList categories={categories} />
+            </div>
+            <div className="rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-5">
+              <TagCloud tags={tags} />
+            </div>
+          </aside>
+        </div>
       </div>
     </div>
   );

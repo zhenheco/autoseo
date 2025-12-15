@@ -1,12 +1,13 @@
 /**
- * ArticleCard - Adventure.com 風格文章卡片
+ * ArticleCard - 簡約風格文章卡片
  *
- * 大圖卡片設計，hover 效果，適合網格佈局
+ * 參考 todaymade.com 設計，乾淨的卡片佈局
  */
 
 import Link from "next/link";
 import Image from "next/image";
 import { Badge } from "@/components/ui/badge";
+import { cn } from "@/lib/utils";
 import type { BlogArticleListItem } from "@/types/blog";
 import type { SupportedLocale } from "@/types/translations";
 import type { BlogMeta } from "@/lib/i18n/blog-meta";
@@ -80,16 +81,19 @@ export function ArticleCard({
 
   return (
     <article
-      className={`group relative overflow-hidden rounded-xl bg-white shadow-sm transition-all duration-300 hover:shadow-lg dark:bg-slate-900 ${
-        size === "large" ? "md:col-span-2 md:row-span-2" : ""
-      }`}
+      className={cn(
+        "group relative overflow-hidden rounded-lg bg-white dark:bg-slate-900",
+        "card-minimal border border-slate-100 dark:border-slate-800",
+        size === "large" && "md:col-span-2 md:row-span-2",
+      )}
     >
       <Link href={articleLink} className="block">
         {/* 圖片區域 */}
         <div
-          className={`relative overflow-hidden ${
-            size === "large" ? "aspect-[16/9]" : "aspect-[4/3]"
-          }`}
+          className={cn(
+            "relative overflow-hidden",
+            size === "large" ? "aspect-[16/9]" : "aspect-[16/10]",
+          )}
         >
           {article.featured_image_url ? (
             <Image
@@ -105,42 +109,44 @@ export function ArticleCard({
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700">
-              <span className="text-4xl text-slate-400">1W</span>
+              <span className="text-4xl text-slate-300 dark:text-slate-600 font-bold">
+                1W
+              </span>
             </div>
           )}
+        </div>
 
-          {/* 漸層遮罩 */}
-          <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent" />
-
+        {/* 內容區域 */}
+        <div className="p-5">
           {/* 分類標籤 */}
           {article.categories.length > 0 && (
-            <div className="absolute left-4 top-4 flex flex-wrap gap-2">
+            <div className="mb-3 flex flex-wrap gap-2">
               {article.categories.slice(0, 2).map((category) => (
                 <Badge
                   key={category}
-                  className="bg-[#E75656] text-white hover:bg-[#d14a4a]"
+                  variant="secondary"
+                  className="bg-purple-100 text-purple-700 hover:bg-purple-200 dark:bg-purple-900/30 dark:text-purple-300 text-xs"
                 >
                   {category}
                 </Badge>
               ))}
             </div>
           )}
-        </div>
 
-        {/* 內容區域 */}
-        <div className="p-4">
           {/* 標題 */}
           <h3
-            className={`mb-2 font-bold leading-tight text-slate-900 transition-colors group-hover:text-[#E75656] dark:text-white ${
-              size === "large" ? "text-xl md:text-2xl" : "text-lg"
-            }`}
+            className={cn(
+              "mb-2 font-semibold leading-snug text-slate-900 dark:text-white",
+              "transition-colors group-hover:text-primary",
+              size === "large" ? "text-xl md:text-2xl" : "text-[17px]",
+            )}
           >
             {article.title}
           </h3>
 
           {/* 摘要 - 只在大卡片顯示 */}
           {size === "large" && article.excerpt && (
-            <p className="mb-3 line-clamp-2 text-sm text-slate-600 dark:text-slate-400">
+            <p className="mb-3 line-clamp-2 text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
               {article.excerpt}
             </p>
           )}
@@ -152,7 +158,7 @@ export function ArticleCard({
             </time>
             {article.reading_time && (
               <>
-                <span className="text-slate-300 dark:text-slate-600">|</span>
+                <span className="text-slate-300 dark:text-slate-600">·</span>
                 <span>
                   {article.reading_time} {minReadText}
                 </span>

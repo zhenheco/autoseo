@@ -1,7 +1,8 @@
 /**
- * ArticleGrid - Adventure.com 風格文章網格
+ * ArticleGrid - 簡約風格文章網格
  *
  * 響應式網格佈局：桌面 3 欄，平板 2 欄，手機 1 欄
+ * 參考 todaymade.com 設計
  */
 
 import { ArticleCard } from "./article-card";
@@ -68,7 +69,7 @@ export function ArticleGrid({
 
       {/* 文章網格 */}
       {(showHero ? otherArticles : articles).length > 0 && (
-        <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-8 sm:grid-cols-2 lg:grid-cols-3">
           {(showHero ? otherArticles : articles).map((article, index) => (
             <ArticleCard
               key={article.id}
