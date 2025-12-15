@@ -1391,7 +1391,10 @@ export type Database = {
             | "processing"
             | "completed"
             | "failed"
-            | "cancelled";
+            | "cancelled"
+            | "scheduled"
+            | "schedule_failed"
+            | "published";
           progress: number;
           current_step: string | null;
           result_url: string | null;
@@ -1423,7 +1426,10 @@ export type Database = {
             | "processing"
             | "completed"
             | "failed"
-            | "cancelled";
+            | "cancelled"
+            | "scheduled"
+            | "schedule_failed"
+            | "published";
           progress?: number;
           current_step?: string | null;
           result_url?: string | null;
@@ -1455,7 +1461,10 @@ export type Database = {
             | "processing"
             | "completed"
             | "failed"
-            | "cancelled";
+            | "cancelled"
+            | "scheduled"
+            | "schedule_failed"
+            | "published";
           progress?: number;
           current_step?: string | null;
           result_url?: string | null;

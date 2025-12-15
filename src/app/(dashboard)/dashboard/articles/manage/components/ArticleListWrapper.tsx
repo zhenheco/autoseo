@@ -59,7 +59,8 @@ export function ArticleListWrapper({
         (a) =>
           a.status === "completed" ||
           a.status === "draft" ||
-          a.status === "scheduled",
+          a.status === "scheduled" ||
+          a.status === "schedule_failed",
       )
       .map((a) => a.id);
   }, [articles]);
