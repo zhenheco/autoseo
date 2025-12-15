@@ -31,7 +31,8 @@ export async function GET(request: NextRequest) {
         wp_enabled,
         wordpress_access_token,
         wordpress_refresh_token,
-        is_active
+        is_active,
+        is_platform_blog
       ),
       generated_articles (
         id,
@@ -111,19 +112,41 @@ export async function GET(request: NextRequest) {
       continue;
     }
 
-    if (!website.is_active || !website.wp_enabled) {
+    // Platform Blog 不需要 WordPress，直接更新資料庫即可
+    const isPlatformBlog = website.is_platform_blog === true;
+
+    // 檢查網站是否啟用（Platform Blog 只需檢查 is_active）
+    if (!website.is_active) {
       await handlePublishError(
         supabase,
         article.id,
         article.publish_retry_count || 0,
-        "網站已停用或 WordPress 功能未啟用",
+        "網站已停用",
       );
       results.failed++;
       results.details.push({
         articleId: article.id,
         title: article.article_title,
         status: "failed",
-        error: "網站已停用或 WordPress 功能未啟用",
+        error: "網站已停用",
+      });
+      continue;
+    }
+
+    // 非 Platform Blog 需要檢查 WordPress 功能
+    if (!isPlatformBlog && !website.wp_enabled) {
+      await handlePublishError(
+        supabase,
+        article.id,
+        article.publish_retry_count || 0,
+        "WordPress 功能未啟用",
+      );
+      results.failed++;
+      results.details.push({
+        articleId: article.id,
+        title: article.article_title,
+        status: "failed",
+        error: "WordPress 功能未啟用",
       });
       continue;
     }
@@ -143,6 +166,86 @@ export async function GET(request: NextRequest) {
         error: "找不到文章內容",
       });
       continue;
+    }
+
+    // 情況 0：Platform Blog → 直接更新資料庫，不需要 WordPress
+    if (isPlatformBlog) {
+      console.log(
+        `[Process Scheduled Articles] Publishing to Platform Blog: ${article.id} - ${generatedArticle.title}`,
+      );
+
+      try {
+        const publishedAt = new Date().toISOString();
+
+        // 更新 article_jobs
+        await supabase
+          .from("article_jobs")
+          .update({
+            status: "published",
+            published_at: publishedAt,
+            publish_retry_count: 0,
+            last_publish_error: null,
+          })
+          .eq("id", article.id);
+
+        // 更新 generated_articles（發布到 Platform Blog）
+        await supabase
+          .from("generated_articles")
+          .update({
+            status: "published",
+            published_at: publishedAt,
+            published_to_website_id: website.id,
+            published_to_website_at: publishedAt,
+          })
+          .eq("id", generatedArticle.id);
+
+        console.log(
+          `[Process Scheduled Articles] Published to Platform Blog: ${article.id} - ${generatedArticle.title}`,
+        );
+        results.published++;
+        results.details.push({
+          articleId: article.id,
+          title: generatedArticle.title,
+          status: "published",
+        });
+        continue;
+      } catch (platformError) {
+        const errorMessage =
+          platformError instanceof Error
+            ? platformError.message
+            : "Platform Blog 發布失敗";
+        console.error(
+          `[Process Scheduled Articles] Platform Blog publish error: ${article.id}`,
+          platformError,
+        );
+
+        const retryCount = article.publish_retry_count || 0;
+        const wasRetried = await handlePublishError(
+          supabase,
+          article.id,
+          retryCount,
+          errorMessage,
+        );
+
+        if (wasRetried) {
+          results.retried++;
+          results.details.push({
+            articleId: article.id,
+            title: generatedArticle.title,
+            status: "retried",
+            error: errorMessage,
+          });
+        } else {
+          results.failed++;
+          results.details.push({
+            articleId: article.id,
+            title: generatedArticle.title,
+            status: "failed",
+            error: errorMessage,
+          });
+        }
+        continue;
+      }
     }
 
     // 情況 1：已有 WordPress 草稿 → 更新為已發布（處理歷史草稿）
