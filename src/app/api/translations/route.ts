@@ -141,20 +141,67 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 建立翻譯任務
-    const jobs = articles.map((article) => ({
-      id: uuidv4(),
-      job_id: `trans-${article.id.slice(0, 8)}-${Date.now()}`,
-      company_id: companyMember.company_id,
-      website_id: article.website_id,
-      user_id: user.id,
-      source_article_id: article.id,
-      target_languages: target_languages,
-      status: "pending",
-      progress: 0,
-      completed_languages: [],
-      failed_languages: {},
-    }));
+    // 查詢已有翻譯，避免重複翻譯
+    const { data: existingTranslations } = await adminClient
+      .from("article_translations")
+      .select("source_article_id, target_language")
+      .in("source_article_id", article_ids)
+      .in("target_language", target_languages);
+
+    // 建立已翻譯的 Set: "articleId:locale"
+    const existingSet = new Set(
+      existingTranslations?.map(
+        (t) => `${t.source_article_id}:${t.target_language}`,
+      ) || [],
+    );
+
+    // 統計跳過的數量
+    let skippedCount = 0;
+    const originalTotalCombinations = articles.length * target_languages.length;
+
+    // 建立翻譯任務，過濾掉已有翻譯的語言
+    const jobs = articles
+      .map((article) => {
+        // 過濾掉已有翻譯的語言
+        const filteredLanguages = target_languages.filter(
+          (lang) => !existingSet.has(`${article.id}:${lang}`),
+        );
+
+        // 計算跳過的數量
+        skippedCount += target_languages.length - filteredLanguages.length;
+
+        // 如果沒有需要翻譯的語言，返回 null
+        if (filteredLanguages.length === 0) return null;
+
+        return {
+          id: uuidv4(),
+          job_id: `trans-${article.id.slice(0, 8)}-${Date.now()}`,
+          company_id: companyMember.company_id,
+          website_id: article.website_id,
+          user_id: user.id,
+          source_article_id: article.id,
+          target_languages: filteredLanguages,
+          status: "pending",
+          progress: 0,
+          completed_languages: [],
+          failed_languages: {},
+        };
+      })
+      .filter(Boolean);
+
+    // 如果所有組合都已翻譯過，返回成功但 job_count 為 0
+    if (jobs.length === 0) {
+      const response: CreateTranslationJobResponse = {
+        success: true,
+        job_count: 0,
+        jobs: [],
+        skipped: {
+          count: skippedCount,
+          reason: "already_translated",
+        },
+      };
+      return NextResponse.json(response, { status: 200 });
+    }
 
     const { error: insertError } = await adminClient
       .from("translation_jobs")
@@ -208,10 +255,17 @@ export async function POST(request: NextRequest) {
       success: true,
       job_count: jobs.length,
       jobs: jobs.map((j) => ({
-        job_id: j.job_id,
-        source_article_id: j.source_article_id,
-        target_languages: j.target_languages as TranslationLocale[],
+        job_id: j!.job_id,
+        source_article_id: j!.source_article_id,
+        target_languages: j!.target_languages as TranslationLocale[],
       })),
+      skipped:
+        skippedCount > 0
+          ? {
+              count: skippedCount,
+              reason: "already_translated",
+            }
+          : undefined,
     };
 
     return NextResponse.json(response, { status: 201 });

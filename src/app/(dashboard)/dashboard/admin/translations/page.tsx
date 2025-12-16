@@ -151,9 +151,21 @@ export default function AdminTranslationsPage() {
       }
 
       const data = await response.json();
-      toast.success(
-        `已建立 ${data.job_count} 個翻譯任務，將於 5 分鐘內開始處理`,
-      );
+
+      // 根據結果顯示不同訊息
+      if (data.job_count === 0 && data.skipped?.count > 0) {
+        toast.info(
+          `所有選中的文章已有該語言的翻譯，已跳過 ${data.skipped.count} 個`,
+        );
+      } else if (data.skipped?.count > 0) {
+        toast.success(
+          `已建立 ${data.job_count} 個翻譯任務，跳過 ${data.skipped.count} 個已有翻譯`,
+        );
+      } else {
+        toast.success(
+          `已建立 ${data.job_count} 個翻譯任務，將於 5 分鐘內開始處理`,
+        );
+      }
 
       // 清空選擇
       setSelectedArticles(new Set());
