@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
 import { WordPressClient } from "@/lib/wordpress/client";
+import { encryptWordPressPassword } from "@/lib/security/token-encryption";
 
 /**
  * 新增 WordPress 網站
@@ -101,13 +102,16 @@ export async function createWebsite(formData: FormData) {
     );
   }
 
+  // 加密 WordPress 密碼
+  const encryptedPassword = encryptWordPressPassword(wpPassword);
+
   // 建立網站記錄（連線驗證成功後）
   const { error } = await supabase.from("website_configs").insert({
     company_id: companyId,
     website_name: siteName,
     wordpress_url: siteUrl.replace(/\/$/, ""), // 移除尾部斜線
     wp_username: wpUsername,
-    wp_app_password: wpPassword, // TODO: 應該加密儲存
+    wp_app_password: encryptedPassword, // 加密儲存
     wp_enabled: true, // 連線驗證成功，啟用 WordPress 發佈
     is_active: true,
     // 文章生成設定

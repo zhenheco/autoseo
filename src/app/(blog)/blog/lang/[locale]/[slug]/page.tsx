@@ -2,10 +2,11 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { createClient } from "@supabase/supabase-js";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { sanitizeArticleHtml } from "@/lib/security/html-sanitizer";
+import { createAnonClient } from "@/lib/supabase/server";
 import {
   ArticleMeta,
   RelatedArticles,
@@ -20,11 +21,8 @@ import type { SupportedLocale, HreflangEntry } from "@/types/translations";
 // 🔧 優化：ISR 快取 - 每小時重新驗證
 export const revalidate = 3600;
 
-// 使用 service role 取得資料
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-);
+// 使用 Anon Key 取得公開資料（安全性提升：不使用 Service Role Key）
+const supabase = createAnonClient();
 
 interface Props {
   params: Promise<{ locale: SupportedLocale; slug: string }>;
@@ -620,7 +618,9 @@ export default async function LocalizedArticlePage({ params }: Props) {
         <div className="mx-auto max-w-4xl">
           <div
             className="prose prose-lg dark:prose-invert max-w-none prose-headings:scroll-mt-20 prose-a:text-primary prose-img:rounded-lg"
-            dangerouslySetInnerHTML={{ __html: article.html_content }}
+            dangerouslySetInnerHTML={{
+              __html: sanitizeArticleHtml(article.html_content || ""),
+            }}
           />
         </div>
 

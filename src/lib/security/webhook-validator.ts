@@ -3,7 +3,8 @@
  * 使用 HMAC SHA256 驗證 webhook 請求的真實性
  */
 
-import crypto from 'crypto'
+import crypto from "crypto";
+import Redis from "ioredis";
 
 /**
  * 驗證 HMAC SHA256 簽章
@@ -16,24 +17,24 @@ import crypto from 'crypto'
 export function verifyHmacSha256(
   payload: string,
   signature: string,
-  secret: string
+  secret: string,
 ): boolean {
   if (!payload || !signature || !secret) {
-    return false
+    return false;
   }
 
   try {
     const computedSignature = crypto
-      .createHmac('sha256', secret)
+      .createHmac("sha256", secret)
       .update(payload)
-      .digest('hex')
+      .digest("hex");
 
     return crypto.timingSafeEqual(
       Buffer.from(signature),
-      Buffer.from(computedSignature)
-    )
+      Buffer.from(computedSignature),
+    );
   } catch {
-    return false
+    return false;
   }
 }
 
@@ -50,25 +51,25 @@ export function verifyNewebPayCallback(
   tradeInfo: string,
   tradeSha: string,
   hashKey: string,
-  hashIV: string
+  hashIV: string,
 ): boolean {
   if (!tradeInfo || !tradeSha || !hashKey || !hashIV) {
-    return false
+    return false;
   }
 
   try {
     const checkValue = crypto
-      .createHash('sha256')
+      .createHash("sha256")
       .update(`HashKey=${hashKey}&${tradeInfo}&HashIV=${hashIV}`)
-      .digest('hex')
-      .toUpperCase()
+      .digest("hex")
+      .toUpperCase();
 
     return crypto.timingSafeEqual(
       Buffer.from(tradeSha.toUpperCase()),
-      Buffer.from(checkValue)
-    )
+      Buffer.from(checkValue),
+    );
   } catch {
-    return false
+    return false;
   }
 }
 
@@ -81,27 +82,27 @@ export function verifyNewebPayCallback(
  */
 export function verifyTimestamp(
   timestamp: string | number,
-  maxAgeSeconds: number = 300
+  maxAgeSeconds: number = 300,
 ): boolean {
   if (!timestamp) {
-    return false
+    return false;
   }
 
   try {
-    let requestTime: number
+    let requestTime: number;
 
-    if (typeof timestamp === 'string') {
-      requestTime = new Date(timestamp).getTime()
+    if (typeof timestamp === "string") {
+      requestTime = new Date(timestamp).getTime();
     } else {
-      requestTime = timestamp * 1000
+      requestTime = timestamp * 1000;
     }
 
-    const currentTime = Date.now()
-    const timeDiff = Math.abs(currentTime - requestTime) / 1000
+    const currentTime = Date.now();
+    const timeDiff = Math.abs(currentTime - requestTime) / 1000;
 
-    return timeDiff <= maxAgeSeconds
+    return timeDiff <= maxAgeSeconds;
   } catch {
-    return false
+    return false;
   }
 }
 
@@ -112,51 +113,132 @@ export function verifyTimestamp(
  * @returns 隨機 nonce 字串
  */
 export function generateNonce(length: number = 32): string {
-  return crypto.randomBytes(length).toString('hex')
+  return crypto.randomBytes(length).toString("hex");
 }
 
 /**
- * Nonce 快取 (簡單的記憶體快取,生產環境應使用 Redis)
+ * Redis 客戶端單例（用於 nonce 快取）
  */
-const nonceCache = new Map<string, number>()
+let redisClient: Redis | null = null;
 
 /**
- * 檢查並記錄 nonce,防止重放攻擊
+ * 記憶體快取作為備援（Redis 不可用時使用）
+ */
+const memoryNonceCache = new Map<string, number>();
+
+/**
+ * 取得 Redis 客戶端
+ */
+function getRedisClient(): Redis | null {
+  if (!process.env.REDIS_URL) {
+    return null;
+  }
+
+  if (!redisClient) {
+    redisClient = new Redis(process.env.REDIS_URL, {
+      maxRetriesPerRequest: 1,
+      retryStrategy: (times) => {
+        if (times > 3) return null;
+        return Math.min(times * 200, 2000);
+      },
+      enableOfflineQueue: false,
+      connectTimeout: 5000,
+      commandTimeout: 3000,
+    });
+
+    redisClient.on("error", (err) => {
+      console.error("[WebhookValidator] Redis error:", err.message);
+    });
+
+    redisClient.on("close", () => {
+      redisClient = null;
+    });
+  }
+
+  return redisClient;
+}
+
+/**
+ * 檢查並記錄 nonce，防止重放攻擊
+ * 優先使用 Redis，不可用時使用記憶體快取
  *
  * @param nonce - 要檢查的 nonce
- * @param ttlSeconds - nonce 有效期 (秒),預設 300 秒
+ * @param ttlSeconds - nonce 有效期 (秒)，預設 300 秒
  * @returns nonce 是否有效 (未使用過)
  */
-export function checkAndRecordNonce(
+export async function checkAndRecordNonce(
   nonce: string,
-  ttlSeconds: number = 300
-): boolean {
+  ttlSeconds: number = 300,
+): Promise<boolean> {
   if (!nonce) {
-    return false
+    return false;
   }
 
-  const now = Date.now()
+  const redis = getRedisClient();
 
-  if (nonceCache.has(nonce)) {
-    return false
+  if (redis) {
+    try {
+      const key = `nonce:${nonce}`;
+      // 使用 SETNX（SET if Not eXists）原子操作
+      const result = await redis.set(key, "1", "EX", ttlSeconds, "NX");
+      // 如果 result 為 "OK"，表示 nonce 不存在且已設定
+      return result === "OK";
+    } catch (error) {
+      console.error("[WebhookValidator] Redis nonce check error:", error);
+      // Redis 錯誤時，fallback 到記憶體快取
+    }
   }
 
-  nonceCache.set(nonce, now + ttlSeconds * 1000)
-
-  cleanupExpiredNonces()
-
-  return true
+  // 記憶體快取 fallback
+  return checkAndRecordNonceInMemory(nonce, ttlSeconds);
 }
 
 /**
- * 清理過期的 nonce
+ * 同步版本的 nonce 檢查（用於不支援 async 的情境）
+ * 僅使用記憶體快取
+ *
+ * @param nonce - 要檢查的 nonce
+ * @param ttlSeconds - nonce 有效期 (秒)
+ * @returns nonce 是否有效
+ */
+export function checkAndRecordNonceSync(
+  nonce: string,
+  ttlSeconds: number = 300,
+): boolean {
+  if (!nonce) {
+    return false;
+  }
+  return checkAndRecordNonceInMemory(nonce, ttlSeconds);
+}
+
+/**
+ * 使用記憶體快取檢查 nonce
+ */
+function checkAndRecordNonceInMemory(
+  nonce: string,
+  ttlSeconds: number,
+): boolean {
+  const now = Date.now();
+
+  if (memoryNonceCache.has(nonce)) {
+    return false;
+  }
+
+  memoryNonceCache.set(nonce, now + ttlSeconds * 1000);
+  cleanupExpiredNonces();
+
+  return true;
+}
+
+/**
+ * 清理過期的 nonce（記憶體快取）
  */
 function cleanupExpiredNonces(): void {
-  const now = Date.now()
+  const now = Date.now();
 
-  for (const [nonce, expiry] of nonceCache.entries()) {
+  for (const [nonce, expiry] of memoryNonceCache.entries()) {
     if (expiry < now) {
-      nonceCache.delete(nonce)
+      memoryNonceCache.delete(nonce);
     }
   }
 }
@@ -170,15 +252,15 @@ function cleanupExpiredNonces(): void {
  */
 export function verifyIpWhitelist(ip: string, allowedIps: string[]): boolean {
   if (!ip || !allowedIps || allowedIps.length === 0) {
-    return false
+    return false;
   }
 
-  return allowedIps.some(allowedIp => {
-    if (allowedIp.includes('/')) {
-      return isIpInCidr(ip, allowedIp)
+  return allowedIps.some((allowedIp) => {
+    if (allowedIp.includes("/")) {
+      return isIpInCidr(ip, allowedIp);
     }
-    return ip === allowedIp
-  })
+    return ip === allowedIp;
+  });
 }
 
 /**
@@ -189,18 +271,20 @@ export function verifyIpWhitelist(ip: string, allowedIps: string[]): boolean {
  * @returns IP 是否在範圍內
  */
 function isIpInCidr(ip: string, cidr: string): boolean {
-  const [range, bits] = cidr.split('/')
-  const mask = -1 << (32 - parseInt(bits, 10))
+  const [range, bits] = cidr.split("/");
+  const mask = -1 << (32 - parseInt(bits, 10));
 
-  const ipInt = ipToInt(ip)
-  const rangeInt = ipToInt(range)
+  const ipInt = ipToInt(ip);
+  const rangeInt = ipToInt(range);
 
-  return (ipInt & mask) === (rangeInt & mask)
+  return (ipInt & mask) === (rangeInt & mask);
 }
 
 /**
  * 將 IP 地址轉換為整數
  */
 function ipToInt(ip: string): number {
-  return ip.split('.').reduce((acc, octet) => (acc << 8) + parseInt(octet, 10), 0)
+  return ip
+    .split(".")
+    .reduce((acc, octet) => (acc << 8) + parseInt(octet, 10), 0);
 }

@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { WordPressClient } from "@/lib/wordpress/client";
+import {
+  decryptWordPressPassword,
+  isEncrypted,
+} from "@/lib/security/token-encryption";
 
 const MAX_RETRY_COUNT = 3;
 const RETRY_DELAYS_MINUTES = [5, 30, 120];
@@ -258,10 +262,17 @@ export async function GET(request: NextRequest) {
       );
 
       try {
+        // 解密 WordPress 密碼（支援舊資料的明文格式）
+        const wpPassword = website.wp_app_password
+          ? isEncrypted(website.wp_app_password)
+            ? decryptWordPressPassword(website.wp_app_password)
+            : website.wp_app_password
+          : "";
+
         const wordpressClient = new WordPressClient({
           url: website.wordpress_url,
           username: website.wp_username || "",
-          applicationPassword: website.wp_app_password || "",
+          applicationPassword: wpPassword,
           accessToken: website.wordpress_access_token || undefined,
           refreshToken: website.wordpress_refresh_token || undefined,
         });
@@ -373,10 +384,17 @@ export async function GET(request: NextRequest) {
     // 情況 3：沒有 wordpress_post_id → 新發布（方案 B：未來新文章）
 
     try {
+      // 解密 WordPress 密碼（支援舊資料的明文格式）
+      const wpPasswordForNew = website.wp_app_password
+        ? isEncrypted(website.wp_app_password)
+          ? decryptWordPressPassword(website.wp_app_password)
+          : website.wp_app_password
+        : "";
+
       const wordpressClient = new WordPressClient({
         url: website.wordpress_url,
         username: website.wp_username || "",
-        applicationPassword: website.wp_app_password || "",
+        applicationPassword: wpPasswordForNew,
         accessToken: website.wordpress_access_token || undefined,
         refreshToken: website.wordpress_refresh_token || undefined,
       });

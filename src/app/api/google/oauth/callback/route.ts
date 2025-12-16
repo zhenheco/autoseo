@@ -38,7 +38,7 @@ export async function GET(request: NextRequest) {
   const websiteId = request.cookies.get("google_oauth_website_id")?.value;
   const serviceType = request.cookies.get("google_oauth_service_type")?.value;
 
-  if (!state || !savedState || !state.startsWith(savedState)) {
+  if (!state || !savedState || state !== savedState) {
     console.error("[OAuth Callback] State 驗證失敗");
     return redirectToWebsites({ error: "invalid_state" });
   }

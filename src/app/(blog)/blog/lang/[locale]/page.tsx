@@ -7,7 +7,7 @@
 
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { createClient } from "@supabase/supabase-js";
+import { createAnonClient } from "@/lib/supabase/server";
 import { BlogHeader, ArticleGrid } from "@/components/blog";
 import {
   getBlogMeta,
@@ -20,11 +20,8 @@ import { TRANSLATION_LANGUAGES } from "@/types/translations";
 // 🔧 優化：ISR 快取 - 每小時重新驗證
 export const revalidate = 3600;
 
-// 使用 service role 取得資料
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-);
+// 使用 Anon Key 取得公開資料（安全性提升：不使用 Service Role Key）
+const supabase = createAnonClient();
 
 interface Props {
   params: Promise<{ locale: string }>;
