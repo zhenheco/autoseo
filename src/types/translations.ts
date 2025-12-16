@@ -495,6 +495,11 @@ export interface CreateTranslationJobResponse {
     source_article_id: string;
     target_languages: TranslationLocale[];
   }[];
+  /** 已跳過的翻譯（已存在的翻譯） */
+  skipped?: {
+    count: number;
+    reason: "already_translated";
+  };
 }
 
 /**
