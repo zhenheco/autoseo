@@ -1,5 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import {
+  checkRateLimit,
+  RATE_LIMIT_CONFIGS,
+} from "@/lib/security/rate-limiter";
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,6 +14,15 @@ export async function POST(request: NextRequest) {
         { error: "請提供電子郵件地址" },
         { status: 400 },
       );
+    }
+
+    // 速率限制：防止濫發驗證信
+    const rateLimitResponse = await checkRateLimit(
+      `auth_resend:${email.toLowerCase()}`,
+      RATE_LIMIT_CONFIGS.AUTH_RESEND,
+    );
+    if (rateLimitResponse) {
+      return rateLimitResponse;
     }
 
     const supabase = await createClient();

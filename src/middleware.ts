@@ -8,9 +8,27 @@ import {
 
 export const runtime = "nodejs";
 
+// Request Body 大小限制（10MB）
+const MAX_BODY_SIZE = 10 * 1024 * 1024;
+
 export async function middleware(request: NextRequest) {
   const url = request.nextUrl.clone();
   const host = request.headers.get("host") || "";
+
+  // ========== Request Body 大小檢查 ==========
+  const contentLength = request.headers.get("content-length");
+  if (contentLength) {
+    const bodySize = parseInt(contentLength, 10);
+    if (!isNaN(bodySize) && bodySize > MAX_BODY_SIZE) {
+      return new NextResponse(
+        JSON.stringify({ error: "Request body too large" }),
+        {
+          status: 413,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    }
+  }
 
   // ========== 生產環境：HTTP → HTTPS + www → non-www 301 重導向 ==========
   if (process.env.NODE_ENV === "production") {

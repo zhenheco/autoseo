@@ -36,6 +36,8 @@ export const RATE_LIMIT_CONFIGS = {
   AFFILIATE_APPLY: { limit: 3, window: 3600 },
   /** 登入嘗試 - 每 IP 每 15 分鐘 10 次 */
   LOGIN_ATTEMPT: { limit: 10, window: 900 },
+  /** 認證相關操作 - 每 Email 每 5 分鐘 3 次（防止濫發驗證信） */
+  AUTH_RESEND: { limit: 3, window: 300 },
   /** 一般 API - 每用戶每分鐘 60 次 */
   DEFAULT: { limit: 60, window: 60 },
 } as const;
@@ -46,6 +48,71 @@ let redisClient: Redis | null = null;
 let lastConnectionError: number = 0;
 /** 連線錯誤後的冷卻時間（毫秒） */
 const CONNECTION_COOLDOWN = 5000;
+
+/**
+ * 記憶體 Rate Limit 快取（Redis 不可用時的備援）
+ * 注意：Vercel serverless 環境下只能在單一實例內生效
+ */
+interface MemoryRateLimitEntry {
+  count: number;
+  expiresAt: number;
+}
+const memoryRateLimitCache = new Map<string, MemoryRateLimitEntry>();
+
+/**
+ * 記憶體快取 Rate Limit（Redis 不可用時使用）
+ */
+function memoryRateLimit(
+  identifier: string,
+  config: RateLimitConfig,
+): RateLimitResult {
+  const now = Date.now();
+  const key = `rate_limit:${identifier}`;
+
+  // 清理過期條目
+  cleanupExpiredMemoryEntries();
+
+  const existing = memoryRateLimitCache.get(key);
+
+  if (existing && existing.expiresAt > now) {
+    // 條目存在且未過期
+    existing.count += 1;
+    const remaining = Math.max(0, config.limit - existing.count);
+    const reset = Math.ceil((existing.expiresAt - now) / 1000);
+
+    return {
+      success: existing.count <= config.limit,
+      remaining,
+      reset,
+      limit: config.limit,
+    };
+  }
+
+  // 建立新條目
+  memoryRateLimitCache.set(key, {
+    count: 1,
+    expiresAt: now + config.window * 1000,
+  });
+
+  return {
+    success: true,
+    remaining: config.limit - 1,
+    reset: config.window,
+    limit: config.limit,
+  };
+}
+
+/**
+ * 清理過期的記憶體快取條目
+ */
+function cleanupExpiredMemoryEntries(): void {
+  const now = Date.now();
+  for (const [key, entry] of memoryRateLimitCache.entries()) {
+    if (entry.expiresAt < now) {
+      memoryRateLimitCache.delete(key);
+    }
+  }
+}
 
 /**
  * 建立新的 Redis 客戶端
@@ -250,19 +317,14 @@ export async function rateLimit(
   identifier: string,
   config: RateLimitConfig = RATE_LIMIT_CONFIGS.DEFAULT,
 ): Promise<RateLimitResult> {
-  // 如果 Redis 未啟用，始終允許
+  // 如果 Redis 未啟用，使用記憶體快取作為備援
   if (!isRedisEnabled()) {
-    return {
-      success: true,
-      remaining: config.limit,
-      reset: config.window,
-      limit: config.limit,
-    };
+    return memoryRateLimit(identifier, config);
   }
 
   const key = `rate_limit:${identifier}`;
 
-  // 使用 safeExecute 包裝 Redis 操作，失敗時優雅降級
+  // 使用 safeExecute 包裝 Redis 操作，失敗時使用記憶體快取備援
   return safeExecute(
     async (redis) => {
       const current = await redis.incr(key);
@@ -281,13 +343,8 @@ export async function rateLimit(
         limit: config.limit,
       };
     },
-    // fallback: Redis 不可用時允許請求通過
-    {
-      success: true,
-      remaining: config.limit,
-      reset: config.window,
-      limit: config.limit,
-    },
+    // fallback: Redis 不可用時使用記憶體快取備援（而非完全允許）
+    memoryRateLimit(identifier, config),
   );
 }
 

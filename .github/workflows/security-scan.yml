@@ -34,11 +34,9 @@ jobs:
 
       - name: Run security check script
         run: bash scripts/security-check.sh
-        continue-on-error: true
 
       - name: Run pnpm audit
-        run: pnpm audit --production
-        continue-on-error: true
+        run: pnpm audit --production --audit-level high
 
       - name: Scan for secrets with Gitleaks
         uses: gitleaks/gitleaks-action@v2

@@ -2,6 +2,10 @@ import { createClient } from "@/lib/supabase/server";
 import { NextRequest, NextResponse } from "next/server";
 import { getUser } from "@/lib/auth";
 import { WordPressClient } from "@/lib/wordpress/client";
+import {
+  decryptWordPressPassword,
+  isEncrypted,
+} from "@/lib/security/token-encryption";
 
 export async function POST(
   request: NextRequest,
@@ -143,10 +147,17 @@ export async function POST(
   let wpPostId: number | null = null;
 
   try {
+    // 解密 WordPress 密碼（支援舊資料的明文格式）
+    const wpPassword = website.wp_app_password
+      ? isEncrypted(website.wp_app_password)
+        ? decryptWordPressPassword(website.wp_app_password)
+        : website.wp_app_password
+      : "";
+
     const wordpressClient = new WordPressClient({
       url: website.wordpress_url,
       username: website.wp_username || "",
-      applicationPassword: website.wp_app_password,
+      applicationPassword: wpPassword,
       accessToken: website.wordpress_access_token || undefined,
       refreshToken: website.wordpress_refresh_token || undefined,
     });

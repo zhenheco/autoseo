@@ -256,8 +256,9 @@ export class AIClient {
       try {
         result = JSON.parse(responseText) as DeepSeekResponse;
       } catch (parseError) {
+        // 安全：不記錄響應內容，只記錄錯誤狀態
         console.error(
-          `[AIClient] JSON 解析失敗，響應前 500 字: ${responseText.slice(0, 500)}`,
+          `[AIClient] JSON 解析失敗 (響應長度: ${responseText.length})`,
         );
         throw new Error(
           `DeepSeek API 響應不是有效 JSON: ${parseError instanceof Error ? parseError.message : "parse error"}`,
@@ -265,7 +266,10 @@ export class AIClient {
       }
 
       if (!response.ok) {
-        throw new Error(`DeepSeek API error: ${JSON.stringify(result)}`);
+        // 安全：只記錄錯誤碼，不記錄完整響應
+        const errorObj = result as unknown as { error?: { code?: string } };
+        const errorCode = errorObj.error?.code || response.status;
+        throw new Error(`DeepSeek API error: ${errorCode}`);
       }
 
       // 檢查 finish_reason

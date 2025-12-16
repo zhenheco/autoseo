@@ -1,8 +1,8 @@
 /**
  * Token 加密工具
  *
- * 使用 AES-256-GCM 加密儲存 Google OAuth tokens
- * 確保敏感資料在資料庫中是加密狀態
+ * 使用 AES-256-GCM 加密儲存敏感資料
+ * 支援 Google OAuth tokens 和 WordPress 密碼等
  */
 
 import crypto from "crypto";
@@ -12,22 +12,33 @@ const IV_LENGTH = 16;
 const AUTH_TAG_LENGTH = 16;
 
 /**
+ * 加密金鑰類型
+ */
+export type EncryptionKeyType = "google" | "wordpress";
+
+/**
  * 取得加密金鑰
+ * @param keyType 金鑰類型
  * @throws 如果環境變數未設定或格式不正確
  */
-function getEncryptionKey(): Buffer {
-  const keyHex = process.env.GOOGLE_TOKEN_ENCRYPTION_KEY;
+function getEncryptionKey(keyType: EncryptionKeyType = "google"): Buffer {
+  const envVarName =
+    keyType === "wordpress"
+      ? "WORDPRESS_ENCRYPTION_KEY"
+      : "GOOGLE_TOKEN_ENCRYPTION_KEY";
+
+  const keyHex = process.env[envVarName];
 
   if (!keyHex) {
     throw new Error(
-      "GOOGLE_TOKEN_ENCRYPTION_KEY 環境變數未設定。" +
+      `${envVarName} 環境變數未設定。` +
         "請使用 'openssl rand -hex 32' 生成一個 64 字元的十六進位金鑰。",
     );
   }
 
   if (keyHex.length !== 64) {
     throw new Error(
-      `GOOGLE_TOKEN_ENCRYPTION_KEY 長度錯誤：預期 64 字元，實際 ${keyHex.length} 字元。` +
+      `${envVarName} 長度錯誤：預期 64 字元，實際 ${keyHex.length} 字元。` +
         "請使用 'openssl rand -hex 32' 生成正確的金鑰。",
     );
   }
@@ -38,10 +49,14 @@ function getEncryptionKey(): Buffer {
 /**
  * 加密 token
  * @param plaintext 明文 token
+ * @param keyType 金鑰類型（預設為 google）
  * @returns 加密後的字串（格式：iv:authTag:encryptedData，全部 base64 編碼）
  */
-export function encryptToken(plaintext: string): string {
-  const key = getEncryptionKey();
+export function encryptToken(
+  plaintext: string,
+  keyType: EncryptionKeyType = "google",
+): string {
+  const key = getEncryptionKey(keyType);
   const iv = crypto.randomBytes(IV_LENGTH);
   const cipher = crypto.createCipheriv(ALGORITHM, key, iv);
 
@@ -57,17 +72,21 @@ export function encryptToken(plaintext: string): string {
 /**
  * 解密 token
  * @param ciphertext 加密的字串
+ * @param keyType 金鑰類型（預設為 google）
  * @returns 解密後的明文 token
  * @throws 如果格式不正確或解密失敗
  */
-export function decryptToken(ciphertext: string): string {
+export function decryptToken(
+  ciphertext: string,
+  keyType: EncryptionKeyType = "google",
+): string {
   const parts = ciphertext.split(":");
   if (parts.length !== 3) {
     throw new Error("加密 token 格式不正確");
   }
 
   const [ivBase64, authTagBase64, encryptedBase64] = parts;
-  const key = getEncryptionKey();
+  const key = getEncryptionKey(keyType);
   const iv = Buffer.from(ivBase64, "base64");
   const authTag = Buffer.from(authTagBase64, "base64");
   const encrypted = Buffer.from(encryptedBase64, "base64");
@@ -79,6 +98,37 @@ export function decryptToken(ciphertext: string): string {
   decrypted += decipher.final("utf8");
 
   return decrypted;
+}
+
+/**
+ * 加密 WordPress 密碼
+ * @param password 明文密碼
+ * @returns 加密後的字串
+ */
+export function encryptWordPressPassword(password: string): string {
+  return encryptToken(password, "wordpress");
+}
+
+/**
+ * 解密 WordPress 密碼
+ * @param encryptedPassword 加密的密碼
+ * @returns 明文密碼
+ */
+export function decryptWordPressPassword(encryptedPassword: string): string {
+  return decryptToken(encryptedPassword, "wordpress");
+}
+
+/**
+ * 檢查字串是否為加密格式
+ * @param value 要檢查的字串
+ * @returns 是否為加密格式
+ */
+export function isEncrypted(value: string): boolean {
+  if (!value || typeof value !== "string") {
+    return false;
+  }
+  const parts = value.split(":");
+  return parts.length === 3 && parts.every((p) => p.length > 0);
 }
 
 /**
