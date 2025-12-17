@@ -108,7 +108,24 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    await generateReferralCode(companyMember.company_id);
+    // 生成推薦碼並檢查是否成功
+    const referralCode = await generateReferralCode(companyMember.company_id);
+
+    if (!referralCode) {
+      // 推薦碼生成失敗，記錄錯誤但不回滾（affiliate 已建立）
+      // 管理員可以手動補建推薦碼
+      console.error(
+        "Failed to generate referral code for company:",
+        companyMember.company_id,
+      );
+      return NextResponse.json(
+        {
+          success: false,
+          message: "申請失敗：無法生成推薦碼，請聯繫客服",
+        },
+        { status: 500 },
+      );
+    }
 
     return NextResponse.json({
       success: true,
