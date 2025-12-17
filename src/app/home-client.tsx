@@ -448,7 +448,7 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
                     key={plan.id}
                     className={`relative flex flex-col h-full transition-all duration-300 ${
                       isPopular
-                        ? "bg-white text-slate-900 border-cyber-violet-500 shadow-lg scale-105"
+                        ? "bg-white dark:bg-slate-900/90 dark:backdrop-blur-xl text-slate-900 dark:text-white border-cyber-violet-500 shadow-lg dark:shadow-cyber-violet-500/30 scale-105"
                         : "bg-white dark:bg-transparent dark:glass shadow-md dark:shadow-none border-slate-200 dark:border-white/10 hover:border-cyber-violet-500/50"
                     }`}
                   >
