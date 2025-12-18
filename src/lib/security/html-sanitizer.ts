@@ -1,17 +1,17 @@
 /**
  * HTML 清理工具
- * 使用 DOMPurify 防止 XSS 攻擊,同時保留文章所需的 HTML 標籤
+ * 使用 sanitize-html 防止 XSS 攻擊,同時保留文章所需的 HTML 標籤
  *
- * 注意：使用 isomorphic-dompurify 以支援 SSR 環境（Vercel）
+ * 注意：sanitize-html 是純 Node.js 實現，完全支援 SSR 環境
  */
 
-import DOMPurify from "isomorphic-dompurify";
+import sanitizeHtml from "sanitize-html";
 
 /**
  * 文章 HTML 清理配置 - 寬鬆設定,保留所有文章格式
  */
-const ARTICLE_CONFIG = {
-  ALLOWED_TAGS: [
+const ARTICLE_CONFIG: sanitizeHtml.IOptions = {
+  allowedTags: [
     // 標題
     "h1",
     "h2",
@@ -83,66 +83,36 @@ const ARTICLE_CONFIG = {
     "section",
     "time",
   ],
-  ALLOWED_ATTR: [
-    // 通用屬性
-    "id",
-    "class",
-    "style",
-    "title",
-    "lang",
-    "dir",
-    // 連結
-    "href",
-    "target",
-    "rel",
-    // 圖片
-    "src",
-    "alt",
-    "width",
-    "height",
-    "loading",
-    // 表格
-    "colspan",
-    "rowspan",
-    "headers",
-    "scope",
-    // 其他
-    "datetime",
-    "cite",
-    "start",
-    "reversed",
-    "type",
-  ],
-  ALLOW_DATA_ATTR: false,
-  FORBID_TAGS: [
-    "script",
-    "style",
-    "iframe",
-    "object",
-    "embed",
-    "base",
-    "link",
-    "meta",
-  ],
-  FORBID_ATTR: [
-    "onerror",
-    "onload",
-    "onclick",
-    "onmouseover",
-    "onfocus",
-    "onblur",
-  ],
+  allowedAttributes: {
+    "*": ["id", "class", "style", "title", "lang", "dir"],
+    a: ["href", "target", "rel"],
+    img: ["src", "alt", "width", "height", "loading"],
+    td: ["colspan", "rowspan", "headers"],
+    th: ["colspan", "rowspan", "headers", "scope"],
+    ol: ["start", "reversed", "type"],
+    time: ["datetime"],
+    blockquote: ["cite"],
+    q: ["cite"],
+  },
+  // 允許所有 URL schemes（http, https, mailto 等）
+  allowedSchemes: ["http", "https", "mailto", "tel"],
+  // 允許相對 URL
+  allowedSchemesByTag: {
+    img: ["http", "https", "data"],
+  },
+  // 不剝離不允許的標籤，而是移除整個標籤
+  disallowedTagsMode: "discard",
 };
 
 /**
  * 使用者輸入清理配置 - 嚴格設定,只保留基本格式
  */
-const USER_INPUT_CONFIG = {
-  ALLOWED_TAGS: ["p", "br", "strong", "em", "u", "a"],
-  ALLOWED_ATTR: ["href", "title"],
-  ALLOW_DATA_ATTR: false,
-  FORBID_TAGS: ["script", "style", "iframe", "object", "embed"],
-  FORBID_ATTR: ["onerror", "onload", "onclick"],
+const USER_INPUT_CONFIG: sanitizeHtml.IOptions = {
+  allowedTags: ["p", "br", "strong", "em", "u", "a"],
+  allowedAttributes: {
+    a: ["href", "title"],
+  },
+  allowedSchemes: ["http", "https", "mailto"],
 };
 
 /**
@@ -156,7 +126,7 @@ export function sanitizeArticleHtml(dirty: string): string {
     return "";
   }
 
-  return DOMPurify.sanitize(dirty, ARTICLE_CONFIG);
+  return sanitizeHtml(dirty, ARTICLE_CONFIG);
 }
 
 /**
@@ -170,7 +140,7 @@ export function sanitizeUserInput(dirty: string): string {
     return "";
   }
 
-  return DOMPurify.sanitize(dirty, USER_INPUT_CONFIG);
+  return sanitizeHtml(dirty, USER_INPUT_CONFIG);
 }
 
 /**

@@ -74,8 +74,6 @@ const nextConfig = {
       },
     ];
   },
-  // jsdom 需要作為外部依賴，避免 Turbopack 打包時找不到 CSS 檔案
-  serverExternalPackages: ["jsdom"],
   experimental: {
     optimizePackageImports: [
       "googleapis",
