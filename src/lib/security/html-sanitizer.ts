@@ -1,9 +1,11 @@
 /**
  * HTML 清理工具
  * 使用 DOMPurify 防止 XSS 攻擊,同時保留文章所需的 HTML 標籤
+ *
+ * 注意：使用 isomorphic-dompurify 以支援 SSR 環境（Vercel）
  */
 
-import DOMPurify from "dompurify";
+import DOMPurify from "isomorphic-dompurify";
 
 /**
  * 文章 HTML 清理配置 - 寬鬆設定,保留所有文章格式

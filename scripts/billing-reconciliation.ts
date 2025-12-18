@@ -93,12 +93,13 @@ async function main() {
   }
 
   // 2. 獲取已有的扣款記錄
+  // 注意：idempotency_key 存儲的是 article_job_id（見 migration 20251114000000）
   const { data: deductions } = await supabase
     .from("token_deduction_records")
-    .select("article_job_id");
+    .select("idempotency_key");
 
   const deductedJobIds = new Set(
-    deductions?.map((d) => d.article_job_id) || [],
+    deductions?.map((d) => d.idempotency_key) || [],
   );
 
   // 3. 過濾出需要補扣的 jobs

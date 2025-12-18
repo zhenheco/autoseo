@@ -47,9 +47,10 @@ async function main() {
   );
 
   // 2. 獲取扣款記錄
+  // 注意：idempotency_key 存儲的是 article_job_id（見 migration 20251114000000）
   const { data: deductions, error: deductionsError } = await supabase
     .from("token_deduction_records")
-    .select("article_job_id")
+    .select("idempotency_key")
     .gte("created_at", since);
 
   if (deductionsError) {
@@ -61,7 +62,7 @@ async function main() {
 
   // 3. 找出未扣款的任務
   const deductedJobIds = new Set(
-    deductions?.map((d) => d.article_job_id) || [],
+    deductions?.map((d) => d.idempotency_key) || [],
   );
 
   const unchargedJobs = (completedJobs || []).filter((job) => {
