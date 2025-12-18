@@ -9,6 +9,130 @@
 
 import Redis from "ioredis";
 
+// ============================================
+// 統計資料收集
+// ============================================
+
+/** Redis 操作統計 */
+interface RedisStats {
+  totalOperations: number;
+  successfulOperations: number;
+  failedOperations: number;
+  timeoutErrors: number;
+  connectionErrors: number;
+  totalLatency: number;
+  lastError: string | null;
+  lastErrorTime: Date | null;
+  operationBreakdown: Record<
+    string,
+    { count: number; failures: number; totalLatency: number }
+  >;
+}
+
+/** 初始化統計資料 */
+const stats: RedisStats = {
+  totalOperations: 0,
+  successfulOperations: 0,
+  failedOperations: 0,
+  timeoutErrors: 0,
+  connectionErrors: 0,
+  totalLatency: 0,
+  lastError: null,
+  lastErrorTime: null,
+  operationBreakdown: {},
+};
+
+/**
+ * 更新操作統計
+ */
+function updateStats(
+  operationName: string,
+  latency: number,
+  success: boolean,
+  errorType?: "timeout" | "connection" | "other",
+): void {
+  stats.totalOperations++;
+  stats.totalLatency += latency;
+
+  if (success) {
+    stats.successfulOperations++;
+  } else {
+    stats.failedOperations++;
+    if (errorType === "timeout") {
+      stats.timeoutErrors++;
+    } else if (errorType === "connection") {
+      stats.connectionErrors++;
+    }
+  }
+
+  // 記錄操作分類統計
+  if (!stats.operationBreakdown[operationName]) {
+    stats.operationBreakdown[operationName] = {
+      count: 0,
+      failures: 0,
+      totalLatency: 0,
+    };
+  }
+  stats.operationBreakdown[operationName].count++;
+  stats.operationBreakdown[operationName].totalLatency += latency;
+  if (!success) {
+    stats.operationBreakdown[operationName].failures++;
+  }
+}
+
+/**
+ * 取得 Redis 操作統計
+ */
+export function getRedisStats(): {
+  totalOperations: number;
+  successRate: number;
+  avgLatency: number;
+  timeoutRate: number;
+  connectionErrorRate: number;
+  lastError: string | null;
+  lastErrorTime: string | null;
+  operationBreakdown: Record<
+    string,
+    { count: number; failureRate: number; avgLatency: number }
+  >;
+} {
+  const successRate =
+    stats.totalOperations > 0
+      ? stats.successfulOperations / stats.totalOperations
+      : 1;
+  const avgLatency =
+    stats.totalOperations > 0 ? stats.totalLatency / stats.totalOperations : 0;
+  const timeoutRate =
+    stats.totalOperations > 0 ? stats.timeoutErrors / stats.totalOperations : 0;
+  const connectionErrorRate =
+    stats.totalOperations > 0
+      ? stats.connectionErrors / stats.totalOperations
+      : 0;
+
+  const operationBreakdown: Record<
+    string,
+    { count: number; failureRate: number; avgLatency: number }
+  > = {};
+  for (const [name, data] of Object.entries(stats.operationBreakdown)) {
+    operationBreakdown[name] = {
+      count: data.count,
+      failureRate: data.count > 0 ? data.failures / data.count : 0,
+      avgLatency: data.count > 0 ? data.totalLatency / data.count : 0,
+    };
+  }
+
+  return {
+    totalOperations: stats.totalOperations,
+    successRate: Math.round(successRate * 100) / 100,
+    avgLatency: Math.round(avgLatency),
+    timeoutRate: Math.round(timeoutRate * 100) / 100,
+    connectionErrorRate: Math.round(connectionErrorRate * 100) / 100,
+    lastError: stats.lastError,
+    lastErrorTime: stats.lastErrorTime?.toISOString() || null,
+    operationBreakdown,
+  };
+}
+
 /** 快取配置 */
 export const CACHE_CONFIG = {
   /** 文章列表快取 - 30 秒（頻繁變動） */
@@ -168,13 +292,23 @@ async function waitForReady(
 /**
  * 安全執行 Redis 命令
  * 失敗時自動重試一次，最終失敗則返回 fallback 值
+ *
+ * @param operation - Redis 操作函數
+ * @param fallback - 失敗時的回傳值
+ * @param operationName - 操作名稱（用於日誌和統計）
  */
 async function safeExecute<T>(
   operation: (redis: Redis) => Promise<T>,
   fallback: T,
+  operationName: string = "unknown",
 ): Promise<T> {
+  const startTime = Date.now();
   let redis = getRedis();
-  if (!redis) return fallback;
+
+  if (!redis) {
+    updateStats(operationName, 0, false, "connection");
+    return fallback;
+  }
 
   try {
     // 等待連接就緒（如果正在連接中）
@@ -183,39 +317,104 @@ async function safeExecute<T>(
       if (!isReady) {
         // 連接失敗，嘗試重建
         redis = reconnect();
-        if (!redis) return fallback;
+        if (!redis) {
+          const latency = Date.now() - startTime;
+          updateStats(operationName, latency, false, "connection");
+          console.error(
+            `[RedisCache] ${operationName} failed: connection not ready (${latency}ms)`,
+          );
+          return fallback;
+        }
         const retryReady = await waitForReady(redis);
         if (!retryReady) {
           lastConnectionError = Date.now();
+          const latency = Date.now() - startTime;
+          updateStats(operationName, latency, false, "connection");
+          console.error(
+            `[RedisCache] ${operationName} failed: reconnection failed (${latency}ms)`,
+          );
           return fallback;
         }
       }
     }
-    return await operation(redis);
+
+    const result = await operation(redis);
+    const latency = Date.now() - startTime;
+    updateStats(operationName, latency, true);
+
+    // 如果延遲超過 1 秒，記錄警告
+    if (latency > 1000) {
+      console.warn(`[RedisCache] ${operationName} slow: ${latency}ms`);
+    }
+
+    return result;
   } catch (error) {
-    // 檢查是否為連線斷開錯誤
+    const latency = Date.now() - startTime;
+    const errorMessage =
+      error instanceof Error ? error.message : "Unknown error";
+
+    // 判斷錯誤類型
+    const isTimeoutError = errorMessage.includes("timed out");
     const isConnectionError =
-      error instanceof Error &&
-      (error.message.includes("Stream isn't writeable") ||
-        error.message.includes("Connection is closed"));
+      errorMessage.includes("Stream isn't writeable") ||
+      errorMessage.includes("Connection is closed") ||
+      errorMessage.includes("ECONNREFUSED") ||
+      errorMessage.includes("ETIMEDOUT");
+
+    if (isTimeoutError) {
+      stats.lastError = `${operationName}: Command timed out`;
+      stats.lastErrorTime = new Date();
+      updateStats(operationName, latency, false, "timeout");
+      console.error(`[RedisCache] ${operationName} TIMEOUT after ${latency}ms`);
+      return fallback;
+    }
 
     if (isConnectionError) {
+      stats.lastError = `${operationName}: ${errorMessage}`;
+      stats.lastErrorTime = new Date();
+      updateStats(operationName, latency, false, "connection");
+
       // 連線斷開，嘗試重建
       redis = reconnect();
-      if (!redis) return fallback;
+      if (!redis) {
+        console.error(
+          `[RedisCache] ${operationName} connection error, reconnect failed (${latency}ms)`,
+        );
+        return fallback;
+      }
 
       try {
+        const retryStart = Date.now();
         const isReady = await waitForReady(redis);
-        if (!isReady) return fallback;
-        return await operation(redis);
-      } catch {
-        // 重試也失敗
+        if (!isReady) {
+          console.error(`[RedisCache] ${operationName} reconnect wait failed`);
+          return fallback;
+        }
+        const retryResult = await operation(redis);
+        const retryLatency = Date.now() - retryStart;
+        updateStats(`${operationName}_retry`, retryLatency, true);
+        console.log(
+          `[RedisCache] ${operationName} retry succeeded (${retryLatency}ms)`,
+        );
+        return retryResult;
+      } catch (retryError) {
+        const retryLatency = Date.now() - startTime;
+        updateStats(`${operationName}_retry`, retryLatency, false, "other");
+        console.error(
+          `[RedisCache] ${operationName} retry also failed (${retryLatency}ms)`,
+        );
         return fallback;
       }
     }
 
-    // 其他錯誤，直接返回 fallback
-    console.error("[RedisCache] Operation error:", error);
+    // 其他錯誤
+    stats.lastError = `${operationName}: ${errorMessage}`;
+    stats.lastErrorTime = new Date();
+    updateStats(operationName, latency, false, "other");
+    console.error(
+      `[RedisCache] ${operationName} error after ${latency}ms:`,
+      errorMessage,
+    );
     return fallback;
   }
 }
@@ -233,11 +432,15 @@ export function isRedisAvailable(): boolean {
  * @returns 快取的資料，如果不存在則返回 null
  */
 export async function cacheGet<T>(key: string): Promise<T | null> {
-  return safeExecute(async (redis) => {
-    const data = await redis.get(key);
-    if (!data) return null;
-    return JSON.parse(data) as T;
-  }, null);
+  return safeExecute(
+    async (redis) => {
+      const data = await redis.get(key);
+      if (!data) return null;
+      return JSON.parse(data) as T;
+    },
+    null,
+    "GET",
+  );
 }
 
 /**
@@ -251,10 +454,14 @@ export async function cacheSet<T>(
   value: T,
   ttlSeconds: number,
 ): Promise<boolean> {
-  return safeExecute(async (redis) => {
-    await redis.setex(key, ttlSeconds, JSON.stringify(value));
-    return true;
-  }, false);
+  return safeExecute(
+    async (redis) => {
+      await redis.setex(key, ttlSeconds, JSON.stringify(value));
+      return true;
+    },
+    false,
+    "SET",
+  );
 }
 
 /**
@@ -262,28 +469,33 @@ export async function cacheSet<T>(
  * @param key 快取 key（支援萬用字元）
  */
 export async function cacheDelete(key: string): Promise<boolean> {
-  return safeExecute(async (redis) => {
-    if (key.includes("*")) {
-      // 使用 SCAN 刪除匹配的 keys（避免 KEYS 命令阻塞）
-      let cursor = "0";
-      do {
-        const [nextCursor, keys] = await redis.scan(
-          cursor,
-          "MATCH",
-          key,
-          "COUNT",
-          100,
-        );
-        cursor = nextCursor;
-        if (keys.length > 0) {
-          await redis.del(...keys);
-        }
-      } while (cursor !== "0");
-    } else {
-      await redis.del(key);
-    }
-    return true;
-  }, false);
+  const operationName = key.includes("*") ? "DEL_SCAN" : "DEL";
+  return safeExecute(
+    async (redis) => {
+      if (key.includes("*")) {
+        // 使用 SCAN 刪除匹配的 keys（避免 KEYS 命令阻塞）
+        let cursor = "0";
+        do {
+          const [nextCursor, keys] = await redis.scan(
+            cursor,
+            "MATCH",
+            key,
+            "COUNT",
+            100,
+          );
+          cursor = nextCursor;
+          if (keys.length > 0) {
+            await redis.del(...keys);
+          }
+        } while (cursor !== "0");
+      } else {
+        await redis.del(key);
+      }
+      return true;
+    },
+    false,
+    operationName,
+  );
 }
 
 /**
@@ -386,7 +598,7 @@ interface CacheStats {
 }
 
 /**
- * 快取統計資訊
+ * 快取統計資訊（來自 Redis INFO 命令）
  */
 export async function getCacheStats(): Promise<CacheStats> {
   return safeExecute<CacheStats>(
@@ -402,5 +614,6 @@ export async function getCacheStats(): Promise<CacheStats> {
       };
     },
     { connected: false, keyCount: 0, memoryUsage: "0" },
+    "INFO",
   );
 }
