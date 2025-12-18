@@ -27,7 +27,7 @@ function getEncryptionKey(keyType: EncryptionKeyType = "google"): Buffer {
       ? "WORDPRESS_ENCRYPTION_KEY"
       : "GOOGLE_TOKEN_ENCRYPTION_KEY";
 
-  const keyHex = process.env[envVarName];
+  const keyHex = process.env[envVarName]?.trim();
 
   if (!keyHex) {
     throw new Error(
