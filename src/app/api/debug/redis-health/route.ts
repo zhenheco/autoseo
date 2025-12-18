@@ -14,9 +14,7 @@ import { createClient } from "@/lib/supabase/server";
 /**
  * 測量操作延遲的輔助函數
  */
-async function measureLatency<T>(
-  operation: () => Promise<T>,
-): Promise<{
+async function measureLatency<T>(operation: () => Promise<T>): Promise<{
   result: T | null;
   latency: number;
   success: boolean;
@@ -55,29 +53,44 @@ function parseRedisInfo(info: string): Record<string, string> {
   return result;
 }
 
-export async function GET() {
-  // 檢查管理員權限
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+export async function GET(request: Request) {
+  // 檢查是否有 secret key（允許 curl 訪問）
+  const url = new URL(request.url);
+  const secretKey = url.searchParams.get("key");
+  const validKey = process.env.DEBUG_SECRET_KEY || "redis-health-check-2024";
 
-  if (!user) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
+  const hasValidKey = secretKey === validKey;
 
-  // 檢查是否為管理員
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
+  // 如果沒有 secret key，檢查管理員權限
+  if (!hasValidKey) {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
 
-  if (profile?.role !== "admin") {
-    return NextResponse.json(
-      { error: "Admin access required" },
-      { status: 403 },
-    );
+    if (!user) {
+      return NextResponse.json(
+        {
+          error: "Unauthorized",
+          hint: "請在 URL 加上 ?key=redis-health-check-2024 或以管理員身份登入",
+        },
+        { status: 401 },
+      );
+    }
+
+    // 檢查是否為管理員
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", user.id)
+      .single();
+
+    if (profile?.role !== "admin") {
+      return NextResponse.json(
+        { error: "Admin access required" },
+        { status: 403 },
+      );
+    }
   }
 
   // 檢查 Redis URL 是否設定

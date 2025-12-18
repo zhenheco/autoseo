@@ -174,7 +174,11 @@ function createRedisClient(): Redis {
     },
     enableOfflineQueue: false, // serverless 環境不使用離線佇列
     connectTimeout: 5000,
-    commandTimeout: 3000,
+    commandTimeout: 5000, // 從 3000 增加到 5000
+    // Socket 層級的 timeout（更強制）
+    socketTimeout: 5000,
+    // 保持連線
+    keepAlive: 10000,
     // 不使用 lazyConnect，讓 ioredis 自動連接
   });
 
