@@ -1,12 +1,12 @@
 /**
- * Redis 健康檢查診斷 API
+ * Redis 健康檢查診斷 API（Upstash 版本）
  * 用於診斷 Redis 連線和效能問題
  *
  * 只允許管理員訪問
  */
 
 import { NextResponse } from "next/server";
-import Redis from "ioredis";
+import { Redis } from "@upstash/redis";
 
 import { getRedisStats } from "@/lib/cache/redis-cache";
 import { createClient } from "@/lib/supabase/server";
@@ -36,21 +36,6 @@ async function measureLatency<T>(operation: () => Promise<T>): Promise<{
       error: error instanceof Error ? error.message : "Unknown error",
     };
   }
-}
-
-/**
- * 解析 Redis INFO 命令的輸出
- */
-function parseRedisInfo(info: string): Record<string, string> {
-  const result: Record<string, string> = {};
-  const lines = info.split("\n");
-  for (const line of lines) {
-    if (line.includes(":")) {
-      const [key, value] = line.split(":");
-      result[key.trim()] = value?.trim() || "";
-    }
-  }
-  return result;
 }
 
 export async function GET(request: Request) {
@@ -93,56 +78,44 @@ export async function GET(request: Request) {
     }
   }
 
-  // 檢查 Redis URL 是否設定
-  if (!process.env.REDIS_URL) {
+  // 檢查 Upstash Redis 是否設定
+  if (
+    !process.env.UPSTASH_REDIS_REST_URL ||
+    !process.env.UPSTASH_REDIS_REST_TOKEN
+  ) {
     return NextResponse.json({
       status: "not_configured",
-      message: "REDIS_URL 環境變數未設定",
+      message:
+        "UPSTASH_REDIS_REST_URL 或 UPSTASH_REDIS_REST_TOKEN 環境變數未設定",
+      provider: "upstash",
     });
   }
 
-  // 建立獨立的 Redis 連線進行診斷
-  let redis: Redis | null = null;
-
   try {
-    // 測量連線時間
-    const connectStart = Date.now();
-    redis = new Redis(process.env.REDIS_URL, {
-      connectTimeout: 10000, // 診斷用，給更多時間
-      commandTimeout: 10000,
-      maxRetriesPerRequest: 1,
-      enableOfflineQueue: false,
-      lazyConnect: true,
+    // 建立 Upstash Redis 客戶端
+    const redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
     });
 
-    // 連線
-    await redis.connect();
-    const connectLatency = Date.now() - connectStart;
-
     // 測試 PING
-    const pingResult = await measureLatency(() => redis!.ping());
+    const pingResult = await measureLatency(() => redis.ping());
 
     // 測試 SET 操作
     const testKey = `_health_check_${Date.now()}`;
     const testValue = "test_value";
     const setResult = await measureLatency(() =>
-      redis!.setex(testKey, 60, testValue),
+      redis.setex(testKey, 60, testValue),
     );
 
     // 測試 GET 操作
-    const getResult = await measureLatency(() => redis!.get(testKey));
+    const getResult = await measureLatency(() => redis.get(testKey));
 
     // 清理測試 key
     await redis.del(testKey);
 
-    // 取得 Redis 伺服器資訊
-    const infoResult = await measureLatency(() => redis!.info());
-    const serverInfo = infoResult.result
-      ? parseRedisInfo(infoResult.result)
-      : {};
-
     // 取得 key 數量
-    const dbsizeResult = await measureLatency(() => redis!.dbsize());
+    const dbsizeResult = await measureLatency(() => redis.dbsize());
 
     // 計算總體狀態
     const allOperationsSuccess =
@@ -155,16 +128,16 @@ export async function GET(request: Request) {
 
     if (!allOperationsSuccess) {
       status = "unhealthy";
-      recommendation = "Redis 操作失敗，請檢查連線和伺服器狀態";
+      recommendation = "Redis 操作失敗，請檢查 Upstash 服務狀態和憑證";
     } else if (avgLatency > 500) {
       status = "degraded";
-      recommendation = `平均延遲過高 (${Math.round(avgLatency)}ms)，建議：1) 檢查 Zeabur Redis 區域設定 2) 考慮遷移到 Upstash (邊緣位置更近) 3) 增加 commandTimeout`;
+      recommendation = `平均延遲過高 (${Math.round(avgLatency)}ms)，建議檢查 Upstash 區域設定是否靠近 Vercel 部署區域`;
     } else if (avgLatency > 200) {
       status = "degraded";
-      recommendation = `延遲略高 (${Math.round(avgLatency)}ms)，建議將 commandTimeout 從 3000ms 增加到 5000ms`;
+      recommendation = `延遲略高 (${Math.round(avgLatency)}ms)，但在可接受範圍內`;
     } else {
       status = "healthy";
-      recommendation = "Redis 運作正常";
+      recommendation = "Upstash Redis 運作正常，延遲良好";
     }
 
     // 取得執行時期統計（來自應用程式的操作記錄）
@@ -172,11 +145,8 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       status,
+      provider: "upstash",
       timestamp: new Date().toISOString(),
-      connection: {
-        latency: connectLatency,
-        success: true,
-      },
       operations: {
         ping: {
           latency: pingResult.latency,
@@ -193,14 +163,6 @@ export async function GET(request: Request) {
           success: getResult.success,
           error: getResult.error,
         },
-      },
-      serverInfo: {
-        version: serverInfo.redis_version || "unknown",
-        connectedClients: serverInfo.connected_clients || "unknown",
-        usedMemory: serverInfo.used_memory_human || "unknown",
-        maxMemory: serverInfo.maxmemory_human || "unknown",
-        uptimeSeconds: serverInfo.uptime_in_seconds || "unknown",
-        role: serverInfo.role || "unknown",
       },
       database: {
         keyCount: dbsizeResult.result ?? 0,
@@ -221,8 +183,9 @@ export async function GET(request: Request) {
         recommendation,
       },
       config: {
-        currentTimeout: 3000,
-        suggestedTimeout: avgLatency > 200 ? 5000 : 3000,
+        provider: "upstash",
+        connectionType: "HTTP (REST API)",
+        note: "Upstash 使用 HTTP API，無連線管理問題",
       },
     });
   } catch (error) {
@@ -231,32 +194,21 @@ export async function GET(request: Request) {
 
     // 分析錯誤類型
     let diagnosis: string;
-    if (errorMessage.includes("ECONNREFUSED")) {
-      diagnosis = "連線被拒絕 - Redis 伺服器可能未啟動或 URL 錯誤";
-    } else if (errorMessage.includes("ETIMEDOUT")) {
-      diagnosis = "連線超時 - 網路延遲過高或防火牆阻擋";
-    } else if (errorMessage.includes("ENOTFOUND")) {
-      diagnosis = "找不到主機 - Redis URL 的主機名稱錯誤";
-    } else if (errorMessage.includes("timed out")) {
-      diagnosis = "命令超時 - Redis 伺服器響應過慢";
+    if (errorMessage.includes("Unauthorized")) {
+      diagnosis = "認證失敗 - 請檢查 UPSTASH_REDIS_REST_TOKEN 是否正確";
+    } else if (errorMessage.includes("fetch")) {
+      diagnosis = "網路錯誤 - 請檢查 UPSTASH_REDIS_REST_URL 是否正確";
     } else {
-      diagnosis = "未知錯誤 - 請檢查 Redis URL 和伺服器狀態";
+      diagnosis = "未知錯誤 - 請檢查 Upstash Dashboard 確認服務狀態";
     }
 
     return NextResponse.json({
       status: "unhealthy",
+      provider: "upstash",
       timestamp: new Date().toISOString(),
       error: errorMessage,
       diagnosis,
-      recommendation: "請檢查 Zeabur Redis 服務狀態，或考慮遷移到 Upstash",
+      recommendation: "請檢查 Upstash 憑證和服務狀態",
     });
-  } finally {
-    if (redis) {
-      try {
-        redis.disconnect();
-      } catch {
-        // 忽略斷開連線錯誤
-      }
-    }
   }
 }

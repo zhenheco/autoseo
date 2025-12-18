@@ -4,7 +4,7 @@
  */
 
 import crypto from "crypto";
-import Redis from "ioredis";
+import { Redis } from "@upstash/redis";
 
 /**
  * 驗證 HMAC SHA256 簽章
@@ -117,9 +117,9 @@ export function generateNonce(length: number = 32): string {
 }
 
 /**
- * Redis 客戶端單例（用於 nonce 快取）
+ * Upstash Redis 客戶端（延遲初始化）
  */
-let redisClient: Redis | null = null;
+let redis: Redis | null = null;
 
 /**
  * 記憶體快取作為備援（Redis 不可用時使用）
@@ -129,33 +129,22 @@ const memoryNonceCache = new Map<string, number>();
 /**
  * 取得 Redis 客戶端
  */
-function getRedisClient(): Redis | null {
-  if (!process.env.REDIS_URL) {
+function getRedis(): Redis | null {
+  if (
+    !process.env.UPSTASH_REDIS_REST_URL ||
+    !process.env.UPSTASH_REDIS_REST_TOKEN
+  ) {
     return null;
   }
 
-  if (!redisClient) {
-    redisClient = new Redis(process.env.REDIS_URL, {
-      maxRetriesPerRequest: 1,
-      retryStrategy: (times) => {
-        if (times > 3) return null;
-        return Math.min(times * 200, 2000);
-      },
-      enableOfflineQueue: false,
-      connectTimeout: 5000,
-      commandTimeout: 3000,
-    });
-
-    redisClient.on("error", (err) => {
-      console.error("[WebhookValidator] Redis error:", err.message);
-    });
-
-    redisClient.on("close", () => {
-      redisClient = null;
+  if (!redis) {
+    redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
     });
   }
 
-  return redisClient;
+  return redis;
 }
 
 /**
@@ -174,13 +163,13 @@ export async function checkAndRecordNonce(
     return false;
   }
 
-  const redis = getRedisClient();
+  const client = getRedis();
 
-  if (redis) {
+  if (client) {
     try {
       const key = `nonce:${nonce}`;
       // 使用 SETNX（SET if Not eXists）原子操作
-      const result = await redis.set(key, "1", "EX", ttlSeconds, "NX");
+      const result = await client.set(key, "1", { ex: ttlSeconds, nx: true });
       // 如果 result 為 "OK"，表示 nonce 不存在且已設定
       return result === "OK";
     } catch (error) {

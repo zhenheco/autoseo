@@ -1,13 +1,14 @@
 /**
- * Rate Limiting 工具
- * 使用 Redis (Zeabur/自建) 實現分散式速率限制
+ * Rate Limiting 工具（使用 Upstash）
+ * 使用 HTTP-based Redis 實現分散式速率限制
  *
- * 針對 Vercel serverless 環境優化：
- * - 連線狀態檢查和自動重連
- * - 優雅降級（Redis 不可用時允許請求通過）
+ * 適合 serverless 環境：
+ * - 無連線管理問題
+ * - 無 timeout 掛起問題
+ * - 全球邊緣位置，低延遲
  */
 
-import Redis from "ioredis";
+import { Redis } from "@upstash/redis";
 import { NextResponse } from "next/server";
 
 export interface RateLimitResult {
@@ -42,12 +43,8 @@ export const RATE_LIMIT_CONFIGS = {
   DEFAULT: { limit: 60, window: 60 },
 } as const;
 
-/** Redis 客戶端單例 */
-let redisClient: Redis | null = null;
-/** 最後一次連線錯誤時間 */
-let lastConnectionError: number = 0;
-/** 連線錯誤後的冷卻時間（毫秒） */
-const CONNECTION_COOLDOWN = 5000;
+/** Upstash Redis 客戶端（延遲初始化） */
+let redis: Redis | null = null;
 
 /**
  * 記憶體 Rate Limit 快取（Redis 不可用時的備援）
@@ -115,196 +112,34 @@ function cleanupExpiredMemoryEntries(): void {
 }
 
 /**
- * 建立新的 Redis 客戶端
- * 不使用 lazyConnect，讓 ioredis 自動管理連接
- */
-function createRedisClient(): Redis {
-  const client = new Redis(process.env.REDIS_URL!, {
-    maxRetriesPerRequest: 1,
-    retryStrategy: (times) => {
-      if (times > 3) {
-        lastConnectionError = Date.now();
-        return null; // 停止重試
-      }
-      return Math.min(times * 200, 2000);
-    },
-    enableOfflineQueue: false, // serverless 環境不使用離線佇列
-    connectTimeout: 5000,
-    commandTimeout: 3000,
-    // 不使用 lazyConnect，讓 ioredis 自動連接
-  });
-
-  client.on("error", (err) => {
-    // 只有真正的連接錯誤才觸發冷卻（排除 Stream isn't writeable）
-    const isStreamError = err.message.includes("Stream isn't writeable");
-    if (!isStreamError) {
-      console.error("[RateLimit] Redis connection error:", err.message);
-      // 只在嚴重錯誤時觸發冷卻
-      if (
-        err.message.includes("ECONNREFUSED") ||
-        err.message.includes("ETIMEDOUT") ||
-        err.message.includes("ENOTFOUND")
-      ) {
-        lastConnectionError = Date.now();
-      }
-    }
-  });
-
-  client.on("close", () => {
-    // 連線關閉時清理客戶端，下次會重新建立
-    if (redisClient === client) {
-      redisClient = null;
-    }
-  });
-
-  client.on("ready", () => {
-    // 連接成功，重置錯誤計時
-    lastConnectionError = 0;
-  });
-
-  return client;
-}
-
-/**
- * 強制重新建立連線
- */
-function reconnect(): Redis | null {
-  if (redisClient) {
-    try {
-      redisClient.disconnect();
-    } catch {
-      // 忽略斷開連線時的錯誤
-    }
-    redisClient = null;
-  }
-  return getRedisClient();
-}
-
-/**
  * 取得 Redis 客戶端
- * 使用單例模式避免重複連線
+ * Upstash 使用 HTTP，每個請求都是獨立的
  */
-function getRedisClient(): Redis | null {
-  if (!process.env.REDIS_URL) {
-    return null;
-  }
-
-  // 冷卻機制：如果最近有嚴重連線錯誤，暫時跳過 Redis
+function getRedis(): Redis | null {
   if (
-    lastConnectionError &&
-    Date.now() - lastConnectionError < CONNECTION_COOLDOWN
+    !process.env.UPSTASH_REDIS_REST_URL ||
+    !process.env.UPSTASH_REDIS_REST_TOKEN
   ) {
     return null;
   }
 
-  // 檢查現有連線狀態
-  if (redisClient) {
-    const status = redisClient.status;
-    // 如果連線已斷開或錯誤狀態，清理並重建
-    if (status === "end" || status === "close") {
-      redisClient = null;
-    }
+  if (!redis) {
+    redis = new Redis({
+      url: process.env.UPSTASH_REDIS_REST_URL,
+      token: process.env.UPSTASH_REDIS_REST_TOKEN,
+    });
   }
 
-  if (!redisClient) {
-    redisClient = createRedisClient();
-  }
-
-  return redisClient;
-}
-
-/**
- * 等待 Redis 連接就緒
- */
-async function waitForReady(
-  redis: Redis,
-  timeoutMs: number = 3000,
-): Promise<boolean> {
-  if (redis.status === "ready") return true;
-  if (redis.status === "end" || redis.status === "close") return false;
-
-  return new Promise((resolve) => {
-    const timeout = setTimeout(() => {
-      resolve(false);
-    }, timeoutMs);
-
-    const onReady = () => {
-      clearTimeout(timeout);
-      redis.removeListener("error", onError);
-      resolve(true);
-    };
-
-    const onError = () => {
-      clearTimeout(timeout);
-      redis.removeListener("ready", onReady);
-      resolve(false);
-    };
-
-    redis.once("ready", onReady);
-    redis.once("error", onError);
-  });
-}
-
-/**
- * 安全執行 Redis 命令
- * 失敗時自動重試一次，最終失敗則返回 fallback 值
- */
-async function safeExecute<T>(
-  operation: (redis: Redis) => Promise<T>,
-  fallback: T,
-): Promise<T> {
-  let redis = getRedisClient();
-  if (!redis) return fallback;
-
-  try {
-    // 等待連接就緒（如果正在連接中）
-    if (redis.status !== "ready") {
-      const isReady = await waitForReady(redis);
-      if (!isReady) {
-        // 連接失敗，嘗試重建
-        redis = reconnect();
-        if (!redis) return fallback;
-        const retryReady = await waitForReady(redis);
-        if (!retryReady) {
-          lastConnectionError = Date.now();
-          return fallback;
-        }
-      }
-    }
-    return await operation(redis);
-  } catch (error) {
-    // 檢查是否為連線斷開錯誤
-    const isConnectionError =
-      error instanceof Error &&
-      (error.message.includes("Stream isn't writeable") ||
-        error.message.includes("Connection is closed"));
-
-    if (isConnectionError) {
-      // 連線斷開，嘗試重建
-      redis = reconnect();
-      if (!redis) return fallback;
-
-      try {
-        const isReady = await waitForReady(redis);
-        if (!isReady) return fallback;
-        return await operation(redis);
-      } catch {
-        // 重試也失敗
-        return fallback;
-      }
-    }
-
-    // 其他錯誤，直接返回 fallback
-    console.error("[RateLimit] Operation error:", error);
-    return fallback;
-  }
+  return redis;
 }
 
 /**
  * 檢查 Redis 是否啟用
  */
 function isRedisEnabled(): boolean {
-  return !!process.env.REDIS_URL;
+  return !!(
+    process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
+  );
 }
 
 /**
@@ -322,30 +157,34 @@ export async function rateLimit(
     return memoryRateLimit(identifier, config);
   }
 
+  const client = getRedis();
+  if (!client) {
+    return memoryRateLimit(identifier, config);
+  }
+
   const key = `rate_limit:${identifier}`;
 
-  // 使用 safeExecute 包裝 Redis 操作，失敗時使用記憶體快取備援
-  return safeExecute(
-    async (redis) => {
-      const current = await redis.incr(key);
+  try {
+    const current = await client.incr(key);
 
-      // 如果是第一次請求，設定過期時間
-      if (current === 1) {
-        await redis.expire(key, config.window);
-      }
+    // 如果是第一次請求，設定過期時間
+    if (current === 1) {
+      await client.expire(key, config.window);
+    }
 
-      const ttl = await redis.ttl(key);
+    const ttl = await client.ttl(key);
 
-      return {
-        success: current <= config.limit,
-        remaining: Math.max(0, config.limit - current),
-        reset: ttl > 0 ? ttl : config.window,
-        limit: config.limit,
-      };
-    },
-    // fallback: Redis 不可用時使用記憶體快取備援（而非完全允許）
-    memoryRateLimit(identifier, config),
-  );
+    return {
+      success: current <= config.limit,
+      remaining: Math.max(0, config.limit - current),
+      reset: ttl > 0 ? ttl : config.window,
+      limit: config.limit,
+    };
+  } catch (error) {
+    console.error("[RateLimit] Redis error:", error);
+    // Redis 錯誤時使用記憶體快取備援
+    return memoryRateLimit(identifier, config);
+  }
 }
 
 /**
