@@ -4,9 +4,12 @@
  * 每日 Billing 審計腳本
  *
  * 功能：
- * 1. 比對 completed jobs vs token_deduction_records
+ * 1. 比對 completed jobs vs 扣款記錄（支援新舊兩種計費系統）
+ *    - 舊系統：token_deduction_records（Token 制）
+ *    - 新系統：article_usage_logs（篇數制）
  * 2. 檢測 metadata.billing_status 為 "failed" 的任務
- * 3. 輸出未扣款任務清單
+ * 3. 認可 "success" 和 "reconciled" 為有效扣款狀態
+ * 4. 輸出未扣款任務清單
  *
  * 用法：
  *   pnpm tsx scripts/billing-audit.ts
@@ -46,31 +49,82 @@ async function main() {
     `[Billing Audit] 📊 找到 ${completedJobs?.length || 0} 個已完成任務`,
   );
 
-  // 2. 獲取扣款記錄
+  // 2a. 獲取舊系統扣款記錄（Token 制）
   // 注意：idempotency_key 存儲的是 article_job_id（見 migration 20251114000000）
-  const { data: deductions, error: deductionsError } = await supabase
+  const { data: tokenDeductions, error: tokenDeductionsError } = await supabase
     .from("token_deduction_records")
     .select("idempotency_key")
     .gte("created_at", since);
 
-  if (deductionsError) {
-    console.error("[Billing Audit] ❌ 查詢 deductions 失敗:", deductionsError);
+  if (tokenDeductionsError) {
+    console.error(
+      "[Billing Audit] ❌ 查詢 token_deduction_records 失敗:",
+      tokenDeductionsError,
+    );
     process.exit(1);
   }
 
-  console.log(`[Billing Audit] 📊 找到 ${deductions?.length || 0} 條扣款記錄`);
+  // 2b. 獲取新系統扣款記錄（篇數制）
+  // article_usage_logs 使用 article_job_id 欄位
+  const { data: articleDeductions, error: articleDeductionsError } = (await (
+    supabase.from("article_usage_logs" as "companies") as unknown as {
+      select: (columns: string) => {
+        gte: (
+          column: string,
+          value: string,
+        ) => Promise<{
+          data: Array<{ article_job_id: string }> | null;
+          error: { message: string } | null;
+        }>;
+      };
+    }
+  )
+    .select("article_job_id")
+    .gte("created_at", since)) as {
+    data: Array<{ article_job_id: string }> | null;
+    error: { message: string } | null;
+  };
 
-  // 3. 找出未扣款的任務
-  const deductedJobIds = new Set(
-    deductions?.map((d) => d.idempotency_key) || [],
+  if (articleDeductionsError) {
+    // article_usage_logs 可能不存在（舊版本），不視為錯誤
+    console.log(
+      "[Billing Audit] ℹ️ article_usage_logs 查詢失敗（可能是舊版本）:",
+      articleDeductionsError.message,
+    );
+  }
+
+  const tokenDeductionCount = tokenDeductions?.length || 0;
+  const articleDeductionCount = articleDeductions?.length || 0;
+  console.log(
+    `[Billing Audit] 📊 找到 ${tokenDeductionCount} 條 Token 扣款記錄`,
+  );
+  console.log(
+    `[Billing Audit] 📊 找到 ${articleDeductionCount} 條篇數扣款記錄`,
   );
 
+  // 3. 找出未扣款的任務（合併兩種系統的記錄）
+  const deductedJobIds = new Set([
+    ...(tokenDeductions?.map((d) => d.idempotency_key) || []),
+    ...(articleDeductions?.map((d) => d.article_job_id) || []),
+  ]);
+
+  // 有效的 billing_status 值（已扣款或已補扣）
+  const validBillingStatuses = new Set(["success", "reconciled"]);
+
   const unchargedJobs = (completedJobs || []).filter((job) => {
-    // 沒有扣款記錄
-    if (!deductedJobIds.has(job.id)) {
-      return true;
+    const metadata = job.metadata as Record<string, unknown> | null;
+
+    // 如果 billing_status 為 success 或 reconciled，視為已扣款
+    if (validBillingStatuses.has(metadata?.billing_status as string)) {
+      return false;
     }
-    return false;
+
+    // 如果有扣款記錄，視為已扣款
+    if (deductedJobIds.has(job.id)) {
+      return false;
+    }
+
+    return true;
   });
 
   // 4. 找出 billing_status = "failed" 的任務
@@ -118,11 +172,22 @@ async function main() {
   }
 
   // 6. 統計摘要
+  const totalDeductions = tokenDeductionCount + articleDeductionCount;
+  const chargedByStatus = (completedJobs || []).filter((job) => {
+    const metadata = job.metadata as Record<string, unknown> | null;
+    return validBillingStatuses.has(metadata?.billing_status as string);
+  }).length;
+
   console.log("=".repeat(60));
   console.log("[Billing Audit] 📈 統計摘要");
   console.log("=".repeat(60));
   console.log(`  總完成任務: ${completedJobs?.length || 0}`);
-  console.log(`  已扣款: ${deductions?.length || 0}`);
+  console.log(
+    `  已扣款（總計）: ${Math.max(totalDeductions, chargedByStatus)}`,
+  );
+  console.log(`    - Token 扣款記錄: ${tokenDeductionCount}`);
+  console.log(`    - 篇數扣款記錄: ${articleDeductionCount}`);
+  console.log(`    - 有效 billing_status: ${chargedByStatus}`);
   console.log(`  未扣款: ${unchargedJobs.length}`);
   console.log(`  扣款失敗: ${billingFailedJobs.length}`);
   console.log("");
