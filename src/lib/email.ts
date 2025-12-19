@@ -327,14 +327,14 @@ export async function sendBillingAlertEmail({
 
 interface ScheduleAlertEmailParams {
   to: string;
-  companyName: string;
+  websiteName: string;
   daysRemaining: number;
   alertLevel: 7 | 3 | 1;
 }
 
 export async function sendScheduleAlertEmail({
   to,
-  companyName,
+  websiteName,
   daysRemaining,
   alertLevel,
 }: ScheduleAlertEmailParams): Promise<boolean> {
@@ -365,7 +365,7 @@ export async function sendScheduleAlertEmail({
     </div>
     <div style="padding: 20px;">
       <p style="color: #4B5563; line-height: 1.6;">
-        您的公司「<strong>${companyName}</strong>」的排程文章即將用盡。
+        您的網站「<strong>${websiteName}</strong>」的排程文章即將用盡。
       </p>
       <p style="color: #4B5563; line-height: 1.6;">
         快來補充新文章，確保網站持續有新內容發布！
