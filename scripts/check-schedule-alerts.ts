@@ -19,6 +19,7 @@ interface Website {
   id: string;
   website_name: string;
   company_id: string;
+  daily_article_limit: number | null;
 }
 
 interface Company {
@@ -51,7 +52,7 @@ async function main() {
   // 查詢所有啟用的網站，並關聯公司資訊
   const { data: websites, error: websitesError } = await supabase
     .from("website_configs")
-    .select("id, website_name, company_id")
+    .select("id, website_name, company_id, daily_article_limit")
     .eq("is_active", true);
 
   if (websitesError) {
@@ -94,18 +95,19 @@ async function main() {
       continue;
     }
 
-    // 查詢該網站最晚的排程文章日期
-    const { data: latestArticle } = await supabase
-      .from("generated_articles")
+    // 查詢該網站最晚的排程文章日期（從 article_jobs 表查詢）
+    const { data: latestJob } = await supabase
+      .from("article_jobs")
       .select("scheduled_publish_at")
       .eq("website_id", website.id)
       .eq("status", "scheduled")
+      .gte("scheduled_publish_at", now.toISOString())
       .order("scheduled_publish_at", { ascending: false })
       .limit(1)
       .single();
 
-    const latestDate = latestArticle?.scheduled_publish_at
-      ? new Date(latestArticle.scheduled_publish_at)
+    const latestDate = latestJob?.scheduled_publish_at
+      ? new Date(latestJob.scheduled_publish_at)
       : null;
 
     // 計算還剩幾天
