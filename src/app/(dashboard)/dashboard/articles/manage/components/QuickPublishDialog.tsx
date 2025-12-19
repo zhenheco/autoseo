@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { WebsiteSelector } from "@/components/articles/WebsiteSelector";
 import {
   ArticleWithWebsite,
@@ -39,6 +40,9 @@ export function QuickPublishDialog({
   const [selectedWebsiteId, setSelectedWebsiteId] = useState<string | null>(
     article.website_id,
   );
+  const [publishStatus, setPublishStatus] = useState<"publish" | "draft">(
+    "publish",
+  );
   const [publishState, setPublishState] = useState<PublishState>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
@@ -53,7 +57,11 @@ export function QuickPublishDialog({
       await assignWebsiteToArticle(article.id, selectedWebsiteId);
     }
 
-    const result = await publishArticle(article.id, selectedWebsiteId);
+    const result = await publishArticle(
+      article.id,
+      selectedWebsiteId,
+      publishStatus,
+    );
 
     if (result.success) {
       setPublishState("success");
@@ -122,6 +130,36 @@ export function QuickPublishDialog({
                   disabled={publishState === "publishing"}
                   placeholder={t("publish.selectWebsite")}
                 />
+              </div>
+              <div className="space-y-2">
+                <Label>{t("publish.statusLabel")}</Label>
+                <RadioGroup
+                  value={publishStatus}
+                  onValueChange={(value) =>
+                    setPublishStatus(value as "publish" | "draft")
+                  }
+                  disabled={publishState === "publishing"}
+                  className="flex gap-4"
+                >
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="publish" id="status-publish" />
+                    <Label
+                      htmlFor="status-publish"
+                      className="font-normal cursor-pointer"
+                    >
+                      {t("publish.statusPublish")}
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="draft" id="status-draft" />
+                    <Label
+                      htmlFor="status-draft"
+                      className="font-normal cursor-pointer"
+                    >
+                      {t("publish.statusDraft")}
+                    </Label>
+                  </div>
+                </RadioGroup>
               </div>
               {!selectedWebsiteId && (
                 <p className="text-sm text-muted-foreground">

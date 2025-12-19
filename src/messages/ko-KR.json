@@ -224,7 +224,10 @@
       "pleaseSelectWebsite": "대상 사이트를 선택해 주세요",
       "publishing": "게시 중...",
       "confirmPublish": "게시 확인",
-      "failed": "게시 실패"
+      "failed": "게시 실패",
+      "statusLabel": "게시 상태",
+      "statusPublish": "게시 (공개)",
+      "statusDraft": "초안"
     },
     "loadFailed": "로드 실패",
     "batchPublish": {

@@ -9,8 +9,9 @@ import {
 } from "../actions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { FileText, Save, Check, Loader2 } from "lucide-react";
+import { FileText, Save, Check, Loader2, Send } from "lucide-react";
 import { TiptapEditor } from "@/components/articles/TiptapEditor";
+import { QuickPublishDialog } from "./QuickPublishDialog";
 import { marked } from "marked";
 
 interface ArticlePreviewProps {
@@ -47,6 +48,7 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
   const [saveSuccess, setSaveSuccess] = useState(false);
   const [hasChanges, setHasChanges] = useState(false);
   const [loadedFromCache, setLoadedFromCache] = useState(false);
+  const [showPublishDialog, setShowPublishDialog] = useState(false);
   const prevArticleIdRef = useRef<string | null>(null);
 
   const article = articles.find((a) => a.id === previewArticleId);
@@ -167,6 +169,15 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
               </>
             )}
           </Button>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => setShowPublishDialog(true)}
+            disabled={isLoading}
+          >
+            <Send className="mr-1 h-4 w-4" />
+            發布
+          </Button>
           {loadedFromCache && (
             <span className="text-xs text-muted-foreground">⚡ 快取</span>
           )}
@@ -186,6 +197,15 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
           />
         )}
       </div>
+
+      {/* 發布對話框 */}
+      {article && (
+        <QuickPublishDialog
+          open={showPublishDialog}
+          onOpenChange={setShowPublishDialog}
+          article={article}
+        />
+      )}
     </div>
   );
 }

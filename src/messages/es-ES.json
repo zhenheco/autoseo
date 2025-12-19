@@ -224,7 +224,10 @@
       "pleaseSelectWebsite": "Por favor seleccione un sitio objetivo",
       "publishing": "Publicando...",
       "confirmPublish": "Confirmar publicación",
-      "failed": "Error al publicar"
+      "failed": "Error al publicar",
+      "statusLabel": "Estado de publicación",
+      "statusPublish": "Publicar (Público)",
+      "statusDraft": "Borrador"
     },
     "loadFailed": "Error al cargar",
     "batchPublish": {

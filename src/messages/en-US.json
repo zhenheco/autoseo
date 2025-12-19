@@ -250,7 +250,10 @@
       "pleaseSelectWebsite": "Please select a target website",
       "publishing": "Publishing...",
       "confirmPublish": "Confirm Publish",
-      "failed": "Publish failed"
+      "failed": "Publish failed",
+      "statusLabel": "Publish Status",
+      "statusPublish": "Publish (Public)",
+      "statusDraft": "Draft"
     },
     "loadFailed": "Load failed",
     "batchPublish": {

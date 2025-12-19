@@ -250,7 +250,10 @@
       "pleaseSelectWebsite": "請選擇要發布的目標網站",
       "publishing": "發布中...",
       "confirmPublish": "確認發布",
-      "failed": "發布失敗"
+      "failed": "發布失敗",
+      "statusLabel": "發布狀態",
+      "statusPublish": "發布（公開）",
+      "statusDraft": "草稿"
     },
     "loadFailed": "載入失敗",
     "batchPublish": {

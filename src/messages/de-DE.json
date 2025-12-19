@@ -224,7 +224,10 @@
       "pleaseSelectWebsite": "Bitte wählen Sie eine Ziel-Website",
       "publishing": "Veröffentlichen...",
       "confirmPublish": "Veröffentlichung bestätigen",
-      "failed": "Veröffentlichung fehlgeschlagen"
+      "failed": "Veröffentlichung fehlgeschlagen",
+      "statusLabel": "Veröffentlichungsstatus",
+      "statusPublish": "Veröffentlichen (Öffentlich)",
+      "statusDraft": "Entwurf"
     },
     "loadFailed": "Laden fehlgeschlagen",
     "batchPublish": {

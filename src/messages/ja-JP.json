@@ -224,7 +224,10 @@
       "pleaseSelectWebsite": "公開先サイトを選択してください",
       "publishing": "公開中...",
       "confirmPublish": "公開する",
-      "failed": "公開に失敗しました"
+      "failed": "公開に失敗しました",
+      "statusLabel": "公開状態",
+      "statusPublish": "公開（一般公開）",
+      "statusDraft": "下書き"
     },
     "loadFailed": "読み込みに失敗しました",
     "batchPublish": {

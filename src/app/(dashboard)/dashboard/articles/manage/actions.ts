@@ -270,15 +270,26 @@ export async function assignWebsiteToArticle(
   return { success: true, error: null };
 }
 
-export async function publishArticle(articleJobId: string, websiteId: string) {
+/**
+ * 發布文章到 WordPress 或 Platform Blog
+ * @param articleJobId - 文章 Job ID
+ * @param websiteId - 目標網站 ID
+ * @param status - 發布狀態：publish（公開）或 draft（草稿），預設為 publish
+ */
+export async function publishArticle(
+  articleJobId: string,
+  websiteId: string,
+  status: "publish" | "draft" = "publish",
+) {
   const user = await getUser();
   if (!user) return { success: false, error: "未登入" };
 
   const supabase = await createClient();
 
+  // 查詢文章以獲取 generated_articles 的 id
   const { data: article, error: fetchError } = await supabase
     .from("generated_articles")
-    .select("*")
+    .select("id")
     .eq("article_job_id", articleJobId)
     .single();
 
@@ -286,9 +297,10 @@ export async function publishArticle(articleJobId: string, websiteId: string) {
     return { success: false, error: "找不到文章內容" };
   }
 
+  // 檢查網站是否為 Platform Blog
   const { data: website, error: websiteError } = await supabase
     .from("website_configs")
-    .select("*")
+    .select("is_platform_blog")
     .eq("id", websiteId)
     .single();
 
@@ -296,18 +308,19 @@ export async function publishArticle(articleJobId: string, websiteId: string) {
     return { success: false, error: "找不到網站配置" };
   }
 
+  const target = website.is_platform_blog ? "platform" : "wordpress";
+
   try {
+    // 呼叫統一的發布 API
     const response = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || ""}/api/wordpress/publish`,
+      `${process.env.NEXT_PUBLIC_APP_URL || ""}/api/articles/${article.id}/publish`,
       {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          articleId: article.id,
-          websiteId: websiteId,
-          title: article.title,
-          content: article.content,
-          metaDescription: article.meta_description,
+          target,
+          website_id: websiteId,
+          status,
         }),
       },
     );
@@ -319,28 +332,7 @@ export async function publishArticle(articleJobId: string, websiteId: string) {
 
     const result = await response.json();
 
-    await supabase
-      .from("generated_articles")
-      .update({
-        status: "published",
-        published_to_website_id: websiteId,
-        published_url: result.url,
-        wp_post_id: result.postId?.toString(),
-        published_at: new Date().toISOString(),
-      })
-      .eq("id", article.id);
-
-    await supabase
-      .from("article_jobs")
-      .update({
-        status: "published",
-        website_id: websiteId,
-        published_at: new Date().toISOString(),
-        wp_post_id: result.postId?.toString(),
-      })
-      .eq("id", articleJobId);
-
-    // 獲取 companyId 並使快取失效
+    // 使快取失效
     const { data: job } = await supabase
       .from("article_jobs")
       .select("company_id")
@@ -351,7 +343,11 @@ export async function publishArticle(articleJobId: string, websiteId: string) {
     }
 
     revalidatePath("/dashboard/articles/manage");
-    return { success: true, error: null, url: result.url };
+    return {
+      success: true,
+      error: null,
+      url: result.wordpress_url || result.platform_url,
+    };
   } catch (err) {
     console.error("Publish error:", err);
     return { success: false, error: "發布過程發生錯誤" };

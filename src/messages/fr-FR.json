@@ -224,7 +224,10 @@
       "pleaseSelectWebsite": "Veuillez sélectionner un site cible",
       "publishing": "Publication...",
       "confirmPublish": "Confirmer la publication",
-      "failed": "Échec de la publication"
+      "failed": "Échec de la publication",
+      "statusLabel": "Statut de publication",
+      "statusPublish": "Publier (Public)",
+      "statusDraft": "Brouillon"
     },
     "loadFailed": "Échec du chargement",
     "batchPublish": {
