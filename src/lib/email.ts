@@ -187,6 +187,144 @@ function getRoleDescription(role: string): string {
   return descriptions[role] || "團隊成員";
 }
 
+/**
+ * 計費失敗告警 Email 參數
+ */
+export interface FailedBillingJob {
+  jobId: string;
+  companyId: string;
+  companyName?: string;
+  error: string;
+  createdAt: string;
+  retryResult?: "success" | "failed";
+}
+
+interface BillingAlertEmailParams {
+  failedJobs: FailedBillingJob[];
+  retrySuccessCount: number;
+  retryFailedCount: number;
+}
+
+/**
+ * 發送計費失敗告警郵件給管理員
+ * 僅在自動重試後仍有失敗任務時發送
+ */
+export async function sendBillingAlertEmail({
+  failedJobs,
+  retrySuccessCount,
+  retryFailedCount,
+}: BillingAlertEmailParams): Promise<boolean> {
+  // 從環境變數獲取管理員 Email 列表
+  const adminEmails =
+    process.env.ADMIN_EMAILS || process.env.SUPER_ADMIN_EMAILS || "";
+  const recipients = adminEmails.split(",").filter((e) => e.trim());
+
+  if (recipients.length === 0) {
+    console.error("❌ 無法發送計費告警：未設定 ADMIN_EMAILS 環境變數");
+    return false;
+  }
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://1wayseo.com";
+  const now = new Date().toLocaleString("zh-TW", { timeZone: "Asia/Taipei" });
+
+  const subject = `[1waySEO 告警] ${retryFailedCount} 筆計費失敗需人工處理`;
+
+  const jobRows = failedJobs
+    .map(
+      (job, index) => `
+      <tr style="border-bottom: 1px solid #e5e7eb;">
+        <td style="padding: 12px; color: #374151;">${index + 1}</td>
+        <td style="padding: 12px; font-family: monospace; font-size: 12px; color: #6b7280;">${job.jobId.slice(0, 8)}...</td>
+        <td style="padding: 12px; color: #374151;">${job.companyName || job.companyId.slice(0, 8)}</td>
+        <td style="padding: 12px; color: #dc2626;">${job.error}</td>
+        <td style="padding: 12px; color: #6b7280;">${new Date(job.createdAt).toLocaleString("zh-TW", { timeZone: "Asia/Taipei" })}</td>
+      </tr>
+    `,
+    )
+    .join("");
+
+  const html = `
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5;">
+  <div style="max-width: 800px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <!-- 告警標題 -->
+    <div style="background-color: #FEE2E2; border-left: 4px solid #DC2626; padding: 20px;">
+      <h2 style="color: #991B1B; margin: 0 0 10px 0;">⚠️ 計費審計告警</h2>
+      <p style="color: #374151; margin: 0; font-size: 14px;">
+        發現 <strong>${retryFailedCount}</strong> 筆計費失敗，需要人工處理
+      </p>
+    </div>
+
+    <!-- 統計摘要 -->
+    <div style="padding: 20px; background-color: #f9fafb; border-bottom: 1px solid #e5e7eb;">
+      <h3 style="color: #374151; margin: 0 0 12px 0; font-size: 14px;">📊 處理摘要</h3>
+      <div style="display: flex; gap: 24px;">
+        <div>
+          <span style="color: #6b7280; font-size: 12px;">自動重試成功</span>
+          <p style="color: #059669; font-size: 20px; font-weight: 600; margin: 4px 0 0 0;">${retrySuccessCount}</p>
+        </div>
+        <div>
+          <span style="color: #6b7280; font-size: 12px;">仍需人工處理</span>
+          <p style="color: #dc2626; font-size: 20px; font-weight: 600; margin: 4px 0 0 0;">${retryFailedCount}</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 失敗任務列表 -->
+    <div style="padding: 20px;">
+      <h3 style="color: #374151; margin: 0 0 12px 0; font-size: 14px;">🚨 失敗任務詳情</h3>
+      <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
+        <thead>
+          <tr style="background-color: #f3f4f6;">
+            <th style="padding: 12px; text-align: left; color: #6b7280;">#</th>
+            <th style="padding: 12px; text-align: left; color: #6b7280;">Job ID</th>
+            <th style="padding: 12px; text-align: left; color: #6b7280;">公司</th>
+            <th style="padding: 12px; text-align: left; color: #6b7280;">錯誤</th>
+            <th style="padding: 12px; text-align: left; color: #6b7280;">創建時間</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${jobRows}
+        </tbody>
+      </table>
+    </div>
+
+    <!-- 行動按鈕 -->
+    <div style="padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+      <a href="${appUrl}/admin/billing"
+         style="display: inline-block; background-color: #2563EB; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500;">
+        前往後台處理
+      </a>
+    </div>
+
+    <!-- 頁腳 -->
+    <div style="background-color: #F9FAFB; padding: 16px 20px; text-align: center; color: #6B7280; font-size: 12px;">
+      告警時間：${now}<br>
+      此郵件由 1WaySEO 自動發送，請勿直接回覆
+    </div>
+  </div>
+</body>
+</html>
+  `;
+
+  // 發送給所有管理員
+  let success = true;
+  for (const recipient of recipients) {
+    const result = await sendEmail({
+      to: recipient.trim(),
+      subject,
+      html,
+    });
+    if (!result) success = false;
+  }
+
+  return success;
+}
+
 interface ScheduleAlertEmailParams {
   to: string;
   companyName: string;

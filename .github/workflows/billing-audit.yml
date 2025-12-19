@@ -41,8 +41,12 @@ jobs:
         run: |
           echo "SUPABASE_URL=$(echo -n '${{ secrets.SUPABASE_URL }}' | tr -d '\n\r')" >> $GITHUB_ENV
           echo "SUPABASE_SERVICE_ROLE_KEY=$(echo -n '${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "GMAIL_USER=$(echo -n '${{ secrets.GMAIL_USER }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "GMAIL_APP_PASSWORD=$(echo -n '${{ secrets.GMAIL_APP_PASSWORD }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "ADMIN_EMAILS=$(echo -n '${{ secrets.ADMIN_EMAILS }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "NEXT_PUBLIC_APP_URL=$(echo -n '${{ secrets.NEXT_PUBLIC_APP_URL }}' | tr -d '\n\r')" >> $GITHUB_ENV
 
-      - name: Run Billing Audit
+      - name: Run Billing Audit with Auto-Retry
         run: tsx scripts/billing-audit.ts --days=${{ github.event.inputs.days || '1' }}
 
       - name: Log Results
