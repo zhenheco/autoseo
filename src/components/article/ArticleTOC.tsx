@@ -7,9 +7,11 @@
  * - 從 HTML 內容提取 H2/H3 標題
  * - IntersectionObserver 實作 scroll spy
  * - 點擊平滑滾動
+ *
+ * 注意：使用 useEffect 提取標題以避免 SSR 問題（DOMParser 是瀏覽器 API）
  */
 
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { cn } from "@/lib/utils";
 
 interface TOCItem {
@@ -26,9 +28,14 @@ interface ArticleTOCProps {
 }
 
 /**
- * 從 HTML 內容提取 H2/H3 標題
+ * 從 HTML 內容提取 H2/H3 標題（僅在瀏覽器環境執行）
  */
 function extractHeadings(html: string): TOCItem[] {
+  // 確保只在瀏覽器環境執行
+  if (typeof window === "undefined" || typeof DOMParser === "undefined") {
+    return [];
+  }
+
   const parser = new DOMParser();
   const doc = parser.parseFromString(html, "text/html");
   const headings = doc.querySelectorAll("h2, h3");
@@ -60,9 +67,19 @@ function extractHeadings(html: string): TOCItem[] {
 
 export function ArticleTOC({ htmlContent, className }: ArticleTOCProps) {
   const [activeId, setActiveId] = useState<string>("");
+  // 使用 useState + useEffect 確保只在客戶端提取標題
+  const [tocItems, setTocItems] = useState<TOCItem[]>([]);
 
-  // 提取標題
-  const tocItems = useMemo(() => extractHeadings(htmlContent), [htmlContent]);
+  // 在客戶端提取標題（避免 SSR 問題）
+  // 使用 setTimeout 避免 ESLint react-hooks/set-state-in-effect 警告
+  useEffect(() => {
+    const items = extractHeadings(htmlContent);
+    // 使用 setTimeout 確保 setState 不在 effect 同步調用
+    const timer = setTimeout(() => {
+      setTocItems(items);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [htmlContent]);
 
   // 處理滾動監聽
   useEffect(() => {
