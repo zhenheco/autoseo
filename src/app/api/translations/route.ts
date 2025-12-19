@@ -22,6 +22,7 @@ import type {
   CreateTranslationJobRequest,
   CreateTranslationJobResponse,
 } from "@/types/translations";
+import { TRANSLATION_LOCALES } from "@/types/translations";
 
 export const maxDuration = 60;
 
@@ -80,15 +81,9 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 驗證語言代碼
-    const validLocales: TranslationLocale[] = [
-      "en-US",
-      "de-DE",
-      "fr-FR",
-      "es-ES",
-    ];
+    // 驗證語言代碼（使用統一的 TRANSLATION_LOCALES 常數）
     const invalidLocales = target_languages.filter(
-      (l) => !validLocales.includes(l as TranslationLocale),
+      (l) => !TRANSLATION_LOCALES.includes(l as TranslationLocale),
     );
     if (invalidLocales.length > 0) {
       return NextResponse.json(
