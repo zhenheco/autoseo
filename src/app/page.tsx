@@ -1,6 +1,9 @@
 import { createClient } from "@/lib/supabase/server";
 import { HomeClient } from "./home-client";
 
+// 快取 1 年（訂閱方案和加購包很少變動，有修改時手動清除快取）
+export const revalidate = 31536000; // 1 年 = 365 * 24 * 60 * 60
+
 /**
  * 篇數制方案資料類型
  * 註：在 migration 執行後需更新 database.types.ts
