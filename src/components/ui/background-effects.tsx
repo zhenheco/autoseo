@@ -68,7 +68,7 @@ export function AuroraBackground({
         className="absolute inset-0"
         style={{
           backgroundImage:
-            "linear-gradient(135deg, rgba(0, 85, 255, 0.15) 0%, rgba(0, 221, 235, 0.15) 50%, rgba(255, 77, 0, 0.15) 100%)",
+            "linear-gradient(135deg, rgba(6, 182, 212, 0.15) 0%, rgba(139, 92, 246, 0.15) 50%, rgba(236, 72, 153, 0.15) 100%)",
         }}
         animate={{
           opacity: [0.3, 0.5, 0.3],
@@ -85,7 +85,7 @@ export function AuroraBackground({
           className="absolute inset-0"
           style={{
             background:
-              "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(0, 85, 255, 0.3) 0%, transparent 60%)",
+              "radial-gradient(ellipse 80% 50% at 50% 0%, rgba(139, 92, 246, 0.3) 0%, transparent 60%)",
           }}
         />
       )}

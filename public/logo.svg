@@ -1,18 +1,10 @@
-<svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+<svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="32" height="32" rx="8" fill="url(#gradient)"/>
+  <text x="16" y="22" text-anchor="middle" fill="white" font-family="system-ui, -apple-system, sans-serif" font-size="14" font-weight="700">1W</text>
   <defs>
-    <!-- 主漸層：藍 → 青 → 橙 -->
-    <linearGradient id="brandGradient" x1="0%" y1="100%" x2="100%" y2="0%">
-      <stop offset="0%" stop-color="#0055FF"/>
-      <stop offset="50%" stop-color="#00DDEB"/>
-      <stop offset="100%" stop-color="#FF4D00"/>
+    <linearGradient id="gradient" x1="0" y1="0" x2="32" y2="32" gradientUnits="userSpaceOnUse">
+      <stop offset="0%" stop-color="#6366f1"/>
+      <stop offset="100%" stop-color="#8b5cf6"/>
     </linearGradient>
   </defs>
-
-  <!-- 1W 標誌：結合數字 1 和字母 W，右上角有向上箭頭 -->
-  <path
-    d="M8 38V14L12 10V38H8Z
-       M16 38L22 18L28 32L34 18L38 38H34L30 26L24 38H20L14 26L18 38H16Z
-       M36 14L42 8L44 10L38 16L44 16V20H34V10H38V14L36 14Z"
-    fill="url(#brandGradient)"
-  />
 </svg>

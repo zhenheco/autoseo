@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { MobileNav } from "./mobile-nav";
 import { UILanguageSelector } from "@/components/common/UILanguageSelector";
@@ -14,15 +13,8 @@ export function Navbar() {
     <header className="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md">
       <div className="container mx-auto flex h-14 md:h-16 items-center justify-between px-4">
         <Link href="/" className="flex items-center gap-2">
-          <Image
-            src="/logo.svg"
-            alt="1waySEO Logo"
-            width={32}
-            height={32}
-            className="w-7 h-7 md:w-8 md:h-8"
-          />
-          <span className="text-lg md:text-xl font-bold bg-gradient-to-r from-brand-blue-500 via-brand-cyan-500 to-brand-orange-500 bg-clip-text text-transparent">
-            1waySEO
+          <span className="text-lg md:text-xl font-bold text-slate-900 dark:text-white">
+            1WaySEO
           </span>
         </Link>
 
