@@ -1,19 +1,18 @@
 <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
   <defs>
-    <!-- 品牌漸層：藍 → 青 → 橙（從左下到右上） -->
-    <linearGradient id="brandGradient" x1="0" y1="48" x2="48" y2="0" gradientUnits="userSpaceOnUse">
+    <!-- 主漸層：藍 → 青 → 橙 -->
+    <linearGradient id="brandGradient" x1="0%" y1="100%" x2="100%" y2="0%">
       <stop offset="0%" stop-color="#0055FF"/>
       <stop offset="50%" stop-color="#00DDEB"/>
       <stop offset="100%" stop-color="#FF4D00"/>
     </linearGradient>
   </defs>
 
-  <!-- 1W Logo 整合路徑 -->
+  <!-- 1W 標誌：結合數字 1 和字母 W，右上角有向上箭頭 -->
   <path
+    d="M8 38V14L12 10V38H8Z
+       M16 38L22 18L28 32L34 18L38 38H34L30 26L24 38H20L14 26L18 38H16Z
+       M36 14L42 8L44 10L38 16L44 16V20H34V10H38V14L36 14Z"
     fill="url(#brandGradient)"
-    d="M4 42V10h4v32H4z
-       M4 8h8v4H4V8z
-       M13 42l6-18 5 10 5-10 6 18h-5l-3-10-3 6-3-6-3 10h-5z
-       M36 24V10h-6l10-8 10 8h-6v14h-8z"
   />
 </svg>

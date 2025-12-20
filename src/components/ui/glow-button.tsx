@@ -9,7 +9,7 @@ interface GlowButtonProps {
   className?: string;
   variant?: "primary" | "secondary" | "outline";
   size?: "sm" | "md" | "lg";
-  glowColor?: "blue" | "cyan" | "orange" | "mixed";
+  glowColor?: "violet" | "cyan" | "magenta" | "mixed";
   onClick?: () => void;
   disabled?: boolean;
   type?: "button" | "submit" | "reset";
@@ -20,7 +20,7 @@ export function GlowButton({
   className,
   variant = "primary",
   size = "md",
-  glowColor = "blue",
+  glowColor = "violet",
   onClick,
   disabled,
   type = "button",
@@ -33,8 +33,8 @@ export function GlowButton({
 
   const variantClasses = {
     primary: cn(
-      "bg-gradient-to-r from-brand-blue-500 via-brand-cyan-500 to-brand-orange-500",
-      "hover:from-brand-blue-600 hover:via-brand-cyan-600 hover:to-brand-orange-600",
+      "bg-gradient-to-r from-violet-600 to-pink-600",
+      "hover:from-violet-500 hover:to-pink-500",
       "text-white font-semibold",
     ),
     secondary: cn(
@@ -45,17 +45,19 @@ export function GlowButton({
     ),
     outline: cn(
       "bg-transparent",
-      "border-2 border-brand-blue-500/50",
-      "hover:border-brand-blue-400 hover:bg-brand-blue-500/10",
+      "border-2 border-violet-500/50",
+      "hover:border-violet-400 hover:bg-violet-500/10",
       "text-white font-medium",
     ),
   };
 
   const glowStyles = {
-    blue: "0 0 20px rgba(0, 85, 255, 0.4), 0 0 40px rgba(0, 85, 255, 0.2)",
-    cyan: "0 0 20px rgba(0, 221, 235, 0.4), 0 0 40px rgba(0, 221, 235, 0.2)",
-    orange: "0 0 20px rgba(255, 77, 0, 0.4), 0 0 40px rgba(255, 77, 0, 0.2)",
-    mixed: "0 0 20px rgba(0, 85, 255, 0.3), 0 0 40px rgba(0, 221, 235, 0.2)",
+    violet:
+      "0 0 20px rgba(139, 92, 246, 0.4), 0 0 40px rgba(139, 92, 246, 0.2)",
+    cyan: "0 0 20px rgba(6, 182, 212, 0.4), 0 0 40px rgba(6, 182, 212, 0.2)",
+    magenta:
+      "0 0 20px rgba(236, 72, 153, 0.4), 0 0 40px rgba(236, 72, 153, 0.2)",
+    mixed: "0 0 20px rgba(139, 92, 246, 0.3), 0 0 40px rgba(6, 182, 212, 0.2)",
   };
 
   return (
@@ -67,7 +69,7 @@ export function GlowButton({
         "relative inline-flex items-center justify-center",
         "rounded-xl",
         "transition-all duration-300",
-        "focus:outline-none focus:ring-2 focus:ring-brand-blue-500/50 focus:ring-offset-2 focus:ring-offset-slate-900",
+        "focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:ring-offset-2 focus:ring-offset-slate-900",
         "disabled:opacity-50 disabled:cursor-not-allowed",
         sizeClasses[size],
         variantClasses[variant],
@@ -91,7 +93,7 @@ interface GlowButtonLinkProps {
   className?: string;
   variant?: "primary" | "secondary" | "outline";
   size?: "sm" | "md" | "lg";
-  glowColor?: "blue" | "cyan" | "orange" | "mixed";
+  glowColor?: "violet" | "cyan" | "magenta" | "mixed";
   href: string;
 }
 
@@ -100,7 +102,7 @@ export function GlowButtonLink({
   className,
   variant = "primary",
   size = "md",
-  glowColor = "blue",
+  glowColor = "violet",
   href,
 }: GlowButtonLinkProps) {
   const sizeClasses = {
@@ -111,8 +113,8 @@ export function GlowButtonLink({
 
   const variantClasses = {
     primary: cn(
-      "bg-gradient-to-r from-brand-blue-500 via-brand-cyan-500 to-brand-orange-500",
-      "hover:from-brand-blue-600 hover:via-brand-cyan-600 hover:to-brand-orange-600",
+      "bg-gradient-to-r from-violet-600 to-pink-600",
+      "hover:from-violet-500 hover:to-pink-500",
       "text-white font-semibold",
     ),
     secondary: cn(
@@ -123,17 +125,19 @@ export function GlowButtonLink({
     ),
     outline: cn(
       "bg-transparent",
-      "border-2 border-brand-blue-500/50",
-      "hover:border-brand-blue-400 hover:bg-brand-blue-500/10",
+      "border-2 border-violet-500/50",
+      "hover:border-violet-400 hover:bg-violet-500/10",
       "text-white font-medium",
     ),
   };
 
   const glowStyles = {
-    blue: "0 0 20px rgba(0, 85, 255, 0.4), 0 0 40px rgba(0, 85, 255, 0.2)",
-    cyan: "0 0 20px rgba(0, 221, 235, 0.4), 0 0 40px rgba(0, 221, 235, 0.2)",
-    orange: "0 0 20px rgba(255, 77, 0, 0.4), 0 0 40px rgba(255, 77, 0, 0.2)",
-    mixed: "0 0 20px rgba(0, 85, 255, 0.3), 0 0 40px rgba(0, 221, 235, 0.2)",
+    violet:
+      "0 0 20px rgba(139, 92, 246, 0.4), 0 0 40px rgba(139, 92, 246, 0.2)",
+    cyan: "0 0 20px rgba(6, 182, 212, 0.4), 0 0 40px rgba(6, 182, 212, 0.2)",
+    magenta:
+      "0 0 20px rgba(236, 72, 153, 0.4), 0 0 40px rgba(236, 72, 153, 0.2)",
+    mixed: "0 0 20px rgba(139, 92, 246, 0.3), 0 0 40px rgba(6, 182, 212, 0.2)",
   };
 
   return (
@@ -143,7 +147,7 @@ export function GlowButtonLink({
         "relative inline-flex items-center justify-center",
         "rounded-xl",
         "transition-all duration-300",
-        "focus:outline-none focus:ring-2 focus:ring-brand-blue-500/50 focus:ring-offset-2 focus:ring-offset-slate-900",
+        "focus:outline-none focus:ring-2 focus:ring-violet-500/50 focus:ring-offset-2 focus:ring-offset-slate-900",
         sizeClasses[size],
         variantClasses[variant],
         variant === "primary" && "glow-button",
@@ -181,8 +185,8 @@ export function GlassCard({
         hover
           ? {
               y: -8,
-              boxShadow: "0 20px 40px rgba(0, 85, 255, 0.15)",
-              borderColor: "rgba(0, 85, 255, 0.5)",
+              boxShadow: "0 20px 40px rgba(139, 92, 246, 0.15)",
+              borderColor: "rgba(139, 92, 246, 0.5)",
             }
           : undefined
       }

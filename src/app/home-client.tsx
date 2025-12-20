@@ -168,7 +168,7 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
                   href="/login"
                   size="lg"
                   variant="primary"
-                  glowColor="blue"
+                  glowColor="violet"
                   className="w-full sm:w-auto text-lg px-8 py-6 gap-2"
                 >
                   <Rocket className="h-5 w-5" />
@@ -292,7 +292,7 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
           className="relative py-20 bg-white dark:bg-gradient-to-b dark:from-slate-900 dark:to-indigo-950"
         >
           <BackgroundGrid variant="dark" />
-          <CyberGlow position="center" color="blue" />
+          <CyberGlow position="center" color="violet" />
 
           <div className="container relative z-10 mx-auto px-4">
             <div className="text-center mb-16">
@@ -379,7 +379,7 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
           className="relative py-20 bg-white dark:bg-gradient-to-b dark:from-indigo-950 dark:to-slate-900"
         >
           <BackgroundGrid variant="dark" />
-          <CyberGlow position="top" color="orange" />
+          <CyberGlow position="top" color="magenta" />
 
           <div className="container relative z-10 mx-auto px-4">
             <div className="text-center mb-12">

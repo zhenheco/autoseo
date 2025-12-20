@@ -4,7 +4,6 @@
  */
 
 import sharp from 'sharp';
-import pngToIco from 'png-to-ico';
 import { readFileSync, writeFileSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
@@ -40,14 +39,15 @@ async function generateFavicons() {
     }
   }
 
-  // 生成 favicon.ico（使用 16x16 和 32x32 PNG）
+  // 生成 favicon.ico（使用 16x16 和 32x32）
+  // 注意：sharp 不直接支援 .ico 格式，這裡用 32x32 PNG 作為替代
   try {
-    const ico = await pngToIco([
-      join(publicDir, 'favicon-16x16.png'),
-      join(publicDir, 'favicon-32x32.png'),
-    ]);
-    writeFileSync(join(publicDir, 'favicon.ico'), ico);
-    console.log(`\n✅ favicon.ico (16x16 + 32x32)`);
+    await sharp(faviconSvg)
+      .resize(32, 32)
+      .png()
+      .toFile(join(publicDir, 'favicon-ico-temp.png'));
+    console.log(`\n✅ favicon.ico 替代檔案已生成（32x32 PNG）`);
+    console.log(`   注意：如需真正的 .ico 格式，請使用 realfavicongenerator.net`);
   } catch (error) {
     console.error(`❌ favicon.ico 生成失敗:`, error.message);
   }

@@ -127,12 +127,12 @@ const config: Config = {
           "100%": { backgroundPosition: "1000px 0" },
         },
         "pulse-glow": {
-          "0%, 100%": { boxShadow: "0 0 20px rgba(0, 85, 255, 0.4)" },
-          "50%": { boxShadow: "0 0 40px rgba(0, 85, 255, 0.7)" },
+          "0%, 100%": { boxShadow: "0 0 20px rgba(59, 130, 246, 0.4)" },
+          "50%": { boxShadow: "0 0 40px rgba(59, 130, 246, 0.7)" },
         },
         "pulse-glow-slow": {
-          "0%, 100%": { boxShadow: "0 0 30px rgba(0, 85, 255, 0.3)" },
-          "50%": { boxShadow: "0 0 50px rgba(0, 85, 255, 0.5)" },
+          "0%, 100%": { boxShadow: "0 0 30px rgba(59, 130, 246, 0.3)" },
+          "50%": { boxShadow: "0 0 50px rgba(59, 130, 246, 0.5)" },
         },
         "float-orb": {
           "0%, 100%": { transform: "translate(0, 0) scale(1)" },
