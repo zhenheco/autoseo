@@ -64,33 +64,29 @@ const config: Config = {
         "dark-section-secondary": "var(--dark-bg-secondary)",
         "light-section": "var(--light-bg)",
         "light-section-secondary": "var(--light-bg-secondary)",
-        "tech-blue": {
-          50: "#eff6ff",
-          100: "#dbeafe",
-          200: "#bfdbfe",
-          300: "#93c5fd",
-          400: "#60a5fa",
-          500: "#3b82f6",
-          600: "#2563eb",
-          700: "#1d4ed8",
-          800: "#1e40af",
-          900: "#1e3a8a",
-          950: "#172554",
+        /* 1waySEO 品牌色系 */
+        "brand-blue": {
+          50: "#e6f0ff",
+          100: "#cce0ff",
+          200: "#99c2ff",
+          300: "#66a3ff",
+          400: "#3377ff",
+          500: "#0055ff",
+          600: "#0044cc",
+          700: "#003399",
+          800: "#002266",
+          900: "#001133",
+          950: "#000819",
         },
-        "cyber-cyan": {
-          400: "#22d3ee",
-          500: "#06b6d4",
-          600: "#0891b2",
+        "brand-cyan": {
+          400: "#33e5f0",
+          500: "#00ddeb",
+          600: "#00b3be",
         },
-        "cyber-violet": {
-          400: "#a78bfa",
-          500: "#8b5cf6",
-          600: "#7c3aed",
-        },
-        "cyber-magenta": {
-          400: "#f472b6",
-          500: "#ec4899",
-          600: "#db2777",
+        "brand-orange": {
+          400: "#ff7033",
+          500: "#ff4d00",
+          600: "#cc3d00",
         },
       },
       borderRadius: {
@@ -131,12 +127,12 @@ const config: Config = {
           "100%": { backgroundPosition: "1000px 0" },
         },
         "pulse-glow": {
-          "0%, 100%": { boxShadow: "0 0 20px rgba(59, 130, 246, 0.4)" },
-          "50%": { boxShadow: "0 0 40px rgba(59, 130, 246, 0.7)" },
+          "0%, 100%": { boxShadow: "0 0 20px rgba(0, 85, 255, 0.4)" },
+          "50%": { boxShadow: "0 0 40px rgba(0, 85, 255, 0.7)" },
         },
         "pulse-glow-slow": {
-          "0%, 100%": { boxShadow: "0 0 30px rgba(59, 130, 246, 0.3)" },
-          "50%": { boxShadow: "0 0 50px rgba(59, 130, 246, 0.5)" },
+          "0%, 100%": { boxShadow: "0 0 30px rgba(0, 85, 255, 0.3)" },
+          "50%": { boxShadow: "0 0 50px rgba(0, 85, 255, 0.5)" },
         },
         "float-orb": {
           "0%, 100%": { transform: "translate(0, 0) scale(1)" },
