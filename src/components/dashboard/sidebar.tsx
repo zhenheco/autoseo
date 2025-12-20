@@ -104,7 +104,7 @@ export function Sidebar({ userEmail = "user@example.com" }: SidebarProps) {
           {!collapsed && (
             <Link href="/dashboard" className="flex items-center gap-2">
               <Image
-                src="/logo.svg"
+                src="/1waySEO_icon.svg"
                 alt="1waySEO"
                 width={32}
                 height={32}

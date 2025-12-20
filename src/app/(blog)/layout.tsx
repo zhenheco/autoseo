@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Home } from "lucide-react";
 
@@ -22,9 +23,18 @@ export default function BlogLayout({
             </Link>
             <Link
               href="/blog"
-              className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent"
+              className="flex items-center gap-2 transition-opacity hover:opacity-80"
             >
-              1waySEO Blog
+              <Image
+                src="/1waySEO_icon.svg"
+                alt="1waySEO"
+                width={28}
+                height={28}
+                className="rounded-md"
+              />
+              <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Blog
+              </span>
             </Link>
           </div>
 

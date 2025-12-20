@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { MobileNav } from "./mobile-nav";
 import { UILanguageSelector } from "@/components/common/UILanguageSelector";
@@ -12,10 +13,18 @@ export function Navbar() {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200 dark:border-slate-800 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md">
       <div className="container mx-auto flex h-14 md:h-16 items-center justify-between px-4">
-        <Link href="/" className="flex items-center gap-2">
-          <span className="text-lg md:text-xl font-bold text-slate-900 dark:text-white">
-            1WaySEO
-          </span>
+        <Link
+          href="/"
+          className="flex items-center gap-2 transition-opacity hover:opacity-80"
+        >
+          <Image
+            src="/1waySEO_logo-LR.svg"
+            alt="1waySEO"
+            width={120}
+            height={32}
+            className="h-7 md:h-8 w-auto"
+            priority
+          />
         </Link>
 
         {/* 桌面版導航 */}

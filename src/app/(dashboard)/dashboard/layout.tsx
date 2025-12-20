@@ -1,6 +1,7 @@
 import { getUser } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
+import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
@@ -57,6 +58,13 @@ export default async function DashboardLayout({
               <div className="flex h-full items-center justify-between px-4 md:px-6">
                 {/* 手機版顯示 Logo */}
                 <div className="flex items-center gap-2 md:hidden">
+                  <Image
+                    src="/1waySEO_icon.svg"
+                    alt="1waySEO"
+                    width={28}
+                    height={28}
+                    className="rounded-md"
+                  />
                   <span className="text-lg font-bold">1waySEO</span>
                 </div>
                 <div className="hidden md:flex items-center gap-4 flex-1"></div>

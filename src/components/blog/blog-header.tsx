@@ -7,6 +7,7 @@
  */
 
 import Link from "next/link";
+import Image from "next/image";
 import { Globe } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -76,9 +77,15 @@ export function BlogHeader({
           {/* Logo / 返回首頁 */}
           <Link
             href="/"
-            className="text-2xl font-bold text-[#8b5cf6] transition-colors hover:text-[#7c3aed]"
+            className="flex items-center gap-2 transition-opacity hover:opacity-80"
           >
-            1Way<span className="text-slate-900 dark:text-white">SEO</span>
+            <Image
+              src="/1waySEO_logo-LR.svg"
+              alt="1waySEO"
+              width={120}
+              height={32}
+              className="h-8 w-auto"
+            />
           </Link>
 
           {/* 右側工具 */}

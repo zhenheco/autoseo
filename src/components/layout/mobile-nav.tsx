@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -37,7 +38,14 @@ export function MobileNav() {
       </SheetTrigger>
       <SheetContent side="right" className="w-[280px] sm:w-[320px]">
         <SheetHeader>
-          <SheetTitle className="text-left">
+          <SheetTitle className="text-left flex items-center gap-2">
+            <Image
+              src="/1waySEO_icon.svg"
+              alt="1waySEO"
+              width={28}
+              height={28}
+              className="rounded-md"
+            />
             <span className="text-xl font-bold">1WaySEO</span>
           </SheetTitle>
         </SheetHeader>
