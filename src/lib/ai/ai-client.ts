@@ -198,9 +198,9 @@ export class AIClient {
     apiKey: string,
     useGateway: boolean,
   ) {
-    // 為 deepseek-reasoner 設定較長的超時時間（180 秒）
-    // 為 deepseek-chat 設定標準超時時間（120 秒）
-    const timeoutMs = params.model === "deepseek-reasoner" ? 180000 : 120000;
+    // 為所有 DeepSeek 模型設定較長的超時時間（300 秒 / 5 分鐘）
+    // 翻譯任務需要多次 API 呼叫，每次呼叫可能需要較長時間
+    const timeoutMs = 300000;
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), timeoutMs);

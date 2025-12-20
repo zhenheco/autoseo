@@ -128,12 +128,25 @@ export abstract class BaseAgent<TInput, TOutput> {
     };
     this.logs.push(entry);
 
+    // 只在 data 有值時才輸出，避免印出 undefined
     if (level === "error") {
-      console.error(`[${this.agentName}]`, message, data);
+      console.error(
+        `[${this.agentName}]`,
+        message,
+        ...(data !== undefined ? [data] : []),
+      );
     } else if (level === "warning") {
-      console.warn(`[${this.agentName}]`, message, data);
+      console.warn(
+        `[${this.agentName}]`,
+        message,
+        ...(data !== undefined ? [data] : []),
+      );
     } else {
-      console.log(`[${this.agentName}]`, message, data);
+      console.log(
+        `[${this.agentName}]`,
+        message,
+        ...(data !== undefined ? [data] : []),
+      );
     }
   }
 
