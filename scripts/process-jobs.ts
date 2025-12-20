@@ -17,6 +17,7 @@ import {
   cacheDelete,
   isRedisAvailable,
 } from "../src/lib/cache/redis-cache";
+import { syncCompanyOwnerToBrevo } from "../src/lib/brevo";
 import type { Database } from "../src/types/database.types";
 
 const MAX_RETRIES = 2;
@@ -193,6 +194,13 @@ async function main() {
       });
 
       console.log(`[Process Jobs] ✅ 任務 ${job.id} 處理成功`);
+
+      // 同步用戶到 Brevo（更新文章生成數，觸發分群變更）
+      syncCompanyOwnerToBrevo(job.company_id).catch((brevoErr) => {
+        // 不影響主流程，僅記錄錯誤
+        console.error(`[Process Jobs] ⚠️ Brevo 同步失敗:`, brevoErr);
+      });
+      console.log(`[Process Jobs] 📧 Brevo 同步已觸發`);
 
       // 文章生成完成後，檢查是否要自動排程
       if (job.website_id) {

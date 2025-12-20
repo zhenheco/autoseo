@@ -8,6 +8,7 @@ import {
 import { processFirstPaymentReward } from "@/lib/referral-service";
 import { processAffiliateCommission } from "@/lib/affiliate-service";
 import { TIER_HIERARCHY } from "@/lib/subscription/upgrade-rules";
+import { syncCompanyOwnerToBrevo } from "@/lib/brevo";
 
 interface NewebPayPeriodResult {
   MerchantOrderNo?: string;
@@ -1106,6 +1107,14 @@ export class PaymentService {
           orderData.id,
         );
 
+        // 同步用戶到 Brevo（訂閱變更後觸發分群更新）
+        syncCompanyOwnerToBrevo(orderData.company_id).catch((error) => {
+          console.error(
+            "[PaymentService] Brevo 同步失敗（不影響付款流程）:",
+            error,
+          );
+        });
+
         return { success: true };
       } else {
         const { error: updateError } = await this.supabase
@@ -1592,6 +1601,14 @@ export class PaymentService {
           "subscription",
           mandateData.first_payment_order_id || undefined,
         );
+
+        // 同步用戶到 Brevo（訂閱變更後觸發分群更新）
+        syncCompanyOwnerToBrevo(mandateData.company_id).catch((error) => {
+          console.error(
+            "[PaymentService] Brevo 同步失敗（不影響付款流程）:",
+            error,
+          );
+        });
 
         console.log("[PaymentService] ✅ 授權成功處理完成");
         return {

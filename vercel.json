@@ -5,6 +5,10 @@
     {
       "path": "/api/cron/hourly-tasks",
       "schedule": "0 0 * * *"
+    },
+    {
+      "path": "/api/cron/sync-brevo",
+      "schedule": "0 2 * * *"
     }
   ]
 }

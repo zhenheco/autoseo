@@ -1,6 +1,7 @@
 import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import { Database } from "@/types/database.types";
+import { syncUserToBrevo } from "@/lib/brevo";
 
 const REFERRAL_COOKIE_NAME = "ref_code";
 
@@ -188,6 +189,12 @@ export async function signUp(email: string, password: string) {
     current_period_start: new Date().toISOString(),
     current_period_end: null,
   });
+
+  // 9. 同步用戶到 Brevo（非阻塞，不影響註冊流程）
+  syncUserToBrevo(authData.user.id).catch((error) => {
+    console.error("[註冊] Brevo 同步失敗（不影響註冊）:", error);
+  });
+  console.log("[註冊] Step 9: Brevo 同步已觸發");
 
   return { user: authData.user, company };
 }
