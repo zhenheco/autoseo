@@ -10,17 +10,19 @@ import {
 } from "@/lib/storage/supabase-storage-client";
 import {
   processBase64Image,
+  processImageFromUrl,
   formatFileSize,
   calculateCompressionRatio,
 } from "@/lib/image-processor";
 
-const DEFAULT_MODEL = "gemini-3-pro-image-preview";
+const DEFAULT_MODEL = "fal-ai/qwen-image";
 
 const IMAGE_PRICING: Record<string, Record<string, number>> = {
+  // fal.ai qwen-image 定價（每張圖約 $0.003）
+  "fal-ai/qwen-image": { "1024x1024": 0.003, "1792x1024": 0.003 },
+  // 保留舊模型定價供參考
   "gemini-3-pro-image-preview": { "1024x1024": 0.02, "1792x1024": 0.03 },
   "gemini-2.5-flash-image": { "1024x1024": 0.01, "1792x1024": 0.02 },
-  "gemini-imagen-flash": { "1024x1024": 0.01 },
-  "gpt-image-1-mini": { "1024x1024": 0.015 },
 };
 
 export class FeaturedImageAgent extends BaseAgent<
@@ -88,21 +90,41 @@ export class FeaturedImageAgent extends BaseAgent<
 
     console.log("[FeaturedImageAgent] 📦 Processing and compressing image...");
 
-    const processed = await processBase64Image(result.url, {
-      format: "jpeg",
-      quality: 85,
-      maxWidth: 1920,
-      maxHeight: 1920,
-    });
+    // 判斷返回的是 URL 還是 base64
+    const isExternalUrl = result.url.startsWith("http");
 
-    const originalSize = Buffer.from(result.url.split(",")[1], "base64").length;
+    let processed;
+    let originalSize: number;
+
+    if (isExternalUrl) {
+      // fal.ai 等服務返回外部 URL，需要下載後處理
+      console.log("[FeaturedImageAgent] 🌐 Downloading from external URL...");
+      processed = await processImageFromUrl(result.url, {
+        format: "jpeg",
+        quality: 85,
+        maxWidth: 1920,
+        maxHeight: 1920,
+      });
+      // 外部 URL 無法預知原始大小，使用處理後大小估算
+      originalSize = Math.round(processed.size * 1.3);
+    } else {
+      // base64 格式（Gemini 等）
+      processed = await processBase64Image(result.url, {
+        format: "jpeg",
+        quality: 85,
+        maxWidth: 1920,
+        maxHeight: 1920,
+      });
+      originalSize = Buffer.from(result.url.split(",")[1], "base64").length;
+    }
+
     const compressionRatio = calculateCompressionRatio(
       originalSize,
       processed.size,
     );
 
     console.log(
-      `[FeaturedImageAgent] ✅ Compressed: ${formatFileSize(originalSize)} → ${formatFileSize(processed.size)} (${compressionRatio}% reduction)`,
+      `[FeaturedImageAgent] ✅ Processed: ${formatFileSize(processed.size)} (${compressionRatio}% compression)`,
     );
 
     const timestamp = Date.now();

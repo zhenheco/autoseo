@@ -7,7 +7,8 @@ type GatewayProvider =
   | "cohere"
   | "deepseek"
   | "perplexity-ai"
-  | "openrouter";
+  | "openrouter"
+  | "fal";
 
 interface GatewayConfig {
   accountId: string;
@@ -160,6 +161,42 @@ export function buildOpenAIHeaders(apiKey: string): Record<string, string> {
   const headers: Record<string, string> = {
     "Content-Type": "application/json",
     Authorization: `Bearer ${apiKey}`,
+  };
+
+  if (isGatewayEnabled()) {
+    Object.assign(headers, getGatewayHeaders());
+  }
+
+  return headers;
+}
+
+/**
+ * 取得 fal.ai Gateway Base URL
+ * 格式：https://gateway.ai.cloudflare.com/v1/{account_id}/{gateway_id}/fal
+ */
+export function getFalBaseUrl(): string {
+  if (isGatewayEnabled()) {
+    return getGatewayBaseUrl("fal");
+  }
+  return "https://fal.run";
+}
+
+/**
+ * 建構 fal.ai API 的完整 URL
+ * Gateway 模式：.../fal/{model}
+ * 直連模式：https://fal.run/{model}
+ */
+export function buildFalApiUrl(model: string): string {
+  const baseUrl = getFalBaseUrl();
+  return `${baseUrl}/${model}`;
+}
+
+/**
+ * 建構 fal.ai Headers（BYOK 模式只需 Gateway token）
+ */
+export function buildFalHeaders(): Record<string, string> {
+  const headers: Record<string, string> = {
+    "Content-Type": "application/json",
   };
 
   if (isGatewayEnabled()) {

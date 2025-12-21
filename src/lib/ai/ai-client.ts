@@ -6,6 +6,8 @@ import {
   getOpenAIBaseUrl,
   getDeepSeekBaseUrl,
   buildDeepSeekHeaders,
+  buildFalApiUrl,
+  buildFalHeaders,
 } from "@/lib/cloudflare/ai-gateway";
 import { OpenRouterClient } from "@/lib/openrouter/client";
 import type {
@@ -23,6 +25,7 @@ export interface ModelCapability {
 export const MODEL_CAPABILITIES: Record<string, ModelCapability> = {
   "deepseek-reasoner": { jsonMode: false, purpose: "reasoning" },
   "deepseek-chat": { jsonMode: true, purpose: "text-generation" },
+  "fal-ai/qwen-image": { jsonMode: false, purpose: "image-generation" },
   "gemini-3-pro-image-preview": {
     jsonMode: false,
     purpose: "image-generation",
@@ -587,6 +590,10 @@ export class AIClient {
     return { success: false, error: lastError! };
   }
 
+  /**
+   * 圖片生成（統一使用 fal.ai qwen-image）
+   * 優點：速度快（約 3 秒）、成本低、直接返回 URL
+   */
   async generateImage(
     prompt: string,
     options: {
@@ -596,35 +603,19 @@ export class AIClient {
     },
   ): Promise<{ url: string; revisedPrompt?: string }> {
     const MAX_RETRIES = 3;
-    const FALLBACK_MODEL = "gemini-2.5-flash-image";
 
-    // 第一階段：嘗試主要模型（最多 3 次）
-    const primaryResult = await this.tryGenerateWithRetries(
+    // 統一使用 fal-ai/qwen-image
+    const result = await this.tryGenerateWithRetries(
       prompt,
-      options,
+      { ...options, model: "fal-ai/qwen-image" },
       MAX_RETRIES,
     );
-    if (primaryResult.success && primaryResult.data) {
-      return primaryResult.data;
+
+    if (result.success && result.data) {
+      return result.data;
     }
 
-    // 第二階段：主要模型失敗，切換到 fallback 模型（也重試 3 次）
-    if (options.model !== FALLBACK_MODEL) {
-      console.warn(
-        `[AIClient] ⚠️ ${options.model} failed ${MAX_RETRIES}x, switching to ${FALLBACK_MODEL}`,
-      );
-      const fallbackResult = await this.tryGenerateWithRetries(
-        prompt,
-        { ...options, model: FALLBACK_MODEL },
-        MAX_RETRIES,
-      );
-      if (fallbackResult.success && fallbackResult.data) {
-        console.log(`[AIClient] ✅ Fallback to ${FALLBACK_MODEL} succeeded`);
-        return fallbackResult.data;
-      }
-    }
-
-    throw primaryResult.error || new Error("Image generation failed");
+    throw result.error || new Error("Image generation failed");
   }
 
   private async generateImageWithModel(
@@ -635,144 +626,98 @@ export class AIClient {
       size?: string;
     },
   ): Promise<{ url: string; revisedPrompt?: string }> {
+    // 優先使用 fal.ai qwen-image
+    if (
+      options.model.includes("fal-ai") ||
+      options.model.includes("qwen-image")
+    ) {
+      return await this.callFalImageAPI(prompt, options);
+    }
+
+    // 其他模型的 fallback（保留但不主動使用）
     if (
       options.model.includes("gemini-imagen") ||
       options.model.includes("imagen-3") ||
-      options.model.includes("gemini-2.5-flash-image")
+      options.model.includes("gemini-2.5-flash-image") ||
+      options.model.includes("gemini-3-pro-image-preview")
     ) {
       return await this.callGeminiImagenAPI(prompt, options);
     }
 
-    if (
-      options.model.includes("gpt-image-1") ||
-      options.model.includes("chatgpt-image")
-    ) {
-      const apiKey = process.env.OPENAI_API_KEY;
-      if (!apiKey) {
-        throw new Error("OPENAI_API_KEY is not set");
-      }
-
-      // 直接使用指定的模型（支援 gpt-image-1-mini, gpt-image-1 等）
-      const requestBody: Record<string, unknown> = {
-        model: options.model,
-        prompt: prompt,
-        n: 1,
-        size: options.size || "1024x1024",
-      };
-
-      // 加入 quality 參數（支援 standard, hd, medium 等）
-      if (options.quality) {
-        requestBody.quality = options.quality;
-      }
-
-      const openaiBaseUrl = getOpenAIBaseUrl();
-      const openaiHeaders = buildOpenAIHeaders(apiKey);
-
-      const response = await fetch(`${openaiBaseUrl}/v1/images/generations`, {
-        method: "POST",
-        headers: openaiHeaders,
-        body: JSON.stringify(requestBody),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(`OpenAI API error: ${JSON.stringify(error)}`);
-      }
-
-      const data = await response.json();
-
-      if (!data.data || !data.data[0]) {
-        throw new Error("Invalid OpenAI image response structure");
-      }
-
-      const imageData = data.data[0];
-
-      if (imageData.b64_json) {
-        const base64Data = imageData.b64_json;
-        const dataUrl = `data:image/png;base64,${base64Data}`;
-
-        console.log(
-          "[AIClient] Generated image from b64_json (base64 length:",
-          base64Data.length,
-          ")",
-        );
-
-        return {
-          url: dataUrl,
-          revisedPrompt: imageData.revised_prompt || prompt,
-        };
-      } else if (imageData.url) {
-        console.log("[AIClient] Generated image from URL:", imageData.url);
-
-        return {
-          url: imageData.url,
-          revisedPrompt: imageData.revised_prompt || prompt,
-        };
-      } else {
-        throw new Error("No image URL or b64_json in OpenAI response");
-      }
-    }
-
-    // 處理 Gemini 3 Pro Image Preview / nano-banana 模型（使用 Gemini generateContent API）
-    if (
-      options.model.includes("gemini-3-pro-image-preview") ||
-      options.model.includes("nano-banana")
-    ) {
-      return await this.callGeminiImageAPI(prompt, options);
-    }
-
-    // 處理 dall-e-3 模型（使用 OpenAI 官方 API）
-    if (options.model.includes("dall-e")) {
-      const dalleApiKey = process.env.OPENAI_API_KEY;
-      if (!dalleApiKey) {
-        throw new Error("OPENAI_API_KEY is not set");
-      }
-
-      const requestBody: Record<string, unknown> = {
-        model: options.model,
-        prompt: prompt,
-        n: 1,
-        size: options.size || "1024x1024",
-        response_format: "b64_json",
-      };
-
-      if (options.quality) {
-        requestBody.quality = options.quality === "high" ? "hd" : "standard";
-      }
-
-      const dalleBaseUrl = getOpenAIBaseUrl();
-      const dalleHeaders = buildOpenAIHeaders(dalleApiKey);
-
-      const response = await fetch(`${dalleBaseUrl}/v1/images/generations`, {
-        method: "POST",
-        headers: dalleHeaders,
-        body: JSON.stringify(requestBody),
-      });
-
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(`DALL-E API error: ${JSON.stringify(error)}`);
-      }
-
-      const data = await response.json();
-      const imageData = data.data[0];
-
-      if (imageData.b64_json) {
-        return {
-          url: `data:image/png;base64,${imageData.b64_json}`,
-          revisedPrompt: imageData.revised_prompt || prompt,
-        };
-      } else if (imageData.url) {
-        return {
-          url: imageData.url,
-          revisedPrompt: imageData.revised_prompt || prompt,
-        };
-      }
-
-      throw new Error("No image data in DALL-E response");
-    }
-
     throw new Error(`Unsupported image model: ${options.model}`);
+  }
+
+  /**
+   * 呼叫 fal.ai qwen-image API（透過 Cloudflare AI Gateway）
+   * 優點：速度快（約 3 秒）、直接返回 URL、成本低
+   */
+  private async callFalImageAPI(
+    prompt: string,
+    options: {
+      model: string;
+      quality?: "low" | "medium" | "high" | "auto";
+      size?: string;
+    },
+  ): Promise<{ url: string; revisedPrompt?: string }> {
+    // 將 size 轉換為 fal.ai 的 image_size 格式
+    const imageSizeMap: Record<string, string> = {
+      "1024x1024": "square_hd",
+      "1792x1024": "landscape_16_9",
+      "1024x1792": "portrait_16_9",
+      "1280x720": "landscape_16_9",
+      "720x1280": "portrait_16_9",
+    };
+    const imageSize =
+      imageSizeMap[options.size || "1024x1024"] || "landscape_16_9";
+
+    // 根據 quality 調整 inference steps
+    const stepsMap: Record<string, number> = {
+      low: 20,
+      medium: 28,
+      high: 35,
+      auto: 28,
+    };
+    const numInferenceSteps = stepsMap[options.quality || "medium"];
+
+    const falUrl = buildFalApiUrl("fal-ai/qwen-image");
+    const falHeaders = buildFalHeaders();
+
+    console.log(
+      `[AIClient] 🎨 Calling fal.ai qwen-image (size: ${imageSize}, steps: ${numInferenceSteps}, gateway: ${isGatewayEnabled()})`,
+    );
+
+    const response = await fetch(falUrl, {
+      method: "POST",
+      headers: falHeaders,
+      body: JSON.stringify({
+        prompt,
+        image_size: imageSize,
+        num_inference_steps: numInferenceSteps,
+        guidance_scale: 3.5,
+        num_images: 1,
+        output_format: "png",
+      }),
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`fal.ai API error (${response.status}): ${errorText}`);
+    }
+
+    const data = await response.json();
+
+    if (!data.images || !data.images[0]?.url) {
+      throw new Error("Invalid fal.ai response: no image URL");
+    }
+
+    console.log(
+      `[AIClient] ✅ fal.ai qwen-image generated (${data.timings?.inference?.toFixed(2)}s)`,
+    );
+
+    return {
+      url: data.images[0].url,
+      revisedPrompt: data.prompt || prompt,
+    };
   }
 
   private mapGeminiImageModel(model: string): string {
