@@ -66,8 +66,6 @@ export async function GET(request: NextRequest) {
       console.log("[Hourly Tasks] 執行每日任務 (09:00 UTC)...");
 
       results.syncModels = { status: "pending", error: null };
-      results.unlockCommissions = { status: "pending", error: null };
-      results.checkInactiveAffiliates = { status: "pending", error: null };
 
       try {
         const syncModelsResponse = await fetch(
@@ -87,48 +85,6 @@ export async function GET(request: NextRequest) {
       } catch (err) {
         results.syncModels.status = "failed";
         results.syncModels.error =
-          err instanceof Error ? err.message : "Unknown error";
-      }
-
-      try {
-        const unlockResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/cron/unlock-commissions`,
-          {
-            headers: { authorization: authHeader },
-          },
-        );
-
-        if (unlockResponse.ok) {
-          results.unlockCommissions.status = "completed";
-          console.log("[Hourly Tasks] 解鎖佣金完成");
-        } else {
-          results.unlockCommissions.status = "failed";
-          results.unlockCommissions.error = `HTTP ${unlockResponse.status}`;
-        }
-      } catch (err) {
-        results.unlockCommissions.status = "failed";
-        results.unlockCommissions.error =
-          err instanceof Error ? err.message : "Unknown error";
-      }
-
-      try {
-        const checkAffiliatesResponse = await fetch(
-          `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/cron/check-inactive-affiliates`,
-          {
-            headers: { authorization: authHeader },
-          },
-        );
-
-        if (checkAffiliatesResponse.ok) {
-          results.checkInactiveAffiliates.status = "completed";
-          console.log("[Hourly Tasks] 檢查不活躍聯盟完成");
-        } else {
-          results.checkInactiveAffiliates.status = "failed";
-          results.checkInactiveAffiliates.error = `HTTP ${checkAffiliatesResponse.status}`;
-        }
-      } catch (err) {
-        results.checkInactiveAffiliates.status = "failed";
-        results.checkInactiveAffiliates.error =
           err instanceof Error ? err.message : "Unknown error";
       }
     }

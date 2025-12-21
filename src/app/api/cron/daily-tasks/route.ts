@@ -7,8 +7,6 @@ import { NextRequest, NextResponse } from "next/server";
  * 執行順序：
  * 1. 處理排程發布文章
  * 2. 同步 AI 模型
- * 3. 解鎖佣金
- * 4. 檢查不活躍聯盟
  */
 export async function GET(request: NextRequest) {
   const authHeader = request.headers.get("authorization");
@@ -20,8 +18,6 @@ export async function GET(request: NextRequest) {
   const results: Record<string, { status: string; error: string | null }> = {
     processScheduledArticles: { status: "pending", error: null },
     syncModels: { status: "pending", error: null },
-    unlockCommissions: { status: "pending", error: null },
-    checkInactiveAffiliates: { status: "pending", error: null },
   };
 
   try {
@@ -67,40 +63,6 @@ export async function GET(request: NextRequest) {
       console.log("[Daily Tasks] sync-models completed");
     } else {
       throw new Error(`sync-models failed: ${syncModelsResponse.status}`);
-    }
-
-    // 任務 3: 解鎖佣金
-    console.log("[Daily Tasks] Starting unlock-commissions...");
-    const unlockResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/cron/unlock-commissions`,
-      {
-        headers: { authorization: authHeader },
-      },
-    );
-
-    if (unlockResponse.ok) {
-      results.unlockCommissions.status = "completed";
-      console.log("[Daily Tasks] unlock-commissions completed");
-    } else {
-      throw new Error(`unlock-commissions failed: ${unlockResponse.status}`);
-    }
-
-    // 任務 4: 檢查不活躍聯盟
-    console.log("[Daily Tasks] Starting check-inactive-affiliates...");
-    const checkAffiliatesResponse = await fetch(
-      `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/cron/check-inactive-affiliates`,
-      {
-        headers: { authorization: authHeader },
-      },
-    );
-
-    if (checkAffiliatesResponse.ok) {
-      results.checkInactiveAffiliates.status = "completed";
-      console.log("[Daily Tasks] check-inactive-affiliates completed");
-    } else {
-      throw new Error(
-        `check-inactive-affiliates failed: ${checkAffiliatesResponse.status}`,
-      );
     }
 
     console.log("[Daily Tasks] All tasks completed successfully");
