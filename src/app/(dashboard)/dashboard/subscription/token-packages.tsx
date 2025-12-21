@@ -58,15 +58,10 @@ export function TokenPackages({
       }
 
       if (data.paymentForm) {
-        const formData = {
-          apiUrl: data.paymentForm.apiUrl,
-          tradeInfo: data.paymentForm.tradeInfo,
-          tradeSha: data.paymentForm.tradeSha,
-          version: data.paymentForm.version,
-          merchantId: data.paymentForm.merchantId,
-        };
-
-        const encodedForm = encodeURIComponent(JSON.stringify(formData));
+        // 新格式：直接使用 SDK 返回的 { action, method, fields } 格式
+        const encodedForm = encodeURIComponent(
+          JSON.stringify(data.paymentForm),
+        );
         router.push(
           `/dashboard/billing/authorizing?paymentForm=${encodedForm}`,
         );

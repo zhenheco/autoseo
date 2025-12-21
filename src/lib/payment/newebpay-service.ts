@@ -53,9 +53,18 @@ export class NewebPayService {
   private config: NewebPayConfig;
 
   constructor(config: NewebPayConfig) {
+    // 驗證必要欄位
+    if (
+      !config.merchantId ||
+      !config.hashKey ||
+      !config.hashIv ||
+      !config.apiUrl
+    ) {
+      throw new Error("NewebPay 配置不完整，請確認環境變數已正確設定");
+    }
+
     this.config = {
       version: "2.0",
-      periodApiUrl: "https://ccore.newebpay.com/MPG/period",
       ...config,
     };
   }
@@ -523,15 +532,17 @@ export class NewebPayService {
     const merchantId = process.env.NEWEBPAY_MERCHANT_ID;
     const hashKey = process.env.NEWEBPAY_HASH_KEY;
     const hashIv = process.env.NEWEBPAY_HASH_IV;
-    const apiUrl =
-      process.env.NEWEBPAY_API_URL ||
-      "https://ccore.newebpay.com/MPG/mpg_gateway";
-    const periodApiUrl =
-      process.env.NEWEBPAY_PERIOD_API_URL ||
-      "https://ccore.newebpay.com/MPG/period";
+    const apiUrl = process.env.NEWEBPAY_API_URL;
+    const periodApiUrl = process.env.NEWEBPAY_PERIOD_API_URL;
 
-    if (!merchantId || !hashKey || !hashIv) {
-      throw new Error("NewebPay 環境變數未設定");
+    if (!merchantId || !hashKey || !hashIv || !apiUrl || !periodApiUrl) {
+      const missing = [];
+      if (!merchantId) missing.push("NEWEBPAY_MERCHANT_ID");
+      if (!hashKey) missing.push("NEWEBPAY_HASH_KEY");
+      if (!hashIv) missing.push("NEWEBPAY_HASH_IV");
+      if (!apiUrl) missing.push("NEWEBPAY_API_URL");
+      if (!periodApiUrl) missing.push("NEWEBPAY_PERIOD_API_URL");
+      throw new Error(`藍新金流環境變數未設定: ${missing.join(", ")}`);
     }
 
     // 驗證 HashKey 長度

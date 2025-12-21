@@ -38,18 +38,35 @@ export const PERPLEXITY_CONFIG = {
 
 /**
  * NewebPay 金流 API 配置
+ * 所有欄位都必須透過環境變數設定，沒有預設值
  */
 export const NEWEBPAY_CONFIG = {
-  apiUrl:
-    process.env.NEWEBPAY_API_URL ||
-    "https://ccore.newebpay.com/MPG/mpg_gateway",
-  periodApiUrl:
-    process.env.NEWEBPAY_PERIOD_API_URL ||
-    "https://ccore.newebpay.com/MPG/period",
+  apiUrl: process.env.NEWEBPAY_API_URL || "",
+  periodApiUrl: process.env.NEWEBPAY_PERIOD_API_URL || "",
   merchantId: process.env.NEWEBPAY_MERCHANT_ID || "",
   hashKey: process.env.NEWEBPAY_HASH_KEY || "",
   hashIV: process.env.NEWEBPAY_HASH_IV || "",
 } as const;
+
+/**
+ * 驗證 NewebPay 配置是否完整
+ * @throws Error 如果必要的環境變數未設定
+ */
+export function validateNewebPayConfig(): void {
+  const required = [
+    { key: "NEWEBPAY_API_URL", value: NEWEBPAY_CONFIG.apiUrl },
+    { key: "NEWEBPAY_PERIOD_API_URL", value: NEWEBPAY_CONFIG.periodApiUrl },
+    { key: "NEWEBPAY_MERCHANT_ID", value: NEWEBPAY_CONFIG.merchantId },
+    { key: "NEWEBPAY_HASH_KEY", value: NEWEBPAY_CONFIG.hashKey },
+    { key: "NEWEBPAY_HASH_IV", value: NEWEBPAY_CONFIG.hashIV },
+  ];
+
+  const missing = required.filter((r) => !r.value).map((r) => r.key);
+
+  if (missing.length > 0) {
+    throw new Error(`藍新金流配置缺失，請設定環境變數: ${missing.join(", ")}`);
+  }
+}
 
 /**
  * Google OAuth 配置

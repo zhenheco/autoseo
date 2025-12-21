@@ -120,6 +120,7 @@ export async function middleware(request: NextRequest) {
       "https://api.deepseek.com",
       "https://api.perplexity.ai",
       "https://generativelanguage.googleapis.com",
+      "https://core.newebpay.com",
       "https://ccore.newebpay.com",
       "https://accounts.google.com",
       "https://oauth2.googleapis.com",

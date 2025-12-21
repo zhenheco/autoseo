@@ -8,6 +8,10 @@ import {
 import { createCommission } from "@/lib/affiliate-client";
 import { TIER_HIERARCHY } from "@/lib/subscription/upgrade-rules";
 import { syncCompanyOwnerToBrevo } from "@/lib/brevo";
+import {
+  createPayment as createGatewayPayment,
+  type CreatePaymentParams,
+} from "./gateway-client";
 
 interface NewebPayPeriodResult {
   MerchantOrderNo?: string;
@@ -164,6 +168,113 @@ export class PaymentService {
     };
   }
 
+  /**
+   * 使用金流微服務 SDK 建立一次性付款
+   *
+   * 這是新版本的付款方法，透過金流微服務 API 建立付款，
+   * 而非直接串接藍新金流。
+   */
+  async createOnetimePaymentWithGateway(
+    params: CreateOnetimeOrderParams,
+  ): Promise<{
+    success: boolean;
+    orderId?: string;
+    orderNo?: string;
+    paymentId?: string;
+    paymentForm?: {
+      action: string;
+      method: string;
+      fields: Record<string, string>;
+    };
+    error?: string;
+  }> {
+    const orderNo = this.generateOrderNo();
+
+    console.log("[PaymentService] 使用 SDK 建立單次付款訂單:", {
+      orderNo,
+      companyId: params.companyId,
+      amount: params.amount,
+      paymentType: params.paymentType,
+    });
+
+    // 1. 先建立訂單記錄
+    const { data: orderData, error: orderError } = await this.supabase
+      .from("payment_orders")
+      .insert({
+        company_id: params.companyId,
+        order_no: orderNo,
+        order_type: "onetime",
+        payment_type: params.paymentType as
+          | "subscription"
+          | "token_package"
+          | "lifetime",
+        amount: params.amount,
+        item_description: params.description,
+        related_id: params.relatedId,
+        status: "pending",
+      })
+      .select<"*", Database["public"]["Tables"]["payment_orders"]["Row"]>()
+      .single();
+
+    if (orderError || !orderData) {
+      console.error("[PaymentService] 建立訂單失敗:", {
+        orderNo,
+        error: orderError,
+      });
+      return { success: false, error: "建立訂單失敗" };
+    }
+
+    console.log("[PaymentService] 訂單建立成功:", {
+      orderId: orderData.id,
+      orderNo: orderData.order_no,
+    });
+
+    // 2. 透過 SDK 建立付款
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+    try {
+      const gatewayResult = await createGatewayPayment({
+        orderId: orderNo,
+        amount: params.amount,
+        description: params.description,
+        email: params.email,
+        callbackUrl: `${baseUrl}/payment/result`,
+        metadata: {
+          companyId: params.companyId,
+          paymentType: params.paymentType,
+          relatedId: params.relatedId,
+        },
+      });
+
+      if (!gatewayResult.success || !gatewayResult.newebpayForm) {
+        console.error(
+          "[PaymentService] 金流微服務建立付款失敗:",
+          gatewayResult,
+        );
+        return { success: false, error: gatewayResult.error || "建立付款失敗" };
+      }
+
+      console.log("[PaymentService] 金流微服務付款建立成功:", {
+        paymentId: gatewayResult.paymentId,
+        orderId: orderData.id,
+      });
+
+      return {
+        success: true,
+        orderId: orderData.id,
+        orderNo: orderData.order_no,
+        paymentId: gatewayResult.paymentId,
+        paymentForm: gatewayResult.newebpayForm,
+      };
+    } catch (error) {
+      console.error("[PaymentService] SDK 呼叫失敗:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "SDK 呼叫失敗",
+      };
+    }
+  }
+
   async createRecurringPayment(params: CreateRecurringOrderParams): Promise<{
     success: boolean;
     mandateId?: string;
@@ -271,6 +382,155 @@ export class PaymentService {
       mandateNo: mandateData.mandate_no,
       paymentForm,
     };
+  }
+
+  /**
+   * 使用金流微服務 SDK 建立定期定額付款
+   *
+   * 這是新版本的定期定額方法，透過金流微服務 API 建立付款，
+   * 而非直接串接藍新金流。
+   */
+  async createRecurringPaymentWithGateway(
+    params: CreateRecurringOrderParams,
+  ): Promise<{
+    success: boolean;
+    mandateId?: string;
+    mandateNo?: string;
+    paymentId?: string;
+    paymentForm?: {
+      action: string;
+      method: string;
+      fields: Record<string, string>;
+    };
+    error?: string;
+  }> {
+    if (params.periodType !== "M") {
+      return { success: false, error: "只支援月繳訂閱" };
+    }
+
+    if (params.periodTimes !== 12) {
+      return { success: false, error: "月繳訂閱必須為 12 期" };
+    }
+
+    if (params.periodStartType !== 2) {
+      return { success: false, error: "月繳訂閱必須使用授權完成後開始扣款" };
+    }
+
+    const periodPoint =
+      params.periodPoint || String(new Date().getDate()).padStart(2, "0");
+
+    console.log("[PaymentService] 使用 SDK 建立月繳 12 期委託:", {
+      companyId: params.companyId,
+      planId: params.planId,
+      amount: params.amount,
+      periodPoint,
+    });
+
+    const mandateNo = this.generateMandateNo();
+
+    // 1. 建立委託記錄
+    const { data: mandateData, error: mandateError } = await this.supabase
+      .from("recurring_mandates")
+      .insert({
+        company_id: params.companyId,
+        plan_id: params.planId,
+        mandate_no: mandateNo,
+        period_type: "M",
+        period_point: periodPoint,
+        period_times: 12,
+        period_amount: params.amount,
+        total_amount: params.amount * 12,
+        status: "pending",
+      })
+      .select<"*", Database["public"]["Tables"]["recurring_mandates"]["Row"]>()
+      .single();
+
+    if (mandateError || !mandateData) {
+      console.error("[PaymentService] 建立委託失敗:", mandateError);
+      return { success: false, error: "建立定期定額委託失敗" };
+    }
+
+    const orderNo = this.generateOrderNo();
+
+    // 2. 建立首期訂單記錄
+    const { data: orderData, error: orderError } = await this.supabase
+      .from("payment_orders")
+      .insert({
+        company_id: params.companyId,
+        order_no: orderNo,
+        order_type: "recurring_first",
+        payment_type: "subscription",
+        amount: params.amount,
+        item_description: params.description,
+        related_id: params.planId,
+        status: "pending",
+      })
+      .select<"*", Database["public"]["Tables"]["payment_orders"]["Row"]>()
+      .single();
+
+    if (orderError || !orderData) {
+      console.error("[PaymentService] 建立訂單失敗:", orderError);
+      return { success: false, error: "建立訂單失敗" };
+    }
+
+    await this.supabase
+      .from("recurring_mandates")
+      .update({ first_payment_order_id: orderData.id })
+      .eq("id", mandateData.id);
+
+    // 3. 透過 SDK 建立定期定額付款
+    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+
+    try {
+      const gatewayResult = await createGatewayPayment({
+        orderId: mandateNo,
+        amount: params.amount,
+        description: params.description,
+        email: params.email,
+        callbackUrl: `${baseUrl}/payment/result`,
+        periodParams: {
+          periodType: "M",
+          periodPoint,
+          periodTimes: 12,
+          periodStartType: 2,
+        },
+        metadata: {
+          companyId: params.companyId,
+          planId: params.planId,
+          mandateId: mandateData.id,
+        },
+      });
+
+      if (!gatewayResult.success || !gatewayResult.newebpayForm) {
+        console.error(
+          "[PaymentService] 金流微服務建立定期定額失敗:",
+          gatewayResult,
+        );
+        return {
+          success: false,
+          error: gatewayResult.error || "建立定期定額付款失敗",
+        };
+      }
+
+      console.log("[PaymentService] 金流微服務定期定額建立成功:", {
+        paymentId: gatewayResult.paymentId,
+        mandateId: mandateData.id,
+      });
+
+      return {
+        success: true,
+        mandateId: mandateData.id,
+        mandateNo: mandateData.mandate_no,
+        paymentId: gatewayResult.paymentId,
+        paymentForm: gatewayResult.newebpayForm,
+      };
+    } catch (error) {
+      console.error("[PaymentService] SDK 呼叫失敗:", error);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "SDK 呼叫失敗",
+      };
+    }
   }
 
   async handleOnetimeCallback(

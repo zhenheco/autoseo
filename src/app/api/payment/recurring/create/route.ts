@@ -81,8 +81,8 @@ export async function POST(request: NextRequest) {
 
     // 根據計費週期設定定期定額參數
     if (billingCycle === "monthly") {
-      // 月繳：每月扣款，共 12 期
-      const result = await paymentService.createRecurringPayment({
+      // 月繳：每月扣款，共 12 期（使用 SDK）
+      const result = await paymentService.createRecurringPaymentWithGateway({
         companyId,
         planId,
         amount,
@@ -103,6 +103,7 @@ export async function POST(request: NextRequest) {
 
       console.log("[API] 月繳定期定額建立成功:", {
         mandateNo: result.mandateNo,
+        paymentId: result.paymentId,
         planId,
         amount,
       });
@@ -111,12 +112,13 @@ export async function POST(request: NextRequest) {
         success: true,
         mandateId: result.mandateId,
         mandateNo: result.mandateNo,
+        paymentId: result.paymentId,
         paymentForm: result.paymentForm,
       });
     } else {
-      // 年繳：使用一次性付款（因為藍新金流年繳定期定額較複雜）
+      // 年繳：使用一次性付款（使用 SDK）
       // 年繳會在付款成功後給予 12 個月的訂閱 + 贈送篇數
-      const result = await paymentService.createOnetimePayment({
+      const result = await paymentService.createOnetimePaymentWithGateway({
         companyId,
         paymentType: "subscription",
         relatedId: planId,
@@ -145,6 +147,7 @@ export async function POST(request: NextRequest) {
 
       console.log("[API] 年繳訂閱付款建立成功:", {
         orderNo: result.orderNo,
+        paymentId: result.paymentId,
         planId,
         amount,
       });
@@ -153,6 +156,7 @@ export async function POST(request: NextRequest) {
         success: true,
         orderId: result.orderId,
         orderNo: result.orderNo,
+        paymentId: result.paymentId,
         paymentForm: result.paymentForm,
       });
     }

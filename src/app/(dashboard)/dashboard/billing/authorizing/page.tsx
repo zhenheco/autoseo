@@ -38,70 +38,92 @@ function AuthorizingContent() {
     try {
       const formData = JSON.parse(decodeURIComponent(paymentForm));
 
-      if (formRef.current && formData.apiUrl) {
+      if (!formRef.current) {
+        throw new Error("表單元素不存在");
+      }
+
+      setTimeout(() => {
+        setStatus("submitting");
+      }, 0);
+
+      // 新格式：使用金流微服務 SDK 的格式 { action, method, fields }
+      if (formData.action && formData.fields) {
+        formRef.current.action = formData.action;
+        formRef.current.method = formData.method || "POST";
+
+        // 動態建立所有表單欄位
+        for (const [key, value] of Object.entries(formData.fields)) {
+          const input = document.createElement("input");
+          input.type = "hidden";
+          input.name = key;
+          input.value = String(value);
+          formRef.current.appendChild(input);
+        }
+      }
+      // 舊格式（向後相容）：定期定額格式
+      else if (formData.apiUrl && formData.postData && formData.merchantId) {
         formRef.current.action = formData.apiUrl;
 
-        setTimeout(() => {
-          setStatus("submitting");
-        }, 0);
+        const merchantInput = document.createElement("input");
+        merchantInput.type = "hidden";
+        merchantInput.name = "MerchantID_";
+        merchantInput.value = formData.merchantId;
+        formRef.current.appendChild(merchantInput);
 
-        if (formData.postData && formData.merchantId) {
-          const merchantInput = document.createElement("input");
-          merchantInput.type = "hidden";
-          merchantInput.name = "MerchantID_";
-          merchantInput.value = formData.merchantId;
-          formRef.current.appendChild(merchantInput);
-
-          const postDataInput = document.createElement("input");
-          postDataInput.type = "hidden";
-          postDataInput.name = "PostData_";
-          postDataInput.value = formData.postData;
-          formRef.current.appendChild(postDataInput);
-        } else if (
-          formData.tradeInfo &&
-          formData.tradeSha &&
-          formData.merchantId
-        ) {
-          const merchantInput = document.createElement("input");
-          merchantInput.type = "hidden";
-          merchantInput.name = "MerchantID";
-          merchantInput.value = formData.merchantId;
-          formRef.current.appendChild(merchantInput);
-
-          const tradeInfoInput = document.createElement("input");
-          tradeInfoInput.type = "hidden";
-          tradeInfoInput.name = "TradeInfo";
-          tradeInfoInput.value = formData.tradeInfo;
-          formRef.current.appendChild(tradeInfoInput);
-
-          const tradeShaInput = document.createElement("input");
-          tradeShaInput.type = "hidden";
-          tradeShaInput.name = "TradeSha";
-          tradeShaInput.value = formData.tradeSha;
-          formRef.current.appendChild(tradeShaInput);
-
-          const versionInput = document.createElement("input");
-          versionInput.type = "hidden";
-          versionInput.name = "Version";
-          versionInput.value = formData.version || "2.0";
-          formRef.current.appendChild(versionInput);
-        } else {
-          throw new Error("缺少必要的付款表單欄位");
-        }
-
-        setTimeout(() => {
-          try {
-            formRef.current?.submit();
-            if (timeoutRef.current) {
-              clearTimeout(timeoutRef.current);
-            }
-          } catch (submitError) {
-            console.error("[Authorizing] 提交表單失敗:", submitError);
-            setStatus("error");
-            setErrorMessage("提交失敗，請檢查瀏覽器設定");
-          }
-        }, 500);
+        const postDataInput = document.createElement("input");
+        postDataInput.type = "hidden";
+        postDataInput.name = "PostData_";
+        postDataInput.value = formData.postData;
+        formRef.current.appendChild(postDataInput);
       }
+      // 舊格式（向後相容）：單次付款格式
+      else if (
+        formData.apiUrl &&
+        formData.tradeInfo &&
+        formData.tradeSha &&
+        formData.merchantId
+      ) {
+        formRef.current.action = formData.apiUrl;
+
+        const merchantInput = document.createElement("input");
+        merchantInput.type = "hidden";
+        merchantInput.name = "MerchantID";
+        merchantInput.value = formData.merchantId;
+        formRef.current.appendChild(merchantInput);
+
+        const tradeInfoInput = document.createElement("input");
+        tradeInfoInput.type = "hidden";
+        tradeInfoInput.name = "TradeInfo";
+        tradeInfoInput.value = formData.tradeInfo;
+        formRef.current.appendChild(tradeInfoInput);
+
+        const tradeShaInput = document.createElement("input");
+        tradeShaInput.type = "hidden";
+        tradeShaInput.name = "TradeSha";
+        tradeShaInput.value = formData.tradeSha;
+        formRef.current.appendChild(tradeShaInput);
+
+        const versionInput = document.createElement("input");
+        versionInput.type = "hidden";
+        versionInput.name = "Version";
+        versionInput.value = formData.version || "2.0";
+        formRef.current.appendChild(versionInput);
+      } else {
+        throw new Error("缺少必要的付款表單欄位");
+      }
+
+      setTimeout(() => {
+        try {
+          formRef.current?.submit();
+          if (timeoutRef.current) {
+            clearTimeout(timeoutRef.current);
+          }
+        } catch (submitError) {
+          console.error("[Authorizing] 提交表單失敗:", submitError);
+          setStatus("error");
+          setErrorMessage("提交失敗，請檢查瀏覽器設定");
+        }
+      }, 500);
     } catch (error) {
       console.error("[Authorizing] 解析付款表單失敗:", error);
       setTimeout(() => {

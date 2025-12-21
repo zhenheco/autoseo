@@ -14,72 +14,27 @@ interface ApproveBody {
 /**
  * POST /api/admin/refunds/[id]/approve
  * 管理員核准退款申請
+ *
+ * 注意：退款功能暫時停用，等待金流微服務支援退款後再啟用
  */
 export async function POST(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> },
 ) {
-  try {
-    const { id } = await params;
+  // 退款功能暫時停用
+  return NextResponse.json(
+    {
+      success: false,
+      error: "退款功能暫時停用，請透過手動方式處理退款",
+      code: "REFUND_DISABLED",
+    },
+    { status: 503 },
+  );
 
-    if (!id) {
-      return NextResponse.json(
-        { success: false, error: "請提供退款申請 ID" },
-        { status: 400 },
-      );
-    }
+  // 以下為原有邏輯，待金流微服務支援退款後啟用
 
-    const supabase = await createClient();
-
-    // 驗證用戶登入
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, error: "請先登入" },
-        { status: 401 },
-      );
-    }
-
-    // 驗證管理員權限
-    if (!ADMIN_EMAILS.includes(user.email || "")) {
-      return NextResponse.json(
-        { success: false, error: "無管理員權限" },
-        { status: 403 },
-      );
-    }
-
-    // 解析請求內容
-    let body: ApproveBody = {};
-    try {
-      body = await request.json();
-    } catch {
-      // 允許空 body
-    }
-
-    // 核准退款
-    const refundService = RefundService.createInstance();
-    const result = await refundService.approveRefund(id, user.id, body.notes);
-
-    if (!result.success) {
-      return NextResponse.json(
-        { success: false, error: result.error },
-        { status: 400 },
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      message: "退款已核准並執行",
-    });
-  } catch (error) {
-    console.error("[API] /admin/refunds/[id]/approve error:", error);
-    return NextResponse.json(
-      { success: false, error: "核准退款失敗" },
-      { status: 500 },
-    );
-  }
+  const _unusedRequest = request;
+  const _unusedParams = params;
+  void _unusedRequest;
+  void _unusedParams;
 }

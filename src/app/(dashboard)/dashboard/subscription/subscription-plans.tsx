@@ -124,15 +124,10 @@ export function SubscriptionPlans({
         }
 
         if (data.paymentForm) {
-          const formData = {
-            apiUrl: data.paymentForm.apiUrl,
-            tradeInfo: data.paymentForm.tradeInfo,
-            tradeSha: data.paymentForm.tradeSha,
-            version: data.paymentForm.version,
-            merchantId: data.paymentForm.merchantId,
-          };
-
-          const encodedForm = encodeURIComponent(JSON.stringify(formData));
+          // 新格式：直接使用 SDK 返回的 { action, method, fields } 格式
+          const encodedForm = encodeURIComponent(
+            JSON.stringify(data.paymentForm),
+          );
           router.push(
             `/dashboard/billing/authorizing?paymentForm=${encodedForm}`,
           );
@@ -153,26 +148,12 @@ export function SubscriptionPlans({
       }
 
       if (data.paymentForm) {
-        // 判斷是定期定額（postData）還是單次付款（tradeInfo）
-        const isRecurring = !!data.paymentForm.postData;
-
-        const formData = isRecurring
-          ? {
-              // 定期定額使用 postData
-              apiUrl: data.paymentForm.apiUrl,
-              postData: data.paymentForm.postData,
-              merchantId: data.paymentForm.merchantId,
-            }
-          : {
-              // 單次付款使用 tradeInfo
-              apiUrl: data.paymentForm.apiUrl,
-              tradeInfo: data.paymentForm.tradeInfo,
-              tradeSha: data.paymentForm.tradeSha,
-              version: data.paymentForm.version,
-              merchantId: data.paymentForm.merchantId,
-            };
-
-        const encodedForm = encodeURIComponent(JSON.stringify(formData));
+        // 新格式：SDK 返回 { action, method, fields }
+        // 舊格式（定期定額）：{ apiUrl, postData, merchantId }
+        // 這裡直接傳遞，授權頁面會根據格式自動處理
+        const encodedForm = encodeURIComponent(
+          JSON.stringify(data.paymentForm),
+        );
         router.push(
           `/dashboard/billing/authorizing?paymentForm=${encodedForm}`,
         );
