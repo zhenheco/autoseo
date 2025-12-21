@@ -3,10 +3,6 @@
 
 title = "Auto-pilot-SEO gitleaks config"
 
-[extend]
-# 使用預設規則
-useDefault = true
-
 [allowlist]
   description = "Allowlist for known false positives and documentation"
 
@@ -30,6 +26,11 @@ useDefault = true
     '''\.git-rewrite/.*''',
     # GitHub Actions workflows（使用 secrets 變數參考）
     '''\.github/workflows/.*\.yml$''',
+    # Platform migration guide
+    '''PLATFORM_MIGRATION_GUIDE\.md$''',
+    # 診斷報告
+    '''診斷報告\.md$''',
+    '''MIGRATION_EXECUTE_GUIDE\.md$''',
   ]
 
   # 排除文檔中常見的佔位符模式
@@ -49,21 +50,4 @@ useDefault = true
     '''eyJxxx''',
     # secrets 變數參考（在 GitHub Actions 中）
     '''\$\{\{\s*secrets\..*\}\}''',
-  ]
-
-# 針對特定規則的調整
-[[rules]]
-  id = "generic-api-key"
-  description = "Generic API Key - adjusted for documentation"
-  allowlist = { paths = ['''\.md$''', '''\.example$''', '''\.sql$'''] }
-
-[[rules]]
-  id = "jwt"
-  description = "JWT - allow in documentation"
-  allowlist = { paths = ['''\.md$''', '''\.example$'''] }
-
-# 停用某些產生太多誤報的規則
-[rules.allowlist]
-  paths = [
-    '''\.md$''',
   ]
