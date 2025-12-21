@@ -1,12 +1,5 @@
-import { createServerClient, type CookieOptions } from "@supabase/ssr";
+import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import {
-  getAffiliateCodeFromUrl,
-  getAffiliateCodeFromCookie,
-  getAffiliateCookieOptions,
-  validateAffiliateCode,
-  logTrackingEvent,
-} from "@/lib/affiliate/tracking";
 
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -53,35 +46,18 @@ export async function updateSession(request: NextRequest) {
 
   // ===== 聯盟行銷追蹤邏輯 =====
   // 檢查 URL 是否包含推薦碼參數 ?ref=CODE
-  const affiliateCodeFromUrl = getAffiliateCodeFromUrl(request);
-  const existingAffiliateCode = getAffiliateCodeFromCookie(request);
+  const affiliateCodeFromUrl = request.nextUrl.searchParams.get("ref");
 
-  if (affiliateCodeFromUrl && validateAffiliateCode(affiliateCodeFromUrl)) {
-    // 如果 URL 有推薦碼且格式正確，設定 Cookie（30天）
-    const cookieOptions = getAffiliateCookieOptions();
-    supabaseResponse.cookies.set(
-      "affiliate_ref",
-      affiliateCodeFromUrl,
-      cookieOptions,
-    );
-
-    // 記錄 'click' 事件（只在新的推薦碼或不同推薦碼時記錄）
-    if (
-      affiliateCodeFromUrl !== existingAffiliateCode &&
-      process.env.SUPABASE_SERVICE_ROLE_KEY
-    ) {
-      // 異步記錄，不阻塞 response
-      logTrackingEvent({
-        supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        supabaseServiceKey: process.env.SUPABASE_SERVICE_ROLE_KEY,
-        affiliateCode: affiliateCodeFromUrl,
-        eventType: "click",
-        request,
-        userId: user?.id,
-      }).catch((error) => {
-        console.error("記錄推薦點擊失敗:", error);
-      });
-    }
+  if (affiliateCodeFromUrl && /^[A-Z0-9]{8}$/.test(affiliateCodeFromUrl)) {
+    // 設定推薦碼 Cookie（30天有效期）
+    // 註冊時由 auth callback 讀取並呼叫新 Affiliate System API
+    supabaseResponse.cookies.set("affiliate_ref", affiliateCodeFromUrl, {
+      path: "/",
+      maxAge: 30 * 24 * 60 * 60, // 30 天
+      httpOnly: true,
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    });
   }
   // ===== 結束追蹤邏輯 =====
 

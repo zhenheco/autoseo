@@ -42,11 +42,7 @@
     "logout": "Abmelden",
     "login": "Anmelden",
     "signup": "Kostenlos starten",
-    "referrals": "Empfehlungen",
     "adminPanel": "Admin-Bereich",
-    "withdrawalReview": "Auszahlungsprüfung",
-    "affiliateManagement": "Partner-Verwaltung",
-    "suspiciousReferrals": "Verdächtige Empfehlungen",
     "translations": "Übersetzungen",
     "customerService": "Support",
     "blog": "Blog"
@@ -488,22 +484,6 @@
     "creating": "Wird erstellt...",
     "createFailed": "Unternehmen konnte nicht erstellt werden",
     "createFailedRetry": "Unternehmen konnte nicht erstellt werden, bitte versuchen Sie es später erneut"
-  },
-  "affiliate": {
-    "title": "Affiliate-Partner",
-    "overview": "Übersicht",
-    "referrals": "Empfehlungsaufzeichnungen",
-    "commissions": "Provisionsaufzeichnungen",
-    "withdrawals": "Auszahlungsaufzeichnungen",
-    "withdraw": "Auszahlung beantragen",
-    "guide": "Werbeleitfaden",
-    "terms": "Partnerbedingungen",
-    "taxNotice": "Steuerinformationen",
-    "apply": "Partner werden",
-    "referralLink": "Empfehlungslink",
-    "totalEarnings": "Gesamteinnahmen",
-    "pendingCommission": "Ausstehende Provision",
-    "availableBalance": "Verfügbares Guthaben"
   },
   "settings": {
     "title": "Einstellungen",

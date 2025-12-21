@@ -17,14 +17,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import {
-  Handshake,
-  Shield,
-  Users,
-  Mail,
-  LogOut,
-  Languages,
-} from "lucide-react";
+import { Handshake, Mail, LogOut, Languages, ExternalLink } from "lucide-react";
 import { useState } from "react";
 
 const SUPER_ADMIN_EMAILS = (process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAILS || "")
@@ -60,22 +53,13 @@ const mainNavItems = [
 const moreNavItems = [
   {
     title: "聯盟夥伴",
-    href: "/dashboard/affiliate",
+    href: "https://affiliate.1wayseo.com",
     icon: Handshake,
+    external: true,
   },
 ];
 
 const adminItems = [
-  {
-    title: "提領審核",
-    href: "/dashboard/admin/withdrawals",
-    icon: Shield,
-  },
-  {
-    title: "聯盟管理",
-    href: "/dashboard/admin/affiliates",
-    icon: Users,
-  },
   {
     title: "翻譯管理",
     href: "/dashboard/admin/translations",
@@ -140,7 +124,25 @@ export function MobileBottomNav({
             <div className="mt-4 space-y-1">
               {moreNavItems.map((item) => {
                 const Icon = item.icon;
-                const isActive = pathname === item.href;
+                const isActive = !item.external && pathname === item.href;
+
+                // 外部連結使用 <a> 標籤
+                if (item.external) {
+                  return (
+                    <a
+                      key={item.href}
+                      href={item.href}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={() => setSheetOpen(false)}
+                      className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-foreground hover:bg-muted transition-colors"
+                    >
+                      <Icon className="h-5 w-5" />
+                      <span>{item.title}</span>
+                      <ExternalLink className="h-3 w-3 ml-auto opacity-50" />
+                    </a>
+                  );
+                }
 
                 return (
                   <Link

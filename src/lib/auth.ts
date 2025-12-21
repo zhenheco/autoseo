@@ -2,8 +2,7 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
 import { Database } from "@/types/database.types";
 import { syncUserToBrevo } from "@/lib/brevo";
-
-const REFERRAL_COOKIE_NAME = "ref_code";
+import { trackRegistration } from "@/lib/affiliate-client";
 
 /**
  * 生成唯一的公司 slug
@@ -118,68 +117,21 @@ export async function signUp(email: string, password: string) {
   }
   console.log("[註冊] Step 5 完成: 訂閱建立成功");
 
-  // 6. 創建推薦碼（使用資料庫函數生成唯一碼）
-  const { data: generatedCode } = await adminClient.rpc(
-    "generate_referral_code",
-  );
-
-  if (generatedCode) {
-    const { error: referralCodeError } = await adminClient
-      .from("referral_codes")
-      .insert({
-        company_id: company.id,
-        code: generatedCode,
-      });
-
-    if (referralCodeError) {
-      console.error("創建推薦碼失敗:", referralCodeError);
-    } else {
-      console.log("[註冊] Step 6 完成: 推薦碼建立成功", generatedCode);
-    }
-  }
-
-  // 7. 檢查是否有推薦人（從 cookie 或 URL 參數）
+  // 6. 處理推薦追蹤（呼叫新的 Affiliate System）
   const cookieStore = await cookies();
-  const referrerCode = cookieStore.get(REFERRAL_COOKIE_NAME)?.value;
+  const affiliateRef = cookieStore.get("affiliate_ref")?.value;
 
-  if (referrerCode) {
-    // 查找推薦人
-    const { data: referrerData } = await adminClient
-      .from("referral_codes")
-      .select("company_id")
-      .eq("code", referrerCode.toUpperCase())
-      .single();
+  if (affiliateRef) {
+    // 非同步呼叫新的 Affiliate System，不阻塞註冊流程
+    trackRegistration({
+      referralCode: affiliateRef,
+      referredUserId: authData.user.id,
+    }).catch((err) => console.error("[註冊] Affiliate 追蹤失敗:", err));
 
-    if (referrerData && referrerData.company_id !== company.id) {
-      // 創建推薦關係
-      const { error: referralError } = await adminClient
-        .from("referrals")
-        .insert({
-          referrer_company_id: referrerData.company_id,
-          referred_company_id: company.id,
-          referral_code: referrerCode.toUpperCase(),
-          status: "pending",
-        });
-
-      if (!referralError) {
-        // 更新推薦碼統計
-        await adminClient.rpc("increment_referral_count", {
-          p_code: referrerCode.toUpperCase(),
-        });
-
-        // 記錄追蹤日誌
-        await adminClient.from("referral_tracking_logs").insert({
-          referral_code: referrerCode.toUpperCase(),
-          event_type: "register",
-          company_id: company.id,
-        });
-
-        console.log("[註冊] Step 7 完成: 推薦關係建立成功");
-      }
-    }
+    console.log("[註冊] Step 6 完成: Affiliate 追蹤已觸發");
   }
 
-  // 8. 也保留舊的 subscriptions 表記錄（向後兼容）
+  // 7. 也保留舊的 subscriptions 表記錄（向後兼容）
   await adminClient.from("subscriptions").insert({
     company_id: company.id,
     plan_name: "free",
@@ -190,11 +142,11 @@ export async function signUp(email: string, password: string) {
     current_period_end: null,
   });
 
-  // 9. 同步用戶到 Brevo（非阻塞，不影響註冊流程）
+  // 8. 同步用戶到 Brevo（非阻塞，不影響註冊流程）
   syncUserToBrevo(authData.user.id).catch((error) => {
     console.error("[註冊] Brevo 同步失敗（不影響註冊）:", error);
   });
-  console.log("[註冊] Step 9: Brevo 同步已觸發");
+  console.log("[註冊] Step 8: Brevo 同步已觸發");
 
   return { user: authData.user, company };
 }

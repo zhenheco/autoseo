@@ -42,11 +42,7 @@
     "logout": "Déconnexion",
     "login": "Connexion",
     "signup": "Commencer gratuitement",
-    "referrals": "Parrainages",
     "adminPanel": "Administration",
-    "withdrawalReview": "Examen des retraits",
-    "affiliateManagement": "Gestion des affiliés",
-    "suspiciousReferrals": "Parrainages suspects",
     "translations": "Traductions",
     "customerService": "Support",
     "blog": "Blog"
@@ -488,22 +484,6 @@
     "creating": "Création en cours...",
     "createFailed": "Échec de la création de l'entreprise",
     "createFailedRetry": "Échec de la création de l'entreprise, veuillez réessayer plus tard"
-  },
-  "affiliate": {
-    "title": "Partenaire affilié",
-    "overview": "Vue d'ensemble",
-    "referrals": "Registres de parrainage",
-    "commissions": "Registres de commissions",
-    "withdrawals": "Registres de retraits",
-    "withdraw": "Demander un retrait",
-    "guide": "Guide de promotion",
-    "terms": "Conditions partenaire",
-    "taxNotice": "Informations fiscales",
-    "apply": "Devenir partenaire",
-    "referralLink": "Lien de parrainage",
-    "totalEarnings": "Gains totaux",
-    "pendingCommission": "Commission en attente",
-    "availableBalance": "Solde disponible"
   },
   "settings": {
     "title": "Paramètres",

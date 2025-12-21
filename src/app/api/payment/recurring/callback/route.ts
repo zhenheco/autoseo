@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { PaymentService } from "@/lib/payment/payment-service";
-import { calculateAndCreateCommission } from "@/lib/affiliate/commission";
+import { createCommission } from "@/lib/affiliate-client";
 import { verifyNewebPayCallback } from "@/lib/security/webhook-validator";
 
 // 處理 GET 請求（藍新金流使用 GET 重定向）
@@ -285,7 +285,7 @@ async function handleCallback(request: NextRequest) {
               "[Payment Callback] 授權成功，所有資料已更新（包含訂閱和代幣）",
             );
 
-            // 計算並創建佣金（異步執行，不阻塞返回）
+            // 呼叫新 Affiliate System 建立佣金（異步執行，不阻塞返回）
             try {
               // 查詢訂單資訊
               const { data: paymentOrder } = await supabase
@@ -300,31 +300,32 @@ async function handleCallback(request: NextRequest) {
                 paymentOrder &&
                 paymentOrder.payment_type === "subscription"
               ) {
-                console.log("[Affiliate] 開始計算佣金，訂單:", paymentOrder.id);
+                // 取得公司的 owner_id 作為 referredUserId
+                const { data: company } = await supabase
+                  .from("companies")
+                  .select("owner_id")
+                  .eq("id", paymentOrder.company_id)
+                  .single();
 
-                const commissionResult = await calculateAndCreateCommission({
-                  supabaseUrl: process.env.NEXT_PUBLIC_SUPABASE_URL!,
-                  supabaseServiceKey: process.env.SUPABASE_SERVICE_ROLE_KEY!,
-                  paymentOrder: paymentOrder as {
-                    id: string;
-                    company_id: string;
-                    order_type: string;
-                    payment_type: "subscription" | "token_package" | "lifetime";
-                    amount: number;
-                    paid_at: string;
-                  },
-                });
+                if (company?.owner_id) {
+                  console.log(
+                    "[Affiliate] 呼叫新系統建立佣金，訂單:",
+                    paymentOrder.id,
+                  );
 
-                if (commissionResult.success) {
-                  console.log(
-                    "[Affiliate] 佣金創建成功:",
-                    commissionResult.commission_id,
-                  );
-                } else {
-                  console.log(
-                    "[Affiliate] 佣金創建失敗或無需創建:",
-                    commissionResult.message,
-                  );
+                  const commissionResult = await createCommission({
+                    referredUserId: company.owner_id,
+                    externalOrderId: paymentOrder.id,
+                    orderAmount: paymentOrder.amount,
+                    orderType: "subscription",
+                  });
+
+                  if (commissionResult) {
+                    console.log(
+                      "[Affiliate] 佣金創建成功:",
+                      commissionResult.commissionId,
+                    );
+                  }
                 }
               }
             } catch (commissionError) {

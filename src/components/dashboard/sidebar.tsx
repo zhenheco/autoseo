@@ -12,11 +12,9 @@ import {
   PenSquare,
   FileText,
   Handshake,
-  Shield,
-  Users,
   Mail,
-  AlertTriangle,
   Languages,
+  ExternalLink,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -51,27 +49,13 @@ const navItems = [
   },
   {
     titleKey: "affiliate",
-    href: "/dashboard/affiliate",
+    href: "https://affiliate.1wayseo.com",
     icon: Handshake,
+    external: true,
   },
 ];
 
 const adminItems = [
-  {
-    titleKey: "withdrawalReview",
-    href: "/dashboard/admin/withdrawals",
-    icon: Shield,
-  },
-  {
-    titleKey: "affiliateManagement",
-    href: "/dashboard/admin/affiliates",
-    icon: Users,
-  },
-  {
-    titleKey: "suspiciousReferrals",
-    href: "/dashboard/admin/suspicious-referrals",
-    icon: AlertTriangle,
-  },
   {
     titleKey: "translations",
     href: "/dashboard/admin/translations",
@@ -131,8 +115,33 @@ export function Sidebar({ userEmail = "user@example.com" }: SidebarProps) {
 
         <nav className="flex-1 space-y-1 p-4">
           {navItems.map((item) => {
-            const isActive = pathname === item.href;
+            const isActive = !item.external && pathname === item.href;
             const Icon = item.icon;
+
+            // 外部連結使用 <a> 標籤
+            if (item.external) {
+              return (
+                <a
+                  key={item.href}
+                  href={item.href}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={cn(
+                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all relative",
+                    "hover:bg-sidebar-foreground/10",
+                    "text-sidebar-foreground/70 hover:text-sidebar-foreground",
+                  )}
+                >
+                  <Icon className="h-5 w-5 shrink-0" />
+                  {!collapsed && (
+                    <>
+                      <span>{t(item.titleKey)}</span>
+                      <ExternalLink className="h-3 w-3 ml-auto opacity-50" />
+                    </>
+                  )}
+                </a>
+              );
+            }
 
             return (
               <Link

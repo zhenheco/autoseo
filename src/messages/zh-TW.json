@@ -42,11 +42,7 @@
     "logout": "登出",
     "login": "登入",
     "signup": "免費開始",
-    "referrals": "好友推薦",
     "adminPanel": "管理後台",
-    "withdrawalReview": "提領審核",
-    "affiliateManagement": "聯盟管理",
-    "suspiciousReferrals": "可疑推薦",
     "translations": "翻譯管理",
     "customerService": "客服信箱",
     "blog": "部落格"
@@ -534,22 +530,6 @@
     "creating": "建立中...",
     "createFailed": "建立公司失敗",
     "createFailedRetry": "建立公司失敗，請稍後再試"
-  },
-  "affiliate": {
-    "title": "聯盟夥伴",
-    "overview": "總覽",
-    "referrals": "推薦紀錄",
-    "commissions": "佣金紀錄",
-    "withdrawals": "提領紀錄",
-    "withdraw": "申請提領",
-    "guide": "推廣教學",
-    "terms": "合作條款",
-    "taxNotice": "稅務說明",
-    "apply": "申請成為夥伴",
-    "referralLink": "推薦連結",
-    "totalEarnings": "累計收益",
-    "pendingCommission": "待發放佣金",
-    "availableBalance": "可提領餘額"
   },
   "settings": {
     "title": "設定",

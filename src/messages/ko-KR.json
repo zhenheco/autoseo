@@ -42,11 +42,7 @@
     "logout": "로그아웃",
     "login": "로그인",
     "signup": "무료로 시작하기",
-    "referrals": "추천",
     "adminPanel": "관리자 패널",
-    "withdrawalReview": "출금 심사",
-    "affiliateManagement": "제휴 관리",
-    "suspiciousReferrals": "의심스러운 추천",
     "translations": "번역 관리",
     "customerService": "고객지원",
     "blog": "블로그"
@@ -488,22 +484,6 @@
     "creating": "생성 중...",
     "createFailed": "회사 생성 실패",
     "createFailedRetry": "회사 생성에 실패했습니다. 나중에 다시 시도해 주세요"
-  },
-  "affiliate": {
-    "title": "제휴 파트너",
-    "overview": "개요",
-    "referrals": "추천 기록",
-    "commissions": "수수료 기록",
-    "withdrawals": "출금 기록",
-    "withdraw": "출금 신청",
-    "guide": "프로모션 가이드",
-    "terms": "파트너 약관",
-    "taxNotice": "세금 정보",
-    "apply": "파트너 되기",
-    "referralLink": "추천 링크",
-    "totalEarnings": "총 수익",
-    "pendingCommission": "대기 중인 수수료",
-    "availableBalance": "출금 가능 잔액"
   },
   "settings": {
     "title": "설정",

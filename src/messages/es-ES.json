@@ -42,11 +42,7 @@
     "logout": "Cerrar sesión",
     "login": "Iniciar sesión",
     "signup": "Comenzar gratis",
-    "referrals": "Referencias",
     "adminPanel": "Panel de admin",
-    "withdrawalReview": "Revisión de retiros",
-    "affiliateManagement": "Gestión de afiliados",
-    "suspiciousReferrals": "Referencias sospechosas",
     "translations": "Traducciones",
     "customerService": "Soporte",
     "blog": "Blog"
@@ -488,22 +484,6 @@
     "creating": "Creando...",
     "createFailed": "Error al crear la empresa",
     "createFailedRetry": "Error al crear la empresa, por favor inténtelo de nuevo más tarde"
-  },
-  "affiliate": {
-    "title": "Socio afiliado",
-    "overview": "Resumen",
-    "referrals": "Registros de referencia",
-    "commissions": "Registros de comisiones",
-    "withdrawals": "Registros de retiros",
-    "withdraw": "Solicitar retiro",
-    "guide": "Guía de promoción",
-    "terms": "Términos de socio",
-    "taxNotice": "Información fiscal",
-    "apply": "Solicitar ser socio",
-    "referralLink": "Enlace de referencia",
-    "totalEarnings": "Ganancias totales",
-    "pendingCommission": "Comisión pendiente",
-    "availableBalance": "Saldo disponible"
   },
   "settings": {
     "title": "Configuración",

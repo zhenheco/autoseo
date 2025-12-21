@@ -42,11 +42,7 @@
     "logout": "ログアウト",
     "login": "ログイン",
     "signup": "無料で始める",
-    "referrals": "紹介",
     "adminPanel": "管理パネル",
-    "withdrawalReview": "出金審査",
-    "affiliateManagement": "アフィリエイト管理",
-    "suspiciousReferrals": "不審な紹介",
     "translations": "翻訳管理",
     "customerService": "サポート",
     "blog": "ブログ"
@@ -488,22 +484,6 @@
     "creating": "作成中...",
     "createFailed": "会社の作成に失敗しました",
     "createFailedRetry": "会社の作成に失敗しました。後でもう一度お試しください"
-  },
-  "affiliate": {
-    "title": "アフィリエイトパートナー",
-    "overview": "概要",
-    "referrals": "紹介記録",
-    "commissions": "コミッション記録",
-    "withdrawals": "出金記録",
-    "withdraw": "出金を申請",
-    "guide": "プロモーションガイド",
-    "terms": "パートナー規約",
-    "taxNotice": "税務情報",
-    "apply": "パートナーになる",
-    "referralLink": "紹介リンク",
-    "totalEarnings": "総収益",
-    "pendingCommission": "保留中のコミッション",
-    "availableBalance": "出金可能残高"
   },
   "settings": {
     "title": "設定",

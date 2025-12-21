@@ -14,7 +14,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
-import { FingerprintCollector } from "@/components/fingerprint-collector";
 
 /**
  * Google 圖示元件
@@ -214,11 +213,6 @@ export function LoginForm({
 
   return (
     <>
-      {/* 收集裝置指紋（不可見元件） */}
-      <FingerprintCollector
-        eventType={mode === "signup" ? "register" : "login"}
-      />
-
       {/* 成功訊息 */}
       {success && (
         <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded-xl text-sm font-medium animate-in fade-in slide-in-from-top-2 duration-300">

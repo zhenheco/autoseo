@@ -42,11 +42,7 @@
     "logout": "Logout",
     "login": "Login",
     "signup": "Get Started Free",
-    "referrals": "Referrals",
     "adminPanel": "Admin Panel",
-    "withdrawalReview": "Withdrawal Review",
-    "affiliateManagement": "Affiliate Management",
-    "suspiciousReferrals": "Suspicious Referrals",
     "translations": "Translations",
     "customerService": "Support",
     "blog": "Blog"
@@ -514,22 +510,6 @@
     "creating": "Creating...",
     "createFailed": "Failed to create company",
     "createFailedRetry": "Failed to create company, please try again later"
-  },
-  "affiliate": {
-    "title": "Affiliate Partner",
-    "overview": "Overview",
-    "referrals": "Referral Records",
-    "commissions": "Commission Records",
-    "withdrawals": "Withdrawal Records",
-    "withdraw": "Request Withdrawal",
-    "guide": "Promotion Guide",
-    "terms": "Partner Terms",
-    "taxNotice": "Tax Information",
-    "apply": "Apply to Become a Partner",
-    "referralLink": "Referral Link",
-    "totalEarnings": "Total Earnings",
-    "pendingCommission": "Pending Commission",
-    "availableBalance": "Available Balance"
   },
   "settings": {
     "title": "Settings",
