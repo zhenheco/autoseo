@@ -11,6 +11,7 @@ import {
 } from "@/lib/storage/supabase-storage-client";
 import {
   processBase64Image,
+  processImageFromUrl,
   formatFileSize,
   calculateCompressionRatio,
 } from "@/lib/image-processor";
@@ -164,21 +165,39 @@ export class ArticleImageAgent extends BaseAgent<
       `[ArticleImageAgent] 📦 Processing content image ${index + 1}...`,
     );
 
-    const processed = await processBase64Image(result.url, {
-      format: "jpeg",
-      quality: 85,
-      maxWidth: 1920,
-      maxHeight: 1920,
-    });
+    // 判斷返回的是 URL 還是 base64
+    const isExternalUrl = result.url.startsWith("http");
+    let processed;
+    let originalSize: number;
 
-    const originalSize = Buffer.from(result.url.split(",")[1], "base64").length;
+    if (isExternalUrl) {
+      console.log(
+        `[ArticleImageAgent] 🌐 Downloading image ${index + 1} from URL...`,
+      );
+      processed = await processImageFromUrl(result.url, {
+        format: "jpeg",
+        quality: 85,
+        maxWidth: 1920,
+        maxHeight: 1920,
+      });
+      originalSize = Math.round(processed.size * 1.3);
+    } else {
+      processed = await processBase64Image(result.url, {
+        format: "jpeg",
+        quality: 85,
+        maxWidth: 1920,
+        maxHeight: 1920,
+      });
+      originalSize = Buffer.from(result.url.split(",")[1], "base64").length;
+    }
+
     const compressionRatio = calculateCompressionRatio(
       originalSize,
       processed.size,
     );
 
     console.log(
-      `[ArticleImageAgent] ✅ Compressed: ${formatFileSize(originalSize)} → ${formatFileSize(processed.size)} (${compressionRatio}% reduction)`,
+      `[ArticleImageAgent] ✅ Processed: ${formatFileSize(processed.size)} (${compressionRatio}% compression)`,
     );
 
     const timestamp = Date.now();
