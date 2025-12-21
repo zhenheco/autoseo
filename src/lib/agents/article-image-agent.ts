@@ -20,12 +20,14 @@ import {
   getTranslation,
 } from "@/lib/i18n/article-translations";
 
-const DEFAULT_MODEL = "gpt-image-1-mini";
+const DEFAULT_MODEL = "fal-ai/qwen-image";
 
 const IMAGE_PRICING: Record<string, Record<string, number>> = {
+  // fal.ai qwen-image 定價（每張圖約 $0.003）
+  "fal-ai/qwen-image": { "1024x1024": 0.003, "1792x1024": 0.003 },
+  // 保留舊模型定價供參考
   "gpt-image-1-mini": { "1024x1024": 0.015, "1792x1024": 0.03 },
   "gemini-2.5-flash-image": { "1024x1024": 0.01 },
-  "dall-e-3": { "1024x1024": 0.04, "1024x1792": 0.08 },
 };
 
 export class ArticleImageAgent extends BaseAgent<

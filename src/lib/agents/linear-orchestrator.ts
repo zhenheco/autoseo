@@ -511,9 +511,9 @@ export class LinearOrchestrator {
 
     const agentConfig = context.getAgentConfig();
     const featuredImageModel =
-      agentConfig.featured_image_model || "gemini-3-pro-image-preview";
+      agentConfig.featured_image_model || "fal-ai/qwen-image";
     const contentImageModel =
-      agentConfig.content_image_model || "gpt-image-1-mini";
+      agentConfig.content_image_model || "fal-ai/qwen-image";
 
     const featuredImageAgent = new FeaturedImageAgent(
       aiConfig,
@@ -1361,9 +1361,9 @@ export class LinearOrchestrator {
       research_model: "deepseek-reasoner",
       strategy_model: "deepseek-chat",
       writing_model: "deepseek-chat",
-      image_model: "gemini-imagen",
-      featured_image_model: "gemini-3-pro-image-preview",
-      content_image_model: "gpt-image-1-mini",
+      image_model: "fal-ai/qwen-image",
+      featured_image_model: "fal-ai/qwen-image",
+      content_image_model: "fal-ai/qwen-image",
       research_temperature: 0.7,
       strategy_temperature: 0.7,
       writing_temperature: 0.7,

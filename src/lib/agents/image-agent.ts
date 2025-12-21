@@ -12,6 +12,12 @@ import {
 } from "@/lib/image-processor";
 
 const IMAGE_MODELS = {
+  // fal.ai qwen-image（主要使用）
+  "fal-ai/qwen-image": {
+    provider: "fal" as const,
+    pricing: { "1024x1024": 0.003, "1792x1024": 0.003 },
+  },
+  // 保留舊模型定價供參考
   "gemini-imagen": {
     provider: "google" as const,
     pricing: { "1024x1024": 0.02 },
@@ -19,22 +25,6 @@ const IMAGE_MODELS = {
   "gemini-imagen-flash": {
     provider: "google" as const,
     pricing: { "1024x1024": 0.01 },
-  },
-  "dall-e-3": {
-    provider: "openai" as const,
-    pricing: { "1024x1024": 0.04, "1024x1792": 0.08, "1792x1024": 0.08 },
-  },
-  "dall-e-2": {
-    provider: "openai" as const,
-    pricing: { "256x256": 0.016, "512x512": 0.018, "1024x1024": 0.02 },
-  },
-  "nano-banana": {
-    provider: "nano" as const,
-    pricing: { "1024x1024": 0.01 },
-  },
-  "chatgpt-image-mini": {
-    provider: "openai" as const,
-    pricing: { "1024x1024": 0.015 },
   },
   "gpt-image-1-mini": {
     provider: "openai" as const,

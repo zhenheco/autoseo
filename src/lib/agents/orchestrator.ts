@@ -225,7 +225,7 @@ export class ParallelOrchestrator {
           agentConfig.meta_model ||
           agentConfig.simple_processing_model ||
           "deepseek-chat",
-        image_model: agentConfig.image_model || "gemini-imagen",
+        image_model: agentConfig.image_model || "fal-ai/qwen-image",
       });
 
       // === 階段 1: Research & Strategy (初始階段) ===
@@ -1057,9 +1057,9 @@ export class ParallelOrchestrator {
     if (!strategyOutput) throw new Error("Strategy output is required");
 
     const featuredImageModel =
-      agentConfig.featured_image_model || "gemini-3-pro-image-preview";
+      agentConfig.featured_image_model || "fal-ai/qwen-image";
     const contentImageModel =
-      agentConfig.content_image_model || "gpt-image-1-mini";
+      agentConfig.content_image_model || "fal-ai/qwen-image";
 
     console.log("[Orchestrator] 🎨 Image models configuration:", {
       featuredImageModel,
@@ -1583,7 +1583,7 @@ export class ParallelOrchestrator {
       strategy_model:
         agentConfig.complex_processing_model || "deepseek-reasoner",
       writing_model: agentConfig.simple_processing_model || "deepseek-chat",
-      image_model: agentConfig.image_model || "gemini-imagen",
+      image_model: agentConfig.image_model || "fal-ai/qwen-image",
 
       research_temperature: agentConfig.research_temperature || 0.7,
       strategy_temperature: agentConfig.strategy_temperature || 0.7,
@@ -1632,7 +1632,7 @@ export class ParallelOrchestrator {
         research_model: "deepseek-reasoner",
         complex_processing_model: "deepseek-chat",
         simple_processing_model: "deepseek-chat",
-        image_model: "gemini-imagen",
+        image_model: "fal-ai/qwen-image",
         research_temperature: 0.7,
         research_max_tokens: 16000,
         strategy_temperature: 0.7,
@@ -1745,7 +1745,7 @@ export class ParallelOrchestrator {
       research_model: "deepseek-reasoner",
       strategy_model: "deepseek-chat",
       writing_model: "deepseek-chat",
-      image_model: "gemini-imagen",
+      image_model: "fal-ai/qwen-image",
       research_temperature: 0.7,
       strategy_temperature: 0.7,
       writing_temperature: 0.7,
