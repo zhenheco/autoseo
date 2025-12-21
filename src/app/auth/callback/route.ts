@@ -105,6 +105,7 @@ export async function GET(request: Request) {
             trackRegistration({
               referralCode: affiliateRef,
               referredUserId: user.id,
+              referredUserEmail: user.email,
               sourceUrl: request.url,
             }).catch((err) =>
               console.error("[OAuth] Affiliate 追蹤失敗:", err),

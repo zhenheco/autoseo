@@ -238,7 +238,7 @@ export class PaymentService {
         amount: params.amount,
         description: params.description,
         email: params.email,
-        callbackUrl: `${baseUrl}/payment/result`,
+        callbackUrl: `${baseUrl}/api/payment/result-redirect`,
         metadata: {
           companyId: params.companyId,
           paymentType: params.paymentType,
@@ -487,7 +487,7 @@ export class PaymentService {
         amount: params.amount,
         description: params.description,
         email: params.email,
-        callbackUrl: `${baseUrl}/payment/result`,
+        callbackUrl: `${baseUrl}/api/payment/result-redirect`,
         periodParams: {
           periodType: "M",
           periodPoint,

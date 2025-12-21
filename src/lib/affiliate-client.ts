@@ -16,6 +16,8 @@ interface RegistrationParams {
   referralCode: string;
   /** 被推薦用戶的 UUID */
   referredUserId: string;
+  /** 被推薦用戶的 Email */
+  referredUserEmail?: string;
   /** 來源頁面 URL */
   sourceUrl?: string;
   /** UTM 來源 */

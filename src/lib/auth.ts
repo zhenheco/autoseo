@@ -126,6 +126,7 @@ export async function signUp(email: string, password: string) {
     trackRegistration({
       referralCode: affiliateRef,
       referredUserId: authData.user.id,
+      referredUserEmail: email,
     }).catch((err) => console.error("[註冊] Affiliate 追蹤失敗:", err));
 
     console.log("[註冊] Step 6 完成: Affiliate 追蹤已觸發");
