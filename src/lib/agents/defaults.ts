@@ -44,7 +44,7 @@ export const DEFAULT_AGENT_CONFIG: AgentConfig = {
   research_max_tokens: 4096,
   strategy_max_tokens: 4096,
   writing_max_tokens: 8192,
-  image_size: "1024x1024",
+  image_size: "1792x1024",
   image_count: 3,
   meta_enabled: true,
   meta_model: "deepseek-chat",

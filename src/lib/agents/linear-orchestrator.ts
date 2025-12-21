@@ -1370,7 +1370,7 @@ export class LinearOrchestrator {
       research_max_tokens: 64000,
       strategy_max_tokens: 64000,
       writing_max_tokens: 64000,
-      image_size: "1024x1024",
+      image_size: "1792x1024",
       image_count: 3,
       meta_enabled: true,
       meta_model: "deepseek-chat",

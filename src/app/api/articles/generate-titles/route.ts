@@ -125,10 +125,10 @@ export async function POST(request: NextRequest) {
           research_model: "deepseek-reasoner",
           complex_processing_model: "deepseek-reasoner",
           simple_processing_model: "google/gemini-2.0-flash-exp:free",
-          image_model: "gemini-imagen",
+          image_model: "fal-ai/qwen-image",
           research_temperature: 0.7,
           research_max_tokens: 4000,
-          image_size: "1024x1024",
+          image_size: "1792x1024",
           image_count: 3,
           meta_enabled: true,
         });
