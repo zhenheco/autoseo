@@ -1,0 +1,69 @@
+# Gitleaks configuration file
+# 排除歷史 commit 中的已知誤報和已處理的問題
+
+title = "Auto-pilot-SEO gitleaks config"
+
+[extend]
+# 使用預設規則
+useDefault = true
+
+[allowlist]
+  description = "Allowlist for known false positives and documentation"
+
+  # 排除文檔和範例檔案中的假陽性
+  paths = [
+    # 環境變數範例（只有佔位符）
+    '''\.env\.example$''',
+    # 開發日誌（可能包含敏感資訊的討論）
+    '''devlog\.md$''',
+    # 專案說明文檔
+    '''CLAUDE\.md$''',
+    '''README\.md$''',
+    # 安全相關文檔（說明如何處理 secrets）
+    '''docs/.*\.md$''',
+    '''SECURITY.*\.md$''',
+    # OpenSpec 規格文檔
+    '''openspec/.*\.md$''',
+    # Migration 文件（SQL schema，無敏感資料）
+    '''supabase/migrations/.*\.sql$''',
+    # 舊的 git-rewrite 目錄（已刪除但可能在歷史中）
+    '''\.git-rewrite/.*''',
+    # GitHub Actions workflows（使用 secrets 變數參考）
+    '''\.github/workflows/.*\.yml$''',
+  ]
+
+  # 排除文檔中常見的佔位符模式
+  regexes = [
+    # 常見佔位符
+    '''your-.*-here''',
+    '''<your-.*>''',
+    '''YOUR_.*_HERE''',
+    '''replace-with-.*''',
+    '''xxx.*xxx''',
+    '''example\.com''',
+    '''placeholder''',
+    # 截斷的範例 keys
+    '''sk-\.\.\.''',
+    '''eyJ\.\.\.''',
+    '''sk-xxx''',
+    '''eyJxxx''',
+    # secrets 變數參考（在 GitHub Actions 中）
+    '''\$\{\{\s*secrets\..*\}\}''',
+  ]
+
+# 針對特定規則的調整
+[[rules]]
+  id = "generic-api-key"
+  description = "Generic API Key - adjusted for documentation"
+  allowlist = { paths = ['''\.md$''', '''\.example$''', '''\.sql$'''] }
+
+[[rules]]
+  id = "jwt"
+  description = "JWT - allow in documentation"
+  allowlist = { paths = ['''\.md$''', '''\.example$'''] }
+
+# 停用某些產生太多誤報的規則
+[rules.allowlist]
+  paths = [
+    '''\.md$''',
+  ]

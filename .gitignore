@@ -58,3 +58,6 @@ note.md
 
 # Development logs (may contain sensitive info)
 devlog.md
+
+# Git history rewrite remnants
+.git-rewrite/
