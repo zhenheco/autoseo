@@ -1,46 +1,31 @@
-import { createClient } from '@/lib/supabase/server'
-import { NextRequest, NextResponse } from 'next/server'
-import { getUser } from '@/lib/auth'
+/**
+ * 文章詳情 API
+ */
 
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> }
-) {
-  const user = await getUser()
-  if (!user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+import { NextRequest } from "next/server";
+import { withCompany } from "@/lib/api/auth-middleware";
+import { successResponse, notFound } from "@/lib/api/response-helpers";
 
-  const { id } = await params
-  const supabase = await createClient()
+export const GET = withCompany(
+  async (
+    request: NextRequest & { params?: Promise<{ id: string }> },
+    { supabase, companyId },
+  ) => {
+    // Next.js 15+ 動態路由參數從 URL 獲取
+    const url = new URL(request.url);
+    const id = url.pathname.split("/").slice(-2, -1)[0];
 
-  const { data: membership } = await supabase
-    .from('company_members')
-    .select('company_id')
-    .eq('user_id', user.id)
-    .eq('status', 'active')
-    .single()
+    const { data: article, error } = await supabase
+      .from("generated_articles")
+      .select("id, title, html_content, word_count, reading_time, status")
+      .eq("id", id)
+      .eq("company_id", companyId)
+      .single();
 
-  if (!membership) {
-    return NextResponse.json(
-      { error: 'Forbidden' },
-      { status: 403 }
-    )
-  }
+    if (error || !article) {
+      return notFound("文章");
+    }
 
-  const { data: article, error } = await supabase
-    .from('generated_articles')
-    .select('id, title, html_content, word_count, reading_time, status')
-    .eq('id', id)
-    .eq('company_id', membership.company_id)
-    .single()
-
-  if (error || !article) {
-    return NextResponse.json(
-      { error: '文章不存在或無權限訪問' },
-      { status: 404 }
-    )
-  }
-
-  return NextResponse.json(article)
-}
+    return successResponse(article);
+  },
+);

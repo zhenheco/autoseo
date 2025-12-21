@@ -1,7 +1,18 @@
-import { NextRequest, NextResponse } from "next/server";
+/**
+ * 標題生成 API
+ * 使用多層 AI fallback 策略生成文章標題
+ */
+
+import { NextRequest } from "next/server";
 import { getAPIRouter } from "@/lib/ai/api-router";
 import { getOpenRouterClient } from "@/lib/openrouter/client";
-import { createClient } from "@/lib/supabase/server";
+import { withCompany } from "@/lib/api/auth-middleware";
+import {
+  successResponse,
+  validationError,
+  notFound,
+  internalError,
+} from "@/lib/api/response-helpers";
 import { getTitlesFromCache, saveTitlesToCache } from "@/lib/cache/title-cache";
 import { getTitlesFromTemplates } from "@/lib/cache/title-templates";
 import {
@@ -51,59 +62,77 @@ async function callGeminiDirectAPI(prompt: string): Promise<string> {
   return content;
 }
 
-export async function POST(request: NextRequest) {
-  try {
+// 語言配置表
+const LANGUAGE_MAP: Record<string, { name: string; example: string }> = {
+  "zh-TW": {
+    name: "Traditional Chinese (繁體中文)",
+    example: "5個關於SEO的實用技巧",
+  },
+  "zh-CN": {
+    name: "Simplified Chinese (简体中文)",
+    example: "5个关于SEO的实用技巧",
+  },
+  en: { name: "English", example: "5 Proven SEO Strategies That Work" },
+  ja: {
+    name: "Japanese (日本語)",
+    example: "SEOに関する5つの実用的なヒント",
+  },
+  ko: { name: "Korean (한국어)", example: "SEO에 대한 5가지 실용적인 팁" },
+  es: {
+    name: "Spanish (Español)",
+    example: "5 Consejos Prácticos sobre SEO",
+  },
+  fr: {
+    name: "French (Français)",
+    example: "5 Conseils Pratiques sur le SEO",
+  },
+  de: { name: "German (Deutsch)", example: "5 Praktische SEO-Tipps" },
+  pt: {
+    name: "Portuguese (Português)",
+    example: "5 Dicas Práticas sobre SEO",
+  },
+  it: { name: "Italian (Italiano)", example: "5 Consigli Pratici sul SEO" },
+  ru: {
+    name: "Russian (Русский)",
+    example: "5 практических советов по SEO",
+  },
+  ar: {
+    name: "Arabic (العربية)",
+    example: "5 نصائح عملية حول تحسين محركات البحث",
+  },
+  th: { name: "Thai (ไทย)", example: "5 เคล็ดลับ SEO ที่ใช้งานได้จริง" },
+  vi: { name: "Vietnamese (Tiếng Việt)", example: "5 Mẹo SEO Thực Tế" },
+  id: {
+    name: "Indonesian (Bahasa Indonesia)",
+    example: "5 Tips SEO yang Praktis",
+  },
+};
+
+export const POST = withCompany(
+  async (request: NextRequest, { supabase, companyId }) => {
     const { keyword, targetLanguage = "zh-TW" } = await request.json();
 
     if (!keyword || typeof keyword !== "string") {
-      return NextResponse.json(
-        { error: "Keyword is required" },
-        { status: 400 },
-      );
+      return validationError("Keyword is required");
     }
 
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const { data: membership, error: membershipError } = await supabase
-      .from("company_members")
-      .select("company_id")
-      .eq("user_id", user.id)
-      .eq("status", "active")
-      .single();
-
-    if (!membership || membershipError) {
-      console.error("Membership error:", membershipError);
-      return NextResponse.json(
-        { error: "No active company membership" },
-        { status: 403 },
-      );
-    }
-
+    // 獲取網站配置
     const websiteQuery = await supabase
       .from("website_configs")
       .select("id")
-      .eq("company_id", membership.company_id)
+      .eq("company_id", companyId)
       .limit(1);
 
     let websites = websiteQuery.data;
     const websiteError = websiteQuery.error;
 
+    // 如果沒有網站配置，創建預設配置
     if ((!websites || websites.length === 0) && !websiteError) {
-      console.log(
-        "Creating default website config for company:",
-        membership.company_id,
-      );
+      console.log("Creating default website config for company:", companyId);
       const { data: newWebsite, error: createError } = await supabase
         .from("website_configs")
         .insert({
-          company_id: membership.company_id,
+          company_id: companyId,
           website_name: "",
           wordpress_url: "",
         })
@@ -112,10 +141,7 @@ export async function POST(request: NextRequest) {
 
       if (createError || !newWebsite) {
         console.error("Failed to create website config:", createError);
-        return NextResponse.json(
-          { error: "Failed to create website configuration" },
-          { status: 500 },
-        );
+        return internalError("Failed to create website configuration");
       }
 
       const { error: agentConfigError } = await supabase
@@ -135,13 +161,7 @@ export async function POST(request: NextRequest) {
 
       if (agentConfigError) {
         console.error("Failed to create agent config:", agentConfigError);
-        return NextResponse.json(
-          {
-            error: "Failed to create agent configuration",
-            details: agentConfigError.message,
-          },
-          { status: 500 },
-        );
+        return internalError("Failed to create agent configuration");
       }
 
       websites = [newWebsite];
@@ -149,82 +169,29 @@ export async function POST(request: NextRequest) {
 
     if (!websites || websites.length === 0) {
       console.error("Website error:", websiteError);
-      return NextResponse.json(
-        { error: "No website configured" },
-        { status: 404 },
-      );
+      return notFound("網站配置");
     }
 
     const websiteId = websites[0].id;
 
+    // 獲取 AI 模型配置
     const { data: agentConfig } = await supabase
       .from("agent_configs")
       .select("simple_processing_model")
       .eq("website_id", websiteId)
       .single();
 
-    const model =
-      agentConfig?.simple_processing_model ||
-      "google/gemini-2.0-flash-exp:free";
-
+    // 嘗試從快取獲取標題
     const cachedTitles = await getTitlesFromCache(keyword, targetLanguage);
     if (cachedTitles && cachedTitles.length > 0) {
-      return NextResponse.json({
-        success: true,
+      return successResponse({
         titles: cachedTitles.slice(0, 10),
         keyword,
         source: "cache",
       });
     }
 
-    const router = getAPIRouter();
-
-    const languageMap: Record<string, { name: string; example: string }> = {
-      "zh-TW": {
-        name: "Traditional Chinese (繁體中文)",
-        example: "5個關於SEO的實用技巧",
-      },
-      "zh-CN": {
-        name: "Simplified Chinese (简体中文)",
-        example: "5个关于SEO的实用技巧",
-      },
-      en: { name: "English", example: "5 Proven SEO Strategies That Work" },
-      ja: {
-        name: "Japanese (日本語)",
-        example: "SEOに関する5つの実用的なヒント",
-      },
-      ko: { name: "Korean (한국어)", example: "SEO에 대한 5가지 실용적인 팁" },
-      es: {
-        name: "Spanish (Español)",
-        example: "5 Consejos Prácticos sobre SEO",
-      },
-      fr: {
-        name: "French (Français)",
-        example: "5 Conseils Pratiques sur le SEO",
-      },
-      de: { name: "German (Deutsch)", example: "5 Praktische SEO-Tipps" },
-      pt: {
-        name: "Portuguese (Português)",
-        example: "5 Dicas Práticas sobre SEO",
-      },
-      it: { name: "Italian (Italiano)", example: "5 Consigli Pratici sul SEO" },
-      ru: {
-        name: "Russian (Русский)",
-        example: "5 практических советов по SEO",
-      },
-      ar: {
-        name: "Arabic (العربية)",
-        example: "5 نصائح عملية حول تحسين محركات البحث",
-      },
-      th: { name: "Thai (ไทย)", example: "5 เคล็ดลับ SEO ที่ใช้งานได้จริง" },
-      vi: { name: "Vietnamese (Tiếng Việt)", example: "5 Mẹo SEO Thực Tế" },
-      id: {
-        name: "Indonesian (Bahasa Indonesia)",
-        example: "5 Tips SEO yang Praktis",
-      },
-    };
-
-    const lang = languageMap[targetLanguage] || languageMap["zh-TW"];
+    const lang = LANGUAGE_MAP[targetLanguage] || LANGUAGE_MAP["zh-TW"];
 
     const prompt = `First, translate the keyword "${keyword}" to ${lang.name} if it's not already in that language.
 
@@ -243,6 +210,7 @@ ${lang.example}
 IMPORTANT: Generate ALL 10 titles in ${lang.name} language only.`;
 
     const openRouterClient = getOpenRouterClient();
+    const router = getAPIRouter();
     let responseContent: string | null = null;
     let source = "ai";
 
@@ -310,8 +278,7 @@ IMPORTANT: Generate ALL 10 titles in ${lang.name} language only.`;
       if (titles.length > 0) {
         await saveTitlesToCache(keyword, targetLanguage, titles);
 
-        return NextResponse.json({
-          success: true,
+        return successResponse({
           titles: titles.slice(0, 10),
           keyword,
           source,
@@ -319,6 +286,7 @@ IMPORTANT: Generate ALL 10 titles in ${lang.name} language only.`;
       }
     }
 
+    // Fallback: 從模板生成
     const templateTitles = await getTitlesFromTemplates(
       {
         language: targetLanguage,
@@ -328,23 +296,13 @@ IMPORTANT: Generate ALL 10 titles in ${lang.name} language only.`;
     );
 
     if (templateTitles.length > 0) {
-      return NextResponse.json({
-        success: true,
+      return successResponse({
         titles: templateTitles.slice(0, 10),
         keyword,
         source: "template",
       });
     }
 
-    return NextResponse.json(
-      { error: "Failed to generate titles" },
-      { status: 500 },
-    );
-  } catch (error) {
-    console.error("Generate titles error:", error);
-    return NextResponse.json(
-      { error: "Internal server error", details: (error as Error).message },
-      { status: 500 },
-    );
-  }
-}
+    return internalError("Failed to generate titles");
+  },
+);

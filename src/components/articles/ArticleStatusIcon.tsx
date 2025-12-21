@@ -1,12 +1,16 @@
 "use client";
 
-import { Check, Clock, XCircle, Calendar, Loader2, Circle } from "lucide-react";
 import {
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import {
+  getStatusConfig,
+  getScheduledLabel,
+  getPublishedLabel,
+} from "@/constants/status-config";
 
 interface ArticleStatusIconProps {
   status: string;
@@ -16,75 +20,33 @@ interface ArticleStatusIconProps {
   wordpressUrl?: string | null;
 }
 
+/**
+ * 文章狀態圖示元件
+ * 使用統一狀態配置，避免重複定義
+ */
 export function ArticleStatusIcon({
   status,
   scheduledAt,
   wordpressStatus,
   publishedToWebsiteName,
-  wordpressUrl,
 }: ArticleStatusIconProps) {
-  const getStatusConfig = () => {
+  const config = getStatusConfig(status);
+  const Icon = config.statusIcon;
+
+  // 根據狀態決定標籤
+  const getLabel = (): string => {
     switch (status) {
-      case "published":
-        const publishInfo = publishedToWebsiteName
-          ? `已發佈到 ${publishedToWebsiteName}${wordpressStatus === "publish" ? "" : " (草稿)"}`
-          : "已發佈";
-        return {
-          icon: Circle,
-          label: publishInfo,
-          iconClassName: "text-red-600 dark:text-red-400 fill-current",
-          url: wordpressUrl,
-        };
-      case "completed":
-      case "generated":
-      case "reviewed":
-        return {
-          icon: Check,
-          label: "已完成",
-          iconClassName: "text-green-600 dark:text-green-400",
-        };
       case "scheduled":
-        return {
-          icon: Calendar,
-          label: scheduledAt
-            ? `排程: ${new Date(scheduledAt).toLocaleString("zh-TW", {
-                month: "2-digit",
-                day: "2-digit",
-                hour: "2-digit",
-                minute: "2-digit",
-              })}`
-            : "已排程",
-          iconClassName: "text-blue-600 dark:text-blue-400",
-        };
-      case "processing":
-        return {
-          icon: Loader2,
-          label: "處理中",
-          iconClassName: "text-yellow-600 dark:text-yellow-400 animate-spin",
-        };
-      case "pending":
-        return {
-          icon: Loader2,
-          label: "生成中",
-          iconClassName: "text-yellow-600 dark:text-yellow-400 animate-spin",
-        };
-      case "failed":
-        return {
-          icon: XCircle,
-          label: "失敗",
-          iconClassName: "text-red-600 dark:text-red-400",
-        };
+        return getScheduledLabel(scheduledAt);
+      case "published":
+        return getPublishedLabel(publishedToWebsiteName, wordpressStatus);
       default:
-        return {
-          icon: Clock,
-          label: status,
-          iconClassName: "text-gray-600 dark:text-gray-400",
-        };
+        return config.label;
     }
   };
 
-  const config = getStatusConfig();
-  const Icon = config.icon;
+  const label = getLabel();
+  const iconClassName = `h-4 w-4 ${config.iconClassName} ${config.animate ? "animate-spin" : ""}`;
 
   return (
     <TooltipProvider>
@@ -92,7 +54,7 @@ export function ArticleStatusIcon({
         <TooltipTrigger asChild>
           <div
             role="img"
-            aria-label={config.label}
+            aria-label={label}
             tabIndex={0}
             className="inline-flex items-center justify-center cursor-help focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 rounded-sm"
             onKeyDown={(e) => {
@@ -101,11 +63,11 @@ export function ArticleStatusIcon({
               }
             }}
           >
-            <Icon className={`h-4 w-4 ${config.iconClassName}`} />
+            <Icon className={iconClassName} />
           </div>
         </TooltipTrigger>
         <TooltipContent role="tooltip">
-          <p>{config.label}</p>
+          <p>{label}</p>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

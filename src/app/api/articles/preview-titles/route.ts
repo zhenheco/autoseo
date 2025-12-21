@@ -1,13 +1,26 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+/**
+ * 預覽標題生成 API
+ * 根據產業、地區、語言生成 SEO 標題預覽
+ */
+
+import { NextRequest } from "next/server";
 import { getOpenRouterClient } from "@/lib/openrouter/client";
 import { getDeepSeekClient } from "@/lib/deepseek/client";
+import { withAuth } from "@/lib/api/auth-middleware";
+import {
+  successResponse,
+  validationError,
+  internalError,
+} from "@/lib/api/response-helpers";
 import {
   buildGeminiApiUrl,
   buildGeminiHeaders,
   isGatewayEnabled,
 } from "@/lib/cloudflare/ai-gateway";
 
+/**
+ * 呼叫 Gemini Direct API（繞過 OpenRouter）
+ */
 async function callGeminiDirectAPI(prompt: string): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey) {
@@ -15,7 +28,6 @@ async function callGeminiDirectAPI(prompt: string): Promise<string> {
   }
 
   const modelName = "gemini-2.0-flash";
-  // Gateway 模式使用 Gateway URL，直連模式使用官方 URL（帶 key 參數）
   const geminiUrl = isGatewayEnabled()
     ? buildGeminiApiUrl(modelName, "generateContent")
     : `${buildGeminiApiUrl(modelName, "generateContent")}?key=${apiKey}`;
@@ -46,6 +58,7 @@ async function callGeminiDirectAPI(prompt: string): Promise<string> {
   return content;
 }
 
+// 產業標籤
 const INDUSTRY_LABELS: Record<string, string> = {
   tech: "科技",
   finance: "金融",
@@ -59,6 +72,7 @@ const INDUSTRY_LABELS: Record<string, string> = {
   manufacturing: "製造業",
 };
 
+// 地區標籤
 const REGION_LABELS: Record<string, string> = {
   taiwan: "台灣",
   japan: "日本",
@@ -70,6 +84,7 @@ const REGION_LABELS: Record<string, string> = {
   global: "全球",
 };
 
+// 語言配置
 const LANGUAGE_CONFIG: Record<string, { name: string; instruction: string }> = {
   "zh-TW": { name: "繁體中文", instruction: "請使用繁體中文撰寫" },
   "zh-CN": { name: "简体中文", instruction: "请使用简体中文撰写" },
@@ -78,39 +93,21 @@ const LANGUAGE_CONFIG: Record<string, { name: string; instruction: string }> = {
   "ko-KR": { name: "한국어", instruction: "한국어로 작성해주세요" },
 };
 
-export async function POST(request: NextRequest) {
-  try {
-    const {
-      industry,
-      region,
-      language,
-      competitors = [],
-    } = await request.json();
+export const POST = withAuth(async (request: NextRequest) => {
+  const { industry, region, language, competitors = [] } = await request.json();
 
-    if (!industry || !region || !language) {
-      return NextResponse.json(
-        { error: "缺少必要參數：產業、地區、語言" },
-        { status: 400 },
-      );
-    }
+  if (!industry || !region || !language) {
+    return validationError("缺少必要參數：產業、地區、語言");
+  }
 
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+  const industryLabel = INDUSTRY_LABELS[industry] || industry;
+  const regionLabel = REGION_LABELS[region] || region;
+  const langConfig = LANGUAGE_CONFIG[language] || LANGUAGE_CONFIG["zh-TW"];
 
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
+  const competitorContext =
+    competitors.length > 0 ? `\n競爭對手網站: ${competitors.join(", ")}` : "";
 
-    const industryLabel = INDUSTRY_LABELS[industry] || industry;
-    const regionLabel = REGION_LABELS[region] || region;
-    const langConfig = LANGUAGE_CONFIG[language] || LANGUAGE_CONFIG["zh-TW"];
-
-    const competitorContext =
-      competitors.length > 0 ? `\n競爭對手網站: ${competitors.join(", ")}` : "";
-
-    const prompt = `你是一位專業的 SEO 內容策略師。
+  const prompt = `你是一位專業的 SEO 內容策略師。
 
 根據以下資訊，生成 5 個具有高點擊率潛力的文章標題：
 
@@ -129,80 +126,67 @@ ${langConfig.instruction}
 
 請直接輸出 5 個標題，每行一個，不要編號：`;
 
-    const openRouterClient = getOpenRouterClient();
-    let responseContent: string;
+  const openRouterClient = getOpenRouterClient();
+  let responseContent: string;
 
-    // Layer 1: OpenRouter Gemini free（透過 AI Gateway）
+  // Layer 1: OpenRouter Gemini free
+  try {
+    const response = await openRouterClient.complete({
+      model: "google/gemini-2.0-flash-exp:free",
+      prompt,
+      temperature: 0.8,
+      max_tokens: 500,
+    });
+    responseContent = response.content;
+    console.log("[preview-titles] ✅ Gemini OpenRouter 成功");
+  } catch (geminiError) {
+    console.warn(
+      "[preview-titles] ⚠️ Gemini OpenRouter 失敗:",
+      (geminiError as Error).message,
+    );
+
+    // Layer 2: Gemini Direct API
     try {
-      const response = await openRouterClient.complete({
-        model: "google/gemini-2.0-flash-exp:free",
+      responseContent = await callGeminiDirectAPI(prompt);
+      console.log("[preview-titles] ✅ Gemini Direct 成功");
+    } catch (geminiDirectError) {
+      console.warn(
+        "[preview-titles] ⚠️ Gemini Direct 失敗:",
+        (geminiDirectError as Error).message,
+      );
+
+      // Layer 3: DeepSeek Chat
+      const deepseekClient = getDeepSeekClient();
+      const deepseekResponse = await deepseekClient.complete({
+        model: "deepseek-chat",
         prompt,
         temperature: 0.8,
         max_tokens: 500,
       });
-      responseContent = response.content;
-      console.log("[preview-titles] ✅ Gemini OpenRouter 成功");
-    } catch (geminiError) {
-      console.warn(
-        "[preview-titles] ⚠️ Gemini OpenRouter 失敗:",
-        (geminiError as Error).message,
-      );
-
-      // Layer 2: Gemini Direct API
-      try {
-        responseContent = await callGeminiDirectAPI(prompt);
-        console.log("[preview-titles] ✅ Gemini Direct 成功");
-      } catch (geminiDirectError) {
-        console.warn(
-          "[preview-titles] ⚠️ Gemini Direct 失敗:",
-          (geminiDirectError as Error).message,
-        );
-
-        // Layer 3: DeepSeek Chat (透過 AI Gateway)
-        const deepseekClient = getDeepSeekClient();
-        const deepseekResponse = await deepseekClient.complete({
-          model: "deepseek-chat",
-          prompt,
-          temperature: 0.8,
-          max_tokens: 500,
-        });
-        responseContent = deepseekResponse.content;
-        console.log("[preview-titles] ✅ DeepSeek Chat 成功 (via AI Gateway)");
-      }
+      responseContent = deepseekResponse.content;
+      console.log("[preview-titles] ✅ DeepSeek Chat 成功 (via AI Gateway)");
     }
-
-    const titles = responseContent
-      .split("\n")
-      .map((line) => line.trim())
-      // 先移除列表前綴（如 "1. ", "* ", "- " 等）
-      .map((line) => line.replace(/^[\d\.\-\*]+[\.\)、\s]*/, "").trim())
-      .filter((line) => line.length > 0 && line.length < 100)
-      // 過濾掉看起來像是說明文字的行
-      .filter((line) => !line.match(/^(標題|範例|格式|要求|例如|以下|根據)/))
-      .slice(0, 5);
-
-    if (titles.length === 0) {
-      console.error("No valid titles generated:", responseContent);
-      return NextResponse.json(
-        { error: "標題生成失敗，請稍後再試" },
-        { status: 500 },
-      );
-    }
-
-    return NextResponse.json({
-      success: true,
-      titles,
-      metadata: {
-        industry: industryLabel,
-        region: regionLabel,
-        language: langConfig.name,
-      },
-    });
-  } catch (error) {
-    console.error("Preview titles error:", error);
-    return NextResponse.json(
-      { error: "Internal server error", details: (error as Error).message },
-      { status: 500 },
-    );
   }
-}
+
+  const titles = responseContent
+    .split("\n")
+    .map((line) => line.trim())
+    .map((line) => line.replace(/^[\d\.\-\*]+[\.\)、\s]*/, "").trim())
+    .filter((line) => line.length > 0 && line.length < 100)
+    .filter((line) => !line.match(/^(標題|範例|格式|要求|例如|以下|根據)/))
+    .slice(0, 5);
+
+  if (titles.length === 0) {
+    console.error("No valid titles generated:", responseContent);
+    return internalError("標題生成失敗，請稍後再試");
+  }
+
+  return successResponse({
+    titles,
+    metadata: {
+      industry: industryLabel,
+      region: regionLabel,
+      language: langConfig.name,
+    },
+  });
+});

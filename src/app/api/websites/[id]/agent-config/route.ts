@@ -1,74 +1,39 @@
-import { createClient } from "@/lib/supabase/server";
-import { NextRequest, NextResponse } from "next/server";
-import type {
-  UpdateAgentConfigRequest,
-  UpdateAgentConfigResponse,
-} from "@/types/ai-models";
+/**
+ * 網站 AI Agent 配置 API
+ */
+
+import { NextRequest } from "next/server";
+import { withCompany, extractPathParams } from "@/lib/api/auth-middleware";
+import {
+  successResponse,
+  notFound,
+  validationError,
+  internalError,
+} from "@/lib/api/response-helpers";
+import type { UpdateAgentConfigRequest } from "@/types/ai-models";
 
 /**
- * 驗證用戶是否有權限存取該網站
- * @param supabase Supabase client
- * @param userId 用戶 ID
- * @param websiteId 網站 ID
- * @returns 驗證結果
+ * GET /api/websites/[id]/agent-config
+ * 取得網站的 AI Agent 配置
  */
-async function verifyWebsiteAccess(
-  supabase: Awaited<ReturnType<typeof createClient>>,
-  userId: string,
-  websiteId: string,
-): Promise<{ success: boolean; error?: string; status?: number }> {
-  // 查詢網站所屬公司
-  const { data: website, error: websiteError } = await supabase
-    .from("website_configs")
-    .select("company_id")
-    .eq("id", websiteId)
-    .single();
+export const GET = withCompany(
+  async (request: NextRequest, { supabase, companyId }) => {
+    const { id: websiteId } = extractPathParams(request);
 
-  if (websiteError || !website) {
-    return { success: false, error: "網站不存在", status: 404 };
-  }
-
-  // 驗證用戶是否為該公司的活躍成員
-  const { data: membership, error: memberError } = await supabase
-    .from("company_members")
-    .select("id")
-    .eq("company_id", website.company_id)
-    .eq("user_id", userId)
-    .eq("status", "active")
-    .single();
-
-  if (memberError || !membership) {
-    return { success: false, error: "無權限存取此網站", status: 403 };
-  }
-
-  return { success: true };
-}
-
-export async function GET(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  try {
-    const supabase = await createClient();
-
-    // 驗證用戶登入
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: "請先登入" }, { status: 401 });
+    if (!websiteId) {
+      return notFound("網站");
     }
 
-    const { id: websiteId } = await params;
+    // 驗證網站屬於該公司
+    const { data: website, error: websiteError } = await supabase
+      .from("website_configs")
+      .select("id")
+      .eq("id", websiteId)
+      .eq("company_id", companyId)
+      .single();
 
-    // 驗證用戶有權限存取該網站
-    const accessCheck = await verifyWebsiteAccess(supabase, user.id, websiteId);
-    if (!accessCheck.success) {
-      return NextResponse.json(
-        { error: accessCheck.error },
-        { status: accessCheck.status },
-      );
+    if (websiteError || !website) {
+      return notFound("網站");
     }
 
     // 查詢 agent config
@@ -80,48 +45,39 @@ export async function GET(
 
     if (error) {
       console.error("[Agent Config API] Error:", error);
-      return NextResponse.json({ error: "查詢失敗" }, { status: 500 });
+      return internalError("查詢失敗");
     }
 
     if (!agentConfig) {
-      return NextResponse.json({ error: "設定不存在" }, { status: 404 });
+      return notFound("設定");
     }
 
-    return NextResponse.json({
-      success: true,
-      config: agentConfig,
-    });
-  } catch (error) {
-    console.error("[Agent Config API] Unexpected error:", error);
-    return NextResponse.json({ error: "伺服器錯誤" }, { status: 500 });
-  }
-}
+    return successResponse({ config: agentConfig });
+  },
+);
 
-export async function PUT(
-  request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  try {
-    const supabase = await createClient();
+/**
+ * PUT /api/websites/[id]/agent-config
+ * 更新網站的 AI Agent 配置
+ */
+export const PUT = withCompany(
+  async (request: NextRequest, { supabase, companyId }) => {
+    const { id: websiteId } = extractPathParams(request);
 
-    // 驗證用戶登入
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-    if (authError || !user) {
-      return NextResponse.json({ error: "請先登入" }, { status: 401 });
+    if (!websiteId) {
+      return notFound("網站");
     }
 
-    const { id: websiteId } = await params;
+    // 驗證網站屬於該公司
+    const { data: website, error: websiteError } = await supabase
+      .from("website_configs")
+      .select("id")
+      .eq("id", websiteId)
+      .eq("company_id", companyId)
+      .single();
 
-    // 驗證用戶有權限存取該網站
-    const accessCheck = await verifyWebsiteAccess(supabase, user.id, websiteId);
-    if (!accessCheck.success) {
-      return NextResponse.json(
-        { error: accessCheck.error },
-        { status: accessCheck.status },
-      );
+    if (websiteError || !website) {
+      return notFound("網站");
     }
 
     const body: UpdateAgentConfigRequest = await request.json();
@@ -145,10 +101,7 @@ export async function PUT(
     }
 
     if (Object.keys(updates).length === 0) {
-      return NextResponse.json(
-        { error: "沒有需要更新的欄位" },
-        { status: 400 },
-      );
+      return validationError("沒有需要更新的欄位");
     }
 
     updates.updated_at = new Date().toISOString();
@@ -162,17 +115,9 @@ export async function PUT(
 
     if (error) {
       console.error("[Agent Config API] Update failed:", error);
-      return NextResponse.json({ error: "更新失敗" }, { status: 500 });
+      return internalError("更新失敗");
     }
 
-    const response: UpdateAgentConfigResponse = {
-      success: true,
-      config: updatedConfig,
-    };
-
-    return NextResponse.json(response);
-  } catch (error) {
-    console.error("[Agent Config API] Unexpected error:", error);
-    return NextResponse.json({ error: "伺服器錯誤" }, { status: 500 });
-  }
-}
+    return successResponse({ config: updatedConfig });
+  },
+);

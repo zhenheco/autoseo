@@ -1,57 +1,36 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+/**
+ * 網站 OAuth 連接狀態 API
+ */
+
+import { withFullAuth, extractPathParams } from "@/lib/api/auth-middleware";
+import { successResponse, notFound } from "@/lib/api/response-helpers";
 import type { WebsiteOAuthStatus } from "@/types/google-analytics.types";
 
 /**
  * GET /api/websites/[id]/oauth-status
  * 取得網站的 Google OAuth 連接狀態
  */
-export async function GET(
-  _request: NextRequest,
-  { params }: { params: Promise<{ id: string }> },
-) {
-  try {
-    const { id: websiteId } = await params;
+export const GET = withFullAuth(
+  async (request, { supabase, companyId, adminClient }) => {
+    const { id: websiteId } = extractPathParams(request);
 
-    // 驗證用戶登入狀態
-    const supabase = await createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: "未授權" }, { status: 401 });
+    if (!websiteId) {
+      return notFound("網站");
     }
 
-    // 驗證用戶有權限存取該網站
+    // 驗證網站屬於該公司
     const { data: website } = await supabase
       .from("website_configs")
-      .select("id, company_id")
+      .select("id")
       .eq("id", websiteId)
+      .eq("company_id", companyId)
       .single();
 
     if (!website) {
-      return NextResponse.json({ error: "網站不存在" }, { status: 404 });
+      return notFound("網站");
     }
 
-    // 驗證用戶是該公司成員
-    const { data: membership } = await supabase
-      .from("company_members")
-      .select("id")
-      .eq("company_id", website.company_id)
-      .eq("user_id", user.id)
-      .eq("status", "active")
-      .single();
-
-    if (!membership) {
-      return NextResponse.json({ error: "無權限存取此網站" }, { status: 403 });
-    }
-
-    // 使用 admin client 取得 OAuth tokens（因為需要讀取加密欄位）
-    const adminClient = createAdminClient();
-
-    // 取得 GSC token
+    // 使用 admin client 取得 GSC token（因為需要讀取加密欄位）
     const { data: gscToken } = await adminClient
       .from("google_oauth_tokens")
       .select("google_account_email, gsc_site_url, status")
@@ -66,9 +45,6 @@ export async function GET(
       gsc_site_url: gscToken?.gsc_site_url || null,
     };
 
-    return NextResponse.json(status);
-  } catch (error) {
-    console.error("[OAuth Status] 錯誤:", error);
-    return NextResponse.json({ error: "伺服器錯誤" }, { status: 500 });
-  }
-}
+    return successResponse(status);
+  },
+);

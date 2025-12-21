@@ -1,5 +1,22 @@
+/**
+ * 圖片模型列表 API（公開端點）
+ */
+
 import { createClient } from "@/lib/supabase/server";
-import { NextResponse } from "next/server";
+import { successResponse, internalError } from "@/lib/api/response-helpers";
+
+interface AIModel {
+  id: string;
+  provider: string;
+  model_id: string;
+  model_name: string;
+  description: string;
+  capabilities: string[];
+  pricing: Record<string, number>;
+  image_sizes: string[];
+  image_quality_options: string[];
+  tags: string[];
+}
 
 export async function GET() {
   const supabase = await createClient();
@@ -8,21 +25,9 @@ export async function GET() {
     const { data, error } = await supabase.rpc("get_active_image_models");
 
     if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
+      return internalError(error.message);
     }
 
-    interface AIModel {
-      id: string;
-      provider: string;
-      model_id: string;
-      model_name: string;
-      description: string;
-      capabilities: string[];
-      pricing: Record<string, number>;
-      image_sizes: string[];
-      image_quality_options: string[];
-      tags: string[];
-    }
     const groupedByProvider = data?.reduce(
       (acc: Record<string, AIModel[]>, model: AIModel) => {
         const provider = model.provider;
@@ -46,14 +51,12 @@ export async function GET() {
       {} as Record<string, AIModel[]>,
     );
 
-    return NextResponse.json({
-      success: true,
+    return successResponse({
       models: data,
       groupedByProvider,
       count: data?.length || 0,
     });
   } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: message }, { status: 500 });
+    return internalError((error as Error).message);
   }
 }

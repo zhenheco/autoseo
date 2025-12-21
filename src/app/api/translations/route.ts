@@ -5,13 +5,18 @@
  * GET: 取得翻譯任務列表
  */
 
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { NextRequest } from "next/server";
 import { v4 as uuidv4 } from "uuid";
+import { withAuth } from "@/lib/api/auth-middleware";
 import {
-  canAccessTranslation,
-  requireTranslationAccess,
-} from "@/lib/translations/access-control";
+  successResponse,
+  validationError,
+  forbidden,
+  notFound,
+  internalError,
+  HTTP_STATUS,
+} from "@/lib/api/response-helpers";
+import { canAccessTranslation } from "@/lib/translations/access-control";
 import {
   cacheSet,
   isRedisAvailable,
@@ -29,70 +34,45 @@ export const maxDuration = 60;
 /**
  * POST: 建立翻譯任務
  */
-export async function POST(request: NextRequest) {
-  try {
-    const supabase = await createClient();
-
-    // 驗證用戶
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // 檢查翻譯功能存取權限
-    if (!canAccessTranslation(user.email)) {
-      return NextResponse.json(
-        {
-          error: "Translation feature is currently in beta. Access restricted.",
-        },
-        { status: 403 },
-      );
-    }
-
-    // 解析請求
-    const body: CreateTranslationJobRequest = await request.json();
-    const { article_ids, target_languages } = body;
-
-    // 驗證參數
-    if (
-      !article_ids ||
-      !Array.isArray(article_ids) ||
-      article_ids.length === 0
-    ) {
-      return NextResponse.json(
-        { error: "article_ids is required and must be a non-empty array" },
-        { status: 400 },
-      );
-    }
-
-    if (
-      !target_languages ||
-      !Array.isArray(target_languages) ||
-      target_languages.length === 0
-    ) {
-      return NextResponse.json(
-        {
-          error: "target_languages is required and must be a non-empty array",
-        },
-        { status: 400 },
-      );
-    }
-
-    // 驗證語言代碼（使用統一的 TRANSLATION_LOCALES 常數）
-    const invalidLocales = target_languages.filter(
-      (l) => !TRANSLATION_LOCALES.includes(l as TranslationLocale),
+export const POST = withAuth(async (request: NextRequest, { user }) => {
+  // 檢查翻譯功能存取權限（Beta 功能）
+  if (!canAccessTranslation(user.email)) {
+    return forbidden(
+      "Translation feature is currently in beta. Access restricted.",
     );
-    if (invalidLocales.length > 0) {
-      return NextResponse.json(
-        { error: `Invalid locales: ${invalidLocales.join(", ")}` },
-        { status: 400 },
-      );
-    }
+  }
 
-    // 使用 service role client
+  // 解析請求
+  const body: CreateTranslationJobRequest = await request.json();
+  const { article_ids, target_languages } = body;
+
+  // 驗證參數
+  if (!article_ids || !Array.isArray(article_ids) || article_ids.length === 0) {
+    return validationError(
+      "article_ids is required and must be a non-empty array",
+    );
+  }
+
+  if (
+    !target_languages ||
+    !Array.isArray(target_languages) ||
+    target_languages.length === 0
+  ) {
+    return validationError(
+      "target_languages is required and must be a non-empty array",
+    );
+  }
+
+  // 驗證語言代碼（使用統一的 TRANSLATION_LOCALES 常數）
+  const invalidLocales = target_languages.filter(
+    (l) => !TRANSLATION_LOCALES.includes(l as TranslationLocale),
+  );
+  if (invalidLocales.length > 0) {
+    return validationError(`Invalid locales: ${invalidLocales.join(", ")}`);
+  }
+
+  try {
+    // 使用 service role client（需要繞過 RLS 查詢跨表資料）
     const { createClient: createSupabaseClient } = await import(
       "@supabase/supabase-js"
     );
@@ -109,10 +89,7 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (!companyMember) {
-      return NextResponse.json(
-        { error: "User is not a member of any company" },
-        { status: 400 },
-      );
+      return validationError("User is not a member of any company");
     }
 
     // 驗證文章存在且屬於用戶的公司
@@ -123,17 +100,11 @@ export async function POST(request: NextRequest) {
       .eq("company_id", companyMember.company_id);
 
     if (articlesError) {
-      return NextResponse.json(
-        { error: "Failed to fetch articles" },
-        { status: 500 },
-      );
+      return internalError("Failed to fetch articles");
     }
 
     if (!articles || articles.length !== article_ids.length) {
-      return NextResponse.json(
-        { error: "Some articles not found or not accessible" },
-        { status: 404 },
-      );
+      return notFound("Some articles not found or not accessible");
     }
 
     // 查詢已有翻譯，避免重複翻譯
@@ -152,7 +123,6 @@ export async function POST(request: NextRequest) {
 
     // 統計跳過的數量
     let skippedCount = 0;
-    const originalTotalCombinations = articles.length * target_languages.length;
 
     // 建立翻譯任務，過濾掉已有翻譯的語言
     const jobs = articles
@@ -195,7 +165,7 @@ export async function POST(request: NextRequest) {
           reason: "already_translated",
         },
       };
-      return NextResponse.json(response, { status: 200 });
+      return successResponse(response);
     }
 
     const { error: insertError } = await adminClient
@@ -204,13 +174,10 @@ export async function POST(request: NextRequest) {
 
     if (insertError) {
       console.error("Failed to create translation jobs:", insertError);
-      return NextResponse.json(
-        { error: "Failed to create translation jobs" },
-        { status: 500 },
-      );
+      return internalError("Failed to create translation jobs");
     }
 
-    // 🔧 優化：設置 Redis flag 通知有待處理翻譯任務
+    // 設置 Redis flag 通知有待處理翻譯任務
     if (isRedisAvailable()) {
       await cacheSet(
         CACHE_CONFIG.PENDING_TRANSLATION_JOBS.prefix,
@@ -263,49 +230,32 @@ export async function POST(request: NextRequest) {
           : undefined,
     };
 
-    return NextResponse.json(response, { status: 201 });
-  } catch (error) {
+    return successResponse(response, undefined, HTTP_STATUS.CREATED);
+  } catch (error: unknown) {
     console.error("Translation API error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return internalError((error as Error).message);
   }
-}
+});
 
 /**
  * GET: 取得翻譯任務列表
  */
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest, { user }) => {
+  // 檢查翻譯功能存取權限（Beta 功能）
+  if (!canAccessTranslation(user.email)) {
+    return forbidden(
+      "Translation feature is currently in beta. Access restricted.",
+    );
+  }
+
+  // 解析查詢參數
+  const { searchParams } = new URL(request.url);
+  const status = searchParams.get("status");
+  const limit = parseInt(searchParams.get("limit") || "20");
+  const offset = parseInt(searchParams.get("offset") || "0");
+
   try {
-    const supabase = await createClient();
-
-    // 驗證用戶
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    // 檢查翻譯功能存取權限
-    if (!canAccessTranslation(user.email)) {
-      return NextResponse.json(
-        {
-          error: "Translation feature is currently in beta. Access restricted.",
-        },
-        { status: 403 },
-      );
-    }
-
-    // 解析查詢參數
-    const { searchParams } = new URL(request.url);
-    const status = searchParams.get("status");
-    const limit = parseInt(searchParams.get("limit") || "20");
-    const offset = parseInt(searchParams.get("offset") || "0");
-
-    // 使用 service role client
+    // 使用 service role client（需要繞過 RLS）
     const { createClient: createSupabaseClient } = await import(
       "@supabase/supabase-js"
     );
@@ -322,7 +272,7 @@ export async function GET(request: NextRequest) {
       .single();
 
     if (!companyMember) {
-      return NextResponse.json({ jobs: [], total: 0 });
+      return successResponse({ jobs: [], total: 0 });
     }
 
     // 建立查詢
@@ -352,23 +302,17 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error("Failed to fetch translation jobs:", error);
-      return NextResponse.json(
-        { error: "Failed to fetch translation jobs" },
-        { status: 500 },
-      );
+      return internalError("Failed to fetch translation jobs");
     }
 
-    return NextResponse.json({
+    return successResponse({
       jobs: jobs || [],
       total: count || 0,
       limit,
       offset,
     });
-  } catch (error) {
+  } catch (error: unknown) {
     console.error("Translation API error:", error);
-    return NextResponse.json(
-      { error: "Internal server error" },
-      { status: 500 },
-    );
+    return internalError((error as Error).message);
   }
-}
+});

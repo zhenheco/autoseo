@@ -1,50 +1,44 @@
-import { createClient } from "@/lib/supabase/server";
-import { NextResponse } from "next/server";
+/**
+ * AI 模型使用統計 API
+ */
 
-export async function GET(request: Request) {
-  const supabase = await createClient();
-  const { searchParams } = new URL(request.url);
-  const companyId = searchParams.get("companyId");
-  const startDate = searchParams.get("startDate");
-  const endDate = searchParams.get("endDate");
+import { NextRequest } from "next/server";
+import { withCompany } from "@/lib/api/auth-middleware";
+import { successResponse, internalError } from "@/lib/api/response-helpers";
 
-  if (!companyId) {
-    return NextResponse.json(
-      { error: "Company ID is required" },
-      { status: 400 },
-    );
-  }
+export const GET = withCompany(
+  async (request: NextRequest, { supabase, companyId }) => {
+    const { searchParams } = new URL(request.url);
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
 
-  try {
-    const params: {
-      company_id_param: string;
-      start_date?: string;
-      end_date?: string;
-    } = { company_id_param: companyId };
+    try {
+      const params: {
+        company_id_param: string;
+        start_date?: string;
+        end_date?: string;
+      } = { company_id_param: companyId };
 
-    if (startDate) {
-      params.start_date = startDate;
+      if (startDate) {
+        params.start_date = startDate;
+      }
+
+      if (endDate) {
+        params.end_date = endDate;
+      }
+
+      const { data, error } = await supabase.rpc(
+        "get_agent_execution_stats",
+        params,
+      );
+
+      if (error) {
+        return internalError(error.message);
+      }
+
+      return successResponse({ stats: data || [] });
+    } catch (error: unknown) {
+      return internalError((error as Error).message);
     }
-
-    if (endDate) {
-      params.end_date = endDate;
-    }
-
-    const { data, error } = await supabase.rpc(
-      "get_agent_execution_stats",
-      params,
-    );
-
-    if (error) {
-      return NextResponse.json({ error: error.message }, { status: 500 });
-    }
-
-    return NextResponse.json({
-      success: true,
-      stats: data || [],
-    });
-  } catch (error: unknown) {
-    const message = error instanceof Error ? error.message : "Unknown error";
-    return NextResponse.json({ error: message }, { status: 500 });
-  }
-}
+  },
+);

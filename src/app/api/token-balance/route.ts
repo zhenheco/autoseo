@@ -1,54 +1,41 @@
-import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { getUser } from "@/lib/auth";
+/**
+ * Token 餘額查詢 API
+ */
+
+import { withCompany } from "@/lib/api/auth-middleware";
+import {
+  successResponse,
+  notFound,
+  internalError,
+} from "@/lib/api/response-helpers";
 import { TokenBillingService } from "@/lib/billing/token-billing-service";
-import { getSafeErrorMessage, logError } from "@/lib/utils/error-handler";
+import { logError } from "@/lib/utils/error-handler";
 
 /**
  * GET /api/token-balance
  * 取得當前公司的 token 餘額和訂閱資訊
  */
-export async function GET(request: NextRequest) {
+export const GET = withCompany(async (request, { supabase, companyId }) => {
   try {
-    // 驗證用戶
-    const user = await getUser();
-    if (!user) {
-      return NextResponse.json({ error: "未登入" }, { status: 401 });
-    }
-
-    const supabase = await createClient();
-
-    // 取得用戶的公司
-    const { data: membership } = await supabase
-      .from("company_members")
-      .select("company_id")
-      .eq("user_id", user.id)
-      .eq("status", "active")
-      .single();
-
-    if (!membership) {
-      return NextResponse.json({ error: "找不到公司" }, { status: 404 });
-    }
-
-    // 取得公司訂閱資訊
+    // 取得公司訂閱層級
     const { data: company } = await supabase
       .from("companies")
       .select("subscription_tier")
-      .eq("id", membership.company_id)
+      .eq("id", companyId)
       .single();
 
-    // 直接從 company_subscriptions 查詢所有需要的數據
+    // 取得訂閱詳情
     const { data: subscription } = await supabase
       .from("company_subscriptions")
       .select(
         "monthly_token_quota, monthly_quota_balance, purchased_token_balance, current_period_start, current_period_end, plan_id",
       )
-      .eq("company_id", membership.company_id)
+      .eq("company_id", companyId)
       .eq("status", "active")
       .single();
 
     if (!subscription) {
-      return NextResponse.json({ error: "找不到有效訂閱" }, { status: 404 });
+      return notFound("有效訂閱");
     }
 
     // 免費方案邏輯：monthly_token_quota = 0
@@ -62,9 +49,7 @@ export async function GET(request: NextRequest) {
     // 取得預扣資訊
     const billingService = new TokenBillingService(supabase);
     const reservationInfo =
-      await billingService.getAvailableBalanceWithReservations(
-        membership.company_id,
-      );
+      await billingService.getAvailableBalanceWithReservations(companyId);
     const reserved = reservationInfo.reserved;
     const available = total - reserved;
 
@@ -80,7 +65,7 @@ export async function GET(request: NextRequest) {
       planInfo = plan;
     }
 
-    const response = {
+    return successResponse({
       balance: {
         total,
         monthlyQuota,
@@ -95,14 +80,9 @@ export async function GET(request: NextRequest) {
         currentPeriodEnd: isFree ? null : subscription.current_period_end,
       },
       plan: planInfo,
-    };
-
-    return NextResponse.json(response);
+    });
   } catch (error) {
     logError("API:token-balance", error);
-    return NextResponse.json(
-      { error: getSafeErrorMessage(error) },
-      { status: 500 },
-    );
+    return internalError("查詢餘額失敗");
   }
-}
+});
