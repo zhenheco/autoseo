@@ -48,8 +48,8 @@ export async function POST(request: NextRequest) {
 
     const paymentService = PaymentService.createInstance(supabase);
 
-    // 使用新的 SDK 方法
-    const result = await paymentService.createOnetimePaymentWithGateway({
+    // 透過 Gateway SDK 建立付款
+    const result = await paymentService.createOnetimePayment({
       companyId,
       paymentType,
       relatedId,

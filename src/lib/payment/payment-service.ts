@@ -1,10 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database.types";
-import {
-  NewebPayService,
-  type OnetimePaymentParams,
-  type RecurringPaymentParams,
-} from "./newebpay-service";
 import { createCommission } from "@/lib/affiliate-client";
 import { TIER_HIERARCHY } from "@/lib/subscription/upgrade-rules";
 import { syncCompanyOwnerToBrevo } from "@/lib/brevo";
@@ -13,20 +8,19 @@ import {
   type CreatePaymentParams,
 } from "./gateway-client";
 
-interface NewebPayPeriodResult {
-  MerchantOrderNo?: string;
-  PeriodNo?: string;
-  TradeNo?: string;
-  AuthCode?: string;
-  MerOrderNo?: string;
-  MandateNo?: string;
-}
-
-interface NewebPayPeriodCallback {
-  Status?: string;
-  Message?: string;
-  Result?: NewebPayPeriodResult;
-  [key: string]: string | number | NewebPayPeriodResult | undefined;
+/**
+ * PAYUNi Webhook 事件資料結構
+ */
+interface PayUniWebhookData {
+  paymentId: string;
+  orderId: string;
+  amount: number;
+  status: "SUCCESS" | "FAILED" | "PENDING";
+  tradeNo?: string;
+  paidAt?: string;
+  errorMessage?: string;
+  periodTradeNo?: string;
+  currentPeriod?: number;
 }
 
 export interface CreateOnetimeOrderParams {
@@ -56,14 +50,9 @@ export interface CreateRecurringOrderParams {
 
 export class PaymentService {
   private supabase: ReturnType<typeof createClient<Database>>;
-  private newebpay: NewebPayService;
 
-  constructor(
-    supabase: ReturnType<typeof createClient<Database>>,
-    newebpay: NewebPayService,
-  ) {
+  constructor(supabase: ReturnType<typeof createClient<Database>>) {
     this.supabase = supabase;
-    this.newebpay = newebpay;
   }
 
   private generateOrderNo(): string {
@@ -93,90 +82,12 @@ export class PaymentService {
       : "free";
   }
 
-  async createOnetimePayment(params: CreateOnetimeOrderParams): Promise<{
-    success: boolean;
-    orderId?: string;
-    orderNo?: string;
-    paymentForm?: {
-      merchantId: string;
-      tradeInfo: string;
-      tradeSha: string;
-      version: string;
-      apiUrl: string;
-    };
-    error?: string;
-  }> {
-    const orderNo = this.generateOrderNo();
-
-    console.log("[PaymentService] 建立單次付款訂單:", {
-      orderNo,
-      companyId: params.companyId,
-      amount: params.amount,
-      paymentType: params.paymentType,
-    });
-
-    const { data: orderData, error: orderError } = await this.supabase
-      .from("payment_orders")
-      .insert({
-        company_id: params.companyId,
-        order_no: orderNo,
-        order_type: "onetime",
-        payment_type: params.paymentType as
-          | "subscription"
-          | "token_package"
-          | "lifetime", // 暫時類型斷言，待 migration 後更新
-        amount: params.amount,
-        item_description: params.description,
-        related_id: params.relatedId,
-        status: "pending",
-      })
-      .select<"*", Database["public"]["Tables"]["payment_orders"]["Row"]>()
-      .single();
-
-    if (orderError || !orderData) {
-      console.error("[PaymentService] 建立訂單失敗:", {
-        orderNo,
-        error: orderError,
-      });
-      return { success: false, error: "建立訂單失敗" };
-    }
-
-    console.log("[PaymentService] 訂單建立成功:", {
-      orderId: orderData.id,
-      orderNo: orderData.order_no,
-    });
-
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-
-    const paymentParams: OnetimePaymentParams = {
-      orderNo,
-      amount: params.amount,
-      description: params.description,
-      email: params.email,
-      returnUrl: `${baseUrl}/api/payment/callback`,
-      notifyUrl: `${baseUrl}/api/payment/notify`,
-      clientBackUrl: `${baseUrl}/dashboard/subscription`,
-    };
-
-    const paymentForm = this.newebpay.createOnetimePayment(paymentParams);
-
-    return {
-      success: true,
-      orderId: orderData.id,
-      orderNo: orderData.order_no,
-      paymentForm,
-    };
-  }
-
   /**
-   * 使用金流微服務 SDK 建立一次性付款
+   * 建立一次性付款
    *
-   * 這是新版本的付款方法，透過金流微服務 API 建立付款，
-   * 而非直接串接藍新金流。
+   * 透過金流微服務 API 建立付款（PAYUNi）
    */
-  async createOnetimePaymentWithGateway(
-    params: CreateOnetimeOrderParams,
-  ): Promise<{
+  async createOnetimePayment(params: CreateOnetimeOrderParams): Promise<{
     success: boolean;
     orderId?: string;
     orderNo?: string;
@@ -275,124 +186,12 @@ export class PaymentService {
     }
   }
 
-  async createRecurringPayment(params: CreateRecurringOrderParams): Promise<{
-    success: boolean;
-    mandateId?: string;
-    mandateNo?: string;
-    paymentForm?: {
-      merchantId: string;
-      postData: string;
-      postDataSha?: string;
-      apiUrl: string;
-    };
-    error?: string;
-  }> {
-    if (params.periodType !== "M") {
-      return { success: false, error: "只支援月繳訂閱" };
-    }
-
-    if (params.periodTimes !== 12) {
-      return { success: false, error: "月繳訂閱必須為 12 期" };
-    }
-
-    if (params.periodStartType !== 2) {
-      return { success: false, error: "月繳訂閱必須使用授權完成後開始扣款" };
-    }
-
-    const periodPoint = params.periodPoint || String(new Date().getDate());
-
-    console.log("[PaymentService] 建立月繳 12 期委託:", {
-      companyId: params.companyId,
-      planId: params.planId,
-      amount: params.amount,
-      periodPoint,
-    });
-
-    const mandateNo = this.generateMandateNo();
-
-    const { data: mandateData, error: mandateError } = await this.supabase
-      .from("recurring_mandates")
-      .insert({
-        company_id: params.companyId,
-        plan_id: params.planId,
-        mandate_no: mandateNo,
-        period_type: "M",
-        period_point: periodPoint,
-        period_times: 12,
-        period_amount: params.amount,
-        total_amount: params.amount * 12,
-        status: "pending",
-      })
-      .select<"*", Database["public"]["Tables"]["recurring_mandates"]["Row"]>()
-      .single();
-
-    if (mandateError || !mandateData) {
-      console.error("[PaymentService] 建立委託失敗:", mandateError);
-      return { success: false, error: "建立定期定額委託失敗" };
-    }
-
-    const orderNo = this.generateOrderNo();
-
-    const { data: orderData, error: orderError } = await this.supabase
-      .from("payment_orders")
-      .insert({
-        company_id: params.companyId,
-        order_no: orderNo,
-        order_type: "recurring_first",
-        payment_type: "subscription",
-        amount: params.amount,
-        item_description: params.description,
-        related_id: params.planId,
-        status: "pending",
-      })
-      .select<"*", Database["public"]["Tables"]["payment_orders"]["Row"]>()
-      .single();
-
-    if (orderError || !orderData) {
-      console.error("[PaymentService] 建立訂單失敗:", orderError);
-      return { success: false, error: "建立訂單失敗" };
-    }
-
-    await this.supabase
-      .from("recurring_mandates")
-      .update({ first_payment_order_id: orderData.id })
-      .eq("id", mandateData.id);
-
-    const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
-
-    const paymentParams: RecurringPaymentParams = {
-      orderNo: mandateNo,
-      amount: params.amount,
-      description: params.description,
-      email: params.email,
-      periodType: "M",
-      periodPoint,
-      periodStartType: 2,
-      periodTimes: 12,
-      returnUrl: `${baseUrl}/api/payment/recurring/callback`,
-      notifyUrl: `${baseUrl}/api/payment/recurring/notify`,
-      clientBackUrl: `${baseUrl}/dashboard/subscription`,
-    };
-
-    const paymentForm = this.newebpay.createRecurringPayment(paymentParams);
-
-    return {
-      success: true,
-      mandateId: mandateData.id,
-      mandateNo: mandateData.mandate_no,
-      paymentForm,
-    };
-  }
-
   /**
-   * 使用金流微服務 SDK 建立定期定額付款
+   * 建立定期定額付款
    *
-   * 這是新版本的定期定額方法，透過金流微服務 API 建立付款，
-   * 而非直接串接藍新金流。
+   * 透過金流微服務 API 建立付款（PAYUNi）
    */
-  async createRecurringPaymentWithGateway(
-    params: CreateRecurringOrderParams,
-  ): Promise<{
+  async createRecurringPayment(params: CreateRecurringOrderParams): Promise<{
     success: boolean;
     mandateId?: string;
     mandateNo?: string;
@@ -533,61 +332,29 @@ export class PaymentService {
     }
   }
 
-  async handleOnetimeCallback(
-    tradeInfo: string,
-    tradeSha: string,
-  ): Promise<{
+  /**
+   * 處理單次付款回調
+   *
+   * 接收來自 PAYUNi webhook 的已解密資料
+   */
+  async handleOnetimeCallback(webhookData: PayUniWebhookData): Promise<{
     success: boolean;
     error?: string;
   }> {
     try {
-      const decryptedData = this.newebpay.decryptCallback(tradeInfo, tradeSha);
+      const {
+        orderId: orderNo,
+        status,
+        tradeNo,
+        amount,
+        errorMessage,
+      } = webhookData;
 
-      // 記錄完整的解密資料結構
-      console.log(
-        "[PaymentService] 解密後的完整資料:",
-        JSON.stringify(decryptedData, null, 2),
-      );
-      console.log(
-        "[PaymentService] 解密資料的 keys:",
-        Object.keys(decryptedData),
-      );
-
-      // 藍新金流單次購買可能回傳兩種格式：
-      // 1. JSON 格式（有 Result 物件）: {Status, Message, Result: {MerchantOrderNo, TradeNo, Amt, ...}}
-      // 2. URLSearchParams 格式（扁平）: {Status, Message, MerchantOrderNo, TradeNo, Amt, ...}
-      let status: string;
-      let message: string;
-      let orderNo: string;
-      let tradeNo: string;
-      let amount: number;
-
-      if (decryptedData.Result && typeof decryptedData.Result === "object") {
-        // JSON 格式：資料在 Result 物件裡
-        console.log("[PaymentService] 使用 JSON 格式（有 Result 物件）");
-        const result = decryptedData.Result as Record<string, any>;
-        status = decryptedData.Status as string;
-        message = decryptedData.Message as string;
-        orderNo = result.MerchantOrderNo as string;
-        tradeNo = result.TradeNo as string;
-        amount = result.Amt as number;
-      } else {
-        // URLSearchParams 格式：資料在最外層
-        console.log("[PaymentService] 使用扁平格式（無 Result 物件）");
-        status = decryptedData.Status as string;
-        message = decryptedData.Message as string;
-        orderNo = decryptedData.MerchantOrderNo as string;
-        tradeNo = decryptedData.TradeNo as string;
-        amount = decryptedData.Amt as number;
-      }
-
-      console.log("[PaymentService] 處理付款通知:", {
+      console.log("[PaymentService] 處理 PAYUNi 付款通知:", {
         orderNo,
         status,
         tradeNo,
         amount,
-        hasOrderNo: !!orderNo,
-        hasStatus: !!status,
       });
 
       // 加入重試機制，應對 Supabase 多區域複製延遲
@@ -650,6 +417,7 @@ export class PaymentService {
         status: orderData.status,
       });
 
+      // PAYUNi status: "SUCCESS" | "FAILED" | "PENDING"
       if (status === "SUCCESS") {
         if (orderData.status === "success") {
           console.log("[PaymentService] 訂單已處理過，跳過重複處理:", {
@@ -667,15 +435,16 @@ export class PaymentService {
           | "renewal"
           | "one_time" = "one_time";
 
+        // 更新訂單狀態（使用現有 newebpay_* 欄位，相容舊資料）
         const { error: updateError } = await this.supabase
           .from("payment_orders")
           .update({
             status: "success",
             newebpay_status: status,
-            newebpay_message: message,
-            newebpay_trade_no: tradeNo,
+            newebpay_message: "付款成功",
+            newebpay_trade_no: tradeNo || "",
             newebpay_response:
-              decryptedData as unknown as Database["public"]["Tables"]["payment_orders"]["Update"]["newebpay_response"],
+              webhookData as unknown as Database["public"]["Tables"]["payment_orders"]["Update"]["newebpay_response"],
             paid_at: new Date().toISOString(),
           })
           .eq("id", orderData.id);
@@ -1414,16 +1183,17 @@ export class PaymentService {
 
         return { success: true };
       } else {
+        // 付款失敗
         const { error: updateError } = await this.supabase
           .from("payment_orders")
           .update({
             status: "failed",
             newebpay_status: status,
-            newebpay_message: message,
+            newebpay_message: errorMessage || "付款失敗",
             newebpay_response:
-              decryptedData as unknown as Database["public"]["Tables"]["payment_orders"]["Update"]["newebpay_response"],
+              webhookData as unknown as Database["public"]["Tables"]["payment_orders"]["Update"]["newebpay_response"],
             failed_at: new Date().toISOString(),
-            failure_reason: message,
+            failure_reason: errorMessage || "付款失敗",
           })
           .eq("id", orderData.id);
 
@@ -1431,7 +1201,7 @@ export class PaymentService {
           console.error("[PaymentService] 更新訂單狀態失敗:", updateError);
         }
 
-        return { success: false, error: message };
+        return { success: false, error: errorMessage || "付款失敗" };
       }
     } catch (error) {
       console.error("[PaymentService] 處理回調失敗:", error);
@@ -1439,54 +1209,31 @@ export class PaymentService {
     }
   }
 
-  // 解密 TradeInfo 格式的定期定額回調
-  decryptTradeInfoForRecurring(
-    tradeInfo: string,
-    tradeSha: string,
-  ): Record<string, string | number | undefined> {
-    return this.newebpay.decryptCallback(tradeInfo, tradeSha);
-  }
-
-  // 解密 Period 格式的定期定額授權回調
-  decryptPeriodCallback(period: string): NewebPayPeriodCallback {
-    return this.newebpay.decryptPeriodCallback(
-      period,
-    ) as NewebPayPeriodCallback;
-  }
-
-  async handleRecurringCallback(period: string): Promise<{
+  /**
+   * 處理定期定額回調
+   *
+   * 接收來自 PAYUNi webhook 的已解密資料
+   */
+  async handleRecurringCallback(webhookData: PayUniWebhookData): Promise<{
     success: boolean;
     error?: string;
     warnings?: string[];
   }> {
     try {
-      const decryptedData = this.newebpay.decryptPeriodCallback(period);
-
-      console.log(
-        "[PaymentService] NotifyURL 解密資料:",
-        JSON.stringify(decryptedData, null, 2),
-      );
-
-      // Period 回調的結構: { Status, Message, Result: { MerchantOrderNo, PeriodNo, ... } }
-      const status = decryptedData.Status as string;
-      const result = (decryptedData as NewebPayPeriodCallback).Result;
-
-      if (!result || !result.MerchantOrderNo) {
-        console.error(
-          "[PaymentService] 解密資料結構錯誤，缺少 Result.MerchantOrderNo",
-        );
-        return { success: false, error: "解密資料結構錯誤" };
-      }
-
-      const mandateNo = result.MerchantOrderNo as string;
-      const periodNo = result.PeriodNo as string;
-
-      console.log("[PaymentService] NotifyURL 提取資訊:", {
+      const {
+        orderId: mandateNo,
         status,
+        periodTradeNo,
+        currentPeriod,
+        errorMessage,
+      } = webhookData;
+
+      console.log("[PaymentService] 處理 PAYUNi 定期定額通知:", {
         mandateNo,
-        periodNo,
+        status,
+        periodTradeNo,
+        currentPeriod,
       });
-      console.log("[PaymentService] 準備查詢委託 mandate_no:", mandateNo);
 
       let mandateData:
         | Database["public"]["Tables"]["recurring_mandates"]["Row"]
@@ -1541,8 +1288,8 @@ export class PaymentService {
         console.error("[PaymentService] mandate_no:", mandateNo);
         console.error("[PaymentService] 最後錯誤:", lastError);
         console.error(
-          "[PaymentService] 完整解密資料:",
-          JSON.stringify(decryptedData, null, 2),
+          "[PaymentService] 完整 webhook 資料:",
+          JSON.stringify(webhookData, null, 2),
         );
 
         const { data: allMandates } = await this.supabase
@@ -1556,6 +1303,7 @@ export class PaymentService {
         return { success: false, error: "找不到定期定額委託" };
       }
 
+      // PAYUNi status: "SUCCESS" | "FAILED" | "PENDING"
       if (status === "SUCCESS") {
         const isFirstAuthorization = mandateData.status === "pending";
         const isRecurringBilling = mandateData.status === "active";
@@ -1576,7 +1324,7 @@ export class PaymentService {
         const mandateUpdate: Database["public"]["Tables"]["recurring_mandates"]["Update"] =
           {
             newebpay_response:
-              decryptedData as unknown as Database["public"]["Tables"]["payment_orders"]["Update"]["newebpay_response"],
+              webhookData as unknown as Database["public"]["Tables"]["payment_orders"]["Update"]["newebpay_response"],
             next_payment_date: this.calculateNextPaymentDate(
               mandateData.period_type,
               mandateData.period_point || undefined,
@@ -1585,7 +1333,7 @@ export class PaymentService {
 
         if (isFirstAuthorization) {
           mandateUpdate.status = "active";
-          mandateUpdate.newebpay_period_no = periodNo;
+          mandateUpdate.newebpay_period_no = periodTradeNo || "";
           mandateUpdate.activated_at = new Date().toISOString();
           mandateUpdate.periods_paid = 1;
         } else if (isRecurringBilling) {
@@ -1615,7 +1363,7 @@ export class PaymentService {
               status: "success",
               newebpay_status: status,
               newebpay_response:
-                decryptedData as unknown as Database["public"]["Tables"]["payment_orders"]["Update"]["newebpay_response"],
+                webhookData as unknown as Database["public"]["Tables"]["payment_orders"]["Update"]["newebpay_response"],
               paid_at: new Date().toISOString(),
             })
             .eq("id", mandateData.first_payment_order_id);
@@ -1932,16 +1680,17 @@ export class PaymentService {
             businessLogicErrors.length > 0 ? businessLogicErrors : undefined,
         };
       } else {
+        // 定期定額失敗
         await this.supabase
           .from("recurring_mandates")
           .update({
             status: "failed",
             newebpay_response:
-              decryptedData as unknown as Database["public"]["Tables"]["payment_orders"]["Update"]["newebpay_response"],
+              webhookData as unknown as Database["public"]["Tables"]["payment_orders"]["Update"]["newebpay_response"],
           })
           .eq("id", mandateData.id);
 
-        return { success: false, error: decryptedData.Message as string };
+        return { success: false, error: errorMessage || "定期定額付款失敗" };
       }
     } catch (error) {
       console.error("[PaymentService] 處理定期定額回調失敗:", error);
@@ -1998,10 +1747,12 @@ export class PaymentService {
     }
   }
 
+  /**
+   * 建立 PaymentService 實例
+   */
   static createInstance(
     supabase: ReturnType<typeof createClient<Database>>,
   ): PaymentService {
-    const newebpay = NewebPayService.createInstance();
-    return new PaymentService(supabase, newebpay);
+    return new PaymentService(supabase);
   }
 }

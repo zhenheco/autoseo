@@ -61,6 +61,11 @@ const adminItems = [
     href: "/dashboard/admin/translations",
     icon: Languages,
   },
+  {
+    titleKey: "paymentTest",
+    href: "/dashboard/admin/payment-test",
+    icon: CreditCard,
+  },
 ];
 
 interface SidebarProps {

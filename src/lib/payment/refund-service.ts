@@ -1,6 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
 import type { Database } from "@/types/database.types";
-import { NewebPayService } from "./newebpay-service";
 
 type RefundRequestRow = Database["public"]["Tables"]["refund_requests"]["Row"];
 type RefundRequestInsert =
@@ -24,14 +23,9 @@ export interface RefundEligibility {
 
 export class RefundService {
   private supabase: ReturnType<typeof createClient<Database>>;
-  private newebpay: NewebPayService;
 
-  constructor(
-    supabase: ReturnType<typeof createClient<Database>>,
-    newebpay: NewebPayService,
-  ) {
+  constructor(supabase: ReturnType<typeof createClient<Database>>) {
     this.supabase = supabase;
-    this.newebpay = newebpay;
   }
 
   /**
@@ -375,7 +369,10 @@ export class RefundService {
   }
 
   /**
-   * 執行退款（調用藍新 API）
+   * 執行退款
+   *
+   * 注意：PAYUNi 退款需透過管理後台或另外整合退款 API
+   * 目前實作為人工退款流程（更新狀態為 pending_manual_refund）
    */
   async executeRefund(refundId: string): Promise<{
     success: boolean;
@@ -402,71 +399,79 @@ export class RefundService {
 
     const order = refund.payment_orders as unknown as PaymentOrderRow;
 
-    // 檢查訂單是否有藍新交易序號
+    // 檢查訂單是否有交易序號
     if (!order.newebpay_trade_no) {
-      console.error("[RefundService] 訂單缺少藍新交易序號:", order.order_no);
+      console.error("[RefundService] 訂單缺少交易序號:", order.order_no);
       return {
         success: false,
-        error: "訂單缺少藍新交易序號，無法退款",
+        error: "訂單缺少交易序號，無法退款",
       };
     }
 
-    // 更新狀態為處理中
+    // 更新狀態為待人工處理
+    // PAYUNi 退款需透過管理後台操作
     await this.supabase
       .from("refund_requests")
       .update({
-        status: "processing",
+        status: "pending_manual_refund" as RefundRequestRow["status"],
         processed_at: new Date().toISOString(),
+        newebpay_message: "待管理員於 PAYUNi 後台執行退款",
       })
       .eq("id", refundId);
 
-    // 調用藍新退款 API
-    const refundResult = await this.newebpay.executeRefund({
+    console.log("[RefundService] 退款申請已標記為待人工處理:", {
+      refundNo: refund.refund_no,
       orderNo: order.order_no,
-      amount: refund.refund_amount,
       tradeNo: order.newebpay_trade_no,
+      amount: refund.refund_amount,
     });
 
-    if (refundResult.success) {
-      // 退款成功：更新狀態並執行後續處理
-      await this.supabase
-        .from("refund_requests")
-        .update({
-          status: "completed",
-          newebpay_trade_no: refundResult.tradeNo,
-          newebpay_status: refundResult.status,
-          newebpay_message: refundResult.message,
-          newebpay_response:
-            refundResult.response as unknown as Database["public"]["Tables"]["refund_requests"]["Update"]["newebpay_response"],
-          completed_at: new Date().toISOString(),
-        })
-        .eq("id", refundId);
+    return {
+      success: true,
+      status: "pending_manual_refund",
+    };
+  }
 
-      // 執行退款後處理
-      await this.handlePostRefund(refundId);
+  /**
+   * 完成人工退款
+   *
+   * 管理員在 PAYUNi 後台完成退款後，呼叫此方法更新狀態
+   */
+  async completeManualRefund(
+    refundId: string,
+    tradeNo?: string,
+  ): Promise<{
+    success: boolean;
+    error?: string;
+  }> {
+    const { data: refundData, error: fetchError } = await this.supabase
+      .from("refund_requests")
+      .select("*")
+      .eq("id", refundId)
+      .single();
 
-      return {
-        success: true,
-        status: "completed",
-      };
-    } else {
-      // 退款失敗
-      await this.supabase
-        .from("refund_requests")
-        .update({
-          status: "failed",
-          newebpay_status: refundResult.status,
-          newebpay_message: refundResult.message,
-          newebpay_response:
-            refundResult.response as unknown as Database["public"]["Tables"]["refund_requests"]["Update"]["newebpay_response"],
-        })
-        .eq("id", refundId);
+    const refund = refundData as RefundRequestRow | null;
 
-      return {
-        success: false,
-        error: refundResult.message,
-      };
+    if (fetchError || !refund) {
+      return { success: false, error: "找不到退款申請" };
     }
+
+    // 更新退款狀態為已完成
+    await this.supabase
+      .from("refund_requests")
+      .update({
+        status: "completed",
+        newebpay_trade_no: tradeNo || null,
+        newebpay_status: "SUCCESS",
+        newebpay_message: "人工退款完成",
+        completed_at: new Date().toISOString(),
+      })
+      .eq("id", refundId);
+
+    // 執行退款後處理（扣除 credits、降級訂閱等）
+    await this.handlePostRefund(refundId);
+
+    return { success: true };
   }
 
   /**
@@ -614,6 +619,7 @@ export class RefundService {
       }
 
       // 3. 如果是定期定額，終止委託
+      // 注意：PAYUNi 定期定額終止需透過管理後台操作
       if (order.order_type === "recurring_first") {
         const { data: mandate } = await this.supabase
           .from("recurring_mandates")
@@ -621,43 +627,23 @@ export class RefundService {
           .eq("first_payment_order_id", order.id)
           .single();
 
-        if (mandate?.newebpay_period_no) {
-          // 調用藍新終止定期定額 API
-          try {
-            const terminateResult = this.newebpay.modifyRecurringStatus(
-              mandate.newebpay_period_no,
-              "terminate",
-            );
+        if (mandate) {
+          // 更新委託狀態為待終止（需管理員在 PAYUNi 後台操作）
+          await this.supabase
+            .from("recurring_mandates")
+            .update({
+              status: "pending_termination" as "terminated",
+              termination_reason: "refund",
+            })
+            .eq("id", mandate.id);
 
-            // 發送終止請求
-            await fetch(terminateResult.apiUrl, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/x-www-form-urlencoded",
-              },
-              body: new URLSearchParams({
-                MerchantID_: terminateResult.merchantId,
-                PostData_: terminateResult.postData,
-              }).toString(),
-            });
-
-            // 更新委託狀態
-            await this.supabase
-              .from("recurring_mandates")
-              .update({
-                status: "terminated",
-                terminated_at: new Date().toISOString(),
-                termination_reason: "refund",
-              })
-              .eq("id", mandate.id);
-
-            console.log(
-              "[RefundService] ✅ 已終止定期定額委託:",
-              mandate.newebpay_period_no,
-            );
-          } catch (error) {
-            console.error("[RefundService] 終止定期定額失敗:", error);
-          }
+          console.log(
+            "[RefundService] 定期定額委託已標記為待終止:",
+            mandate.newebpay_period_no,
+          );
+          console.log(
+            "[RefundService] ⚠️ 請管理員於 PAYUNi 後台手動終止定期定額",
+          );
         }
       }
     }
@@ -861,8 +847,7 @@ export class RefundService {
     }
 
     const supabase = createClient<Database>(supabaseUrl, supabaseServiceKey);
-    const newebpay = NewebPayService.createInstance();
 
-    return new RefundService(supabase, newebpay);
+    return new RefundService(supabase);
   }
 }

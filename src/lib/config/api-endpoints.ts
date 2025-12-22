@@ -37,35 +37,55 @@ export const PERPLEXITY_CONFIG = {
 } as const;
 
 /**
- * NewebPay 金流 API 配置
- * 所有欄位都必須透過環境變數設定，沒有預設值
+ * PAYUNi 金流 API 配置
  */
-export const NEWEBPAY_CONFIG = {
-  apiUrl: process.env.NEWEBPAY_API_URL || "",
-  periodApiUrl: process.env.NEWEBPAY_PERIOD_API_URL || "",
-  merchantId: process.env.NEWEBPAY_MERCHANT_ID || "",
-  hashKey: process.env.NEWEBPAY_HASH_KEY || "",
-  hashIV: process.env.NEWEBPAY_HASH_IV || "",
+export const PAYUNI_CONFIG = {
+  apiKey: process.env.PAYUNI_API_KEY || "",
+  siteCode: process.env.PAYUNI_SITE_CODE || "",
+  webhookSecret: process.env.PAYUNI_WEBHOOK_SECRET || "",
+  environment:
+    (process.env.PAYUNI_ENVIRONMENT as "sandbox" | "production") ||
+    "production",
 } as const;
 
 /**
- * 驗證 NewebPay 配置是否完整
+ * 驗證 PAYUNi 配置是否完整
  * @throws Error 如果必要的環境變數未設定
  */
-export function validateNewebPayConfig(): void {
+export function validatePayUniConfig(): void {
   const required = [
-    { key: "NEWEBPAY_API_URL", value: NEWEBPAY_CONFIG.apiUrl },
-    { key: "NEWEBPAY_PERIOD_API_URL", value: NEWEBPAY_CONFIG.periodApiUrl },
-    { key: "NEWEBPAY_MERCHANT_ID", value: NEWEBPAY_CONFIG.merchantId },
-    { key: "NEWEBPAY_HASH_KEY", value: NEWEBPAY_CONFIG.hashKey },
-    { key: "NEWEBPAY_HASH_IV", value: NEWEBPAY_CONFIG.hashIV },
+    { key: "PAYUNI_API_KEY", value: PAYUNI_CONFIG.apiKey },
+    { key: "PAYUNI_SITE_CODE", value: PAYUNI_CONFIG.siteCode },
+    { key: "PAYUNI_WEBHOOK_SECRET", value: PAYUNI_CONFIG.webhookSecret },
   ];
 
   const missing = required.filter((r) => !r.value).map((r) => r.key);
 
   if (missing.length > 0) {
-    throw new Error(`藍新金流配置缺失，請設定環境變數: ${missing.join(", ")}`);
+    throw new Error(
+      `PAYUNi 金流配置缺失，請設定環境變數: ${missing.join(", ")}`,
+    );
   }
+}
+
+/**
+ * @deprecated 已棄用。系統已改用 PAYUNi 金流。
+ */
+export const NEWEBPAY_CONFIG = {
+  apiUrl: "",
+  periodApiUrl: "",
+  merchantId: "",
+  hashKey: "",
+  hashIV: "",
+} as const;
+
+/**
+ * @deprecated 已棄用。系統已改用 PAYUNi 金流。
+ */
+export function validateNewebPayConfig(): void {
+  console.warn(
+    "[api-endpoints] validateNewebPayConfig 已棄用，請使用 validatePayUniConfig",
+  );
 }
 
 /**

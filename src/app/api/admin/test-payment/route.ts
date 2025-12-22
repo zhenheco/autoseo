@@ -1,88 +1,160 @@
+/**
+ * Admin 付款測試 API
+ *
+ * 用於在正式環境測試 PAYUNi 金流整合
+ * 僅 super-admin 可使用
+ */
+
 import { NextResponse } from "next/server";
+import { createPayUniClient } from "@/lib/payment/payuni-client";
 import { createClient } from "@/lib/supabase/server";
 import { isSuperAdmin } from "@/lib/auth-guard";
-import { PaymentService } from "@/lib/payment/payment-service";
 
-export async function POST() {
+/** 請求 body 類型 */
+interface TestPaymentRequest {
+  type: "onetime" | "recurring";
+  amount: number;
+  description: string;
+  email: string;
+  periodParams?: {
+    periodType: "week" | "month" | "year";
+    periodDate: string;
+    periodTimes: number;
+  };
+}
+
+export async function POST(request: Request) {
   try {
+    // 驗證用戶身份
     const supabase = await createClient();
-
     const {
       data: { user },
     } = await supabase.auth.getUser();
 
     if (!user) {
-      return NextResponse.json({ error: "未授權" }, { status: 401 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: { code: "UNAUTHORIZED", message: "請先登入" },
+        },
+        { status: 401 },
+      );
     }
 
+    // 驗證是否為 super-admin
     if (!isSuperAdmin(user.email)) {
-      return NextResponse.json({ error: "無權限" }, { status: 403 });
+      return NextResponse.json(
+        {
+          success: false,
+          error: { code: "FORBIDDEN", message: "僅限 Super Admin 使用" },
+        },
+        { status: 403 },
+      );
     }
 
-    // 查詢用戶的公司
-    const { data: membership, error: membershipError } = await supabase
-      .from("company_members")
-      .select("company_id")
-      .eq("user_id", user.id)
-      .single();
+    // 解析請求
+    const body: TestPaymentRequest = await request.json();
+    const { type, amount, description, email, periodParams } = body;
 
-    if (membershipError) {
-      console.error("[Admin Test Payment] 查詢公司失敗:", membershipError);
+    // 驗證金額
+    if (!amount || amount < 1) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: { code: "INVALID_AMOUNT", message: "金額必須大於 0" },
+        },
+        { status: 400 },
+      );
     }
 
-    if (!membership) {
-      return NextResponse.json({ error: "找不到公司" }, { status: 400 });
-    }
+    // 建立 PAYUNi 客戶端
+    const payuniClient = createPayUniClient({
+      apiKey: process.env.PAYUNI_API_KEY || "",
+      siteCode: process.env.PAYUNI_SITE_CODE || "",
+      webhookSecret: process.env.PAYUNI_WEBHOOK_SECRET || "",
+      environment:
+        (process.env.PAYUNI_ENVIRONMENT as "sandbox" | "production") ||
+        "production",
+    });
 
-    // 查詢測試方案
-    const { data: testPlan, error: planError } = await supabase
-      .from("subscription_plans")
-      .select("id, lifetime_price")
-      .eq("slug", "test-payment-1nt")
-      .single();
+    // 產生唯一訂單編號
+    const orderId = `test-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
-    if (planError) {
-      console.error("[Admin Test Payment] 查詢方案失敗:", planError);
-    }
-
-    if (!testPlan) {
-      return NextResponse.json({ error: "找不到測試方案" }, { status: 400 });
-    }
+    // 設定回調 URL
+    const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://1wayseo.com";
+    const callbackUrl = `${appUrl}/payment/result`;
 
     console.log("[Admin Test Payment] 建立訂單:", {
-      companyId: membership.company_id,
-      planId: testPlan.id,
-      amount: testPlan.lifetime_price,
+      type,
+      orderId,
+      amount,
+      email,
     });
 
-    const paymentService = PaymentService.createInstance(supabase);
+    if (type === "onetime") {
+      // 單次付款
+      const result = await payuniClient.createPayment({
+        orderId,
+        amount,
+        description,
+        email,
+        callbackUrl,
+        metadata: {
+          testPayment: "true",
+          createdBy: user.email || "",
+        },
+      });
 
-    const result = await paymentService.createOnetimePayment({
-      companyId: membership.company_id,
-      paymentType: "lifetime",
-      relatedId: testPlan.id,
-      amount: testPlan.lifetime_price || 1,
-      description: "藍新金流正式環境測試 NT$1",
-      email: user.email || "",
-    });
+      console.log("[Admin Test Payment] 單次付款結果:", result.success);
 
-    if (!result.success) {
-      console.error("[Admin Test Payment] 建立訂單失敗:", result.error);
-      return NextResponse.json({ error: result.error }, { status: 500 });
+      return NextResponse.json(result);
+    } else {
+      // 定期定額
+      if (!periodParams) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: {
+              code: "MISSING_PERIOD_PARAMS",
+              message: "定期定額需要 periodParams",
+            },
+          },
+          { status: 400 },
+        );
+      }
+
+      const result = await payuniClient.createPeriodPayment({
+        orderId,
+        periodParams: {
+          periodAmt: amount,
+          prodDesc: description,
+          periodType: periodParams.periodType,
+          periodDate: periodParams.periodDate,
+          periodTimes: periodParams.periodTimes,
+          firstType: "build", // 立即扣款首期
+          payerEmail: email,
+        },
+        callbackUrl,
+        metadata: {
+          testPayment: "true",
+          createdBy: user.email || "",
+        },
+      });
+
+      console.log("[Admin Test Payment] 定期定額結果:", result.success);
+
+      return NextResponse.json(result);
     }
-
-    console.log("[Admin Test Payment] 訂單建立成功:", result.orderNo);
-
-    return NextResponse.json({
-      success: true,
-      orderId: result.orderId,
-      orderNo: result.orderNo,
-      paymentForm: result.paymentForm,
-    });
   } catch (error) {
     console.error("[Admin Test Payment] 發生錯誤:", error);
     return NextResponse.json(
-      { error: error instanceof Error ? error.message : "建立測試訂單失敗" },
+      {
+        success: false,
+        error: {
+          code: "INTERNAL_ERROR",
+          message: error instanceof Error ? error.message : "內部錯誤",
+        },
+      },
       { status: 500 },
     );
   }

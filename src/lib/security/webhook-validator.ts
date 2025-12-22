@@ -41,6 +41,8 @@ export function verifyHmacSha256(
 /**
  * 驗證藍新金流 (NewebPay) 回調簽章
  *
+ * @deprecated 已棄用。系統已改用 PAYUNi 金流，此函數僅為向後相容保留。
+ *
  * @param tradeInfo - 交易資料
  * @param tradeSha - 收到的簽章
  * @param hashKey - HashKey
