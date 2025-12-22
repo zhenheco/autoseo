@@ -120,8 +120,10 @@ export async function middleware(request: NextRequest) {
       "https://api.deepseek.com",
       "https://api.perplexity.ai",
       "https://generativelanguage.googleapis.com",
-      "https://core.newebpay.com",
-      "https://ccore.newebpay.com",
+      // PAYUNi 金流微服務（已移除藍新金流）
+      "https://api.payuni.com.tw",
+      "https://affiliate.1wayseo.com",
+      "https://sandbox.affiliate.1wayseo.com",
       "https://accounts.google.com",
       "https://oauth2.googleapis.com",
       "https://www.googleapis.com",
@@ -138,7 +140,8 @@ export async function middleware(request: NextRequest) {
     ].join(" "),
     "frame-ancestors 'self'",
     "base-uri 'self'",
-    "form-action 'self' https://ccore.newebpay.com https://core.newebpay.com",
+    // PAYUNi 金流表單提交（已移除藍新金流）
+    "form-action 'self' https://api.payuni.com.tw",
   ];
 
   response.headers.set("Content-Security-Policy", cspDirectives.join("; "));
