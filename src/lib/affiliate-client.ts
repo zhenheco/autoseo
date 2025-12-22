@@ -11,6 +11,23 @@ const PRODUCT_CODE = process.env.AFFILIATE_PRODUCT_CODE;
 
 // ==================== Types ====================
 
+interface ClickParams {
+  /** 推薦碼（8 位大寫英數字） */
+  referralCode: string;
+  /** Session ID（可選，用於關聯同一訪客的多次點擊） */
+  sessionId?: string;
+  /** 著陸頁 URL */
+  landingUrl?: string;
+  /** 來源頁 URL（HTTP Referer） */
+  referrerUrl?: string;
+  /** UTM 來源 */
+  utmSource?: string;
+  /** UTM 媒介 */
+  utmMedium?: string;
+  /** UTM 活動 */
+  utmCampaign?: string;
+}
+
 interface RegistrationParams {
   /** 推薦碼（8 位大寫英數字） */
   referralCode: string;
@@ -66,6 +83,46 @@ function isConfigured(): boolean {
 }
 
 // ==================== API Functions ====================
+
+/**
+ * 追蹤點擊事件
+ *
+ * 當訪客點擊推薦連結時呼叫此函數
+ * 此 API 不需要認證，可在前端或後端呼叫
+ *
+ * @param params 點擊參數
+ * @returns 成功返回 true，失敗返回 false
+ */
+export async function trackClick(params: ClickParams): Promise<boolean> {
+  if (!AFFILIATE_URL || !PRODUCT_CODE) {
+    console.warn("[AffiliateClient] 系統未設定，跳過點擊追蹤");
+    return false;
+  }
+
+  try {
+    const response = await fetch(`${AFFILIATE_URL}/api/tracking/click`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        productCode: PRODUCT_CODE,
+        ...params,
+      }),
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({}));
+      console.error("[AffiliateClient] 點擊追蹤失敗:", error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("[AffiliateClient] 點擊追蹤錯誤:", error);
+    return false;
+  }
+}
 
 /**
  * 追蹤推薦註冊
