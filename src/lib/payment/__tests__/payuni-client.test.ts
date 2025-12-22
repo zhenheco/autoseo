@@ -56,19 +56,18 @@ describe("PayUniClient", () => {
 
   describe("createPayment - 單次付款", () => {
     it("應該成功建立單次付款", async () => {
+      // 金流微服務直接返回 paymentId 和 payuniForm 在根層級
       const mockResponse = {
         success: true,
-        data: {
-          paymentId: "pay-123",
-          payuniForm: {
-            action: "https://api.payuni.com.tw/api/upp",
-            method: "POST",
-            fields: {
-              MerID: "mer-123",
-              Version: "1.0",
-              EncryptInfo: "encrypted-data",
-              HashInfo: "hash-data",
-            },
+        paymentId: "pay-123",
+        payuniForm: {
+          action: "https://api.payuni.com.tw/api/upp",
+          method: "POST",
+          fields: {
+            MerID: "mer-123",
+            Version: "1.0",
+            EncryptInfo: "encrypted-data",
+            HashInfo: "hash-data",
           },
         },
       };
@@ -87,8 +86,8 @@ describe("PayUniClient", () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.data?.paymentId).toBe("pay-123");
-      expect(result.data?.payuniForm).toBeDefined();
+      expect(result.paymentId).toBe("pay-123");
+      expect(result.payuniForm).toBeDefined();
     });
 
     it("應該正確處理 API 錯誤", async () => {
@@ -119,7 +118,9 @@ describe("PayUniClient", () => {
         json: () =>
           Promise.resolve({
             success: true,
-            data: { paymentId: "pay-123", payuniForm: {} },
+            // 金流微服務直接返回在根層級
+            paymentId: "pay-123",
+            payuniForm: {},
           }),
       });
 
@@ -147,19 +148,18 @@ describe("PayUniClient", () => {
 
   describe("createPeriodPayment - 定期定額", () => {
     it("應該成功建立定期定額付款", async () => {
+      // 金流微服務直接返回 paymentId 和 payuniForm 在根層級
       const mockResponse = {
         success: true,
-        data: {
-          paymentId: "period-pay-123",
-          payuniForm: {
-            action: "https://api.payuni.com.tw/api/upp",
-            method: "POST",
-            fields: {
-              MerID: "mer-123",
-              Version: "1.0",
-              EncryptInfo: "encrypted-data",
-              HashInfo: "hash-data",
-            },
+        paymentId: "period-pay-123",
+        payuniForm: {
+          action: "https://api.payuni.com.tw/api/upp",
+          method: "POST",
+          fields: {
+            MerID: "mer-123",
+            Version: "1.0",
+            EncryptInfo: "encrypted-data",
+            HashInfo: "hash-data",
           },
         },
       };
@@ -184,7 +184,8 @@ describe("PayUniClient", () => {
       });
 
       expect(result.success).toBe(true);
-      expect(result.data?.paymentId).toBe("period-pay-123");
+      // 金流微服務直接返回 paymentId 在根層級
+      expect(result.paymentId).toBe("period-pay-123");
     });
 
     it("應該呼叫正確的 API 端點", async () => {
@@ -193,7 +194,9 @@ describe("PayUniClient", () => {
         json: () =>
           Promise.resolve({
             success: true,
-            data: { paymentId: "pay-123", payuniForm: {} },
+            // 金流微服務直接返回在根層級
+            paymentId: "pay-123",
+            payuniForm: {},
           }),
       });
 
