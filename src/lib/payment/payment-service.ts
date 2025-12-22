@@ -659,6 +659,14 @@ export class PaymentService {
           return { success: true };
         }
 
+        // 追蹤佣金類型（用於區分首次訂閱、升級、加購等）
+        let commissionOrderType:
+          | "subscription"
+          | "upgrade"
+          | "addon"
+          | "renewal"
+          | "one_time" = "one_time";
+
         const { error: updateError } = await this.supabase
           .from("payment_orders")
           .update({
@@ -681,6 +689,9 @@ export class PaymentService {
           orderData.payment_type === "token_package" &&
           orderData.related_id
         ) {
+          // Token 包加購
+          commissionOrderType = "addon";
+
           const { data: packageData, error: packageError } = await this.supabase
             .from("token_packages")
             .select<
@@ -826,7 +837,8 @@ export class PaymentService {
           (orderData.payment_type as string) === "article_package" &&
           orderData.related_id
         ) {
-          // 處理篇數制加購包
+          // 篇數制加購包
+          commissionOrderType = "addon";
           // 類型定義（article_packages 表尚未在 database.types.ts 中）
           interface ArticlePackageRow {
             id: string;
@@ -966,7 +978,9 @@ export class PaymentService {
           orderData.payment_type === "subscription" &&
           orderData.related_id
         ) {
-          // 處理年繳訂閱（篇數制）
+          // 處理年繳訂閱（篇數制）- 預設為首次訂閱，後續會檢查是否為升級
+          commissionOrderType = "subscription";
+
           const { data: planData, error: planError } = await this.supabase
             .from("subscription_plans")
             .select("*")
@@ -1037,6 +1051,11 @@ export class PaymentService {
             id: string;
             purchased_articles_remaining: number | null;
           } | null;
+
+          // 如果有舊訂閱，則為升級
+          if (oldSubscription) {
+            commissionOrderType = "upgrade";
+          }
 
           // 保留舊的加購額度
           const preservedPurchased =
@@ -1131,6 +1150,9 @@ export class PaymentService {
           orderData.payment_type === "lifetime" &&
           orderData.related_id
         ) {
+          // 終身方案 - 預設為首次訂閱，後續會檢查是否為升級
+          commissionOrderType = "subscription";
+
           const { data: planData, error: planError } = await this.supabase
             .from("subscription_plans")
             .select<
@@ -1181,6 +1203,9 @@ export class PaymentService {
             .maybeSingle();
 
           if (existingSubscription) {
+            // 疊加購買也算升級（追加購買同方案）
+            commissionOrderType = "upgrade";
+
             // 疊加購買：累加配額（每次購買增加基礎配額）
             const currentQuota =
               existingSubscription.monthly_token_quota || planData.base_tokens;
@@ -1251,6 +1276,11 @@ export class PaymentService {
               newPlanSlug: planData.slug,
               isDowngrade: newTierLevel < oldTierLevel,
             });
+
+            // 如果有舊訂閱，則為升級（無論方案等級高低）
+            if (oldSubscription) {
+              commissionOrderType = "upgrade";
+            }
 
             // 【關鍵修復】：如果是降級，只累加 tokens，不更換方案
             if (oldSubscription && newTierLevel < oldTierLevel) {
@@ -1364,16 +1394,15 @@ export class PaymentService {
           referredUserId: orderData.company_id,
           externalOrderId: orderData.id,
           orderAmount: orderData.amount,
-          orderType:
-            orderData.payment_type === "subscription"
-              ? "subscription"
-              : "one_time",
+          orderType: commissionOrderType,
         }).catch((error) => {
           console.error(
             "[PaymentService] Affiliate 佣金記錄失敗（不影響付款流程）:",
             error,
           );
         });
+
+        console.log("[PaymentService] 佣金類型:", commissionOrderType);
 
         // 同步用戶到 Brevo（訂閱變更後觸發分群更新）
         syncCompanyOwnerToBrevo(orderData.company_id).catch((error) => {
@@ -1531,6 +1560,10 @@ export class PaymentService {
         const isFirstAuthorization = mandateData.status === "pending";
         const isRecurringBilling = mandateData.status === "active";
 
+        // 追蹤佣金類型：首次訂閱、升級、或續約
+        let commissionOrderType: "subscription" | "upgrade" | "renewal" =
+          isRecurringBilling ? "renewal" : "subscription";
+
         console.log("[PaymentService] 開始處理授權成功邏輯:", {
           isFirstAuthorization,
           isRecurringBilling,
@@ -1662,6 +1695,11 @@ export class PaymentService {
             newPlanSlug: planData.slug,
             isDowngrade: newTierLevel < oldTierLevel,
           });
+
+          // 如果是首次授權且有舊訂閱，則為升級
+          if (isFirstAuthorization && oldSubscription) {
+            commissionOrderType = "upgrade";
+          }
 
           // 定義在 if/else 外部，供後續使用
           const preservedPurchasedBalance =
@@ -1863,19 +1901,21 @@ export class PaymentService {
           }
         }
 
-        // 呼叫新的 Affiliate System 記錄佣金（定期扣款）
+        // 呼叫新的 Affiliate System 記錄佣金
         createCommission({
           referredUserId: mandateData.company_id,
           externalOrderId:
             mandateData.first_payment_order_id || `mandate-${mandateData.id}`,
           orderAmount: mandateData.period_amount,
-          orderType: "renewal",
+          orderType: commissionOrderType,
         }).catch((error) => {
           console.error(
             "[PaymentService] Affiliate 佣金記錄失敗（不影響付款流程）:",
             error,
           );
         });
+
+        console.log("[PaymentService] 佣金類型:", commissionOrderType);
 
         // 同步用戶到 Brevo（訂閱變更後觸發分群更新）
         syncCompanyOwnerToBrevo(mandateData.company_id).catch((error) => {

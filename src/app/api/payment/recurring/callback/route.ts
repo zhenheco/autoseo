@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { PaymentService } from "@/lib/payment/payment-service";
-import { createCommission } from "@/lib/affiliate-client";
 import { verifyNewebPayCallback } from "@/lib/security/webhook-validator";
 
 // 處理 GET 請求（藍新金流使用 GET 重定向）
@@ -285,53 +284,7 @@ async function handleCallback(request: NextRequest) {
               "[Payment Callback] 授權成功，所有資料已更新（包含訂閱和代幣）",
             );
 
-            // 呼叫新 Affiliate System 建立佣金（異步執行，不阻塞返回）
-            try {
-              // 查詢訂單資訊
-              const { data: paymentOrder } = await supabase
-                .from("payment_orders")
-                .select(
-                  "id, company_id, order_type, payment_type, amount, paid_at",
-                )
-                .eq("order_no", orderNo)
-                .single();
-
-              if (
-                paymentOrder &&
-                paymentOrder.payment_type === "subscription"
-              ) {
-                // 取得公司的 owner_id 作為 referredUserId
-                const { data: company } = await supabase
-                  .from("companies")
-                  .select("owner_id")
-                  .eq("id", paymentOrder.company_id)
-                  .single();
-
-                if (company?.owner_id) {
-                  console.log(
-                    "[Affiliate] 呼叫新系統建立佣金，訂單:",
-                    paymentOrder.id,
-                  );
-
-                  const commissionResult = await createCommission({
-                    referredUserId: company.owner_id,
-                    externalOrderId: paymentOrder.id,
-                    orderAmount: paymentOrder.amount,
-                    orderType: "subscription",
-                  });
-
-                  if (commissionResult) {
-                    console.log(
-                      "[Affiliate] 佣金創建成功:",
-                      commissionResult.commissionId,
-                    );
-                  }
-                }
-              }
-            } catch (commissionError) {
-              // 佣金計算失敗不影響支付流程
-              console.error("[Affiliate] 佣金計算錯誤:", commissionError);
-            }
+            // 注意：佣金已在 handleRecurringCallback 中處理，包含正確的 orderType（subscription/upgrade/renewal）
 
             // 立即返回成功，使用 mandateNo 參數
             const redirectUrl = `${baseUrl}/dashboard/subscription?payment=success&mandateNo=${encodeURIComponent(orderNo)}`;
