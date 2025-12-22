@@ -341,6 +341,8 @@ async function handleTokenPackagePurchase(
 
 /**
  * 處理訂閱購買
+ *
+ * 更新或建立公司訂閱，設定訂閱額度和週期。
  */
 async function handleSubscriptionPurchase(
   supabase: ReturnType<typeof createAdminClient>,
@@ -350,9 +352,87 @@ async function handleSubscriptionPurchase(
 ): Promise<void> {
   console.log("[GatewayWebhook] 處理訂閱購買:", { companyId, planId });
 
-  // 這裡需要根據 AutoSEO 的實際訂閱邏輯來實作
-  // 目前只是記錄日誌，實際邏輯需要從 payment-service.ts 遷移
-  console.log("[GatewayWebhook] 訂閱邏輯待實作");
+  // 查詢訂閱方案
+  const { data: plan, error: planError } = await supabase
+    .from("subscription_plans")
+    .select("*")
+    .eq("id", planId)
+    .single();
+
+  if (planError || !plan) {
+    console.error("[GatewayWebhook] 找不到訂閱方案:", planId);
+    return;
+  }
+
+  const articlesPerMonth = plan.articles_per_month as number;
+  const planName = plan.name as string;
+
+  // 計算訂閱週期
+  const now = new Date();
+  const periodEnd = new Date(now);
+  periodEnd.setMonth(periodEnd.getMonth() + 1);
+
+  // 檢查是否已有訂閱
+  const { data: existingSub } = await supabase
+    .from("company_subscriptions")
+    .select("*")
+    .eq("company_id", companyId)
+    .single();
+
+  if (existingSub) {
+    // 更新現有訂閱
+    const currentArticles =
+      (existingSub.subscription_articles_remaining as number) || 0;
+    const newArticles = currentArticles + articlesPerMonth;
+
+    const { error: updateError } = await supabase
+      .from("company_subscriptions")
+      .update({
+        plan_id: planId,
+        status: "active",
+        subscription_articles_remaining: newArticles,
+        articles_per_month: articlesPerMonth,
+        current_period_start: now.toISOString(),
+        current_period_end: periodEnd.toISOString(),
+        last_quota_reset_at: now.toISOString(),
+      })
+      .eq("id", existingSub.id);
+
+    if (updateError) {
+      console.error("[GatewayWebhook] 更新訂閱失敗:", updateError);
+      return;
+    }
+
+    console.log("[GatewayWebhook] 訂閱已更新:", {
+      planName,
+      articlesAdded: articlesPerMonth,
+      totalArticles: newArticles,
+    });
+  } else {
+    // 建立新訂閱
+    const { error: insertError } = await supabase
+      .from("company_subscriptions")
+      .insert({
+        company_id: companyId,
+        plan_id: planId,
+        status: "active",
+        subscription_articles_remaining: articlesPerMonth,
+        articles_per_month: articlesPerMonth,
+        current_period_start: now.toISOString(),
+        current_period_end: periodEnd.toISOString(),
+        last_quota_reset_at: now.toISOString(),
+      });
+
+    if (insertError) {
+      console.error("[GatewayWebhook] 建立訂閱失敗:", insertError);
+      return;
+    }
+
+    console.log("[GatewayWebhook] 新訂閱已建立:", {
+      planName,
+      articles: articlesPerMonth,
+    });
+  }
 }
 
 /**
@@ -371,6 +451,8 @@ async function handleLifetimePurchase(
 
 /**
  * 處理加購篇數
+ *
+ * 增加公司訂閱的加購文章額度。
  */
 async function handleArticlePackagePurchase(
   supabase: ReturnType<typeof createAdminClient>,
@@ -379,8 +461,58 @@ async function handleArticlePackagePurchase(
 ): Promise<void> {
   console.log("[GatewayWebhook] 處理加購篇數:", { companyId, packageId });
 
-  // 這裡需要根據 AutoSEO 的實際加購邏輯來實作
-  console.log("[GatewayWebhook] 加購篇數邏輯待實作");
+  // 查詢文章包
+  const { data: pkg, error: pkgError } = await supabase
+    .from("article_packages")
+    .select("*")
+    .eq("id", packageId)
+    .single();
+
+  if (pkgError || !pkg) {
+    console.error("[GatewayWebhook] 找不到文章包:", packageId);
+    return;
+  }
+
+  const articlesToAdd = pkg.articles as number;
+  const packageName = pkg.name as string;
+
+  // 查詢公司訂閱
+  const { data: subscription } = await supabase
+    .from("company_subscriptions")
+    .select("*")
+    .eq("company_id", companyId)
+    .single();
+
+  if (!subscription) {
+    console.error("[GatewayWebhook] 找不到公司訂閱:", companyId);
+    return;
+  }
+
+  // 更新加購篇數
+  const currentPurchased =
+    (subscription.purchased_articles_remaining as number) || 0;
+  const newPurchased = currentPurchased + articlesToAdd;
+  const purchaseCount = ((subscription.purchased_count as number) || 0) + 1;
+
+  const { error: updateError } = await supabase
+    .from("company_subscriptions")
+    .update({
+      purchased_articles_remaining: newPurchased,
+      purchased_count: purchaseCount,
+    })
+    .eq("id", subscription.id);
+
+  if (updateError) {
+    console.error("[GatewayWebhook] 更新加購篇數失敗:", updateError);
+    return;
+  }
+
+  console.log("[GatewayWebhook] 加購篇數已增加:", {
+    packageName,
+    articlesAdded: articlesToAdd,
+    previousTotal: currentPurchased,
+    newTotal: newPurchased,
+  });
 }
 
 /**
