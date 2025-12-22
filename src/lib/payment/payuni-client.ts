@@ -262,18 +262,46 @@ export function submitPayuniForm(form: {
   method: string;
   fields: Record<string, string>;
 }): void {
+  console.log("[submitPayuniForm] 準備提交表單:", {
+    action: form.action,
+    method: form.method,
+    fieldsCount: Object.keys(form.fields || {}).length,
+    fields: form.fields,
+  });
+
+  if (!form.action) {
+    console.error("[submitPayuniForm] 錯誤: action 為空");
+    alert("付款表單錯誤: action 為空");
+    return;
+  }
+
+  if (!form.fields || Object.keys(form.fields).length === 0) {
+    console.error("[submitPayuniForm] 錯誤: fields 為空");
+    alert("付款表單錯誤: fields 為空");
+    return;
+  }
+
   const formElement = document.createElement("form");
-  formElement.method = form.method;
+  formElement.method = form.method || "POST";
   formElement.action = form.action;
+  // 確保表單不會被 target 影響
+  formElement.target = "_self";
 
   Object.entries(form.fields).forEach(([name, value]) => {
     const input = document.createElement("input");
     input.type = "hidden";
     input.name = name;
-    input.value = value;
+    // 確保 value 是字串
+    input.value = String(value);
     formElement.appendChild(input);
   });
 
+  console.log("[submitPayuniForm] 表單已建立，準備提交到:", form.action);
   document.body.appendChild(formElement);
-  formElement.submit();
+
+  // 使用 setTimeout 確保 DOM 更新完成後再提交
+  setTimeout(() => {
+    console.log("[submitPayuniForm] 正在提交表單...");
+    formElement.submit();
+  }, 100);
 }

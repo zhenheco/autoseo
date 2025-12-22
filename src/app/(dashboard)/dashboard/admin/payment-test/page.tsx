@@ -73,19 +73,24 @@ export default function AdminPaymentTestPage() {
 
       // 跳轉至 PAYUNi 付款頁面
       // 注意：金流微服務直接返回 payuniForm 在根層級，而非 data.payuniForm
+      console.log("[PaymentTest] API 回應:", JSON.stringify(result, null, 2));
+
       if (result.payuniForm) {
+        console.log("[PaymentTest] payuniForm:", result.payuniForm);
         toast.success("正在跳轉至 PAYUNi 付款頁面...");
+        // 重要：不要在 submitPayuniForm 後設置 loading=false
+        // 因為頁面會跳轉，設置狀態可能導致 React 重新渲染而中斷表單提交
         submitPayuniForm(result.payuniForm);
+        return; // 跳轉後不執行 finally
       } else {
-        console.error("付款回應:", result);
+        console.error("[PaymentTest] 未收到 payuniForm，完整回應:", result);
         toast.error("未收到付款表單資料");
       }
     } catch (error) {
-      console.error("付款測試失敗:", error);
+      console.error("[PaymentTest] 付款測試失敗:", error);
       toast.error("付款測試失敗，請查看 console");
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   }
 
   /**
@@ -119,20 +124,22 @@ export default function AdminPaymentTestPage() {
       }
 
       // 跳轉至 PAYUNi 付款頁面
-      // 注意：金流微服務直接返回 payuniForm 在根層級，而非 data.payuniForm
+      console.log("[PaymentTest] API 回應:", JSON.stringify(result, null, 2));
+
       if (result.payuniForm) {
+        console.log("[PaymentTest] payuniForm:", result.payuniForm);
         toast.success("正在跳轉至 PAYUNi 付款頁面...");
         submitPayuniForm(result.payuniForm);
+        return; // 跳轉後不執行後續代碼
       } else {
-        console.error("付款回應:", result);
+        console.error("[PaymentTest] 未收到 payuniForm，完整回應:", result);
         toast.error("未收到付款表單資料");
       }
     } catch (error) {
-      console.error("付款測試失敗:", error);
+      console.error("[PaymentTest] 付款測試失敗:", error);
       toast.error("付款測試失敗，請查看 console");
-    } finally {
-      setLoading(false);
     }
+    setLoading(false);
   }
 
   /**
