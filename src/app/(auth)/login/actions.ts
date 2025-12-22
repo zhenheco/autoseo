@@ -59,11 +59,16 @@ export async function signInWithEmail(
 /**
  * 使用 Email + 密碼註冊
  * @returns 成功時返回 needsVerification，失敗時返回 error
+ *          如果用戶已註冊，返回 alreadyRegistered: true
  */
 export async function signUpWithEmail(
   email: string,
   password: string,
-): Promise<{ error?: string; needsVerification?: boolean }> {
+): Promise<{
+  error?: string;
+  needsVerification?: boolean;
+  alreadyRegistered?: boolean;
+}> {
   try {
     const result = await authSignUp(email, password);
 
@@ -78,9 +83,12 @@ export async function signUpWithEmail(
     const errorMessage =
       error instanceof Error ? error.message : "註冊失敗，請稍後再試";
 
-    // 處理常見錯誤
+    // 處理常見錯誤：用戶已註冊
     if (errorMessage.includes("User already registered")) {
-      return { error: "此 Email 已被註冊" };
+      return {
+        error: "此 Email 已被註冊",
+        alreadyRegistered: true,
+      };
     }
 
     return { error: errorMessage };

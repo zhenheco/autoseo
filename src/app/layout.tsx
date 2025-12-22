@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
+import { Suspense } from "react";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { IntlProvider } from "@/providers/IntlProvider";
 import { CookieConsentProvider } from "@/components/consent";
 import { GoogleAnalytics } from "@/components/tracking/GoogleAnalytics";
+import { AffiliateTracker } from "@/components/tracking/affiliate-tracker";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -58,6 +60,9 @@ export default function RootLayout({
         >
           <CookieConsentProvider>
             <GoogleAnalytics />
+            <Suspense fallback={null}>
+              <AffiliateTracker />
+            </Suspense>
             <IntlProvider>
               {children}
               <Toaster richColors position="top-right" />

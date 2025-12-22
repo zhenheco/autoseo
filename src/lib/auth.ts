@@ -165,6 +165,21 @@ export async function signIn(email: string, password: string) {
 
   if (error) throw error;
 
+  // === Affiliate 追蹤（登入也追蹤，支援跨產品推薦）===
+  // 設計原則：只要有推薦碼，任何認證成功（登入或註冊）都應該追蹤
+  // API 端會處理重複的情況（同一用戶同一產品返回 409）
+  const cookieStore = await cookies();
+  const affiliateRef = cookieStore.get("affiliate_ref")?.value;
+
+  if (affiliateRef && data.user) {
+    // 非同步呼叫，不阻塞登入流程
+    trackRegistration({
+      referralCode: affiliateRef,
+      referredUserId: data.user.id,
+      referredUserEmail: email,
+    }).catch((err) => console.error("[SignIn] Affiliate 追蹤失敗:", err));
+  }
+
   return data;
 }
 

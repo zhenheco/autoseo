@@ -74,6 +74,7 @@ export function LoginForm({
   const [error, setError] = useState(initialError || "");
   const [success, setSuccess] = useState(initialSuccess || "");
   const [needsVerification, setNeedsVerification] = useState(false);
+  const [alreadyRegistered, setAlreadyRegistered] = useState(false);
 
   // 當 URL 參數變化時更新模式
   useEffect(() => {
@@ -106,6 +107,7 @@ export function LoginForm({
     setError("");
     setSuccess("");
     setNeedsVerification(false);
+    setAlreadyRegistered(false);
     setIsEmailLoading(true);
 
     try {
@@ -138,6 +140,10 @@ export function LoginForm({
         const result = await signUpWithEmail(email, password);
         if (result.error) {
           setError(result.error);
+          // 如果是「已註冊」的情況，設置標記以顯示特殊 UI
+          if (result.alreadyRegistered) {
+            setAlreadyRegistered(true);
+          }
         } else if (result.needsVerification) {
           setSuccess(t("registerSuccess"));
           setNeedsVerification(true);
@@ -199,6 +205,7 @@ export function LoginForm({
     setError("");
     setSuccess("");
     setNeedsVerification(false);
+    setAlreadyRegistered(false);
     // 更新 URL 但不重新載入頁面
     const url = new URL(window.location.href);
     if (newMode === "signin") {
@@ -224,7 +231,32 @@ export function LoginForm({
       {error && (
         <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-700 dark:text-red-400 rounded-xl text-sm font-medium animate-in fade-in slide-in-from-top-2 duration-300">
           <p>{error}</p>
-          {needsVerification && email && (
+          {/* 已註冊情況：顯示登入和重發驗證信選項 */}
+          {alreadyRegistered && email && (
+            <div className="mt-3 space-y-2">
+              <p className="text-xs opacity-80">
+                {t("emailAlreadyRegisteredHint")}
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => switchMode("signin")}
+                  className="text-sm underline hover:no-underline"
+                >
+                  {t("goToLogin")}
+                </button>
+                <span className="text-xs opacity-50">|</span>
+                <button
+                  onClick={handleResendVerification}
+                  disabled={isLoading}
+                  className="text-sm underline hover:no-underline"
+                >
+                  {t("resendVerification")}
+                </button>
+              </div>
+            </div>
+          )}
+          {/* 未驗證登入情況：只顯示重發驗證信 */}
+          {needsVerification && !alreadyRegistered && email && (
             <button
               onClick={handleResendVerification}
               disabled={isLoading}

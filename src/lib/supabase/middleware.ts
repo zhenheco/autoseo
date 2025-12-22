@@ -49,6 +49,9 @@ export async function updateSession(request: NextRequest) {
   const affiliateCodeFromUrl = request.nextUrl.searchParams.get("ref");
 
   if (affiliateCodeFromUrl && /^[A-Z0-9]{8}$/.test(affiliateCodeFromUrl)) {
+    // 檢查是否為新的推薦碼
+    const existingRef = request.cookies.get("affiliate_ref")?.value;
+
     // 設定推薦碼 Cookie（30天有效期）
     // 註冊時由 auth callback 讀取並呼叫新 Affiliate System API
     supabaseResponse.cookies.set("affiliate_ref", affiliateCodeFromUrl, {
@@ -58,6 +61,11 @@ export async function updateSession(request: NextRequest) {
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
     });
+
+    // 如果是新的推薦碼，清除「已追蹤」標記，允許追蹤新的推薦連結
+    if (existingRef !== affiliateCodeFromUrl) {
+      supabaseResponse.cookies.delete("affiliate_clicked");
+    }
   }
   // ===== 結束追蹤邏輯 =====
 

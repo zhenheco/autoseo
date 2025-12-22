@@ -27,6 +27,22 @@ export async function GET(request: Request) {
       const user = session.user;
       const adminClient = createAdminClient();
 
+      // === Affiliate 追蹤（移到最前面，不管新舊用戶都追蹤）===
+      // 設計原則：只要有推薦碼，任何認證成功（登入或註冊）都應該追蹤
+      // API 端會處理重複的情況（同一用戶同一產品返回 409）
+      const cookieStore = await cookies();
+      const affiliateRef = cookieStore.get("affiliate_ref")?.value;
+
+      if (affiliateRef) {
+        // 非同步呼叫 Affiliate System，不阻塞認證流程
+        trackRegistration({
+          referralCode: affiliateRef,
+          referredUserId: user.id,
+          referredUserEmail: user.email,
+          sourceUrl: request.url,
+        }).catch((err) => console.error("[OAuth] Affiliate 追蹤失敗:", err));
+      }
+
       const { data: existingMember } = await adminClient
         .from("company_members")
         .select("id")
@@ -95,24 +111,9 @@ export async function GET(request: Request) {
               `${origin}/login?error=${encodeURIComponent("訂閱建立失敗，請稍後再試")}`,
             );
           }
-
-          // 處理推薦追蹤（呼叫新的 Affiliate System）
-          const cookieStore = await cookies();
-          const affiliateRef = cookieStore.get("affiliate_ref")?.value;
-
-          if (affiliateRef) {
-            // 非同步呼叫新的 Affiliate System，不阻塞註冊流程
-            trackRegistration({
-              referralCode: affiliateRef,
-              referredUserId: user.id,
-              referredUserEmail: user.email,
-              sourceUrl: request.url,
-            }).catch((err) =>
-              console.error("[OAuth] Affiliate 追蹤失敗:", err),
-            );
-          }
         }
       }
+      // 舊用戶登入：Affiliate 追蹤已在上方處理（第 30-46 行）
 
       return NextResponse.redirect(`${origin}${next}`);
     }

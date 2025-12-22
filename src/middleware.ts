@@ -140,8 +140,8 @@ export async function middleware(request: NextRequest) {
     ].join(" "),
     "frame-ancestors 'self'",
     "base-uri 'self'",
-    // PAYUNi 金流表單提交（已移除藍新金流）
-    "form-action 'self' https://api.payuni.com.tw",
+    // 金流表單提交（金流微服務底層使用藍新金流）
+    "form-action 'self' https://api.payuni.com.tw https://ccore.newebpay.com https://core.newebpay.com",
   ];
 
   response.headers.set("Content-Security-Policy", cspDirectives.join("; "));

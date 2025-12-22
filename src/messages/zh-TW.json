@@ -101,7 +101,9 @@
     "resetPasswordDesc": "請輸入您的新密碼",
     "newPassword": "新密碼",
     "confirmNewPassword": "確認新密碼",
-    "passwordResetSuccess": "密碼重設成功"
+    "passwordResetSuccess": "密碼重設成功",
+    "emailAlreadyRegisteredHint": "請直接登入，或者如果您尚未收到驗證信，可以點擊下方重新發送。",
+    "goToLogin": "去登入"
   },
   "dashboard": {
     "title": "儀表板",
