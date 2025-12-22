@@ -92,15 +92,18 @@ export interface PayuniFormData {
   };
 }
 
-/** 建立付款回應 */
+/**
+ * 建立付款回應
+ *
+ * 注意：金流微服務直接返回 payuniForm 和 paymentId 在根層級，
+ * 而非包在 data 中。這是微服務的實際回應格式。
+ */
 export interface CreatePaymentResponse {
   success: boolean;
-  data?: {
-    /** 付款記錄 ID */
-    paymentId: string;
-    /** PAYUNi 表單資料 */
-    payuniForm: PayuniFormData;
-  };
+  /** 付款記錄 ID（成功時，直接在根層級） */
+  paymentId?: string;
+  /** PAYUNi 表單資料（成功時，直接在根層級） */
+  payuniForm?: PayuniFormData;
   error?: {
     code: string;
     message: string;

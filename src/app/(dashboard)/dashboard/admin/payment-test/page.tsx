@@ -72,10 +72,12 @@ export default function AdminPaymentTestPage() {
       }
 
       // 跳轉至 PAYUNi 付款頁面
-      if (result.data?.payuniForm) {
+      // 注意：金流微服務直接返回 payuniForm 在根層級，而非 data.payuniForm
+      if (result.payuniForm) {
         toast.success("正在跳轉至 PAYUNi 付款頁面...");
-        submitPayuniForm(result.data.payuniForm);
+        submitPayuniForm(result.payuniForm);
       } else {
+        console.error("付款回應:", result);
         toast.error("未收到付款表單資料");
       }
     } catch (error) {
@@ -117,10 +119,12 @@ export default function AdminPaymentTestPage() {
       }
 
       // 跳轉至 PAYUNi 付款頁面
-      if (result.data?.payuniForm) {
+      // 注意：金流微服務直接返回 payuniForm 在根層級，而非 data.payuniForm
+      if (result.payuniForm) {
         toast.success("正在跳轉至 PAYUNi 付款頁面...");
-        submitPayuniForm(result.data.payuniForm);
+        submitPayuniForm(result.payuniForm);
       } else {
+        console.error("付款回應:", result);
         toast.error("未收到付款表單資料");
       }
     } catch (error) {

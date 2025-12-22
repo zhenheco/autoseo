@@ -84,6 +84,11 @@ export function createPayUniClient(config: PayUniClientConfig): PayUniClient {
   ): Promise<T> {
     const url = `${baseUrl}${endpoint}`;
 
+    console.log("[PayUniClient] API 請求:", {
+      url,
+      method: options.method || "GET",
+    });
+
     try {
       const response = await fetch(url, {
         ...options,
@@ -97,6 +102,13 @@ export function createPayUniClient(config: PayUniClientConfig): PayUniClient {
 
       const data = (await response.json()) as Record<string, unknown>;
 
+      console.log("[PayUniClient] API 回應:", {
+        status: response.status,
+        success: data.success,
+        hasPayuniForm: !!data.payuniForm,
+        hasError: !!data.error,
+      });
+
       if (!response.ok) {
         return {
           success: false,
@@ -108,13 +120,11 @@ export function createPayUniClient(config: PayUniClientConfig): PayUniClient {
         } as T;
       }
 
-      // 直接返回 API 回應（已包含 success 和 data）
-      if (data.success !== undefined) {
-        return data as T;
-      }
-
-      return { success: true, data } as T;
+      // 金流微服務直接返回 payuniForm 和 paymentId 在根層級
+      // 無需額外包裝，直接返回
+      return data as T;
     } catch (error) {
+      console.error("[PayUniClient] API 錯誤:", error);
       // 處理網路錯誤
       return {
         success: false,

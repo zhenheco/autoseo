@@ -89,6 +89,8 @@ export async function POST(request: Request) {
       orderId,
       amount,
       email,
+      environment: process.env.PAYUNI_ENVIRONMENT,
+      baseUrl: payuniClient.getBaseUrl(),
     });
 
     if (type === "onetime") {
@@ -105,7 +107,12 @@ export async function POST(request: Request) {
         },
       });
 
-      console.log("[Admin Test Payment] 單次付款結果:", result.success);
+      console.log("[Admin Test Payment] 單次付款結果:", {
+        success: result.success,
+        hasPayuniForm: !!result.payuniForm,
+        paymentId: result.paymentId,
+        error: result.error,
+      });
 
       return NextResponse.json(result);
     } else {
@@ -141,7 +148,12 @@ export async function POST(request: Request) {
         },
       });
 
-      console.log("[Admin Test Payment] 定期定額結果:", result.success);
+      console.log("[Admin Test Payment] 定期定額結果:", {
+        success: result.success,
+        hasPayuniForm: !!result.payuniForm,
+        paymentId: result.paymentId,
+        error: result.error,
+      });
 
       return NextResponse.json(result);
     }
