@@ -63,7 +63,17 @@ const API_URLS = {
  * @returns PayUniClient 實例
  */
 export function createPayUniClient(config: PayUniClientConfig): PayUniClient {
-  const baseUrl = API_URLS[config.environment];
+  // 確保 environment 有有效值，預設為 production
+  const environment =
+    config.environment === "sandbox" ? "sandbox" : "production";
+  const baseUrl = API_URLS[environment];
+
+  console.log("[PayUniClient] 初始化:", {
+    environment,
+    baseUrl,
+    hasSiteCode: !!config.siteCode,
+    hasApiKey: !!config.apiKey,
+  });
 
   /**
    * 發送 API 請求
