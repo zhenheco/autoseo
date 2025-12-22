@@ -195,7 +195,7 @@ function AuthorizingContent() {
                 <p className="mt-2 text-muted-foreground">
                   {status === "loading"
                     ? "正在準備付款資料..."
-                    : "正在連接藍新金流..."}
+                    : "正在連接金流服務..."}
                 </p>
                 <p className="mt-4 text-sm text-muted-foreground">
                   請稍候，不要關閉此頁面

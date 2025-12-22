@@ -760,7 +760,7 @@
       },
       "paymentMethods": {
         "question": "支援哪些付款方式？",
-        "answer": "我們支援信用卡（Visa、MasterCard、JCB）、網路 ATM 轉帳等多種付款方式，透過藍新金流安全處理。"
+        "answer": "我們支援信用卡（Visa、MasterCard、JCB）、網路 ATM 轉帳等多種付款方式，透過安全加密通道處理。"
       }
     }
   },
