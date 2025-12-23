@@ -95,19 +95,20 @@ export function ArticleForm({
         }),
       });
 
-      const data = await response.json();
+      const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "標題生成失敗");
+        throw new Error(result.error || "標題生成失敗");
       }
 
-      // 檢查結果是否為空
-      if (!data.titles?.length) {
+      // 修正：從 data 屬性取得 titles（符合 successResponse 統一格式）
+      const titles = result.data?.titles;
+      if (!titles?.length) {
         throw new Error("無法生成標題，請稍後再試");
       }
 
-      setTitleOptions(data.titles);
-      setSelectedTitles([data.titles[0]]);
+      setTitleOptions(titles);
+      setSelectedTitles([titles[0]]);
       setShowTitleDialog(true);
     } catch (error) {
       console.error("標題預覽失敗:", error);
