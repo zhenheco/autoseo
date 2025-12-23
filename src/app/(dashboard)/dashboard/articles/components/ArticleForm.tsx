@@ -71,6 +71,18 @@ export function ArticleForm({
   }, []);
 
   const handlePreviewTitles = async () => {
+    // 主題是必填的核心欄位
+    if (!industry?.trim()) {
+      alert(
+        "請先填寫「主題」欄位\n\n例如：如何把AI融入行銷中\n\n填寫主題可以讓 AI 生成更精準的標題。",
+      );
+      return;
+    }
+
+    // region 和 language 如果沒填，使用預設值（不阻擋用戶）
+    const effectiveRegion = region?.trim() || "taiwan";
+    const effectiveLanguage = language?.trim() || "zh-TW";
+
     setIsLoadingTitles(true);
     try {
       const response = await fetch("/api/articles/preview-titles", {
@@ -78,8 +90,8 @@ export function ArticleForm({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           industry,
-          region,
-          language,
+          region: effectiveRegion,
+          language: effectiveLanguage,
         }),
       });
 
@@ -89,8 +101,13 @@ export function ArticleForm({
         throw new Error(data.error || "標題生成失敗");
       }
 
-      setTitleOptions(data.titles || []);
-      setSelectedTitles(data.titles?.[0] ? [data.titles[0]] : []);
+      // 檢查結果是否為空
+      if (!data.titles?.length) {
+        throw new Error("無法生成標題，請稍後再試");
+      }
+
+      setTitleOptions(data.titles);
+      setSelectedTitles([data.titles[0]]);
       setShowTitleDialog(true);
     } catch (error) {
       console.error("標題預覽失敗:", error);
@@ -218,13 +235,15 @@ export function ArticleForm({
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
+    // 主題是必填欄位
     if (!industry || industry.trim() === "") {
-      alert("請選擇或輸入產業");
+      alert("請先填寫「主題」欄位\n\n例如：如何把AI融入行銷中");
       return;
     }
 
+    // 地區是必填欄位
     if (!region || region.trim() === "") {
-      alert("請選擇或輸入地區");
+      alert("請選擇目標地區");
       return;
     }
 

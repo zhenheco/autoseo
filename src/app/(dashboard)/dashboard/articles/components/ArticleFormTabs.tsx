@@ -101,30 +101,34 @@ export function ArticleFormTabs({
         if (!response.ok) return;
 
         const settings = await response.json();
+        console.log("[DEBUG] 網站設定 API 返回:", settings);
 
-        // 只有網站有設定時才更新
-        if (settings.industry) {
-          setTimeout(() => setIndustry(settings.industry), 0);
-        }
+        // 新邏輯：不論 API 返回什麼，都更新狀態
+        // 使用單一 setTimeout 包裹所有狀態更新，避免 race condition
+        setTimeout(() => {
+          // 主題：有值就用，沒有就清空
+          setIndustry(settings.industry || "");
 
-        if (settings.region) {
-          // 檢查是否為預設地區
-          const isPreset = (REGION_KEYS as readonly string[]).includes(
-            settings.region,
-          );
-          if (isPreset) {
-            setTimeout(() => setRegion(settings.region), 0);
-          } else {
-            setTimeout(() => {
+          // 地區：有值就用，沒有就用預設值 "taiwan"
+          if (settings.region) {
+            const isPreset = (REGION_KEYS as readonly string[]).includes(
+              settings.region,
+            );
+            if (isPreset) {
+              setRegion(settings.region);
+              setCustomRegion("");
+            } else {
               setRegion("other");
               setCustomRegion(settings.region);
-            }, 0);
+            }
+          } else {
+            setRegion("taiwan");
+            setCustomRegion("");
           }
-        }
 
-        if (settings.language) {
-          setTimeout(() => setLanguage(settings.language), 0);
-        }
+          // 語言：有值就用，沒有就用預設值 "zh-TW"
+          setLanguage(settings.language || "zh-TW");
+        }, 0);
       } catch (error) {
         console.error("載入網站設定失敗:", error);
       }
