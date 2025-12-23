@@ -195,19 +195,21 @@ export async function POST(request: Request) {
         year: "Y",
       };
 
-      const result = await callPayUniAPI("/api/payment/period", {
+      const result = await callPayUniAPI("/api/payment/create", {
         orderId,
         amount,
         description,
         email,
         callbackUrl,
-        periodType: periodTypeMap[periodParams.periodType] || "M",
-        periodPoint: periodParams.periodDate,
-        periodTimes: periodParams.periodTimes,
-        periodStartType: 2, // 授權完成後開始扣款
         metadata: {
           testPayment: "true",
           createdBy: user.email || "",
+        },
+        periodParams: {
+          periodType: periodTypeMap[periodParams.periodType] || "M",
+          periodPoint: periodParams.periodDate,
+          periodTimes: periodParams.periodTimes,
+          periodStartType: 2, // 授權完成後開始扣款
         },
       });
 

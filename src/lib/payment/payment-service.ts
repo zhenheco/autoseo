@@ -342,20 +342,22 @@ export class PaymentService {
     // 3. 透過 PAYUNi 金流微服務建立定期定額付款
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-    const payuniResult = await callPayUniAPI("/api/payment/period", {
+    const payuniResult = await callPayUniAPI("/api/payment/create", {
       orderId: mandateNo,
       amount: params.amount,
       description: params.description,
       email: params.email,
       callbackUrl: `${baseUrl}/api/payment/result-redirect`,
-      periodType: "M",
-      periodPoint,
-      periodTimes: 12,
-      periodStartType: 2,
       metadata: {
         companyId: params.companyId,
         planId: params.planId,
         mandateId: mandateData.id,
+      },
+      periodParams: {
+        periodType: "M",
+        periodPoint,
+        periodTimes: 12,
+        periodStartType: 2,
       },
     });
 
