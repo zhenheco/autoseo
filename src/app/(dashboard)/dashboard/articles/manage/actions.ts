@@ -14,6 +14,7 @@ import {
   cacheGet,
   cacheSet,
 } from "@/lib/cache/redis-cache";
+import { getExtendedSlotsForCount } from "@/lib/scheduling/golden-slots";
 
 const RESERVED_TOKENS = 4000; // 預扣額度
 
@@ -615,23 +616,27 @@ export async function scheduleArticlesForPublish(
   };
 }
 
+/**
+ * 計算批量排程的時間
+ *
+ * @param articleCount 要排程的文章數量
+ * @param articlesPerDay 每日發布篇數（1-5）
+ * @param lastScheduledDate 最後一次排程的日期
+ * @param scheduleType 排程模式：daily（每日 N 篇）或 interval（每 X 天 1 篇）
+ * @param intervalDays 間隔天數（僅在 interval 模式使用）
+ * @returns 排程時間陣列
+ */
 function calculateScheduleTimes(
   articleCount: number,
   articlesPerDay: number,
   lastScheduledDate?: Date | null,
+  scheduleType?: "daily" | "interval" | null,
+  intervalDays?: number | null,
 ): Date[] {
   const times: Date[] = [];
 
-  // 固定黃金時段（UTC 時間）：對應台灣時間 09:00, 14:00, 20:00
-  // UTC 01:00 = 台灣 09:00（早上）
-  // UTC 06:00 = 台灣 14:00（下午）
-  // UTC 12:00 = 台灣 20:00（晚上）
-  const FIXED_SLOTS_UTC = [1, 6, 12];
-
-  // 如果每日篇數超過 3 篇，則在 08:00-22:00 間平均分散（fallback）
-  const START_HOUR_UTC = 0; // 台灣 08:00
-  const END_HOUR_UTC = 14; // 台灣 22:00
-  const WORKING_HOURS = END_HOUR_UTC - START_HOUR_UTC; // 14 小時
+  // 使用擴充時段（支援 1-5 篇）
+  const slotsUTC = getExtendedSlotsForCount(articlesPerDay);
 
   const now = new Date();
   let startDate: Date;
@@ -647,6 +652,25 @@ function calculateScheduleTimes(
   }
   startDate.setUTCHours(0, 0, 0, 0);
 
+  // interval 模式：每 X 天發布 1 篇
+  if (scheduleType === "interval" && intervalDays && intervalDays > 1) {
+    for (let i = 0; i < articleCount; i++) {
+      const scheduleTime = new Date(startDate);
+      scheduleTime.setUTCDate(scheduleTime.getUTCDate() + i * intervalDays);
+
+      // 使用第一個黃金時段（09:00 台灣時間）
+      scheduleTime.setUTCHours(slotsUTC[0]);
+
+      // 加入隨機偏移 (0-15 分鐘)
+      const randomOffset = Math.floor(Math.random() * 16);
+      scheduleTime.setUTCMinutes(randomOffset);
+
+      times.push(scheduleTime);
+    }
+    return times;
+  }
+
+  // daily 模式：每日發布 N 篇
   for (let i = 0; i < articleCount; i++) {
     const dayIndex = Math.floor(i / articlesPerDay);
     const slotIndex = i % articlesPerDay;
@@ -654,22 +678,13 @@ function calculateScheduleTimes(
     const scheduleTime = new Date(startDate);
     scheduleTime.setUTCDate(scheduleTime.getUTCDate() + dayIndex);
 
-    // 加入隨機偏移 (±15 分鐘)，讓時間更自然
-    const randomOffset = Math.floor(Math.random() * 31) - 15;
+    // 使用對應的時段
+    const slotHourUTC = slotsUTC[slotIndex];
+    scheduleTime.setUTCHours(slotHourUTC);
 
-    if (articlesPerDay <= 3) {
-      // 使用固定黃金時段：09:00, 14:00, 20:00
-      const slotHourUTC = FIXED_SLOTS_UTC[slotIndex];
-      scheduleTime.setUTCHours(slotHourUTC);
-      scheduleTime.setUTCMinutes(Math.max(0, randomOffset + 15)); // 確保正數分鐘
-    } else {
-      // 超過 3 篇：在 08:00-22:00 間平均分散
-      const intervalMinutes = Math.floor((WORKING_HOURS * 60) / articlesPerDay);
-      const baseMinutes = slotIndex * intervalMinutes;
-      const totalMinutes = Math.max(0, baseMinutes + randomOffset);
-      scheduleTime.setUTCHours(START_HOUR_UTC);
-      scheduleTime.setUTCMinutes(totalMinutes);
-    }
+    // 加入隨機偏移 (0-15 分鐘)
+    const randomOffset = Math.floor(Math.random() * 16);
+    scheduleTime.setUTCMinutes(randomOffset);
 
     times.push(scheduleTime);
   }

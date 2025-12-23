@@ -17,6 +17,46 @@ export const GOLDEN_SLOTS_UTC = [1, 6, 12];
 export const GOLDEN_SLOTS_TW = [9, 14, 20];
 
 /**
+ * 擴充時段定義（UTC 時間）- 支援每日最多 5 篇
+ * 包含 3 個黃金時段 + 2 個補位時段
+ * UTC 01:00 = 台灣 09:00（早上）
+ * UTC 03:00 = 台灣 11:00（上午補位）
+ * UTC 06:00 = 台灣 14:00（下午）
+ * UTC 09:00 = 台灣 17:00（傍晚補位）
+ * UTC 12:00 = 台灣 20:00（晚上）
+ */
+export const EXTENDED_SLOTS_UTC = [1, 3, 6, 9, 12];
+
+/**
+ * 根據每日文章數量取得對應的時段
+ * 優先使用黃金時段，超過 3 篇時使用補位時段
+ *
+ * @param count 每日文章數（1-5）
+ * @returns 對應的 UTC 時段陣列
+ *
+ * @example
+ * getExtendedSlotsForCount(1) // [1] → 09:00
+ * getExtendedSlotsForCount(2) // [1, 6] → 09:00, 14:00
+ * getExtendedSlotsForCount(3) // [1, 6, 12] → 09:00, 14:00, 20:00
+ * getExtendedSlotsForCount(4) // [1, 3, 6, 12] → 09:00, 11:00, 14:00, 20:00
+ * getExtendedSlotsForCount(5) // [1, 3, 6, 9, 12] → 09:00, 11:00, 14:00, 17:00, 20:00
+ */
+export function getExtendedSlotsForCount(count: number): number[] {
+  // 每日篇數對應的時段索引映射
+  const slotMappings: Record<number, number[]> = {
+    1: [1], // 09:00
+    2: [1, 6], // 09:00, 14:00
+    3: [1, 6, 12], // 09:00, 14:00, 20:00
+    4: [1, 3, 6, 12], // 09:00, 11:00, 14:00, 20:00
+    5: [1, 3, 6, 9, 12], // 09:00, 11:00, 14:00, 17:00, 20:00
+  };
+
+  // 確保 count 在有效範圍內
+  const normalizedCount = Math.max(1, Math.min(5, count));
+  return slotMappings[normalizedCount];
+}
+
+/**
  * 計算從現在開始的下一個黃金時段
  *
  * @param fromDate 起始時間（預設為現在）

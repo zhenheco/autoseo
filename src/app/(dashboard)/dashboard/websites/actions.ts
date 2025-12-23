@@ -531,21 +531,47 @@ export async function updateWebsiteAutoSchedule(formData: FormData) {
     formData.get("dailyArticleLimit") as string,
   );
   const autoScheduleEnabled = formData.get("autoScheduleEnabled") === "true";
+  const scheduleType = formData.get("scheduleType") as "daily" | "interval";
+  const scheduleIntervalDays = parseInt(
+    formData.get("scheduleIntervalDays") as string,
+  );
 
   if (!websiteId) {
     redirect("/dashboard/websites?error=" + encodeURIComponent("缺少網站 ID"));
   }
 
-  // 驗證數值範圍（1-3 篇）
+  // 驗證排程模式
+  if (scheduleType !== "daily" && scheduleType !== "interval") {
+    redirect(
+      `/dashboard/websites/${websiteId}/edit?error=` +
+        encodeURIComponent("無效的排程模式"),
+    );
+  }
+
+  // 驗證數值範圍（每日 1-5 篇）
   if (
     isNaN(dailyArticleLimit) ||
     dailyArticleLimit < 1 ||
-    dailyArticleLimit > 3
+    dailyArticleLimit > 5
   ) {
     redirect(
       `/dashboard/websites/${websiteId}/edit?error=` +
-        encodeURIComponent("每日發布數量必須在 1-3 之間"),
+        encodeURIComponent("每日發布數量必須在 1-5 之間"),
     );
+  }
+
+  // 驗證間隔天數（2-7 天，interval 模式才檢查）
+  if (scheduleType === "interval") {
+    if (
+      isNaN(scheduleIntervalDays) ||
+      scheduleIntervalDays < 2 ||
+      scheduleIntervalDays > 7
+    ) {
+      redirect(
+        `/dashboard/websites/${websiteId}/edit?error=` +
+          encodeURIComponent("間隔天數必須在 2-7 之間"),
+      );
+    }
   }
 
   const supabase = await createClient();
@@ -584,6 +610,9 @@ export async function updateWebsiteAutoSchedule(formData: FormData) {
     .update({
       daily_article_limit: dailyArticleLimit,
       auto_schedule_enabled: autoScheduleEnabled,
+      schedule_type: scheduleType,
+      schedule_interval_days:
+        scheduleType === "interval" ? scheduleIntervalDays : 1,
     })
     .eq("id", websiteId);
 

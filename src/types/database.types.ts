@@ -1583,6 +1583,8 @@ export type Database = {
           is_platform_blog: boolean | null;
           daily_article_limit: number | null;
           auto_schedule_enabled: boolean | null;
+          schedule_type: "daily" | "interval" | null;
+          schedule_interval_days: number | null;
         };
         Insert: {
           id?: string;
@@ -1607,6 +1609,8 @@ export type Database = {
           is_platform_blog?: boolean | null;
           daily_article_limit?: number | null;
           auto_schedule_enabled?: boolean | null;
+          schedule_type?: "daily" | "interval" | null;
+          schedule_interval_days?: number | null;
         };
         Update: {
           id?: string;
@@ -1631,6 +1635,8 @@ export type Database = {
           is_platform_blog?: boolean | null;
           daily_article_limit?: number | null;
           auto_schedule_enabled?: boolean | null;
+          schedule_type?: "daily" | "interval" | null;
+          schedule_interval_days?: number | null;
         };
         Relationships: [
           {

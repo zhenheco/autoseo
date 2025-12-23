@@ -4,7 +4,11 @@
  */
 
 import { SupabaseClient } from "@supabase/supabase-js";
-import { getGoldenSlotsForDate, GOLDEN_SLOTS_UTC } from "./golden-slots";
+import {
+  getGoldenSlotsForDate,
+  GOLDEN_SLOTS_UTC,
+  getExtendedSlotsForCount,
+} from "./golden-slots";
 import type { Database } from "@/types/database.types";
 
 interface ScheduleResult {
@@ -14,20 +18,57 @@ interface ScheduleResult {
 }
 
 /**
- * 計算下一個可用的黃金時段
- * 考慮每日發布上限，找到最近的空位
+ * 排程選項
+ */
+interface ScheduleOptions {
+  /** 排程模式：daily（每日 N 篇）或 interval（每 X 天 1 篇） */
+  scheduleType?: "daily" | "interval" | null;
+  /** 間隔天數（僅在 interval 模式使用，2-7） */
+  intervalDays?: number | null;
+}
+
+/**
+ * 計算下一個可用的發布時段
+ * 支援兩種模式：
+ * 1. daily: 每日發布 N 篇，使用黃金時段和補位時段
+ * 2. interval: 每 X 天發布 1 篇，固定使用第一個黃金時段
  *
  * @param supabase Supabase client
  * @param websiteId 網站 ID
- * @param dailyLimit 每日發布上限（1-3 篇）
+ * @param dailyLimit 每日發布上限（1-5 篇）
+ * @param options 排程選項
  * @returns 下一個可用的時段，或 null 表示 30 天內沒有空位
  */
 export async function getNextAvailableSlot(
   supabase: SupabaseClient<Database>,
   websiteId: string,
   dailyLimit: number,
+  options?: ScheduleOptions,
 ): Promise<Date | null> {
   const now = new Date();
+  const scheduleType = options?.scheduleType || "daily";
+  const intervalDays = options?.intervalDays || 1;
+
+  // interval 模式：每 X 天發布 1 篇
+  if (scheduleType === "interval" && intervalDays > 1) {
+    return getNextIntervalSlot(supabase, websiteId, intervalDays, now);
+  }
+
+  // daily 模式：每日發布 N 篇
+  return getNextDailySlot(supabase, websiteId, dailyLimit, now);
+}
+
+/**
+ * daily 模式：計算下一個可用的每日時段
+ */
+async function getNextDailySlot(
+  supabase: SupabaseClient<Database>,
+  websiteId: string,
+  dailyLimit: number,
+  now: Date,
+): Promise<Date | null> {
+  // 取得對應篇數的時段
+  const slotsUTC = getExtendedSlotsForCount(dailyLimit);
 
   // 檢查未來 30 天
   for (let dayOffset = 0; dayOffset < 30; dayOffset++) {
@@ -53,9 +94,6 @@ export async function getNextAvailableSlot(
 
     // 如果當天還有空位
     if (scheduledCount < dailyLimit) {
-      // 取得當天的黃金時段
-      const goldenSlots = getGoldenSlotsForDate(targetDate);
-
       // 查詢已使用的時段
       const { data: usedSlots } = await supabase
         .from("article_jobs")
@@ -71,13 +109,16 @@ export async function getNextAvailableSlot(
         ) || [],
       );
 
-      // 找第一個可用的黃金時段
-      for (const slot of goldenSlots) {
+      // 找第一個可用的時段
+      for (const slotHour of slotsUTC) {
+        // 跳過已使用的時段
+        if (usedHours.has(slotHour)) continue;
+
+        const slot = new Date(targetDate);
+        slot.setUTCHours(slotHour, 0, 0, 0);
+
         // 如果是今天，跳過已過的時段
         if (dayOffset === 0 && slot <= now) continue;
-
-        // 跳過已使用的時段
-        if (usedHours.has(slot.getUTCHours())) continue;
 
         // 加入隨機偏移 (0-15 分鐘)，讓發布時間更自然
         const randomOffset = Math.floor(Math.random() * 16);
@@ -89,6 +130,63 @@ export async function getNextAvailableSlot(
   }
 
   return null; // 30 天內沒有可用時段
+}
+
+/**
+ * interval 模式：計算下一個間隔時段
+ * 確保與上次發布間隔至少 intervalDays 天
+ */
+async function getNextIntervalSlot(
+  supabase: SupabaseClient<Database>,
+  websiteId: string,
+  intervalDays: number,
+  now: Date,
+): Promise<Date | null> {
+  // 查詢該網站最近一次排程或已發布的文章
+  const { data: lastArticle } = await supabase
+    .from("article_jobs")
+    .select("scheduled_publish_at, completed_at")
+    .eq("website_id", websiteId)
+    .in("status", ["scheduled", "published"])
+    .order("scheduled_publish_at", { ascending: false })
+    .limit(1)
+    .single();
+
+  let nextDate: Date;
+
+  if (lastArticle?.scheduled_publish_at) {
+    // 有上次排程：從上次排程日期 + 間隔天數開始
+    const lastDate = new Date(lastArticle.scheduled_publish_at);
+    nextDate = new Date(lastDate);
+    nextDate.setUTCDate(nextDate.getUTCDate() + intervalDays);
+  } else {
+    // 沒有排程紀錄：從明天開始
+    nextDate = new Date(now);
+    nextDate.setUTCDate(nextDate.getUTCDate() + 1);
+  }
+
+  // 如果計算出的日期已過，調整到今天或明天
+  if (nextDate < now) {
+    nextDate = new Date(now);
+    nextDate.setUTCDate(nextDate.getUTCDate() + 1);
+  }
+
+  // 設定為第一個黃金時段（09:00 台灣時間 = UTC 01:00）
+  nextDate.setUTCHours(GOLDEN_SLOTS_UTC[0], 0, 0, 0);
+
+  // 加入隨機偏移 (0-15 分鐘)
+  const randomOffset = Math.floor(Math.random() * 16);
+  nextDate.setUTCMinutes(randomOffset);
+
+  // 確保不超過 30 天
+  const maxDate = new Date(now);
+  maxDate.setUTCDate(maxDate.getUTCDate() + 30);
+
+  if (nextDate > maxDate) {
+    return null;
+  }
+
+  return nextDate;
 }
 
 /**
@@ -109,7 +207,7 @@ export async function autoScheduleArticle(
   const { data: website, error: websiteError } = await supabase
     .from("website_configs")
     .select(
-      "id, auto_schedule_enabled, daily_article_limit, is_active, wp_enabled, is_platform_blog",
+      "id, auto_schedule_enabled, daily_article_limit, is_active, wp_enabled, is_platform_blog, schedule_type, schedule_interval_days",
     )
     .eq("id", websiteId)
     .single();
@@ -155,7 +253,13 @@ export async function autoScheduleArticle(
 
   // 6. 計算下一個可用時段
   const dailyLimit = website.daily_article_limit || 3;
-  const nextSlot = await getNextAvailableSlot(supabase, websiteId, dailyLimit);
+  const scheduleType = website.schedule_type || "daily";
+  const intervalDays = website.schedule_interval_days || 1;
+
+  const nextSlot = await getNextAvailableSlot(supabase, websiteId, dailyLimit, {
+    scheduleType,
+    intervalDays,
+  });
 
   if (!nextSlot) {
     return { success: false, error: "未來 30 天內沒有可用的發布時段" };

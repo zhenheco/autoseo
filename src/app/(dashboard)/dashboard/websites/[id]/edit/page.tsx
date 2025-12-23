@@ -30,7 +30,7 @@ async function getWebsite(websiteId: string, companyId: string) {
   const { data, error } = await supabase
     .from("website_configs")
     .select(
-      "id, website_name, wordpress_url, wp_username, company_id, brand_voice, industry, region, language, daily_article_limit, auto_schedule_enabled",
+      "id, website_name, wordpress_url, wp_username, company_id, brand_voice, industry, region, language, daily_article_limit, auto_schedule_enabled, schedule_type, schedule_interval_days",
     )
     .eq("id", websiteId)
     .eq("company_id", companyId)
@@ -50,6 +50,8 @@ async function getWebsite(websiteId: string, companyId: string) {
     language: string | null;
     daily_article_limit: number | null;
     auto_schedule_enabled: boolean | null;
+    schedule_type: "daily" | "interval" | null;
+    schedule_interval_days: number | null;
   };
 }
 
@@ -185,6 +187,8 @@ export default async function EditWebsitePage({
           websiteId={website.id}
           dailyArticleLimit={website.daily_article_limit}
           autoScheduleEnabled={website.auto_schedule_enabled}
+          scheduleType={website.schedule_type}
+          scheduleIntervalDays={website.schedule_interval_days}
         />
       </div>
     </div>
