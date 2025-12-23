@@ -140,7 +140,7 @@ export async function middleware(request: NextRequest) {
     ].join(" "),
     "frame-ancestors 'self'",
     "base-uri 'self'",
-    // 金流表單提交（金流微服務底層使用藍新金流）
+    // 金流表單提交（PAYUNi 正式環境）
     "form-action 'self' https://api.payuni.com.tw https://ccore.newebpay.com https://core.newebpay.com",
   ];
 
