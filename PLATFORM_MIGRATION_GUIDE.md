@@ -149,9 +149,6 @@ Install Command: pnpm install
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-
-# Database
-DATABASE_URL=postgresql://postgres:password@host:5432/database
 SUPABASE_DB_URL=postgresql://postgres:password@host:5432/database
 
 # App Configuration
@@ -167,9 +164,9 @@ CRON_SECRET=generate_a_random_string_for_cron_authentication
 GMAIL_USER=your-email@gmail.com
 GMAIL_APP_PASSWORD=your-gmail-app-password
 
-# NextAuth
-NEXTAUTH_URL=https://your-production-domain.com
-NEXTAUTH_SECRET=generate-a-secure-random-string
+# Rate Limiting & Cache (Upstash Redis)
+UPSTASH_REDIS_REST_URL=https://xxx.upstash.io
+UPSTASH_REDIS_REST_TOKEN=AXxxxxxxxxxxxx
 ```
 
 ##### AI 服務 API Keys (REQUIRED)
@@ -188,18 +185,15 @@ OPENAI_API_KEY=sk-proj-replace-with-your-key
 PERPLEXITY_API_KEY=pplx-replace-with-your-key
 ```
 
-##### 金流服務 (如需要)
+##### 金流微服務（PAYUNi 整合）
 
 ```bash
-# 藍新金流 NewebPay
-NEWEBPAY_MERCHANT_ID=your-merchant-id
-NEWEBPAY_HASH_KEY=your-hash-key
-NEWEBPAY_HASH_IV=your-hash-iv
-NEWEBPAY_API_URL=https://ccore.newebpay.com/MPG/mpg_gateway
-NEWEBPAY_PERIOD_API_URL=https://ccore.newebpay.com/MPG/period
-NEWEBPAY_RETURN_URL=https://your-domain.com/api/payment/callback
-NEWEBPAY_NOTIFY_URL=https://your-domain.com/api/payment/notify
-NEWEBPAY_CLIENT_BACK_URL=https://your-domain.com/dashboard/billing
+# 金流微服務 API 配置（統一使用 PAYMENT_GATEWAY_* 前綴）
+# 微服務位於 affiliate.1wayseo.com，負責處理 PAYUNi 付款
+PAYMENT_GATEWAY_API_KEY=your-api-key
+PAYMENT_GATEWAY_SITE_CODE=1WAYSEO
+PAYMENT_GATEWAY_WEBHOOK_SECRET=your-webhook-secret
+PAYMENT_GATEWAY_ENV=production  # sandbox 或 production
 ```
 
 ##### 圖片儲存 (Cloudflare R2)
@@ -225,10 +219,6 @@ PERPLEXITY_API_BASE_URL=https://api.perplexity.ai
 
 # 允許的額外域名
 NEXT_PUBLIC_ALLOWED_DOMAINS=api.your-domain.com,cdn.your-domain.com
-
-# N8N Workflow 整合
-N8N_WEBHOOK_BASE_URL=https://your-n8n-instance.com/webhook/article-generation
-N8N_API_KEY=generate_a_random_string
 
 # GitHub Actions (避免 Vercel 超時)
 USE_GITHUB_ACTIONS=false

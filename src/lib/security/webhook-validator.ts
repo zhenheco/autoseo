@@ -39,43 +39,6 @@ export function verifyHmacSha256(
 }
 
 /**
- * 驗證藍新金流 (NewebPay) 回調簽章
- *
- * @deprecated 已棄用。系統已改用 PAYUNi 金流，此函數僅為向後相容保留。
- *
- * @param tradeInfo - 交易資料
- * @param tradeSha - 收到的簽章
- * @param hashKey - HashKey
- * @param hashIV - HashIV
- * @returns 簽章是否有效
- */
-export function verifyNewebPayCallback(
-  tradeInfo: string,
-  tradeSha: string,
-  hashKey: string,
-  hashIV: string,
-): boolean {
-  if (!tradeInfo || !tradeSha || !hashKey || !hashIV) {
-    return false;
-  }
-
-  try {
-    const checkValue = crypto
-      .createHash("sha256")
-      .update(`HashKey=${hashKey}&${tradeInfo}&HashIV=${hashIV}`)
-      .digest("hex")
-      .toUpperCase();
-
-    return crypto.timingSafeEqual(
-      Buffer.from(tradeSha.toUpperCase()),
-      Buffer.from(checkValue),
-    );
-  } catch {
-    return false;
-  }
-}
-
-/**
  * 驗證請求時間戳,防止重放攻擊
  *
  * @param timestamp - 請求時間戳 (Unix timestamp in seconds 或 ISO string)

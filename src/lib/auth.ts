@@ -171,13 +171,30 @@ export async function signIn(email: string, password: string) {
   const cookieStore = await cookies();
   const affiliateRef = cookieStore.get("affiliate_ref")?.value;
 
+  // 診斷日誌
+  console.log("[SignIn Affiliate] 診斷資訊:", {
+    userId: data.user?.id,
+    userEmail: email,
+    affiliateRef: affiliateRef || "(無)",
+    hasRef: !!affiliateRef,
+  });
+
   if (affiliateRef && data.user) {
-    // 非同步呼叫，不阻塞登入流程
-    trackRegistration({
-      referralCode: affiliateRef,
-      referredUserId: data.user.id,
-      referredUserEmail: email,
-    }).catch((err) => console.error("[SignIn] Affiliate 追蹤失敗:", err));
+    try {
+      const result = await trackRegistration({
+        referralCode: affiliateRef,
+        referredUserId: data.user.id,
+        referredUserEmail: email,
+      });
+      console.log("[SignIn Affiliate] 追蹤成功:", {
+        success: !!result,
+        referralId: result?.referralId || null,
+      });
+    } catch (err) {
+      console.error("[SignIn Affiliate] 追蹤失敗:", err);
+    }
+  } else {
+    console.log("[SignIn Affiliate] 無推薦碼或無用戶，跳過追蹤");
   }
 
   return data;

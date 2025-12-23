@@ -3,10 +3,14 @@
  *
  * 用於在正式環境測試 PAYUNi 金流整合
  * 僅 super-admin 可使用
+ *
+ * 環境變數（統一使用 PAYMENT_GATEWAY_* 前綴）：
+ * - PAYMENT_GATEWAY_API_KEY: 金流微服務 API Key
+ * - PAYMENT_GATEWAY_SITE_CODE: 站點代碼
+ * - PAYMENT_GATEWAY_ENV: 環境（production/sandbox）
  */
 
 import { NextResponse } from "next/server";
-import { createPayUniClient } from "@/lib/payment/payuni-client";
 import { createClient } from "@/lib/supabase/server";
 import { isSuperAdmin } from "@/lib/auth-guard";
 
@@ -21,6 +25,78 @@ interface TestPaymentRequest {
     periodDate: string;
     periodTimes: number;
   };
+}
+
+/** PAYUNi API 回應格式 */
+interface PayUniAPIResponse {
+  success: boolean;
+  paymentId?: string;
+  payuniForm?: {
+    action: string;
+    method: string;
+    fields: Record<string, string>;
+  };
+  error?: string;
+  message?: string;
+}
+
+/**
+ * 調用 PAYUNi 金流微服務 API
+ *
+ * 使用 PAYMENT_GATEWAY_* 環境變數
+ */
+async function callPayUniAPI(
+  endpoint: string,
+  params: object,
+): Promise<PayUniAPIResponse> {
+  const baseUrl =
+    process.env.PAYMENT_GATEWAY_ENV === "production"
+      ? "https://affiliate.1wayseo.com"
+      : "https://sandbox.affiliate.1wayseo.com";
+
+  console.log("[Admin Test Payment] 調用 PAYUNi API:", {
+    url: `${baseUrl}${endpoint}`,
+    hasApiKey: !!process.env.PAYMENT_GATEWAY_API_KEY,
+    hasSiteCode: !!process.env.PAYMENT_GATEWAY_SITE_CODE,
+    env: process.env.PAYMENT_GATEWAY_ENV,
+  });
+
+  try {
+    const response = await fetch(`${baseUrl}${endpoint}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "X-API-Key": process.env.PAYMENT_GATEWAY_API_KEY || "",
+        "X-Site-Code": process.env.PAYMENT_GATEWAY_SITE_CODE || "",
+      },
+      body: JSON.stringify(params),
+    });
+
+    const data = (await response.json()) as PayUniAPIResponse;
+
+    console.log("[Admin Test Payment] PAYUNi API 回應:", {
+      status: response.status,
+      success: data.success,
+      hasPayuniForm: !!data.payuniForm,
+      paymentId: data.paymentId,
+      error: data.error,
+    });
+
+    if (!response.ok || !data.success) {
+      return {
+        success: false,
+        error: data.error || data.message || "API 呼叫失敗",
+      };
+    }
+
+    return data;
+  } catch (error) {
+    console.error("[Admin Test Payment] PAYUNi API 呼叫失敗:", error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : "網路錯誤",
+    };
+  }
 }
 
 export async function POST(request: Request) {
@@ -67,16 +143,6 @@ export async function POST(request: Request) {
       );
     }
 
-    // 建立 PAYUNi 客戶端
-    const payuniClient = createPayUniClient({
-      apiKey: process.env.PAYUNI_API_KEY || "",
-      siteCode: process.env.PAYUNI_SITE_CODE || "",
-      webhookSecret: process.env.PAYUNI_WEBHOOK_SECRET || "",
-      environment:
-        (process.env.PAYUNI_ENVIRONMENT as "sandbox" | "production") ||
-        "production",
-    });
-
     // 產生唯一訂單編號
     const orderId = `test-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
 
@@ -89,13 +155,12 @@ export async function POST(request: Request) {
       orderId,
       amount,
       email,
-      environment: process.env.PAYUNI_ENVIRONMENT,
-      baseUrl: payuniClient.getBaseUrl(),
+      environment: process.env.PAYMENT_GATEWAY_ENV,
     });
 
     if (type === "onetime") {
-      // 單次付款
-      const result = await payuniClient.createPayment({
+      // 單次付款 - 使用 PAYUNi 端點
+      const result = await callPayUniAPI("/api/payment/payuni/create", {
         orderId,
         amount,
         description,
@@ -105,13 +170,6 @@ export async function POST(request: Request) {
           testPayment: "true",
           createdBy: user.email || "",
         },
-      });
-
-      console.log("[Admin Test Payment] 單次付款結果:", {
-        success: result.success,
-        hasPayuniForm: !!result.payuniForm,
-        paymentId: result.paymentId,
-        error: result.error,
       });
 
       return NextResponse.json(result);
@@ -130,29 +188,27 @@ export async function POST(request: Request) {
         );
       }
 
-      const result = await payuniClient.createPeriodPayment({
+      // 映射 periodType 到 PAYUNi 格式
+      const periodTypeMap: Record<string, string> = {
+        week: "W",
+        month: "M",
+        year: "Y",
+      };
+
+      const result = await callPayUniAPI("/api/payment/payuni/period", {
         orderId,
-        periodParams: {
-          periodAmt: amount,
-          prodDesc: description,
-          periodType: periodParams.periodType,
-          periodDate: periodParams.periodDate,
-          periodTimes: periodParams.periodTimes,
-          firstType: "build", // 立即扣款首期
-          payerEmail: email,
-        },
+        amount,
+        description,
+        email,
         callbackUrl,
+        periodType: periodTypeMap[periodParams.periodType] || "M",
+        periodPoint: periodParams.periodDate,
+        periodTimes: periodParams.periodTimes,
+        periodStartType: 2, // 授權完成後開始扣款
         metadata: {
           testPayment: "true",
           createdBy: user.email || "",
         },
-      });
-
-      console.log("[Admin Test Payment] 定期定額結果:", {
-        success: result.success,
-        hasPayuniForm: !!result.payuniForm,
-        paymentId: result.paymentId,
-        error: result.error,
       });
 
       return NextResponse.json(result);

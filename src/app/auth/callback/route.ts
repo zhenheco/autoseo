@@ -33,14 +33,33 @@ export async function GET(request: Request) {
       const cookieStore = await cookies();
       const affiliateRef = cookieStore.get("affiliate_ref")?.value;
 
+      // 診斷日誌
+      console.log("[OAuth Affiliate] 診斷資訊:", {
+        userId: user.id,
+        userEmail: user.email,
+        affiliateRef: affiliateRef || "(無)",
+        hasRef: !!affiliateRef,
+        allCookies: cookieStore.getAll().map((c) => c.name),
+      });
+
       if (affiliateRef) {
-        // 非同步呼叫 Affiliate System，不阻塞認證流程
-        trackRegistration({
-          referralCode: affiliateRef,
-          referredUserId: user.id,
-          referredUserEmail: user.email,
-          sourceUrl: request.url,
-        }).catch((err) => console.error("[OAuth] Affiliate 追蹤失敗:", err));
+        // 使用 await 以便記錄結果
+        try {
+          const result = await trackRegistration({
+            referralCode: affiliateRef,
+            referredUserId: user.id,
+            referredUserEmail: user.email,
+            sourceUrl: request.url,
+          });
+          console.log("[OAuth Affiliate] 追蹤成功:", {
+            success: !!result,
+            referralId: result?.referralId || null,
+          });
+        } catch (err) {
+          console.error("[OAuth Affiliate] 追蹤失敗:", err);
+        }
+      } else {
+        console.log("[OAuth Affiliate] 無推薦碼，跳過追蹤");
       }
 
       const { data: existingMember } = await adminClient

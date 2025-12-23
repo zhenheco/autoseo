@@ -3,15 +3,24 @@
  *
  * 用於與金流微服務進行通信，處理單次付款和定期定額付款
  *
+ * 注意：建議使用 PaymentService 進行付款操作，它已整合正確的環境變數。
+ * 此客戶端主要供低階操作使用。
+ *
+ * 環境變數（統一使用 PAYMENT_GATEWAY_* 前綴）：
+ * - PAYMENT_GATEWAY_API_KEY: 金流微服務 API Key
+ * - PAYMENT_GATEWAY_SITE_CODE: 站點代碼
+ * - PAYMENT_GATEWAY_WEBHOOK_SECRET: Webhook 驗證密鑰
+ * - PAYMENT_GATEWAY_ENV: 環境（production/sandbox）
+ *
  * @example
  * ```typescript
  * import { createPayUniClient } from '@/lib/payment/payuni-client';
  *
  * const client = createPayUniClient({
- *   apiKey: process.env.PAYUNI_API_KEY!,
- *   siteCode: process.env.PAYUNI_SITE_CODE!,
- *   webhookSecret: process.env.PAYUNI_WEBHOOK_SECRET!,
- *   environment: 'production',
+ *   apiKey: process.env.PAYMENT_GATEWAY_API_KEY!,
+ *   siteCode: process.env.PAYMENT_GATEWAY_SITE_CODE!,
+ *   webhookSecret: process.env.PAYMENT_GATEWAY_WEBHOOK_SECRET!,
+ *   environment: process.env.PAYMENT_GATEWAY_ENV as 'production' | 'sandbox' || 'production',
  * });
  *
  * // 單次付款

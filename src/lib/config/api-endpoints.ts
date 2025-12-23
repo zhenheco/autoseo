@@ -37,56 +37,27 @@ export const PERPLEXITY_CONFIG = {
 } as const;
 
 /**
- * PAYUNi 金流 API 配置
+ * 金流微服務配置（PAYUNi）
+ *
+ * 環境變數（統一使用 PAYMENT_GATEWAY_* 前綴）：
+ * - PAYMENT_GATEWAY_API_KEY: 金流微服務 API Key
+ * - PAYMENT_GATEWAY_SITE_CODE: 站點代碼
+ * - PAYMENT_GATEWAY_WEBHOOK_SECRET: Webhook 驗證密鑰
+ * - PAYMENT_GATEWAY_ENV: 環境（production/sandbox）
+ *
+ * 注意：實際調用在 PaymentService 和 test-payment API 中實作，
+ * 這裡只提供配置參考，不再直接使用 PAYUNI_* 環境變數。
  */
-export const PAYUNI_CONFIG = {
-  apiKey: process.env.PAYUNI_API_KEY || "",
-  siteCode: process.env.PAYUNI_SITE_CODE || "",
-  webhookSecret: process.env.PAYUNI_WEBHOOK_SECRET || "",
-  environment:
-    (process.env.PAYUNI_ENVIRONMENT as "sandbox" | "production") ||
-    "production",
+export const PAYMENT_GATEWAY_CONFIG = {
+  /** 生產環境 API 基礎 URL */
+  productionBaseUrl: "https://affiliate.1wayseo.com",
+  /** 沙盒環境 API 基礎 URL */
+  sandboxBaseUrl: "https://sandbox.affiliate.1wayseo.com",
+  /** 單次付款端點 */
+  onetimeEndpoint: "/api/payment/payuni/create",
+  /** 定期定額端點 */
+  recurringEndpoint: "/api/payment/payuni/period",
 } as const;
-
-/**
- * 驗證 PAYUNi 配置是否完整
- * @throws Error 如果必要的環境變數未設定
- */
-export function validatePayUniConfig(): void {
-  const required = [
-    { key: "PAYUNI_API_KEY", value: PAYUNI_CONFIG.apiKey },
-    { key: "PAYUNI_SITE_CODE", value: PAYUNI_CONFIG.siteCode },
-    { key: "PAYUNI_WEBHOOK_SECRET", value: PAYUNI_CONFIG.webhookSecret },
-  ];
-
-  const missing = required.filter((r) => !r.value).map((r) => r.key);
-
-  if (missing.length > 0) {
-    throw new Error(
-      `PAYUNi 金流配置缺失，請設定環境變數: ${missing.join(", ")}`,
-    );
-  }
-}
-
-/**
- * @deprecated 已棄用。系統已改用 PAYUNi 金流。
- */
-export const NEWEBPAY_CONFIG = {
-  apiUrl: "",
-  periodApiUrl: "",
-  merchantId: "",
-  hashKey: "",
-  hashIV: "",
-} as const;
-
-/**
- * @deprecated 已棄用。系統已改用 PAYUNi 金流。
- */
-export function validateNewebPayConfig(): void {
-  console.warn(
-    "[api-endpoints] validateNewebPayConfig 已棄用，請使用 validatePayUniConfig",
-  );
-}
 
 /**
  * Google OAuth 配置

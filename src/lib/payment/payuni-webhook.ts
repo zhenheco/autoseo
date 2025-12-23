@@ -3,12 +3,15 @@
  *
  * 負責驗證和解析來自金流微服務的 Webhook 事件
  *
+ * 環境變數（統一使用 PAYMENT_GATEWAY_* 前綴）：
+ * - PAYMENT_GATEWAY_WEBHOOK_SECRET: Webhook 驗證密鑰
+ *
  * @example
  * ```typescript
  * import { PayUniWebhookHandler } from '@/lib/payment/payuni-webhook';
  *
  * const handler = new PayUniWebhookHandler({
- *   webhookSecret: process.env.PAYUNI_WEBHOOK_SECRET!,
+ *   webhookSecret: process.env.PAYMENT_GATEWAY_WEBHOOK_SECRET!,
  * });
  *
  * // 在 API route 中使用
