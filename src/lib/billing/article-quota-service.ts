@@ -194,6 +194,10 @@ export class ArticleQuotaService {
   /**
    * 扣除文章額度（原子操作）
    * 扣款順序：訂閱額度 -> 加購額度（FIFO）
+   *
+   * 防呆措施：
+   * - 檢測 search_path 問題（"does not exist" 錯誤）
+   * - 記錄詳細錯誤日誌供診斷
    */
   async deductArticle(
     companyId: string,
@@ -218,6 +222,18 @@ export class ArticleQuotaService {
 
     if (error) {
       console.error("[ArticleQuotaService] deductArticle error:", error);
+
+      // 防呆：檢測 search_path 問題
+      const errorMsg = error.message || "";
+      if (errorMsg.includes("does not exist")) {
+        console.error(
+          "[ArticleQuotaService] ⚠️ 可能的 search_path 問題！請檢查 RPC 函數的 search_path 設定",
+        );
+        console.error(
+          "[ArticleQuotaService] 修復方式：ALTER FUNCTION deduct_article_quota SET search_path = public",
+        );
+      }
+
       return {
         success: false,
         deductedFrom: "subscription",
@@ -225,7 +241,7 @@ export class ArticleQuotaService {
         subscriptionRemaining: 0,
         purchasedRemaining: 0,
         totalRemaining: 0,
-        error: error.message,
+        error: errorMsg,
       };
     }
 
