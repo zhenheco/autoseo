@@ -164,8 +164,13 @@
     "schedule": {
       "selectPublishWebsite": "Seleccionar sitio de publicación",
       "selectTargetWebsite": "(Seleccionar sitio objetivo)",
+      "modeDaily": "Diario",
+      "modeInterval": "Intervalo",
       "perDay": "Por día",
       "articles": "artículos",
+      "intervalEvery": "Cada",
+      "intervalDays": "días, 1 artículo",
+      "timeSlotsHint": "Hora de publicación (Hora de Taiwán): {slots}",
       "scheduling": "Programando...",
       "schedule": "Programar",
       "cancelling": "Cancelando...",

@@ -18,6 +18,10 @@ interface ScheduleContextType {
   setWebsiteId: (id: string | null) => void;
   articlesPerDay: number;
   setArticlesPerDay: (n: number) => void;
+  scheduleType: "daily" | "interval";
+  setScheduleType: (type: "daily" | "interval") => void;
+  intervalDays: number;
+  setIntervalDays: (days: number) => void;
   isScheduling: boolean;
   setIsScheduling: (v: boolean) => void;
   previewArticleId: string | null;
@@ -36,6 +40,10 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
   );
   const [websiteId, setWebsiteId] = useState<string | null>(null);
   const [articlesPerDay, setArticlesPerDay] = useState<number>(3);
+  const [scheduleType, setScheduleType] = useState<"daily" | "interval">(
+    "daily",
+  );
+  const [intervalDays, setIntervalDays] = useState<number>(3);
   const [isScheduling, setIsScheduling] = useState(false);
   const [previewArticleId, setPreviewArticleId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
@@ -86,6 +94,10 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
         setWebsiteId,
         articlesPerDay,
         setArticlesPerDay,
+        scheduleType,
+        setScheduleType,
+        intervalDays,
+        setIntervalDays,
         isScheduling,
         setIsScheduling,
         previewArticleId,

@@ -193,8 +193,13 @@
     "schedule": {
       "selectPublishWebsite": "選擇發布網站",
       "selectTargetWebsite": "(選擇目標網站)",
+      "modeDaily": "每日發布",
+      "modeInterval": "間隔發布",
       "perDay": "每日",
       "articles": "篇",
+      "intervalEvery": "每隔",
+      "intervalDays": "天發布 1 篇",
+      "timeSlotsHint": "發布時段（台灣時間）：{slots}",
       "scheduling": "排程中...",
       "schedule": "排程",
       "cancelling": "取消中...",

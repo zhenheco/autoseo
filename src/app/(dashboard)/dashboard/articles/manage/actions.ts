@@ -412,6 +412,8 @@ export async function scheduleArticlesForPublish(
   articleIds: string[],
   websiteId: string,
   articlesPerDay: number,
+  scheduleType?: "daily" | "interval",
+  intervalDays?: number,
 ): Promise<{
   success: boolean;
   error?: string;
@@ -429,8 +431,8 @@ export async function scheduleArticlesForPublish(
     return { success: false, error: "請選擇發布網站" };
   }
 
-  if (articlesPerDay < 1 || articlesPerDay > 10) {
-    return { success: false, error: "每日發布數量必須在 1-10 之間" };
+  if (articlesPerDay < 1 || articlesPerDay > 5) {
+    return { success: false, error: "每日發布數量必須在 1-5 之間" };
   }
 
   const supabase = await createClient();
@@ -496,6 +498,8 @@ export async function scheduleArticlesForPublish(
     normalArticles.length,
     articlesPerDay,
     lastScheduledDate,
+    scheduleType,
+    intervalDays,
   );
 
   const scheduledArticles: ScheduleResult[] = [];

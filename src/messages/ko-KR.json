@@ -164,8 +164,13 @@
     "schedule": {
       "selectPublishWebsite": "게시할 사이트 선택",
       "selectTargetWebsite": "(대상 사이트 선택)",
+      "modeDaily": "매일 게시",
+      "modeInterval": "간격 게시",
       "perDay": "일일",
       "articles": "개",
+      "intervalEvery": "매",
+      "intervalDays": "일마다 1개 게시",
+      "timeSlotsHint": "게시 시간 (대만 시간): {slots}",
       "scheduling": "예약 중...",
       "schedule": "예약",
       "cancelling": "취소 중...",

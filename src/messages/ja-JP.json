@@ -164,8 +164,13 @@
     "schedule": {
       "selectPublishWebsite": "公開先を選択",
       "selectTargetWebsite": "(対象サイトを選択)",
+      "modeDaily": "毎日公開",
+      "modeInterval": "間隔公開",
       "perDay": "1日",
       "articles": "件",
+      "intervalEvery": "毎",
+      "intervalDays": "日ごとに1件公開",
+      "timeSlotsHint": "公開時間（台湾時間）：{slots}",
       "scheduling": "予約中...",
       "schedule": "予約",
       "cancelling": "キャンセル中...",

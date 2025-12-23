@@ -9,6 +9,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Label } from "@/components/ui/label";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -19,7 +21,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { CalendarClock, Loader2, XCircle, Trash2 } from "lucide-react";
+import {
+  CalendarClock,
+  Loader2,
+  XCircle,
+  Trash2,
+  Clock,
+  CalendarDays,
+} from "lucide-react";
 import { useScheduleContext } from "./ScheduleContext";
 import {
   scheduleArticlesForPublish,
@@ -51,6 +60,10 @@ export function ScheduleControlBar({
     setWebsiteId,
     articlesPerDay,
     setArticlesPerDay,
+    scheduleType,
+    setScheduleType,
+    intervalDays,
+    setIntervalDays,
     isScheduling,
     setIsScheduling,
   } = useScheduleContext();
@@ -85,6 +98,8 @@ export function ScheduleControlBar({
         Array.from(selectedArticleIds),
         websiteId,
         articlesPerDay,
+        scheduleType,
+        intervalDays,
       );
 
       if (!result.success) {
@@ -111,6 +126,8 @@ export function ScheduleControlBar({
     websiteId,
     selectedArticleIds,
     articlesPerDay,
+    scheduleType,
+    intervalDays,
     setIsScheduling,
     router,
     t,
@@ -198,35 +215,108 @@ export function ScheduleControlBar({
     return null;
   }
 
+  // 時段顯示邏輯
+  const TIME_SLOTS_INFO: Record<number, string> = {
+    1: "09:00",
+    2: "09:00、14:00",
+    3: "09:00、14:00、20:00",
+    4: "09:00、11:00、14:00、20:00",
+    5: "09:00、11:00、14:00、17:00、20:00",
+  };
+
+  const currentTimeSlots =
+    scheduleType === "daily"
+      ? TIME_SLOTS_INFO[articlesPerDay] || TIME_SLOTS_INFO[3]
+      : "09:00";
+
   return (
     <div className="border rounded-lg p-3 mb-4 bg-muted/30">
       {/* 手機版：垂直堆疊 */}
       <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-3">
-        {/* 每日篇數設定 */}
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground whitespace-nowrap">
-            {t("schedule.perDay")}
-          </span>
-          <Select
-            value={articlesPerDay.toString()}
-            onValueChange={(v) => setArticlesPerDay(parseInt(v))}
-            disabled={isScheduling}
-          >
-            <SelectTrigger className="w-[70px] h-10 lg:h-8">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
-                <SelectItem key={n} value={n.toString()}>
-                  {n}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-          <span className="text-sm text-muted-foreground whitespace-nowrap">
-            {t("schedule.articles")}
-          </span>
-        </div>
+        {/* 排程模式選擇 */}
+        <RadioGroup
+          value={scheduleType}
+          onValueChange={(v) => setScheduleType(v as "daily" | "interval")}
+          className="flex gap-4"
+          disabled={isScheduling}
+        >
+          <div className="flex items-center space-x-1">
+            <RadioGroupItem value="daily" id="schedule-daily" />
+            <Label
+              htmlFor="schedule-daily"
+              className="flex items-center gap-1 cursor-pointer text-sm"
+            >
+              <Clock className="h-3 w-3" />
+              {t("schedule.modeDaily")}
+            </Label>
+          </div>
+          <div className="flex items-center space-x-1">
+            <RadioGroupItem value="interval" id="schedule-interval" />
+            <Label
+              htmlFor="schedule-interval"
+              className="flex items-center gap-1 cursor-pointer text-sm"
+            >
+              <CalendarDays className="h-3 w-3" />
+              {t("schedule.modeInterval")}
+            </Label>
+          </div>
+        </RadioGroup>
+
+        {/* 每日篇數設定 - 僅 daily 模式顯示 */}
+        {scheduleType === "daily" && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground whitespace-nowrap">
+              {t("schedule.perDay")}
+            </span>
+            <Select
+              value={articlesPerDay.toString()}
+              onValueChange={(v) => setArticlesPerDay(parseInt(v))}
+              disabled={isScheduling}
+            >
+              <SelectTrigger className="w-[70px] h-10 lg:h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[1, 2, 3, 4, 5].map((n) => (
+                  <SelectItem key={n} value={n.toString()}>
+                    {n}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <span className="text-sm text-muted-foreground whitespace-nowrap">
+              {t("schedule.articles")}
+            </span>
+          </div>
+        )}
+
+        {/* 間隔天數設定 - 僅 interval 模式顯示 */}
+        {scheduleType === "interval" && (
+          <div className="flex items-center gap-2">
+            <span className="text-sm text-muted-foreground whitespace-nowrap">
+              {t("schedule.intervalEvery")}
+            </span>
+            <Select
+              value={intervalDays.toString()}
+              onValueChange={(v) => setIntervalDays(parseInt(v))}
+              disabled={isScheduling}
+            >
+              <SelectTrigger className="w-[70px] h-10 lg:h-8">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {[2, 3, 4, 5, 6, 7].map((n) => (
+                  <SelectItem key={n} value={n.toString()}>
+                    {n}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <span className="text-sm text-muted-foreground whitespace-nowrap">
+              {t("schedule.intervalDays")}
+            </span>
+          </div>
+        )}
 
         {/* 按鈕區域 - 手機版橫向滾動或換行 */}
         <div className="flex flex-wrap gap-2 lg:flex-nowrap lg:gap-3">
@@ -292,6 +382,14 @@ export function ScheduleControlBar({
         </div>
 
         {error && <p className="text-sm text-destructive">{error}</p>}
+
+        {/* 時段提示 */}
+        <div className="flex items-center gap-1 text-xs text-muted-foreground">
+          <Clock className="h-3 w-3" />
+          <span>
+            {t("schedule.timeSlotsHint", { slots: currentTimeSlots })}
+          </span>
+        </div>
       </div>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
