@@ -23,8 +23,8 @@ interface PayUniAPIResponse {
  * 調用 PAYUNi 金流微服務 API
  *
  * 使用正確的 PAYUNi 端點：
- * - 單次付款：/api/payment/payuni/create
- * - 定期定額：/api/payment/payuni/period
+ * - 單次付款：/api/payment/create
+ * - 定期定額：/api/payment/period
  */
 async function callPayUniAPI(
   endpoint: string,
@@ -213,7 +213,7 @@ export class PaymentService {
     // 2. 透過 PAYUNi 金流微服務建立付款
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-    const payuniResult = await callPayUniAPI("/api/payment/payuni/create", {
+    const payuniResult = await callPayUniAPI("/api/payment/create", {
       orderId: orderNo,
       amount: params.amount,
       description: params.description,
@@ -342,7 +342,7 @@ export class PaymentService {
     // 3. 透過 PAYUNi 金流微服務建立定期定額付款
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
 
-    const payuniResult = await callPayUniAPI("/api/payment/payuni/period", {
+    const payuniResult = await callPayUniAPI("/api/payment/period", {
       orderId: mandateNo,
       amount: params.amount,
       description: params.description,

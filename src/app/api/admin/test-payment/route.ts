@@ -160,7 +160,7 @@ export async function POST(request: Request) {
 
     if (type === "onetime") {
       // 單次付款 - 使用 PAYUNi 端點
-      const result = await callPayUniAPI("/api/payment/payuni/create", {
+      const result = await callPayUniAPI("/api/payment/create", {
         orderId,
         amount,
         description,
@@ -195,7 +195,7 @@ export async function POST(request: Request) {
         year: "Y",
       };
 
-      const result = await callPayUniAPI("/api/payment/payuni/period", {
+      const result = await callPayUniAPI("/api/payment/period", {
         orderId,
         amount,
         description,
