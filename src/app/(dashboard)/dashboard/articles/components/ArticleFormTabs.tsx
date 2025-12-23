@@ -103,23 +103,25 @@ export function ArticleFormTabs({
         const settings = await response.json();
         console.log("[DEBUG] 網站設定 API 返回:", settings);
 
-        // 新邏輯：不論 API 返回什麼，都更新狀態
+        // 解析 API 回傳結構：successResponse 包裝為 { success: true, data: {...} }
+        const data = settings.data || settings;
+
         // 使用單一 setTimeout 包裹所有狀態更新，避免 race condition
         setTimeout(() => {
           // 主題：有值就用，沒有就清空
-          setIndustry(settings.industry || "");
+          setIndustry(data.industry || "");
 
           // 地區：有值就用，沒有就用預設值 "taiwan"
-          if (settings.region) {
+          if (data.region) {
             const isPreset = (REGION_KEYS as readonly string[]).includes(
-              settings.region,
+              data.region,
             );
             if (isPreset) {
-              setRegion(settings.region);
+              setRegion(data.region);
               setCustomRegion("");
             } else {
               setRegion("other");
-              setCustomRegion(settings.region);
+              setCustomRegion(data.region);
             }
           } else {
             setRegion("taiwan");
@@ -127,7 +129,7 @@ export function ArticleFormTabs({
           }
 
           // 語言：有值就用，沒有就用預設值 "zh-TW"
-          setLanguage(settings.language || "zh-TW");
+          setLanguage(data.language || "zh-TW");
         }, 0);
       } catch (error) {
         console.error("載入網站設定失敗:", error);
