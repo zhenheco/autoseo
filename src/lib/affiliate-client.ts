@@ -5,9 +5,10 @@
  * 參考文件：affiliate-system/docs/product-integration-guide.md
  */
 
-const AFFILIATE_URL = process.env.AFFILIATE_SYSTEM_URL;
-const WEBHOOK_SECRET = process.env.AFFILIATE_WEBHOOK_SECRET;
-const PRODUCT_CODE = process.env.AFFILIATE_PRODUCT_CODE;
+// 清理環境變數，移除可能的空白和換行符（常見於複製貼上錯誤）
+const AFFILIATE_URL = process.env.AFFILIATE_SYSTEM_URL?.trim();
+const WEBHOOK_SECRET = process.env.AFFILIATE_WEBHOOK_SECRET?.trim();
+const PRODUCT_CODE = process.env.AFFILIATE_PRODUCT_CODE?.trim();
 
 // ==================== Types ====================
 
