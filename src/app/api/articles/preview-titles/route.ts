@@ -1,11 +1,15 @@
 /**
  * 預覽標題生成 API
  * 根據產業、地區、語言生成 SEO 標題預覽
+ *
+ * AI 層級順序（與 generate-titles 一致）：
+ * 1. OpenRouter Gemini (google/gemini-2.0-flash-exp:free) - 透過 AI Gateway
+ * 2. Gemini Direct API (gemini-2.0-flash) - 備用
+ * 3. 模板回退 - 最後手段
  */
 
 import { NextRequest } from "next/server";
 import { getOpenRouterClient } from "@/lib/openrouter/client";
-import { getDeepSeekClient } from "@/lib/deepseek/client";
 import { withAuth } from "@/lib/api/auth-middleware";
 import {
   successResponse,
@@ -17,9 +21,10 @@ import {
   buildGeminiHeaders,
   isGatewayEnabled,
 } from "@/lib/cloudflare/ai-gateway";
+import { getTitlesFromTemplates } from "@/lib/cache/title-templates";
 
 /**
- * 呼叫 Gemini Direct API（繞過 OpenRouter）
+ * 呼叫 Gemini Direct API
  */
 async function callGeminiDirectAPI(prompt: string): Promise<string> {
   const apiKey = process.env.GEMINI_API_KEY;
@@ -56,6 +61,41 @@ async function callGeminiDirectAPI(prompt: string): Promise<string> {
     throw new Error("Invalid Gemini response structure");
   }
   return content;
+}
+
+/**
+ * 標準格式解析
+ * 處理：每行一個標題，可能有編號前綴
+ */
+function parseStandardFormat(content: string): string[] {
+  return content
+    .split("\n")
+    .map((line) => line.trim())
+    .map((line) => line.replace(/^[\d\.\-\*]+[\.\)、\s]*/, "").trim())
+    .filter((line) => line.length > 0 && line.length < 100)
+    .filter(
+      (line) =>
+        !line.match(
+          /^(標題|範例|格式|要求|例如|以下|根據|希望|請|您|這些|生成)/,
+        ),
+    )
+    .slice(0, 5);
+}
+
+/**
+ * 寬鬆格式解析
+ * 當標準解析失敗時使用，條件更寬鬆
+ */
+function parseLenientFormat(content: string): string[] {
+  return content
+    .split("\n")
+    .map((line) => line.trim())
+    .filter((line) => line.length > 10 && line.length < 200)
+    .filter(
+      (line) =>
+        !line.match(/^(以下|希望|請|您|這些|生成|標題：|範例：|格式：)/),
+    )
+    .slice(0, 5);
 }
 
 // 產業標籤
@@ -126,11 +166,11 @@ ${langConfig.instruction}
 
 請直接輸出 5 個標題，每行一個，不要編號：`;
 
-  const openRouterClient = getOpenRouterClient();
-  let responseContent: string;
+  let responseContent: string = "";
 
-  // Layer 1: OpenRouter Gemini free
+  // Layer 1: OpenRouter Gemini（透過 AI Gateway，優先使用免費模型）
   try {
+    const openRouterClient = getOpenRouterClient();
     const response = await openRouterClient.complete({
       model: "google/gemini-2.0-flash-exp:free",
       prompt,
@@ -138,14 +178,14 @@ ${langConfig.instruction}
       max_tokens: 500,
     });
     responseContent = response.content;
-    console.log("[preview-titles] ✅ Gemini OpenRouter 成功");
-  } catch (geminiError) {
+    console.log("[preview-titles] ✅ OpenRouter Gemini 成功");
+  } catch (openRouterError) {
     console.warn(
-      "[preview-titles] ⚠️ Gemini OpenRouter 失敗:",
-      (geminiError as Error).message,
+      "[preview-titles] ⚠️ OpenRouter Gemini 失敗:",
+      (openRouterError as Error).message,
     );
 
-    // Layer 2: Gemini Direct API
+    // Layer 2: Gemini Direct API（備用，繞過 OpenRouter 限制）
     try {
       responseContent = await callGeminiDirectAPI(prompt);
       console.log("[preview-titles] ✅ Gemini Direct 成功");
@@ -154,30 +194,75 @@ ${langConfig.instruction}
         "[preview-titles] ⚠️ Gemini Direct 失敗:",
         (geminiDirectError as Error).message,
       );
-
-      // Layer 3: DeepSeek Chat
-      const deepseekClient = getDeepSeekClient();
-      const deepseekResponse = await deepseekClient.complete({
-        model: "deepseek-chat",
-        prompt,
-        temperature: 0.8,
-        max_tokens: 500,
-      });
-      responseContent = deepseekResponse.content;
-      console.log("[preview-titles] ✅ DeepSeek Chat 成功 (via AI Gateway)");
+      // responseContent 保持為空，將觸發模板回退
     }
   }
 
-  const titles = responseContent
-    .split("\n")
-    .map((line) => line.trim())
-    .map((line) => line.replace(/^[\d\.\-\*]+[\.\)、\s]*/, "").trim())
-    .filter((line) => line.length > 0 && line.length < 100)
-    .filter((line) => !line.match(/^(標題|範例|格式|要求|例如|以下|根據)/))
-    .slice(0, 5);
+  // Layer 3: 模板回退（所有 Gemini 都失敗時）
+  if (!responseContent || responseContent.trim() === "") {
+    console.log("[preview-titles] ⚠️ 所有 Gemini 層失敗，使用模板回退");
+    try {
+      const templateTitles = await getTitlesFromTemplates(
+        { language, keyword: industry },
+        5,
+      );
+      if (templateTitles.length > 0) {
+        return successResponse({
+          titles: templateTitles,
+          metadata: {
+            industry: industryLabel,
+            region: regionLabel,
+            language: langConfig.name,
+            source: "template",
+          },
+        });
+      }
+    } catch (templateError) {
+      console.error(
+        "[preview-titles] ⚠️ 模板回退也失敗:",
+        (templateError as Error).message,
+      );
+    }
+    // 如果連模板都失敗，返回錯誤
+    return internalError("標題生成失敗，請稍後再試");
+  }
+
+  // 解析標題：先用標準格式，失敗則用寬鬆格式
+  let titles = parseStandardFormat(responseContent);
 
   if (titles.length === 0) {
-    console.error("No valid titles generated:", responseContent);
+    console.log("[preview-titles] 標準解析無結果，嘗試寬鬆解析");
+    titles = parseLenientFormat(responseContent);
+  }
+
+  // 如果兩種解析都失敗，嘗試模板回退
+  if (titles.length === 0) {
+    console.warn(
+      "[preview-titles] 解析失敗，原始內容:",
+      responseContent.substring(0, 200),
+    );
+    try {
+      const templateTitles = await getTitlesFromTemplates(
+        { language, keyword: industry },
+        5,
+      );
+      if (templateTitles.length > 0) {
+        return successResponse({
+          titles: templateTitles,
+          metadata: {
+            industry: industryLabel,
+            region: regionLabel,
+            language: langConfig.name,
+            source: "template",
+          },
+        });
+      }
+    } catch (templateError) {
+      console.error(
+        "[preview-titles] 模板回退失敗:",
+        (templateError as Error).message,
+      );
+    }
     return internalError("標題生成失敗，請稍後再試");
   }
 
