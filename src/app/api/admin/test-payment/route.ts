@@ -144,7 +144,11 @@ export async function POST(request: Request) {
     }
 
     // 產生唯一訂單編號（PAYUNi 限制 20 字元，英數字和 - 符號）
-    const orderId = `T${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
+    // 格式：{站點代碼前3字}-{時間戳base36}{隨機4碼}，方便辨識來源
+    const sitePrefix = (process.env.PAYMENT_GATEWAY_SITE_CODE || "TST")
+      .slice(0, 3)
+      .toUpperCase();
+    const orderId = `${sitePrefix}-${Date.now().toString(36)}${Math.random().toString(36).slice(2, 6)}`;
 
     // 設定回調 URL
     const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://1wayseo.com";

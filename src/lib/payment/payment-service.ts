@@ -125,20 +125,32 @@ export class PaymentService {
     this.supabase = supabase;
   }
 
+  /**
+   * 產生訂單編號
+   * 格式：{站點代碼前3字}O{時間戳base36}{隨機3碼}
+   * 範例：1WAOmji21wrnabc（15字元，PAYUNi 限制 20 字元）
+   */
   private generateOrderNo(): string {
-    const timestamp = Date.now();
-    const random = Math.floor(Math.random() * 10000)
-      .toString()
-      .padStart(4, "0");
-    return `ORD${timestamp}${random}`;
+    const sitePrefix = (process.env.PAYMENT_GATEWAY_SITE_CODE || "1WS")
+      .slice(0, 3)
+      .toUpperCase();
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).slice(2, 5);
+    return `${sitePrefix}O${timestamp}${random}`;
   }
 
+  /**
+   * 產生委託編號
+   * 格式：{站點代碼前3字}M{時間戳base36}{隨機3碼}
+   * 範例：1WAMmji21wrnabc（15字元，PAYUNi 限制 20 字元）
+   */
   private generateMandateNo(): string {
-    const timestamp = Date.now();
-    const random = Math.floor(Math.random() * 10000)
-      .toString()
-      .padStart(4, "0");
-    return `MAN${timestamp}${random}`;
+    const sitePrefix = (process.env.PAYMENT_GATEWAY_SITE_CODE || "1WS")
+      .slice(0, 3)
+      .toUpperCase();
+    const timestamp = Date.now().toString(36);
+    const random = Math.random().toString(36).slice(2, 5);
+    return `${sitePrefix}M${timestamp}${random}`;
   }
 
   private mapPlanSlugToTier(
