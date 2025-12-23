@@ -9,7 +9,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Label } from "@/components/ui/label";
 import {
   AlertDialog,
@@ -21,14 +20,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  CalendarClock,
-  Loader2,
-  XCircle,
-  Trash2,
-  Clock,
-  CalendarDays,
-} from "lucide-react";
+import { CalendarClock, Loader2, XCircle, Trash2 } from "lucide-react";
 import { useScheduleContext } from "./ScheduleContext";
 import {
   scheduleArticlesForPublish,
@@ -215,59 +207,33 @@ export function ScheduleControlBar({
     return null;
   }
 
-  // 時段顯示邏輯
-  const TIME_SLOTS_INFO: Record<number, string> = {
-    1: "09:00",
-    2: "09:00、14:00",
-    3: "09:00、14:00、20:00",
-    4: "09:00、11:00、14:00、20:00",
-    5: "09:00、11:00、14:00、17:00、20:00",
-  };
-
-  const currentTimeSlots =
-    scheduleType === "daily"
-      ? TIME_SLOTS_INFO[articlesPerDay] || TIME_SLOTS_INFO[3]
-      : "09:00";
-
   return (
     <div className="border rounded-lg p-3 mb-4 bg-muted/30">
-      {/* 手機版：垂直堆疊 */}
-      <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:gap-3">
-        {/* 排程模式選擇 */}
-        <RadioGroup
+      {/* 第一列：模式選擇 + 設定 */}
+      <div className="flex flex-wrap items-center gap-2 mb-3">
+        {/* 排程模式下拉選單 */}
+        <Select
           value={scheduleType}
           onValueChange={(v) => setScheduleType(v as "daily" | "interval")}
-          className="flex gap-4"
           disabled={isScheduling}
         >
-          <div className="flex items-center space-x-1">
-            <RadioGroupItem value="daily" id="schedule-daily" />
-            <Label
-              htmlFor="schedule-daily"
-              className="flex items-center gap-1 cursor-pointer text-sm"
-            >
-              <Clock className="h-3 w-3" />
-              {t("schedule.modeDaily")}
-            </Label>
-          </div>
-          <div className="flex items-center space-x-1">
-            <RadioGroupItem value="interval" id="schedule-interval" />
-            <Label
-              htmlFor="schedule-interval"
-              className="flex items-center gap-1 cursor-pointer text-sm"
-            >
-              <CalendarDays className="h-3 w-3" />
+          <SelectTrigger className="w-[120px] h-10 lg:h-8">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="daily">{t("schedule.modeDaily")}</SelectItem>
+            <SelectItem value="interval">
               {t("schedule.modeInterval")}
-            </Label>
-          </div>
-        </RadioGroup>
+            </SelectItem>
+          </SelectContent>
+        </Select>
 
         {/* 每日篇數設定 - 僅 daily 模式顯示 */}
         {scheduleType === "daily" && (
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground whitespace-nowrap">
+            <Label className="text-sm text-muted-foreground whitespace-nowrap">
               {t("schedule.perDay")}
-            </span>
+            </Label>
             <Select
               value={articlesPerDay.toString()}
               onValueChange={(v) => setArticlesPerDay(parseInt(v))}
@@ -284,18 +250,18 @@ export function ScheduleControlBar({
                 ))}
               </SelectContent>
             </Select>
-            <span className="text-sm text-muted-foreground whitespace-nowrap">
+            <Label className="text-sm text-muted-foreground whitespace-nowrap">
               {t("schedule.articles")}
-            </span>
+            </Label>
           </div>
         )}
 
         {/* 間隔天數設定 - 僅 interval 模式顯示 */}
         {scheduleType === "interval" && (
           <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground whitespace-nowrap">
+            <Label className="text-sm text-muted-foreground whitespace-nowrap">
               {t("schedule.intervalEvery")}
-            </span>
+            </Label>
             <Select
               value={intervalDays.toString()}
               onValueChange={(v) => setIntervalDays(parseInt(v))}
@@ -312,84 +278,76 @@ export function ScheduleControlBar({
                 ))}
               </SelectContent>
             </Select>
-            <span className="text-sm text-muted-foreground whitespace-nowrap">
+            <Label className="text-sm text-muted-foreground whitespace-nowrap">
               {t("schedule.intervalDays")}
-            </span>
+            </Label>
           </div>
         )}
+      </div>
 
-        {/* 按鈕區域 - 手機版橫向滾動或換行 */}
-        <div className="flex flex-wrap gap-2 lg:flex-nowrap lg:gap-3">
-          <Button
-            size="sm"
-            onClick={handleSchedule}
-            disabled={
-              isScheduling ||
-              isCancelling ||
-              isDeleting ||
-              selectedCount === 0 ||
-              !websiteId
-            }
-            className="whitespace-nowrap h-10 px-4 lg:h-8 lg:px-3"
-          >
-            {isScheduling ? (
-              <>
-                <Loader2 className="mr-1 h-4 w-4 lg:h-3 lg:w-3 animate-spin" />
-                {t("schedule.scheduling")}
-              </>
-            ) : (
-              <>
-                <CalendarClock className="mr-1 h-4 w-4 lg:h-3 lg:w-3" />
-                {t("schedule.schedule")}
-              </>
-            )}
-          </Button>
+      {/* 第二列：按鈕區域 */}
+      <div className="flex flex-wrap gap-2">
+        <Button
+          size="sm"
+          onClick={handleSchedule}
+          disabled={
+            isScheduling ||
+            isCancelling ||
+            isDeleting ||
+            selectedCount === 0 ||
+            !websiteId
+          }
+          className="whitespace-nowrap h-10 px-4 lg:h-8 lg:px-3"
+        >
+          {isScheduling ? (
+            <>
+              <Loader2 className="mr-1 h-4 w-4 lg:h-3 lg:w-3 animate-spin" />
+              {t("schedule.scheduling")}
+            </>
+          ) : (
+            <>
+              <CalendarClock className="mr-1 h-4 w-4 lg:h-3 lg:w-3" />
+              {t("schedule.schedule")}
+            </>
+          )}
+        </Button>
 
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={handleCancelSchedule}
-            disabled={
-              isScheduling || isCancelling || isDeleting || selectedCount === 0
-            }
-            className="whitespace-nowrap h-10 px-4 lg:h-8 lg:px-3"
-          >
-            {isCancelling ? (
-              <>
-                <Loader2 className="mr-1 h-4 w-4 lg:h-3 lg:w-3 animate-spin" />
-                {t("schedule.cancelling")}
-              </>
-            ) : (
-              <>
-                <XCircle className="mr-1 h-4 w-4 lg:h-3 lg:w-3" />
-                {t("schedule.cancelSchedule")}
-              </>
-            )}
-          </Button>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={handleCancelSchedule}
+          disabled={
+            isScheduling || isCancelling || isDeleting || selectedCount === 0
+          }
+          className="whitespace-nowrap h-10 px-4 lg:h-8 lg:px-3"
+        >
+          {isCancelling ? (
+            <>
+              <Loader2 className="mr-1 h-4 w-4 lg:h-3 lg:w-3 animate-spin" />
+              {t("schedule.cancelling")}
+            </>
+          ) : (
+            <>
+              <XCircle className="mr-1 h-4 w-4 lg:h-3 lg:w-3" />
+              {t("schedule.cancelSchedule")}
+            </>
+          )}
+        </Button>
 
-          <Button
-            size="sm"
-            variant="destructive"
-            onClick={() => setDeleteDialogOpen(true)}
-            disabled={
-              isScheduling || isCancelling || isDeleting || selectedCount === 0
-            }
-            className="whitespace-nowrap h-10 px-4 lg:h-8 lg:px-3"
-          >
-            <Trash2 className="mr-1 h-4 w-4 lg:h-3 lg:w-3" />
-            {t("schedule.delete")}
-          </Button>
-        </div>
+        <Button
+          size="sm"
+          variant="destructive"
+          onClick={() => setDeleteDialogOpen(true)}
+          disabled={
+            isScheduling || isCancelling || isDeleting || selectedCount === 0
+          }
+          className="whitespace-nowrap h-10 px-4 lg:h-8 lg:px-3"
+        >
+          <Trash2 className="mr-1 h-4 w-4 lg:h-3 lg:w-3" />
+          {t("schedule.delete")}
+        </Button>
 
-        {error && <p className="text-sm text-destructive">{error}</p>}
-
-        {/* 時段提示 */}
-        <div className="flex items-center gap-1 text-xs text-muted-foreground">
-          <Clock className="h-3 w-3" />
-          <span>
-            {t("schedule.timeSlotsHint", { slots: currentTimeSlots })}
-          </span>
-        </div>
+        {error && <p className="text-sm text-destructive ml-2">{error}</p>}
       </div>
 
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
