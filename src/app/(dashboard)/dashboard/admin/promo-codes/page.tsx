@@ -20,6 +20,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -29,7 +36,7 @@ import {
 } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Loader2, Plus, Pencil, Trash2 } from "lucide-react";
+import { Loader2, Plus, Pencil, Trash2, Search } from "lucide-react";
 import { toast } from "sonner";
 
 interface PromoCode {
@@ -48,7 +55,10 @@ interface PromoCode {
 
 export default function AdminPromoCodesPage() {
   const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
+  const [filteredPromoCodes, setFilteredPromoCodes] = useState<PromoCode[]>([]);
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
 
   // 對話框狀態
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -69,6 +79,27 @@ export default function AdminPromoCodesPage() {
   useEffect(() => {
     fetchPromoCodes();
   }, []);
+
+  useEffect(() => {
+    let result = promoCodes;
+
+    // 搜尋過濾
+    if (searchTerm) {
+      result = result.filter(
+        (code) =>
+          code.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          code.name.toLowerCase().includes(searchTerm.toLowerCase()),
+      );
+    }
+
+    // 狀態過濾
+    if (statusFilter !== "all") {
+      const isActiveFilter = statusFilter === "active";
+      result = result.filter((code) => code.isActive === isActiveFilter);
+    }
+
+    setFilteredPromoCodes(result);
+  }, [searchTerm, statusFilter, promoCodes]);
 
   const fetchPromoCodes = async () => {
     try {
@@ -222,7 +253,7 @@ export default function AdminPromoCodesPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-5xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">優惠碼管理</h1>
@@ -245,57 +276,101 @@ export default function AdminPromoCodesPage() {
           <CardDescription>共 {promoCodes.length} 個優惠碼</CardDescription>
         </CardHeader>
         <CardContent>
+          {/* 篩選區塊 */}
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <div className="relative flex-1 min-w-[200px] max-w-xs">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="搜尋優惠碼..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 h-9"
+              />
+            </div>
+
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[120px] h-9">
+                <SelectValue placeholder="全部狀態" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全部狀態</SelectItem>
+                <SelectItem value="active">啟用中</SelectItem>
+                <SelectItem value="inactive">已停用</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {(statusFilter !== "all" || searchTerm) && (
+              <span className="text-sm text-muted-foreground">
+                {filteredPromoCodes.length} / {promoCodes.length}
+              </span>
+            )}
+          </div>
+
           <div className="rounded-md border">
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>優惠碼</TableHead>
+                  <TableHead className="w-[120px]">優惠碼</TableHead>
                   <TableHead>名稱</TableHead>
-                  <TableHead className="text-right">加送篇數</TableHead>
-                  <TableHead className="text-right">使用次數</TableHead>
-                  <TableHead>到期日</TableHead>
-                  <TableHead>狀態</TableHead>
-                  <TableHead className="text-right">操作</TableHead>
+                  <TableHead className="w-[80px] text-right">加送</TableHead>
+                  <TableHead className="w-[90px] text-right">
+                    使用次數
+                  </TableHead>
+                  <TableHead className="w-[100px]">到期日</TableHead>
+                  <TableHead className="w-[70px]">狀態</TableHead>
+                  <TableHead className="w-[80px] text-right">操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {promoCodes.map((code) => (
+                {filteredPromoCodes.map((code) => (
                   <TableRow key={code.id}>
-                    <TableCell className="font-mono font-medium">
+                    <TableCell className="font-mono font-medium text-sm">
                       {code.code}
                     </TableCell>
-                    <TableCell>{code.name}</TableCell>
-                    <TableCell className="text-right">
-                      +{code.bonusArticles} 篇
+                    <TableCell
+                      className="truncate max-w-[150px]"
+                      title={code.name}
+                    >
+                      {code.name}
                     </TableCell>
-                    <TableCell className="text-right">
+                    <TableCell className="text-right tabular-nums">
+                      +{code.bonusArticles}
+                    </TableCell>
+                    <TableCell className="text-right tabular-nums">
                       {code.currentUses}
-                      {code.maxUses && ` / ${code.maxUses}`}
+                      {code.maxUses && `/${code.maxUses}`}
                     </TableCell>
-                    <TableCell>{formatDate(code.expiresAt)}</TableCell>
+                    <TableCell className="text-sm">
+                      {formatDate(code.expiresAt)}
+                    </TableCell>
                     <TableCell>
-                      {code.isActive ? (
-                        <Badge variant="default">啟用中</Badge>
-                      ) : (
-                        <Badge variant="secondary">已停用</Badge>
-                      )}
+                      <Badge
+                        variant={code.isActive ? "default" : "secondary"}
+                        className="text-xs"
+                      >
+                        {code.isActive ? "啟用" : "停用"}
+                      </Badge>
                     </TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
+                      <div className="flex justify-end gap-1">
                         <Button
                           variant="ghost"
                           size="sm"
+                          className="h-7 w-7 p-0"
+                          title="編輯"
                           onClick={() => openEditDialog(code)}
                         >
-                          <Pencil className="h-4 w-4" />
+                          <Pencil className="h-3.5 w-3.5" />
                         </Button>
                         {code.isActive && (
                           <Button
                             variant="ghost"
                             size="sm"
+                            className="h-7 w-7 p-0"
+                            title="停用"
                             onClick={() => handleDeactivate(code)}
                           >
-                            <Trash2 className="h-4 w-4 text-destructive" />
+                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
                           </Button>
                         )}
                       </div>

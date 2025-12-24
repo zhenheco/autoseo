@@ -20,6 +20,13 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -56,6 +63,8 @@ export default function AdminSubscriptionsPage() {
   >([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState<string>("all");
+  const [planFilter, setPlanFilter] = useState<string>("all");
 
   // 對話框狀態
   const [extendDialogOpen, setExtendDialogOpen] = useState(false);
@@ -73,19 +82,35 @@ export default function AdminSubscriptionsPage() {
   }, []);
 
   useEffect(() => {
+    let result = subscriptions;
+
     // 搜尋過濾
     if (searchTerm) {
-      setFilteredSubscriptions(
-        subscriptions.filter(
-          (sub) =>
-            sub.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            sub.planName.toLowerCase().includes(searchTerm.toLowerCase()),
-        ),
+      result = result.filter(
+        (sub) =>
+          sub.companyName.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          sub.planName.toLowerCase().includes(searchTerm.toLowerCase()),
       );
-    } else {
-      setFilteredSubscriptions(subscriptions);
     }
-  }, [searchTerm, subscriptions]);
+
+    // 狀態過濾
+    if (statusFilter !== "all") {
+      if (statusFilter === "lifetime") {
+        result = result.filter((sub) => sub.isLifetime);
+      } else {
+        result = result.filter(
+          (sub) => !sub.isLifetime && sub.status === statusFilter,
+        );
+      }
+    }
+
+    // 方案過濾
+    if (planFilter !== "all") {
+      result = result.filter((sub) => sub.planSlug === planFilter);
+    }
+
+    setFilteredSubscriptions(result);
+  }, [searchTerm, statusFilter, planFilter, subscriptions]);
 
   const fetchSubscriptions = async () => {
     try {
@@ -203,7 +228,7 @@ export default function AdminSubscriptionsPage() {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="max-w-5xl mx-auto space-y-6">
       <div>
         <h1 className="text-2xl font-bold">會員訂閱管理</h1>
         <p className="text-muted-foreground">查看和管理所有會員的訂閱狀態</p>
@@ -215,17 +240,50 @@ export default function AdminSubscriptionsPage() {
           <CardDescription>共 {subscriptions.length} 個訂閱</CardDescription>
         </CardHeader>
         <CardContent>
-          {/* 搜尋欄 */}
-          <div className="flex items-center gap-4 mb-4">
-            <div className="relative flex-1 max-w-sm">
+          {/* 篩選區塊 */}
+          <div className="flex flex-wrap items-center gap-3 mb-4">
+            <div className="relative flex-1 min-w-[200px] max-w-xs">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="搜尋公司名稱..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10"
+                className="pl-10 h-9"
               />
             </div>
+
+            <Select value={statusFilter} onValueChange={setStatusFilter}>
+              <SelectTrigger className="w-[120px] h-9">
+                <SelectValue placeholder="全部狀態" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全部狀態</SelectItem>
+                <SelectItem value="active">有效</SelectItem>
+                <SelectItem value="past_due">已過期</SelectItem>
+                <SelectItem value="cancelled">已取消</SelectItem>
+                <SelectItem value="lifetime">終身</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={planFilter} onValueChange={setPlanFilter}>
+              <SelectTrigger className="w-[130px] h-9">
+                <SelectValue placeholder="全部方案" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">全部方案</SelectItem>
+                <SelectItem value="free">Free</SelectItem>
+                <SelectItem value="starter">Starter</SelectItem>
+                <SelectItem value="professional">Professional</SelectItem>
+                <SelectItem value="business">Business</SelectItem>
+                <SelectItem value="agency">Agency</SelectItem>
+              </SelectContent>
+            </Select>
+
+            {(statusFilter !== "all" || planFilter !== "all" || searchTerm) && (
+              <span className="text-sm text-muted-foreground">
+                {filteredSubscriptions.length} / {subscriptions.length}
+              </span>
+            )}
           </div>
 
           {/* 表格 */}
@@ -233,12 +291,14 @@ export default function AdminSubscriptionsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead>公司名稱</TableHead>
-                  <TableHead>方案</TableHead>
-                  <TableHead>狀態</TableHead>
-                  <TableHead className="text-right">剩餘篇數</TableHead>
-                  <TableHead>到期日</TableHead>
-                  <TableHead className="text-right">操作</TableHead>
+                  <TableHead className="w-[180px]">公司名稱</TableHead>
+                  <TableHead className="w-[140px]">方案</TableHead>
+                  <TableHead className="w-[80px]">狀態</TableHead>
+                  <TableHead className="w-[100px] text-right">
+                    剩餘篇數
+                  </TableHead>
+                  <TableHead className="w-[100px]">到期日</TableHead>
+                  <TableHead className="w-[100px] text-right">操作</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -269,28 +329,30 @@ export default function AdminSubscriptionsPage() {
                     </TableCell>
                     <TableCell>{formatDate(sub.currentPeriodEnd)}</TableCell>
                     <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
+                      <div className="flex justify-end gap-1">
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           size="sm"
+                          className="h-8 w-8 p-0"
+                          title="延長訂閱"
                           onClick={() => {
                             setSelectedCompany(sub);
                             setExtendDialogOpen(true);
                           }}
                         >
-                          <Calendar className="h-4 w-4 mr-1" />
-                          延長
+                          <Calendar className="h-4 w-4" />
                         </Button>
                         <Button
-                          variant="outline"
+                          variant="ghost"
                           size="sm"
+                          className="h-8 w-8 p-0"
+                          title="贈送篇數"
                           onClick={() => {
                             setSelectedCompany(sub);
                             setGrantDialogOpen(true);
                           }}
                         >
-                          <Gift className="h-4 w-4 mr-1" />
-                          贈送
+                          <Gift className="h-4 w-4" />
                         </Button>
                       </div>
                     </TableCell>
