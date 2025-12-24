@@ -15,6 +15,9 @@ import {
   Mail,
   Languages,
   ExternalLink,
+  Users,
+  Ticket,
+  History,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -56,6 +59,21 @@ const navItems = [
 ];
 
 const adminItems = [
+  {
+    titleKey: "subscriptionManagement",
+    href: "/dashboard/admin/subscriptions",
+    icon: Users,
+  },
+  {
+    titleKey: "promoCodeManagement",
+    href: "/dashboard/admin/promo-codes",
+    icon: Ticket,
+  },
+  {
+    titleKey: "operationLogs",
+    href: "/dashboard/admin/logs",
+    icon: History,
+  },
   {
     titleKey: "translations",
     href: "/dashboard/admin/translations",

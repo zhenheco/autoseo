@@ -1695,6 +1695,179 @@ export type Database = {
           },
         ];
       };
+      promo_codes: {
+        Row: {
+          id: string;
+          code: string;
+          name: string;
+          description: string | null;
+          bonus_articles: number;
+          max_uses: number | null;
+          current_uses: number;
+          starts_at: string;
+          expires_at: string | null;
+          is_active: boolean;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          code: string;
+          name: string;
+          description?: string | null;
+          bonus_articles: number;
+          max_uses?: number | null;
+          current_uses?: number;
+          starts_at?: string;
+          expires_at?: string | null;
+          is_active?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          code?: string;
+          name?: string;
+          description?: string | null;
+          bonus_articles?: number;
+          max_uses?: number | null;
+          current_uses?: number;
+          starts_at?: string;
+          expires_at?: string | null;
+          is_active?: boolean;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "promo_codes_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      promo_code_usages: {
+        Row: {
+          id: string;
+          promo_code_id: string;
+          company_id: string;
+          payment_order_id: string | null;
+          bonus_articles: number;
+          used_at: string;
+        };
+        Insert: {
+          id?: string;
+          promo_code_id: string;
+          company_id: string;
+          payment_order_id?: string | null;
+          bonus_articles: number;
+          used_at?: string;
+        };
+        Update: {
+          id?: string;
+          promo_code_id?: string;
+          company_id?: string;
+          payment_order_id?: string | null;
+          bonus_articles?: number;
+          used_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "promo_code_usages_promo_code_id_fkey";
+            columns: ["promo_code_id"];
+            isOneToOne: false;
+            referencedRelation: "promo_codes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "promo_code_usages_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "promo_code_usages_payment_order_id_fkey";
+            columns: ["payment_order_id"];
+            isOneToOne: false;
+            referencedRelation: "payment_orders";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      admin_action_logs: {
+        Row: {
+          id: string;
+          admin_user_id: string;
+          admin_email: string;
+          action_type:
+            | "extend_subscription"
+            | "grant_articles"
+            | "adjust_subscription"
+            | "create_promo_code"
+            | "update_promo_code"
+            | "deactivate_promo_code"
+            | "manual_adjustment"
+            | "other";
+          target_type: "company" | "subscription" | "promo_code";
+          target_id: string;
+          target_name: string | null;
+          action_details: Json;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          admin_user_id: string;
+          admin_email: string;
+          action_type:
+            | "extend_subscription"
+            | "grant_articles"
+            | "adjust_subscription"
+            | "create_promo_code"
+            | "update_promo_code"
+            | "deactivate_promo_code"
+            | "manual_adjustment"
+            | "other";
+          target_type: "company" | "subscription" | "promo_code";
+          target_id: string;
+          target_name?: string | null;
+          action_details?: Json;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          admin_user_id?: string;
+          admin_email?: string;
+          action_type?:
+            | "extend_subscription"
+            | "grant_articles"
+            | "adjust_subscription"
+            | "create_promo_code"
+            | "update_promo_code"
+            | "deactivate_promo_code"
+            | "manual_adjustment"
+            | "other";
+          target_type?: "company" | "subscription" | "promo_code";
+          target_id?: string;
+          target_name?: string | null;
+          action_details?: Json;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "admin_action_logs_admin_user_id_fkey";
+            columns: ["admin_user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

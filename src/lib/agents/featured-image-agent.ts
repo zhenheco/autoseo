@@ -174,16 +174,12 @@ export class FeaturedImageAgent extends BaseAgent<
     const targetLang = input.targetLanguage || "zh-TW";
 
     const styleGuide = input.brandStyle
-      ? `
-Style: ${input.brandStyle.style || "professional, modern"}
+      ? `Style: ${input.brandStyle.style || "professional, modern"}
 Color scheme: ${input.brandStyle.colorScheme?.join(", ") || "vibrant, eye-catching"}
-Mood: ${input.brandStyle.mood || "engaging, informative"}
-`
-      : `
-Style: professional, modern, clean
+Mood: ${input.brandStyle.mood || "engaging, informative"}`
+      : `Style: professional, modern, clean
 Color scheme: vibrant, eye-catching
-Mood: engaging, informative
-`;
+Mood: engaging, informative`;
 
     let contextSection = "";
     if (input.articleContext) {
@@ -204,35 +200,39 @@ Mood: engaging, informative
         );
       }
       if (parts.length > 0) {
-        contextSection = `\nArticle Context:\n${parts.join("\n")}\n`;
+        contextSection = `Article Context:
+${parts.join("\n")}`;
       }
     }
 
-    return `Create a high-quality featured image for an article.
+    // 把「禁止文字」規則放在最前面，這是最重要的規則
+    return `⚠️ CRITICAL RULE - ABSOLUTELY NO TEXT IN THE IMAGE ⚠️
+This is the MOST IMPORTANT rule. The image MUST NOT contain:
+- ANY text, words, letters, numbers, or characters
+- ANY language: Chinese, English, Japanese, Korean, Arabic, etc.
+- ANY watermarks, labels, captions, titles, or logos with text
+- ANY text-like shapes or symbols that resemble writing
+If ANY text appears, the image will be REJECTED immediately.
 
-Target Language/Region: ${targetLang}
-Article Title: "${input.title}"
-${contextSection}
+Create a high-quality featured image for:
+Title: "${input.title}"
+Target audience: ${targetLang}
+${contextSection ? `\n${contextSection}` : ""}
+
 ${styleGuide}
 
-IMPORTANT - Cultural & Visual Style:
-- This image is for a "${targetLang}" audience
-- Use visual style, colors, and design elements that are culturally appropriate and appealing for "${targetLang}" readers
-- Consider the cultural aesthetics and design preferences of the target region
+Cultural & Visual Style:
+- Design for "${targetLang}" audience with culturally appropriate visual elements
+- Use colors and aesthetics that appeal to the target region
 
-CRITICAL - ABSOLUTELY NO TEXT (THIS IS THE MOST IMPORTANT RULE):
-- ZERO text, words, letters, numbers, or characters of ANY language
-- NO Chinese, English, Japanese, Korean, or any other written language
-- NO watermarks, NO labels, NO captions, NO titles within the image
-- If ANY text appears in the image, it will be REJECTED immediately
-- Use ONLY visual symbols, icons, illustrations, and visual metaphors
-
-Other Requirements:
+Visual Requirements:
 - Eye-catching and professional
-- Relevant to the article topic and its main sections
+- Relevant to the article topic
 - Suitable for blog header/social media
-- High visual impact
-- Pure visual design ONLY`;
+- Use ONLY illustrations, icons, photos, and visual metaphors
+- Pure visual storytelling - NO TEXT
+
+⚠️ FINAL REMINDER: ZERO TEXT ALLOWED - This image must be purely visual ⚠️`;
   }
 
   private calculateCost(model: string, size: string): number {

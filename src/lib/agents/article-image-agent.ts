@@ -254,34 +254,35 @@ export class ArticleImageAgent extends BaseAgent<
     section: Outline["mainSections"][0],
   ): string {
     const styleGuide = input.brandStyle
-      ? `
-Style: ${input.brandStyle.style || "professional, modern"}
-Color scheme: ${input.brandStyle.colorScheme?.join(", ") || "clear, informative"}
-`
-      : `
-Style: professional, modern, clean
-Color scheme: clear, informative
-`;
+      ? `Style: ${input.brandStyle.style || "professional, modern"}
+Color scheme: ${input.brandStyle.colorScheme?.join(", ") || "clear, informative"}`
+      : `Style: professional, modern, clean
+Color scheme: clear, informative`;
 
-    return `Create an illustration for the section "${section.heading}" in an article about "${input.title}".
+    // 把「禁止文字」規則放在最前面，這是最重要的規則
+    return `⚠️ CRITICAL RULE - ABSOLUTELY NO TEXT IN THE IMAGE ⚠️
+This is the MOST IMPORTANT rule. The image MUST NOT contain:
+- ANY text, words, letters, numbers, or characters
+- ANY language: Chinese, English, Japanese, Korean, Arabic, etc.
+- ANY watermarks, labels, captions, titles, or logos with text
+- ANY text-like shapes or symbols that resemble writing
+If ANY text appears, the image will be REJECTED immediately.
+
+Create an illustration for section "${section.heading}" in article "${input.title}".
 
 ${styleGuide}
 
 Key points to visualize:
 ${section.keyPoints.join("\n")}
 
-CRITICAL - ABSOLUTELY NO TEXT (THIS IS THE MOST IMPORTANT RULE):
-- ZERO text, words, letters, numbers, or characters of ANY language
-- NO Chinese, English, Japanese, Korean, or any other written language
-- NO watermarks, NO labels, NO captions, NO titles within the image
-- If ANY text appears in the image, it will be REJECTED immediately
-- Use ONLY visual symbols, icons, illustrations, and visual metaphors
-
-Other Requirements:
+Visual Requirements:
 - Clear and informative visual
 - Supports the text content
 - Professional quality
-- Pure visual design ONLY`;
+- Use ONLY illustrations, icons, photos, and visual metaphors
+- Pure visual storytelling - NO TEXT
+
+⚠️ FINAL REMINDER: ZERO TEXT ALLOWED - This image must be purely visual ⚠️`;
   }
 
   private calculateTotalCost(

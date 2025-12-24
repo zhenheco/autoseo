@@ -14,6 +14,7 @@ import {
   type WebhookEvent,
   PaymentGatewayError,
 } from "./gateway-client";
+import { applyPromoCodeByCode } from "@/lib/admin/promo-code-service";
 
 // ============================================================================
 // 類型定義
@@ -269,6 +270,7 @@ async function processPaymentBusinessLogic(
           companyId,
           relatedId,
           orderData,
+          event,
         );
       }
       break;
@@ -343,12 +345,14 @@ async function handleTokenPackagePurchase(
  * 處理訂閱購買
  *
  * 更新或建立公司訂閱，設定訂閱額度和週期。
+ * 若使用優惠碼，同時套用優惠碼獎勵。
  */
 async function handleSubscriptionPurchase(
   supabase: ReturnType<typeof createAdminClient>,
   companyId: string,
   planId: string,
   orderData: Record<string, unknown>,
+  event: WebhookEvent,
 ): Promise<void> {
   console.log("[GatewayWebhook] 處理訂閱購買:", { companyId, planId });
 
@@ -432,6 +436,34 @@ async function handleSubscriptionPurchase(
       planName,
       articles: articlesPerMonth,
     });
+  }
+
+  // 套用優惠碼（如果有）
+  const promoCode = event.metadata?.promoCode as string | undefined;
+  const paymentOrderId = orderData.id as string | undefined;
+
+  if (promoCode) {
+    console.log("[GatewayWebhook] 套用優惠碼:", promoCode);
+
+    try {
+      const result = await applyPromoCodeByCode(
+        promoCode,
+        companyId,
+        paymentOrderId,
+      );
+
+      if (result.success) {
+        console.log("[GatewayWebhook] 優惠碼套用成功:", {
+          promoCode,
+          bonusArticles: result.bonusArticles,
+        });
+      } else {
+        console.warn("[GatewayWebhook] 優惠碼套用失敗:", result.error);
+      }
+    } catch (error) {
+      console.error("[GatewayWebhook] 優惠碼套用異常:", error);
+      // 不阻塞主流程，優惠碼套用失敗不影響訂閱建立
+    }
   }
 }
 

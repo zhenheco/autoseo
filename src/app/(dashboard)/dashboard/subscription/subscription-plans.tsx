@@ -2,7 +2,9 @@
 
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { CheckCircle2, Gift, FileText } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import { CheckCircle2, Gift, FileText, Loader2, X, Tag } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
@@ -50,6 +52,58 @@ export function SubscriptionPlans({
   );
   const router = useRouter();
   const t = useTranslations("subscription");
+
+  // 優惠碼相關 state
+  const [promoCode, setPromoCode] = useState("");
+  const [promoValidating, setPromoValidating] = useState(false);
+  const [promoValid, setPromoValid] = useState<boolean | null>(null);
+  const [promoData, setPromoData] = useState<{
+    code: string;
+    name: string;
+    bonusArticles: number;
+  } | null>(null);
+  const [promoError, setPromoError] = useState<string | null>(null);
+
+  // 驗證優惠碼
+  const handleValidatePromo = async () => {
+    if (!promoCode.trim()) return;
+
+    setPromoValidating(true);
+    setPromoError(null);
+    setPromoValid(null);
+    setPromoData(null);
+
+    try {
+      const res = await fetch("/api/promo-codes/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code: promoCode.trim() }),
+      });
+
+      const data = await res.json();
+
+      if (data.success) {
+        setPromoValid(true);
+        setPromoData(data.data);
+      } else {
+        setPromoValid(false);
+        setPromoError(data.error || "優惠碼無效");
+      }
+    } catch {
+      setPromoValid(false);
+      setPromoError("驗證優惠碼失敗");
+    } finally {
+      setPromoValidating(false);
+    }
+  };
+
+  // 清除優惠碼
+  const handleClearPromo = () => {
+    setPromoCode("");
+    setPromoValid(null);
+    setPromoData(null);
+    setPromoError(null);
+  };
 
   // 獲取當前方案的價格（用於判斷是否可以降級）
   const currentPlan = plans.find((p) => p.slug === currentTier);
@@ -109,7 +163,10 @@ export function SubscriptionPlans({
             amount: price || 0,
             description,
             email: userEmail,
-            metadata: { billingCycle },
+            metadata: {
+              billingCycle,
+              promoCode: promoValid && promoData ? promoData.code : undefined,
+            },
           }),
         });
 
@@ -198,6 +255,75 @@ export function SubscriptionPlans({
               {t("yearlyBonus") || "送2個月"}
             </span>
           </button>
+        </div>
+
+        {/* 優惠碼輸入區塊 */}
+        <div className="max-w-md mx-auto mt-6">
+          <div className="flex items-center gap-2 p-3 rounded-lg bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 shadow-sm">
+            <Tag className="h-4 w-4 text-slate-400 shrink-0" />
+            <Input
+              placeholder="輸入優惠碼"
+              value={promoCode}
+              onChange={(e) => {
+                setPromoCode(e.target.value.toUpperCase());
+                if (promoValid !== null) {
+                  setPromoValid(null);
+                  setPromoData(null);
+                  setPromoError(null);
+                }
+              }}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleValidatePromo();
+                }
+              }}
+              className="border-0 bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0 text-sm"
+              disabled={promoValidating || promoValid === true}
+            />
+            {promoValid === true ? (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleClearPromo}
+                className="shrink-0 h-8 w-8 p-0"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            ) : (
+              <Button
+                variant="secondary"
+                size="sm"
+                onClick={handleValidatePromo}
+                disabled={promoValidating || !promoCode.trim()}
+                className="shrink-0"
+              >
+                {promoValidating ? (
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                ) : (
+                  "套用"
+                )}
+              </Button>
+            )}
+          </div>
+
+          {/* 優惠碼驗證結果 */}
+          {promoValid === true && promoData && (
+            <div className="mt-2 flex items-center justify-center gap-2">
+              <Badge
+                variant="default"
+                className="bg-green-500 hover:bg-green-600"
+              >
+                <Gift className="h-3 w-3 mr-1" />
+                每月加送 {promoData.bonusArticles} 篇
+              </Badge>
+            </div>
+          )}
+          {promoValid === false && promoError && (
+            <p className="mt-2 text-sm text-red-500 text-center">
+              {promoError}
+            </p>
+          )}
         </div>
       </div>
 
