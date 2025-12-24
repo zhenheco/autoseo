@@ -265,16 +265,17 @@ Color scheme: clear, informative`;
     // 從 sectionImageTexts 取得對應的文字（如果有的話）
     const imageText = input.sectionImageTexts?.[sectionIndex];
 
-    // 如果有指定 imageText，使用「雙引號 + 重複強調」技巧生成文字
+    // 如果有指定 imageText，使用英文強調文字
     let textInstruction = "";
     if (imageText) {
       textInstruction = `
 
-📝 TEXT TO INCLUDE IN THE IMAGE:
-圖片上清晰地顯示文字："${imageText}"
-The image contains clear text: "${imageText}"
-Typography style: bold, readable, well-integrated into the design
-text "${imageText}" written prominently, signage style, high quality typography`;
+📝 TEXT OVERLAY (IMPORTANT):
+Include the text "${imageText}" prominently in the image.
+- Typography: bold, modern, highly readable sans-serif font
+- Position: integrated with the composition, easy to read
+- Style: clean signage style, professional typography
+- The text "${imageText}" should be clearly visible and legible`;
     }
 
     return `Create an illustration for section "${section.heading}" in article "${input.title}".

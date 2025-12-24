@@ -1469,35 +1469,38 @@ ${this.buildCompetitorExclusionList(input.researchData)}
     const brandStyle = input.brandVoice?.tone_of_voice || "";
     const targetAudience = input.brandVoice?.target_audience || "";
 
-    const prompt = `為文章「${selectedTitle}」生成圖片建議。
+    // 總是使用英文作為圖片文字（AI 模型對英文文字渲染效果較好）
+    const prompt = `Generate image suggestions for an article titled: "${selectedTitle}"
 
-## 文章大綱
+## Article Outline
 ${outline.mainSections.map((s, i) => `${i + 1}. ${s.heading}`).join("\n")}
 
-## 品牌資訊
-- 語調風格：${brandStyle || "專業、友善"}
-- 目標受眾：${targetAudience || "一般讀者"}
+## Brand Info
+- Tone: ${brandStyle || "professional, friendly"}
+- Target audience: ${targetAudience || "general readers"}
 
-## 任務
-請根據文章主題和品牌風格，提供圖片生成建議：
+## Task
+Provide image generation suggestions:
 
-1. **style**: 描述整體圖片風格（如：professional photography, modern minimalist, warm and inviting）
-2. **featuredImageText**: 特色圖片上要顯示的短文字（2-6個字，用於標題圖，可選）
-3. **sectionImageTexts**: 每個段落圖片上要顯示的短文字（每個2-6個字，用於內容圖）
+1. **style**: Describe the overall visual style (e.g., "professional photography, modern minimalist, warm lighting, clean background")
+2. **featuredImageText**: SHORT English text for the featured/hero image (2-4 words, like a tagline or key concept)
+3. **sectionImageTexts**: SHORT English text for each section image (2-4 words each, reinforcing the section's key message)
 
-## 文字建議原則
-- 文字要簡短有力（2-6個中文字或2-4個英文單詞）
-- 適合寫在圖片上的標語或關鍵詞
-- 能強化該段落的核心訊息
+## Text Guidelines (IMPORTANT)
+- ALL text MUST be in English (better AI rendering)
+- Keep text SHORT: 2-4 words maximum
+- Use impactful keywords or phrases
+- Examples: "Expert Tips", "Save Time", "Pro Guide", "Best Practice", "Quick Start"
+- Text should be suitable for overlay on images
 
-## 輸出格式（JSON）
+## Output Format (JSON only)
 {
-  "style": "professional photography, clean and modern, bright lighting",
-  "featuredImageText": "關鍵字或短語",
-  "sectionImageTexts": ["段落1文字", "段落2文字", "段落3文字"]
+  "style": "professional photography, clean and modern, bright natural lighting, minimalist composition",
+  "featuredImageText": "Expert Guide",
+  "sectionImageTexts": ["Key Insight", "Pro Tips", "Best Practice"]
 }
 
-請用 ${languageName} 輸出文字內容，直接輸出 JSON：`;
+Output JSON only:`;
 
     try {
       const response = await this.complete(prompt, {
@@ -1573,24 +1576,31 @@ ${outline.mainSections.map((s, i) => `${i + 1}. ${s.heading}`).join("\n")}
 
   /**
    * 獲取預設的圖片指引（當 AI 生成失敗時使用）
+   * 使用通用英文文字作為 fallback
    */
   private getFallbackImageGuidance(
-    title: string,
+    _title: string,
     outline: StrategyOutput["outline"],
   ): ImageGuidance {
-    // 從標題提取核心關鍵詞
-    const keyTopic = title.length > 10 ? title.substring(0, 10) : title;
+    // 通用英文圖片文字
+    const genericTexts = [
+      "Key Insight",
+      "Pro Tips",
+      "Best Practice",
+      "Expert Guide",
+      "Quick Start",
+      "Essential Info",
+      "Top Methods",
+      "Smart Choice",
+    ];
 
     return {
       style:
         "professional photography, clean and modern, bright natural lighting, high quality",
-      featuredImageText: undefined, // 預設不加文字
-      sectionImageTexts: outline.mainSections.map((section) => {
-        // 從每個段落標題提取 2-4 個字作為圖片文字
-        const heading = section.heading;
-        if (heading.length <= 6) return heading;
-        // 嘗試提取核心詞（通常在標題前面）
-        return heading.substring(0, 4);
+      featuredImageText: "Expert Guide", // 預設英文標語
+      sectionImageTexts: outline.mainSections.map((_, index) => {
+        // 從通用文字列表中選取
+        return genericTexts[index % genericTexts.length];
       }),
     };
   }

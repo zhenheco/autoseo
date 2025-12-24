@@ -206,17 +206,17 @@ ${parts.join("\n")}`;
       }
     }
 
-    // 如果有指定 imageText，使用「雙引號 + 重複強調」技巧生成文字
-    // 關鍵技巧：中文說一次，英文 text "..." 再強調一次
+    // 如果有指定 imageText，使用英文強調文字
     let textInstruction = "";
     if (input.imageText) {
       textInstruction = `
 
-📝 TEXT TO INCLUDE IN THE IMAGE:
-圖片上清晰地顯示文字："${input.imageText}"
-The image contains clear text: "${input.imageText}"
-Typography style: bold, readable, well-integrated into the design
-text "${input.imageText}" written prominently, signage style, high quality typography`;
+📝 TEXT OVERLAY (IMPORTANT):
+Include the text "${input.imageText}" prominently in the image.
+- Typography: bold, modern, highly readable sans-serif font
+- Position: center or lower-third, well-integrated with the composition
+- Style: clean signage style, professional typography
+- The text "${input.imageText}" should be clearly visible and legible`;
     }
 
     return `Create a high-quality featured image for:
