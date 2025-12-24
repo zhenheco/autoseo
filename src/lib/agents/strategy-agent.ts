@@ -1,5 +1,9 @@
 import { BaseAgent } from "./base-agent";
-import type { StrategyInput, StrategyOutput } from "@/types/agents";
+import type {
+  StrategyInput,
+  StrategyOutput,
+  ImageGuidance,
+} from "@/types/agents";
 import { LOCALE_FULL_NAMES } from "@/lib/i18n/locales";
 
 export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
@@ -17,6 +21,13 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
 
     const sectionDistribution = this.calculateWordDistribution(
       input.targetWordCount,
+      outline,
+    );
+
+    // 生成圖片指引（風格和文字建議）
+    const imageGuidance = await this.generateImageGuidance(
+      input,
+      selectedTitle,
       outline,
     );
 
@@ -41,6 +52,7 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
         competitiveAdvantages: ["深入分析", "實用建議", "最新資訊"],
       },
       externalReferences: input.researchData.externalReferences,
+      imageGuidance, // 新增圖片指引
       executionInfo: this.getExecutionInfo(input.model),
     };
   }
@@ -1437,6 +1449,149 @@ ${this.buildCompetitorExclusionList(input.researchData)}
       mainSections: mainSectionsTotal,
       conclusion: conclusionWordCount,
       faq: faqWordCount,
+    };
+  }
+
+  /**
+   * 生成圖片指引（風格和文字建議）
+   * 用於 Seedream v4 等支援文字渲染的圖片生成模型
+   */
+  private async generateImageGuidance(
+    input: StrategyInput,
+    selectedTitle: string,
+    outline: StrategyOutput["outline"],
+  ): Promise<ImageGuidance> {
+    const targetLang = input.targetLanguage || "zh-TW";
+    const languageName =
+      LOCALE_FULL_NAMES[targetLang] || "Traditional Chinese (繁體中文)";
+
+    // 從 brandVoice 提取風格提示
+    const brandStyle = input.brandVoice?.tone_of_voice || "";
+    const targetAudience = input.brandVoice?.target_audience || "";
+
+    const prompt = `為文章「${selectedTitle}」生成圖片建議。
+
+## 文章大綱
+${outline.mainSections.map((s, i) => `${i + 1}. ${s.heading}`).join("\n")}
+
+## 品牌資訊
+- 語調風格：${brandStyle || "專業、友善"}
+- 目標受眾：${targetAudience || "一般讀者"}
+
+## 任務
+請根據文章主題和品牌風格，提供圖片生成建議：
+
+1. **style**: 描述整體圖片風格（如：professional photography, modern minimalist, warm and inviting）
+2. **featuredImageText**: 特色圖片上要顯示的短文字（2-6個字，用於標題圖，可選）
+3. **sectionImageTexts**: 每個段落圖片上要顯示的短文字（每個2-6個字，用於內容圖）
+
+## 文字建議原則
+- 文字要簡短有力（2-6個中文字或2-4個英文單詞）
+- 適合寫在圖片上的標語或關鍵詞
+- 能強化該段落的核心訊息
+
+## 輸出格式（JSON）
+{
+  "style": "professional photography, clean and modern, bright lighting",
+  "featuredImageText": "關鍵字或短語",
+  "sectionImageTexts": ["段落1文字", "段落2文字", "段落3文字"]
+}
+
+請用 ${languageName} 輸出文字內容，直接輸出 JSON：`;
+
+    try {
+      const response = await this.complete(prompt, {
+        model: input.model,
+        temperature: 0.7,
+        maxTokens: 500,
+        format: "json",
+      });
+
+      if (!response.content) {
+        console.warn(
+          "[StrategyAgent] Empty imageGuidance response, using fallback",
+        );
+        return this.getFallbackImageGuidance(selectedTitle, outline);
+      }
+
+      const content = response.content.trim();
+
+      // 嘗試解析 JSON
+      let parsed: ImageGuidance | null = null;
+
+      // 清理可能的 markdown 包裹
+      let cleanContent = content;
+      if (cleanContent.startsWith("```json")) {
+        cleanContent = cleanContent
+          .replace(/^```json\s*\n?/, "")
+          .replace(/\n?```$/, "");
+      } else if (cleanContent.startsWith("```")) {
+        cleanContent = cleanContent
+          .replace(/^```\s*\n?/, "")
+          .replace(/\n?```$/, "");
+      }
+
+      try {
+        parsed = JSON.parse(cleanContent);
+      } catch {
+        // 嘗試提取 JSON
+        const jsonMatch = content.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          try {
+            parsed = JSON.parse(jsonMatch[0]);
+          } catch {
+            console.warn(
+              "[StrategyAgent] Failed to parse imageGuidance JSON:",
+              content.substring(0, 200),
+            );
+          }
+        }
+      }
+
+      if (parsed && parsed.style) {
+        console.log("[StrategyAgent] ✅ Generated imageGuidance:", {
+          style: parsed.style.substring(0, 50),
+          featuredText: parsed.featuredImageText,
+          sectionTextsCount: parsed.sectionImageTexts?.length || 0,
+        });
+        return {
+          style: parsed.style,
+          featuredImageText: parsed.featuredImageText,
+          sectionImageTexts: parsed.sectionImageTexts || [],
+        };
+      }
+
+      console.warn(
+        "[StrategyAgent] Invalid imageGuidance format, using fallback",
+      );
+      return this.getFallbackImageGuidance(selectedTitle, outline);
+    } catch (error) {
+      console.error("[StrategyAgent] imageGuidance generation failed:", error);
+      return this.getFallbackImageGuidance(selectedTitle, outline);
+    }
+  }
+
+  /**
+   * 獲取預設的圖片指引（當 AI 生成失敗時使用）
+   */
+  private getFallbackImageGuidance(
+    title: string,
+    outline: StrategyOutput["outline"],
+  ): ImageGuidance {
+    // 從標題提取核心關鍵詞
+    const keyTopic = title.length > 10 ? title.substring(0, 10) : title;
+
+    return {
+      style:
+        "professional photography, clean and modern, bright natural lighting, high quality",
+      featuredImageText: undefined, // 預設不加文字
+      sectionImageTexts: outline.mainSections.map((section) => {
+        // 從每個段落標題提取 2-4 個字作為圖片文字
+        const heading = section.heading;
+        if (heading.length <= 6) return heading;
+        // 嘗試提取核心詞（通常在標題前面）
+        return heading.substring(0, 4);
+      }),
     };
   }
 }

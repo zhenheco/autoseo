@@ -25,7 +25,6 @@ const DEFAULT_MODEL = "fal-ai/qwen-image";
 const IMAGE_PRICING: Record<string, Record<string, number>> = {
   // fal.ai qwen-image 定價（每張圖約 $0.003）
   "fal-ai/qwen-image": { "1024x1024": 0.003, "1792x1024": 0.003 },
-  // 保留舊模型定價供參考
   "gpt-image-1-mini": { "1024x1024": 0.015, "1792x1024": 0.03 },
   "gemini-2.5-flash-image": { "1024x1024": 0.01 },
 };
@@ -153,7 +152,7 @@ export class ArticleImageAgent extends BaseAgent<
     index: number,
     model: string,
   ): Promise<GeneratedImage> {
-    const prompt = this.buildPrompt(input, section);
+    const prompt = this.buildPrompt(input, section, index);
 
     const result = await this.generateImage(prompt, {
       model,
@@ -252,25 +251,36 @@ export class ArticleImageAgent extends BaseAgent<
   private buildPrompt(
     input: ArticleImageInput,
     section: Outline["mainSections"][0],
+    sectionIndex: number,
   ): string {
-    const styleGuide = input.brandStyle
-      ? `Style: ${input.brandStyle.style || "professional, modern"}
+    // 優先使用 imageStyle，否則使用 brandStyle
+    const styleGuide = input.imageStyle
+      ? `Visual Style: ${input.imageStyle}`
+      : input.brandStyle
+        ? `Style: ${input.brandStyle.style || "professional, modern"}
 Color scheme: ${input.brandStyle.colorScheme?.join(", ") || "clear, informative"}`
-      : `Style: professional, modern, clean
+        : `Style: professional, modern, clean
 Color scheme: clear, informative`;
 
-    // 把「禁止文字」規則放在最前面，這是最重要的規則
-    return `⚠️ CRITICAL RULE - ABSOLUTELY NO TEXT IN THE IMAGE ⚠️
-This is the MOST IMPORTANT rule. The image MUST NOT contain:
-- ANY text, words, letters, numbers, or characters
-- ANY language: Chinese, English, Japanese, Korean, Arabic, etc.
-- ANY watermarks, labels, captions, titles, or logos with text
-- ANY text-like shapes or symbols that resemble writing
-If ANY text appears, the image will be REJECTED immediately.
+    // 從 sectionImageTexts 取得對應的文字（如果有的話）
+    const imageText = input.sectionImageTexts?.[sectionIndex];
 
-Create an illustration for section "${section.heading}" in article "${input.title}".
+    // 如果有指定 imageText，使用「雙引號 + 重複強調」技巧生成文字
+    let textInstruction = "";
+    if (imageText) {
+      textInstruction = `
+
+📝 TEXT TO INCLUDE IN THE IMAGE:
+圖片上清晰地顯示文字："${imageText}"
+The image contains clear text: "${imageText}"
+Typography style: bold, readable, well-integrated into the design
+text "${imageText}" written prominently, signage style, high quality typography`;
+    }
+
+    return `Create an illustration for section "${section.heading}" in article "${input.title}".
 
 ${styleGuide}
+${textInstruction}
 
 Key points to visualize:
 ${section.keyPoints.join("\n")}
@@ -279,10 +289,7 @@ Visual Requirements:
 - Clear and informative visual
 - Supports the text content
 - Professional quality
-- Use ONLY illustrations, icons, photos, and visual metaphors
-- Pure visual storytelling - NO TEXT
-
-⚠️ FINAL REMINDER: ZERO TEXT ALLOWED - This image must be purely visual ⚠️`;
+- High resolution, detailed`;
   }
 
   private calculateTotalCost(

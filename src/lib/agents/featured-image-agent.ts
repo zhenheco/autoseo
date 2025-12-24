@@ -20,7 +20,6 @@ const DEFAULT_MODEL = "fal-ai/qwen-image";
 const IMAGE_PRICING: Record<string, Record<string, number>> = {
   // fal.ai qwen-image 定價（每張圖約 $0.003）
   "fal-ai/qwen-image": { "1024x1024": 0.003, "1792x1024": 0.003 },
-  // 保留舊模型定價供參考
   "gemini-3-pro-image-preview": { "1024x1024": 0.02, "1792x1024": 0.03 },
   "gemini-2.5-flash-image": { "1024x1024": 0.01, "1792x1024": 0.02 },
 };
@@ -173,12 +172,14 @@ export class FeaturedImageAgent extends BaseAgent<
   private buildPrompt(input: FeaturedImageInput): string {
     const targetLang = input.targetLanguage || "zh-TW";
 
-    const styleGuide = input.brandStyle
-      ? `Style: ${input.brandStyle.style || "professional, modern"}
+    // 優先使用 imageStyle，否則使用 brandStyle
+    const styleGuide = input.imageStyle
+      ? `Visual Style: ${input.imageStyle}`
+      : input.brandStyle
+        ? `Style: ${input.brandStyle.style || "professional, modern"}
 Color scheme: ${input.brandStyle.colorScheme?.join(", ") || "vibrant, eye-catching"}
 Mood: ${input.brandStyle.mood || "engaging, informative"}`
-      : `Style: professional, modern, clean
-Color scheme: vibrant, eye-catching
+        : `Style: professional photography, clean and modern, bright natural lighting
 Mood: engaging, informative`;
 
     let contextSection = "";
@@ -205,21 +206,26 @@ ${parts.join("\n")}`;
       }
     }
 
-    // 把「禁止文字」規則放在最前面，這是最重要的規則
-    return `⚠️ CRITICAL RULE - ABSOLUTELY NO TEXT IN THE IMAGE ⚠️
-This is the MOST IMPORTANT rule. The image MUST NOT contain:
-- ANY text, words, letters, numbers, or characters
-- ANY language: Chinese, English, Japanese, Korean, Arabic, etc.
-- ANY watermarks, labels, captions, titles, or logos with text
-- ANY text-like shapes or symbols that resemble writing
-If ANY text appears, the image will be REJECTED immediately.
+    // 如果有指定 imageText，使用「雙引號 + 重複強調」技巧生成文字
+    // 關鍵技巧：中文說一次，英文 text "..." 再強調一次
+    let textInstruction = "";
+    if (input.imageText) {
+      textInstruction = `
 
-Create a high-quality featured image for:
+📝 TEXT TO INCLUDE IN THE IMAGE:
+圖片上清晰地顯示文字："${input.imageText}"
+The image contains clear text: "${input.imageText}"
+Typography style: bold, readable, well-integrated into the design
+text "${input.imageText}" written prominently, signage style, high quality typography`;
+    }
+
+    return `Create a high-quality featured image for:
 Title: "${input.title}"
 Target audience: ${targetLang}
 ${contextSection ? `\n${contextSection}` : ""}
 
 ${styleGuide}
+${textInstruction}
 
 Cultural & Visual Style:
 - Design for "${targetLang}" audience with culturally appropriate visual elements
@@ -229,10 +235,7 @@ Visual Requirements:
 - Eye-catching and professional
 - Relevant to the article topic
 - Suitable for blog header/social media
-- Use ONLY illustrations, icons, photos, and visual metaphors
-- Pure visual storytelling - NO TEXT
-
-⚠️ FINAL REMINDER: ZERO TEXT ALLOWED - This image must be purely visual ⚠️`;
+- High quality, detailed, photorealistic or stylized as appropriate`;
   }
 
   private calculateCost(model: string, size: string): number {

@@ -1061,10 +1061,15 @@ export class ParallelOrchestrator {
     const contentImageModel =
       agentConfig.content_image_model || "fal-ai/qwen-image";
 
+    // 從 strategyOutput 取得 imageGuidance（圖片風格和文字建議）
+    const imageGuidance = strategyOutput.imageGuidance;
+
     console.log("[Orchestrator] 🎨 Image models configuration:", {
       featuredImageModel,
       contentImageModel,
       usingSplitAgents: true,
+      hasImageGuidance: !!imageGuidance,
+      imageStyle: imageGuidance?.style?.substring(0, 50),
     });
 
     const featuredImageAgent = new FeaturedImageAgent(aiConfig, context);
@@ -1076,6 +1081,8 @@ export class ParallelOrchestrator {
         model: featuredImageModel,
         quality: "medium" as const,
         size: agentConfig.image_size,
+        imageStyle: imageGuidance?.style, // 從 Strategy 傳來的風格
+        imageText: imageGuidance?.featuredImageText, // 特色圖片的文字
         articleContext: {
           outline:
             strategyOutput.outline?.mainSections?.map((s) => s.heading) || [],
@@ -1092,6 +1099,8 @@ export class ParallelOrchestrator {
         model: contentImageModel,
         quality: "medium" as const,
         size: agentConfig.image_size,
+        imageStyle: imageGuidance?.style, // 從 Strategy 傳來的風格
+        sectionImageTexts: imageGuidance?.sectionImageTexts, // 各段落的圖片文字
       }),
     ]);
 

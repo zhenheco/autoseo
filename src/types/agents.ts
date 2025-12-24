@@ -236,11 +236,19 @@ export interface StrategyOutput {
     competitiveAdvantages: string[];
   };
   externalReferences?: ExternalReference[];
+  imageGuidance?: ImageGuidance; // 圖片生成指引
   executionInfo: {
     model?: string;
     executionTime: number;
     tokenUsage: { input: number; output: number };
   };
+}
+
+// 圖片生成指引類型
+export interface ImageGuidance {
+  style: string; // 圖片風格描述（如："professional, modern, minimalist"）
+  featuredImageText?: string; // 特色圖片的文字（可選）
+  sectionImageTexts?: string[]; // 各段落圖片的文字（每個 mainSection 對應一個）
 }
 
 // Writing Agent Types
@@ -354,6 +362,8 @@ export interface FeaturedImageInput {
     mainTopics?: string[];
     keywords?: string[];
   };
+  imageStyle?: string; // 從 Strategy 傳來的風格
+  imageText?: string; // 要在圖片中顯示的文字（用雙引號包起來）
 }
 
 export interface FeaturedImageOutput {
@@ -379,6 +389,8 @@ export interface ArticleImageInput {
   size: string;
   targetLanguage?: string;
   maxImages?: number;
+  imageStyle?: string; // 從 Strategy 傳來的風格
+  sectionImageTexts?: string[]; // 各段落的圖片文字
 }
 
 export interface ArticleImageOutput {

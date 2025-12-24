@@ -25,6 +25,10 @@ export interface ModelCapability {
 export const MODEL_CAPABILITIES: Record<string, ModelCapability> = {
   "deepseek-reasoner": { jsonMode: false, purpose: "reasoning" },
   "deepseek-chat": { jsonMode: true, purpose: "text-generation" },
+  "fal-ai/bytedance/seedream/v4/text-to-image": {
+    jsonMode: false,
+    purpose: "image-generation",
+  },
   "fal-ai/qwen-image": { jsonMode: false, purpose: "image-generation" },
   "gemini-3-pro-image-preview": {
     jsonMode: false,
@@ -626,9 +630,10 @@ export class AIClient {
       size?: string;
     },
   ): Promise<{ url: string; revisedPrompt?: string }> {
-    // 優先使用 fal.ai qwen-image
+    // 優先使用 fal.ai（Seedream v4 或 qwen-image）
     if (
       options.model.includes("fal-ai") ||
+      options.model.includes("seedream") ||
       options.model.includes("qwen-image")
     ) {
       return await this.callFalImageAPI(prompt, options);
@@ -648,8 +653,8 @@ export class AIClient {
   }
 
   /**
-   * 呼叫 fal.ai qwen-image API（透過 Cloudflare AI Gateway）
-   * 優點：速度快（約 3 秒）、直接返回 URL、成本低
+   * 呼叫 fal.ai API（支援 Seedream v4 和 qwen-image）
+   * Seedream v4: 支援文字渲染、高品質
    */
   private async callFalImageAPI(
     prompt: string,
@@ -659,44 +664,60 @@ export class AIClient {
       size?: string;
     },
   ): Promise<{ url: string; revisedPrompt?: string }> {
-    // 將 size 轉換為 fal.ai 的 image_size 格式
-    const imageSizeMap: Record<string, string> = {
-      "1024x1024": "square_hd",
-      "1792x1024": "landscape_16_9",
-      "1024x1792": "portrait_16_9",
-      "1280x720": "landscape_16_9",
-      "720x1280": "portrait_16_9",
-    };
-    const imageSize =
-      imageSizeMap[options.size || "1024x1024"] || "landscape_16_9";
+    // 判斷使用的模型
+    const isSeedream = options.model.includes("seedream");
+    const modelPath = isSeedream
+      ? "fal-ai/bytedance/seedream/v4/text-to-image"
+      : "fal-ai/qwen-image";
 
-    // 根據 quality 調整 inference steps
-    const stepsMap: Record<string, number> = {
-      low: 20,
-      medium: 28,
-      high: 35,
-      auto: 28,
-    };
-    const numInferenceSteps = stepsMap[options.quality || "medium"];
+    // Seedream v4 使用 auto_2K 格式，qwen-image 使用舊格式
+    let imageSize: string;
+    if (isSeedream) {
+      // Seedream v4 支援 auto_2K, auto_4K 或自訂尺寸
+      imageSize = "auto_2K";
+    } else {
+      // qwen-image 使用舊格式
+      const imageSizeMap: Record<string, string> = {
+        "1024x1024": "square_hd",
+        "1792x1024": "landscape_16_9",
+        "1024x1792": "portrait_16_9",
+        "1280x720": "landscape_16_9",
+        "720x1280": "portrait_16_9",
+      };
+      imageSize = imageSizeMap[options.size || "1024x1024"] || "landscape_16_9";
+    }
 
-    const falUrl = buildFalApiUrl("fal-ai/qwen-image");
+    const falUrl = buildFalApiUrl(modelPath);
     const falHeaders = buildFalHeaders();
 
     console.log(
-      `[AIClient] 🎨 Calling fal.ai qwen-image (size: ${imageSize}, steps: ${numInferenceSteps}, gateway: ${isGatewayEnabled()})`,
+      `[AIClient] 🎨 Calling fal.ai ${isSeedream ? "Seedream v4" : "qwen-image"} (size: ${imageSize}, gateway: ${isGatewayEnabled()})`,
     );
+
+    // Seedream v4 不需要 num_inference_steps 和 guidance_scale
+    const requestBody: Record<string, unknown> = {
+      prompt,
+      image_size: imageSize,
+      num_images: 1,
+    };
+
+    // 只有 qwen-image 需要這些參數
+    if (!isSeedream) {
+      const stepsMap: Record<string, number> = {
+        low: 20,
+        medium: 28,
+        high: 35,
+        auto: 28,
+      };
+      requestBody.num_inference_steps = stepsMap[options.quality || "medium"];
+      requestBody.guidance_scale = 3.5;
+      requestBody.output_format = "png";
+    }
 
     const response = await fetch(falUrl, {
       method: "POST",
       headers: falHeaders,
-      body: JSON.stringify({
-        prompt,
-        image_size: imageSize,
-        num_inference_steps: numInferenceSteps,
-        guidance_scale: 3.5,
-        num_images: 1,
-        output_format: "png",
-      }),
+      body: JSON.stringify(requestBody),
     });
 
     if (!response.ok) {
@@ -711,7 +732,7 @@ export class AIClient {
     }
 
     console.log(
-      `[AIClient] ✅ fal.ai qwen-image generated (${data.timings?.inference?.toFixed(2)}s)`,
+      `[AIClient] ✅ fal.ai ${isSeedream ? "Seedream v4" : "qwen-image"} generated (${data.timings?.inference?.toFixed(2) || "N/A"}s)`,
     );
 
     return {
