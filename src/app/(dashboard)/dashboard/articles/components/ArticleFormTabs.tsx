@@ -54,7 +54,7 @@ interface ArticleFormTabsProps {
 }
 
 export function ArticleFormTabs({
-  quotaStatus,
+  quotaStatus: _quotaStatus, // 保留供未來使用
   initialWebsiteId,
 }: ArticleFormTabsProps) {
   const t = useTranslations("articles");
@@ -89,24 +89,20 @@ export function ArticleFormTabs({
     }
   }, []);
 
-  // 當選擇網站時，自動載入網站設定
+  // 當選擇網站時，自動載入網站設定（含超時、重試、Fallback）
   useEffect(() => {
     if (!selectedWebsiteId) return;
 
     const fetchWebsiteSettings = async () => {
-      try {
-        const response = await fetch(
-          `/api/websites/${selectedWebsiteId}/settings`,
-        );
-        if (!response.ok) return;
+      const MAX_RETRIES = 2;
+      const TIMEOUT_MS = 5000; // 5 秒超時
 
-        const settings = await response.json();
-        console.log("[DEBUG] 網站設定 API 返回:", settings);
-
-        // 解析 API 回傳結構：successResponse 包裝為 { success: true, data: {...} }
-        const data = settings.data || settings;
-
-        // 使用單一 setTimeout 包裹所有狀態更新，避免 race condition
+      // 輔助函數：應用設定到 state
+      const applySettings = (data: {
+        industry?: string;
+        region?: string;
+        language?: string;
+      }) => {
         setTimeout(() => {
           // 主題：有值就用，沒有就清空
           setIndustry(data.industry || "");
@@ -131,8 +127,98 @@ export function ArticleFormTabs({
           // 語言：有值就用，沒有就用預設值 "zh-TW"
           setLanguage(data.language || "zh-TW");
         }, 0);
-      } catch (error) {
-        console.error("載入網站設定失敗:", error);
+      };
+
+      // 輔助函數：使用 localStorage fallback
+      const applyFallbackSettings = () => {
+        console.warn("[設定載入] 使用 localStorage/預設值作為 Fallback");
+        setTimeout(() => {
+          const storedIndustry = localStorage.getItem(STORAGE_KEYS.INDUSTRY);
+          const storedRegion = localStorage.getItem(STORAGE_KEYS.REGION);
+          const storedLanguage = localStorage.getItem(STORAGE_KEYS.LANGUAGE);
+
+          setIndustry(storedIndustry || "");
+          setRegion(storedRegion || "taiwan");
+          setLanguage(storedLanguage || "zh-TW");
+        }, 0);
+      };
+
+      // 輔助函數：通知 Admin 錯誤
+      const notifyError = async (errorMessage: string) => {
+        try {
+          await fetch("/api/admin/log-error", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              errorType: "API_TIMEOUT",
+              endpoint: `/api/websites/${selectedWebsiteId}/settings`,
+              errorMessage,
+              timestamp: new Date().toISOString(),
+            }),
+          });
+        } catch (e) {
+          console.error("通知 Admin 失敗:", e);
+        }
+      };
+
+      // 開始重試循環
+      for (let attempt = 1; attempt <= MAX_RETRIES; attempt++) {
+        const controller = new AbortController();
+        const timeoutId = window.setTimeout(
+          () => controller.abort(),
+          TIMEOUT_MS,
+        );
+
+        try {
+          console.log(`[設定載入] 嘗試 ${attempt}/${MAX_RETRIES}...`);
+
+          const response = await fetch(
+            `/api/websites/${selectedWebsiteId}/settings`,
+            { signal: controller.signal },
+          );
+          window.clearTimeout(timeoutId);
+
+          if (!response.ok) {
+            throw new Error(`HTTP ${response.status}`);
+          }
+
+          const settings = await response.json();
+          console.log("[設定載入] API 返回成功:", settings);
+
+          // 解析 API 回傳結構：successResponse 包裝為 { success: true, data: {...} }
+          const data = settings.data || settings;
+          applySettings(data);
+          return; // 成功，結束重試
+        } catch (error) {
+          window.clearTimeout(timeoutId);
+
+          const errorName =
+            error instanceof Error ? error.name : "UnknownError";
+          const errorMessage =
+            error instanceof Error ? error.message : String(error);
+
+          console.error(
+            `[設定載入] 嘗試 ${attempt}/${MAX_RETRIES} 失敗:`,
+            errorName,
+            errorMessage,
+          );
+
+          if (attempt === MAX_RETRIES) {
+            // 最後一次嘗試失敗
+            console.error("[設定載入] 所有重試均失敗，啟用 Fallback");
+
+            // 通知 Admin
+            notifyError(
+              `網站設定 API 連續 ${MAX_RETRIES} 次失敗 (${errorName}: ${errorMessage})`,
+            );
+
+            // 使用 Fallback
+            applyFallbackSettings();
+          } else {
+            // 等待 1 秒後重試
+            await new Promise((r) => setTimeout(r, 1000));
+          }
+        }
       }
     };
 

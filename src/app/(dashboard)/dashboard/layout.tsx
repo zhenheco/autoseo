@@ -13,7 +13,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { signOut } from "@/lib/auth";
-import { User, Settings, Gift } from "lucide-react";
+import { User, Settings } from "lucide-react";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import {
   DashboardLayoutClient,
@@ -74,14 +74,6 @@ export default async function DashboardLayout({
                   <div className="hidden md:block">
                     <NewArticleButton />
                   </div>
-
-                  {/* 好友推薦 - 手機版隱藏 */}
-                  <Link href="/dashboard/referrals" className="hidden md:block">
-                    <Button variant="ghost" size="sm" className="gap-2">
-                      <Gift className="h-4 w-4" />
-                      <span className="hidden sm:inline">好友推薦</span>
-                    </Button>
-                  </Link>
 
                   <ArticleQuotaDisplay compact />
 
