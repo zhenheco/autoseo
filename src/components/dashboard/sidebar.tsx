@@ -18,7 +18,6 @@ import {
   Users,
   Ticket,
   History,
-  Activity,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -35,11 +34,6 @@ const navItems = [
     titleKey: "websites",
     href: "/dashboard/websites",
     icon: Globe,
-  },
-  {
-    titleKey: "healthCheck",
-    href: "/dashboard/health-check",
-    icon: Activity,
   },
   {
     titleKey: "newArticle",
