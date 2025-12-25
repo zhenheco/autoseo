@@ -20,9 +20,15 @@ import {
   getTranslation,
 } from "@/lib/i18n/article-translations";
 
-const DEFAULT_MODEL = "fal-ai/qwen-image";
+const DEFAULT_MODEL = "fal-ai/bytedance/seedream/v4/text-to-image";
 
 const IMAGE_PRICING: Record<string, Record<string, number>> = {
+  // fal.ai Seedream v4 定價（支援文字渲染，每張圖約 $0.005）
+  "fal-ai/bytedance/seedream/v4/text-to-image": {
+    "1024x1024": 0.005,
+    "1792x1024": 0.005,
+    auto_2K: 0.005,
+  },
   // fal.ai qwen-image 定價（每張圖約 $0.003）
   "fal-ai/qwen-image": { "1024x1024": 0.003, "1792x1024": 0.003 },
   "gpt-image-1-mini": { "1024x1024": 0.015, "1792x1024": 0.03 },

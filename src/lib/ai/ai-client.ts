@@ -608,10 +608,10 @@ export class AIClient {
   ): Promise<{ url: string; revisedPrompt?: string }> {
     const MAX_RETRIES = 3;
 
-    // 統一使用 fal-ai/qwen-image
+    // 統一使用 fal-ai Seedream v4（支援文字渲染）
     const result = await this.tryGenerateWithRetries(
       prompt,
-      { ...options, model: "fal-ai/qwen-image" },
+      { ...options, model: "fal-ai/bytedance/seedream/v4/text-to-image" },
       MAX_RETRIES,
     );
 
