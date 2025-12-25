@@ -103,10 +103,80 @@ export async function POST(
 
     console.log(`[Health Check API] Job created: ${job.id} for ${urlToCheck}`);
 
+    // 觸發 GitHub Actions workflow（避免等待 cron schedule）
+    try {
+      const githubToken = process.env.GITHUB_TOKEN;
+      const githubOwner = process.env.GITHUB_REPO_OWNER;
+      const githubRepo = process.env.GITHUB_REPO_NAME;
+
+      if (githubToken && githubOwner && githubRepo) {
+        // 使用 AbortController 設定 5 秒超時（避免阻塞過久）
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000);
+
+        try {
+          const response = await fetch(
+            `https://api.github.com/repos/${githubOwner}/${githubRepo}/dispatches`,
+            {
+              method: "POST",
+              headers: {
+                Authorization: `Bearer ${githubToken}`,
+                Accept: "application/vnd.github.v3+json",
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                event_type: "health-check-jobs-created",
+                client_payload: {
+                  jobId: job.id,
+                  websiteId: websiteId,
+                  timestamp: new Date().toISOString(),
+                },
+              }),
+              signal: controller.signal,
+            },
+          );
+          clearTimeout(timeoutId);
+
+          if (response.ok) {
+            console.log(
+              `[Health Check API] ✅ Triggered GitHub Actions for job ${job.id}`,
+            );
+          } else {
+            const errorText = await response.text();
+            console.warn(
+              `[Health Check API] ⚠️ Workflow trigger failed: ${response.status}`,
+              errorText,
+            );
+            // 不影響 job 創建，讓定時任務處理
+          }
+        } catch (fetchError) {
+          clearTimeout(timeoutId);
+          if (fetchError instanceof Error && fetchError.name === "AbortError") {
+            console.warn(
+              "[Health Check API] ⚠️ GitHub API timeout (5s), job will be processed by scheduler",
+            );
+          } else {
+            console.error("[Health Check API] ❌ Trigger error:", fetchError);
+          }
+          // 不影響 job 創建，讓定時任務處理
+        }
+      } else {
+        console.log(
+          "[Health Check API] ⚠️ GitHub configuration incomplete, workflow will run on schedule",
+        );
+      }
+    } catch (dispatchError) {
+      console.error(
+        "[Health Check API] ⚠️ Error triggering workflow:",
+        dispatchError,
+      );
+      // 不影響 job 創建
+    }
+
     return NextResponse.json({
       success: true,
       job,
-      message: "健康檢查任務已建立，將在背景處理中",
+      message: "健康檢查任務已建立，正在背景處理中",
     });
   } catch (error) {
     console.error("[Health Check API] Error:", error);
