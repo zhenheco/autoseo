@@ -8,7 +8,7 @@ import { successResponse, internalError } from "@/lib/api/response-helpers";
 export const GET = withCompany(async (request, { supabase, companyId }) => {
   const { data: websites, error } = await supabase
     .from("website_configs")
-    .select("id, website_name, base_url, slug_prefix")
+    .select("id, website_name, wordpress_url")
     .eq("company_id", companyId)
     .order("website_name");
 
@@ -21,7 +21,7 @@ export const GET = withCompany(async (request, { supabase, companyId }) => {
   const mappedWebsites = (websites || []).map((w) => ({
     id: w.id,
     name: w.website_name,
-    site_url: w.base_url,
+    site_url: w.wordpress_url,
   }));
 
   return successResponse(mappedWebsites);
