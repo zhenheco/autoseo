@@ -34,6 +34,7 @@
     "home": "Home",
     "dashboard": "Dashboard",
     "websites": "Websites",
+    "healthCheck": "Health Check",
     "newArticle": "New Article",
     "articleManagement": "Articles",
     "subscription": "Subscription",
@@ -50,6 +51,20 @@
     "paymentTest": "Payment Test",
     "customerService": "Support",
     "blog": "Blog"
+  },
+  "healthCheck": {
+    "description": "Check your website performance, SEO and Core Web Vitals",
+    "neverChecked": "Never checked",
+    "completed": "Completed",
+    "processing": "Processing",
+    "pending": "Pending",
+    "failed": "Failed",
+    "noWebsites": "You haven't added any websites yet",
+    "addWebsite": "Add Website",
+    "noUrl": "No URL configured",
+    "viewResults": "View Results",
+    "startCheck": "Start Check",
+    "retry": "Retry"
   },
   "auth": {
     "welcomeTitle": "Welcome to 1waySEO",

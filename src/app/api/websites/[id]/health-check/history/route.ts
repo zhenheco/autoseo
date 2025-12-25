@@ -3,15 +3,15 @@ import { createClient } from "@/lib/supabase/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 /**
- * GET /api/websites/[websiteId]/health-check/history
+ * GET /api/websites/[id]/health-check/history
  * 取得健康檢查歷史記錄
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ websiteId: string }> },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { websiteId } = await params;
+    const { id: websiteId } = await params;
     const { searchParams } = new URL(request.url);
     const limit = Math.min(parseInt(searchParams.get("limit") || "10"), 50);
     const offset = parseInt(searchParams.get("offset") || "0");

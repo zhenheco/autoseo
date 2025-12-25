@@ -4,7 +4,7 @@ import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 import type { CreateHealthCheckJobRequest } from "@/types/health-check";
 
 /**
- * POST /api/websites/[websiteId]/health-check
+ * POST /api/websites/[id]/health-check
  * 建立健康檢查任務（只建立 job，不執行檢查）
  *
  * 這個 API 設計為極輕量：
@@ -16,10 +16,10 @@ import type { CreateHealthCheckJobRequest } from "@/types/health-check";
  */
 export async function POST(
   request: NextRequest,
-  { params }: { params: Promise<{ websiteId: string }> },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { websiteId } = await params;
+    const { id: websiteId } = await params;
     const body: CreateHealthCheckJobRequest = await request.json();
 
     // 驗證用戶身份
@@ -117,15 +117,15 @@ export async function POST(
 }
 
 /**
- * GET /api/websites/[websiteId]/health-check
+ * GET /api/websites/[id]/health-check
  * 取得最新的健康檢查結果
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ websiteId: string }> },
+  { params }: { params: Promise<{ id: string }> },
 ) {
   try {
-    const { websiteId } = await params;
+    const { id: websiteId } = await params;
 
     // 驗證用戶身份
     const cookieClient = await createClient();

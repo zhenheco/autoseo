@@ -34,6 +34,7 @@
     "home": "首頁",
     "dashboard": "儀表板",
     "websites": "網站管理",
+    "healthCheck": "網站健檢",
     "newArticle": "寫新文章",
     "articleManagement": "文章管理",
     "subscription": "訂閱方案",
@@ -50,6 +51,20 @@
     "paymentTest": "付款測試",
     "customerService": "客服信箱",
     "blog": "部落格"
+  },
+  "healthCheck": {
+    "description": "檢查您的網站效能、SEO 和 Core Web Vitals",
+    "neverChecked": "尚未檢查",
+    "completed": "已完成",
+    "processing": "檢查中",
+    "pending": "等待中",
+    "failed": "失敗",
+    "noWebsites": "您還沒有新增任何網站",
+    "addWebsite": "新增網站",
+    "noUrl": "未設定網址",
+    "viewResults": "查看結果",
+    "startCheck": "開始檢查",
+    "retry": "重試"
   },
   "auth": {
     "welcomeTitle": "歡迎使用 1waySEO",

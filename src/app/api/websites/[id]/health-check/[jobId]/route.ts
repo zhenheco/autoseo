@@ -3,15 +3,15 @@ import { createClient } from "@/lib/supabase/server";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 /**
- * GET /api/websites/[websiteId]/health-check/[jobId]
+ * GET /api/websites/[id]/health-check/[jobId]
  * 取得特定健康檢查任務的狀態和結果
  */
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ websiteId: string; jobId: string }> },
+  { params }: { params: Promise<{ id: string; jobId: string }> },
 ) {
   try {
-    const { websiteId, jobId } = await params;
+    const { id: websiteId, jobId } = await params;
 
     // 驗證用戶身份
     const cookieClient = await createClient();
