@@ -3,6 +3,8 @@
  * 避免在生產環境洩漏敏感資訊
  */
 
+import { ErrorNotificationService } from "@/lib/notifications/error-notification-service";
+
 /**
  * 安全的錯誤訊息提取
  * 在生產環境中隱藏詳細錯誤訊息，只返回通用訊息
@@ -23,16 +25,110 @@ export function getSafeErrorMessage(error: unknown): string {
 }
 
 /**
+ * CRITICAL 錯誤關鍵字清單
+ * 包含這些關鍵字的錯誤會被視為 CRITICAL 並發送通知
+ */
+const CRITICAL_ERROR_PATTERNS = [
+  // 資料庫相關
+  "connection refused",
+  "connection reset",
+  "database connection",
+  "supabase",
+  "postgres",
+  // 認證相關
+  "authentication failed",
+  "unauthorized",
+  "invalid token",
+  "jwt expired",
+  // 支付相關
+  "payment failed",
+  "billing error",
+  "stripe error",
+  // 系統相關
+  "out of memory",
+  "heap out of memory",
+  "fatal error",
+  "uncaught exception",
+  "unhandled rejection",
+];
+
+/**
+ * 判斷是否為 CRITICAL 錯誤
+ */
+function isCriticalError(error: unknown): boolean {
+  const message =
+    error instanceof Error
+      ? error.message.toLowerCase()
+      : String(error).toLowerCase();
+
+  return CRITICAL_ERROR_PATTERNS.some((pattern) => message.includes(pattern));
+}
+
+/**
+ * 分類錯誤類型
+ */
+function categorizeError(error: unknown): string {
+  const message =
+    error instanceof Error
+      ? error.message.toLowerCase()
+      : String(error).toLowerCase();
+
+  if (message.includes("timeout") || message.includes("etimedout")) {
+    return "timeout";
+  }
+  if (
+    message.includes("network") ||
+    message.includes("econnreset") ||
+    message.includes("connection")
+  ) {
+    return "network";
+  }
+  if (message.includes("parse") || message.includes("json")) {
+    return "parsing";
+  }
+  if (message.includes("validation") || message.includes("invalid")) {
+    return "validation";
+  }
+  if (message.includes("api") || message.includes("model")) {
+    return "ai_api";
+  }
+  if (message.includes("rate") || message.includes("limit")) {
+    return "rate_limit";
+  }
+
+  return "unknown";
+}
+
+/**
  * 安全的錯誤日誌記錄
  * 在伺服器端記錄詳細錯誤，但不返回給客戶端
+ * 如果是 CRITICAL 錯誤，會發送郵件通知給管理員
  */
 export function logError(context: string, error: unknown): void {
   console.error(`[${context}]`, error);
 
-  // TODO: 整合錯誤追蹤服務（如 Sentry）
-  // if (process.env.ERROR_TRACKING_ENABLED === 'true') {
-  //   Sentry.captureException(error, { tags: { context } })
-  // }
+  // 判斷是否為 CRITICAL 錯誤並發送通知
+  if (isCriticalError(error)) {
+    const errorMessage = error instanceof Error ? error.message : String(error);
+    const errorStack = error instanceof Error ? error.stack : undefined;
+
+    ErrorNotificationService.getInstance()
+      .notify({
+        id: `api_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+        category: categorizeError(error),
+        severity: "critical",
+        message: errorMessage,
+        stack: errorStack,
+        context: {
+          source: "api",
+          endpoint: context,
+        },
+        timestamp: new Date().toISOString(),
+      })
+      .catch((notifyError) => {
+        console.error("[logError] 發送錯誤通知失敗:", notifyError);
+      });
+  }
 }
 
 /**

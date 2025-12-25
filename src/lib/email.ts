@@ -387,3 +387,188 @@ export async function sendScheduleAlertEmail({
 
   return sendEmail({ to, subject, html });
 }
+
+/**
+ * 錯誤告警 Email 參數
+ */
+export interface ErrorAlertEmailParams {
+  error: {
+    id: string;
+    severity: string;
+    category: string;
+    message: string;
+    stack?: string;
+    source: string;
+    agentName?: string;
+    endpoint?: string;
+    articleJobId?: string;
+    companyId?: string;
+    timestamp: string;
+  };
+}
+
+/**
+ * 發送系統錯誤告警郵件給管理員
+ * 用於 CRITICAL 等級的錯誤通知
+ */
+export async function sendErrorAlertEmail({
+  error,
+}: ErrorAlertEmailParams): Promise<boolean> {
+  // 從環境變數獲取管理員 Email 列表
+  const adminEmails =
+    process.env.ADMIN_EMAILS || process.env.SUPER_ADMIN_EMAILS || "";
+  const recipients = adminEmails.split(",").filter((e) => e.trim());
+
+  if (recipients.length === 0) {
+    console.error("❌ 無法發送錯誤告警：未設定 ADMIN_EMAILS 環境變數");
+    return false;
+  }
+
+  const appUrl = process.env.NEXT_PUBLIC_APP_URL || "https://1wayseo.com";
+
+  // 格式化時間為台灣時區
+  const formattedTime = new Date(error.timestamp).toLocaleString("zh-TW", {
+    timeZone: "Asia/Taipei",
+  });
+
+  // 類別翻譯
+  const categoryTranslation: Record<string, string> = {
+    network: "網路錯誤",
+    ai_api: "AI API 錯誤",
+    timeout: "超時錯誤",
+    rate_limit: "限速錯誤",
+    parsing: "解析錯誤",
+    validation: "驗證錯誤",
+    logic: "邏輯錯誤",
+    unknown: "未知錯誤",
+  };
+
+  // 來源翻譯
+  const sourceTranslation: Record<string, string> = {
+    agent: "Agent 代理",
+    api: "API 端點",
+    cron: "排程任務",
+  };
+
+  const categoryName =
+    categoryTranslation[error.category.toLowerCase()] || error.category;
+  const sourceName =
+    sourceTranslation[error.source.toLowerCase()] || error.source;
+
+  // 簡短錯誤訊息（用於標題）
+  const shortMessage =
+    error.message.length > 50
+      ? error.message.substring(0, 50) + "..."
+      : error.message;
+
+  const subject = `[1waySEO CRITICAL] ${categoryName} - ${shortMessage}`;
+
+  // Stack trace 格式化（限制長度）
+  const stackTrace = error.stack
+    ? error.stack.split("\n").slice(0, 10).join("\n")
+    : "無堆疊追蹤資訊";
+
+  const html = `
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+</head>
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5;">
+  <div style="max-width: 700px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
+    <!-- 告警標題 -->
+    <div style="background-color: #FEE2E2; border-left: 4px solid #DC2626; padding: 20px;">
+      <h2 style="color: #991B1B; margin: 0 0 10px 0;">🚨 系統嚴重錯誤</h2>
+      <p style="color: #374151; margin: 0; font-size: 14px;">
+        偵測到 <strong style="color: #DC2626;">CRITICAL</strong> 等級的系統錯誤
+      </p>
+    </div>
+
+    <!-- 錯誤資訊摘要 -->
+    <div style="padding: 20px; background-color: #f9fafb; border-bottom: 1px solid #e5e7eb;">
+      <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
+        <tr>
+          <td style="padding: 8px 0; color: #6b7280; width: 100px;">錯誤 ID</td>
+          <td style="padding: 8px 0; color: #374151; font-family: monospace; font-size: 12px;">${error.id}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #6b7280;">類別</td>
+          <td style="padding: 8px 0; color: #374151;">${categoryName}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #6b7280;">來源</td>
+          <td style="padding: 8px 0; color: #374151;">${sourceName}${error.agentName ? ` - ${error.agentName}` : ""}${error.endpoint ? ` (${error.endpoint})` : ""}</td>
+        </tr>
+        <tr>
+          <td style="padding: 8px 0; color: #6b7280;">時間</td>
+          <td style="padding: 8px 0; color: #374151;">${formattedTime}</td>
+        </tr>
+        ${
+          error.articleJobId
+            ? `
+        <tr>
+          <td style="padding: 8px 0; color: #6b7280;">任務 ID</td>
+          <td style="padding: 8px 0; color: #374151; font-family: monospace; font-size: 12px;">${error.articleJobId}</td>
+        </tr>
+        `
+            : ""
+        }
+        ${
+          error.companyId
+            ? `
+        <tr>
+          <td style="padding: 8px 0; color: #6b7280;">公司 ID</td>
+          <td style="padding: 8px 0; color: #374151; font-family: monospace; font-size: 12px;">${error.companyId}</td>
+        </tr>
+        `
+            : ""
+        }
+      </table>
+    </div>
+
+    <!-- 錯誤訊息 -->
+    <div style="padding: 20px;">
+      <h3 style="color: #374151; margin: 0 0 12px 0; font-size: 14px;">📋 錯誤訊息</h3>
+      <div style="background-color: #FEF2F2; border: 1px solid #FECACA; border-radius: 6px; padding: 16px;">
+        <p style="color: #991B1B; margin: 0; font-size: 14px; white-space: pre-wrap; word-break: break-word;">${error.message}</p>
+      </div>
+    </div>
+
+    <!-- Stack Trace -->
+    <div style="padding: 0 20px 20px;">
+      <h3 style="color: #374151; margin: 0 0 12px 0; font-size: 14px;">📜 Stack Trace</h3>
+      <div style="background-color: #1F2937; border-radius: 6px; padding: 16px; overflow-x: auto;">
+        <pre style="color: #D1D5DB; margin: 0; font-size: 12px; font-family: 'Monaco', 'Menlo', monospace; white-space: pre-wrap; word-break: break-all;">${stackTrace}</pre>
+      </div>
+    </div>
+
+    <!-- 行動按鈕 -->
+    <div style="padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+      <a href="${appUrl}/admin/logs"
+         style="display: inline-block; background-color: #2563EB; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500;">
+        前往後台查看
+      </a>
+    </div>
+
+    <!-- 頁腳 -->
+    <div style="background-color: #F9FAFB; padding: 16px 20px; text-align: center; color: #6B7280; font-size: 12px;">
+      此郵件由 1WaySEO 錯誤監控系統自動發送，請勿直接回覆
+    </div>
+  </div>
+</body>
+</html>
+  `;
+
+  // 發送給所有管理員
+  let success = true;
+  for (const recipient of recipients) {
+    const result = await sendEmail({
+      to: recipient.trim(),
+      subject,
+      html,
+    });
+    if (!result) success = false;
+  }
+
+  return success;
+}
