@@ -17,5 +17,12 @@ export const GET = withCompany(async (request, { supabase, companyId }) => {
     return internalError("獲取網站列表失敗");
   }
 
-  return successResponse(websites || []);
+  // 映射為前端期望的欄位名稱
+  const mappedWebsites = (websites || []).map((w) => ({
+    id: w.id,
+    name: w.website_name,
+    site_url: w.base_url,
+  }));
+
+  return successResponse(mappedWebsites);
 });
