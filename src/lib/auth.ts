@@ -32,6 +32,12 @@ export async function signUp(email: string, password: string) {
   if (authError) throw authError;
   if (!authData.user) throw new Error("註冊失敗");
 
+  // 檢查是否為「假成功」（用戶已存在但未驗證）
+  // Supabase 為防止用戶枚舉攻擊，不會返回錯誤，而是返回 identities 為空的響應
+  if (authData.user.identities && authData.user.identities.length === 0) {
+    throw new Error("User already registered");
+  }
+
   console.log("[註冊] Step 1 完成: 使用者帳號建立成功", authData.user.id);
 
   // 2. 建立公司（使用 admin client 避免 RLS 限制）
