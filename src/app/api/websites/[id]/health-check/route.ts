@@ -41,11 +41,12 @@ export async function POST(
     // 驗證網站存在且用戶有權限
     const { data: website, error: websiteError } = await supabase
       .from("website_configs")
-      .select("id, site_url, company_id")
+      .select("id, wordpress_url, company_id")
       .eq("id", websiteId)
       .single();
 
     if (websiteError || !website) {
+      console.error("[Health Check API] Website query error:", websiteError);
       return NextResponse.json({ error: "Website not found" }, { status: 404 });
     }
 
@@ -66,7 +67,7 @@ export async function POST(
     }
 
     // 決定要檢查的 URL
-    const urlToCheck = body.url || website.site_url;
+    const urlToCheck = body.url || website.wordpress_url;
 
     if (!urlToCheck) {
       return NextResponse.json(
