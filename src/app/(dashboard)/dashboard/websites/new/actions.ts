@@ -33,6 +33,18 @@ export async function createWebsite(formData: FormData) {
   const targetAudience = formData.get("targetAudience") as string;
   const writingStyle = formData.get("writingStyle") as string;
 
+  // 自動發文設定
+  const autoScheduleEnabled =
+    formData.get("autoScheduleEnabled")?.toString().trim() === "true";
+  const scheduleType =
+    (formData.get("scheduleType")?.toString().trim() as "daily" | "interval") ||
+    "daily";
+  const dailyArticleLimit =
+    parseInt(formData.get("dailyArticleLimit")?.toString().trim() || "3") || 3;
+  const scheduleIntervalDays =
+    parseInt(formData.get("scheduleIntervalDays")?.toString().trim() || "3") ||
+    3;
+
   if (!companyId || !siteName || !siteUrl || !wpUsername || !wpPassword) {
     redirect(
       "/dashboard/websites/new?error=" + encodeURIComponent("缺少必要欄位"),
@@ -125,6 +137,11 @@ export async function createWebsite(formData: FormData) {
       target_audience: targetAudience || "",
       writing_style: writingStyle || "專業正式",
     },
+    // 自動發文設定
+    auto_schedule_enabled: autoScheduleEnabled,
+    schedule_type: scheduleType,
+    daily_article_limit: dailyArticleLimit,
+    schedule_interval_days: scheduleIntervalDays,
   });
 
   if (error) {

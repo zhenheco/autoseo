@@ -16,6 +16,7 @@ import {
   decryptWordPressPassword,
   isEncrypted,
 } from "@/lib/security/token-encryption";
+import { syncCompanyOwnerToBrevo } from "@/lib/brevo";
 
 export const POST = withCompany(
   async (request: NextRequest, { supabase, companyId }) => {
@@ -92,6 +93,11 @@ export const POST = withCompany(
           })
           .eq("id", article.article_job_id);
       }
+
+      // 同步到 Brevo（更新 ARTICLES_PUBLISHED 等屬性）
+      syncCompanyOwnerToBrevo(companyId).catch((error) => {
+        console.error("[Publish] Brevo 同步失敗（不影響發布）:", error);
+      });
 
       return successResponse({
         published_at: now,
@@ -176,6 +182,11 @@ export const POST = withCompany(
           })
           .eq("id", article.article_job_id);
       }
+
+      // 同步到 Brevo（更新 ARTICLES_PUBLISHED 等屬性）
+      syncCompanyOwnerToBrevo(companyId).catch((error) => {
+        console.error("[Publish] Brevo 同步失敗（不影響發布）:", error);
+      });
 
       return successResponse({
         wordpress_post_id: publishResult.post.id,
