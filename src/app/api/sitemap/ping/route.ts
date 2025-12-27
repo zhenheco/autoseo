@@ -36,6 +36,25 @@ export async function POST(request: NextRequest) {
     const sitemapUrl = body.sitemapUrl;
     const pingAll = body.all === true;
 
+    // 驗證 sitemapUrl 格式和域名
+    if (sitemapUrl) {
+      try {
+        const url = new URL(sitemapUrl);
+        // 只允許 1wayseo.com 域名
+        if (!url.hostname.endsWith("1wayseo.com")) {
+          return NextResponse.json(
+            { error: "Invalid sitemap URL: only 1wayseo.com domain allowed" },
+            { status: 400 },
+          );
+        }
+      } catch {
+        return NextResponse.json(
+          { error: "Invalid sitemap URL format" },
+          { status: 400 },
+        );
+      }
+    }
+
     let results;
 
     if (pingAll) {

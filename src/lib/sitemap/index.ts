@@ -9,12 +9,23 @@ import type { UrlEntryOptions, SitemapIndexEntry } from "./types";
 // Supabase client (延遲初始化，避免模組載入時環境變數尚未就緒)
 let _supabase: SupabaseClient | null = null;
 
+/**
+ * 取得 Supabase client（延遲初始化）
+ * @returns Supabase client 實例
+ * @throws Error 如果環境變數未設定
+ */
 function getSupabase(): SupabaseClient {
   if (!_supabase) {
-    _supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    );
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error(
+        "[Sitemap] 缺少必要環境變數: NEXT_PUBLIC_SUPABASE_URL 或 SUPABASE_SERVICE_ROLE_KEY",
+      );
+    }
+
+    _supabase = createClient(supabaseUrl, supabaseKey);
   }
   return _supabase;
 }
@@ -24,6 +35,7 @@ export const BASE_URL = "https://1wayseo.com";
 
 /**
  * 取得 Platform Blog 的 ID
+ * @returns Platform Blog 的 ID，如果不存在則返回 null
  */
 export async function getPlatformBlogId(): Promise<string | null> {
   const { data } = await getSupabase()
@@ -36,17 +48,22 @@ export async function getPlatformBlogId(): Promise<string | null> {
 }
 
 /**
- * 格式化日期為 ISO 8601 格式（台灣時區 +08:00）
+ * 格式化日期為 ISO 8601 格式（UTC）
+ * 使用 UTC 格式確保時間戳記正確，搜尋引擎完全支援
+ * @param date 日期物件或字串
+ * @returns ISO 8601 格式的日期字串
  */
 export function formatDate(date: Date | string): string {
-  const d = new Date(date);
-  return d.toISOString().replace("Z", "+08:00");
+  return new Date(date).toISOString();
 }
 
 /**
  * XML 轉義特殊字元
+ * @param str 要轉義的字串
+ * @returns 轉義後的安全 XML 字串
  */
-export function escapeXml(str: string): string {
+export function escapeXml(str: string | null | undefined): string {
+  if (!str) return "";
   return str
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
@@ -57,6 +74,10 @@ export function escapeXml(str: string): string {
 
 /**
  * 生成 xhtml:link hreflang 標籤
+ * @param baseUrl 網站基礎 URL
+ * @param originalSlug 原文文章的 slug
+ * @param translations 翻譯版本陣列
+ * @returns 多語系 hreflang 標籤字串
  */
 export function generateHreflangLinks(
   baseUrl: string,
@@ -85,6 +106,8 @@ export function generateHreflangLinks(
 
 /**
  * 生成單個 URL 條目
+ * @param options URL 條目選項（loc、lastmod、changefreq 等）
+ * @returns XML 格式的 URL 條目字串
  */
 export function generateUrlEntry(options: UrlEntryOptions): string {
   const { loc, lastmod, changefreq, priority, imageUrl, hreflangLinks } =
@@ -138,6 +161,7 @@ export function generateSitemapHeader(
 
 /**
  * 生成 Sitemap XML footer
+ * @returns Sitemap XML 結尾標籤
  */
 export function generateSitemapFooter(): string {
   return `</urlset>`;
@@ -145,6 +169,7 @@ export function generateSitemapFooter(): string {
 
 /**
  * 生成 Sitemap Index header
+ * @returns Sitemap Index XML 開頭標籤
  */
 export function generateSitemapIndexHeader(): string {
   return `<?xml version="1.0" encoding="UTF-8"?>
@@ -154,6 +179,7 @@ export function generateSitemapIndexHeader(): string {
 
 /**
  * 生成 Sitemap Index footer
+ * @returns Sitemap Index XML 結尾標籤
  */
 export function generateSitemapIndexFooter(): string {
   return `</sitemapindex>`;
@@ -161,6 +187,8 @@ export function generateSitemapIndexFooter(): string {
 
 /**
  * 生成 Sitemap Index 條目
+ * @param entry Sitemap Index 條目資料
+ * @returns XML 格式的 sitemap 條目
  */
 export function generateSitemapIndexEntry(entry: SitemapIndexEntry): string {
   return `  <sitemap>
@@ -171,6 +199,7 @@ export function generateSitemapIndexEntry(entry: SitemapIndexEntry): string {
 
 /**
  * 取得所有已發布文章（用於 sitemap）
+ * @returns 已發布文章陣列，包含翻譯資訊
  */
 export async function getPublishedArticles() {
   const platformBlogId = await getPlatformBlogId();
@@ -208,6 +237,7 @@ export async function getPublishedArticles() {
 
 /**
  * 取得所有分類（從已發布文章）
+ * @returns 分類名稱陣列
  */
 export async function getPublishedCategories(): Promise<string[]> {
   const platformBlogId = await getPlatformBlogId();
@@ -235,6 +265,7 @@ export async function getPublishedCategories(): Promise<string[]> {
 
 /**
  * 取得所有標籤（從已發布文章）
+ * @returns 標籤名稱陣列
  */
 export async function getPublishedTags(): Promise<string[]> {
   const platformBlogId = await getPlatformBlogId();
@@ -262,6 +293,7 @@ export async function getPublishedTags(): Promise<string[]> {
 
 /**
  * 取得最新文章更新時間
+ * @returns 最新文章的更新時間，如果沒有文章則返回當前時間
  */
 export async function getLatestArticleUpdate(): Promise<Date> {
   const platformBlogId = await getPlatformBlogId();
@@ -285,6 +317,9 @@ export async function getLatestArticleUpdate(): Promise<Date> {
 
 /**
  * 建立標準 Sitemap Response
+ * @param xml Sitemap XML 內容
+ * @param cacheMaxAge 快取時間（秒），預設 3600
+ * @returns HTTP Response 物件
  */
 export function createSitemapResponse(
   xml: string,
