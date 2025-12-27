@@ -3,14 +3,21 @@
  * 從現有 sitemap.xml/route.ts 提取並模組化
  */
 
-import { createClient } from "@supabase/supabase-js";
+import { createClient, SupabaseClient } from "@supabase/supabase-js";
 import type { UrlEntryOptions, SitemapIndexEntry } from "./types";
 
-// Supabase client (使用 service role)
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-);
+// Supabase client (延遲初始化，避免模組載入時環境變數尚未就緒)
+let _supabase: SupabaseClient | null = null;
+
+function getSupabase(): SupabaseClient {
+  if (!_supabase) {
+    _supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    );
+  }
+  return _supabase;
+}
 
 // 網站基礎 URL
 export const BASE_URL = "https://1wayseo.com";
@@ -19,7 +26,7 @@ export const BASE_URL = "https://1wayseo.com";
  * 取得 Platform Blog 的 ID
  */
 export async function getPlatformBlogId(): Promise<string | null> {
-  const { data } = await supabase
+  const { data } = await getSupabase()
     .from("website_configs")
     .select("id")
     .eq("is_platform_blog", true)
@@ -172,7 +179,7 @@ export async function getPublishedArticles() {
     return [];
   }
 
-  const { data } = await supabase
+  const { data } = await getSupabase()
     .from("generated_articles")
     .select(
       `
@@ -204,7 +211,7 @@ export async function getPublishedCategories(): Promise<string[]> {
     return [];
   }
 
-  const { data } = await supabase
+  const { data } = await getSupabase()
     .from("generated_articles")
     .select("categories")
     .eq("published_to_website_id", platformBlogId)
@@ -231,7 +238,7 @@ export async function getPublishedTags(): Promise<string[]> {
     return [];
   }
 
-  const { data } = await supabase
+  const { data } = await getSupabase()
     .from("generated_articles")
     .select("tags")
     .eq("published_to_website_id", platformBlogId)
@@ -258,7 +265,7 @@ export async function getLatestArticleUpdate(): Promise<Date> {
     return new Date();
   }
 
-  const { data } = await supabase
+  const { data } = await getSupabase()
     .from("generated_articles")
     .select("updated_at")
     .eq("published_to_website_id", platformBlogId)
