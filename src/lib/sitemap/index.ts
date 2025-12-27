@@ -179,14 +179,14 @@ export async function getPublishedArticles() {
     return [];
   }
 
-  const { data } = await getSupabase()
+  const { data, error } = await getSupabase()
     .from("generated_articles")
     .select(
       `
       id,
       slug,
       updated_at,
-      cover_image_url,
+      featured_image_url,
       article_translations (
         target_language,
         slug,
@@ -197,6 +197,11 @@ export async function getPublishedArticles() {
     .eq("published_to_website_id", platformBlogId)
     .eq("status", "published")
     .not("slug", "is", null);
+
+  if (error) {
+    console.error("[Sitemap] getPublishedArticles error:", error);
+    return [];
+  }
 
   return data || [];
 }

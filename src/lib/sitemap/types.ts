@@ -36,7 +36,7 @@ export interface ArticleForSitemap {
   id: string;
   slug: string;
   updated_at: string;
-  cover_image_url?: string | null;
+  featured_image_url?: string | null;
   article_translations: Array<{
     target_language: string;
     slug: string;

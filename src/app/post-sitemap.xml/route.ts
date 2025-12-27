@@ -61,7 +61,7 @@ export async function GET() {
           lastmod: formatDate(article.updated_at),
           changefreq: "weekly",
           priority: "0.7",
-          imageUrl: article.cover_image_url,
+          imageUrl: article.featured_image_url,
           hreflangLinks,
         }),
       );
