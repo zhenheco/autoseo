@@ -4,6 +4,7 @@
  */
 
 import { NextRequest } from "next/server";
+import { revalidatePath } from "next/cache";
 import { withCompany, extractPathParams } from "@/lib/api/auth-middleware";
 import {
   successResponse,
@@ -17,6 +18,28 @@ import {
   isEncrypted,
 } from "@/lib/security/token-encryption";
 import { syncCompanyOwnerToBrevo } from "@/lib/brevo";
+import { pingAllSearchEngines } from "@/lib/sitemap/ping-service";
+
+/**
+ * 文章發布後觸發 sitemap 更新和搜尋引擎 ping
+ */
+async function revalidateSitemapAndPing(): Promise<void> {
+  try {
+    // Revalidate 相關 sitemap 路徑
+    revalidatePath("/sitemap.xml");
+    revalidatePath("/post-sitemap.xml");
+    revalidatePath("/category-sitemap.xml");
+    revalidatePath("/tag-sitemap.xml");
+    console.log("[Publish] Sitemap revalidated");
+
+    // Ping 搜尋引擎（非同步，不阻塞返回）
+    pingAllSearchEngines().catch((error) => {
+      console.error("[Publish] Sitemap ping 失敗:", error);
+    });
+  } catch (error) {
+    console.error("[Publish] Sitemap revalidate 失敗:", error);
+  }
+}
 
 export const POST = withCompany(
   async (request: NextRequest, { supabase, companyId }) => {
@@ -98,6 +121,9 @@ export const POST = withCompany(
       syncCompanyOwnerToBrevo(companyId).catch((error) => {
         console.error("[Publish] Brevo 同步失敗（不影響發布）:", error);
       });
+
+      // 觸發 sitemap 更新和搜尋引擎 ping
+      revalidateSitemapAndPing();
 
       return successResponse({
         published_at: now,
@@ -187,6 +213,9 @@ export const POST = withCompany(
       syncCompanyOwnerToBrevo(companyId).catch((error) => {
         console.error("[Publish] Brevo 同步失敗（不影響發布）:", error);
       });
+
+      // 觸發 sitemap 更新和搜尋引擎 ping（WordPress 發布也觸發，因為可能同時發布到 Platform Blog）
+      revalidateSitemapAndPing();
 
       return successResponse({
         wordpress_post_id: publishResult.post.id,

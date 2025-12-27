@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { createAdminClient } from "@/lib/supabase/server";
 import { WordPressClient } from "@/lib/wordpress/client";
 import {
   decryptWordPressPassword,
   isEncrypted,
 } from "@/lib/security/token-encryption";
+import { pingAllSearchEngines } from "@/lib/sitemap/ping-service";
 
 const MAX_RETRY_COUNT = 3;
 const RETRY_DELAYS_MINUTES = [5, 30, 120];
@@ -491,6 +493,29 @@ export async function GET(request: NextRequest) {
 
   // 同時處理排程的翻譯版本發布
   const translationResults = await processScheduledTranslations(supabase);
+
+  // 如果有任何文章或翻譯成功發布，觸發 sitemap 更新和搜尋引擎 ping
+  const totalPublished =
+    results.published + (translationResults.published || 0);
+  if (totalPublished > 0) {
+    try {
+      revalidatePath("/sitemap.xml");
+      revalidatePath("/post-sitemap.xml");
+      revalidatePath("/category-sitemap.xml");
+      revalidatePath("/tag-sitemap.xml");
+      console.log("[Process Scheduled Articles] Sitemap revalidated");
+
+      // Ping 搜尋引擎（非同步，不阻塞返回）
+      pingAllSearchEngines().catch((error) => {
+        console.error("[Process Scheduled Articles] Sitemap ping 失敗:", error);
+      });
+    } catch (error) {
+      console.error(
+        "[Process Scheduled Articles] Sitemap revalidate 失敗:",
+        error,
+      );
+    }
+  }
 
   return NextResponse.json({
     success: true,
