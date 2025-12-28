@@ -128,6 +128,9 @@ export async function middleware(request: NextRequest) {
       "https://oauth2.googleapis.com",
       "https://www.googleapis.com",
       "https://cloudflareinsights.com",
+      // Google Tag Manager 連線（fetch/XHR）
+      "https://www.googletagmanager.com",
+      "https://tagmanager.google.com",
       // Google Analytics 和 Search Console API
       "https://www.google-analytics.com",
       "https://ssl.google-analytics.com",
