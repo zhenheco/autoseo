@@ -4,6 +4,11 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getUser } from "@/lib/auth";
+import { WordPressClient } from "@/lib/wordpress/client";
+import {
+  encryptWordPressPassword,
+  decryptWordPressPassword,
+} from "@/lib/security/token-encryption";
 
 interface Website {
   id: string;
@@ -165,6 +170,55 @@ export async function updateWebsite(formData: FormData) {
     );
   }
 
+  // 取得現有網站設定（用於取得現有密碼）
+  const { data: existingConfig } = await supabase
+    .from("website_configs")
+    .select("wp_app_password, is_platform_blog")
+    .eq("id", websiteId)
+    .single();
+
+  // Platform Blog 不需要 WordPress 驗證
+  const isPlatformBlog = existingConfig?.is_platform_blog === true;
+
+  // WordPress 連線驗證（非 Platform Blog 才需要）
+  if (!isPlatformBlog && wpUsername) {
+    // 決定使用哪個密碼：新密碼 > 現有密碼
+    let passwordToTest = wpPassword?.trim() || "";
+    if (!passwordToTest && existingConfig?.wp_app_password) {
+      try {
+        passwordToTest = decryptWordPressPassword(
+          existingConfig.wp_app_password,
+        );
+      } catch {
+        // 解密失敗，可能是舊格式未加密的密碼
+        passwordToTest = existingConfig.wp_app_password;
+      }
+    }
+
+    if (passwordToTest) {
+      const wordpressClient = new WordPressClient({
+        url: siteUrl.replace(/\/$/, ""),
+        username: wpUsername,
+        applicationPassword: passwordToTest,
+      });
+
+      try {
+        await wordpressClient.getCategories();
+        console.log("[編輯網站] WordPress 連線驗證成功:", siteUrl);
+      } catch (error) {
+        console.error("[編輯網站] WordPress 連線驗證失敗:", error);
+        const errorMessage =
+          error instanceof Error
+            ? error.message
+            : "WordPress 連線失敗，請檢查網址、使用者名稱和應用密碼是否正確";
+        redirect(
+          `/dashboard/websites/${websiteId}/edit?error=` +
+            encodeURIComponent(errorMessage),
+        );
+      }
+    }
+  }
+
   // 準備更新資料
   const updateData: {
     website_name: string;
@@ -177,9 +231,9 @@ export async function updateWebsite(formData: FormData) {
     wp_username: wpUsername,
   };
 
-  // 只有在提供新密碼時才更新
+  // 只有在提供新密碼時才更新（加密儲存）
   if (wpPassword && wpPassword.trim() !== "") {
-    updateData.wp_app_password = wpPassword;
+    updateData.wp_app_password = encryptWordPressPassword(wpPassword.trim());
   }
 
   // 更新網站記錄
