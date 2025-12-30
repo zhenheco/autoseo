@@ -1,8 +1,12 @@
 #!/usr/bin/env tsx
 
 /**
- * 發佈已排程的文章到 WordPress
+ * 發佈已排程的文章到 WordPress 或 Platform Blog
  * 由 GitHub Actions 每小時執行
+ *
+ * 重要修復（2025-12-30）：
+ * - 從查詢 generated_articles 改為查詢 article_jobs
+ * - 這是因為排程資料存儲在 article_jobs 表，而非 generated_articles
  */
 
 import { createClient } from "@supabase/supabase-js";
@@ -10,37 +14,48 @@ import { WordPressClient } from "../src/lib/wordpress/client";
 import type { Database } from "../src/types/database.types";
 
 const MAX_RETRIES = 3;
+const RETRY_DELAYS_MINUTES = [5, 30, 120];
 
-interface ScheduledArticle {
+interface ArticleJob {
   id: string;
-  title: string;
-  html_content: string | null;
-  slug: string | null;
-  seo_title: string | null;
-  seo_description: string | null;
-  focus_keyword: string | null;
-  featured_image_url: string | null;
-  og_image: string | null;
-  categories: string[] | null;
-  tags: string[] | null;
-  target_wordpress_status: string | null;
+  article_title: string | null;
+  status: string;
+  scheduled_publish_at: string | null;
+  auto_publish: boolean | null;
   publish_retry_count: number | null;
-  published_to_website_id: string | null;
-}
-
-interface WebsiteConfig {
-  id: string;
-  wordpress_url: string;
-  wp_username: string | null;
-  wp_app_password: string | null;
-  wp_enabled: boolean | null;
+  last_publish_error: string | null;
+  website_id: string | null;
+  website_configs: {
+    id: string;
+    website_name: string | null;
+    wordpress_url: string;
+    wp_username: string | null;
+    wp_app_password: string | null;
+    wp_enabled: boolean | null;
+    is_active: boolean | null;
+    is_platform_blog: boolean | null;
+  } | null;
+  generated_articles: {
+    id: string;
+    title: string;
+    html_content: string | null;
+    seo_title: string | null;
+    seo_description: string | null;
+    slug: string | null;
+    og_image: string | null;
+    categories: string[] | null;
+    tags: string[] | null;
+    focus_keyword: string | null;
+    wordpress_post_id: number | null;
+    wordpress_status: string | null;
+  } | null;
 }
 
 async function main() {
   console.log("[Publish] 🚀 開始處理排程發佈...");
 
-  const supabaseUrl = process.env.SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  const supabaseUrl = process.env.SUPABASE_URL?.trim();
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim();
 
   if (!supabaseUrl || !supabaseKey) {
     console.error(
@@ -56,113 +71,170 @@ async function main() {
     },
   });
 
-  // 查詢待發佈的文章
   const now = new Date().toISOString();
   console.log(`[Publish] 🔍 查詢排程時間 <= ${now} 的文章...`);
 
-  const { data: articles, error: articlesError } = await supabase
-    .from("generated_articles")
+  // 核心修復：查詢 article_jobs 而非 generated_articles
+  const { data: jobs, error: fetchError } = await supabase
+    .from("article_jobs")
     .select(
       `
       id,
-      title,
-      html_content,
-      slug,
-      seo_title,
-      seo_description,
-      focus_keyword,
-      featured_image_url,
-      og_image,
-      categories,
-      tags,
-      target_wordpress_status,
+      article_title,
+      status,
+      scheduled_publish_at,
+      auto_publish,
       publish_retry_count,
-      published_to_website_id
+      last_publish_error,
+      website_id,
+      website_configs (
+        id,
+        website_name,
+        wordpress_url,
+        wp_username,
+        wp_app_password,
+        wp_enabled,
+        is_active,
+        is_platform_blog
+      ),
+      generated_articles (
+        id,
+        title,
+        html_content,
+        seo_title,
+        seo_description,
+        slug,
+        og_image,
+        categories,
+        tags,
+        focus_keyword,
+        wordpress_post_id,
+        wordpress_status
+      )
     `,
     )
     .eq("status", "scheduled")
-    .is("wordpress_post_id", null)
     .lte("scheduled_publish_at", now)
-    .lt("publish_retry_count", MAX_RETRIES)
+    .eq("auto_publish", true)
     .order("scheduled_publish_at", { ascending: true })
     .limit(50);
 
-  if (articlesError) {
-    console.error("[Publish] ❌ 查詢文章失敗:", articlesError);
+  if (fetchError) {
+    console.error("[Publish] ❌ 查詢文章失敗:", fetchError);
     process.exit(1);
   }
 
-  if (!articles || articles.length === 0) {
+  if (!jobs || jobs.length === 0) {
     console.log("[Publish] ✅ 沒有待發佈的文章");
     return;
   }
 
-  console.log(`[Publish] 📝 發現 ${articles.length} 篇待發佈文章`);
+  console.log(`[Publish] 📝 發現 ${jobs.length} 篇待發佈文章`);
 
-  // 收集所有需要的網站 ID
-  const websiteIds = [
-    ...new Set(
-      (articles as ScheduledArticle[])
-        .map((a) => a.published_to_website_id)
-        .filter((id): id is string => id !== null),
-    ),
-  ];
-
-  if (websiteIds.length === 0) {
-    console.log("[Publish] ⚠️ 沒有文章指定目標網站");
-    return;
-  }
-
-  // 查詢網站設定
-  const { data: websites, error: websitesError } = await supabase
-    .from("website_configs")
-    .select("id, wordpress_url, wp_username, wp_app_password, wp_enabled")
-    .in("id", websiteIds);
-
-  if (websitesError) {
-    console.error("[Publish] ❌ 查詢網站設定失敗:", websitesError);
-    process.exit(1);
-  }
-
-  const websiteMap = new Map<string, WebsiteConfig>(
-    (websites || []).map((w) => [w.id, w as WebsiteConfig]),
-  );
-
-  // 處理每篇文章
   let successCount = 0;
   let failedCount = 0;
+  let retriedCount = 0;
 
-  for (const article of articles as ScheduledArticle[]) {
-    const websiteId = article.published_to_website_id;
-    if (!websiteId) {
-      console.log(`[Publish] ⚠️ 文章 ${article.id} 沒有指定目標網站，跳過`);
-      continue;
-    }
+  for (const job of jobs as unknown as ArticleJob[]) {
+    const website = job.website_configs;
+    const article = job.generated_articles;
 
-    const website = websiteMap.get(websiteId);
+    // 驗證網站配置
     if (!website) {
-      console.log(
-        `[Publish] ⚠️ 找不到網站 ${websiteId}，跳過文章 ${article.id}`,
-      );
-      await markArticleFailed(
+      console.log(`[Publish] ⚠️ 文章 ${job.id} 找不到網站配置，跳過`);
+      await handlePublishError(
         supabase,
-        article.id,
-        article.publish_retry_count || 0,
-        "找不到目標網站設定",
+        job.id,
+        job.publish_retry_count || 0,
+        "網站配置不存在",
       );
       failedCount++;
       continue;
     }
 
+    if (!website.is_active) {
+      console.log(`[Publish] ⚠️ 網站 ${website.website_name} 已停用，跳過`);
+      await handlePublishError(
+        supabase,
+        job.id,
+        job.publish_retry_count || 0,
+        "網站已停用",
+      );
+      failedCount++;
+      continue;
+    }
+
+    if (!article) {
+      console.log(`[Publish] ⚠️ 文章 ${job.id} 找不到文章內容，跳過`);
+      await handlePublishError(
+        supabase,
+        job.id,
+        job.publish_retry_count || 0,
+        "找不到文章內容",
+      );
+      failedCount++;
+      continue;
+    }
+
+    const isPlatformBlog = website.is_platform_blog === true;
+
+    // 處理 Platform Blog
+    if (isPlatformBlog) {
+      console.log(`[Publish] 📤 發佈到 Platform Blog: ${article.title}`);
+      try {
+        const publishedAt = new Date().toISOString();
+
+        // 更新 article_jobs
+        await supabase
+          .from("article_jobs")
+          .update({
+            status: "published",
+            published_at: publishedAt,
+            publish_retry_count: 0,
+            last_publish_error: null,
+          })
+          .eq("id", job.id);
+
+        // 更新 generated_articles
+        await supabase
+          .from("generated_articles")
+          .update({
+            status: "published",
+            published_at: publishedAt,
+            published_to_website_id: website.id,
+            published_to_website_at: publishedAt,
+          })
+          .eq("id", article.id);
+
+        console.log(`[Publish] ✅ Platform Blog 發佈成功: ${article.title}`);
+        successCount++;
+        continue;
+      } catch (error) {
+        const errorMessage =
+          error instanceof Error ? error.message : "Platform Blog 發布失敗";
+        console.error(`[Publish] ❌ Platform Blog 發佈失敗 ${job.id}:`, error);
+        const wasRetried = await handlePublishError(
+          supabase,
+          job.id,
+          job.publish_retry_count || 0,
+          errorMessage,
+        );
+        if (wasRetried) retriedCount++;
+        else failedCount++;
+        continue;
+      }
+    }
+
+    // 處理 WordPress
     if (!website.wp_enabled) {
       console.log(
-        `[Publish] ⚠️ 網站 ${websiteId} WordPress 發佈未啟用，跳過文章 ${article.id}`,
+        `[Publish] ⚠️ 網站 ${website.website_name} WordPress 未啟用，跳過`,
       );
-      await markArticleFailed(
+      await handlePublishError(
         supabase,
-        article.id,
-        article.publish_retry_count || 0,
-        "WordPress 發佈功能未啟用",
+        job.id,
+        job.publish_retry_count || 0,
+        "WordPress 功能未啟用",
       );
       failedCount++;
       continue;
@@ -174,12 +246,12 @@ async function main() {
       !website.wp_app_password
     ) {
       console.log(
-        `[Publish] ⚠️ 網站 ${websiteId} WordPress 設定不完整，跳過文章 ${article.id}`,
+        `[Publish] ⚠️ 網站 ${website.website_name} WordPress 設定不完整，跳過`,
       );
-      await markArticleFailed(
+      await handlePublishError(
         supabase,
-        article.id,
-        article.publish_retry_count || 0,
+        job.id,
+        job.publish_retry_count || 0,
         "WordPress 設定不完整",
       );
       failedCount++;
@@ -187,7 +259,7 @@ async function main() {
     }
 
     try {
-      console.log(`[Publish] 📤 發佈文章: ${article.title}`);
+      console.log(`[Publish] 📤 發佈到 WordPress: ${article.title}`);
 
       const wpClient = new WordPressClient({
         url: website.wordpress_url,
@@ -195,90 +267,176 @@ async function main() {
         applicationPassword: website.wp_app_password,
       });
 
-      const status = (
-        article.target_wordpress_status === "draft" ? "draft" : "publish"
-      ) as "draft" | "publish";
+      // 如果已有 WordPress 草稿，更新狀態
+      if (article.wordpress_post_id && article.wordpress_status === "draft") {
+        console.log(
+          `[Publish] 📝 更新現有草稿 (post_id: ${article.wordpress_post_id})`,
+        );
+        await wpClient.updatePost(article.wordpress_post_id, {
+          status: "publish",
+        });
 
+        const publishedAt = new Date().toISOString();
+
+        // 更新 article_jobs
+        await supabase
+          .from("article_jobs")
+          .update({
+            status: "published",
+            published_at: publishedAt,
+            wordpress_post_id: String(article.wordpress_post_id),
+            publish_retry_count: 0,
+            last_publish_error: null,
+          })
+          .eq("id", job.id);
+
+        // 更新 generated_articles
+        await supabase
+          .from("generated_articles")
+          .update({
+            wordpress_status: "publish",
+            published_at: publishedAt,
+            status: "published",
+            published_to_website_id: website.id,
+            published_to_website_at: publishedAt,
+          })
+          .eq("id", article.id);
+
+        console.log(`[Publish] ✅ 草稿更新為已發佈: ${article.title}`);
+        successCount++;
+        continue;
+      }
+
+      // 如果已發佈，同步狀態
+      if (article.wordpress_post_id && article.wordpress_status === "publish") {
+        console.log(
+          `[Publish] ℹ️ 文章已發佈 (post_id: ${article.wordpress_post_id})，同步狀態`,
+        );
+        await supabase
+          .from("article_jobs")
+          .update({
+            status: "published",
+            wordpress_post_id: String(article.wordpress_post_id),
+          })
+          .eq("id", job.id);
+        successCount++;
+        continue;
+      }
+
+      // 新發佈
       const result = await wpClient.publishArticle(
         {
-          title: article.title,
+          title: article.seo_title || article.title,
           content: article.html_content || "",
-          slug: article.slug || undefined,
-          seoTitle: article.seo_title || undefined,
-          seoDescription: article.seo_description || undefined,
-          focusKeyword: article.focus_keyword || undefined,
-          featuredImageUrl:
-            article.og_image || article.featured_image_url || undefined,
-          categories: article.categories || undefined,
-          tags: article.tags || undefined,
+          excerpt: article.seo_description || "",
+          slug: article.slug || "",
+          featuredImageUrl: article.og_image || undefined,
+          categories: article.categories || [],
+          tags: article.tags || [],
+          seoTitle: article.seo_title || article.title,
+          seoDescription: article.seo_description || "",
+          focusKeyword: article.focus_keyword || "",
         },
-        status,
+        "publish",
       );
 
-      // 更新文章狀態
-      const { error: updateError } = await supabase
-        .from("generated_articles")
+      const publishedAt = new Date().toISOString();
+
+      // 更新 article_jobs
+      await supabase
+        .from("article_jobs")
         .update({
-          wordpress_post_id: String(result.post.id),
-          wordpress_post_url: result.post.link,
           status: "published",
-          published_at: new Date().toISOString(),
+          published_at: publishedAt,
+          wordpress_post_id: String(result.post.id),
+          publish_retry_count: 0,
           last_publish_error: null,
         })
-        .eq("id", article.id);
+        .eq("id", job.id);
 
-      if (updateError) {
-        console.error(
-          `[Publish] ⚠️ 更新文章狀態失敗 ${article.id}:`,
-          updateError,
-        );
-      }
+      // 更新 generated_articles
+      await supabase
+        .from("generated_articles")
+        .update({
+          wordpress_post_id: result.post.id,
+          wordpress_post_url: result.post.link,
+          wordpress_status: result.post.status,
+          published_at: publishedAt,
+          status: "published",
+          published_to_website_id: website.id,
+          published_to_website_at: publishedAt,
+        })
+        .eq("id", article.id);
 
       console.log(`[Publish] ✅ 文章發佈成功: ${result.post.link}`);
       successCount++;
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : String(error);
-      console.error(`[Publish] ❌ 發佈文章失敗 ${article.id}:`, errorMessage);
-      await markArticleFailed(
+      const errorMessage = error instanceof Error ? error.message : "發布失敗";
+      console.error(`[Publish] ❌ 發佈文章失敗 ${job.id}:`, errorMessage);
+      const wasRetried = await handlePublishError(
         supabase,
-        article.id,
-        article.publish_retry_count || 0,
+        job.id,
+        job.publish_retry_count || 0,
         errorMessage,
       );
-      failedCount++;
+      if (wasRetried) retriedCount++;
+      else failedCount++;
     }
   }
 
   console.log(
-    `[Publish] 📊 處理結果：${successCount} 成功，${failedCount} 失敗`,
+    `[Publish] 📊 處理結果：${successCount} 成功，${retriedCount} 重試中，${failedCount} 失敗`,
   );
   console.log("[Publish] 🎉 排程發佈處理完成");
 }
 
-async function markArticleFailed(
+async function handlePublishError(
   supabase: ReturnType<typeof createClient<Database>>,
-  articleId: string,
+  jobId: string,
   currentRetryCount: number,
   errorMessage: string,
-) {
+): Promise<boolean> {
   const newRetryCount = currentRetryCount + 1;
-  const status = newRetryCount >= MAX_RETRIES ? "publish_failed" : "scheduled";
-
-  await supabase
-    .from("generated_articles")
-    .update({
-      publish_retry_count: newRetryCount,
-      last_publish_error: errorMessage,
-      status: status,
-    })
-    .eq("id", articleId);
 
   if (newRetryCount >= MAX_RETRIES) {
+    // 達到最大重試次數，自動延後 2 小時
+    const autoRescheduleTime = new Date();
+    autoRescheduleTime.setHours(autoRescheduleTime.getHours() + 2);
+
+    await supabase
+      .from("article_jobs")
+      .update({
+        status: "scheduled",
+        scheduled_publish_at: autoRescheduleTime.toISOString(),
+        last_publish_error: `${errorMessage} (已重試 ${newRetryCount} 次，自動重新排程)`,
+        publish_retry_count: 0,
+      })
+      .eq("id", jobId);
+
     console.log(
-      `[Publish] ⚠️ 文章 ${articleId} 已達最大重試次數，標記為發佈失敗`,
+      `[Publish] ⚠️ 文章 ${jobId} 已達最大重試次數，自動延後至 ${autoRescheduleTime.toISOString()}`,
     );
+    return false;
   }
+
+  // 設定延遲重試
+  const nextRetryMinutes = RETRY_DELAYS_MINUTES[newRetryCount - 1] || 120;
+  const nextRetryTime = new Date();
+  nextRetryTime.setMinutes(nextRetryTime.getMinutes() + nextRetryMinutes);
+
+  await supabase
+    .from("article_jobs")
+    .update({
+      scheduled_publish_at: nextRetryTime.toISOString(),
+      last_publish_error: errorMessage,
+      publish_retry_count: newRetryCount,
+    })
+    .eq("id", jobId);
+
+  console.log(
+    `[Publish] ℹ️ 文章 ${jobId} 將在 ${nextRetryMinutes} 分鐘後重試 (第 ${newRetryCount} 次)`,
+  );
+  return true;
 }
 
 main().catch((err) => {
