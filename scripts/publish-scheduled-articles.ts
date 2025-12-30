@@ -18,7 +18,6 @@ const RETRY_DELAYS_MINUTES = [5, 30, 120];
 
 interface ArticleJob {
   id: string;
-  article_title: string | null;
   status: string;
   scheduled_publish_at: string | null;
   auto_publish: boolean | null;
@@ -80,7 +79,6 @@ async function main() {
     .select(
       `
       id,
-      article_title,
       status,
       scheduled_publish_at,
       auto_publish,
