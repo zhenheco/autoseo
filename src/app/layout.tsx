@@ -7,6 +7,7 @@ import { ThemeProvider } from "@/components/providers/theme-provider";
 import { IntlProvider } from "@/providers/IntlProvider";
 import { CookieConsentProvider } from "@/components/consent";
 import { GoogleAnalytics } from "@/components/tracking/GoogleAnalytics";
+import { GA4Script } from "@/components/tracking/GA4Script";
 import { AffiliateTracker } from "@/components/tracking/affiliate-tracker";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -51,6 +52,8 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-TW" suppressHydrationWarning>
+      {/* GA4 腳本 - 使用 beforeInteractive 確保在 head 中盡早載入 */}
+      <GA4Script />
       <body className={inter.className}>
         <ThemeProvider
           attribute="class"

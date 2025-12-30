@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { trackArticleGeneration } from "@/lib/analytics/events";
 
 interface ArticleFormProps {
   websiteId: string | null;
@@ -187,6 +188,12 @@ export function ArticleForm({
     if (!response.ok) {
       throw new Error(data.message || data.error || "文章生成失敗");
     }
+
+    // GA4 追蹤：文章生成任務已建立
+    trackArticleGeneration(
+      data.jobId || data.data?.jobId || "unknown",
+      [industry, region, language].filter(Boolean),
+    );
 
     return data;
   };

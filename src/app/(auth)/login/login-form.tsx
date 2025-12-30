@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
+import { trackLogin, trackSignUp } from "@/lib/analytics/events";
 
 /**
  * Google 圖示元件
@@ -92,6 +93,12 @@ export function LoginForm({
     setIsGoogleLoading(true);
 
     try {
+      // 追蹤 Google 登入/註冊嘗試（因為會重定向，需要在這裡追蹤）
+      if (mode === "signup") {
+        trackSignUp("google");
+      } else {
+        trackLogin("google");
+      }
       await signInWithGoogle();
     } catch (err) {
       setError(err instanceof Error ? err.message : t("loginFailed"));
@@ -147,7 +154,11 @@ export function LoginForm({
         } else if (result.needsVerification) {
           setSuccess(t("registerSuccess"));
           setNeedsVerification(true);
+          // 追蹤註冊成功（等待驗證）
+          trackSignUp("email");
         } else {
+          // 追蹤註冊成功（直接登入）
+          trackSignUp("email");
           router.push("/dashboard");
         }
       } else {
@@ -167,6 +178,8 @@ export function LoginForm({
             setError(result.error);
           }
         } else {
+          // 追蹤登入成功
+          trackLogin("email");
           router.push("/dashboard");
         }
       }

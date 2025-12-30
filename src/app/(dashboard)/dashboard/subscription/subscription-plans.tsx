@@ -8,6 +8,7 @@ import { CheckCircle2, Gift, FileText, Loader2, X, Tag } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
+import { trackBeginCheckout, trackViewItem } from "@/lib/analytics/events";
 
 /**
  * 篇數制方案資料類型
@@ -136,6 +137,12 @@ export function SubscriptionPlans({
       const price =
         billingCycle === "yearly" ? plan.yearly_price : plan.monthly_price;
       const description = `${getPlanName(plan)} ${billingCycle === "yearly" ? "年繳" : "月繳"}訂閱`;
+
+      // GA4 追蹤：開始結帳
+      trackBeginCheckout(
+        [{ item_id: plan.id, item_name: getPlanName(plan), price: price || 0 }],
+        price || 0,
+      );
 
       // 使用定期定額 API（目前暫時返回 410，Phase 4 會重新啟用）
       const response = await fetch("/api/payment/recurring/create", {

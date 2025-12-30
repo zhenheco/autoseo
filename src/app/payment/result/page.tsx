@@ -1,19 +1,42 @@
 "use client";
 
-import { useEffect, useState, Suspense } from "react";
+import { useEffect, useState, Suspense, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { CheckCircle, XCircle, Loader2 } from "lucide-react";
+import { trackPurchase } from "@/lib/analytics/events";
 
 function PaymentResultContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const [countdown, setCountdown] = useState(5);
+  const hasTracked = useRef(false);
 
   const paymentId = searchParams.get("paymentId");
   const orderId = searchParams.get("orderId");
   const status = searchParams.get("status");
+  const amount = searchParams.get("amount");
 
   const isSuccess = status === "success" || status === "SUCCESS";
+
+  // GA4 追蹤：付款成功時追蹤購買事件
+  useEffect(() => {
+    if (isSuccess && !hasTracked.current) {
+      hasTracked.current = true;
+      trackPurchase({
+        transaction_id: orderId || paymentId || `order_${Date.now()}`,
+        value: amount ? parseInt(amount, 10) : 0,
+        currency: "TWD",
+        items: [
+          {
+            item_id: "subscription",
+            item_name: "1waySEO 訂閱",
+            price: amount ? parseInt(amount, 10) : 0,
+            quantity: 1,
+          },
+        ],
+      });
+    }
+  }, [isSuccess, orderId, paymentId, amount]);
 
   useEffect(() => {
     // 倒數計時後跳轉

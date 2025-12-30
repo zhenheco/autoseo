@@ -20,6 +20,7 @@ import Link from "next/link";
 import { deleteWebsite, createPlatformBlog } from "./actions";
 import { checkPagePermission } from "@/lib/permissions";
 import { WebsiteStatusToggle } from "./website-status-toggle";
+import { WebsiteAddedTracker } from "./WebsiteAddedTracker";
 import { Globe, ExternalLink, Clock } from "lucide-react";
 
 async function getCompanyWebsites(companyId: string) {
@@ -107,6 +108,9 @@ export default async function WebsitesPage({
 
   return (
     <div className="container mx-auto p-8">
+      {/* GA4 追蹤：網站添加成功 */}
+      <WebsiteAddedTracker success={params.success} />
+
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">{t("title")}</h1>
