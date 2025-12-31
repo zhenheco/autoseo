@@ -165,10 +165,49 @@ export class ArticleQuotaService {
       typedData.subscription_articles_remaining || 0;
     const purchasedRemaining = typedData.purchased_articles_remaining || 0;
 
+    // 查詢 active 預扣數量，避免並發請求超額
+    let totalReserved = 0;
+    try {
+      const { data: activeReservations } = await (
+        this.supabase.from("token_reservations" as "companies") as unknown as {
+          select: (columns: string) => {
+            eq: (
+              column: string,
+              value: string,
+            ) => {
+              eq: (
+                column: string,
+                value: string,
+              ) => Promise<{
+                data: Array<{ reserved_amount: number }> | null;
+              }>;
+            };
+          };
+        }
+      )
+        .select("reserved_amount")
+        .eq("company_id", companyId)
+        .eq("status", "active");
+
+      totalReserved =
+        activeReservations?.reduce(
+          (sum, r) => sum + (r.reserved_amount || 0),
+          0,
+        ) || 0;
+    } catch {
+      // token_reservations 表不存在時忽略錯誤
+      console.warn(
+        "[ArticleQuotaService] getBalance: 無法查詢預扣記錄，忽略預扣數量",
+      );
+    }
+
+    const rawTotal = subscriptionRemaining + purchasedRemaining;
+    const actualAvailable = Math.max(0, rawTotal - totalReserved);
+
     return {
       subscriptionRemaining,
       purchasedRemaining,
-      totalAvailable: subscriptionRemaining + purchasedRemaining,
+      totalAvailable: actualAvailable,
       monthlyQuota: typedData.articles_per_month || 0,
       periodEnd: typedData.current_period_end,
       billingCycle: typedData.billing_cycle as "monthly" | "yearly" | null,

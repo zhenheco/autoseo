@@ -359,8 +359,49 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // ===== 優化：分批插入（每批 20 筆）=====
+    // ===== 預扣額度（防止並發超額）=====
+    // 批量預扣：一次預扣所需的總篇數
+    const totalToReserve = jobsToInsert.length;
+    if (totalToReserve > 0) {
+      // 檢查是否有足夠額度（考慮已有的 active 預扣）
+      const balanceCheck = await quotaService.getBalance(billingId!);
+
+      // 查詢現有 active 預扣數量
+      const { data: activeReservations } = await adminClient
+        .from("token_reservations")
+        .select("reserved_amount")
+        .eq("company_id", billingId!)
+        .eq("status", "active");
+
+      const totalReserved =
+        activeReservations?.reduce(
+          (sum, r) => sum + ((r.reserved_amount as number) || 0),
+          0,
+        ) || 0;
+
+      const actualAvailable = balanceCheck.totalAvailable - totalReserved;
+
+      if (actualAvailable < totalToReserve) {
+        console.warn(
+          `[Batch] ❌ 額度不足（考慮預扣後）：需要 ${totalToReserve} 篇，實際可用 ${actualAvailable} 篇（總額度 ${balanceCheck.totalAvailable}，已預扣 ${totalReserved}）`,
+        );
+        return NextResponse.json(
+          {
+            error: "Insufficient quota",
+            message: `額度不足：需要 ${totalToReserve} 篇，實際可用 ${actualAvailable} 篇（已有 ${totalReserved} 篇進行中）`,
+            requiredCredits: totalToReserve,
+            availableCredits: actualAvailable,
+            reservedCredits: totalReserved,
+          },
+          { status: 402 },
+        );
+      }
+    }
+
+    // ===== 優化：分批插入（每批 20 筆）+ 為每個 job 創建預扣記錄 =====
     const BATCH_SIZE = 20;
+    const reservedJobIds: string[] = [];
+
     for (let i = 0; i < jobsToInsert.length; i += BATCH_SIZE) {
       const batch = jobsToInsert.slice(i, i + BATCH_SIZE);
       const { data: inserted, error: batchError } = await adminClient
@@ -373,6 +414,24 @@ export async function POST(request: NextRequest) {
         console.log(
           `[Batch] ✅ Inserted batch ${Math.floor(i / BATCH_SIZE) + 1}: ${inserted.length} jobs`,
         );
+
+        // 為每個成功插入的 job 創建預扣記錄
+        for (const job of inserted) {
+          const reservation = await quotaService.reserveArticles(
+            billingId!,
+            job.id,
+            1,
+          );
+          if (reservation.success) {
+            reservedJobIds.push(job.id);
+          } else {
+            console.warn(
+              `[Batch] ⚠️ 預扣失敗: job ${job.id}, 原因: ${reservation.message}`,
+            );
+            // 預扣失敗的 job 仍會繼續處理，但在生成完成後可能無法扣款
+            // Billing Audit 會捕獲這些情況
+          }
+        }
       }
       if (batchError) {
         console.error(
@@ -387,6 +446,10 @@ export async function POST(request: NextRequest) {
         });
       }
     }
+
+    console.log(
+      `[Batch] 📦 預扣結果: ${reservedJobIds.length}/${newJobIds.length} 成功`,
+    );
 
     console.log(
       `[Batch] 📊 Summary: ${newJobIds.length} created, ${skippedJobIds.length} skipped, ${failedItems.length} failed`,
