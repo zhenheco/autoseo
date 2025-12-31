@@ -50,16 +50,28 @@ export class ArticleImageAgent extends BaseAgent<
     const images: GeneratedImage[] = [];
     const failedIndices: number[] = [];
 
-    const maxImages = input.maxImages ?? 3;
-    const sectionsNeedingImages = Math.min(
-      input.outline.mainSections.length,
-      maxImages,
-    );
+    // 新邏輯：只為第 2 個和最後一個 H2 生成圖片（共 2 張）
+    const totalSections = input.outline.mainSections.length;
+    const targetIndices: number[] = [];
+
+    // 只有當有 2 個以上段落時，才在第 2 個 H2 放圖
+    if (totalSections >= 2) {
+      targetIndices.push(1); // 第 2 個 H2 (index 1)
+    }
+
+    // 在最後一個 H2 放圖（避免與第 2 個 H2 重複）
+    if (totalSections >= 1) {
+      const lastIndex = totalSections - 1;
+      if (!targetIndices.includes(lastIndex)) {
+        targetIndices.push(lastIndex);
+      }
+    }
+
     console.log(
-      `[ArticleImageAgent] 🎨 Generating ${sectionsNeedingImages} content images (max: ${maxImages}) with model: ${model}`,
+      `[ArticleImageAgent] 🎨 Generating ${targetIndices.length} content images for H2 positions: ${targetIndices.map((i) => i + 1).join(", ")} with model: ${model}`,
     );
 
-    for (let i = 0; i < sectionsNeedingImages; i++) {
+    for (const i of targetIndices) {
       const section = input.outline.mainSections[i];
       try {
         const image = await this.generateContentImageWithRetry(
@@ -71,12 +83,12 @@ export class ArticleImageAgent extends BaseAgent<
         );
         images.push(image);
         console.log(
-          `[ArticleImageAgent] ✅ Content image ${i + 1}/${sectionsNeedingImages} generated`,
+          `[ArticleImageAgent] ✅ Content image for H2 #${i + 1} generated`,
         );
       } catch (error) {
         const err = error as Error;
         console.warn(
-          `[ArticleImageAgent] ⚠️ Content image ${i + 1} failed: ${err.message}`,
+          `[ArticleImageAgent] ⚠️ Content image for H2 #${i + 1} failed: ${err.message}`,
         );
         failedIndices.push(i + 1);
       }
@@ -84,7 +96,7 @@ export class ArticleImageAgent extends BaseAgent<
 
     if (failedIndices.length > 0) {
       console.warn(
-        `[ArticleImageAgent] ⚠️ Failed images (positions): ${failedIndices.join(", ")}`,
+        `[ArticleImageAgent] ⚠️ Failed images (H2 positions): ${failedIndices.join(", ")}`,
       );
     }
 
@@ -255,6 +267,67 @@ export class ArticleImageAgent extends BaseAgent<
   }
 
   private buildPrompt(
+    input: ArticleImageInput,
+    section: Outline["mainSections"][0],
+    sectionIndex: number,
+  ): string {
+    const targetLang = input.targetLanguage || "zh-TW";
+    const isChinese = targetLang.startsWith("zh");
+
+    // 根據目標語言選擇 prompt 格式
+    if (isChinese) {
+      return this.buildChinesePrompt(input, section, sectionIndex);
+    }
+    return this.buildEnglishPrompt(input, section, sectionIndex);
+  }
+
+  /**
+   * 中文 Prompt 格式 - 根據 BytePlus 官方文檔最佳實踐
+   */
+  private buildChinesePrompt(
+    input: ArticleImageInput,
+    section: Outline["mainSections"][0],
+    sectionIndex: number,
+  ): string {
+    // 優先使用 imageStyle，否則使用 brandStyle
+    const styleDesc = input.imageStyle
+      ? input.imageStyle
+      : input.brandStyle
+        ? `${input.brandStyle.style || "專業現代"}風格，${input.brandStyle.colorScheme?.join("、") || "清晰易懂"}`
+        : "專業現代風格，色調清晰易懂";
+
+    // 從 sectionImageTexts 取得對應的文字（如果有的話）
+    const imageText = input.sectionImageTexts?.[sectionIndex];
+
+    let prompt = `為文章「${input.title}」的段落「${section.heading}」生成一張配圖。`;
+
+    // 關鍵：使用雙引號包裹要渲染的中文文字
+    if (imageText) {
+      prompt += `\n\n在圖片中顯示文字 "${imageText}"。`;
+      prompt += `\n文字要求：使用粗體現代黑體字，清晰易讀。`;
+    }
+
+    prompt += `\n\n視覺風格：${styleDesc}`;
+
+    // 要點視覺化
+    if (section.keyPoints?.length > 0) {
+      prompt += `\n\n需要視覺化的要點：`;
+      prompt += `\n${section.keyPoints.slice(0, 3).join("\n")}`;
+    }
+
+    prompt += `\n\n圖片要求：`;
+    prompt += `\n- 清晰且具資訊性`;
+    prompt += `\n- 支持文章內容`;
+    prompt += `\n- 專業品質`;
+    prompt += `\n- 高解析度、細節豐富`;
+
+    return prompt;
+  }
+
+  /**
+   * 英文 Prompt 格式 - 保留原有邏輯
+   */
+  private buildEnglishPrompt(
     input: ArticleImageInput,
     section: Outline["mainSections"][0],
     sectionIndex: number,

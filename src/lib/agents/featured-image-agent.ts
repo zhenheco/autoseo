@@ -177,6 +177,75 @@ export class FeaturedImageAgent extends BaseAgent<
 
   private buildPrompt(input: FeaturedImageInput): string {
     const targetLang = input.targetLanguage || "zh-TW";
+    const isChinese = targetLang.startsWith("zh");
+
+    // 根據目標語言選擇 prompt 格式
+    if (isChinese) {
+      return this.buildChinesePrompt(input);
+    }
+    return this.buildEnglishPrompt(input);
+  }
+
+  /**
+   * 中文 Prompt 格式 - 根據 BytePlus 官方文檔最佳實踐
+   * 關鍵：使用雙引號包裹要渲染的文字
+   */
+  private buildChinesePrompt(input: FeaturedImageInput): string {
+    // 優先使用 imageStyle，否則使用 brandStyle
+    const styleDesc = input.imageStyle
+      ? input.imageStyle
+      : input.brandStyle
+        ? `${input.brandStyle.style || "專業現代"}風格，色調${input.brandStyle.colorScheme?.join("、") || "鮮明吸睛"}，${input.brandStyle.mood || "引人入勝"}`
+        : "專業攝影風格，乾淨現代，明亮自然光";
+
+    let prompt = `生成一張高質量的部落格精選封面圖片。`;
+
+    // 關鍵：使用雙引號包裹要渲染的中文文字
+    if (input.imageText) {
+      prompt += `\n\n在圖片中央醒目位置顯示文字 "${input.imageText}"。`;
+      prompt += `\n文字要求：使用粗體現代黑體字，清晰易讀，與背景形成對比。`;
+    }
+
+    prompt += `\n\n主題：${input.title}`;
+
+    // 文章上下文（如果有）
+    if (input.articleContext) {
+      const parts: string[] = [];
+      if (input.articleContext.outline?.length) {
+        parts.push(
+          `主要章節：${input.articleContext.outline.slice(0, 3).join("、")}`,
+        );
+      }
+      if (input.articleContext.mainTopics?.length) {
+        parts.push(
+          `核心主題：${input.articleContext.mainTopics.slice(0, 3).join("、")}`,
+        );
+      }
+      if (input.articleContext.keywords?.length) {
+        parts.push(
+          `關鍵詞：${input.articleContext.keywords.slice(0, 3).join("、")}`,
+        );
+      }
+      if (parts.length > 0) {
+        prompt += `\n\n文章背景：\n${parts.join("\n")}`;
+      }
+    }
+
+    prompt += `\n\n視覺風格：${styleDesc}`;
+    prompt += `\n\n圖片要求：`;
+    prompt += `\n- 吸睛且專業`;
+    prompt += `\n- 與文章主題相關`;
+    prompt += `\n- 適合作為部落格封面或社群媒體分享`;
+    prompt += `\n- 高質量、細節豐富`;
+
+    return prompt;
+  }
+
+  /**
+   * 英文 Prompt 格式 - 保留原有邏輯
+   */
+  private buildEnglishPrompt(input: FeaturedImageInput): string {
+    const targetLang = input.targetLanguage || "en-US";
 
     // 優先使用 imageStyle，否則使用 brandStyle
     const styleGuide = input.imageStyle
