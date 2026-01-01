@@ -11,6 +11,7 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArticleDetailPublish } from "./components/ArticleDetailPublish";
+import { SocialShareDialog } from "@/components/social/SocialShareDialog";
 
 async function getArticle(articleId: string) {
   const supabase = await createClient();
@@ -31,7 +32,8 @@ async function getArticle(articleId: string) {
         markdown_content,
         word_count,
         seo_title,
-        seo_description
+        seo_description,
+        featured_image_url
       )
     `,
     )
@@ -84,6 +86,20 @@ export default async function ArticleDetailPage({
               currentWebsiteId={article.website_id}
             />
           )}
+          {(article.status === "completed" || article.status === "published") &&
+            article.generated_articles?.id && (
+              <SocialShareDialog
+                articleId={article.generated_articles.id}
+                articleTitle={
+                  article.generated_articles?.title ||
+                  article.article_title ||
+                  "未命名文章"
+                }
+                featuredImageUrl={
+                  article.generated_articles?.featured_image_url || undefined
+                }
+              />
+            )}
         </div>
       </div>
 

@@ -18,6 +18,7 @@ import {
   Users,
   Ticket,
   History,
+  Share2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -44,6 +45,11 @@ const navItems = [
     titleKey: "articleManagement",
     href: "/dashboard/articles/manage",
     icon: FileText,
+  },
+  {
+    titleKey: "socialPosts",
+    href: "/dashboard/social",
+    icon: Share2,
   },
   {
     titleKey: "subscription",
