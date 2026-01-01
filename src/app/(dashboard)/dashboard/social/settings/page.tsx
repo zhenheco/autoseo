@@ -349,7 +349,8 @@ export default function SocialSettingsPage() {
                 )}
               </div>
               <p className="text-sm text-muted-foreground">
-                {t("apiKeyHelp") || "請在發文小助手後台取得 API Key 和 User ID"}
+                {t("apiKeyHelp") ||
+                  "請至發文小助手 > 帳號管理 > API 設定頁面取得"}
               </p>
             </div>
           )}
@@ -506,7 +507,7 @@ export default function SocialSettingsPage() {
               </h4>
               <p className="text-sm text-muted-foreground">
                 {t("guide1Desc") ||
-                  "登入發文小助手後台，取得 API Key 和 User ID"}
+                  "登入發文小助手，前往「帳號管理 > API 設定」取得 User ID 和 API Key"}
               </p>
             </div>
           </div>
