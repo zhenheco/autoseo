@@ -20,13 +20,15 @@ import {
   Facebook,
   Instagram,
   AtSign,
-  Zap,
-  RefreshCw,
   Sparkles,
   AlertCircle,
   CheckCircle2,
   Loader2,
+  ExternalLink,
 } from "lucide-react";
+
+// 巴斯系統 URL
+const BAS_SYSTEM_URL = "https://bas.zhenhe-dm.com";
 
 /**
  * 社群帳號
@@ -132,7 +134,6 @@ export function SocialShareDialog({
     useState<ContentStyle>("professional");
   const [editedContent, setEditedContent] = useState("");
   const [editedHashtags, setEditedHashtags] = useState<string[]>([]);
-  const [creditsBalance, setCreditsBalance] = useState(0);
 
   // 載入狀態
   const [loadingAccounts, setLoadingAccounts] = useState(false);
@@ -142,24 +143,17 @@ export function SocialShareDialog({
   // 訊息狀態
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [isInsufficientCredits, setIsInsufficientCredits] = useState(false);
 
-  // 載入帳號和點數
+  // 載入帳號
   const loadData = useCallback(async () => {
     try {
       setLoadingAccounts(true);
-      const [accountsRes, creditsRes] = await Promise.all([
-        fetch("/api/social/accounts"),
-        fetch("/api/social/credits"),
-      ]);
+      const accountsRes = await fetch("/api/social/accounts");
 
       if (accountsRes.ok) {
         const data = await accountsRes.json();
         setAccounts(data.accounts || []);
-      }
-
-      if (creditsRes.ok) {
-        const data = await creditsRes.json();
-        setCreditsBalance(data.creditsRemaining || 0);
       }
     } catch (err) {
       console.error("載入資料失敗:", err);
@@ -171,6 +165,9 @@ export function SocialShareDialog({
   useEffect(() => {
     if (open) {
       loadData();
+      // 重置錯誤狀態
+      setError(null);
+      setIsInsufficientCredits(false);
     }
   }, [open, loadData]);
 
@@ -236,16 +233,10 @@ export function SocialShareDialog({
       return;
     }
 
-    if (selectedAccounts.length > creditsBalance) {
-      setError(
-        `點數不足，需要 ${selectedAccounts.length} 點，目前餘額 ${creditsBalance} 點`,
-      );
-      return;
-    }
-
     try {
       setPublishing(true);
       setError(null);
+      setIsInsufficientCredits(false);
 
       const selectedAccountsData = accounts
         .filter((acc) => selectedAccounts.includes(acc.account_id))
@@ -271,13 +262,25 @@ export function SocialShareDialog({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "發布失敗");
+        // 檢查是否為額度不足錯誤
+        if (
+          data.error?.includes("額度不足") ||
+          data.error?.includes("insufficient") ||
+          data.error?.includes("credit") ||
+          data.code === "INSUFFICIENT_CREDITS"
+        ) {
+          setIsInsufficientCredits(true);
+          setError(
+            t("insufficientCreditsError") ||
+              "巴斯系統額度不足，請至巴斯系統購買額度後再試",
+          );
+        } else {
+          throw new Error(data.error || "發布失敗");
+        }
+        return;
       }
 
-      setSuccess(
-        `發布成功！使用 ${data.creditsUsed} 點，剩餘 ${data.remainingCredits} 點`,
-      );
-      setCreditsBalance(data.remainingCredits);
+      setSuccess(t("publishSuccess") || "發布成功！");
 
       // 3 秒後關閉對話框
       setTimeout(() => {
@@ -316,29 +319,30 @@ export function SocialShareDialog({
         </DialogHeader>
 
         <div className="space-y-6">
-          {/* 點數餘額 */}
-          <div className="flex items-center justify-between p-3 bg-purple-50 dark:bg-purple-900/20 rounded-lg">
-            <div className="flex items-center gap-2">
-              <Zap className="h-5 w-5 text-purple-600" />
-              <span className="text-sm">
-                {t("currentBalance") || "目前餘額"}:{" "}
-                <strong className="text-purple-600">{creditsBalance}</strong>{" "}
-                {t("credits") || "點"}
-              </span>
-            </div>
-            {selectedAccounts.length > 0 && (
-              <Badge variant="secondary">
-                {t("willUse") || "將使用"} {selectedAccounts.length}{" "}
-                {t("credits") || "點"}
-              </Badge>
-            )}
-          </div>
-
           {/* 錯誤/成功訊息 */}
           {error && (
-            <div className="flex items-center gap-2 p-3 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg text-red-700 dark:text-red-300">
-              <AlertCircle className="h-5 w-5" />
-              {error}
+            <div className="flex flex-col gap-3 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <div className="flex items-center gap-2 text-red-700 dark:text-red-300">
+                <AlertCircle className="h-5 w-5 flex-shrink-0" />
+                <span>{error}</span>
+              </div>
+              {isInsufficientCredits && (
+                <Button
+                  asChild
+                  size="sm"
+                  variant="outline"
+                  className="self-start"
+                >
+                  <a
+                    href={BAS_SYSTEM_URL}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-2" />
+                    {t("goToBas") || "前往巴斯系統購買額度"}
+                  </a>
+                </Button>
+              )}
             </div>
           )}
           {success && (
@@ -516,8 +520,7 @@ export function SocialShareDialog({
               disabled={
                 publishing ||
                 selectedAccounts.length === 0 ||
-                !editedContent.trim() ||
-                selectedAccounts.length > creditsBalance
+                !editedContent.trim()
               }
               className="flex-1"
             >
@@ -528,7 +531,7 @@ export function SocialShareDialog({
               )}
               {publishing
                 ? t("publishing") || "發布中..."
-                : `${t("publish") || "發布"} (${selectedAccounts.length} ${t("credits") || "點"})`}
+                : t("publish") || "發布"}
             </Button>
           </div>
         </div>

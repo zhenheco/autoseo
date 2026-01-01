@@ -876,6 +876,14 @@
     "enterContent": "請輸入或使用 AI 生成貼文內容...",
     "willUse": "將使用",
     "publish": "發布",
-    "publishing": "發布中..."
+    "publishing": "發布中...",
+    "basSystemTitle": "帳號與額度管理",
+    "basSystemDescription": "社群發文功能使用巴斯系統進行帳號管理和額度計費",
+    "basSystemHint": "請至巴斯系統查看您的帳號額度、購買發文點數",
+    "goToBas": "前往巴斯系統",
+    "basSystemManagement": "巴斯系統管理",
+    "basSystemManagementDesc": "前往巴斯系統連接社群帳號、查看額度、購買發文點數",
+    "insufficientCreditsError": "巴斯系統額度不足，請至巴斯系統購買額度後再試",
+    "publishSuccess": "發布成功！"
   }
 }

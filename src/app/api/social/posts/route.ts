@@ -8,7 +8,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createBasClientFromConfig } from "@/lib/social/bas-client";
-import { createSocialCreditService } from "@/lib/social/social-credit-service";
 
 /**
  * 建立社群發文
@@ -57,21 +56,6 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 檢查點數餘額
-    const creditService = createSocialCreditService(supabase);
-    const creditsNeeded = selectedAccounts.length;
-    const hasCredits = await creditService.hasEnoughCredits(
-      profile.company_id,
-      creditsNeeded,
-    );
-
-    if (!hasCredits) {
-      return NextResponse.json(
-        { error: `點數不足，需要 ${creditsNeeded} 點` },
-        { status: 400 },
-      );
-    }
-
     // 取得社群設定
     const { data: config, error: configError } = await supabase
       .from("social_account_configs")
@@ -116,21 +100,22 @@ export async function POST(request: NextRequest) {
     });
 
     if (!basResponse.success) {
+      // 檢查是否為巴斯系統額度不足錯誤
+      const errorMsg =
+        basResponse.error || basResponse.message || "發文失敗，請稍後再試";
+      const isInsufficientCredits =
+        errorMsg.includes("額度不足") ||
+        errorMsg.includes("insufficient") ||
+        errorMsg.includes("credit") ||
+        errorMsg.includes("quota");
+
       return NextResponse.json(
-        { error: "發文失敗，請稍後再試" },
-        { status: 500 },
+        {
+          error: errorMsg,
+          code: isInsufficientCredits ? "INSUFFICIENT_CREDITS" : "POST_FAILED",
+        },
+        { status: isInsufficientCredits ? 402 : 500 },
       );
-    }
-
-    // 扣除點數
-    const deductResult = await creditService.deductCredits(
-      profile.company_id,
-      creditsNeeded,
-      `社群發文: ${basResponse.postId}`,
-    );
-
-    if (!deductResult.success) {
-      console.error("[API] 扣點失敗但發文已成功:", deductResult.error);
     }
 
     // 建立發文記錄
@@ -148,7 +133,6 @@ export async function POST(request: NextRequest) {
         scheduled_at: scheduledAt || null,
         status: scheduledAt ? "pending" : "published",
         published_at: scheduledAt ? null : new Date().toISOString(),
-        credits_used: 1,
       }),
     );
 
@@ -164,8 +148,6 @@ export async function POST(request: NextRequest) {
       success: true,
       postId: basResponse.postId,
       message: scheduledAt ? "發文已排程" : "發文成功",
-      creditsUsed: creditsNeeded,
-      remainingCredits: deductResult.remainingCredits,
     });
   } catch (error) {
     console.error("[API] 建立社群發文失敗:", error);

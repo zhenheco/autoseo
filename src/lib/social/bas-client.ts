@@ -58,6 +58,7 @@ export interface CreatePostResponse {
   postId: string;
   status: string;
   message: string;
+  error?: string; // 錯誤訊息（失敗時由巴斯系統返回）
   data: {
     id: string;
     content: string;

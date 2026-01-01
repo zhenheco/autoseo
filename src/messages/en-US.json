@@ -856,6 +856,14 @@
     "enterContent": "Enter or use AI to generate post content...",
     "willUse": "Will use",
     "publish": "Publish",
-    "publishing": "Publishing..."
+    "publishing": "Publishing...",
+    "basSystemTitle": "Account & Credit Management",
+    "basSystemDescription": "Social posting uses BAS system for account management and billing",
+    "basSystemHint": "Please visit BAS system to check your credit balance and purchase posting credits",
+    "goToBas": "Go to BAS System",
+    "basSystemManagement": "BAS System Management",
+    "basSystemManagementDesc": "Visit BAS system to connect social accounts, check balance, and purchase credits",
+    "insufficientCreditsError": "Insufficient BAS credits. Please purchase more credits in BAS system",
+    "publishSuccess": "Published successfully!"
   }
 }

@@ -26,7 +26,11 @@ import {
   Key,
   User,
   AlertCircle,
+  ExternalLink,
 } from "lucide-react";
+
+// 巴斯系統 URL
+const BAS_SYSTEM_URL = "https://bas.zhenhe-dm.com";
 
 /**
  * 社群帳號設定
@@ -461,6 +465,28 @@ export default function SocialSettingsPage() {
               })}
             </div>
           )}
+        </CardContent>
+      </Card>
+
+      {/* 巴斯系統連結 */}
+      <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-blue-200 dark:border-blue-800">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <ExternalLink className="h-5 w-5 text-blue-600" />
+            {t("basSystemManagement") || "巴斯系統管理"}
+          </CardTitle>
+          <CardDescription>
+            {t("basSystemManagementDesc") ||
+              "前往巴斯系統連接社群帳號、查看額度、購買發文點數"}
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          <Button asChild>
+            <a href={BAS_SYSTEM_URL} target="_blank" rel="noopener noreferrer">
+              <ExternalLink className="h-4 w-4 mr-2" />
+              {t("goToBas") || "前往巴斯系統"}
+            </a>
+          </Button>
         </CardContent>
       </Card>
 
