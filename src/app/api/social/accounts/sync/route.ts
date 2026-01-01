@@ -1,7 +1,7 @@
 /**
  * 同步社群帳號 API
  *
- * POST /api/social/accounts/sync - 從巴斯 API 同步帳號資訊
+ * POST /api/social/accounts/sync - 從發文小助手 API 同步帳號資訊
  */
 
 import { NextResponse } from "next/server";
@@ -42,23 +42,23 @@ export async function POST() {
 
     if (configError || !config) {
       return NextResponse.json(
-        { error: "請先設定巴斯 API Key" },
+        { error: "請先設定發文小助手 API Key" },
         { status: 400 },
       );
     }
 
-    // 建立巴斯 API Client
+    // 建立發文小助手 API Client
     const basClient = createBasClientFromConfig({
       bas_api_key: config.bas_api_key,
       bas_user_id: config.bas_user_id,
     });
 
-    // 從巴斯 API 取得帳號列表
+    // 從發文小助手 API 取得帳號列表
     const response = await basClient.getAccounts();
 
     if (!response.success) {
       return NextResponse.json(
-        { error: "無法從巴斯取得帳號列表" },
+        { error: "無法從發文小助手取得帳號列表" },
         { status: 500 },
       );
     }

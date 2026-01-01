@@ -19,14 +19,14 @@ import {
   Info,
 } from "lucide-react";
 
-// 巴斯系統 URL
+// 發文小助手系統 URL
 const BAS_SYSTEM_URL = "https://bas.zhenhe-dm.com";
 
 /**
  * 社群發文主頁面
  *
  * 功能：
- * - 引導用戶到巴斯系統管理帳號和額度
+ * - 引導用戶到發文小助手管理帳號和額度
  * - 快速導航到各功能
  * - 使用說明
  */
@@ -48,7 +48,7 @@ export default function SocialPage() {
         </div>
       </div>
 
-      {/* 巴斯系統提示卡片 */}
+      {/* 發文小助手提示卡片 */}
       <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-blue-200 dark:border-blue-800">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
@@ -57,14 +57,14 @@ export default function SocialPage() {
           </CardTitle>
           <CardDescription>
             {t("basSystemDescription") ||
-              "社群發文功能使用巴斯系統進行帳號管理和額度計費"}
+              "社群發文功能使用發文小助手進行帳號管理和額度計費"}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <div className="flex items-center justify-between">
             <p className="text-sm text-muted-foreground">
               {t("basSystemHint") ||
-                "請至巴斯系統查看您的帳號額度、購買發文點數"}
+                "請至發文小助手查看您的帳號額度、購買發文點數"}
             </p>
             <Button asChild>
               <a
@@ -73,7 +73,7 @@ export default function SocialPage() {
                 rel="noopener noreferrer"
               >
                 <ExternalLink className="h-4 w-4 mr-2" />
-                {t("goToBas") || "前往巴斯系統"}
+                {t("goToBas") || "前往發文小助手"}
               </a>
             </Button>
           </div>
@@ -92,7 +92,7 @@ export default function SocialPage() {
               </CardTitle>
               <CardDescription>
                 {t("accountSettingsDesc") ||
-                  "連接您的巴斯帳號以使用社群發文功能"}
+                  "連接您的發文小助手帳號以使用社群發文功能"}
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -144,7 +144,7 @@ export default function SocialPage() {
               <div>
                 <h4 className="font-medium">{t("step1Title") || "連接帳號"}</h4>
                 <p className="text-sm text-muted-foreground">
-                  {t("step1Desc") || "在帳號設定中輸入您的巴斯 API 金鑰"}
+                  {t("step1Desc") || "在帳號設定中連接您的社群媒體帳號"}
                 </p>
               </div>
             </div>

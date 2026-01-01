@@ -1,7 +1,7 @@
 /**
- * 巴斯社群發文 API Client
+ * 發文小助手 API Client
  *
- * 封裝巴斯心思發文系統的外部 API
+ * 封裝發文小助手系統的外部 API
  * 文件：/Users/avyshiu/外部API使用指南.md
  */
 

@@ -27,7 +27,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 
-// 巴斯系統 URL
+// 發文小助手系統 URL
 const BAS_SYSTEM_URL = "https://bas.zhenhe-dm.com";
 
 /**
@@ -272,7 +272,7 @@ export function SocialShareDialog({
           setIsInsufficientCredits(true);
           setError(
             t("insufficientCreditsError") ||
-              "巴斯系統額度不足，請至巴斯系統購買額度後再試",
+              "發文小助手額度不足，請購買額度後再試",
           );
         } else {
           throw new Error(data.error || "發布失敗");
@@ -339,7 +339,7 @@ export function SocialShareDialog({
                     rel="noopener noreferrer"
                   >
                     <ExternalLink className="h-4 w-4 mr-2" />
-                    {t("goToBas") || "前往巴斯系統購買額度"}
+                    {t("goToBas") || "前往發文小助手購買額度"}
                   </a>
                 </Button>
               )}

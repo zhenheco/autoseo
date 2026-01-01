@@ -29,7 +29,7 @@ import {
   ExternalLink,
 } from "lucide-react";
 
-// 巴斯系統 URL
+// 發文小助手系統 URL
 const BAS_SYSTEM_URL = "https://bas.zhenhe-dm.com";
 
 /**
@@ -242,7 +242,7 @@ export default function SocialSettingsPage() {
         </h1>
         <p className="text-muted-foreground mt-1">
           {t("accountSettingsPageDesc") ||
-            "設定巴斯 API 並連接您的社群媒體帳號"}
+            "設定發文小助手 API 並連接您的社群媒體帳號"}
         </p>
       </div>
 
@@ -268,7 +268,7 @@ export default function SocialSettingsPage() {
             {t("apiSettings") || "API 設定"}
           </CardTitle>
           <CardDescription>
-            {t("apiSettingsDesc") || "設定巴斯社群發文系統的 API 金鑰"}
+            {t("apiSettingsDesc") || "設定發文小助手的 API 金鑰"}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -310,11 +310,11 @@ export default function SocialSettingsPage() {
                     className="flex items-center gap-2"
                   >
                     <User className="h-4 w-4" />
-                    {t("basUserId") || "巴斯 User ID"}
+                    {t("basUserId") || "發文小助手 User ID"}
                   </Label>
                   <Input
                     id="basUserId"
-                    placeholder="請輸入巴斯 User ID"
+                    placeholder="請輸入 User ID"
                     value={basUserId}
                     onChange={(e) => setBasUserId(e.target.value)}
                   />
@@ -325,12 +325,12 @@ export default function SocialSettingsPage() {
                     className="flex items-center gap-2"
                   >
                     <Key className="h-4 w-4" />
-                    {t("basApiKey") || "巴斯 API Key"}
+                    {t("basApiKey") || "發文小助手 API Key"}
                   </Label>
                   <Input
                     id="basApiKey"
                     type="password"
-                    placeholder="請輸入巴斯 API Key"
+                    placeholder="請輸入 API Key"
                     value={basApiKey}
                     onChange={(e) => setBasApiKey(e.target.value)}
                   />
@@ -349,8 +349,7 @@ export default function SocialSettingsPage() {
                 )}
               </div>
               <p className="text-sm text-muted-foreground">
-                {t("apiKeyHelp") ||
-                  "您可以在巴斯後台的 API 設定頁面取得 API Key 和 User ID"}
+                {t("apiKeyHelp") || "請在發文小助手後台取得 API Key 和 User ID"}
               </p>
             </div>
           )}
@@ -365,7 +364,7 @@ export default function SocialSettingsPage() {
               <CardTitle>{t("connectedAccounts") || "已連結帳號"}</CardTitle>
               <CardDescription>
                 {t("connectedAccountsDesc") ||
-                  "以下是您在巴斯系統中已連接的社群帳號"}
+                  "以下是您在發文小助手中已連接的社群帳號"}
               </CardDescription>
             </div>
             {config && (
@@ -393,7 +392,8 @@ export default function SocialSettingsPage() {
                 {t("noApiConfig") || "尚未設定 API"}
               </p>
               <p className="text-sm text-muted-foreground mt-1">
-                {t("pleaseSetupApi") || "請先設定巴斯 API Key 以連接社群帳號"}
+                {t("pleaseSetupApi") ||
+                  "請先設定發文小助手 API Key 以連接社群帳號"}
               </p>
             </div>
           ) : accounts.length === 0 ? (
@@ -404,7 +404,7 @@ export default function SocialSettingsPage() {
               </p>
               <p className="text-sm text-muted-foreground mt-1">
                 {t("pleaseConnectInBas") ||
-                  "請先在巴斯系統中連接您的社群帳號，然後點擊同步"}
+                  "請先在發文小助手中連接您的社群帳號，然後點擊同步"}
               </p>
               <Button
                 variant="outline"
@@ -468,23 +468,23 @@ export default function SocialSettingsPage() {
         </CardContent>
       </Card>
 
-      {/* 巴斯系統連結 */}
+      {/* 發文小助手系統連結 */}
       <Card className="bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950 dark:to-indigo-950 border-blue-200 dark:border-blue-800">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <ExternalLink className="h-5 w-5 text-blue-600" />
-            {t("basSystemManagement") || "巴斯系統管理"}
+            {t("basSystemManagement") || "發文小助手管理"}
           </CardTitle>
           <CardDescription>
             {t("basSystemManagementDesc") ||
-              "前往巴斯系統連接社群帳號、查看額度、購買發文點數"}
+              "前往發文小助手連接社群帳號、查看額度、購買發文點數"}
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Button asChild>
             <a href={BAS_SYSTEM_URL} target="_blank" rel="noopener noreferrer">
               <ExternalLink className="h-4 w-4 mr-2" />
-              {t("goToBas") || "前往巴斯系統"}
+              {t("goToBas") || "前往發文小助手"}
             </a>
           </Button>
         </CardContent>
@@ -506,7 +506,7 @@ export default function SocialSettingsPage() {
               </h4>
               <p className="text-sm text-muted-foreground">
                 {t("guide1Desc") ||
-                  "登入巴斯後台，前往 API 設定頁面取得 API Key 和 User ID"}
+                  "登入發文小助手後台，取得 API Key 和 User ID"}
               </p>
             </div>
           </div>
@@ -520,7 +520,7 @@ export default function SocialSettingsPage() {
               </h4>
               <p className="text-sm text-muted-foreground">
                 {t("guide2Desc") ||
-                  "在巴斯系統中連接您的 Facebook、Instagram 或 Threads 帳號"}
+                  "在發文小助手中連接您的 Facebook、Instagram 或 Threads 帳號"}
               </p>
             </div>
           </div>

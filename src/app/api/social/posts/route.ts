@@ -64,10 +64,13 @@ export async function POST(request: NextRequest) {
       .single();
 
     if (configError || !config) {
-      return NextResponse.json({ error: "請先設定巴斯 API" }, { status: 400 });
+      return NextResponse.json(
+        { error: "請先設定發文小助手 API" },
+        { status: 400 },
+      );
     }
 
-    // 建立巴斯 API Client
+    // 建立發文小助手 API Client
     const basClient = createBasClientFromConfig({
       bas_api_key: config.bas_api_key,
       bas_user_id: config.bas_user_id,
@@ -80,7 +83,7 @@ export async function POST(request: NextRequest) {
         : "";
     const fullContent = content + hashtagStr;
 
-    // 呼叫巴斯 API 建立發文
+    // 呼叫發文小助手 API 建立發文
     const basResponse = await basClient.createPost({
       content: fullContent,
       selectedAccounts: selectedAccounts.map(
@@ -100,7 +103,7 @@ export async function POST(request: NextRequest) {
     });
 
     if (!basResponse.success) {
-      // 檢查是否為巴斯系統額度不足錯誤
+      // 檢查是否為發文小助手額度不足錯誤
       const errorMsg =
         basResponse.error || basResponse.message || "發文失敗，請稍後再試";
       const isInsufficientCredits =
