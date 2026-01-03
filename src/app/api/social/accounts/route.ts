@@ -6,6 +6,7 @@
 
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getUserCompanyIdOrError } from "@/lib/auth/get-user-company";
 
 export async function GET() {
   try {
@@ -21,22 +22,21 @@ export async function GET() {
       return NextResponse.json({ error: "未登入" }, { status: 401 });
     }
 
-    // 取得用戶的公司 ID
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("company_id")
-      .eq("id", user.id)
-      .single();
+    // 取得用戶的公司 ID（使用 company_members 表，統一查詢邏輯）
+    const { companyId, errorResponse } = await getUserCompanyIdOrError(
+      supabase,
+      user.id,
+    );
 
-    if (profileError || !profile?.company_id) {
-      return NextResponse.json({ error: "找不到公司資訊" }, { status: 404 });
+    if (errorResponse) {
+      return NextResponse.json(errorResponse, { status: 403 });
     }
 
     // 取得已連結帳號（從快取表）
     const { data: accounts, error: accountsError } = await supabase
       .from("social_accounts")
       .select("*")
-      .eq("company_id", profile.company_id)
+      .eq("company_id", companyId)
       .order("platform", { ascending: true });
 
     if (accountsError) {

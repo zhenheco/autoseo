@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
+import { getUserCompanyIdOrError } from "@/lib/auth/get-user-company";
 
 /**
  * 取得社群帳號設定
@@ -25,22 +26,21 @@ export async function GET() {
       return NextResponse.json({ error: "未登入" }, { status: 401 });
     }
 
-    // 取得用戶的公司 ID
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("company_id")
-      .eq("id", user.id)
-      .single();
+    // 取得用戶的公司 ID（使用 company_members 表，統一查詢邏輯）
+    const { companyId, errorResponse } = await getUserCompanyIdOrError(
+      supabase,
+      user.id,
+    );
 
-    if (profileError || !profile?.company_id) {
-      return NextResponse.json({ error: "找不到公司資訊" }, { status: 404 });
+    if (errorResponse) {
+      return NextResponse.json(errorResponse, { status: 403 });
     }
 
     // 取得社群設定
     const { data: config, error: configError } = await supabase
       .from("social_account_configs")
       .select("id, bas_user_id, is_active, last_synced_at, created_at")
-      .eq("company_id", profile.company_id)
+      .eq("company_id", companyId)
       .single();
 
     if (configError && configError.code !== "PGRST116") {
@@ -88,15 +88,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "未登入" }, { status: 401 });
     }
 
-    // 取得用戶的公司 ID
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("company_id")
-      .eq("id", user.id)
-      .single();
+    // 取得用戶的公司 ID（使用 company_members 表，統一查詢邏輯）
+    const { companyId, errorResponse } = await getUserCompanyIdOrError(
+      supabase,
+      user.id,
+    );
 
-    if (profileError || !profile?.company_id) {
-      return NextResponse.json({ error: "找不到公司資訊" }, { status: 404 });
+    if (errorResponse) {
+      return NextResponse.json(errorResponse, { status: 403 });
     }
 
     // 解析請求
@@ -114,7 +113,7 @@ export async function POST(request: NextRequest) {
     const { data: existingConfig } = await supabase
       .from("social_account_configs")
       .select("id")
-      .eq("company_id", profile.company_id)
+      .eq("company_id", companyId)
       .single();
 
     if (existingConfig) {
@@ -127,7 +126,7 @@ export async function POST(request: NextRequest) {
           is_active: true,
           updated_at: new Date().toISOString(),
         })
-        .eq("company_id", profile.company_id);
+        .eq("company_id", companyId);
 
       if (updateError) {
         throw new Error(`更新設定失敗: ${updateError.message}`);
@@ -137,7 +136,7 @@ export async function POST(request: NextRequest) {
       const { error: insertError } = await supabase
         .from("social_account_configs")
         .insert({
-          company_id: profile.company_id,
+          company_id: companyId,
           bas_api_key: basApiKey,
           bas_user_id: basUserId,
           is_active: true,

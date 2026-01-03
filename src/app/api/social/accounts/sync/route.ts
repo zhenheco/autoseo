@@ -7,6 +7,7 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createBasClientFromConfig } from "@/lib/social/bas-client";
+import { getUserCompanyIdOrError } from "@/lib/auth/get-user-company";
 
 export async function POST() {
   try {
@@ -22,22 +23,21 @@ export async function POST() {
       return NextResponse.json({ error: "未登入" }, { status: 401 });
     }
 
-    // 取得用戶的公司 ID
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("company_id")
-      .eq("id", user.id)
-      .single();
+    // 取得用戶的公司 ID（使用 company_members 表，統一查詢邏輯）
+    const { companyId, errorResponse } = await getUserCompanyIdOrError(
+      supabase,
+      user.id,
+    );
 
-    if (profileError || !profile?.company_id) {
-      return NextResponse.json({ error: "找不到公司資訊" }, { status: 404 });
+    if (errorResponse) {
+      return NextResponse.json(errorResponse, { status: 403 });
     }
 
     // 取得社群設定
     const { data: config, error: configError } = await supabase
       .from("social_account_configs")
       .select("*")
-      .eq("company_id", profile.company_id)
+      .eq("company_id", companyId)
       .single();
 
     if (configError || !config) {
@@ -64,15 +64,12 @@ export async function POST() {
     }
 
     // 清除舊的帳號快取
-    await supabase
-      .from("social_accounts")
-      .delete()
-      .eq("company_id", profile.company_id);
+    await supabase.from("social_accounts").delete().eq("company_id", companyId);
 
     // 儲存新的帳號資訊
     if (response.data && response.data.length > 0) {
       const accountsToInsert = response.data.map((account) => ({
-        company_id: profile.company_id,
+        company_id: companyId,
         config_id: config.id,
         platform: account.platform,
         account_id: account.id,

@@ -11,6 +11,7 @@ import {
   extractArticleSummary,
   type SocialPlatform,
 } from "@/lib/social/social-content-agent";
+import { getUserCompanyIdOrError } from "@/lib/auth/get-user-company";
 
 export async function POST(request: NextRequest) {
   try {
@@ -26,15 +27,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "未登入" }, { status: 401 });
     }
 
-    // 取得用戶的公司 ID
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("company_id")
-      .eq("id", user.id)
-      .single();
+    // 取得用戶的公司 ID（使用 company_members 表，統一查詢邏輯）
+    const { companyId, errorResponse } = await getUserCompanyIdOrError(
+      supabase,
+      user.id,
+    );
 
-    if (profileError || !profile?.company_id) {
-      return NextResponse.json({ error: "找不到公司資訊" }, { status: 404 });
+    if (errorResponse) {
+      return NextResponse.json(errorResponse, { status: 403 });
     }
 
     // 解析請求
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
       .eq("generated_articles!inner(id)", articleId)
       .single();
 
-    if (!job || job.company_id !== profile.company_id) {
+    if (!job || job.company_id !== companyId) {
       return NextResponse.json({ error: "無權限存取此文章" }, { status: 403 });
     }
 

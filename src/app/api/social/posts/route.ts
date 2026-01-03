@@ -8,6 +8,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createBasClientFromConfig } from "@/lib/social/bas-client";
+import { getUserCompanyIdOrError } from "@/lib/auth/get-user-company";
 
 /**
  * 建立社群發文
@@ -26,15 +27,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "未登入" }, { status: 401 });
     }
 
-    // 取得用戶的公司 ID
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("company_id")
-      .eq("id", user.id)
-      .single();
+    // 取得用戶的公司 ID（使用 company_members 表，統一查詢邏輯）
+    const { companyId, errorResponse } = await getUserCompanyIdOrError(
+      supabase,
+      user.id,
+    );
 
-    if (profileError || !profile?.company_id) {
-      return NextResponse.json({ error: "找不到公司資訊" }, { status: 404 });
+    if (errorResponse) {
+      return NextResponse.json(errorResponse, { status: 403 });
     }
 
     // 解析請求
@@ -60,7 +60,7 @@ export async function POST(request: NextRequest) {
     const { data: config, error: configError } = await supabase
       .from("social_account_configs")
       .select("*")
-      .eq("company_id", profile.company_id)
+      .eq("company_id", companyId)
       .single();
 
     if (configError || !config) {
@@ -124,7 +124,7 @@ export async function POST(request: NextRequest) {
     // 建立發文記錄
     const postsToInsert = selectedAccounts.map(
       (acc: { platform: string; accountId: string }) => ({
-        company_id: profile.company_id,
+        company_id: companyId,
         article_id: articleId || null,
         account_id: acc.accountId,
         platform: acc.platform,
@@ -180,15 +180,14 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "未登入" }, { status: 401 });
     }
 
-    // 取得用戶的公司 ID
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("company_id")
-      .eq("id", user.id)
-      .single();
+    // 取得用戶的公司 ID（使用 company_members 表，統一查詢邏輯）
+    const { companyId, errorResponse } = await getUserCompanyIdOrError(
+      supabase,
+      user.id,
+    );
 
-    if (profileError || !profile?.company_id) {
-      return NextResponse.json({ error: "找不到公司資訊" }, { status: 404 });
+    if (errorResponse) {
+      return NextResponse.json(errorResponse, { status: 403 });
     }
 
     // 取得分頁參數
@@ -205,7 +204,7 @@ export async function GET(request: NextRequest) {
     } = await supabase
       .from("social_posts")
       .select("*, generated_articles(title)", { count: "exact" })
-      .eq("company_id", profile.company_id)
+      .eq("company_id", companyId)
       .order("created_at", { ascending: false })
       .range(offset, offset + limit - 1);
 

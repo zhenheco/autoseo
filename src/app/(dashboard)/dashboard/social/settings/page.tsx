@@ -97,25 +97,49 @@ export default function SocialSettingsPage() {
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
+      setError(null);
+
       const [configRes, accountsRes] = await Promise.all([
         fetch("/api/social/config"),
         fetch("/api/social/accounts"),
       ]);
 
+      // 處理 config API 回應
       if (configRes.ok) {
         const data = await configRes.json();
         if (data.config) {
           setConfig(data.config);
           setBasUserId(data.config.basUserId || "");
         }
+      } else {
+        const errorData = await configRes.json().catch(() => ({}));
+        // 處理「沒有公司」的特殊錯誤
+        if (errorData.code === "NO_COMPANY") {
+          setError(
+            "請先完成公司設定。前往「設定」頁面建立或加入公司後，即可使用社群發文功能。",
+          );
+          return; // 不繼續載入其他資料
+        } else if (configRes.status !== 401) {
+          // 忽略未登入錯誤（會被重定向）
+          console.error("載入設定失敗:", errorData.error);
+        }
       }
 
+      // 處理 accounts API 回應
       if (accountsRes.ok) {
         const data = await accountsRes.json();
         setAccounts(data.accounts || []);
+      } else {
+        const errorData = await accountsRes.json().catch(() => ({}));
+        if (errorData.code === "NO_COMPANY") {
+          setError(
+            "請先完成公司設定。前往「設定」頁面建立或加入公司後，即可使用社群發文功能。",
+          );
+        }
       }
     } catch (err) {
       console.error("載入資料失敗:", err);
+      setError("載入資料時發生錯誤，請重新整理頁面");
     } finally {
       setLoading(false);
     }
