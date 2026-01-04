@@ -748,3 +748,15 @@ await supabase.from("article_translations").upsert({
 - 取消排程：`actions.ts` → `cancelArticleSchedule()`
 - Cron 處理：`/api/cron/process-scheduled-articles/route.ts`
 - Migration：`supabase/migrations/20251215000000_translation_scheduling.sql`
+
+---
+
+# 🐛 已知問題與解法
+
+### Supabase RLS - social_accounts 表缺少寫入政策
+
+**問題**：同步社群帳號時出現 `new row violates row-level security policy for table "social_accounts"`
+**原因**：原始 migration 只定義了 SELECT 政策，缺少 INSERT/DELETE/UPDATE 政策
+**解法**：創建 `20260104000000_social_accounts_rls_fix.sql` 補齊缺少的 RLS 政策
+**教訓**：新增資料表時，務必確認所有 CRUD 操作都有對應的 RLS 政策
+**日期**：2026-01-04
