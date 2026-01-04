@@ -124,9 +124,9 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
     return typeof translatedName === "string" ? translatedName : plan.name;
   };
 
-  // 計算年繳贈送的篇數
+  // 計算年繳加贈的篇數（原始額度 × 200%）
   const getYearlyBonus = (plan: ArticlePlan) => {
-    return plan.articles_per_month * (plan.yearly_bonus_months || 2);
+    return plan.articles_per_month * 2;
   };
 
   return (
@@ -428,7 +428,7 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
                         : "bg-yellow-400/80 text-slate-900"
                     }`}
                   >
-                    {t("yearlyBonus") || "送2個月"}
+                    {t("yearlyBonus") || "多送200%"}
                   </span>
                 </button>
               </div>
@@ -498,7 +498,7 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
                           <div className="flex items-center justify-center gap-1 mt-2 text-sm text-cyber-magenta-500 dark:text-cyber-magenta-400">
                             <Gift className="h-4 w-4" />
                             <span className="font-medium">
-                              {t("bonusArticles") || "再送"} {yearlyBonus}{" "}
+                              {t("bonusArticles") || "每月加贈"} {yearlyBonus}{" "}
                               {t("articles") || "篇"}
                             </span>
                           </div>

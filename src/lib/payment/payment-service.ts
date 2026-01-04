@@ -869,9 +869,8 @@ export class PaymentService {
             now.getDate(),
           ).toISOString();
 
-          // 計算年繳贈送篇數（加到加購額度）
-          const bonusArticles =
-            plan.articles_per_month * (plan.yearly_bonus_months || 2);
+          // 年繳用戶每月額度 = 原始額度 × 3（原本 + 200% 加贈）
+          const effectiveArticlesPerMonth = plan.articles_per_month * 3;
 
           // 查詢舊訂閱
           const { data: rawOldSubscription } = await this.supabase
@@ -892,11 +891,9 @@ export class PaymentService {
             commissionOrderType = "upgrade";
           }
 
-          // 保留舊的加購額度
+          // 保留舊的加購額度（年繳不再額外送加購額度，改為每月額度 ×3）
           const preservedPurchased =
             oldSubscription?.purchased_articles_remaining || 0;
-          // 新的加購額度 = 保留的 + 年繳贈送
-          const newPurchasedArticles = preservedPurchased + bonusArticles;
 
           // 刪除舊訂閱
           if (oldSubscription) {
@@ -913,9 +910,9 @@ export class PaymentService {
               company_id: orderData.company_id,
               plan_id: plan.id,
               status: "active",
-              subscription_articles_remaining: plan.articles_per_month,
-              purchased_articles_remaining: newPurchasedArticles,
-              articles_per_month: plan.articles_per_month,
+              subscription_articles_remaining: effectiveArticlesPerMonth,
+              purchased_articles_remaining: preservedPurchased,
+              articles_per_month: effectiveArticlesPerMonth,
               billing_cycle: "yearly",
               current_period_start: periodStart,
               current_period_end: periodEnd,
@@ -950,35 +947,14 @@ export class PaymentService {
             );
           }
 
-          // 如果有年繳贈送，記錄到 purchased_article_credits（FIFO 追蹤）
-          if (bonusArticles > 0) {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { error: creditError } = await (this.supabase as any)
-              .from("purchased_article_credits")
-              .insert({
-                company_id: orderData.company_id,
-                package_id: null, // 年繳贈送，沒有 package_id
-                payment_order_id: orderData.id,
-                original_credits: bonusArticles,
-                remaining_credits: bonusArticles,
-                expires_at: null, // 贈送篇數永久有效
-              });
-
-            if (creditError) {
-              console.error(
-                "[PaymentService] 記錄年繳贈送篇數失敗:",
-                creditError,
-              );
-            }
-          }
+          // 年繳優惠改為每月額度 ×3，不再額外送加購額度
 
           console.log("[PaymentService] 年繳訂閱處理成功:", {
             planName: plan.name,
             tier,
-            articlesPerMonth: plan.articles_per_month,
-            bonusArticles,
+            baseArticlesPerMonth: plan.articles_per_month,
+            effectiveArticlesPerMonth,
             preservedPurchased,
-            totalPurchased: newPurchasedArticles,
             periodEnd,
           });
         } else if (
