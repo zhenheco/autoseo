@@ -6,6 +6,14 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { validateApiKey, WebsiteInfo } from "./api-key-service";
+import {
+  checkRateLimit,
+  createRateLimitHeaders,
+  createRateLimitExceededResponse,
+  DEFAULT_RATE_LIMIT,
+  RateLimitConfig,
+} from "./rate-limiter";
+import { logApiUsage, getClientInfo } from "./api-usage-tracker";
 
 /**
  * API 端點處理函數類型
@@ -96,9 +104,10 @@ export function createSuccessResponse<T>(
 /**
  * API Key 認證 Higher-Order Function
  *
- * 包裝 API handler，自動處理認證邏輯
+ * 包裝 API handler，自動處理認證邏輯和速率限制
  *
  * @param handler - 原始 API handler
+ * @param rateLimitConfig - 速率限制設定（可選）
  * @returns 包裝後的 handler
  *
  * @example
@@ -110,7 +119,10 @@ export function createSuccessResponse<T>(
  * })
  * ```
  */
-export function withApiKeyAuth(handler: ApiHandler) {
+export function withApiKeyAuth(
+  handler: ApiHandler,
+  rateLimitConfig: RateLimitConfig = DEFAULT_RATE_LIMIT,
+) {
   return async (request: NextRequest): Promise<Response> => {
     // 1. 取得 Authorization header
     const authHeader = request.headers.get("authorization");
@@ -133,8 +145,44 @@ export function withApiKeyAuth(handler: ApiHandler) {
       return createErrorResponse("Invalid API key", 401);
     }
 
-    // 4. 呼叫原始 handler，傳入 website 資訊
-    return handler(request, website);
+    // 4. 檢查速率限制（使用網站 ID 作為識別符）
+    const rateLimitResult = await checkRateLimit(
+      `site:${website.id}`,
+      rateLimitConfig,
+    );
+
+    if (!rateLimitResult.allowed) {
+      return createRateLimitExceededResponse(rateLimitResult);
+    }
+
+    // 5. 呼叫原始 handler，傳入 website 資訊
+    const startTime = Date.now();
+    const response = await handler(request, website);
+    const responseTime = Date.now() - startTime;
+
+    // 6. 記錄 API 使用量（非阻塞）
+    const { ip, userAgent } = getClientInfo(request);
+    const endpoint = new URL(request.url).pathname;
+
+    logApiUsage({
+      websiteId: website.id,
+      endpoint,
+      method: request.method,
+      statusCode: response.status,
+      responseTimeMs: responseTime,
+      requestIp: ip || undefined,
+      userAgent: userAgent || undefined,
+    }).catch(() => {
+      // 忽略記錄錯誤
+    });
+
+    // 7. 加入 rate limit headers 到回應
+    const rateLimitHeaders = createRateLimitHeaders(rateLimitResult);
+    rateLimitHeaders.forEach((value, key) => {
+      response.headers.set(key, value);
+    });
+
+    return response;
   };
 }
 
