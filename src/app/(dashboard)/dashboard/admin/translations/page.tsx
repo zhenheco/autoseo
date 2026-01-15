@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -19,8 +19,18 @@ import {
 } from "@/components/ui/table";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Input } from "@/components/ui/input";
+import { Switch } from "@/components/ui/switch";
+import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Globe, Languages, Loader2, RefreshCw, Search } from "lucide-react";
+import {
+  Globe,
+  Languages,
+  Loader2,
+  RefreshCw,
+  Search,
+  Settings,
+  Zap,
+} from "lucide-react";
 import type {
   TranslationLocale,
   ArticleTranslationSummary,
@@ -30,6 +40,14 @@ import {
   TRANSLATION_LOCALES,
 } from "@/types/translations";
 import { WebsiteSelector } from "@/components/articles/WebsiteSelector";
+
+// 網站自動翻譯設定類型
+interface WebsiteAutoTranslateSettings {
+  id: string;
+  website_name: string;
+  auto_translate_enabled: boolean;
+  auto_translate_languages: string[];
+}
 
 /**
  * 翻譯管理頁面
@@ -44,18 +62,111 @@ export default function AdminTranslationsPage() {
   const [search, setSearch] = useState("");
   const [websiteId, setWebsiteId] = useState<string | null>(null);
   const [selectedArticles, setSelectedArticles] = useState<Set<string>>(
-    new Set(),
+    new Set()
   );
   const [selectedLanguages, setSelectedLanguages] = useState<
     Set<TranslationLocale>
   >(new Set(["en-US"]));
   const [accessDenied, setAccessDenied] = useState(false);
 
-  useEffect(() => {
-    fetchArticles();
-  }, [search, websiteId]);
+  // 自動翻譯設定 state
+  const [settingsLoading, setSettingsLoading] = useState(true);
+  const [websiteSettings, setWebsiteSettings] = useState<
+    WebsiteAutoTranslateSettings[]
+  >([]);
+  const [savingSettings, setSavingSettings] = useState<string | null>(null);
 
-  const fetchArticles = async () => {
+  // 載入自動翻譯設定
+  const fetchSettings = useCallback(async () => {
+    try {
+      const response = await fetch("/api/translations/settings");
+      if (response.status === 403) {
+        setAccessDenied(true);
+        return;
+      }
+      if (!response.ok) {
+        throw new Error("載入設定失敗");
+      }
+      const data = await response.json();
+      setWebsiteSettings(data.websites || []);
+    } catch (error) {
+      console.error("載入自動翻譯設定失敗:", error);
+    } finally {
+      setSettingsLoading(false);
+    }
+  }, []);
+
+  // 更新單一網站的自動翻譯設定
+  const updateSettings = async (
+    websiteId: string,
+    enabled: boolean,
+    languages: string[]
+  ) => {
+    setSavingSettings(websiteId);
+    try {
+      const response = await fetch("/api/translations/settings", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          website_id: websiteId,
+          auto_translate_enabled: enabled,
+          auto_translate_languages: languages,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || "更新失敗");
+      }
+
+      // 更新本地 state
+      setWebsiteSettings((prev) =>
+        prev.map((w) =>
+          w.id === websiteId
+            ? { ...w, auto_translate_enabled: enabled, auto_translate_languages: languages }
+            : w
+        )
+      );
+
+      toast.success("設定已儲存");
+    } catch (error) {
+      console.error("更新自動翻譯設定失敗:", error);
+      toast.error(error instanceof Error ? error.message : "更新設定失敗");
+    } finally {
+      setSavingSettings(null);
+    }
+  };
+
+  // 切換網站的自動翻譯開關
+  const handleToggleAutoTranslate = (website: WebsiteAutoTranslateSettings) => {
+    const newEnabled = !website.auto_translate_enabled;
+    // 如果啟用但沒有選擇語言，預設選擇英文
+    const languages =
+      newEnabled && website.auto_translate_languages.length === 0
+        ? ["en-US"]
+        : website.auto_translate_languages;
+    updateSettings(website.id, newEnabled, languages);
+  };
+
+  // 切換網站的目標語言
+  const handleToggleAutoLanguage = (
+    website: WebsiteAutoTranslateSettings,
+    locale: TranslationLocale
+  ) => {
+    const currentLanguages = new Set(website.auto_translate_languages);
+    if (currentLanguages.has(locale)) {
+      currentLanguages.delete(locale);
+    } else {
+      currentLanguages.add(locale);
+    }
+    const newLanguages = Array.from(currentLanguages);
+    // 如果取消所有語言，也要關閉自動翻譯
+    const newEnabled =
+      newLanguages.length > 0 ? website.auto_translate_enabled : false;
+    updateSettings(website.id, newEnabled, newLanguages);
+  };
+
+  const fetchArticles = useCallback(async () => {
     try {
       const params = new URLSearchParams({
         limit: "50",
@@ -69,7 +180,7 @@ export default function AdminTranslationsPage() {
       }
 
       const response = await fetch(
-        `/api/translations/articles?${params.toString()}`,
+        `/api/translations/articles?${params.toString()}`
       );
 
       if (response.status === 403) {
@@ -91,7 +202,15 @@ export default function AdminTranslationsPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [search, websiteId]);
+
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
+
+  useEffect(() => {
+    fetchArticles();
+  }, [fetchArticles]);
 
   const handleSelectAll = (checked: boolean) => {
     if (checked) {
@@ -155,15 +274,15 @@ export default function AdminTranslationsPage() {
       // 根據結果顯示不同訊息
       if (data.job_count === 0 && data.skipped?.count > 0) {
         toast.info(
-          `所有選中的文章已有該語言的翻譯，已跳過 ${data.skipped.count} 個`,
+          `所有選中的文章已有該語言的翻譯，已跳過 ${data.skipped.count} 個`
         );
       } else if (data.skipped?.count > 0) {
         toast.success(
-          `已建立 ${data.job_count} 個翻譯任務，跳過 ${data.skipped.count} 個已有翻譯`,
+          `已建立 ${data.job_count} 個翻譯任務，跳過 ${data.skipped.count} 個已有翻譯`
         );
       } else {
         toast.success(
-          `已建立 ${data.job_count} 個翻譯任務，將於 5 分鐘內開始處理`,
+          `已建立 ${data.job_count} 個翻譯任務，將於 5 分鐘內開始處理`
         );
       }
 
@@ -175,6 +294,11 @@ export default function AdminTranslationsPage() {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleRefresh = () => {
+    fetchArticles();
+    fetchSettings();
   };
 
   if (accessDenied) {
@@ -209,13 +333,106 @@ export default function AdminTranslationsPage() {
             將已發布的文章翻譯成多種語言，擴展國際 SEO 覆蓋範圍
           </p>
         </div>
-        <Button variant="outline" onClick={fetchArticles} disabled={loading}>
+        <Button variant="outline" onClick={handleRefresh} disabled={loading}>
           <RefreshCw
             className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
           />
           重新整理
         </Button>
       </div>
+
+      {/* 自動翻譯設定區塊 */}
+      <Card>
+        <CardHeader>
+          <div className="flex items-center gap-2">
+            <Settings className="h-5 w-5" />
+            <CardTitle className="text-lg">自動翻譯設定</CardTitle>
+          </div>
+          <CardDescription>
+            啟用後，當文章排程發布時會自動觸發翻譯任務
+          </CardDescription>
+        </CardHeader>
+        <CardContent>
+          {settingsLoading ? (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            </div>
+          ) : websiteSettings.length === 0 ? (
+            <p className="text-muted-foreground text-center py-4">
+              沒有可設定的網站
+            </p>
+          ) : (
+            <div className="space-y-4">
+              {websiteSettings.map((website) => (
+                <div
+                  key={website.id}
+                  className="flex flex-col gap-3 p-4 rounded-lg border bg-card"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <Switch
+                        checked={website.auto_translate_enabled}
+                        onCheckedChange={() =>
+                          handleToggleAutoTranslate(website)
+                        }
+                        disabled={savingSettings === website.id}
+                      />
+                      <div>
+                        <div className="font-medium flex items-center gap-2">
+                          {website.website_name}
+                          {website.auto_translate_enabled && (
+                            <Badge variant="secondary" className="gap-1">
+                              <Zap className="h-3 w-3" />
+                              自動翻譯
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          {website.auto_translate_enabled
+                            ? `排程發布時自動翻譯成 ${website.auto_translate_languages.length} 種語言`
+                            : "未啟用自動翻譯"}
+                        </p>
+                      </div>
+                    </div>
+                    {savingSettings === website.id && (
+                      <Loader2 className="h-4 w-4 animate-spin" />
+                    )}
+                  </div>
+
+                  {/* 目標語言選擇 - 只有啟用時才顯示 */}
+                  {website.auto_translate_enabled && (
+                    <div className="flex flex-wrap gap-2 pl-12">
+                      {TRANSLATION_LOCALES.map((locale) => {
+                        const lang = TRANSLATION_LANGUAGES[locale];
+                        const isSelected =
+                          website.auto_translate_languages.includes(locale);
+
+                        return (
+                          <Button
+                            key={locale}
+                            variant={isSelected ? "default" : "outline"}
+                            size="sm"
+                            onClick={() =>
+                              handleToggleAutoLanguage(website, locale)
+                            }
+                            disabled={savingSettings === website.id}
+                            className="gap-1"
+                          >
+                            <span>{lang.flagEmoji}</span>
+                            <span className="hidden sm:inline">
+                              {lang.nativeName}
+                            </span>
+                          </Button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
 
       {/* 篩選區：網站選擇 + 目標語言 */}
       <div className="grid gap-6 md:grid-cols-2">
@@ -344,7 +561,7 @@ export default function AdminTranslationsPage() {
                         onCheckedChange={(checked) =>
                           handleSelectArticle(
                             article.article_id,
-                            checked === true,
+                            checked === true
                           )
                         }
                       />

@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
+import { v4 as uuidv4 } from "uuid";
 import { createAdminClient } from "@/lib/supabase/server";
 import { WordPressClient } from "@/lib/wordpress/client";
 import {
@@ -7,6 +8,11 @@ import {
   isEncrypted,
 } from "@/lib/security/token-encryption";
 import { pingAllSearchEngines } from "@/lib/sitemap/ping-service";
+import {
+  cacheSet,
+  isRedisAvailable,
+  CACHE_CONFIG,
+} from "@/lib/cache/redis-cache";
 
 const MAX_RETRY_COUNT = 3;
 const RETRY_DELAYS_MINUTES = [5, 30, 120];
@@ -38,7 +44,9 @@ export async function GET(request: NextRequest) {
         wordpress_access_token,
         wordpress_refresh_token,
         is_active,
-        is_platform_blog
+        is_platform_blog,
+        auto_translate_enabled,
+        auto_translate_languages
       ),
       generated_articles (
         id,
@@ -208,6 +216,18 @@ export async function GET(request: NextRequest) {
         console.log(
           `[Process Scheduled Articles] Published to Platform Blog: ${article.id} - ${generatedArticle.title}`,
         );
+
+        // 觸發自動翻譯
+        await triggerAutoTranslation(
+          supabase,
+          generatedArticle.id,
+          website.id,
+          article.company_id,
+          article.user_id,
+          website.auto_translate_enabled,
+          website.auto_translate_languages
+        );
+
         results.published++;
         results.details.push({
           articleId: article.id,
@@ -313,6 +333,18 @@ export async function GET(request: NextRequest) {
         console.log(
           `[Process Scheduled Articles] Draft updated to publish: ${article.id} - ${article.article_title}`,
         );
+
+        // 觸發自動翻譯
+        await triggerAutoTranslation(
+          supabase,
+          generatedArticle.id,
+          website.id,
+          article.company_id,
+          article.user_id,
+          website.auto_translate_enabled,
+          website.auto_translate_languages
+        );
+
         results.published++;
         results.details.push({
           articleId: article.id,
@@ -446,6 +478,18 @@ export async function GET(request: NextRequest) {
       console.log(
         `[Process Scheduled Articles] Published: ${article.id} - ${article.article_title}`,
       );
+
+      // 觸發自動翻譯
+      await triggerAutoTranslation(
+        supabase,
+        generatedArticle.id,
+        website.id,
+        article.company_id,
+        article.user_id,
+        website.auto_translate_enabled,
+        website.auto_translate_languages
+      );
+
       results.published++;
       results.details.push({
         articleId: article.id,
@@ -636,6 +680,123 @@ async function processScheduledTranslations(
   );
 
   return results;
+}
+
+/**
+ * 文章發布成功後觸發自動翻譯
+ * 檢查網站的自動翻譯設定，如果啟用則建立翻譯任務
+ */
+async function triggerAutoTranslation(
+  supabase: ReturnType<typeof createAdminClient>,
+  articleId: string,
+  websiteId: string,
+  companyId: string,
+  userId: string,
+  autoTranslateEnabled: boolean | null,
+  autoTranslateLanguages: string[] | null
+): Promise<{ triggered: boolean; jobCount: number; skipped: number }> {
+  // 檢查是否啟用自動翻譯
+  if (!autoTranslateEnabled || !autoTranslateLanguages || autoTranslateLanguages.length === 0) {
+    return { triggered: false, jobCount: 0, skipped: 0 };
+  }
+
+  console.log(
+    `[Auto Translate] Checking article ${articleId} for auto translation to: ${autoTranslateLanguages.join(", ")}`
+  );
+
+  try {
+    // 查詢已有翻譯，避免重複翻譯
+    const { data: existingTranslations } = await supabase
+      .from("article_translations")
+      .select("target_language")
+      .eq("source_article_id", articleId);
+
+    // 建立已翻譯的 Set
+    const existingSet = new Set(
+      existingTranslations?.map((t) => t.target_language) || []
+    );
+
+    // 過濾掉已有翻譯的語言
+    const languagesToTranslate = autoTranslateLanguages.filter(
+      (lang) => !existingSet.has(lang)
+    );
+
+    const skippedCount = autoTranslateLanguages.length - languagesToTranslate.length;
+
+    if (languagesToTranslate.length === 0) {
+      console.log(
+        `[Auto Translate] All languages already translated for article ${articleId}, skipped ${skippedCount}`
+      );
+      return { triggered: false, jobCount: 0, skipped: skippedCount };
+    }
+
+    // 建立翻譯任務
+    const job = {
+      id: uuidv4(),
+      job_id: `auto-trans-${articleId.slice(0, 8)}-${Date.now()}`,
+      company_id: companyId,
+      website_id: websiteId,
+      user_id: userId,
+      source_article_id: articleId,
+      target_languages: languagesToTranslate,
+      status: "pending",
+      progress: 0,
+      completed_languages: [],
+      failed_languages: {},
+    };
+
+    const { error: insertError } = await supabase
+      .from("translation_jobs")
+      .insert([job]);
+
+    if (insertError) {
+      console.error("[Auto Translate] Failed to create translation job:", insertError);
+      return { triggered: false, jobCount: 0, skipped: skippedCount };
+    }
+
+    console.log(
+      `[Auto Translate] Created translation job for article ${articleId}: ${languagesToTranslate.join(", ")}`
+    );
+
+    // 設置 Redis flag 通知有待處理翻譯任務
+    if (isRedisAvailable()) {
+      await cacheSet(
+        CACHE_CONFIG.PENDING_TRANSLATION_JOBS.prefix,
+        true,
+        CACHE_CONFIG.PENDING_TRANSLATION_JOBS.ttl
+      ).catch((err) => {
+        console.warn("[Auto Translate] Redis flag 設置失敗:", err);
+      });
+    }
+
+    // 觸發 GitHub Actions 立即處理翻譯任務
+    if (process.env.GH_PAT && process.env.GH_REPO) {
+      try {
+        await fetch(
+          `https://api.github.com/repos/${process.env.GH_REPO}/dispatches`,
+          {
+            method: "POST",
+            headers: {
+              Authorization: `Bearer ${process.env.GH_PAT}`,
+              Accept: "application/vnd.github.v3+json",
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              event_type: "translation-jobs-created",
+            }),
+          }
+        );
+        console.log("[Auto Translate] GitHub Actions 已觸發");
+      } catch (e) {
+        console.warn("[Auto Translate] GitHub dispatch 失敗:", e);
+      }
+    }
+
+    return { triggered: true, jobCount: 1, skipped: skippedCount };
+  } catch (error) {
+    console.error("[Auto Translate] Error:", error);
+    return { triggered: false, jobCount: 0, skipped: 0 };
+  }
 }
 
 async function handlePublishError(

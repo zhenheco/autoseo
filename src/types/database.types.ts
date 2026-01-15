@@ -1585,6 +1585,8 @@ export type Database = {
           auto_schedule_enabled: boolean | null;
           schedule_type: "daily" | "interval" | null;
           schedule_interval_days: number | null;
+          auto_translate_enabled: boolean | null;
+          auto_translate_languages: string[] | null;
         };
         Insert: {
           id?: string;
@@ -1611,6 +1613,8 @@ export type Database = {
           auto_schedule_enabled?: boolean | null;
           schedule_type?: "daily" | "interval" | null;
           schedule_interval_days?: number | null;
+          auto_translate_enabled?: boolean | null;
+          auto_translate_languages?: string[] | null;
         };
         Update: {
           id?: string;
@@ -1637,6 +1641,8 @@ export type Database = {
           auto_schedule_enabled?: boolean | null;
           schedule_type?: "daily" | "interval" | null;
           schedule_interval_days?: number | null;
+          auto_translate_enabled?: boolean | null;
+          auto_translate_languages?: string[] | null;
         };
         Relationships: [
           {
