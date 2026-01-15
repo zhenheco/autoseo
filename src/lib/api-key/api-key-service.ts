@@ -10,7 +10,7 @@
  */
 
 import crypto from "crypto";
-import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/server";
 
 /** API Key 前綴 */
 const API_KEY_PREFIX = "sk_site_";
@@ -103,7 +103,7 @@ export async function validateApiKey(
     const hashedKey = await hashApiKey(apiKey);
 
     // 使用 service role 查詢（繞過 RLS）
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     const { data, error } = await supabase
       .from("website_configs")
@@ -154,7 +154,7 @@ export async function regenerateApiKey(
     const hashedKey = await hashApiKey(newApiKey);
 
     // 更新資料庫
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     const { error } = await supabase
       .from("website_configs")
@@ -192,7 +192,7 @@ export async function createApiKeyForWebsite(
     const hashedKey = await hashApiKey(newApiKey);
 
     // 更新資料庫
-    const supabase = await createClient();
+    const supabase = createAdminClient();
 
     const { error } = await supabase
       .from("website_configs")
