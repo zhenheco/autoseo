@@ -9,6 +9,11 @@ import {
   encryptWordPressPassword,
   decryptWordPressPassword,
 } from "@/lib/security/token-encryption";
+import {
+  generateApiKey,
+  hashApiKey,
+  regenerateApiKey,
+} from "@/lib/api-key/api-key-service";
 
 interface Website {
   id: string;
@@ -682,4 +687,255 @@ export async function updateWebsiteAutoSchedule(formData: FormData) {
     `/dashboard/websites/${websiteId}/edit?success=` +
       encodeURIComponent("自動排程設定已更新"),
   );
+}
+
+/**
+ * 註冊外部網站
+ */
+export async function registerExternalSite(formData: FormData): Promise<{
+  success: boolean;
+  apiKey?: string;
+  websiteId?: string;
+  error?: string;
+}> {
+  const user = await getUser();
+  if (!user) {
+    return { success: false, error: "未登入" };
+  }
+
+  const websiteName = formData.get("websiteName") as string;
+  const websiteUrl = formData.get("websiteUrl") as string;
+  const companyId = formData.get("companyId") as string;
+
+  if (!websiteName || !websiteUrl || !companyId) {
+    return { success: false, error: "缺少必要欄位" };
+  }
+
+  // 驗證 URL 格式
+  try {
+    new URL(websiteUrl);
+  } catch {
+    return { success: false, error: "無效的網站 URL" };
+  }
+
+  const supabase = await createClient();
+
+  // 檢查使用者是否有權限
+  const { data: membership } = await supabase
+    .from("company_members")
+    .select("role")
+    .eq("company_id", companyId)
+    .eq("user_id", user.id)
+    .single();
+
+  if (
+    !membership ||
+    (membership.role !== "owner" && membership.role !== "admin")
+  ) {
+    return { success: false, error: "您沒有權限註冊外部網站" };
+  }
+
+  // 檢查網址是否已被使用
+  const { data: existingWebsite } = await supabase
+    .from("website_configs")
+    .select("id")
+    .eq("wordpress_url", websiteUrl)
+    .single();
+
+  if (existingWebsite) {
+    return { success: false, error: "此網址已被註冊" };
+  }
+
+  // 生成 API Key
+  const apiKey = await generateApiKey();
+  const hashedApiKey = await hashApiKey(apiKey);
+
+  // 建立網站記錄
+  const { data: website, error } = await supabase
+    .from("website_configs")
+    .insert({
+      company_id: companyId,
+      website_name: websiteName,
+      wordpress_url: websiteUrl.replace(/\/$/, ""),
+      site_type: "external",
+      is_external_site: true,
+      wp_enabled: false,
+      api_key: hashedApiKey,
+      api_key_created_at: new Date().toISOString(),
+      is_active: true,
+      created_by: user.id,
+    })
+    .select("id")
+    .single();
+
+  if (error) {
+    console.error("[External Site Register] Database error:", error);
+    return { success: false, error: "建立網站失敗：" + error.message };
+  }
+
+  revalidatePath("/dashboard/websites");
+
+  return {
+    success: true,
+    apiKey: apiKey,
+    websiteId: website.id,
+  };
+}
+
+/**
+ * 重新生成外部網站 API Key
+ */
+export async function regenerateExternalSiteApiKey(
+  formData: FormData,
+): Promise<{
+  success: boolean;
+  apiKey?: string;
+  error?: string;
+}> {
+  const user = await getUser();
+  if (!user) {
+    return { success: false, error: "未登入" };
+  }
+
+  const websiteId = formData.get("websiteId") as string;
+
+  if (!websiteId) {
+    return { success: false, error: "缺少網站 ID" };
+  }
+
+  const supabase = await createClient();
+
+  // 取得網站資訊
+  const { data: website } = await supabase
+    .from("website_configs")
+    .select("company_id, is_external_site")
+    .eq("id", websiteId)
+    .single();
+
+  if (!website) {
+    return { success: false, error: "找不到該網站" };
+  }
+
+  if (!website.is_external_site) {
+    return { success: false, error: "此網站不是外部網站" };
+  }
+
+  // 檢查使用者是否有權限
+  const { data: membership } = await supabase
+    .from("company_members")
+    .select("role")
+    .eq("company_id", website.company_id)
+    .eq("user_id", user.id)
+    .single();
+
+  if (
+    !membership ||
+    (membership.role !== "owner" && membership.role !== "admin")
+  ) {
+    return { success: false, error: "您沒有權限重新生成 API Key" };
+  }
+
+  // 重新生成 API Key
+  const newApiKey = await regenerateApiKey(websiteId, website.company_id);
+
+  if (!newApiKey) {
+    return { success: false, error: "重新生成 API Key 失敗" };
+  }
+
+  revalidatePath("/dashboard/websites");
+
+  return {
+    success: true,
+    apiKey: newApiKey,
+  };
+}
+
+/**
+ * 刪除外部網站
+ */
+export async function deleteExternalSite(formData: FormData) {
+  const user = await getUser();
+  if (!user) {
+    redirect("/login");
+  }
+
+  const websiteId = formData.get("websiteId") as string;
+
+  if (!websiteId) {
+    redirect("/dashboard/websites?error=" + encodeURIComponent("缺少網站 ID"));
+  }
+
+  const supabase = await createClient();
+
+  // 取得網站資訊以檢查權限
+  const { data: website } = await supabase
+    .from("website_configs")
+    .select("company_id, is_external_site")
+    .eq("id", websiteId)
+    .single();
+
+  if (!website) {
+    redirect("/dashboard/websites?error=" + encodeURIComponent("找不到該網站"));
+  }
+
+  if (!website.is_external_site) {
+    redirect(
+      "/dashboard/websites?error=" + encodeURIComponent("此網站不是外部網站"),
+    );
+  }
+
+  // 檢查使用者是否有權限刪除
+  const { data: membership } = await supabase
+    .from("company_members")
+    .select("role")
+    .eq("company_id", website.company_id)
+    .eq("user_id", user.id)
+    .single();
+
+  if (
+    !membership ||
+    (membership.role !== "owner" && membership.role !== "admin")
+  ) {
+    redirect(
+      "/dashboard/websites?error=" + encodeURIComponent("您沒有權限刪除網站"),
+    );
+  }
+
+  // 刪除網站
+  const { error } = await supabase
+    .from("website_configs")
+    .delete()
+    .eq("id", websiteId);
+
+  if (error) {
+    redirect("/dashboard/websites?error=" + encodeURIComponent(error.message));
+  }
+
+  revalidatePath("/dashboard/websites");
+  redirect(
+    "/dashboard/websites?success=" + encodeURIComponent("外部網站已刪除"),
+  );
+}
+
+/**
+ * 取得外部網站的 masked API Key
+ */
+export async function getExternalSiteMaskedApiKey(
+  websiteId: string,
+): Promise<string | null> {
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from("website_configs")
+    .select("api_key")
+    .eq("id", websiteId)
+    .eq("is_external_site", true)
+    .single();
+
+  if (!data?.api_key) {
+    return null;
+  }
+
+  // API Key 已經是 hash 過的，我們返回一個提示格式
+  return "sk_site_••••••••";
 }

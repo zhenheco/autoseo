@@ -22,6 +22,7 @@ import { checkPagePermission } from "@/lib/permissions";
 import { WebsiteStatusToggle } from "./website-status-toggle";
 import { WebsiteAddedTracker } from "./WebsiteAddedTracker";
 import { Globe, ExternalLink, Clock } from "lucide-react";
+import { ExternalSitesSection } from "./external-sites-section";
 
 async function getCompanyWebsites(companyId: string) {
   try {
@@ -157,105 +158,128 @@ export default async function WebsitesPage({
         </Card>
       )}
 
-      {/* 網站列表 */}
+      {/* 外部網站區塊 */}
+      <div className="mb-8">
+        <ExternalSitesSection
+          sites={websites
+            .filter((w) => w.is_external_site === true)
+            .map((w) => ({
+              id: w.id,
+              website_name: w.website_name,
+              wordpress_url: w.wordpress_url,
+              api_key_created_at: w.api_key_created_at,
+              is_active: w.is_active,
+            }))}
+          companyId={company.id}
+        />
+      </div>
+
+      {/* WordPress 網站列表 */}
+      <div className="mb-4">
+        <h2 className="text-lg font-semibold text-muted-foreground">
+          WordPress 網站
+        </h2>
+      </div>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {websites && websites.length > 0 ? (
-          websites.map((website: WebsiteConfig) => (
-            <Card
-              key={website.id}
-              className={`hover:shadow-lg transition-shadow ${
-                website.is_platform_blog
-                  ? "border-primary/50 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30"
-                  : ""
-              }`}
-            >
-              <Link href={`/dashboard/websites/${website.id}`}>
-                <CardHeader className="cursor-pointer">
-                  <div className="flex items-center justify-between">
-                    <CardTitle className="text-lg">
-                      {website.website_name}
-                    </CardTitle>
-                    <div className="flex gap-1">
-                      {website.auto_schedule_enabled && (
-                        <Badge variant="secondary" className="text-xs">
-                          <Clock className="h-3 w-3 mr-1" />
-                          自動排程
-                        </Badge>
-                      )}
-                      {website.is_platform_blog && (
-                        <Badge
-                          variant="default"
-                          className="bg-gradient-to-r from-blue-600 to-purple-600"
+        {websites && websites.filter((w) => !w.is_external_site).length > 0 ? (
+          websites
+            .filter((w) => !w.is_external_site)
+            .map((website: WebsiteConfig) => (
+              <Card
+                key={website.id}
+                className={`hover:shadow-lg transition-shadow ${
+                  website.is_platform_blog
+                    ? "border-primary/50 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30"
+                    : ""
+                }`}
+              >
+                <Link href={`/dashboard/websites/${website.id}`}>
+                  <CardHeader className="cursor-pointer">
+                    <div className="flex items-center justify-between">
+                      <CardTitle className="text-lg">
+                        {website.website_name}
+                      </CardTitle>
+                      <div className="flex gap-1">
+                        {website.auto_schedule_enabled && (
+                          <Badge variant="secondary" className="text-xs">
+                            <Clock className="h-3 w-3 mr-1" />
+                            自動排程
+                          </Badge>
+                        )}
+                        {website.is_platform_blog && (
+                          <Badge
+                            variant="default"
+                            className="bg-gradient-to-r from-blue-600 to-purple-600"
+                          >
+                            官方 Blog
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                    <CardDescription className="break-all">
+                      {website.is_platform_blog ? (
+                        <a
+                          href="/blog"
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="flex items-center gap-1 text-primary hover:underline"
                         >
-                          官方 Blog
-                        </Badge>
+                          /blog
+                          <ExternalLink className="h-3 w-3" />
+                        </a>
+                      ) : (
+                        website.wordpress_url
+                      )}
+                    </CardDescription>
+                  </CardHeader>
+                </Link>
+                <CardContent>
+                  <div className="space-y-3">
+                    <div className="flex justify-between items-center">
+                      <span className="text-sm text-muted-foreground">
+                        {t("status")}
+                      </span>
+                      <WebsiteStatusToggle
+                        websiteId={website.id}
+                        initialStatus={website.is_active ?? true}
+                      />
+                    </div>
+                    <div className="flex gap-2 pt-2">
+                      <Link
+                        href={`/dashboard/websites/${website.id}`}
+                        className="flex-1"
+                      >
+                        <Button variant="default" size="sm" className="w-full">
+                          {t("viewArticles")}
+                        </Button>
+                      </Link>
+                      <Link href={`/dashboard/websites/${website.id}/edit`}>
+                        <Button variant="outline" size="sm">
+                          {tCommon("edit")}
+                        </Button>
+                      </Link>
+                      {!website.is_platform_blog && (
+                        <form action={deleteWebsite} className="inline">
+                          <input
+                            type="hidden"
+                            name="websiteId"
+                            value={website.id}
+                          />
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            type="submit"
+                            className="text-destructive hover:text-destructive"
+                          >
+                            {tCommon("delete")}
+                          </Button>
+                        </form>
                       )}
                     </div>
                   </div>
-                  <CardDescription className="break-all">
-                    {website.is_platform_blog ? (
-                      <a
-                        href="/blog"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex items-center gap-1 text-primary hover:underline"
-                      >
-                        /blog
-                        <ExternalLink className="h-3 w-3" />
-                      </a>
-                    ) : (
-                      website.wordpress_url
-                    )}
-                  </CardDescription>
-                </CardHeader>
-              </Link>
-              <CardContent>
-                <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-muted-foreground">
-                      {t("status")}
-                    </span>
-                    <WebsiteStatusToggle
-                      websiteId={website.id}
-                      initialStatus={website.is_active ?? true}
-                    />
-                  </div>
-                  <div className="flex gap-2 pt-2">
-                    <Link
-                      href={`/dashboard/websites/${website.id}`}
-                      className="flex-1"
-                    >
-                      <Button variant="default" size="sm" className="w-full">
-                        {t("viewArticles")}
-                      </Button>
-                    </Link>
-                    <Link href={`/dashboard/websites/${website.id}/edit`}>
-                      <Button variant="outline" size="sm">
-                        {tCommon("edit")}
-                      </Button>
-                    </Link>
-                    {!website.is_platform_blog && (
-                      <form action={deleteWebsite} className="inline">
-                        <input
-                          type="hidden"
-                          name="websiteId"
-                          value={website.id}
-                        />
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          type="submit"
-                          className="text-destructive hover:text-destructive"
-                        >
-                          {tCommon("delete")}
-                        </Button>
-                      </form>
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))
+                </CardContent>
+              </Card>
+            ))
         ) : (
           <div className="col-span-full">
             <Card>
