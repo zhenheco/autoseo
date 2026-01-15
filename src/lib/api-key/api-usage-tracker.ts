@@ -59,7 +59,7 @@ export interface UsageSummary {
  */
 export async function logApiUsage(log: ApiUsageLog): Promise<void> {
   try {
-    await supabase.from("api_usage_logs").insert({
+    await supabase.from("external_site_api_logs").insert({
       website_id: log.websiteId,
       endpoint: log.endpoint,
       method: log.method,
@@ -91,34 +91,34 @@ export async function getUsageSummary(
 
     // 查詢總請求數
     const { count: totalRequests } = await supabase
-      .from("api_usage_logs")
+      .from("external_site_api_logs")
       .select("id", { count: "exact", head: true })
       .eq("website_id", websiteId);
 
     // 查詢今日請求數
     const { count: todayRequests } = await supabase
-      .from("api_usage_logs")
+      .from("external_site_api_logs")
       .select("id", { count: "exact", head: true })
       .eq("website_id", websiteId)
       .gte("created_at", today.toISOString());
 
     // 查詢過去 7 天請求數
     const { count: last7DaysRequests } = await supabase
-      .from("api_usage_logs")
+      .from("external_site_api_logs")
       .select("id", { count: "exact", head: true })
       .eq("website_id", websiteId)
       .gte("created_at", last7Days.toISOString());
 
     // 查詢過去 30 天請求數
     const { count: last30DaysRequests } = await supabase
-      .from("api_usage_logs")
+      .from("external_site_api_logs")
       .select("id", { count: "exact", head: true })
       .eq("website_id", websiteId)
       .gte("created_at", last30Days.toISOString());
 
     // 查詢熱門端點（過去 30 天）
     const { data: endpointStats } = await supabase
-      .from("api_usage_logs")
+      .from("external_site_api_logs")
       .select("endpoint")
       .eq("website_id", websiteId)
       .gte("created_at", last30Days.toISOString());
@@ -139,7 +139,7 @@ export async function getUsageSummary(
 
     // 查詢平均回應時間和錯誤率（過去 30 天）
     const { data: performanceData } = await supabase
-      .from("api_usage_logs")
+      .from("external_site_api_logs")
       .select("response_time_ms, status_code")
       .eq("website_id", websiteId)
       .gte("created_at", last30Days.toISOString());
@@ -196,7 +196,7 @@ export async function getDailyStats(
     startDate.setDate(startDate.getDate() - days);
 
     const { data, error } = await supabase
-      .from("api_usage_daily_stats")
+      .from("external_site_api_daily_stats")
       .select("*")
       .eq("website_id", websiteId)
       .gte("date", startDate.toISOString().split("T")[0])
