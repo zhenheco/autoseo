@@ -862,10 +862,16 @@ export class PaymentService {
 
           const now = new Date();
           const periodStart = now.toISOString();
-          // 年繳：12 個月後到期
-          const periodEnd = new Date(
+          // 年繳訂閱到期日：12 個月後
+          const subscriptionEndsAt = new Date(
             now.getFullYear() + 1,
             now.getMonth(),
+            now.getDate(),
+          ).toISOString();
+          // 月配額重置週期：1 個月後（年繳用戶每月重置配額）
+          const quotaPeriodEnd = new Date(
+            now.getFullYear(),
+            now.getMonth() + 1,
             now.getDate(),
           ).toISOString();
 
@@ -915,7 +921,7 @@ export class PaymentService {
               articles_per_month: effectiveArticlesPerMonth,
               billing_cycle: "yearly",
               current_period_start: periodStart,
-              current_period_end: periodEnd,
+              current_period_end: quotaPeriodEnd, // 一個月後（用於月配額重置）
               last_quota_reset_at: periodStart,
               // 向後相容必填欄位
               monthly_token_quota: 0,
@@ -935,7 +941,7 @@ export class PaymentService {
             .from("companies")
             .update({
               subscription_tier: tier,
-              subscription_ends_at: periodEnd,
+              subscription_ends_at: subscriptionEndsAt, // 一年後（年繳訂閱到期日）
               updated_at: now.toISOString(),
             })
             .eq("id", orderData.company_id);
@@ -955,7 +961,8 @@ export class PaymentService {
             baseArticlesPerMonth: plan.articles_per_month,
             effectiveArticlesPerMonth,
             preservedPurchased,
-            periodEnd,
+            quotaPeriodEnd, // 每月配額重置日期
+            subscriptionEndsAt, // 年繳訂閱到期日
           });
         } else if (
           orderData.payment_type === "lifetime" &&

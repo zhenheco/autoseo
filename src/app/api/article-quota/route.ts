@@ -56,13 +56,12 @@ export async function GET(request: NextRequest) {
       .eq("status", "active")
       .single();
 
-    // 取得預扣中的篇數
+    // 取得預扣中的篇數（status = 'active' 表示正在處理中的預扣）
     const { data: reservations } = await supabase
       .from("token_reservations")
       .select("reserved_amount")
       .eq("company_id", membership.company_id)
-      .eq("status", "pending")
-      .gt("expires_at", new Date().toISOString());
+      .eq("status", "active");
 
     const reservedCount =
       reservations?.reduce((sum, r) => sum + (r.reserved_amount || 0), 0) || 0;
@@ -74,14 +73,16 @@ export async function GET(request: NextRequest) {
       features: unknown;
     } | null;
 
+    // balance.totalAvailable 已經扣除了預扣，所以 available 直接使用它
+    // reserved 顯示處理中的篇數（僅供 UI 顯示用）
     const response = {
       balance: {
         subscriptionRemaining: balance.subscriptionRemaining,
         purchasedRemaining: balance.purchasedRemaining,
-        totalAvailable: balance.totalAvailable,
+        totalAvailable: balance.totalAvailable + reservedCount, // 還原為未扣預扣的總額
         monthlyQuota: balance.monthlyQuota,
         reserved: reservedCount,
-        available: balance.totalAvailable - reservedCount,
+        available: balance.totalAvailable, // 已扣除預扣的實際可用額度
       },
       subscription: {
         billingCycle: balance.billingCycle,

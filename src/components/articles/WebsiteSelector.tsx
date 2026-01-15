@@ -19,6 +19,15 @@ interface Website {
   is_active?: boolean | null;
 }
 
+/** 從 URL 提取 hostname，失敗時返回原始字串 */
+function getHostname(url: string): string {
+  try {
+    return new URL(url).hostname;
+  } catch {
+    return url;
+  }
+}
+
 interface WebsiteSelectorProps {
   value: string | null;
   onChange: (websiteId: string | null) => void;
@@ -117,19 +126,19 @@ export function WebsiteSelector({
     };
   }, [articleWebsiteId, getDefaultWebsite, onChange, value, allowNoWebsite]);
 
-  const handleChange = (websiteId: string) => {
-    if (websiteId === "__none__") {
-      onChange(null);
-      if (companyId) {
-        localStorage.removeItem(`last-selected-website-${companyId}`);
-      }
+  function handleChange(websiteId: string): void {
+    const isNoWebsite = websiteId === "__none__";
+    onChange(isNoWebsite ? null : websiteId);
+
+    if (!companyId) return;
+
+    const storageKey = `last-selected-website-${companyId}`;
+    if (isNoWebsite) {
+      localStorage.removeItem(storageKey);
     } else {
-      onChange(websiteId);
-      if (companyId) {
-        localStorage.setItem(`last-selected-website-${companyId}`, websiteId);
-      }
+      localStorage.setItem(storageKey, websiteId);
     }
-  };
+  }
 
   if (loading) {
     return (
@@ -152,73 +161,83 @@ export function WebsiteSelector({
   }
 
   const selectedWebsite = websites.find((w) => w.id === value);
-  const selectValue = value === null ? "__none__" : value || "";
+
+  // 計算 Select 的 value：
+  // - allowNoWebsite=true 且 value=null → "__none__"（對應「單純寫文章」選項）
+  // - allowNoWebsite=false 且 value=null → ""（顯示 placeholder）
+  // - 有選擇網站 → 直接使用 value
+  function getSelectValue(): string {
+    if (value === null) {
+      return allowNoWebsite ? "__none__" : "";
+    }
+    return value;
+  }
+
+  function renderSelectedValue(): React.ReactNode {
+    if (value === null && allowNoWebsite) {
+      return <span className="text-muted-foreground">單純寫文章</span>;
+    }
+    if (selectedWebsite) {
+      return (
+        <div className="flex items-center gap-2">
+          <Globe className="h-4 w-4 text-muted-foreground" />
+          <span>{selectedWebsite.website_name}</span>
+        </div>
+      );
+    }
+    return null;
+  }
 
   return (
-    <>
-      <Select
-        value={selectValue}
-        onValueChange={handleChange}
-        disabled={disabled}
-      >
-        <SelectTrigger>
-          <SelectValue placeholder={placeholder}>
-            {value === null && allowNoWebsite ? (
-              <span className="text-muted-foreground">單純寫文章</span>
-            ) : selectedWebsite ? (
+    <Select
+      value={getSelectValue()}
+      onValueChange={handleChange}
+      disabled={disabled}
+    >
+      <SelectTrigger>
+        <SelectValue placeholder={placeholder}>
+          {renderSelectedValue()}
+        </SelectValue>
+      </SelectTrigger>
+      <SelectContent>
+        {allowNoWebsite && (
+          <SelectItem value="__none__">
+            <span className="text-muted-foreground">單純寫文章</span>
+          </SelectItem>
+        )}
+        {websites.map((website) => {
+          const isActive = website.is_active !== false;
+          return (
+            <SelectItem
+              key={website.id}
+              value={website.id}
+              disabled={!isActive}
+            >
               <div className="flex items-center gap-2">
                 <Globe className="h-4 w-4 text-muted-foreground" />
-                <span>{selectedWebsite.website_name}</span>
-              </div>
-            ) : null}
-          </SelectValue>
-        </SelectTrigger>
-        <SelectContent>
-          {allowNoWebsite && (
-            <SelectItem value="__none__">
-              <span className="text-muted-foreground">單純寫文章</span>
-            </SelectItem>
-          )}
-          {websites.map((website) => {
-            const isActive = website.is_active !== false;
-            return (
-              <SelectItem
-                key={website.id}
-                value={website.id}
-                disabled={!isActive}
-              >
-                <div className="flex items-center gap-2">
-                  <Globe className="h-4 w-4 text-muted-foreground" />
-                  <div className="flex flex-col items-start">
-                    <div className="flex items-center gap-2">
-                      <span
-                        className={`font-medium ${!isActive ? "text-muted-foreground" : ""}`}
-                      >
-                        {website.website_name}
-                      </span>
-                      {!isActive && (
-                        <span className="text-xs text-muted-foreground">
-                          （已停用）
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-xs text-muted-foreground">
-                      {(() => {
-                        try {
-                          return new URL(website.wordpress_url).hostname;
-                        } catch {
-                          return website.wordpress_url;
-                        }
-                      })()}
+                <div className="flex flex-col items-start">
+                  <div className="flex items-center gap-2">
+                    <span
+                      className={`font-medium ${!isActive ? "text-muted-foreground" : ""}`}
+                    >
+                      {website.website_name}
                     </span>
+                    {!isActive && (
+                      <span className="text-xs text-muted-foreground">
+                        （已停用）
+                      </span>
+                    )}
                   </div>
+                  <span className="text-xs text-muted-foreground">
+                    {getHostname(website.wordpress_url)}
+                  </span>
                 </div>
-              </SelectItem>
-            );
-          })}
-        </SelectContent>
-      </Select>
-    </>
+              </div>
+            </SelectItem>
+          );
+        })}
+      </SelectContent>
+    </Select>
   );
 }
 
