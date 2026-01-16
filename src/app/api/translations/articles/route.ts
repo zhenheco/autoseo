@@ -75,25 +75,10 @@ export const GET = withAuth(async (request: NextRequest, { user }) => {
       offset,
     });
 
-    // 查詢原始文章（明確指定 FK 關係）
+    // 步驟 1：查詢文章列表（不含嵌入查詢，避免 FK hint 問題）
     let articlesQuery = adminClient
       .from("generated_articles")
-      .select(
-        `
-        id,
-        title,
-        slug,
-        status,
-        created_at,
-        article_translations!source_article_id (
-          id,
-          target_language,
-          status,
-          published_at
-        )
-      `,
-        { count: "exact" },
-      )
+      .select("id, title, slug, status, created_at", { count: "exact" })
       .eq("company_id", companyMember.company_id)
       .eq("status", "published") // 只顯示已發布的文章
       .order("created_at", { ascending: false })
@@ -120,20 +105,6 @@ export const GET = withAuth(async (request: NextRequest, { user }) => {
       return handleApiError(new Error("Failed to fetch articles"));
     }
 
-    // 檢查前幾筆文章的翻譯資料
-    const articlesWithTranslations = (articles || []).filter(
-      (a) => a.article_translations && a.article_translations.length > 0
-    );
-    console.log("[Translation Articles] Query result:", {
-      count,
-      articlesReturned: articles?.length || 0,
-      articlesWithTranslations: articlesWithTranslations.length,
-      sampleTranslations: articlesWithTranslations.slice(0, 3).map((a) => ({
-        title: a.title?.substring(0, 30),
-        translations: a.article_translations,
-      })),
-    });
-
     // 定義翻譯記錄型別
     interface TranslationRecord {
       id: string;
@@ -142,12 +113,58 @@ export const GET = withAuth(async (request: NextRequest, { user }) => {
       published_at: string | null;
     }
 
+    // 步驟 2：批量查詢這些文章的翻譯（分開查詢更可靠）
+    const articleIds = (articles || []).map((a) => a.id);
+    const translationsMap = new Map<string, TranslationRecord[]>();
+
+    if (articleIds.length > 0) {
+      const { data: translations, error: transError } = await adminClient
+        .from("article_translations")
+        .select("id, source_article_id, target_language, status, published_at")
+        .in("source_article_id", articleIds);
+
+      if (transError) {
+        console.error("[Translation Articles] Translations query failed:", {
+          error: transError.message,
+        });
+        // 繼續處理，翻譯資料為空
+      } else if (translations) {
+        // 按 source_article_id 分組
+        for (const t of translations) {
+          const existing = translationsMap.get(t.source_article_id) || [];
+          existing.push({
+            id: t.id,
+            target_language: t.target_language as TranslationLocale,
+            status: t.status as TranslationStatus,
+            published_at: t.published_at,
+          });
+          translationsMap.set(t.source_article_id, existing);
+        }
+      }
+
+      console.log("[Translation Articles] Translations query result:", {
+        totalTranslations: translations?.length || 0,
+        articlesWithTranslations: translationsMap.size,
+        sampleTranslations: Array.from(translationsMap.entries())
+          .slice(0, 3)
+          .map(([id, trans]) => ({
+            articleId: id.substring(0, 8),
+            languages: trans.map((t) => t.target_language),
+          })),
+      });
+    }
+
+    console.log("[Translation Articles] Query result:", {
+      count,
+      articlesReturned: articles?.length || 0,
+      articlesWithTranslations: translationsMap.size,
+    });
+
     // 組裝結果
     const summaries: ArticleTranslationSummary[] = (articles || []).map(
       (article) => {
-        const translations = (article.article_translations ||
-          []) as TranslationRecord[];
-        const translationsMap = new Map(
+        const translations = translationsMap.get(article.id) || [];
+        const langMap = new Map(
           translations.map((t) => [t.target_language, t]),
         );
 
@@ -155,7 +172,7 @@ export const GET = withAuth(async (request: NextRequest, { user }) => {
           article_id: article.id,
           article_title: article.title,
           translations: TRANSLATION_LOCALES.map((locale) => {
-            const translation = translationsMap.get(locale);
+            const translation = langMap.get(locale);
             return {
               locale,
               status: translation ? translation.status : "not_translated",

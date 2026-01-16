@@ -87,7 +87,9 @@ export default function AdminTranslationsPage() {
       if (!response.ok) {
         throw new Error("載入設定失敗");
       }
-      const data = await response.json();
+      const result = await response.json();
+      // successResponse 包裝在 data 欄位中
+      const data = result.data || result;
       setWebsiteSettings(data.websites || []);
     } catch (error) {
       console.error("載入自動翻譯設定失敗:", error);
