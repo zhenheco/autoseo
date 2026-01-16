@@ -49,6 +49,22 @@ interface WebsiteAutoTranslateSettings {
   auto_translate_languages: string[];
 }
 
+// 切換 Set 中的項目
+function toggleSetItem<T>(set: Set<T>, item: T): Set<T> {
+  const newSet = new Set(set);
+  if (newSet.has(item)) {
+    newSet.delete(item);
+  } else {
+    newSet.add(item);
+  }
+  return newSet;
+}
+
+// 從 API 回應提取 data
+function extractData<T>(result: { data?: T } | T): T {
+  return (result as { data?: T }).data ?? (result as T);
+}
+
 /**
  * 翻譯管理頁面
  *
@@ -87,9 +103,7 @@ export default function AdminTranslationsPage() {
       if (!response.ok) {
         throw new Error("載入設定失敗");
       }
-      const result = await response.json();
-      // successResponse 包裝在 data 欄位中
-      const data = result.data || result;
+      const data = extractData(await response.json());
       setWebsiteSettings(data.websites || []);
     } catch (error) {
       console.error("載入自動翻譯設定失敗:", error);
@@ -155,35 +169,21 @@ export default function AdminTranslationsPage() {
     website: WebsiteAutoTranslateSettings,
     locale: TranslationLocale
   ) => {
-    const currentLanguages = new Set(website.auto_translate_languages);
-    if (currentLanguages.has(locale)) {
-      currentLanguages.delete(locale);
-    } else {
-      currentLanguages.add(locale);
-    }
-    const newLanguages = Array.from(currentLanguages);
+    const newLanguages = Array.from(
+      toggleSetItem(new Set(website.auto_translate_languages), locale)
+    );
     // 如果取消所有語言，也要關閉自動翻譯
-    const newEnabled =
-      newLanguages.length > 0 ? website.auto_translate_enabled : false;
+    const newEnabled = newLanguages.length > 0 && website.auto_translate_enabled;
     updateSettings(website.id, newEnabled, newLanguages);
   };
 
   const fetchArticles = useCallback(async () => {
     try {
-      const params = new URLSearchParams({
-        limit: "50",
-        offset: "0",
-      });
-      if (search) {
-        params.set("search", search);
-      }
-      if (websiteId) {
-        params.set("website_id", websiteId);
-      }
+      const params = new URLSearchParams({ limit: "50", offset: "0" });
+      if (search) params.set("search", search);
+      if (websiteId) params.set("website_id", websiteId);
 
-      const response = await fetch(
-        `/api/translations/articles?${params.toString()}`
-      );
+      const response = await fetch(`/api/translations/articles?${params}`);
 
       if (response.status === 403) {
         setAccessDenied(true);
@@ -195,9 +195,7 @@ export default function AdminTranslationsPage() {
         throw new Error("載入失敗");
       }
 
-      const result = await response.json();
-      // successResponse 包裝在 data 欄位中
-      const data = result.data || result;
+      const data = extractData(await response.json());
       setArticles(data.articles || []);
       setTotal(data.total || 0);
     } catch (error) {
@@ -217,31 +215,17 @@ export default function AdminTranslationsPage() {
   }, [fetchArticles]);
 
   const handleSelectAll = (checked: boolean) => {
-    if (checked) {
-      setSelectedArticles(new Set(articles.map((a) => a.article_id)));
-    } else {
-      setSelectedArticles(new Set());
-    }
+    setSelectedArticles(
+      checked ? new Set(articles.map((a) => a.article_id)) : new Set()
+    );
   };
 
-  const handleSelectArticle = (articleId: string, checked: boolean) => {
-    const newSelected = new Set(selectedArticles);
-    if (checked) {
-      newSelected.add(articleId);
-    } else {
-      newSelected.delete(articleId);
-    }
-    setSelectedArticles(newSelected);
+  const handleSelectArticle = (articleId: string) => {
+    setSelectedArticles(toggleSetItem(selectedArticles, articleId));
   };
 
   const handleToggleLanguage = (locale: TranslationLocale) => {
-    const newSelected = new Set(selectedLanguages);
-    if (newSelected.has(locale)) {
-      newSelected.delete(locale);
-    } else {
-      newSelected.add(locale);
-    }
-    setSelectedLanguages(newSelected);
+    setSelectedLanguages(toggleSetItem(selectedLanguages, locale));
   };
 
   const handleTranslate = async () => {
@@ -562,11 +546,8 @@ export default function AdminTranslationsPage() {
                     <TableCell>
                       <Checkbox
                         checked={selectedArticles.has(article.article_id)}
-                        onCheckedChange={(checked) =>
-                          handleSelectArticle(
-                            article.article_id,
-                            checked === true
-                          )
+                        onCheckedChange={() =>
+                          handleSelectArticle(article.article_id)
                         }
                       />
                     </TableCell>
