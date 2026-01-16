@@ -41,15 +41,27 @@ import {
 } from "@/types/translations";
 import { WebsiteSelector } from "@/components/articles/WebsiteSelector";
 
-// 網站自動翻譯設定類型
+/** 網站類型標籤對應 */
+const SITE_TYPE_LABELS: Record<string, string> = {
+  platform: "官方 Blog",
+  external: "外部網站",
+};
+
+/** 取得網站類型的顯示標籤 */
+function getSiteTypeLabel(siteType: string): string {
+  return SITE_TYPE_LABELS[siteType] ?? siteType;
+}
+
+/** 網站自動翻譯設定類型 */
 interface WebsiteAutoTranslateSettings {
   id: string;
   website_name: string;
   auto_translate_enabled: boolean;
   auto_translate_languages: string[];
+  site_type: "platform" | "external";
 }
 
-// 切換 Set 中的項目
+/** 切換 Set 中的項目 */
 function toggleSetItem<T>(set: Set<T>, item: T): Set<T> {
   const newSet = new Set(set);
   if (newSet.has(item)) {
@@ -60,7 +72,7 @@ function toggleSetItem<T>(set: Set<T>, item: T): Set<T> {
   return newSet;
 }
 
-// 從 API 回應提取 data
+/** 從 API 回應提取 data */
 function extractData<T>(result: { data?: T } | T): T {
   return (result as { data?: T }).data ?? (result as T);
 }
@@ -368,6 +380,9 @@ export default function AdminTranslationsPage() {
                       <div>
                         <div className="font-medium flex items-center gap-2">
                           {website.website_name}
+                          <Badge variant="outline" className="text-xs">
+                            {getSiteTypeLabel(website.site_type)}
+                          </Badge>
                           {website.auto_translate_enabled && (
                             <Badge variant="secondary" className="gap-1">
                               <Zap className="h-3 w-3" />

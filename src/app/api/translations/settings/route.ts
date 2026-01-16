@@ -14,9 +14,13 @@ import {
   notFound,
   internalError,
 } from "@/lib/api/response-helpers";
+import { createAdminClient } from "@/lib/supabase/server";
 import { canAccessTranslation } from "@/lib/translations/access-control";
 import type { TranslationLocale } from "@/types/translations";
 import { TRANSLATION_LOCALES } from "@/types/translations";
+
+/** 網站類型（只支援 platform 和 external） */
+type SupportedSiteType = "platform" | "external";
 
 /**
  * GET: 取得用戶所有網站的自動翻譯設定
@@ -30,13 +34,7 @@ export const GET = withAuth(async (_request: NextRequest, { user }) => {
   }
 
   try {
-    const { createClient: createSupabaseClient } = await import(
-      "@supabase/supabase-js"
-    );
-    const adminClient = createSupabaseClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const adminClient = createAdminClient();
 
     // 取得用戶的公司
     const { data: companyMember } = await adminClient
@@ -50,13 +48,15 @@ export const GET = withAuth(async (_request: NextRequest, { user }) => {
     }
 
     // 取得公司的所有網站及其自動翻譯設定
+    // 只顯示 platform（官方 Blog）和 external（SDK 串接網站），排除 wordpress 網站
     const { data: websites, error } = await adminClient
       .from("website_configs")
       .select(
-        "id, website_name, auto_translate_enabled, auto_translate_languages"
+        "id, website_name, auto_translate_enabled, auto_translate_languages, site_type"
       )
       .eq("company_id", companyMember.company_id)
       .eq("is_active", true)
+      .in("site_type", ["platform", "external"])
       .order("website_name");
 
     if (error) {
@@ -71,6 +71,7 @@ export const GET = withAuth(async (_request: NextRequest, { user }) => {
           website_name: w.website_name,
           auto_translate_enabled: w.auto_translate_enabled ?? false,
           auto_translate_languages: w.auto_translate_languages ?? [],
+          site_type: w.site_type as SupportedSiteType,
         })) || [],
     });
   } catch (error: unknown) {
@@ -118,13 +119,7 @@ export const PUT = withAuth(async (request: NextRequest, { user }) => {
   }
 
   try {
-    const { createClient: createSupabaseClient } = await import(
-      "@supabase/supabase-js"
-    );
-    const adminClient = createSupabaseClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    );
+    const adminClient = createAdminClient();
 
     // 取得用戶的公司
     const { data: companyMember } = await adminClient
