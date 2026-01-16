@@ -75,7 +75,7 @@ export const GET = withAuth(async (request: NextRequest, { user }) => {
       offset,
     });
 
-    // 查詢原始文章
+    // 查詢原始文章（明確指定 FK 關係）
     let articlesQuery = adminClient
       .from("generated_articles")
       .select(
@@ -85,7 +85,7 @@ export const GET = withAuth(async (request: NextRequest, { user }) => {
         slug,
         status,
         created_at,
-        article_translations (
+        article_translations!source_article_id (
           id,
           target_language,
           status,
@@ -120,9 +120,18 @@ export const GET = withAuth(async (request: NextRequest, { user }) => {
       return handleApiError(new Error("Failed to fetch articles"));
     }
 
+    // 檢查前幾筆文章的翻譯資料
+    const articlesWithTranslations = (articles || []).filter(
+      (a) => a.article_translations && a.article_translations.length > 0
+    );
     console.log("[Translation Articles] Query result:", {
       count,
       articlesReturned: articles?.length || 0,
+      articlesWithTranslations: articlesWithTranslations.length,
+      sampleTranslations: articlesWithTranslations.slice(0, 3).map((a) => ({
+        title: a.title?.substring(0, 30),
+        translations: a.article_translations,
+      })),
     });
 
     // 定義翻譯記錄型別

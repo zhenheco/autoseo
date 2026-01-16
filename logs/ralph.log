@@ -1,0 +1,8 @@
+[2026-01-02 19:39:42] [INFO] Setting up tmux session: ralph-1767353982
+[2026-01-02 19:39:42] [SUCCESS] Tmux session created. Attaching to session...
+[2026-01-02 19:39:42] [INFO] Use Ctrl+B then D to detach from session
+[2026-01-02 19:39:42] [INFO] Use 'tmux attach -t ralph-1767353982' to reattach
+[2026-01-02 19:39:42] [SUCCESS] 🚀 Ralph loop starting with Claude Code
+[2026-01-02 19:39:42] [INFO] Max calls per hour: 100
+[2026-01-02 19:39:42] [INFO] Logs: logs/ | Docs: docs/generated/ | Status: status.json
+[2026-01-02 19:39:42] [ERROR] Prompt file 'PROMPT.md' not found!
