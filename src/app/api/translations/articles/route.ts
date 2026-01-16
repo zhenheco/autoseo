@@ -9,10 +9,15 @@ import { withAuth } from "@/lib/api/auth-middleware";
 import {
   successResponse,
   forbidden,
-  internalError,
+  handleApiError,
 } from "@/lib/api/response-helpers";
+import { createAdminClient } from "@/lib/supabase/admin";
 import { canAccessTranslation } from "@/lib/translations/access-control";
-import type { ArticleTranslationSummary } from "@/types/translations";
+import type {
+  ArticleTranslationSummary,
+  TranslationLocale,
+  TranslationStatus,
+} from "@/types/translations";
 import { TRANSLATION_LOCALES } from "@/types/translations";
 
 export const maxDuration = 30;
@@ -37,24 +42,38 @@ export const GET = withAuth(async (request: NextRequest, { user }) => {
 
   try {
     // 使用 service role client（需要繞過 RLS）
-    const { createClient: createSupabaseClient } = await import(
-      "@supabase/supabase-js"
-    );
-    const adminClient = createSupabaseClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    );
+    const adminClient = createAdminClient();
 
     // 取得用戶的公司
-    const { data: companyMember } = await adminClient
+    const { data: companyMember, error: memberError } = await adminClient
       .from("company_members")
       .select("company_id")
       .eq("user_id", user.id)
       .single();
 
+    if (memberError) {
+      console.error("[Translation Articles] Company member query failed:", {
+        userId: user.id,
+        userEmail: user.email,
+        error: memberError.message,
+      });
+    }
+
     if (!companyMember) {
+      console.warn("[Translation Articles] No company member found for user:", {
+        userId: user.id,
+        userEmail: user.email,
+      });
       return successResponse({ articles: [], total: 0 });
     }
+
+    console.log("[Translation Articles] Query params:", {
+      userId: user.id,
+      companyId: companyMember.company_id,
+      websiteId: websiteId || "all",
+      limit,
+      offset,
+    });
 
     // 查詢原始文章
     let articlesQuery = adminClient
@@ -93,18 +112,34 @@ export const GET = withAuth(async (request: NextRequest, { user }) => {
     const { data: articles, error, count } = await articlesQuery;
 
     if (error) {
-      console.error("Failed to fetch articles:", error);
-      return internalError("Failed to fetch articles");
+      console.error("[Translation Articles] Articles query failed:", {
+        companyId: companyMember.company_id,
+        websiteId,
+        error: error.message,
+      });
+      return handleApiError(new Error("Failed to fetch articles"));
+    }
+
+    console.log("[Translation Articles] Query result:", {
+      count,
+      articlesReturned: articles?.length || 0,
+    });
+
+    // 定義翻譯記錄型別
+    interface TranslationRecord {
+      id: string;
+      target_language: TranslationLocale;
+      status: TranslationStatus;
+      published_at: string | null;
     }
 
     // 組裝結果
     const summaries: ArticleTranslationSummary[] = (articles || []).map(
       (article) => {
+        const translations = (article.article_translations ||
+          []) as TranslationRecord[];
         const translationsMap = new Map(
-          (article.article_translations || []).map((t: any) => [
-            t.target_language,
-            t,
-          ]),
+          translations.map((t) => [t.target_language, t]),
         );
 
         return {
@@ -114,9 +149,7 @@ export const GET = withAuth(async (request: NextRequest, { user }) => {
             const translation = translationsMap.get(locale);
             return {
               locale,
-              status: translation
-                ? (translation.status as any)
-                : "not_translated",
+              status: translation ? translation.status : "not_translated",
               translation_id: translation?.id || null,
               published_at: translation?.published_at || null,
             };
@@ -131,8 +164,8 @@ export const GET = withAuth(async (request: NextRequest, { user }) => {
       limit,
       offset,
     });
-  } catch (error: unknown) {
-    console.error("Translation articles API error:", error);
-    return internalError((error as Error).message);
+  } catch (error) {
+    console.error("[Translation Articles] Unexpected error:", error);
+    return handleApiError(error);
   }
 });
