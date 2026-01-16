@@ -193,7 +193,9 @@ export default function AdminTranslationsPage() {
         throw new Error("載入失敗");
       }
 
-      const data = await response.json();
+      const result = await response.json();
+      // successResponse 包裝在 data 欄位中
+      const data = result.data || result;
       setArticles(data.articles || []);
       setTotal(data.total || 0);
     } catch (error) {
