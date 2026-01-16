@@ -569,23 +569,21 @@ export default function AdminTranslationsPage() {
                       />
                     </TableCell>
                     <TableCell className="font-medium">
-                      <div>
-                        <div>{article.article_title}</div>
-                        <div className="flex flex-wrap gap-1 mt-1">
+                      <div className="flex items-center gap-2">
+                        <span>{article.article_title}</span>
+                        <span className="flex gap-0.5">
                           {article.translations
-                            .filter((t) => t.status === "published")
+                            .filter((t) => t.status !== "not_translated")
                             .map((t) => (
                               <span
                                 key={t.locale}
-                                title={
-                                  TRANSLATION_LANGUAGES[t.locale].nativeName
-                                }
-                                className="text-lg"
+                                title={`${TRANSLATION_LANGUAGES[t.locale].nativeName} (${t.status})`}
+                                className="text-sm opacity-80"
                               >
                                 {TRANSLATION_LANGUAGES[t.locale].flagEmoji}
                               </span>
                             ))}
-                        </div>
+                        </span>
                       </div>
                     </TableCell>
                   </TableRow>
