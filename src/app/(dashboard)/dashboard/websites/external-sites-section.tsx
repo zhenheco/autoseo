@@ -41,12 +41,16 @@ import {
   Check,
   Trash2,
   Code,
+  FileText,
+  Settings,
 } from "lucide-react";
+import Link from "next/link";
 import {
   registerExternalSite,
   regenerateExternalSiteApiKey,
   deleteExternalSite,
 } from "./actions";
+import { WebsiteStatusToggle } from "./website-status-toggle";
 
 interface ExternalSite {
   id: string;
@@ -273,12 +277,10 @@ export function ExternalSitesSection({
                   <CardTitle className="text-base">
                     {site.website_name}
                   </CardTitle>
-                  <Badge
-                    variant={site.is_active ? "default" : "secondary"}
-                    className="text-xs"
-                  >
-                    {site.is_active ? "啟用" : "停用"}
-                  </Badge>
+                  <WebsiteStatusToggle
+                    websiteId={site.id}
+                    initialStatus={site.is_active ?? true}
+                  />
                 </div>
                 <CardDescription className="flex items-center gap-1 text-xs">
                   <a
@@ -348,18 +350,34 @@ export function ExternalSitesSection({
                   </div>
                 )}
 
-                {/* 操作按鈕 */}
+                {/* 操作按鈕 - 第一排：查看文章、編輯設定 */}
                 <div className="flex gap-2 pt-2">
+                  <Link href={`/dashboard/websites/${site.id}`} className="flex-1">
+                    <Button size="sm" variant="default" className="w-full">
+                      <FileText className="h-3 w-3 mr-1" />
+                      查看文章
+                    </Button>
+                  </Link>
+                  <Link href={`/dashboard/websites/${site.id}/edit`}>
+                    <Button size="sm" variant="outline">
+                      <Settings className="h-3 w-3 mr-1" />
+                      設定
+                    </Button>
+                  </Link>
+                </div>
+
+                {/* 操作按鈕 - 第二排：API Key 管理、刪除 */}
+                <div className="flex gap-2">
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button
                         size="sm"
-                        variant="outline"
-                        className="flex-1"
+                        variant="ghost"
+                        className="flex-1 text-muted-foreground"
                         disabled={isLoading}
                       >
                         <RefreshCw className="h-3 w-3 mr-1" />
-                        重新生成
+                        重新生成 Key
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>

@@ -30,7 +30,7 @@ async function getWebsite(websiteId: string, companyId: string) {
   const { data, error } = await supabase
     .from("website_configs")
     .select(
-      "id, website_name, wordpress_url, wp_username, company_id, brand_voice, industry, region, language, daily_article_limit, auto_schedule_enabled, schedule_type, schedule_interval_days",
+      "id, website_name, wordpress_url, wp_username, company_id, brand_voice, industry, region, language, daily_article_limit, auto_schedule_enabled, schedule_type, schedule_interval_days, is_external_site, is_platform_blog",
     )
     .eq("id", websiteId)
     .eq("company_id", companyId)
@@ -52,6 +52,8 @@ async function getWebsite(websiteId: string, companyId: string) {
     auto_schedule_enabled: boolean | null;
     schedule_type: "daily" | "interval" | null;
     schedule_interval_days: number | null;
+    is_external_site: boolean | null;
+    is_platform_blog: boolean | null;
   };
 }
 
@@ -83,27 +85,60 @@ export default async function EditWebsitePage({
     redirect("/dashboard/websites?error=" + encodeURIComponent("找不到該網站"));
   }
 
+  // 判斷網站類型並取得對應的頁面資訊
+  const isExternalSite = website.is_external_site === true;
+  const isPlatformBlog = website.is_platform_blog === true;
+
+  // 根據網站類型設定頁面資訊
+  function getPageInfo(): { title: string; description: string } {
+    if (isExternalSite) {
+      return {
+        title: "編輯外部 API 網站",
+        description: "設定外部網站的文章生成參數和品牌聲音",
+      };
+    }
+    if (isPlatformBlog) {
+      return {
+        title: "編輯官方 Blog",
+        description: "設定官方 Blog 的文章生成參數",
+      };
+    }
+    return {
+      title: "編輯 WordPress 網站",
+      description: "更新您的 WordPress 網站設定",
+    };
+  }
+
+  const { title: pageTitle, description: pageDescription } = getPageInfo();
+
   return (
     <div className="container mx-auto p-8 max-w-2xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">編輯 WordPress 網站</h1>
-        <p className="text-muted-foreground mt-2">
-          更新您的 WordPress 網站設定
-        </p>
+        <h1 className="text-3xl font-bold">{pageTitle}</h1>
+        <p className="text-muted-foreground mt-2">{pageDescription}</p>
       </div>
 
       <div className="grid gap-6">
+        {/* 網站基本資訊卡片 */}
         <Card>
           <CardHeader>
             <CardTitle>網站資訊</CardTitle>
             <CardDescription>
-              修改您的 WordPress 網站資訊。留空密碼欄位表示不更改密碼。
+              {isExternalSite
+                ? "修改外部網站的基本資訊"
+                : "修改您的網站資訊。留空密碼欄位表示不更改密碼。"
+              }
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form action={updateWebsite} className="space-y-6">
               <input type="hidden" name="websiteId" value={website.id} />
               <input type="hidden" name="companyId" value={company.id} />
+              <input
+                type="hidden"
+                name="isExternalSite"
+                value={isExternalSite ? "true" : "false"}
+              />
 
               <div className="space-y-2">
                 <Label htmlFor="site-name">網站名稱</Label>
@@ -130,34 +165,41 @@ export default async function EditWebsitePage({
                   required
                 />
                 <p className="text-xs text-muted-foreground">
-                  您的 WordPress 網站完整網址（包含 https://）
+                  {isExternalSite
+                    ? "您的外部網站完整網址（包含 https://）"
+                    : "您的 WordPress 網站完整網址（包含 https://）"}
                 </p>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="wp-username">WordPress 使用者名稱</Label>
-                <Input
-                  id="wp-username"
-                  name="wpUsername"
-                  placeholder="admin"
-                  defaultValue={website.wp_username || ""}
-                  required
-                />
-              </div>
+              {/* WordPress 認證欄位 - 只對非外部網站顯示 */}
+              {!isExternalSite && (
+                <>
+                  <div className="space-y-2">
+                    <Label htmlFor="wp-username">WordPress 使用者名稱</Label>
+                    <Input
+                      id="wp-username"
+                      name="wpUsername"
+                      placeholder="admin"
+                      defaultValue={website.wp_username || ""}
+                      required
+                    />
+                  </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="wp-password">WordPress 應用密碼</Label>
-                <Input
-                  id="wp-password"
-                  name="wpPassword"
-                  type="password"
-                  placeholder="留空表示不更改"
-                />
-                <p className="text-xs text-muted-foreground">
-                  請至 WordPress 後台 → 使用者 → 個人資料 → 應用程式密碼
-                  建立新的應用密碼。留空表示不更改現有密碼。
-                </p>
-              </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="wp-password">WordPress 應用密碼</Label>
+                    <Input
+                      id="wp-password"
+                      name="wpPassword"
+                      type="password"
+                      placeholder="留空表示不更改"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      請至 WordPress 後台 → 使用者 → 個人資料 → 應用程式密碼
+                      建立新的應用密碼。留空表示不更改現有密碼。
+                    </p>
+                  </div>
+                </>
+              )}
 
               <div className="flex gap-4">
                 <Button type="submit">儲存變更</Button>
@@ -171,6 +213,7 @@ export default async function EditWebsitePage({
           </CardContent>
         </Card>
 
+        {/* 網站設定（行業、地區、語言）- 所有網站類型都顯示 */}
         <WebsiteSettingsForm
           websiteId={website.id}
           industry={website.industry}
@@ -178,11 +221,13 @@ export default async function EditWebsitePage({
           language={website.language}
         />
 
+        {/* 品牌聲音設定 - 所有網站類型都顯示 */}
         <BrandVoiceForm
           websiteId={website.id}
           brandVoice={website.brand_voice}
         />
 
+        {/* 自動排程設定 - 所有網站類型都顯示 */}
         <AutoScheduleForm
           websiteId={website.id}
           dailyArticleLimit={website.daily_article_limit}

@@ -14,6 +14,7 @@ import {
   hashApiKey,
   regenerateApiKey,
 } from "@/lib/api-key/api-key-service";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 interface Website {
   id: string;
@@ -21,6 +22,48 @@ interface Website {
   wordpress_url: string;
   company_id: string;
   is_active: boolean | null;
+}
+
+type UserRole = "owner" | "admin" | "member";
+
+/**
+ * 檢查使用者是否有管理權限（owner 或 admin）
+ */
+async function checkAdminPermission(
+  supabase: SupabaseClient,
+  companyId: string,
+  userId: string,
+): Promise<{ hasPermission: boolean; role: UserRole | null }> {
+  const { data: membership } = await supabase
+    .from("company_members")
+    .select("role")
+    .eq("company_id", companyId)
+    .eq("user_id", userId)
+    .single();
+
+  if (!membership) {
+    return { hasPermission: false, role: null };
+  }
+
+  const hasPermission =
+    membership.role === "owner" || membership.role === "admin";
+  return { hasPermission, role: membership.role as UserRole };
+}
+
+/**
+ * 取得網站並驗證存在性
+ */
+async function getWebsiteCompanyId(
+  supabase: SupabaseClient,
+  websiteId: string,
+): Promise<string | null> {
+  const { data: website } = await supabase
+    .from("website_configs")
+    .select("company_id")
+    .eq("id", websiteId)
+    .single();
+
+  return website?.company_id ?? null;
 }
 
 /**
@@ -74,42 +117,28 @@ export async function deleteWebsite(formData: FormData) {
   }
 
   const websiteId = formData.get("websiteId") as string;
-
   if (!websiteId) {
     redirect("/dashboard/websites?error=" + encodeURIComponent("缺少網站 ID"));
   }
 
   const supabase = await createClient();
 
-  // 取得網站資訊以檢查權限
-  const { data: website } = await supabase
-    .from("website_configs")
-    .select("company_id")
-    .eq("id", websiteId)
-    .single();
-
-  if (!website) {
+  const companyId = await getWebsiteCompanyId(supabase, websiteId);
+  if (!companyId) {
     redirect("/dashboard/websites?error=" + encodeURIComponent("找不到該網站"));
   }
 
-  // 檢查使用者是否有權限刪除
-  const { data: membership } = await supabase
-    .from("company_members")
-    .select("role")
-    .eq("company_id", website.company_id)
-    .eq("user_id", user.id)
-    .single();
-
-  if (
-    !membership ||
-    (membership.role !== "owner" && membership.role !== "admin")
-  ) {
+  const { hasPermission } = await checkAdminPermission(
+    supabase,
+    companyId,
+    user.id,
+  );
+  if (!hasPermission) {
     redirect(
       "/dashboard/websites?error=" + encodeURIComponent("您沒有權限刪除網站"),
     );
   }
 
-  // 刪除網站
   const { error } = await supabase
     .from("website_configs")
     .delete()
@@ -124,7 +153,7 @@ export async function deleteWebsite(formData: FormData) {
 }
 
 /**
- * 更新 WordPress 網站
+ * 更新網站（支援 WordPress 網站、外部 API 網站、Platform Blog）
  */
 export async function updateWebsite(formData: FormData) {
   const user = await getUser();
@@ -138,11 +167,21 @@ export async function updateWebsite(formData: FormData) {
   const siteUrl = formData.get("siteUrl") as string;
   const wpUsername = formData.get("wpUsername") as string;
   const wpPassword = formData.get("wpPassword") as string;
+  const isExternalSite = formData.get("isExternalSite") === "true";
 
-  if (!websiteId || !companyId || !siteName || !siteUrl || !wpUsername) {
+  // 外部網站不需要 WordPress 認證欄位
+  if (!websiteId || !companyId || !siteName || !siteUrl) {
     redirect(
       `/dashboard/websites/${websiteId}/edit?error=` +
         encodeURIComponent("缺少必要欄位"),
+    );
+  }
+
+  // 非外部網站需要 WordPress 認證
+  if (!isExternalSite && !wpUsername) {
+    redirect(
+      `/dashboard/websites/${websiteId}/edit?error=` +
+        encodeURIComponent("缺少 WordPress 使用者名稱"),
     );
   }
 
@@ -178,15 +217,16 @@ export async function updateWebsite(formData: FormData) {
   // 取得現有網站設定（用於取得現有密碼）
   const { data: existingConfig } = await supabase
     .from("website_configs")
-    .select("wp_app_password, is_platform_blog")
+    .select("wp_app_password, is_platform_blog, is_external_site")
     .eq("id", websiteId)
     .single();
 
-  // Platform Blog 不需要 WordPress 驗證
+  // Platform Blog 和外部網站不需要 WordPress 驗證
   const isPlatformBlog = existingConfig?.is_platform_blog === true;
+  const isExternalSiteFromDB = existingConfig?.is_external_site === true;
 
-  // WordPress 連線驗證（非 Platform Blog 才需要）
-  if (!isPlatformBlog && wpUsername) {
+  // WordPress 連線驗證（非 Platform Blog 且非外部網站才需要）
+  if (!isPlatformBlog && !isExternalSiteFromDB && !isExternalSite && wpUsername) {
     // 決定使用哪個密碼：新密碼 > 現有密碼
     let passwordToTest = wpPassword?.trim() || "";
     if (!passwordToTest && existingConfig?.wp_app_password) {
@@ -228,17 +268,22 @@ export async function updateWebsite(formData: FormData) {
   const updateData: {
     website_name: string;
     wordpress_url: string;
-    wp_username: string;
+    wp_username?: string;
     wp_app_password?: string;
   } = {
     website_name: siteName,
     wordpress_url: siteUrl.replace(/\/$/, ""), // 移除尾部斜線
-    wp_username: wpUsername,
   };
 
-  // 只有在提供新密碼時才更新（加密儲存）
-  if (wpPassword && wpPassword.trim() !== "") {
-    updateData.wp_app_password = encryptWordPressPassword(wpPassword.trim());
+  // 外部網站不需要更新 WordPress 認證欄位
+  if (!isExternalSite && !isExternalSiteFromDB) {
+    if (wpUsername) {
+      updateData.wp_username = wpUsername;
+    }
+    // 只有在提供新密碼時才更新（加密儲存）
+    if (wpPassword && wpPassword.trim() !== "") {
+      updateData.wp_app_password = encryptWordPressPassword(wpPassword.trim());
+    }
   }
 
   // 更新網站記錄
@@ -276,33 +321,20 @@ export async function toggleWebsiteStatus(formData: FormData) {
 
   const supabase = await createClient();
 
-  // 取得網站資訊以檢查權限
-  const { data: website } = await supabase
-    .from("website_configs")
-    .select("company_id")
-    .eq("id", websiteId)
-    .single();
-
-  if (!website) {
+  const companyId = await getWebsiteCompanyId(supabase, websiteId);
+  if (!companyId) {
     throw new Error("找不到該網站");
   }
 
-  // 檢查使用者是否有權限
-  const { data: membership } = await supabase
-    .from("company_members")
-    .select("role")
-    .eq("company_id", website.company_id)
-    .eq("user_id", user.id)
-    .single();
-
-  if (
-    !membership ||
-    (membership.role !== "owner" && membership.role !== "admin")
-  ) {
+  const { hasPermission } = await checkAdminPermission(
+    supabase,
+    companyId,
+    user.id,
+  );
+  if (!hasPermission) {
     throw new Error("您沒有權限修改網站狀態");
   }
 
-  // 切換狀態
   const { error } = await supabase
     .from("website_configs")
     .update({ is_active: !currentStatus })
@@ -335,27 +367,17 @@ export async function updateWebsiteSettings(formData: FormData) {
 
   const supabase = await createClient();
 
-  const { data: website } = await supabase
-    .from("website_configs")
-    .select("company_id")
-    .eq("id", websiteId)
-    .single();
-
-  if (!website) {
+  const companyId = await getWebsiteCompanyId(supabase, websiteId);
+  if (!companyId) {
     redirect("/dashboard/websites?error=" + encodeURIComponent("找不到網站"));
   }
 
-  const { data: membership } = await supabase
-    .from("company_members")
-    .select("role")
-    .eq("company_id", website.company_id)
-    .eq("user_id", user.id)
-    .single();
-
-  if (
-    !membership ||
-    (membership.role !== "owner" && membership.role !== "admin")
-  ) {
+  const { hasPermission } = await checkAdminPermission(
+    supabase,
+    companyId,
+    user.id,
+  );
+  if (!hasPermission) {
     redirect(
       "/dashboard/websites?error=" + encodeURIComponent("您沒有權限編輯此網站"),
     );
@@ -405,27 +427,17 @@ export async function updateWebsiteBrandVoice(formData: FormData) {
 
   const supabase = await createClient();
 
-  const { data: website } = await supabase
-    .from("website_configs")
-    .select("company_id")
-    .eq("id", websiteId)
-    .single();
-
-  if (!website) {
+  const companyId = await getWebsiteCompanyId(supabase, websiteId);
+  if (!companyId) {
     redirect("/dashboard/websites?error=" + encodeURIComponent("找不到網站"));
   }
 
-  const { data: membership } = await supabase
-    .from("company_members")
-    .select("role")
-    .eq("company_id", website.company_id)
-    .eq("user_id", user.id)
-    .single();
-
-  if (
-    !membership ||
-    (membership.role !== "owner" && membership.role !== "admin")
-  ) {
+  const { hasPermission } = await checkAdminPermission(
+    supabase,
+    companyId,
+    user.id,
+  );
+  if (!hasPermission) {
     redirect(
       "/dashboard/websites?error=" + encodeURIComponent("您沒有權限編輯此網站"),
     );
@@ -635,35 +647,22 @@ export async function updateWebsiteAutoSchedule(formData: FormData) {
 
   const supabase = await createClient();
 
-  // 取得網站資訊以檢查權限
-  const { data: website } = await supabase
-    .from("website_configs")
-    .select("company_id")
-    .eq("id", websiteId)
-    .single();
-
-  if (!website) {
+  const companyId = await getWebsiteCompanyId(supabase, websiteId);
+  if (!companyId) {
     redirect("/dashboard/websites?error=" + encodeURIComponent("找不到網站"));
   }
 
-  // 檢查使用者是否有權限
-  const { data: membership } = await supabase
-    .from("company_members")
-    .select("role")
-    .eq("company_id", website.company_id)
-    .eq("user_id", user.id)
-    .single();
-
-  if (
-    !membership ||
-    (membership.role !== "owner" && membership.role !== "admin")
-  ) {
+  const { hasPermission } = await checkAdminPermission(
+    supabase,
+    companyId,
+    user.id,
+  );
+  if (!hasPermission) {
     redirect(
       "/dashboard/websites?error=" + encodeURIComponent("您沒有權限編輯此網站"),
     );
   }
 
-  // 更新自動排程設定
   const { error } = await supabase
     .from("website_configs")
     .update({
