@@ -45,6 +45,7 @@ export const GET = withAuth(async (request: NextRequest, { user }) => {
   const offset = parseInt(searchParams.get("offset") || "0");
   const search = searchParams.get("search");
   const websiteId = searchParams.get("website_id");
+  const filter = searchParams.get("filter") || "all"; // all | translated | not_translated
 
   try {
     const adminClient = createAdminClient();
@@ -67,11 +68,34 @@ export const GET = withAuth(async (request: NextRequest, { user }) => {
       .select("id, title, slug, status, created_at", { count: "exact" })
       .eq("company_id", companyMember.company_id)
       .eq("status", "published")
-      .order("created_at", { ascending: false })
-      .range(offset, offset + limit - 1);
+      .order("created_at", { ascending: false });
+
+    // 套用翻譯狀態篩選
+    if (filter === "translated" || filter === "not_translated") {
+      const { data: translatedArticles } = await adminClient
+        .from("article_translations")
+        .select("source_article_id")
+        .eq("company_id", companyMember.company_id);
+
+      const translatedIds = [...new Set(
+        (translatedArticles || []).map((t) => t.source_article_id)
+      )];
+
+      if (filter === "translated") {
+        if (translatedIds.length === 0) {
+          return successResponse({ articles: [], total: 0, limit, offset, filter });
+        }
+        articlesQuery = articlesQuery.in("id", translatedIds);
+      } else if (translatedIds.length > 0) {
+        articlesQuery = articlesQuery.not("id", "in", `(${translatedIds.join(",")})`);
+      }
+    }
 
     if (search) articlesQuery = articlesQuery.ilike("title", `%${search}%`);
     if (websiteId) articlesQuery = articlesQuery.eq("published_to_website_id", websiteId);
+
+    // 套用分頁
+    articlesQuery = articlesQuery.range(offset, offset + limit - 1);
 
     const { data: articles, error, count } = await articlesQuery;
 
@@ -128,6 +152,7 @@ export const GET = withAuth(async (request: NextRequest, { user }) => {
       total: count || 0,
       limit,
       offset,
+      filter,
     });
   } catch (error) {
     console.error("[Translation Articles] Error:", error);

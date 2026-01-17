@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   Card,
   CardContent,
@@ -23,6 +23,8 @@ import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import {
+  ChevronLeft,
+  ChevronRight,
   Globe,
   Languages,
   Loader2,
@@ -31,6 +33,7 @@ import {
   Settings,
   Zap,
 } from "lucide-react";
+import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import type {
   TranslationLocale,
   ArticleTranslationSummary,
@@ -47,9 +50,41 @@ const SITE_TYPE_LABELS: Record<string, string> = {
   external: "外部網站",
 };
 
+/** 篩選狀態的空結果訊息 */
+const EMPTY_STATE_MESSAGES: Record<string, string> = {
+  translated: "沒有已翻譯的文章",
+  not_translated: "沒有未翻譯的文章",
+  all: "沒有已發布的文章可供翻譯",
+};
+
 /** 取得網站類型的顯示標籤 */
 function getSiteTypeLabel(siteType: string): string {
   return SITE_TYPE_LABELS[siteType] ?? siteType;
+}
+
+/** 語言按鈕元件 Props */
+interface LanguageButtonProps {
+  locale: TranslationLocale;
+  isSelected: boolean;
+  onClick: () => void;
+  disabled?: boolean;
+}
+
+/** 語言按鈕元件 */
+function LanguageButton({ locale, isSelected, onClick, disabled }: LanguageButtonProps): React.ReactNode {
+  const lang = TRANSLATION_LANGUAGES[locale];
+  return (
+    <Button
+      variant={isSelected ? "default" : "outline"}
+      size="sm"
+      onClick={onClick}
+      disabled={disabled}
+      className="gap-1"
+    >
+      <span>{lang.flagEmoji}</span>
+      <span className="hidden sm:inline">{lang.nativeName}</span>
+    </Button>
+  );
 }
 
 /** 網站自動翻譯設定類型 */
@@ -89,6 +124,9 @@ export default function AdminTranslationsPage() {
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
   const [websiteId, setWebsiteId] = useState<string | null>(null);
+  const [filter, setFilter] = useState<"all" | "translated" | "not_translated">("all");
+  const [currentPage, setCurrentPage] = useState(1);
+  const pageSize = 50;
   const [selectedArticles, setSelectedArticles] = useState<Set<string>>(
     new Set()
   );
@@ -190,8 +228,14 @@ export default function AdminTranslationsPage() {
   };
 
   const fetchArticles = useCallback(async () => {
+    setLoading(true);
     try {
-      const params = new URLSearchParams({ limit: "50", offset: "0" });
+      const offset = (currentPage - 1) * pageSize;
+      const params = new URLSearchParams({
+        limit: String(pageSize),
+        offset: String(offset),
+        filter,
+      });
       if (search) params.set("search", search);
       if (websiteId) params.set("website_id", websiteId);
 
@@ -216,7 +260,7 @@ export default function AdminTranslationsPage() {
     } finally {
       setLoading(false);
     }
-  }, [search, websiteId]);
+  }, [search, websiteId, filter, currentPage, pageSize]);
 
   useEffect(() => {
     fetchSettings();
@@ -299,6 +343,35 @@ export default function AdminTranslationsPage() {
   const handleRefresh = () => {
     fetchArticles();
     fetchSettings();
+  };
+
+  // 切換篩選時重置頁碼
+  const handleFilterChange = (newFilter: "all" | "translated" | "not_translated") => {
+    setFilter(newFilter);
+    setCurrentPage(1);
+    setSelectedArticles(new Set());
+  };
+
+  // 分頁計算
+  const totalPages = Math.ceil(total / pageSize);
+  const startItem = total === 0 ? 0 : (currentPage - 1) * pageSize + 1;
+  const endItem = Math.min(currentPage * pageSize, total);
+
+  // 產生頁碼按鈕
+  const getPageNumbers = () => {
+    const pages: (number | "...")[] = [];
+    if (totalPages <= 7) {
+      for (let i = 1; i <= totalPages; i++) pages.push(i);
+    } else {
+      pages.push(1);
+      if (currentPage > 3) pages.push("...");
+      for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+        pages.push(i);
+      }
+      if (currentPage < totalPages - 2) pages.push("...");
+      pages.push(totalPages);
+    }
+    return pages;
   };
 
   if (accessDenied) {
@@ -405,29 +478,15 @@ export default function AdminTranslationsPage() {
                   {/* 目標語言選擇 - 只有啟用時才顯示 */}
                   {website.auto_translate_enabled && (
                     <div className="flex flex-wrap gap-2 pl-12">
-                      {TRANSLATION_LOCALES.map((locale) => {
-                        const lang = TRANSLATION_LANGUAGES[locale];
-                        const isSelected =
-                          website.auto_translate_languages.includes(locale);
-
-                        return (
-                          <Button
-                            key={locale}
-                            variant={isSelected ? "default" : "outline"}
-                            size="sm"
-                            onClick={() =>
-                              handleToggleAutoLanguage(website, locale)
-                            }
-                            disabled={savingSettings === website.id}
-                            className="gap-1"
-                          >
-                            <span>{lang.flagEmoji}</span>
-                            <span className="hidden sm:inline">
-                              {lang.nativeName}
-                            </span>
-                          </Button>
-                        );
-                      })}
+                      {TRANSLATION_LOCALES.map((locale) => (
+                        <LanguageButton
+                          key={locale}
+                          locale={locale}
+                          isSelected={website.auto_translate_languages.includes(locale)}
+                          onClick={() => handleToggleAutoLanguage(website, locale)}
+                          disabled={savingSettings === website.id}
+                        />
+                      ))}
                     </div>
                   )}
                 </div>
@@ -467,23 +526,14 @@ export default function AdminTranslationsPage() {
           </CardHeader>
           <CardContent>
             <div className="flex flex-wrap gap-2">
-              {TRANSLATION_LOCALES.map((locale) => {
-                const lang = TRANSLATION_LANGUAGES[locale];
-                const isSelected = selectedLanguages.has(locale);
-
-                return (
-                  <Button
-                    key={locale}
-                    variant={isSelected ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => handleToggleLanguage(locale)}
-                    className="gap-1"
-                  >
-                    <span>{lang.flagEmoji}</span>
-                    <span className="hidden sm:inline">{lang.nativeName}</span>
-                  </Button>
-                );
-              })}
+              {TRANSLATION_LOCALES.map((locale) => (
+                <LanguageButton
+                  key={locale}
+                  locale={locale}
+                  isSelected={selectedLanguages.has(locale)}
+                  onClick={() => handleToggleLanguage(locale)}
+                />
+              ))}
             </div>
           </CardContent>
         </Card>
@@ -496,7 +546,7 @@ export default function AdminTranslationsPage() {
             <div>
               <CardTitle className="text-lg">文章列表</CardTitle>
               <CardDescription>
-                選擇要翻譯的文章（共 {total} 篇已發布文章）
+                選擇要翻譯的文章（共 {total} 篇文章）
               </CardDescription>
             </div>
             <div className="flex items-center gap-4">
@@ -505,7 +555,10 @@ export default function AdminTranslationsPage() {
                 <Input
                   placeholder="搜尋文章..."
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setCurrentPage(1);
+                  }}
                   className="pl-9 w-64"
                 />
               </div>
@@ -527,6 +580,14 @@ export default function AdminTranslationsPage() {
               </Button>
             </div>
           </div>
+          {/* 篩選 Tabs */}
+          <Tabs value={filter} onValueChange={(v) => handleFilterChange(v as typeof filter)} className="mt-4">
+            <TabsList>
+              <TabsTrigger value="all">全部</TabsTrigger>
+              <TabsTrigger value="translated">有翻譯</TabsTrigger>
+              <TabsTrigger value="not_translated">未翻譯</TabsTrigger>
+            </TabsList>
+          </Tabs>
         </CardHeader>
         <CardContent>
           {loading ? (
@@ -535,59 +596,106 @@ export default function AdminTranslationsPage() {
             </div>
           ) : articles.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              沒有已發布的文章可供翻譯
+              {EMPTY_STATE_MESSAGES[filter]}
             </div>
           ) : (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-12">
-                    <Checkbox
-                      checked={
-                        selectedArticles.size === articles.length &&
-                        articles.length > 0
-                      }
-                      onCheckedChange={(checked) =>
-                        handleSelectAll(checked === true)
-                      }
-                    />
-                  </TableHead>
-                  <TableHead>文章資訊</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {articles.map((article) => (
-                  <TableRow key={article.article_id}>
-                    <TableCell>
+            <>
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-12">
                       <Checkbox
-                        checked={selectedArticles.has(article.article_id)}
-                        onCheckedChange={() =>
-                          handleSelectArticle(article.article_id)
+                        checked={
+                          selectedArticles.size === articles.length &&
+                          articles.length > 0
+                        }
+                        onCheckedChange={(checked) =>
+                          handleSelectAll(checked === true)
                         }
                       />
-                    </TableCell>
-                    <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <span>{article.article_title}</span>
-                        <span className="flex gap-0.5">
-                          {article.translations
-                            .filter((t) => t.status !== "not_translated")
-                            .map((t) => (
-                              <span
-                                key={t.locale}
-                                title={`${TRANSLATION_LANGUAGES[t.locale].nativeName} (${t.status})`}
-                                className="text-sm opacity-80"
-                              >
-                                {TRANSLATION_LANGUAGES[t.locale].flagEmoji}
-                              </span>
-                            ))}
-                        </span>
-                      </div>
-                    </TableCell>
+                    </TableHead>
+                    <TableHead>文章資訊</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {articles.map((article) => (
+                    <TableRow key={article.article_id}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedArticles.has(article.article_id)}
+                          onCheckedChange={() =>
+                            handleSelectArticle(article.article_id)
+                          }
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        <div className="flex items-center gap-2">
+                          <span>{article.article_title}</span>
+                          <span className="flex gap-0.5">
+                            {article.translations
+                              .filter((t) => t.status !== "not_translated")
+                              .map((t) => (
+                                <span
+                                  key={t.locale}
+                                  title={`${TRANSLATION_LANGUAGES[t.locale].nativeName} (${t.status})`}
+                                  className="text-sm opacity-80"
+                                >
+                                  {TRANSLATION_LANGUAGES[t.locale].flagEmoji}
+                                </span>
+                              ))}
+                          </span>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+
+              {/* 分頁元件 */}
+              {totalPages > 1 && (
+                <div className="flex items-center justify-between mt-6 pt-4 border-t">
+                  <div className="text-sm text-muted-foreground">
+                    顯示 {startItem}-{endItem} 筆，共 {total} 筆
+                  </div>
+                  <div className="flex items-center gap-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                      disabled={currentPage === 1 || loading}
+                    >
+                      <ChevronLeft className="h-4 w-4" />
+                    </Button>
+                    {getPageNumbers().map((page, idx) =>
+                      page === "..." ? (
+                        <span key={`ellipsis-${idx}`} className="px-2 text-muted-foreground">
+                          ...
+                        </span>
+                      ) : (
+                        <Button
+                          key={page}
+                          variant={currentPage === page ? "default" : "outline"}
+                          size="sm"
+                          onClick={() => setCurrentPage(page)}
+                          disabled={loading}
+                          className="min-w-[36px]"
+                        >
+                          {page}
+                        </Button>
+                      )
+                    )}
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      disabled={currentPage === totalPages || loading}
+                    >
+                      <ChevronRight className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
