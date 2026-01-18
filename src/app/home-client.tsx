@@ -244,7 +244,7 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
                   <CheckCircle2 className="h-5 w-5 text-green-500" />
                   <span>
                     <strong className="text-slate-900 dark:text-white">
-                      免費 10 篇
+                      免費 3 篇
                     </strong>{" "}
                     文章額度
                   </span>
@@ -439,8 +439,8 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
                     className="bg-white dark:bg-transparent dark:glass shadow-md dark:shadow-none border-slate-200 dark:border-white/10 hover:border-cyber-violet-500/50 hover:-translate-y-2 transition-all duration-300"
                   >
                     <CardContent className="p-6">
-                      <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-cyber-cyan-700 to-cyber-violet-700 shadow-lg shadow-cyber-violet-500/25">
-                        <Icon className="h-6 w-6 text-white drop-shadow-sm" />
+                      <div className="mb-4 inline-flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 shadow-lg shadow-violet-500/30">
+                        <Icon className="h-6 w-6 text-white" />
                       </div>
                       <h3 className="mb-2 text-lg font-bold text-slate-900 dark:text-white">
                         {t(`features.${featureKey}`)}
@@ -736,7 +736,7 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
               {/* 緊迫性標籤 */}
               <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-amber-100 dark:bg-amber-900/30 px-4 py-2 text-sm font-medium text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700">
                 <Gift className="h-4 w-4" />
-                <span>限時優惠：免費 10 篇文章額度</span>
+                <span>限時優惠：免費 3 篇文章額度</span>
               </div>
 
               <h2 className="font-bold mb-6">
@@ -752,7 +752,7 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
               </h2>
 
               <p className="text-slate-600 dark:text-slate-400 mb-8 text-lg max-w-2xl mx-auto">
-                現在註冊即可獲得 <strong className="text-slate-900 dark:text-white">免費 10 篇文章</strong>，
+                現在註冊即可獲得 <strong className="text-slate-900 dark:text-white">免費 3 篇文章</strong>，
                 親自體驗 AI 生成的 SEO 文章品質。無需信用卡，30 秒內開始。
               </p>
 
@@ -775,7 +775,7 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
               <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-slate-500 dark:text-slate-400">
                 <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  <span>免費 10 篇文章</span>
+                  <span>免費 3 篇文章</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 text-green-500" />
