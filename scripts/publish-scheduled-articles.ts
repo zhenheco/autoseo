@@ -7,9 +7,14 @@
  * 重要修復（2025-12-30）：
  * - 從查詢 generated_articles 改為查詢 article_jobs
  * - 這是因為排程資料存儲在 article_jobs 表，而非 generated_articles
+ *
+ * 重要修復（2026-01-18）：
+ * - 添加自動翻譯觸發邏輯，與 API route 同步
+ * - 文章發布後會檢查網站的自動翻譯設定並創建翻譯任務
  */
 
 import { createClient } from "@supabase/supabase-js";
+import { v4 as uuidv4 } from "uuid";
 import { WordPressClient } from "../src/lib/wordpress/client";
 import type { Database } from "../src/types/database.types";
 
@@ -24,6 +29,8 @@ interface ArticleJob {
   publish_retry_count: number | null;
   last_publish_error: string | null;
   website_id: string | null;
+  company_id: string | null;
+  user_id: string | null;
   website_configs: {
     id: string;
     website_name: string | null;
@@ -33,6 +40,8 @@ interface ArticleJob {
     wp_enabled: boolean | null;
     is_active: boolean | null;
     is_platform_blog: boolean | null;
+    auto_translate_enabled: boolean | null;
+    auto_translate_languages: string[] | null;
   } | null;
   generated_articles: {
     id: string;
@@ -74,6 +83,7 @@ async function main() {
   console.log(`[Publish] 🔍 查詢排程時間 <= ${now} 的文章...`);
 
   // 核心修復：查詢 article_jobs 而非 generated_articles
+  // 2026-01-18: 添加 company_id, user_id 和網站翻譯設定欄位以支援自動翻譯
   const { data: jobs, error: fetchError } = await supabase
     .from("article_jobs")
     .select(
@@ -85,6 +95,8 @@ async function main() {
       publish_retry_count,
       last_publish_error,
       website_id,
+      company_id,
+      user_id,
       website_configs (
         id,
         website_name,
@@ -93,7 +105,9 @@ async function main() {
         wp_app_password,
         wp_enabled,
         is_active,
-        is_platform_blog
+        is_platform_blog,
+        auto_translate_enabled,
+        auto_translate_languages
       ),
       generated_articles (
         id,
@@ -205,6 +219,18 @@ async function main() {
           .eq("id", article.id);
 
         console.log(`[Publish] ✅ Platform Blog 發佈成功: ${article.title}`);
+
+        // 觸發自動翻譯
+        await triggerAutoTranslation(
+          supabase,
+          article.id,
+          website.id,
+          job.company_id || "",
+          job.user_id || "",
+          website.auto_translate_enabled,
+          website.auto_translate_languages
+        );
+
         successCount++;
         continue;
       } catch (error) {
@@ -301,6 +327,18 @@ async function main() {
           .eq("id", article.id);
 
         console.log(`[Publish] ✅ 草稿更新為已發佈: ${article.title}`);
+
+        // 觸發自動翻譯
+        await triggerAutoTranslation(
+          supabase,
+          article.id,
+          website.id,
+          job.company_id || "",
+          job.user_id || "",
+          website.auto_translate_enabled,
+          website.auto_translate_languages
+        );
+
         successCount++;
         continue;
       }
@@ -367,6 +405,18 @@ async function main() {
         .eq("id", article.id);
 
       console.log(`[Publish] ✅ 文章發佈成功: ${result.post.link}`);
+
+      // 觸發自動翻譯
+      await triggerAutoTranslation(
+        supabase,
+        article.id,
+        website.id,
+        job.company_id || "",
+        job.user_id || "",
+        website.auto_translate_enabled,
+        website.auto_translate_languages
+      );
+
       successCount++;
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "發布失敗";
@@ -386,6 +436,97 @@ async function main() {
     `[Publish] 📊 處理結果：${successCount} 成功，${retriedCount} 重試中，${failedCount} 失敗`,
   );
   console.log("[Publish] 🎉 排程發佈處理完成");
+}
+
+/**
+ * 文章發布成功後觸發自動翻譯
+ * 檢查網站的自動翻譯設定，如果啟用則建立翻譯任務
+ */
+async function triggerAutoTranslation(
+  supabase: ReturnType<typeof createClient<Database>>,
+  articleId: string,
+  websiteId: string,
+  companyId: string,
+  userId: string,
+  autoTranslateEnabled: boolean | null,
+  autoTranslateLanguages: string[] | null
+): Promise<{ triggered: boolean; jobCount: number; skipped: number }> {
+  // 檢查是否啟用自動翻譯
+  if (
+    !autoTranslateEnabled ||
+    !autoTranslateLanguages ||
+    autoTranslateLanguages.length === 0
+  ) {
+    return { triggered: false, jobCount: 0, skipped: 0 };
+  }
+
+  console.log(
+    `[Auto Translate] 🌐 檢查文章 ${articleId} 的自動翻譯設定，目標語言: ${autoTranslateLanguages.join(", ")}`
+  );
+
+  try {
+    // 查詢已有翻譯，避免重複翻譯
+    const { data: existingTranslations } = await supabase
+      .from("article_translations")
+      .select("target_language")
+      .eq("source_article_id", articleId);
+
+    // 建立已翻譯的 Set
+    const existingSet = new Set(
+      existingTranslations?.map((t) => t.target_language) || []
+    );
+
+    // 過濾掉已有翻譯的語言
+    const languagesToTranslate = autoTranslateLanguages.filter(
+      (lang) => !existingSet.has(lang)
+    );
+
+    const skippedCount =
+      autoTranslateLanguages.length - languagesToTranslate.length;
+
+    if (languagesToTranslate.length === 0) {
+      console.log(
+        `[Auto Translate] ℹ️ 文章 ${articleId} 所有目標語言已有翻譯，跳過 ${skippedCount} 個`
+      );
+      return { triggered: false, jobCount: 0, skipped: skippedCount };
+    }
+
+    // 建立翻譯任務
+    const job = {
+      id: uuidv4(),
+      job_id: `auto-trans-${articleId.slice(0, 8)}-${Date.now()}`,
+      company_id: companyId,
+      website_id: websiteId,
+      user_id: userId,
+      source_article_id: articleId,
+      target_languages: languagesToTranslate,
+      status: "pending",
+      progress: 0,
+      completed_languages: [],
+      failed_languages: {},
+    };
+
+    const { error: insertError } = await supabase
+      .from("translation_jobs")
+      .insert([job]);
+
+    if (insertError) {
+      console.error(
+        "[Auto Translate] ❌ 建立翻譯任務失敗:",
+        insertError
+      );
+      return { triggered: false, jobCount: 0, skipped: skippedCount };
+    }
+
+    console.log(
+      `[Auto Translate] ✅ 已建立翻譯任務: ${languagesToTranslate.join(", ")}`
+    );
+
+    return { triggered: true, jobCount: 1, skipped: skippedCount };
+  } catch (error) {
+    console.error("[Auto Translate] ❌ 錯誤:", error);
+    return { triggered: false, jobCount: 0, skipped: 0 };
+  }
 }
 
 async function handlePublishError(
