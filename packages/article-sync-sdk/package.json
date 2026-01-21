@@ -1,0 +1,70 @@
+{
+  "name": "@1wayseo/article-sync-sdk",
+  "version": "1.0.0",
+  "description": "SDK for syncing articles from 1waySEO to external projects",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    },
+    "./react": {
+      "import": "./dist/react/index.mjs",
+      "require": "./dist/react/index.js",
+      "types": "./dist/react/index.d.ts"
+    },
+    "./nextjs": {
+      "import": "./dist/nextjs/index.mjs",
+      "require": "./dist/nextjs/index.js",
+      "types": "./dist/nextjs/index.d.ts"
+    },
+    "./migrations": {
+      "import": "./dist/setup/migrations/index.mjs",
+      "require": "./dist/setup/migrations/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsup",
+    "dev": "tsup --watch",
+    "typecheck": "tsc --noEmit",
+    "lint": "eslint src --ext .ts,.tsx",
+    "prepublishOnly": "pnpm run build"
+  },
+  "keywords": [
+    "1wayseo",
+    "article-sync",
+    "cms",
+    "webhook",
+    "supabase"
+  ],
+  "author": "1waySEO",
+  "license": "MIT",
+  "peerDependencies": {
+    "@supabase/supabase-js": ">=2.0.0",
+    "react": ">=18.0.0",
+    "react-dom": ">=18.0.0"
+  },
+  "peerDependenciesMeta": {
+    "react": {
+      "optional": true
+    },
+    "react-dom": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@supabase/supabase-js": "^2.47.10",
+    "@types/node": "^20.11.0",
+    "@types/react": "^18.2.48",
+    "react": "^18.2.0",
+    "tsup": "^8.0.1",
+    "typescript": "^5.3.3"
+  }
+}

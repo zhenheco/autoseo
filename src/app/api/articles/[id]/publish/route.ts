@@ -19,6 +19,8 @@ import {
 } from "@/lib/security/token-encryption";
 import { syncCompanyOwnerToBrevo } from "@/lib/brevo";
 import { pingAllSearchEngines } from "@/lib/sitemap/ping-service";
+import { syncArticle } from "@/lib/sync";
+import type { GeneratedArticle } from "@/types/article.types";
 
 /**
  * 文章發布後觸發 sitemap 更新和搜尋引擎 ping
@@ -125,6 +127,11 @@ export const POST = withCompany(
       // 觸發 sitemap 更新和搜尋引擎 ping
       revalidateSitemapAndPing();
 
+      // 同步文章到外部專案（非阻塞）
+      syncArticle(article as GeneratedArticle, "create").catch((error) => {
+        console.error("[Publish] 文章同步失敗（不影響發布）:", error);
+      });
+
       return successResponse({
         published_at: now,
         published_to_website_id: website_id,
@@ -216,6 +223,11 @@ export const POST = withCompany(
 
       // 觸發 sitemap 更新和搜尋引擎 ping（WordPress 發布也觸發，因為可能同時發布到 Platform Blog）
       revalidateSitemapAndPing();
+
+      // 同步文章到外部專案（非阻塞）
+      syncArticle(article as GeneratedArticle, "create").catch((error) => {
+        console.error("[Publish] 文章同步失敗（不影響發布）:", error);
+      });
 
       return successResponse({
         wordpress_post_id: publishResult.post.id,

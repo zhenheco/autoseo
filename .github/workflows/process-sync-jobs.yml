@@ -1,0 +1,49 @@
+name: Process Sync Jobs
+
+on:
+  schedule:
+    # 每 5 分鐘執行一次
+    - cron: "*/5 * * * *"
+
+  # 支援手動觸發
+  workflow_dispatch:
+
+# 避免多個實例同時運行
+concurrency:
+  group: process-sync-jobs
+  cancel-in-progress: false
+
+jobs:
+  process-sync-retries:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install tsx
+        run: pnpm add -g tsx
+
+      - name: Clean environment variables
+        run: |
+          # 清理所有環境變數的換行符和回車符
+          echo "NEXT_PUBLIC_SUPABASE_URL=$(echo -n '${{ secrets.SUPABASE_URL }}' | tr -d '\n\r')" >> $GITHUB_ENV
+          echo "SUPABASE_SERVICE_ROLE_KEY=$(echo -n '${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}' | tr -d '\n\r')" >> $GITHUB_ENV
+
+      - name: Retry failed sync jobs
+        run: tsx scripts/process-sync-jobs.ts

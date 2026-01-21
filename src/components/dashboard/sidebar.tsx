@@ -19,6 +19,7 @@ import {
   Ticket,
   History,
   Share2,
+  RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -89,6 +90,11 @@ const adminItems = [
     titleKey: "paymentTest",
     href: "/dashboard/admin/payment-test",
     icon: CreditCard,
+  },
+  {
+    titleKey: "syncTargets",
+    href: "/dashboard/admin/sync-targets",
+    icon: RefreshCw,
   },
 ];
 

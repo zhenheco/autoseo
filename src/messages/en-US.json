@@ -49,6 +49,7 @@
     "operationLogs": "Activity Logs",
     "translations": "Translations",
     "paymentTest": "Payment Test",
+    "syncTargets": "Article Sync",
     "customerService": "Support",
     "blog": "Blog"
   },

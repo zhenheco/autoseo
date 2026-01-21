@@ -1874,6 +1874,154 @@ export type Database = {
           },
         ];
       };
+      sync_targets: {
+        Row: {
+          id: string;
+          name: string;
+          slug: string;
+          description: string | null;
+          webhook_url: string;
+          webhook_secret: string;
+          sync_on_publish: boolean;
+          sync_on_update: boolean;
+          sync_on_unpublish: boolean;
+          sync_translations: boolean;
+          sync_languages: string[];
+          is_active: boolean;
+          last_synced_at: string | null;
+          last_sync_status: string | null;
+          last_sync_error: string | null;
+          metadata: Json;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          name: string;
+          slug: string;
+          description?: string | null;
+          webhook_url: string;
+          webhook_secret: string;
+          sync_on_publish?: boolean;
+          sync_on_update?: boolean;
+          sync_on_unpublish?: boolean;
+          sync_translations?: boolean;
+          sync_languages?: string[];
+          is_active?: boolean;
+          last_synced_at?: string | null;
+          last_sync_status?: string | null;
+          last_sync_error?: string | null;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          name?: string;
+          slug?: string;
+          description?: string | null;
+          webhook_url?: string;
+          webhook_secret?: string;
+          sync_on_publish?: boolean;
+          sync_on_update?: boolean;
+          sync_on_unpublish?: boolean;
+          sync_translations?: boolean;
+          sync_languages?: string[];
+          is_active?: boolean;
+          last_synced_at?: string | null;
+          last_sync_status?: string | null;
+          last_sync_error?: string | null;
+          metadata?: Json;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
+      article_sync_logs: {
+        Row: {
+          id: string;
+          article_id: string;
+          sync_target_id: string;
+          translation_id: string | null;
+          action: "create" | "update" | "delete";
+          status: "pending" | "processing" | "success" | "failed" | "retrying";
+          webhook_url: string;
+          request_payload: Json | null;
+          response_status: number | null;
+          response_body: string | null;
+          error_message: string | null;
+          retry_count: number;
+          max_retries: number;
+          next_retry_at: string | null;
+          started_at: string | null;
+          completed_at: string | null;
+          created_at: string;
+          metadata: Json;
+        };
+        Insert: {
+          id?: string;
+          article_id: string;
+          sync_target_id: string;
+          translation_id?: string | null;
+          action: "create" | "update" | "delete";
+          status?: "pending" | "processing" | "success" | "failed" | "retrying";
+          webhook_url: string;
+          request_payload?: Json | null;
+          response_status?: number | null;
+          response_body?: string | null;
+          error_message?: string | null;
+          retry_count?: number;
+          max_retries?: number;
+          next_retry_at?: string | null;
+          started_at?: string | null;
+          completed_at?: string | null;
+          created_at?: string;
+          metadata?: Json;
+        };
+        Update: {
+          id?: string;
+          article_id?: string;
+          sync_target_id?: string;
+          translation_id?: string | null;
+          action?: "create" | "update" | "delete";
+          status?: "pending" | "processing" | "success" | "failed" | "retrying";
+          webhook_url?: string;
+          request_payload?: Json | null;
+          response_status?: number | null;
+          response_body?: string | null;
+          error_message?: string | null;
+          retry_count?: number;
+          max_retries?: number;
+          next_retry_at?: string | null;
+          started_at?: string | null;
+          completed_at?: string | null;
+          created_at?: string;
+          metadata?: Json;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "article_sync_logs_article_id_fkey";
+            columns: ["article_id"];
+            isOneToOne: false;
+            referencedRelation: "generated_articles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "article_sync_logs_sync_target_id_fkey";
+            columns: ["sync_target_id"];
+            isOneToOne: false;
+            referencedRelation: "sync_targets";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "article_sync_logs_translation_id_fkey";
+            columns: ["translation_id"];
+            isOneToOne: false;
+            referencedRelation: "article_translations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
