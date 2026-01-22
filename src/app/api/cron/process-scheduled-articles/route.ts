@@ -45,7 +45,6 @@ export async function GET(request: NextRequest) {
         wordpress_refresh_token,
         is_active,
         is_platform_blog,
-        is_external_site,
         site_type,
         auto_translate_enabled,
         auto_translate_languages
@@ -130,10 +129,8 @@ export async function GET(request: NextRequest) {
 
     // Platform Blog 不需要 WordPress，直接更新資料庫即可
     const isPlatformBlog = website.is_platform_blog === true;
-    // 外部網站使用 Pull 模式，也不需要 WordPress
-    const isExternalSite = website.is_external_site === true || website.site_type === "external";
 
-    // 檢查網站是否啟用（Platform Blog 和外部網站只需檢查 is_active）
+    // 檢查網站是否啟用
     if (!website.is_active) {
       await handlePublishError(
         supabase,
@@ -151,8 +148,8 @@ export async function GET(request: NextRequest) {
       continue;
     }
 
-    // 非 Platform Blog 且非外部網站 才需要檢查 WordPress 功能
-    if (!isPlatformBlog && !isExternalSite && !website.wp_enabled) {
+    // 非 Platform Blog 才需要檢查 WordPress 功能
+    if (!isPlatformBlog && !website.wp_enabled) {
       await handlePublishError(
         supabase,
         article.id,
@@ -247,98 +244,6 @@ export async function GET(request: NextRequest) {
         console.error(
           `[Process Scheduled Articles] Platform Blog publish error: ${article.id}`,
           platformError,
-        );
-
-        const retryCount = article.publish_retry_count || 0;
-        const wasRetried = await handlePublishError(
-          supabase,
-          article.id,
-          retryCount,
-          errorMessage,
-        );
-
-        if (wasRetried) {
-          results.retried++;
-          results.details.push({
-            articleId: article.id,
-            title: generatedArticle.title,
-            status: "retried",
-            error: errorMessage,
-          });
-        } else {
-          results.failed++;
-          results.details.push({
-            articleId: article.id,
-            title: generatedArticle.title,
-            status: "failed",
-            error: errorMessage,
-          });
-        }
-        continue;
-      }
-    }
-
-    // 情況 0.5：外部網站 → 直接更新資料庫，外部網站透過 API 拉取文章
-    if (isExternalSite) {
-      console.log(
-        `[Process Scheduled Articles] Publishing for External Site: ${article.id} - ${generatedArticle.title} (${website.website_name})`,
-      );
-
-      try {
-        const publishedAt = new Date().toISOString();
-
-        // 更新 article_jobs
-        await supabase
-          .from("article_jobs")
-          .update({
-            status: "published",
-            published_at: publishedAt,
-            publish_retry_count: 0,
-            last_publish_error: null,
-          })
-          .eq("id", article.id);
-
-        // 更新 generated_articles（標記已發布到外部網站）
-        await supabase
-          .from("generated_articles")
-          .update({
-            status: "published",
-            published_at: publishedAt,
-            published_to_website_id: website.id,
-            published_to_website_at: publishedAt,
-          })
-          .eq("id", generatedArticle.id);
-
-        console.log(
-          `[Process Scheduled Articles] Published for External Site: ${article.id} - ${generatedArticle.title}`,
-        );
-
-        // 觸發自動翻譯
-        await triggerAutoTranslation(
-          supabase,
-          generatedArticle.id,
-          website.id,
-          article.company_id,
-          article.user_id,
-          website.auto_translate_enabled,
-          website.auto_translate_languages
-        );
-
-        results.published++;
-        results.details.push({
-          articleId: article.id,
-          title: generatedArticle.title,
-          status: "published",
-        });
-        continue;
-      } catch (externalError) {
-        const errorMessage =
-          externalError instanceof Error
-            ? externalError.message
-            : "外部網站發布失敗";
-        console.error(
-          `[Process Scheduled Articles] External Site publish error: ${article.id}`,
-          externalError,
         );
 
         const retryCount = article.publish_retry_count || 0;

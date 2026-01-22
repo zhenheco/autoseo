@@ -262,7 +262,10 @@
       "failed": "發布失敗",
       "statusLabel": "發布狀態",
       "statusPublish": "發布（公開）",
-      "statusDraft": "草稿"
+      "statusDraft": "草稿",
+      "syncTargets": "同步到外部專案",
+      "syncTargetsDesc": "選擇要同步的外部專案，不選則不同步",
+      "loadingSyncTargets": "載入同步目標中..."
     },
     "loadFailed": "載入失敗",
     "batchPublish": {

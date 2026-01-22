@@ -260,7 +260,10 @@
       "failed": "Publish failed",
       "statusLabel": "Publish Status",
       "statusPublish": "Publish (Public)",
-      "statusDraft": "Draft"
+      "statusDraft": "Draft",
+      "syncTargets": "Sync to External Projects",
+      "syncTargetsDesc": "Select projects to sync to, uncheck to skip sync",
+      "loadingSyncTargets": "Loading sync targets..."
     },
     "loadFailed": "Load failed",
     "batchPublish": {

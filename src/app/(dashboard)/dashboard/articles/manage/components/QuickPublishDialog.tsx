@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Dialog,
   DialogContent,
@@ -12,15 +12,24 @@ import {
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
 import { WebsiteSelector } from "@/components/articles/WebsiteSelector";
 import {
   ArticleWithWebsite,
   publishArticle,
   assignWebsiteToArticle,
 } from "../actions";
-import { Loader2, CheckCircle, ExternalLink } from "lucide-react";
+import { Loader2, CheckCircle, ExternalLink, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useTranslations } from "next-intl";
+
+// 同步目標類型
+interface SyncTarget {
+  id: string;
+  name: string;
+  slug: string;
+  description: string | null;
+}
 
 interface QuickPublishDialogProps {
   open: boolean;
@@ -47,6 +56,46 @@ export function QuickPublishDialog({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [publishedUrl, setPublishedUrl] = useState<string | null>(null);
 
+  // 同步目標相關 state
+  const [syncTargets, setSyncTargets] = useState<SyncTarget[]>([]);
+  const [selectedSyncTargets, setSelectedSyncTargets] = useState<string[]>([]);
+  const [loadingSyncTargets, setLoadingSyncTargets] = useState(false);
+
+  // 獲取同步目標列表
+  useEffect(() => {
+    if (!open) return;
+
+    setLoadingSyncTargets(true);
+    fetch("/api/sync-targets")
+      .then((res) => res.json())
+      .then((data) => {
+        // API 返回格式：{ success: true, data: [...] } 或直接陣列
+        const targets: SyncTarget[] = Array.isArray(data.data)
+          ? data.data
+          : Array.isArray(data)
+            ? data
+            : [];
+        setSyncTargets(targets);
+        // 預設全選
+        setSelectedSyncTargets(targets.map((t) => t.id));
+      })
+      .catch((error) => {
+        console.error("[QuickPublishDialog] 獲取同步目標失敗:", error);
+      })
+      .finally(() => {
+        setLoadingSyncTargets(false);
+      });
+  }, [open]);
+
+  // 切換同步目標選擇
+  const toggleSyncTarget = (targetId: string) => {
+    setSelectedSyncTargets((prev) =>
+      prev.includes(targetId)
+        ? prev.filter((id) => id !== targetId)
+        : [...prev, targetId],
+    );
+  };
+
   const handlePublish = async () => {
     if (!selectedWebsiteId) return;
 
@@ -57,10 +106,12 @@ export function QuickPublishDialog({
       await assignWebsiteToArticle(article.id, selectedWebsiteId);
     }
 
+    // 傳入選擇的同步目標
     const result = await publishArticle(
       article.id,
       selectedWebsiteId,
       publishStatus,
+      selectedSyncTargets, // 傳入同步目標 ID 列表
     );
 
     if (result.success) {
@@ -79,6 +130,7 @@ export function QuickPublishDialog({
       setPublishState("idle");
       setErrorMessage(null);
       setPublishedUrl(null);
+      // 不重置同步目標選擇，讓用戶保持上次的選擇
     }, 200);
   };
 
@@ -161,6 +213,50 @@ export function QuickPublishDialog({
                   </div>
                 </RadioGroup>
               </div>
+
+              {/* 同步目標選擇 */}
+              {syncTargets.length > 0 && (
+                <div className="space-y-2">
+                  <Label>{t("publish.syncTargets")}</Label>
+                  <p className="text-xs text-muted-foreground">
+                    {t("publish.syncTargetsDesc")}
+                  </p>
+                  <div className="space-y-2 rounded-md border p-3">
+                    {loadingSyncTargets ? (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <RefreshCw className="h-4 w-4 animate-spin" />
+                        {t("publish.loadingSyncTargets")}
+                      </div>
+                    ) : (
+                      syncTargets.map((target) => (
+                        <div
+                          key={target.id}
+                          className="flex items-center space-x-2"
+                        >
+                          <Checkbox
+                            id={`sync-${target.id}`}
+                            checked={selectedSyncTargets.includes(target.id)}
+                            onCheckedChange={() => toggleSyncTarget(target.id)}
+                            disabled={publishState === "publishing"}
+                          />
+                          <Label
+                            htmlFor={`sync-${target.id}`}
+                            className="font-normal cursor-pointer"
+                          >
+                            {target.name}
+                            {target.description && (
+                              <span className="ml-1 text-xs text-muted-foreground">
+                                ({target.description})
+                              </span>
+                            )}
+                          </Label>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </div>
+              )}
+
               {!selectedWebsiteId && (
                 <p className="text-sm text-muted-foreground">
                   {t("publish.pleaseSelectWebsite")}

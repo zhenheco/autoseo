@@ -276,11 +276,13 @@ export async function assignWebsiteToArticle(
  * @param articleJobId - 文章 Job ID
  * @param websiteId - 目標網站 ID
  * @param status - 發布狀態：publish（公開）或 draft（草稿），預設為 publish
+ * @param syncTargetIds - 可選：指定同步目標 ID 列表。若不傳則同步到所有啟用目標；若傳空陣列則不執行同步
  */
 export async function publishArticle(
   articleJobId: string,
   websiteId: string,
   status: "publish" | "draft" = "publish",
+  syncTargetIds?: string[],
 ) {
   const user = await getUser();
   if (!user) return { success: false, error: "未登入" };
@@ -322,6 +324,7 @@ export async function publishArticle(
           target,
           website_id: websiteId,
           status,
+          syncTargetIds, // 傳入同步目標 ID 列表
         }),
       },
     );

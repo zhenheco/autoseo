@@ -36,16 +36,35 @@ export class ArticleSyncService {
   }
 
   /**
-   * 同步文章到所有啟用的 sync_targets
+   * 同步文章到指定的 sync_targets
+   * @param article 要同步的文章
+   * @param action 同步操作類型
+   * @param targetIds 可選：指定同步目標 ID 列表。若不傳則同步到所有啟用目標；若傳空陣列則不執行同步
    */
   async syncArticle(
     article: GeneratedArticle,
-    action: SyncAction
+    action: SyncAction,
+    targetIds?: string[]
   ): Promise<BatchSyncResult> {
+    // 如果明確傳入空陣列，表示不同步
+    if (targetIds && targetIds.length === 0) {
+      return {
+        total: 0,
+        success: 0,
+        failed: 0,
+        results: [],
+      };
+    }
+
     const supabase = createAdminClient();
 
     // 取得所有啟用的同步目標
-    const targets = await this.getActiveSyncTargets(action);
+    let targets = await this.getActiveSyncTargets(action);
+
+    // 如果有指定 targetIds，過濾目標
+    if (targetIds && targetIds.length > 0) {
+      targets = targets.filter((t) => targetIds.includes(t.id));
+    }
 
     if (targets.length === 0) {
       return {
@@ -459,11 +478,15 @@ export function getSyncService(config?: SyncServiceConfig): ArticleSyncService {
 
 /**
  * 便捷函數：同步文章
+ * @param article 要同步的文章
+ * @param action 同步操作類型
+ * @param targetIds 可選：指定同步目標 ID 列表。若不傳則同步到所有啟用目標；若傳空陣列則不執行同步
  */
 export async function syncArticle(
   article: GeneratedArticle,
-  action: SyncAction
+  action: SyncAction,
+  targetIds?: string[]
 ): Promise<BatchSyncResult> {
   const service = getSyncService();
-  return service.syncArticle(article, action);
+  return service.syncArticle(article, action, targetIds);
 }

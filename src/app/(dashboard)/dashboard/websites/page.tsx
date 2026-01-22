@@ -22,7 +22,6 @@ import { checkPagePermission } from "@/lib/permissions";
 import { WebsiteStatusToggle } from "./website-status-toggle";
 import { WebsiteAddedTracker } from "./WebsiteAddedTracker";
 import { Globe, ExternalLink, Clock } from "lucide-react";
-import { ExternalSitesSection } from "./external-sites-section";
 
 async function getCompanyWebsites(companyId: string) {
   try {
@@ -158,22 +157,6 @@ export default async function WebsitesPage({
         </Card>
       )}
 
-      {/* 外部網站區塊 */}
-      <div className="mb-8">
-        <ExternalSitesSection
-          sites={websites
-            .filter((w) => w.is_external_site === true)
-            .map((w) => ({
-              id: w.id,
-              website_name: w.website_name,
-              wordpress_url: w.wordpress_url,
-              api_key_created_at: w.api_key_created_at,
-              is_active: w.is_active,
-            }))}
-          companyId={company.id}
-        />
-      </div>
-
       {/* WordPress 網站列表 */}
       <div className="mb-4">
         <h2 className="text-lg font-semibold text-muted-foreground">
@@ -181,10 +164,8 @@ export default async function WebsitesPage({
         </h2>
       </div>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {websites && websites.filter((w) => !w.is_external_site).length > 0 ? (
-          websites
-            .filter((w) => !w.is_external_site)
-            .map((website: WebsiteConfig) => (
+        {websites && websites.length > 0 ? (
+          websites.map((website: WebsiteConfig) => (
               <Card
                 key={website.id}
                 className={`hover:shadow-lg transition-shadow ${

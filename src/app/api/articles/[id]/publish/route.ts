@@ -52,7 +52,17 @@ export const POST = withCompany(
     }
 
     const body = await request.json();
-    const { target, website_id, status: publishStatus = "publish" } = body;
+    const {
+      target,
+      website_id,
+      status: publishStatus = "publish",
+      syncTargetIds,
+    } = body as {
+      target: string;
+      website_id: string;
+      status?: "publish" | "draft";
+      syncTargetIds?: string[]; // 可選：指定同步目標 ID 列表
+    };
 
     if (target !== "wordpress" && target !== "platform") {
       return validationError("目前支援 WordPress 和 Platform Blog");
@@ -128,9 +138,12 @@ export const POST = withCompany(
       revalidateSitemapAndPing();
 
       // 同步文章到外部專案（非阻塞）
-      syncArticle(article as GeneratedArticle, "create").catch((error) => {
-        console.error("[Publish] 文章同步失敗（不影響發布）:", error);
-      });
+      // 只有當用戶選擇了同步目標時才執行同步
+      syncArticle(article as GeneratedArticle, "create", syncTargetIds).catch(
+        (error) => {
+          console.error("[Publish] 文章同步失敗（不影響發布）:", error);
+        },
+      );
 
       return successResponse({
         published_at: now,
@@ -225,9 +238,12 @@ export const POST = withCompany(
       revalidateSitemapAndPing();
 
       // 同步文章到外部專案（非阻塞）
-      syncArticle(article as GeneratedArticle, "create").catch((error) => {
-        console.error("[Publish] 文章同步失敗（不影響發布）:", error);
-      });
+      // 只有當用戶選擇了同步目標時才執行同步
+      syncArticle(article as GeneratedArticle, "create", syncTargetIds).catch(
+        (error) => {
+          console.error("[Publish] 文章同步失敗（不影響發布）:", error);
+        },
+      );
 
       return successResponse({
         wordpress_post_id: publishResult.post.id,
