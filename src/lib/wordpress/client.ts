@@ -616,21 +616,30 @@ export class WordPressClient {
    * 解析 WordPress API 錯誤訊息，返回友善的中文提示
    */
   private parseWordPressError(errorText: string, statusCode: number): string {
+    // 預定義的 HTTP 狀態碼訊息
+    const statusMessages: Record<number, string> = {
+      401: "WordPress 認證失敗，請檢查使用者名稱和應用密碼是否正確",
+      403: "WordPress 權限被拒絕（403）：1. 請確認帳號為「編輯者」或「管理員」角色 2. 檢查是否有安全外掛（如 Wordfence、iThemes Security）阻擋 REST API 3. 確認網站的 REST API 未被禁用",
+      404: "WordPress 網址不正確或 REST API 未啟用，請確認網址格式正確（如 https://your-site.com）",
+      500: "WordPress 伺服器錯誤，請稍後再試或聯繫您的主機商",
+    };
+
+    // 預定義的 WordPress 錯誤碼訊息
+    const codeMessages: Record<string, string> = {
+      incorrect_password: "WordPress 應用密碼錯誤，請檢查密碼是否正確",
+      rest_forbidden: statusMessages[403],
+      rest_no_route: "WordPress REST API 路徑不存在，請確認網址是否正確",
+      rest_invalid_param: "WordPress API 參數錯誤",
+    };
+
     try {
       const errorData = JSON.parse(errorText);
       const code = errorData.code || "";
       const message = errorData.message || "";
 
-      // 根據錯誤碼提供中文訊息
-      const errorMessages: Record<string, string> = {
-        incorrect_password: "WordPress 應用密碼錯誤，請檢查密碼是否正確",
-        rest_forbidden: "WordPress 權限不足，請確認使用者有足夠權限",
-        rest_no_route: "WordPress REST API 路徑不存在，請確認網址是否正確",
-        rest_invalid_param: "WordPress API 參數錯誤",
-      };
-
-      if (errorMessages[code]) {
-        return errorMessages[code];
+      // 優先使用錯誤碼對應的訊息
+      if (codeMessages[code]) {
+        return codeMessages[code];
       }
 
       // 如果有中文訊息，直接返回
@@ -638,24 +647,18 @@ export class WordPressClient {
         return message;
       }
 
-      // 根據 HTTP 狀態碼提供通用訊息
-      switch (statusCode) {
-        case 401:
-          return "WordPress 認證失敗，請檢查使用者名稱和應用密碼";
-        case 403:
-          return "WordPress 權限不足，請確認使用者有足夠權限";
-        case 404:
-          return "WordPress 網址不正確或 REST API 未啟用";
-        case 500:
-          return "WordPress 伺服器錯誤，請稍後再試";
-        default:
-          return message || `WordPress 連線失敗 (錯誤碼: ${statusCode})`;
-      }
+      // 使用 HTTP 狀態碼對應的訊息
+      return (
+        statusMessages[statusCode] ||
+        message ||
+        `WordPress 連線失敗 (錯誤碼: ${statusCode})`
+      );
     } catch {
-      // 如果無法解析 JSON，返回通用訊息
-      return statusCode === 404
-        ? "WordPress 網址不正確或 REST API 未啟用"
-        : `WordPress 連線失敗 (錯誤碼: ${statusCode})`;
+      // 無法解析 JSON，使用狀態碼訊息
+      return (
+        statusMessages[statusCode] ||
+        `WordPress 連線失敗 (錯誤碼: ${statusCode})`
+      );
     }
   }
 

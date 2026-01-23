@@ -20,9 +20,19 @@ import {
 } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Calendar, Clock, CalendarDays } from "lucide-react";
+import {
+  Calendar,
+  Clock,
+  CalendarDays,
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+  ExternalLink,
+  HelpCircle,
+} from "lucide-react";
 import Link from "next/link";
 import { createWebsite } from "./actions";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 
 const REGIONS = [
   { value: "taiwan", label: "台灣" },
@@ -107,6 +117,9 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
   );
   const [dailyLimit, setDailyLimit] = useState("3");
   const [intervalDays, setIntervalDays] = useState("3");
+
+  // 排錯說明展開狀態
+  const [troubleshootOpen, setTroubleshootOpen] = useState(false);
 
   // 動態計算時段提示
   const currentTimeSlots =
@@ -196,6 +209,126 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
               請至 WordPress 後台 → 使用者 → 個人資料 → 應用程式密碼
               建立新的應用密碼
             </p>
+          </div>
+
+          {/* 排錯說明 */}
+          <div className="mt-4">
+            <button
+              type="button"
+              onClick={() => setTroubleshootOpen(!troubleshootOpen)}
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <HelpCircle className="h-4 w-4" />
+              <span>連線失敗？查看排錯指南</span>
+              {troubleshootOpen ? (
+                <ChevronUp className="h-4 w-4" />
+              ) : (
+                <ChevronDown className="h-4 w-4" />
+              )}
+            </button>
+
+            {troubleshootOpen && (
+              <Alert className="mt-3">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>WordPress 連線排錯指南</AlertTitle>
+                <AlertDescription className="mt-2 space-y-3">
+                  <div>
+                    <p className="font-medium text-sm">
+                      403 權限被拒絕 - 常見原因：
+                    </p>
+                    <ul className="list-disc list-inside text-sm mt-1 space-y-1 text-muted-foreground">
+                      <li>
+                        <strong>帳號權限不足</strong>：建立應用密碼的帳號必須是「編輯者」或「管理員」角色
+                      </li>
+                      <li>
+                        <strong>安全外掛阻擋</strong>：Wordfence、iThemes
+                        Security 等外掛可能會阻擋 REST API 請求
+                      </li>
+                      <li>
+                        <strong>REST API 被禁用</strong>：某些主機或外掛會禁用
+                        WordPress REST API
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <p className="font-medium text-sm">
+                      401 認證失敗 - 常見原因：
+                    </p>
+                    <ul className="list-disc list-inside text-sm mt-1 space-y-1 text-muted-foreground">
+                      <li>使用者名稱或應用密碼輸入錯誤</li>
+                      <li>應用密碼已過期或被撤銷</li>
+                      <li>
+                        密碼格式錯誤（應為空格分隔的 24 位字元，如 xxxx xxxx
+                        xxxx xxxx xxxx xxxx）
+                      </li>
+                    </ul>
+                  </div>
+
+                  <div>
+                    <p className="font-medium text-sm">
+                      404 找不到 API - 常見原因：
+                    </p>
+                    <ul className="list-disc list-inside text-sm mt-1 space-y-1 text-muted-foreground">
+                      <li>網址格式錯誤（請確認包含 https://）</li>
+                      <li>WordPress 固定網址設定問題</li>
+                      <li>REST API 被完全禁用</li>
+                    </ul>
+                  </div>
+
+                  <div className="pt-3 mt-3 border-t">
+                    <p className="font-medium text-sm text-orange-600 dark:text-orange-400">
+                      🔥 Cloudways 主機用戶注意：
+                    </p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      如果您使用 Cloudways
+                      主機，且在瀏覽器能正常訪問 REST API，但綁定時仍出現 403
+                      錯誤，請檢查：
+                    </p>
+                    <ul className="list-disc list-inside text-sm mt-1 space-y-1 text-muted-foreground">
+                      <li>
+                        <strong>Bot Protection</strong>：暫時關閉機器人保護
+                        （Applications → Bot Protection）
+                      </li>
+                      <li>
+                        <strong>WAF 防火牆</strong>：將 WAF 模式改為 Learning
+                        或暫時停用（Application Settings → WAF）
+                      </li>
+                      <li>
+                        <strong>Cloudflare</strong>：如有開啟
+                        Cloudflare，檢查防火牆規則是否阻擋 API 請求
+                      </li>
+                    </ul>
+                    <p className="text-xs text-muted-foreground mt-2">
+                      完成網站綁定後，可以重新啟用這些安全功能。
+                    </p>
+                  </div>
+
+                  <div className="pt-2 border-t">
+                    <p className="text-sm font-medium">快速測試方法：</p>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      在瀏覽器中訪問{" "}
+                      <code className="bg-muted px-1 py-0.5 rounded text-xs">
+                        您的網站網址/wp-json/wp/v2/categories
+                      </code>
+                      ，如果顯示 JSON 格式的分類資料，表示 REST API 正常運作。
+                    </p>
+                  </div>
+
+                  <div className="pt-2">
+                    <a
+                      href="https://developer.wordpress.org/rest-api/using-the-rest-api/authentication/#application-passwords"
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                    >
+                      查看 WordPress 應用密碼官方文件
+                      <ExternalLink className="h-3 w-3" />
+                    </a>
+                  </div>
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
         </CardContent>
       </Card>
