@@ -1587,6 +1587,19 @@ export type Database = {
           schedule_interval_days: number | null;
           auto_translate_enabled: boolean | null;
           auto_translate_languages: string[] | null;
+          // 外部網站相關欄位
+          website_type: "wordpress" | "platform_blog" | "external" | null;
+          webhook_url: string | null;
+          webhook_secret: string | null;
+          sync_on_publish: boolean | null;
+          sync_on_update: boolean | null;
+          sync_on_unpublish: boolean | null;
+          sync_translations: boolean | null;
+          sync_languages: string[] | null;
+          last_synced_at: string | null;
+          last_sync_status: string | null;
+          last_sync_error: string | null;
+          external_slug: string | null;
         };
         Insert: {
           id?: string;
@@ -1615,6 +1628,19 @@ export type Database = {
           schedule_interval_days?: number | null;
           auto_translate_enabled?: boolean | null;
           auto_translate_languages?: string[] | null;
+          // 外部網站相關欄位
+          website_type?: "wordpress" | "platform_blog" | "external" | null;
+          webhook_url?: string | null;
+          webhook_secret?: string | null;
+          sync_on_publish?: boolean | null;
+          sync_on_update?: boolean | null;
+          sync_on_unpublish?: boolean | null;
+          sync_translations?: boolean | null;
+          sync_languages?: string[] | null;
+          last_synced_at?: string | null;
+          last_sync_status?: string | null;
+          last_sync_error?: string | null;
+          external_slug?: string | null;
         };
         Update: {
           id?: string;
@@ -1643,6 +1669,19 @@ export type Database = {
           schedule_interval_days?: number | null;
           auto_translate_enabled?: boolean | null;
           auto_translate_languages?: string[] | null;
+          // 外部網站相關欄位
+          website_type?: "wordpress" | "platform_blog" | "external" | null;
+          webhook_url?: string | null;
+          webhook_secret?: string | null;
+          sync_on_publish?: boolean | null;
+          sync_on_update?: boolean | null;
+          sync_on_unpublish?: boolean | null;
+          sync_translations?: boolean | null;
+          sync_languages?: string[] | null;
+          last_synced_at?: string | null;
+          last_sync_status?: string | null;
+          last_sync_error?: string | null;
+          external_slug?: string | null;
         };
         Relationships: [
           {
@@ -1942,6 +1981,7 @@ export type Database = {
           id: string;
           article_id: string;
           sync_target_id: string;
+          external_website_id: string | null;
           translation_id: string | null;
           action: "create" | "update" | "delete";
           status: "pending" | "processing" | "success" | "failed" | "retrying";
@@ -1961,7 +2001,8 @@ export type Database = {
         Insert: {
           id?: string;
           article_id: string;
-          sync_target_id: string;
+          sync_target_id?: string;
+          external_website_id?: string | null;
           translation_id?: string | null;
           action: "create" | "update" | "delete";
           status?: "pending" | "processing" | "success" | "failed" | "retrying";
@@ -1982,6 +2023,7 @@ export type Database = {
           id?: string;
           article_id?: string;
           sync_target_id?: string;
+          external_website_id?: string | null;
           translation_id?: string | null;
           action?: "create" | "update" | "delete";
           status?: "pending" | "processing" | "success" | "failed" | "retrying";

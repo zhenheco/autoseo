@@ -7,6 +7,7 @@ import {
   useCallback,
   ReactNode,
 } from "react";
+import type { SyncTarget } from "@/lib/sync/types";
 
 interface ScheduleContextType {
   selectedArticleIds: Set<string>;
@@ -30,6 +31,13 @@ interface ScheduleContextType {
   setCurrentPage: (page: number) => void;
   pageSize: number;
   setPageSize: (size: number) => void;
+  // 同步目標相關
+  syncTargets: SyncTarget[];
+  setSyncTargets: (targets: SyncTarget[]) => void;
+  selectedSyncTargetIds: string[];
+  setSelectedSyncTargetIds: (ids: string[]) => void;
+  loadingSyncTargets: boolean;
+  setLoadingSyncTargets: (loading: boolean) => void;
 }
 
 const ScheduleContext = createContext<ScheduleContextType | null>(null);
@@ -48,6 +56,12 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
   const [previewArticleId, setPreviewArticleId] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  // 同步目標相關狀態
+  const [syncTargets, setSyncTargets] = useState<SyncTarget[]>([]);
+  const [selectedSyncTargetIds, setSelectedSyncTargetIds] = useState<string[]>(
+    [],
+  );
+  const [loadingSyncTargets, setLoadingSyncTargets] = useState(false);
 
   const toggleSelection = useCallback((id: string) => {
     setSelectedArticleIds((prev) => {
@@ -106,6 +120,12 @@ export function ScheduleProvider({ children }: { children: ReactNode }) {
         setCurrentPage,
         pageSize,
         setPageSize,
+        syncTargets,
+        setSyncTargets,
+        selectedSyncTargetIds,
+        setSelectedSyncTargetIds,
+        loadingSyncTargets,
+        setLoadingSyncTargets,
       }}
     >
       {children}

@@ -34,6 +34,7 @@ export async function GET(request: NextRequest) {
     .select(
       `
       *,
+      sync_target_ids,
       website_configs (
         id,
         website_name,
@@ -229,6 +230,27 @@ export async function GET(request: NextRequest) {
           website.auto_translate_languages
         );
 
+        // 同步文章到外部專案（如有設定同步目標）
+        const syncTargetIds = article.sync_target_ids as string[] | null;
+        if (syncTargetIds && syncTargetIds.length > 0) {
+          // 查詢完整的文章資料以供同步
+          const { data: fullArticle } = await supabase
+            .from("generated_articles")
+            .select("*")
+            .eq("id", generatedArticle.id)
+            .single();
+
+          if (fullArticle) {
+            const { syncArticle } = await import("@/lib/sync");
+            syncArticle(fullArticle, "create", syncTargetIds).catch((error) => {
+              console.error(
+                `[Process Scheduled Articles] Sync failed for ${article.id}:`,
+                error,
+              );
+            });
+          }
+        }
+
         results.published++;
         results.details.push({
           articleId: article.id,
@@ -345,6 +367,27 @@ export async function GET(request: NextRequest) {
           website.auto_translate_enabled,
           website.auto_translate_languages
         );
+
+        // 同步文章到外部專案（如有設定同步目標）
+        const syncTargetIds = article.sync_target_ids as string[] | null;
+        if (syncTargetIds && syncTargetIds.length > 0) {
+          // 查詢完整的文章資料以供同步
+          const { data: fullArticle } = await supabase
+            .from("generated_articles")
+            .select("*")
+            .eq("id", generatedArticle.id)
+            .single();
+
+          if (fullArticle) {
+            const { syncArticle } = await import("@/lib/sync");
+            syncArticle(fullArticle, "create", syncTargetIds).catch((error) => {
+              console.error(
+                `[Process Scheduled Articles] Sync failed for ${article.id}:`,
+                error,
+              );
+            });
+          }
+        }
 
         results.published++;
         results.details.push({
@@ -490,6 +533,27 @@ export async function GET(request: NextRequest) {
         website.auto_translate_enabled,
         website.auto_translate_languages
       );
+
+      // 同步文章到外部專案（如有設定同步目標）
+      const syncTargetIds = article.sync_target_ids as string[] | null;
+      if (syncTargetIds && syncTargetIds.length > 0) {
+        // 查詢完整的文章資料以供同步
+        const { data: fullArticle } = await supabase
+          .from("generated_articles")
+          .select("*")
+          .eq("id", generatedArticle.id)
+          .single();
+
+        if (fullArticle) {
+          const { syncArticle } = await import("@/lib/sync");
+          syncArticle(fullArticle, "create", syncTargetIds).catch((error) => {
+            console.error(
+              `[Process Scheduled Articles] Sync failed for ${article.id}:`,
+              error,
+            );
+          });
+        }
+      }
 
       results.published++;
       results.details.push({

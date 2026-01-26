@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { useCallback, useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -10,6 +10,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -58,6 +59,12 @@ export function ScheduleControlBar({
     setIntervalDays,
     isScheduling,
     setIsScheduling,
+    syncTargets,
+    setSyncTargets,
+    selectedSyncTargetIds,
+    setSelectedSyncTargetIds,
+    loadingSyncTargets,
+    setLoadingSyncTargets,
   } = useScheduleContext();
 
   const [error, setError] = useState<string | null>(null);
@@ -66,6 +73,43 @@ export function ScheduleControlBar({
   const [isDeleting, setIsDeleting] = useState(false);
 
   const selectedCount = selectedArticleIds.size;
+
+  // 載入同步目標
+  useEffect(() => {
+    async function loadSyncTargets() {
+      setLoadingSyncTargets(true);
+      try {
+        const response = await fetch("/api/sync-targets");
+        if (response.ok) {
+          const data = await response.json();
+          setSyncTargets(data.targets || []);
+          // 預設全選所有同步目標
+          setSelectedSyncTargetIds(
+            (data.targets || []).map((t: { id: string }) => t.id),
+          );
+        }
+      } catch (err) {
+        console.error("Failed to load sync targets:", err);
+      } finally {
+        setLoadingSyncTargets(false);
+      }
+    }
+    loadSyncTargets();
+  }, [setSyncTargets, setSelectedSyncTargetIds, setLoadingSyncTargets]);
+
+  // 切換同步目標選取
+  const toggleSyncTarget = useCallback(
+    (targetId: string) => {
+      if (selectedSyncTargetIds.includes(targetId)) {
+        setSelectedSyncTargetIds(
+          selectedSyncTargetIds.filter((id) => id !== targetId),
+        );
+      } else {
+        setSelectedSyncTargetIds([...selectedSyncTargetIds, targetId]);
+      }
+    },
+    [selectedSyncTargetIds, setSelectedSyncTargetIds],
+  );
 
   // 計算選中的可取消文章數量（用於刪除對話框提示）
   const selectedCancellableCount = Array.from(selectedArticleIds).filter((id) =>
@@ -92,6 +136,7 @@ export function ScheduleControlBar({
         articlesPerDay,
         scheduleType,
         intervalDays,
+        selectedSyncTargetIds,
       );
 
       if (!result.success) {
@@ -120,6 +165,7 @@ export function ScheduleControlBar({
     articlesPerDay,
     scheduleType,
     intervalDays,
+    selectedSyncTargetIds,
     setIsScheduling,
     router,
     t,
@@ -284,6 +330,39 @@ export function ScheduleControlBar({
           </div>
         )}
       </div>
+
+      {/* 同步目標選擇（選填） */}
+      {syncTargets.length > 0 && (
+        <div className="flex flex-wrap items-center gap-3 mb-3 py-2 border-t border-border/50">
+          <Label className="text-sm text-muted-foreground whitespace-nowrap">
+            {t("schedule.syncTargets")}
+          </Label>
+          {loadingSyncTargets ? (
+            <span className="text-sm text-muted-foreground">
+              {t("schedule.loadingSyncTargets")}
+            </span>
+          ) : (
+            <div className="flex flex-wrap items-center gap-3">
+              {syncTargets.map((target) => (
+                <div key={target.id} className="flex items-center gap-1.5">
+                  <Checkbox
+                    id={`sync-target-${target.id}`}
+                    checked={selectedSyncTargetIds.includes(target.id)}
+                    onCheckedChange={() => toggleSyncTarget(target.id)}
+                    disabled={isScheduling}
+                  />
+                  <Label
+                    htmlFor={`sync-target-${target.id}`}
+                    className="text-sm font-normal cursor-pointer"
+                  >
+                    {target.website_name}
+                  </Label>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* 第二列：按鈕區域 */}
       <div className="flex flex-wrap gap-2">

@@ -1,6 +1,7 @@
 /**
- * 同步目標管理 API
+ * 外部網站（同步目標）管理 API
  * 用於管理文章同步到的外部專案
+ * 現在使用 website_configs 表（website_type = 'external'）
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -9,6 +10,9 @@ import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { isAdminEmail } from "@/lib/utils/admin-check";
 
 export const dynamic = "force-dynamic";
+
+// Ace 的公司 ID（目前外部網站都屬於此公司）
+const ACE_COMPANY_ID = "1c9c2d1d-3b26-4ab1-971f-98a980fdbce9";
 
 /**
  * 驗證管理員權限
@@ -47,7 +51,7 @@ function sanitizeTarget<T extends { webhook_secret?: string | null }>(target: T)
 
 /**
  * GET /api/admin/sync-targets
- * 取得所有同步目標
+ * 取得所有外部網站（同步目標）
  */
 export async function GET(): Promise<NextResponse> {
   try {
@@ -56,8 +60,9 @@ export async function GET(): Promise<NextResponse> {
 
     const adminSupabase = createAdminClient();
     const { data, error } = await adminSupabase
-      .from("sync_targets")
+      .from("website_configs")
       .select("*")
+      .eq("website_type", "external")
       .order("created_at", { ascending: false });
 
     if (error) {
@@ -77,7 +82,7 @@ export async function GET(): Promise<NextResponse> {
 
 /**
  * POST /api/admin/sync-targets
- * 建立新的同步目標
+ * 建立新的外部網站（同步目標）
  */
 export async function POST(request: NextRequest): Promise<NextResponse> {
   try {
@@ -88,7 +93,6 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
     const {
       name,
       slug,
-      description,
       webhook_url,
       sync_on_publish = true,
       sync_on_update = true,
@@ -119,11 +123,13 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     const adminSupabase = createAdminClient();
     const { data, error } = await adminSupabase
-      .from("sync_targets")
+      .from("website_configs")
       .insert({
-        name,
-        slug,
-        description,
+        company_id: ACE_COMPANY_ID,
+        website_name: name,
+        wordpress_url: `external://${slug}`,
+        website_type: "external",
+        external_slug: slug,
         webhook_url,
         webhook_secret,
         sync_on_publish,

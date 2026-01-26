@@ -5,8 +5,36 @@
 import type { Tables } from "@/types/database.types";
 
 // 資料庫類型別名
-export type SyncTarget = Tables<"sync_targets">;
 export type ArticleSyncLog = Tables<"article_sync_logs">;
+
+// 外部網站類型（從 website_configs 查詢 website_type = 'external'）
+export type ExternalWebsite = Tables<"website_configs"> & {
+  website_type: "external";
+};
+
+// SyncTarget 現在是 ExternalWebsite 的別名（向後相容）
+export type SyncTarget = ExternalWebsite;
+
+/**
+ * 外部網站（同步目標）
+ * 從 website_configs 查詢 website_type = 'external' 的資料
+ */
+export interface ExternalWebsiteTarget {
+  id: string;
+  website_name: string;
+  external_slug: string | null;
+  webhook_url: string;
+  webhook_secret: string | null;
+  sync_on_publish: boolean;
+  sync_on_update: boolean;
+  sync_on_unpublish: boolean;
+  sync_translations: boolean;
+  sync_languages: string[];
+  is_active: boolean;
+  last_synced_at: string | null;
+  last_sync_status: string | null;
+  last_sync_error: string | null;
+}
 
 /**
  * 同步操作類型

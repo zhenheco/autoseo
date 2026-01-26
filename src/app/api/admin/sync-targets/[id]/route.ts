@@ -1,5 +1,6 @@
 /**
- * 單個同步目標管理 API
+ * 單個外部網站（同步目標）管理 API
+ * 現在使用 website_configs 表（website_type = 'external'）
  */
 
 import { NextRequest, NextResponse } from "next/server";
@@ -37,7 +38,7 @@ async function verifyAdmin(): Promise<{ success: true } | { success: false; resp
 
 /**
  * GET /api/admin/sync-targets/[id]
- * 取得單個同步目標
+ * 取得單個外部網站
  */
 export async function GET(_request: NextRequest, { params }: RouteParams): Promise<NextResponse> {
   try {
@@ -48,9 +49,10 @@ export async function GET(_request: NextRequest, { params }: RouteParams): Promi
 
     const adminSupabase = createAdminClient();
     const { data, error } = await adminSupabase
-      .from("sync_targets")
+      .from("website_configs")
       .select("*")
       .eq("id", id)
+      .eq("website_type", "external")
       .single();
 
     if (error || !data) {
@@ -69,7 +71,7 @@ export async function GET(_request: NextRequest, { params }: RouteParams): Promi
 
 /**
  * PATCH /api/admin/sync-targets/[id]
- * 更新同步目標
+ * 更新外部網站
  */
 export async function PATCH(request: NextRequest, { params }: RouteParams): Promise<NextResponse> {
   try {
@@ -81,7 +83,6 @@ export async function PATCH(request: NextRequest, { params }: RouteParams): Prom
     const body = await request.json();
     const {
       name,
-      description,
       webhook_url,
       sync_on_publish,
       sync_on_update,
@@ -95,8 +96,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams): Prom
     // 建立更新物件
     const updateData: Record<string, unknown> = {};
 
-    if (name !== undefined) updateData.name = name;
-    if (description !== undefined) updateData.description = description;
+    if (name !== undefined) updateData.website_name = name;
     if (webhook_url !== undefined) {
       try {
         new URL(webhook_url);
@@ -125,9 +125,10 @@ export async function PATCH(request: NextRequest, { params }: RouteParams): Prom
 
     const adminSupabase = createAdminClient();
     const { data, error } = await adminSupabase
-      .from("sync_targets")
+      .from("website_configs")
       .update(updateData)
       .eq("id", id)
+      .eq("website_type", "external")
       .select()
       .single();
 
@@ -160,7 +161,7 @@ export async function PATCH(request: NextRequest, { params }: RouteParams): Prom
 
 /**
  * DELETE /api/admin/sync-targets/[id]
- * 刪除同步目標
+ * 刪除外部網站
  */
 export async function DELETE(_request: NextRequest, { params }: RouteParams): Promise<NextResponse> {
   try {
@@ -171,22 +172,24 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams): Pr
 
     const adminSupabase = createAdminClient();
 
-    // 先檢查是否存在
+    // 先檢查是否存在且為外部網站
     const { data: existing } = await adminSupabase
-      .from("sync_targets")
-      .select("id, name")
+      .from("website_configs")
+      .select("id, website_name")
       .eq("id", id)
+      .eq("website_type", "external")
       .single();
 
     if (!existing) {
       return NextResponse.json({ success: false, error: "找不到同步目標" }, { status: 404 });
     }
 
-    // 刪除（相關的 article_sync_logs 會因為 ON DELETE CASCADE 自動刪除）
+    // 刪除（相關的 article_sync_logs 會因為 ON DELETE SET NULL 保留）
     const { error } = await adminSupabase
-      .from("sync_targets")
+      .from("website_configs")
       .delete()
-      .eq("id", id);
+      .eq("id", id)
+      .eq("website_type", "external");
 
     if (error) {
       console.error("[SyncTargets] 刪除失敗:", error);
@@ -195,7 +198,7 @@ export async function DELETE(_request: NextRequest, { params }: RouteParams): Pr
 
     return NextResponse.json({
       success: true,
-      message: `已刪除同步目標: ${existing.name}`,
+      message: `已刪除同步目標: ${existing.website_name}`,
     });
   } catch (error) {
     console.error("[SyncTargets] DELETE 錯誤:", error);

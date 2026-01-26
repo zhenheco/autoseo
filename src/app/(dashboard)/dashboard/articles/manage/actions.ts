@@ -417,6 +417,7 @@ export async function scheduleArticlesForPublish(
   articlesPerDay: number,
   scheduleType?: "daily" | "interval",
   intervalDays?: number,
+  syncTargetIds?: string[],
 ): Promise<{
   success: boolean;
   error?: string;
@@ -525,6 +526,8 @@ export async function scheduleArticlesForPublish(
         // 重新排程時重置重試計數和錯誤訊息
         publish_retry_count: 0,
         last_publish_error: null,
+        // 同步目標 ID 列表
+        sync_target_ids: syncTargetIds || [],
       })
       .eq("id", article.id);
 
@@ -572,6 +575,8 @@ export async function scheduleArticlesForPublish(
         // 重新排程時重置重試計數和錯誤訊息
         publish_retry_count: 0,
         last_publish_error: null,
+        // 同步目標 ID 列表
+        sync_target_ids: syncTargetIds || [],
       })
       .eq("id", article.id);
 

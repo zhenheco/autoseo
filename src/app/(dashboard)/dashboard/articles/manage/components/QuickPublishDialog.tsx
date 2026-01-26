@@ -23,12 +23,11 @@ import { Loader2, CheckCircle, ExternalLink, RefreshCw } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useTranslations } from "next-intl";
 
-// 同步目標類型
+// 同步目標類型（對應 website_configs 的外部網站）
 interface SyncTarget {
   id: string;
-  name: string;
-  slug: string;
-  description: string | null;
+  website_name: string;
+  external_slug: string | null;
 }
 
 interface QuickPublishDialogProps {
@@ -243,12 +242,7 @@ export function QuickPublishDialog({
                             htmlFor={`sync-${target.id}`}
                             className="font-normal cursor-pointer"
                           >
-                            {target.name}
-                            {target.description && (
-                              <span className="ml-1 text-xs text-muted-foreground">
-                                ({target.description})
-                              </span>
-                            )}
+                            {target.website_name}
                           </Label>
                         </div>
                       ))

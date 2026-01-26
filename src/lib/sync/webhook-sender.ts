@@ -96,7 +96,7 @@ export function verifySignature(
 export async function sendWebhook(
   url: string,
   payload: WebhookPayload,
-  secret: string,
+  secret: string | null | undefined,
   options: WebhookSendOptions = {}
 ): Promise<{
   success: boolean;
@@ -119,19 +119,26 @@ export async function sendWebhook(
     try {
       const payloadString = JSON.stringify(payload);
       const timestamp = Date.now();
-      const { signature } = generateSignature(payloadString, secret, timestamp);
+
+      // 建立 headers
+      const headers: Record<string, string> = {
+        "Content-Type": "application/json",
+        [TIMESTAMP_HEADER]: timestamp.toString(),
+        "User-Agent": "1waySEO-ArticleSync/1.0",
+      };
+
+      // 只有在有 secret 時才生成簽章
+      if (secret) {
+        const { signature } = generateSignature(payloadString, secret, timestamp);
+        headers[SIGNATURE_HEADER] = signature;
+      }
 
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
 
       const response = await fetch(url, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          [SIGNATURE_HEADER]: signature,
-          [TIMESTAMP_HEADER]: timestamp.toString(),
-          "User-Agent": "1waySEO-ArticleSync/1.0",
-        },
+        headers,
         body: payloadString,
         signal: controller.signal,
       });

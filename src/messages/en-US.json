@@ -208,7 +208,9 @@
       "cancelling": "Cancelling...",
       "cancelSchedule": "Cancel Schedule",
       "cancelGeneration": "Cancel Generation",
-      "delete": "Delete"
+      "delete": "Delete",
+      "syncTargets": "Sync Targets (Optional)",
+      "loadingSyncTargets": "Loading..."
     },
     "dialogs": {
       "confirmDelete": "Delete selected articles?",

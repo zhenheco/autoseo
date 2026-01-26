@@ -6,7 +6,6 @@
 import { createAdminClient } from "@/lib/supabase/server";
 import { sendWebhook } from "./webhook-sender";
 import type {
-  SyncTarget,
   SyncAction,
   SyncResult,
   BatchSyncResult,
@@ -14,6 +13,8 @@ import type {
   WebhookPayload,
   SyncedArticleData,
   SyncedTranslationData,
+  ExternalWebsiteTarget,
+  SyncTarget,
 } from "./types";
 import type { GeneratedArticle } from "@/types/article.types";
 
@@ -94,10 +95,10 @@ export class ArticleSyncService {
       );
       results.push(result);
 
-      // 更新 sync_target 的 last_synced_at
+      // 更新外部網站的 last_synced_at
       if (result.success) {
         await supabase
-          .from("sync_targets")
+          .from("website_configs")
           .update({
             last_synced_at: new Date().toISOString(),
             last_sync_status: "success",
@@ -106,7 +107,7 @@ export class ArticleSyncService {
           .eq("id", target.id);
       } else {
         await supabase
-          .from("sync_targets")
+          .from("website_configs")
           .update({
             last_sync_status: "failed",
             last_sync_error: result.error_message || "Unknown error",
@@ -136,12 +137,25 @@ export class ArticleSyncService {
   ): Promise<SyncResult> {
     const supabase = createAdminClient();
 
+    // 檢查 webhook_url 是否存在
+    if (!target.webhook_url) {
+      console.error("[SyncService] Target has no webhook_url:", target.id);
+      return {
+        success: false,
+        sync_target_id: target.id,
+        sync_target_slug: target.external_slug || target.id,
+        article_id: articleId,
+        action,
+        error_message: "Target has no webhook_url configured",
+      };
+    }
+
     // 創建同步日誌
     const { data: logEntry, error: logError } = await supabase
       .from("article_sync_logs")
       .insert({
         article_id: articleId,
-        sync_target_id: target.id,
+        external_website_id: target.id,
         action,
         status: "processing",
         webhook_url: target.webhook_url,
@@ -156,7 +170,7 @@ export class ArticleSyncService {
       return {
         success: false,
         sync_target_id: target.id,
-        sync_target_slug: target.slug,
+        sync_target_slug: target.external_slug || target.id,
         article_id: articleId,
         action,
         error_message: "Failed to create sync log",
@@ -199,7 +213,7 @@ export class ArticleSyncService {
     return {
       success: result.success,
       sync_target_id: target.id,
-      sync_target_slug: target.slug,
+      sync_target_slug: target.external_slug || target.id,
       article_id: articleId,
       action,
       response_status: result.status,
@@ -209,14 +223,16 @@ export class ArticleSyncService {
   }
 
   /**
-   * 取得啟用的同步目標
+   * 取得啟用的外部網站（同步目標）
+   * 從 website_configs 查詢 website_type = 'external' 的資料
    */
   private async getActiveSyncTargets(action: SyncAction): Promise<SyncTarget[]> {
     const supabase = createAdminClient();
 
     let query = supabase
-      .from("sync_targets")
+      .from("website_configs")
       .select("*")
+      .eq("website_type", "external")
       .eq("is_active", true);
 
     // 根據 action 類型篩選
@@ -354,19 +370,20 @@ export class ArticleSyncService {
   async retryFailedSyncs(): Promise<BatchSyncResult> {
     const supabase = createAdminClient();
 
-    // 查詢需要重試的任務
+    // 查詢需要重試的任務（使用新的 external_website_id FK）
     const { data: pendingLogs, error } = await supabase
       .from("article_sync_logs")
       .select(
         `
         *,
-        sync_targets!inner(*),
+        website_configs!external_website_id(*),
         generated_articles!inner(*)
       `
       )
       .in("status", ["failed", "retrying"])
       .lt("retry_count", 3)
       .lte("next_retry_at", new Date().toISOString())
+      .not("external_website_id", "is", null)
       .limit(this.config.batchSize);
 
     if (error || !pendingLogs) {
@@ -377,6 +394,14 @@ export class ArticleSyncService {
     const results: SyncResult[] = [];
 
     for (const log of pendingLogs) {
+      const target = log.website_configs as unknown as SyncTarget;
+
+      // 跳過沒有 webhook_url 的目標
+      if (!target?.webhook_url) {
+        console.warn("[SyncService] Skipping retry, no webhook_url:", log.id);
+        continue;
+      }
+
       // 重新準備 payload
       const translations = await this.getArticleTranslations(log.article_id);
       const articleData = this.prepareArticleData(
@@ -387,8 +412,6 @@ export class ArticleSyncService {
         log.action as SyncAction,
         articleData
       );
-
-      const target = log.sync_targets as unknown as SyncTarget;
 
       // 更新狀態為 processing
       await supabase
@@ -443,7 +466,7 @@ export class ArticleSyncService {
       results.push({
         success: webhookResult.success,
         sync_target_id: target.id,
-        sync_target_slug: target.slug,
+        sync_target_slug: target.external_slug || target.id,
         article_id: log.article_id,
         action: log.action as SyncAction,
         response_status: webhookResult.status,

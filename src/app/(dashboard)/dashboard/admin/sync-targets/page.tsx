@@ -42,23 +42,23 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
+// 對應 website_configs 表的外部網站類型
 interface SyncTarget {
   id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  webhook_url: string;
-  webhook_secret: string;
-  sync_on_publish: boolean;
-  sync_on_update: boolean;
-  sync_on_unpublish: boolean;
-  sync_translations: boolean;
-  sync_languages: string[];
-  is_active: boolean;
+  website_name: string;
+  external_slug: string | null;
+  webhook_url: string | null;
+  webhook_secret: string | null;
+  sync_on_publish: boolean | null;
+  sync_on_update: boolean | null;
+  sync_on_unpublish: boolean | null;
+  sync_translations: boolean | null;
+  sync_languages: string[] | null;
+  is_active: boolean | null;
   last_synced_at: string | null;
   last_sync_status: string | null;
   last_sync_error: string | null;
-  created_at: string;
+  created_at: string | null;
 }
 
 export default function AdminSyncTargetsPage() {
@@ -223,7 +223,7 @@ export default function AdminSyncTargetsPage() {
   };
 
   const handleDelete = async (target: SyncTarget) => {
-    if (!confirm(`確定要刪除「${target.name}」？此操作無法復原。`)) {
+    if (!confirm(`確定要刪除「${target.website_name}」？此操作無法復原。`)) {
       return;
     }
 
@@ -261,14 +261,14 @@ export default function AdminSyncTargetsPage() {
   const openEditDialog = (target: SyncTarget) => {
     setSelectedTarget(target);
     setFormData({
-      name: target.name,
-      slug: target.slug,
-      description: target.description || "",
-      webhook_url: target.webhook_url,
-      sync_on_publish: target.sync_on_publish,
-      sync_on_update: target.sync_on_update,
-      sync_on_unpublish: target.sync_on_unpublish,
-      sync_translations: target.sync_translations,
+      name: target.website_name || "",
+      slug: target.external_slug || "",
+      description: "",
+      webhook_url: target.webhook_url || "",
+      sync_on_publish: target.sync_on_publish ?? true,
+      sync_on_update: target.sync_on_update ?? true,
+      sync_on_unpublish: target.sync_on_unpublish ?? true,
+      sync_translations: target.sync_translations ?? true,
     });
     setEditDialogOpen(true);
   };
@@ -352,9 +352,9 @@ export default function AdminSyncTargetsPage() {
                   <TableRow key={target.id}>
                     <TableCell>
                       <div>
-                        <div className="font-medium">{target.name}</div>
+                        <div className="font-medium">{target.website_name}</div>
                         <div className="text-sm text-muted-foreground">
-                          {target.slug}
+                          {target.external_slug}
                         </div>
                       </div>
                     </TableCell>
@@ -363,20 +363,22 @@ export default function AdminSyncTargetsPage() {
                         <code className="text-xs bg-muted px-2 py-1 rounded max-w-[200px] truncate">
                           {target.webhook_url}
                         </code>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-6 w-6"
-                          onClick={() => window.open(target.webhook_url, "_blank")}
-                        >
-                          <ExternalLink className="h-3 w-3" />
-                        </Button>
+                        {target.webhook_url && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6"
+                            onClick={() => window.open(target.webhook_url!, "_blank")}
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                          </Button>
+                        )}
                       </div>
                     </TableCell>
                     <TableCell>
                       <div className="flex items-center gap-2">
                         <Switch
-                          checked={target.is_active}
+                          checked={target.is_active ?? false}
                           onCheckedChange={() => handleToggleActive(target)}
                         />
                         {target.last_sync_status === "success" && (

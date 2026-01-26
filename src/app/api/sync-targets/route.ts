@@ -1,6 +1,7 @@
 /**
  * 同步目標查詢 API（用戶端）
  * 用於發布文章時選擇同步目標
+ * 現在從 website_configs 查詢 website_type = 'external' 的資料
  */
 
 import { withCompany } from "@/lib/api/auth-middleware";
@@ -11,7 +12,8 @@ export const dynamic = "force-dynamic";
 
 /**
  * GET /api/sync-targets
- * 取得所有啟用的同步目標（給用戶端選擇用）
+ * 取得所有啟用的外部網站（同步目標）
+ * 從 website_configs 查詢 website_type = 'external' 的資料
  * 僅返回必要欄位，脫敏敏感資訊
  */
 export const GET = withCompany(async () => {
@@ -19,11 +21,12 @@ export const GET = withCompany(async () => {
     const adminSupabase = createAdminClient();
 
     const { data, error } = await adminSupabase
-      .from("sync_targets")
-      .select("id, name, slug, description, is_active, sync_on_publish")
+      .from("website_configs")
+      .select("id, website_name, external_slug, is_active, sync_on_publish")
+      .eq("website_type", "external")
       .eq("is_active", true)
       .eq("sync_on_publish", true)
-      .order("name", { ascending: true });
+      .order("website_name", { ascending: true });
 
     if (error) {
       console.error("[SyncTargets] 查詢失敗:", error);

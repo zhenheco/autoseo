@@ -210,7 +210,9 @@
       "cancelling": "取消中...",
       "cancelSchedule": "取消排程",
       "cancelGeneration": "取消生成",
-      "delete": "刪除"
+      "delete": "刪除",
+      "syncTargets": "同步目標（選填）",
+      "loadingSyncTargets": "載入中..."
     },
     "dialogs": {
       "confirmDelete": "確定要刪除選中的文章嗎？",
