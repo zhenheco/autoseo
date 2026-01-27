@@ -67,6 +67,11 @@ const navItems = [
 
 const adminItems = [
   {
+    titleKey: "externalWebsites",
+    href: "/dashboard/websites/external",
+    icon: RefreshCw,
+  },
+  {
     titleKey: "subscriptionManagement",
     href: "/dashboard/admin/subscriptions",
     icon: Users,
@@ -90,11 +95,6 @@ const adminItems = [
     titleKey: "paymentTest",
     href: "/dashboard/admin/payment-test",
     icon: CreditCard,
-  },
-  {
-    titleKey: "syncTargets",
-    href: "/dashboard/admin/sync-targets",
-    icon: RefreshCw,
   },
 ];
 

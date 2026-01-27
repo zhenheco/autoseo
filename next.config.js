@@ -27,6 +27,16 @@ const nextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      {
+        // 舊的同步目標頁面重定向到新的外部網站頁面
+        source: "/dashboard/admin/sync-targets",
+        destination: "/dashboard/websites/external",
+        permanent: true,
+      },
+    ];
+  },
   async headers() {
     return [
       {

@@ -68,7 +68,7 @@ interface ApiErrorResponse {
   details?: unknown;
 }
 
-type ApiResponse<T = unknown> = ApiSuccessResponse<T> | ApiErrorResponse;
+export type ApiResponse<T = unknown> = ApiSuccessResponse<T> | ApiErrorResponse;
 
 /**
  * 成功回應
@@ -151,6 +151,15 @@ export function noCompanyMembership(): NextResponse<ApiErrorResponse> {
     HTTP_STATUS.FORBIDDEN,
     ERROR_CODES.NO_COMPANY_MEMBERSHIP,
   );
+}
+
+/**
+ * 403 非管理員
+ */
+export function notAdmin(
+  message: string = "無管理員權限",
+): NextResponse<ApiErrorResponse> {
+  return errorResponse(message, HTTP_STATUS.FORBIDDEN, ERROR_CODES.NOT_ADMIN);
 }
 
 /**

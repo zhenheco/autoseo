@@ -180,3 +180,33 @@ export async function getBillingId(userId: string): Promise<string> {
   const companyId = await getUserCompanyId(userId);
   return companyId ?? userId;
 }
+
+/**
+ * 管理員認證包裝器
+ * 檢查用戶是否為管理員（透過 email 白名單）
+ */
+export function withAdmin(
+  handler: AuthHandler<AdminAuthContext>,
+): (request: NextRequest) => Promise<NextResponse> {
+  return withAuth(async (request, { user, supabase }) => {
+    try {
+      // 動態 import 避免循環依賴
+      const { isAdminEmail } = await import("@/lib/utils/admin-check");
+
+      if (!isAdminEmail(user.email)) {
+        const { forbidden } = await import("./response-helpers");
+        return forbidden("無管理員權限");
+      }
+
+      const adminClient = createAdminClient();
+
+      return handler(request, {
+        user,
+        supabase,
+        adminClient,
+      });
+    } catch (error) {
+      return handleApiError(error);
+    }
+  });
+}
