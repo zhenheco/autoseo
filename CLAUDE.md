@@ -28,6 +28,64 @@ Keep this managed block so 'openspec update' can refresh the instructions.
 
 ---
 
+# 🌐 多語系開發規範（強制執行）
+
+> ⚠️ **所有 UI 文字修改都必須同步更新三個語系檔案**
+
+## 支援語系（7 種）
+
+| 語系代碼 | 語言 | 檔案位置 |
+|---------|------|----------|
+| `zh-TW` | 繁體中文（主要基準） | `src/messages/zh-TW.json` |
+| `en-US` | English | `src/messages/en-US.json` |
+| `ja-JP` | 日本語 | `src/messages/ja-JP.json` |
+| `ko-KR` | 한국어 | `src/messages/ko-KR.json` |
+| `de-DE` | Deutsch | `src/messages/de-DE.json` |
+| `es-ES` | Español | `src/messages/es-ES.json` |
+| `fr-FR` | Français | `src/messages/fr-FR.json` |
+
+## 開發流程
+
+1. **新增 UI 文字時**：
+   - 先在 `zh-TW.json` 新增 key
+   - 同時新增對應翻譯到 `en-US.json` 和 `ja-JP.json`
+   - 使用 `useTranslations()` hook 取得翻譯
+
+2. **修改現有文字時**：
+   - 同步更新所有語系檔案（至少 zh-TW、en-US、ja-JP）
+
+3. **完成後驗證**：
+   ```bash
+   node scripts/check-translations.js
+   ```
+   確保輸出顯示「(完整)」
+
+## 程式碼範例
+
+```tsx
+// 在 React 組件中使用
+import { useTranslations } from "next-intl";
+
+export function MyComponent() {
+  const t = useTranslations("nav");
+  return <h1>{t("home")}</h1>;
+}
+```
+
+## 翻譯 Key 命名規範
+
+- 使用 **camelCase**：`loginButton`、`welcomeMessage`
+- 按功能分類：`nav.home`、`auth.loginFailed`、`articles.generate`
+- 帶參數使用 `{placeholder}`：`"welcome": "歡迎，{name}"`
+
+## 🚨 禁止事項
+
+- ❌ 在程式碼中硬編碼中文文字（必須使用 `t()` 函數）
+- ❌ 只更新一個語系檔案
+- ❌ 跳過翻譯完整性檢查
+
+---
+
 # 🆕 新功能開發規範
 
 ## 1. 分支策略

@@ -106,7 +106,11 @@
     "resetPasswordDesc": "Enter your new password",
     "newPassword": "New Password",
     "confirmNewPassword": "Confirm New Password",
-    "passwordResetSuccess": "Password reset successful"
+    "passwordResetSuccess": "Password reset successful",
+    "redirectingToGoogle": "Redirecting to Google...",
+    "pleaseWait": "Please wait, do not close or refresh this page",
+    "emailAlreadyRegisteredHint": "Please sign in directly, or click below to resend verification email if you haven't received it.",
+    "goToLogin": "Go to Login"
   },
   "dashboard": {
     "title": "Dashboard",
@@ -456,7 +460,14 @@
     "subscribe": "Subscribe Now",
     "cannotDowngrade": "Cannot Subscribe",
     "processing": "Processing...",
-    "mostPopular": "Most Popular"
+    "mostPopular": "Most Popular",
+    "monthly": "Monthly",
+    "subscriptionRemaining": "Subscription Remaining",
+    "monthlyQuota": "Monthly Quota",
+    "purchasedRemaining": "Purchased Remaining",
+    "articlePackagePurchase": "Article Package Purchase",
+    "greatValue": "Great Value",
+    "buyNow": "Buy Now"
   },
   "payment": {
     "failed": "Payment Failed",

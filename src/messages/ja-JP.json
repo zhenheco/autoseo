@@ -44,7 +44,12 @@
     "login": "ログイン",
     "signup": "無料で始める",
     "adminPanel": "管理パネル",
+    "subscriptionManagement": "サブスクリプション管理",
+    "promoCodeManagement": "プロモコード",
+    "operationLogs": "操作ログ",
     "translations": "翻訳管理",
+    "paymentTest": "決済テスト",
+    "externalWebsites": "外部サイト",
     "customerService": "サポート",
     "blog": "ブログ"
   },
@@ -75,7 +80,37 @@
     "checkInbox": "受信トレイ（迷惑メールフォルダも含む）を確認し、リンクをクリックしてパスワードをリセットしてください。",
     "noEmailReceived": "数分以内にメールが届かない場合は、再送信してください。",
     "resendEmail": "メールを再送信",
-    "backToLogin": "ログインに戻る"
+    "backToLogin": "ログインに戻る",
+    "redirectingToGoogle": "Googleへリダイレクト中...",
+    "pleaseWait": "お待ちください。このページを閉じたり更新したりしないでください",
+    "password": "パスワード",
+    "confirmPassword": "パスワードを確認",
+    "noAccount": "アカウントをお持ちでないですか？",
+    "signUpNow": "今すぐ登録",
+    "hasAccount": "すでにアカウントをお持ちですか？",
+    "signInNow": "今すぐログイン",
+    "orLoginWithEmail": "またはメールで",
+    "register": "登録",
+    "login": "ログイン",
+    "processing": "処理中...",
+    "passwordMismatch": "パスワードが一致しません",
+    "passwordTooShort": "パスワードは6文字以上必要です",
+    "registerSuccess": "登録成功！確認メールをご確認ください",
+    "invalidCredentials": "メールアドレスまたはパスワードが正しくありません",
+    "emailNotVerified": "まずメールを確認してください",
+    "resendVerification": "確認メールを再送信",
+    "verificationEmailSent": "確認メールを送信しました",
+    "createAccount": "アカウントを作成",
+    "createAccountDesc": "メールで登録して始める",
+    "welcomeBack": "おかえりなさい",
+    "welcomeBackDesc": "アカウントにログイン",
+    "resetPassword": "パスワードをリセット",
+    "resetPasswordDesc": "新しいパスワードを入力してください",
+    "newPassword": "新しいパスワード",
+    "confirmNewPassword": "新しいパスワードを確認",
+    "passwordResetSuccess": "パスワードのリセットに成功しました",
+    "emailAlreadyRegisteredHint": "直接ログインするか、確認メールが届いていない場合は下のボタンで再送信してください。",
+    "goToLogin": "ログインへ"
   },
   "dashboard": {
     "title": "ダッシュボード",
@@ -177,7 +212,9 @@
       "cancelling": "キャンセル中...",
       "cancelSchedule": "予約取消",
       "cancelGeneration": "生成取消",
-      "delete": "削除"
+      "delete": "削除",
+      "syncTargets": "同期先（任意）",
+      "loadingSyncTargets": "読み込み中..."
     },
     "dialogs": {
       "confirmDelete": "選択した記事を削除しますか？",
@@ -229,7 +266,10 @@
       "failed": "公開に失敗しました",
       "statusLabel": "公開状態",
       "statusPublish": "公開（一般公開）",
-      "statusDraft": "下書き"
+      "statusDraft": "下書き",
+      "syncTargets": "外部プロジェクトに同期",
+      "syncTargetsDesc": "同期する外部プロジェクトを選択、未選択の場合は同期しません",
+      "loadingSyncTargets": "同期先を読み込み中..."
     },
     "loadFailed": "読み込みに失敗しました",
     "batchPublish": {
@@ -408,6 +448,7 @@
     "monthlyBilling": "月払い",
     "yearlyBilling": "年払い",
     "yearlyBonus": "+2ヶ月無料",
+    "monthly": "毎月",
     "year": "年",
     "month": "月",
     "equivalentMonthly": "約",
@@ -420,7 +461,13 @@
     "subscribe": "今すぐ登録",
     "cannotDowngrade": "登録不可",
     "processing": "処理中...",
-    "mostPopular": "最も人気"
+    "mostPopular": "最も人気",
+    "subscriptionRemaining": "今期の残り",
+    "monthlyQuota": "毎月の配額",
+    "purchasedRemaining": "追加購入分の残り",
+    "articlePackagePurchase": "記事追加パッケージ",
+    "greatValue": "お得な選択",
+    "buyNow": "今すぐ購入"
   },
   "payment": {
     "failed": "決済失敗",
@@ -680,7 +727,21 @@
         "wordpressPublish": "WordPressワンクリック公開",
         "scheduledPost": "スケジュール自動投稿"
       }
-    }
+    },
+    "subscriptionPlans": "サブスクリプションプラン",
+    "chooseYourPlan": "あなたに合ったプランを選択",
+    "subscriptionDesc": "毎月自動的に記事枠がリセットされ、高品質なコンテンツを継続的に作成できます",
+    "monthlyBilling": "月払い",
+    "yearlyBilling": "年払い",
+    "yearlyBonus": "+2ヶ月無料",
+    "year": "年",
+    "month": "月",
+    "equivalentMonthly": "約",
+    "articles": "記事",
+    "bonusArticles": "ボーナス",
+    "articlePackage": "記事追加パッケージ",
+    "needMoreArticles": "もっと記事枠が必要ですか？",
+    "packageDescArticle": "追加購入した枠は永久有効、サブスクリプション期間に関係なく使用可能"
   },
   "faq": {
     "title": "よくある質問",
@@ -793,6 +854,25 @@
     "guide2Title": "ソーシャルアカウント接続",
     "guide2Desc": "Basシステムでお使いのFacebook、Instagram、Threadsアカウントを接続",
     "guide3Title": "アカウント同期",
-    "guide3Desc": "「アカウント同期」ボタンをクリックして接続済みアカウントを取得"
+    "guide3Desc": "「アカウント同期」ボタンをクリックして接続済みアカウントを取得",
+    "shareToSocial": "ソーシャルにシェア",
+    "selectAccounts": "投稿アカウントを選択",
+    "noAccountsConnected": "ソーシャルアカウント未接続",
+    "pleaseConnectFirst": "先にアカウント設定で接続してください",
+    "postContent": "投稿内容",
+    "aiGenerate": "AIで文案生成",
+    "generating": "生成中...",
+    "enterContent": "投稿内容を入力、またはAIで生成してください...",
+    "willUse": "使用予定",
+    "publish": "投稿",
+    "publishing": "投稿中...",
+    "basSystemTitle": "アカウントとクレジット管理",
+    "basSystemDescription": "ソーシャル投稿機能はBas APIでアカウント管理と課金を行います",
+    "basSystemHint": "Basダッシュボードでアカウント残高確認・クレジット購入ができます",
+    "goToBas": "Basダッシュボードへ",
+    "basSystemManagement": "Basシステム管理",
+    "basSystemManagementDesc": "Basダッシュボードでソーシャルアカウント接続・残高確認・クレジット購入",
+    "insufficientCreditsError": "Basクレジット不足です。クレジットを購入してから再試行してください",
+    "publishSuccess": "投稿成功！"
   }
 }

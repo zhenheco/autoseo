@@ -3,15 +3,16 @@
  * UI 語系和文章生成語系都從這裡引用
  */
 
-// UI 介面支援的語系（7 種）
+// UI 介面支援的語系（目前只有中英日翻譯完整）
 export const UI_LOCALES = [
   { code: "zh-TW", name: "繁體中文", flag: "🇹🇼" },
   { code: "en-US", name: "English", flag: "🇺🇸" },
-  { code: "es-ES", name: "Español", flag: "🇪🇸" },
-  { code: "de-DE", name: "Deutsch", flag: "🇩🇪" },
-  { code: "fr-FR", name: "Français", flag: "🇫🇷" },
   { code: "ja-JP", name: "日本語", flag: "🇯🇵" },
-  { code: "ko-KR", name: "한국어", flag: "🇰🇷" },
+  // 以下語系翻譯尚未完整，暫時隱藏
+  // { code: "es-ES", name: "Español", flag: "🇪🇸" },
+  // { code: "de-DE", name: "Deutsch", flag: "🇩🇪" },
+  // { code: "fr-FR", name: "Français", flag: "🇫🇷" },
+  // { code: "ko-KR", name: "한국어", flag: "🇰🇷" },
 ] as const;
 
 // 文章生成支援的語系（18 種）
