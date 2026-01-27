@@ -233,6 +233,21 @@ export function LoginForm({
 
   return (
     <>
+      {/* Google 登入全屏 Loading 覆蓋層 */}
+      {isGoogleLoading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-background/80 backdrop-blur-sm">
+          <div className="flex flex-col items-center gap-4 p-6 rounded-xl bg-card border shadow-lg">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <p className="text-sm font-medium text-muted-foreground">
+              {t("redirectingToGoogle") || "正在前往 Google 登入..."}
+            </p>
+            <p className="text-xs text-muted-foreground/70">
+              {t("pleaseWait") || "請稍候，不要關閉或重新整理頁面"}
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* 成功訊息 */}
       {success && (
         <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-700 dark:text-emerald-400 rounded-xl text-sm font-medium animate-in fade-in slide-in-from-top-2 duration-300">
