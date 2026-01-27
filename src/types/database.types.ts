@@ -1411,6 +1411,7 @@ export type Database = {
           created_at: string;
           started_at: string | null;
           completed_at: string | null;
+          sync_target_ids: Json | null;
         };
         Insert: {
           id?: string;
@@ -1446,6 +1447,7 @@ export type Database = {
           created_at?: string;
           started_at?: string | null;
           completed_at?: string | null;
+          sync_target_ids?: Json | null;
         };
         Update: {
           id?: string;
@@ -1481,6 +1483,7 @@ export type Database = {
           created_at?: string;
           started_at?: string | null;
           completed_at?: string | null;
+          sync_target_ids?: Json | null;
         };
         Relationships: [
           {
