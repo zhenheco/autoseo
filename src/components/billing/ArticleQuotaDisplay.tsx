@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import { FileText } from "lucide-react";
 
@@ -29,10 +30,26 @@ interface ArticleQuotaDisplayProps {
   compact?: boolean;
 }
 
+// 自定義錯誤類別，包含 HTTP 狀態碼
+class FetchError extends Error {
+  status: number;
+  constructor(message: string, status: number) {
+    super(message);
+    this.status = status;
+  }
+}
+
 const fetcher = async (url: string) => {
   const res = await fetch(url);
   if (!res.ok) {
-    throw new Error("無法取得文章額度");
+    // 根據狀態碼提供更具體的錯誤訊息
+    if (res.status === 401) {
+      throw new FetchError("登入已過期，請重新登入", 401);
+    }
+    if (res.status === 404) {
+      throw new FetchError("找不到公司資料", 404);
+    }
+    throw new FetchError("無法取得文章額度", res.status);
   }
   return res.json();
 };
@@ -40,6 +57,7 @@ const fetcher = async (url: string) => {
 export function ArticleQuotaDisplay({
   compact = false,
 }: ArticleQuotaDisplayProps) {
+  const router = useRouter();
   const {
     data: quota,
     error,
@@ -68,6 +86,17 @@ export function ArticleQuotaDisplay({
       window.removeEventListener("tokenReserved", handleQuotaUpdate);
     };
   }, [mutate]);
+
+  // 偵測 401 錯誤，自動導向登入頁面
+  useEffect(() => {
+    if (error && error instanceof FetchError && error.status === 401) {
+      // 延遲一秒後導向登入頁，讓用戶看到錯誤訊息
+      const timer = setTimeout(() => {
+        router.push("/login?message=" + encodeURIComponent("登入已過期，請重新登入"));
+      }, 1500);
+      return () => clearTimeout(timer);
+    }
+  }, [error, router]);
 
   if (isLoading) {
     return (
