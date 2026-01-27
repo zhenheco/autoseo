@@ -2,8 +2,8 @@ name: Process Article Jobs
 
 on:
   schedule:
-    # 每 2 分鐘執行一次（避免 GitHub 限流）
-    - cron: "*/2 * * * *"
+    # 每 5 分鐘執行一次（減少並發衝突通知）
+    - cron: "*/5 * * * *"
 
   # 支援手動觸發
   workflow_dispatch:
