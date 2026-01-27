@@ -207,7 +207,7 @@ export async function autoScheduleArticle(
   const { data: website, error: websiteError } = await supabase
     .from("website_configs")
     .select(
-      "id, auto_schedule_enabled, daily_article_limit, is_active, wp_enabled, is_platform_blog, schedule_type, schedule_interval_days",
+      "id, auto_schedule_enabled, daily_article_limit, is_active, wp_enabled, is_platform_blog, website_type, schedule_type, schedule_interval_days",
     )
     .eq("id", websiteId)
     .single();
@@ -226,9 +226,11 @@ export async function autoScheduleArticle(
     return { success: false, error: "網站已停用" };
   }
 
-  // 4. 檢查網站配置是否完整（非 Platform Blog 需要 WordPress 設定）
+  // 4. 檢查網站配置是否完整
+  // 支援三種類型：Platform Blog、WordPress 網站、外部網站（webhook）
   const isPlatformBlog = website.is_platform_blog === true;
-  if (!isPlatformBlog && !website.wp_enabled) {
+  const isExternalWebsite = website.website_type === "external";
+  if (!isPlatformBlog && !isExternalWebsite && !website.wp_enabled) {
     return { success: false, error: "WordPress 功能未啟用" };
   }
 
