@@ -43,7 +43,8 @@ export async function requireOwnerRole() {
     .select("role, company_id")
     .eq("user_id", user.id)
     .eq("status", "active")
-    .single();
+    .limit(1)
+    .maybeSingle();
 
   if (error || !membership || membership.role !== "owner") {
     redirect("/dashboard");

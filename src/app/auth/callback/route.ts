@@ -62,11 +62,13 @@ export async function GET(request: Request) {
         console.log("[OAuth Affiliate] 無推薦碼，跳過追蹤");
       }
 
+      // 使用 .limit(1) 避免多筆記錄時 .single() 報錯
       const { data: existingMember } = await adminClient
         .from("company_members")
         .select("id")
         .eq("user_id", user.id)
-        .single();
+        .limit(1)
+        .maybeSingle();
 
       if (!existingMember) {
         const { data: company, error: companyError } = await adminClient

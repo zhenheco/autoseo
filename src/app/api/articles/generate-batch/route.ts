@@ -82,7 +82,8 @@ export async function POST(request: NextRequest) {
       .select("company_id")
       .eq("user_id", user.id)
       .eq("status", "active")
-      .single();
+      .limit(1)
+      .maybeSingle();
 
     let billingId: string | undefined = membership?.company_id;
 

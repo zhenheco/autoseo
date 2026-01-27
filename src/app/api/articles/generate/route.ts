@@ -172,7 +172,8 @@ export async function POST(request: NextRequest) {
       .select("company_id")
       .eq("user_id", user.id)
       .eq("status", "active")
-      .single();
+      .limit(1)
+      .maybeSingle();
 
     // 使用 company_id 或 user_id 作為 billing identifier
     const billingId = membership?.company_id || user.id;

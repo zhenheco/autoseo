@@ -18,13 +18,14 @@ export async function GET(request: NextRequest) {
 
     const supabase = await createClient();
 
-    // 取得用戶的公司
+    // 取得用戶的公司（使用 limit(1) 避免多筆記錄時報錯）
     const { data: membership } = await supabase
       .from("company_members")
       .select("company_id")
       .eq("user_id", user.id)
       .eq("status", "active")
-      .single();
+      .limit(1)
+      .maybeSingle();
 
     if (!membership) {
       return NextResponse.json({ error: "找不到公司" }, { status: 404 });

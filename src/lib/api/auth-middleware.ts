@@ -85,7 +85,8 @@ export function withCompany(
         .select("company_id")
         .eq("user_id", user.id)
         .eq("status", "active")
-        .single();
+        .limit(1)
+        .maybeSingle();
 
       if (error || !membership) {
         return noCompanyMembership();
@@ -168,7 +169,8 @@ export async function getUserCompanyId(userId: string): Promise<string | null> {
     .select("company_id")
     .eq("user_id", userId)
     .eq("status", "active")
-    .single();
+    .limit(1)
+    .maybeSingle();
 
   return data?.company_id ?? null;
 }
