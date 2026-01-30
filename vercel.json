@@ -4,7 +4,7 @@
   "crons": [
     {
       "path": "/api/cron/hourly-tasks",
-      "schedule": "0 0 * * *"
+      "schedule": "0 * * * *"
     },
     {
       "path": "/api/cron/sync-brevo",
