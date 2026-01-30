@@ -31,6 +31,9 @@ export {
   sendWebhookBatch,
 } from "./webhook-sender";
 
+// 工具函數
+export { extractFirstImageUrl, extractImageAlt } from "./utils";
+
 // 類型
 export type {
   SyncTarget,

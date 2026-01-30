@@ -17,6 +17,7 @@ import type {
   SyncTarget,
 } from "./types";
 import type { GeneratedArticle } from "@/types/article.types";
+import { extractFirstImageUrl, extractImageAlt } from "./utils";
 
 // 預設配置
 const DEFAULT_CONFIG: Required<SyncServiceConfig> = {
@@ -294,6 +295,12 @@ export class ArticleSyncService {
     article: GeneratedArticle,
     translations: SyncedTranslationData[]
   ): SyncedArticleData {
+    // 從 HTML 內容提取第一張圖片作為 featured_image
+    const featuredImageUrl = extractFirstImageUrl(article.html_content);
+    const featuredImageAlt = featuredImageUrl
+      ? extractImageAlt(article.html_content, featuredImageUrl)
+      : null;
+
     return {
       source_id: article.id,
       slug: article.slug,
@@ -309,8 +316,8 @@ export class ArticleSyncService {
       seo_description: article.seo_description,
       focus_keyword: article.focus_keyword,
       keywords: article.keywords || [],
-      featured_image_url: null, // TODO: 從文章中提取
-      featured_image_alt: null,
+      featured_image_url: featuredImageUrl,
+      featured_image_alt: featuredImageAlt,
       word_count: article.word_count,
       reading_time: article.reading_time,
       published_at: article.published_at,
