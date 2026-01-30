@@ -55,6 +55,7 @@ export class SyncClient {
         title,
         excerpt,
         featured_image_url,
+        html_content,
         categories,
         tags,
         language,
@@ -144,9 +145,9 @@ export class SyncClient {
   }
 
   /**
-   * 取得所有分類
+   * 取得所有分類（帶計數）
    */
-  async getCategories(): Promise<string[]> {
+  async getCategories(): Promise<{ name: string; count: number }[]> {
     const { data, error } = await this.supabase
       .from(this.tableName)
       .select("categories")
@@ -156,21 +157,32 @@ export class SyncClient {
       throw new Error(`Failed to fetch categories: ${error.message}`);
     }
 
-    // 合併所有分類並去重
-    const allCategories = new Set<string>();
+    // 統計每個分類的文章數量
+    const categoryCount = new Map<string, number>();
     for (const row of data || []) {
       for (const cat of row.categories || []) {
-        allCategories.add(cat);
+        categoryCount.set(cat, (categoryCount.get(cat) || 0) + 1);
       }
     }
 
-    return Array.from(allCategories).sort();
+    // 轉換為陣列並按文章數量排序（降序）
+    return Array.from(categoryCount.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
   }
 
   /**
-   * 取得所有標籤
+   * 取得所有分類名稱（向後兼容）
    */
-  async getTags(): Promise<string[]> {
+  async getCategoryNames(): Promise<string[]> {
+    const categories = await this.getCategories();
+    return categories.map((c) => c.name);
+  }
+
+  /**
+   * 取得所有標籤（帶計數）
+   */
+  async getTags(): Promise<{ name: string; count: number }[]> {
     const { data, error } = await this.supabase
       .from(this.tableName)
       .select("tags")
@@ -180,15 +192,26 @@ export class SyncClient {
       throw new Error(`Failed to fetch tags: ${error.message}`);
     }
 
-    // 合併所有標籤並去重
-    const allTags = new Set<string>();
+    // 統計每個標籤的文章數量
+    const tagCount = new Map<string, number>();
     for (const row of data || []) {
       for (const tag of row.tags || []) {
-        allTags.add(tag);
+        tagCount.set(tag, (tagCount.get(tag) || 0) + 1);
       }
     }
 
-    return Array.from(allTags).sort();
+    // 轉換為陣列並按文章數量排序（降序）
+    return Array.from(tagCount.entries())
+      .map(([name, count]) => ({ name, count }))
+      .sort((a, b) => b.count - a.count);
+  }
+
+  /**
+   * 取得所有標籤名稱（向後兼容）
+   */
+  async getTagNames(): Promise<string[]> {
+    const tags = await this.getTags();
+    return tags.map((t) => t.name);
   }
 
   /**
@@ -222,6 +245,7 @@ export class SyncClient {
         title,
         excerpt,
         featured_image_url,
+        html_content,
         categories,
         tags,
         language,
@@ -276,6 +300,7 @@ export class SyncClient {
         title,
         excerpt,
         featured_image_url,
+        html_content,
         categories,
         tags,
         language,

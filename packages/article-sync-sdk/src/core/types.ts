@@ -38,6 +38,7 @@ export interface SyncedArticle {
 
 /**
  * 文章列表項目（精簡版）
+ * 包含 html_content 以便客戶端可以從中提取第一張圖片作為封面
  */
 export interface SyncedArticleListItem {
   id: string;
@@ -45,6 +46,7 @@ export interface SyncedArticleListItem {
   title: string;
   excerpt: string | null;
   featured_image_url: string | null;
+  html_content: string;
   categories: string[];
   tags: string[];
   language: string;
