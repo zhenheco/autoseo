@@ -818,3 +818,41 @@ await supabase.from("article_translations").upsert({
 **解法**：創建 `20260104000000_social_accounts_rls_fix.sql` 補齊缺少的 RLS 政策
 **教訓**：新增資料表時，務必確認所有 CRUD 操作都有對應的 RLS 政策
 **日期**：2026-01-04
+
+---
+
+### Vercel Cron - 排程文章全部卡住無法發布
+
+**問題**：排程文章時間過了卻沒有發布，全部卡到同一天（1/26-1/30 共 4 天文章未發布）
+
+**根本原因**：
+`vercel.json` 中的 cron 配置錯誤：
+```json
+// ❌ 錯誤配置（每天 UTC 00:00 執行一次）
+"schedule": "0 0 * * *"
+
+// ✅ 正確配置（每小時執行一次）
+"schedule": "0 * * * *"
+```
+
+API 名稱是 `hourly-tasks`，但實際配置成每天執行一次，導致排程文章要等到隔天 UTC 00:00 才會被處理。
+
+**解法**：
+1. 緊急處理：手動呼叫 cron API 發布積壓文章
+   ```bash
+   curl -X GET 'https://1wayseo.com/api/cron/process-scheduled-articles' \
+     -H 'Authorization: Bearer ${CRON_SECRET}'
+   ```
+2. 永久修復：將 `vercel.json` 的 schedule 改為 `"0 * * * *"`
+
+**相關檔案**：
+- Cron 配置：`vercel.json`
+- 排程處理 API：`src/app/api/cron/process-scheduled-articles/route.ts`
+- 每小時任務：`src/app/api/cron/hourly-tasks/route.ts`
+
+**教訓**：
+1. Cron 配置與 API 命名要一致（hourly 就應該是每小時）
+2. 排程功能上線後要監控是否正常執行
+3. 發現問題先手動處理積壓，再修復根本原因
+
+**日期**：2026-01-30
