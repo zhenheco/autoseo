@@ -47,6 +47,9 @@ export async function GET(request: NextRequest) {
         is_active,
         is_platform_blog,
         site_type,
+        website_type,
+        webhook_url,
+        webhook_secret,
         auto_translate_enabled,
         auto_translate_languages
       ),
@@ -128,8 +131,9 @@ export async function GET(request: NextRequest) {
       continue;
     }
 
-    // Platform Blog 不需要 WordPress，直接更新資料庫即可
+    // 判斷網站類型
     const isPlatformBlog = website.is_platform_blog === true;
+    const isExternalWebsite = website.website_type === "external";
 
     // 檢查網站是否啟用
     if (!website.is_active) {
@@ -149,8 +153,26 @@ export async function GET(request: NextRequest) {
       continue;
     }
 
-    // 非 Platform Blog 才需要檢查 WordPress 功能
-    if (!isPlatformBlog && !website.wp_enabled) {
+    // 外部網站需要 webhook_url
+    if (isExternalWebsite && !website.webhook_url) {
+      await handlePublishError(
+        supabase,
+        article.id,
+        article.publish_retry_count || 0,
+        "外部網站未設定 webhook URL",
+      );
+      results.failed++;
+      results.details.push({
+        articleId: article.id,
+        title: article.article_title,
+        status: "failed",
+        error: "外部網站未設定 webhook URL",
+      });
+      continue;
+    }
+
+    // 非 Platform Blog 且非外部網站才需要檢查 WordPress 功能
+    if (!isPlatformBlog && !isExternalWebsite && !website.wp_enabled) {
       await handlePublishError(
         supabase,
         article.id,
@@ -266,6 +288,118 @@ export async function GET(request: NextRequest) {
         console.error(
           `[Process Scheduled Articles] Platform Blog publish error: ${article.id}`,
           platformError,
+        );
+
+        const retryCount = article.publish_retry_count || 0;
+        const wasRetried = await handlePublishError(
+          supabase,
+          article.id,
+          retryCount,
+          errorMessage,
+        );
+
+        if (wasRetried) {
+          results.retried++;
+          results.details.push({
+            articleId: article.id,
+            title: generatedArticle.title,
+            status: "retried",
+            error: errorMessage,
+          });
+        } else {
+          results.failed++;
+          results.details.push({
+            articleId: article.id,
+            title: generatedArticle.title,
+            status: "failed",
+            error: errorMessage,
+          });
+        }
+        continue;
+      }
+    }
+
+    // 情況 0.5：外部網站 → 透過 webhook 同步文章
+    if (isExternalWebsite) {
+      console.log(
+        `[Process Scheduled Articles] Publishing to External Website: ${article.id} - ${generatedArticle.title} -> ${website.website_name}`,
+      );
+
+      try {
+        const publishedAt = new Date().toISOString();
+
+        // 查詢完整的文章資料
+        const { data: fullArticle } = await supabase
+          .from("generated_articles")
+          .select("*")
+          .eq("id", generatedArticle.id)
+          .single();
+
+        if (!fullArticle) {
+          throw new Error("無法取得完整文章資料");
+        }
+
+        // 使用同步服務發送 webhook
+        const { syncArticle } = await import("@/lib/sync");
+        const syncResult = await syncArticle(fullArticle, "create", [website.id]);
+
+        if (syncResult.failed > 0) {
+          const failedResult = syncResult.results.find((r) => !r.success);
+          throw new Error(failedResult?.error_message || "同步失敗");
+        }
+
+        // 更新 article_jobs
+        await supabase
+          .from("article_jobs")
+          .update({
+            status: "published",
+            published_at: publishedAt,
+            publish_retry_count: 0,
+            last_publish_error: null,
+          })
+          .eq("id", article.id);
+
+        // 更新 generated_articles
+        await supabase
+          .from("generated_articles")
+          .update({
+            status: "published",
+            published_at: publishedAt,
+            published_to_website_id: website.id,
+            published_to_website_at: publishedAt,
+          })
+          .eq("id", generatedArticle.id);
+
+        console.log(
+          `[Process Scheduled Articles] Published to External Website: ${article.id} - ${generatedArticle.title}`,
+        );
+
+        // 觸發自動翻譯
+        await triggerAutoTranslation(
+          supabase,
+          generatedArticle.id,
+          website.id,
+          article.company_id,
+          article.user_id,
+          website.auto_translate_enabled,
+          website.auto_translate_languages
+        );
+
+        results.published++;
+        results.details.push({
+          articleId: article.id,
+          title: generatedArticle.title,
+          status: "published",
+        });
+        continue;
+      } catch (externalError) {
+        const errorMessage =
+          externalError instanceof Error
+            ? externalError.message
+            : "外部網站發布失敗";
+        console.error(
+          `[Process Scheduled Articles] External website publish error: ${article.id}`,
+          externalError,
         );
 
         const retryCount = article.publish_retry_count || 0;

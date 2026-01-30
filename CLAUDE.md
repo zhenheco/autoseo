@@ -906,3 +906,59 @@ if (categoriesResult.status === "fulfilled") {
 - Cron Job：`src/app/api/cron/process-scheduled-articles/route.ts`
 
 **日期**：2026-01-30
+
+---
+
+### 外部網站 - 排程文章無法發布到一手通等外部專案
+
+**問題**：一手通等外部網站的排程文章全部失敗，錯誤訊息為「WordPress 功能未啟用」
+
+**根本原因**：
+Cron job 的檢查邏輯只區分 Platform Blog 和 WordPress 網站，沒有處理 `website_type = 'external'` 的情況：
+```typescript
+// 舊邏輯：只檢查 isPlatformBlog 和 wp_enabled
+if (!isPlatformBlog && !website.wp_enabled) {
+  throw new Error("WordPress 功能未啟用");
+}
+```
+
+外部網站（如一手通）的配置：
+- `website_type = 'external'`
+- `wp_enabled = false`（外部網站不需要 WordPress）
+- `webhook_url` 有設定（用於接收文章同步）
+
+**解法**：
+1. 在查詢中加入 `website_type`、`webhook_url`、`webhook_secret` 欄位
+2. 修改檢查邏輯，區分三種網站類型：
+   - Platform Blog：直接更新資料庫
+   - External Website：透過 webhook 同步
+   - WordPress：發布到 WordPress
+3. 加入外部網站的發布邏輯，使用 `syncArticle()` 發送 webhook
+
+```typescript
+// 新邏輯：區分三種類型
+const isPlatformBlog = website.is_platform_blog === true;
+const isExternalWebsite = website.website_type === "external";
+
+// 外部網站需要 webhook_url
+if (isExternalWebsite && !website.webhook_url) {
+  throw new Error("外部網站未設定 webhook URL");
+}
+
+// 非 Platform Blog 且非外部網站才需要檢查 WordPress 功能
+if (!isPlatformBlog && !isExternalWebsite && !website.wp_enabled) {
+  throw new Error("WordPress 功能未啟用");
+}
+
+// 外部網站：使用 syncArticle() 發送 webhook
+if (isExternalWebsite) {
+  await syncArticle(fullArticle, "create", [website.id]);
+}
+```
+
+**相關檔案**：
+- Cron Job：`src/app/api/cron/process-scheduled-articles/route.ts`
+- 同步服務：`src/lib/sync/sync-service.ts`
+- Webhook 發送：`src/lib/sync/webhook-sender.ts`
+
+**日期**：2026-01-30
