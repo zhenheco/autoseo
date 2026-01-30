@@ -856,3 +856,53 @@ API 名稱是 `hourly-tasks`，但實際配置成每天執行一次，導致排�
 3. 發現問題先手動處理積壓，再修復根本原因
 
 **日期**：2026-01-30
+
+---
+
+### WordPress API - 間歇性 401 錯誤導致文章發布失敗
+
+**問題**：部分 WordPress 文章發布失敗，錯誤訊息為「獲取標籤失敗: 401」，但同一網站其他文章成功發布
+
+**根本原因**：
+`ensureTaxonomies()` 方法使用 `Promise.all()` 同時取得分類和標籤，任一 API 失敗就會導致整個發布流程中斷。間歇性 401 可能由以下原因造成：
+- WordPress 限流（短時間內太多 API 請求）
+- 安全外掛（如 Wordfence）暫時阻擋
+- 網路不穩定導致認證標頭傳輸錯誤
+
+**解法**：
+在 `src/lib/wordpress/client.ts` 的 `ensureTaxonomies()` 方法加入 fallback 機制：
+1. 改用 `Promise.allSettled()` 取代 `Promise.all()`
+2. 標籤/分類 API 失敗時記錄警告但繼續執行
+3. 文章仍可發布，只是不會設定失敗的標籤/分類
+
+```typescript
+// 舊版：任一失敗就全部失敗
+const [existingCategories, existingTags] = await Promise.all([
+  this.getCategories(),
+  this.getTags(),
+]);
+
+// 新版：失敗時 fallback 到空陣列，繼續發布
+const [categoriesResult, tagsResult] = await Promise.allSettled([
+  this.getCategories(),
+  this.getTags(),
+]);
+
+let existingCategories: WordPressTaxonomy[] = [];
+if (categoriesResult.status === "fulfilled") {
+  existingCategories = categoriesResult.value;
+} else {
+  console.warn("[WordPress] 獲取分類失敗，將跳過分類設定");
+}
+```
+
+**教訓**：
+1. 非核心功能（標籤/分類）失敗不應中斷核心功能（文章發布）
+2. 使用 `Promise.allSettled()` 提高 API 調用的容錯性
+3. 間歇性錯誤要考慮 fallback 而非只是重試
+
+**相關檔案**：
+- WordPress Client：`src/lib/wordpress/client.ts`
+- Cron Job：`src/app/api/cron/process-scheduled-articles/route.ts`
+
+**日期**：2026-01-30

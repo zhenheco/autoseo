@@ -476,6 +476,7 @@ export class WordPressClient {
 
   /**
    * 批量創建或獲取分類和標籤
+   * 加入 fallback 機制：當 API 失敗時繼續發布文章，只是不設定標籤/分類
    */
   async ensureTaxonomies(
     categories: string[],
@@ -484,38 +485,79 @@ export class WordPressClient {
     categoryIds: number[];
     tagIds: number[];
   }> {
-    const [existingCategories, existingTags] = await Promise.all([
+    // 使用 Promise.allSettled 而非 Promise.all，避免單一失敗導致全部中斷
+    const [categoriesResult, tagsResult] = await Promise.allSettled([
       this.getCategories(),
       this.getTags(),
     ]);
 
-    // 處理分類
-    const categoryIds: number[] = [];
-    for (const catName of categories) {
-      const existing = existingCategories.find(
-        (c) => c.name.toLowerCase() === catName.toLowerCase(),
+    // 取得分類列表（失敗時使用空陣列，記錄警告）
+    let existingCategories: WordPressTaxonomy[] = [];
+    if (categoriesResult.status === "fulfilled") {
+      existingCategories = categoriesResult.value;
+    } else {
+      console.warn(
+        "[WordPress] 獲取分類失敗，將跳過分類設定:",
+        categoriesResult.reason?.message || categoriesResult.reason,
       );
+    }
 
-      if (existing) {
-        categoryIds.push(existing.id);
-      } else {
-        const newCat = await this.createCategory(catName);
-        categoryIds.push(newCat.id);
+    // 取得標籤列表（失敗時使用空陣列，記錄警告）
+    let existingTags: WordPressTaxonomy[] = [];
+    if (tagsResult.status === "fulfilled") {
+      existingTags = tagsResult.value;
+    } else {
+      console.warn(
+        "[WordPress] 獲取標籤失敗，將跳過標籤設定:",
+        tagsResult.reason?.message || tagsResult.reason,
+      );
+    }
+
+    // 處理分類（只有在成功獲取分類列表時才處理）
+    const categoryIds: number[] = [];
+    if (categoriesResult.status === "fulfilled") {
+      for (const catName of categories) {
+        try {
+          const existing = existingCategories.find(
+            (c) => c.name.toLowerCase() === catName.toLowerCase(),
+          );
+
+          if (existing) {
+            categoryIds.push(existing.id);
+          } else {
+            const newCat = await this.createCategory(catName);
+            categoryIds.push(newCat.id);
+          }
+        } catch (error) {
+          console.warn(
+            `[WordPress] 創建分類 "${catName}" 失敗，跳過:`,
+            error instanceof Error ? error.message : error,
+          );
+        }
       }
     }
 
-    // 處理標籤
+    // 處理標籤（只有在成功獲取標籤列表時才處理）
     const tagIds: number[] = [];
-    for (const tagName of tags) {
-      const existing = existingTags.find(
-        (t) => t.name.toLowerCase() === tagName.toLowerCase(),
-      );
+    if (tagsResult.status === "fulfilled") {
+      for (const tagName of tags) {
+        try {
+          const existing = existingTags.find(
+            (t) => t.name.toLowerCase() === tagName.toLowerCase(),
+          );
 
-      if (existing) {
-        tagIds.push(existing.id);
-      } else {
-        const newTag = await this.createTag(tagName);
-        tagIds.push(newTag.id);
+          if (existing) {
+            tagIds.push(existing.id);
+          } else {
+            const newTag = await this.createTag(tagName);
+            tagIds.push(newTag.id);
+          }
+        } catch (error) {
+          console.warn(
+            `[WordPress] 創建標籤 "${tagName}" 失敗，跳過:`,
+            error instanceof Error ? error.message : error,
+          );
+        }
       }
     }
 
