@@ -50,21 +50,14 @@ export class ArticleImageAgent extends BaseAgent<
     const images: GeneratedImage[] = [];
     const failedIndices: number[] = [];
 
-    // 新邏輯：只為第 2 個和最後一個 H2 生成圖片（共 2 張）
+    // 新邏輯：只在文章中間位置生成 1 張配圖
     const totalSections = input.outline.mainSections.length;
     const targetIndices: number[] = [];
 
-    // 只有當有 2 個以上段落時，才在第 2 個 H2 放圖
-    if (totalSections >= 2) {
-      targetIndices.push(1); // 第 2 個 H2 (index 1)
-    }
-
-    // 在最後一個 H2 放圖（避免與第 2 個 H2 重複）
+    // 選擇中間位置的 H2 放圖（如果有 5 個段落，就選第 3 個）
     if (totalSections >= 1) {
-      const lastIndex = totalSections - 1;
-      if (!targetIndices.includes(lastIndex)) {
-        targetIndices.push(lastIndex);
-      }
+      const middleIndex = Math.floor(totalSections / 2);
+      targetIndices.push(middleIndex);
     }
 
     console.log(
