@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -30,6 +31,8 @@ export function ArticleDetailPublish({
   currentWebsiteId,
 }: ArticleDetailPublishProps) {
   const router = useRouter();
+  const t = useTranslations("articles");
+  const tCommon = useTranslations("common");
   const [open, setOpen] = useState(false);
   const [selectedWebsiteId, setSelectedWebsiteId] = useState<string | null>(
     currentWebsiteId,
@@ -58,7 +61,7 @@ export function ArticleDetailPublish({
       }, 2000);
     } else {
       setPublishState("error");
-      setErrorMessage(result.error || "發布失敗");
+      setErrorMessage(result.error || t("publish.failed"));
     }
   };
 
@@ -79,18 +82,18 @@ export function ArticleDetailPublish({
       <DialogTrigger asChild>
         <Button>
           <Send className="mr-2 h-4 w-4" />
-          發布文章
+          {t("publish.title")}
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>
-            {publishState === "success" ? "發布成功" : "發布文章"}
+            {publishState === "success" ? t("publish.success") : t("publish.title")}
           </DialogTitle>
           <DialogDescription>
             {publishState === "success"
-              ? "文章已成功發布至 WordPress"
-              : "選擇目標網站並發布文章"}
+              ? t("publish.successDesc")
+              : t("publish.selectTargetAndPublish")}
           </DialogDescription>
         </DialogHeader>
 
@@ -98,7 +101,7 @@ export function ArticleDetailPublish({
           <div className="py-6 flex flex-col items-center gap-4">
             <CheckCircle className="h-16 w-16 text-green-500" />
             <p className="text-sm text-muted-foreground">
-              頁面將在 2 秒後自動重新整理
+              {t("publish.pageRefreshHint")}
             </p>
             {publishedUrl && (
               <Button variant="outline" asChild>
@@ -108,7 +111,7 @@ export function ArticleDetailPublish({
                   rel="noopener noreferrer"
                 >
                   <ExternalLink className="mr-2 h-4 w-4" />
-                  查看文章
+                  {t("publish.viewArticle")}
                 </a>
               </Button>
             )}
@@ -117,17 +120,17 @@ export function ArticleDetailPublish({
           <>
             <div className="grid gap-4 py-4">
               <div className="space-y-2">
-                <Label htmlFor="website">目標網站</Label>
+                <Label htmlFor="website">{t("targetWebsite")}</Label>
                 <WebsiteSelector
                   value={selectedWebsiteId}
                   onChange={setSelectedWebsiteId}
                   disabled={publishState === "publishing"}
-                  placeholder="選擇要發布的網站"
+                  placeholder={t("publish.selectWebsite")}
                 />
               </div>
               {!selectedWebsiteId && (
                 <p className="text-sm text-muted-foreground">
-                  請選擇要發布的目標網站
+                  {t("publish.pleaseSelectWebsite")}
                 </p>
               )}
               {errorMessage && (
@@ -143,7 +146,7 @@ export function ArticleDetailPublish({
                 onClick={() => handleOpenChange(false)}
                 disabled={publishState === "publishing"}
               >
-                取消
+                {tCommon("cancel")}
               </Button>
               <Button
                 onClick={handlePublish}
@@ -152,10 +155,10 @@ export function ArticleDetailPublish({
                 {publishState === "publishing" ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    發布中...
+                    {t("publish.publishing")}
                   </>
                 ) : (
-                  "確認發布"
+                  t("publish.confirmPublish")
                 )}
               </Button>
             </DialogFooter>

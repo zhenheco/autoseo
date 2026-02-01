@@ -68,27 +68,12 @@ interface GeneratedContent {
 type ContentStyle = "professional" | "catchy" | "story";
 
 /**
- * 風格設定
+ * 風格顏色對應
  */
-const styleConfig: Record<
-  ContentStyle,
-  { label: string; description: string; color: string }
-> = {
-  professional: {
-    label: "專業版",
-    description: "數據導向、專業術語、適合 B2B",
-    color: "bg-blue-500",
-  },
-  catchy: {
-    label: "吸睛版",
-    description: "問句開頭、製造好奇、病毒傳播",
-    color: "bg-orange-500",
-  },
-  story: {
-    label: "故事版",
-    description: "第一人稱、情感連結、個人品牌",
-    color: "bg-purple-500",
-  },
+const styleColors: Record<ContentStyle, string> = {
+  professional: "bg-blue-500",
+  catchy: "bg-orange-500",
+  story: "bg-purple-500",
 };
 
 /**
@@ -189,7 +174,7 @@ export function SocialShareDialog({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "生成失敗");
+        throw new Error(data.error || t("generateFailed"));
       }
 
       setGeneratedContent(data.content);
@@ -197,7 +182,7 @@ export function SocialShareDialog({
       setEditedContent(data.content.professional.content);
       setEditedHashtags(data.content.professional.hashtags);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "生成失敗");
+      setError(err instanceof Error ? err.message : t("generateFailed"));
     } finally {
       setGenerating(false);
     }
@@ -224,12 +209,12 @@ export function SocialShareDialog({
   // 發布
   const handlePublish = async () => {
     if (selectedAccounts.length === 0) {
-      setError("請選擇至少一個發布帳號");
+      setError(t("selectAccountError"));
       return;
     }
 
     if (!editedContent.trim()) {
-      setError("請輸入文案內容");
+      setError(t("enterContentError"));
       return;
     }
 
@@ -275,7 +260,7 @@ export function SocialShareDialog({
               "發文小助手額度不足，請購買額度後再試",
           );
         } else {
-          throw new Error(data.error || "發布失敗");
+          throw new Error(data.error || t("publishFailed"));
         }
         return;
       }
@@ -293,7 +278,7 @@ export function SocialShareDialog({
         setEditedHashtags([]);
       }, 3000);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "發布失敗");
+      setError(err instanceof Error ? err.message : t("publishFailed"));
     } finally {
       setPublishing(false);
     }
@@ -364,9 +349,9 @@ export function SocialShareDialog({
             ) : accounts.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 <AlertCircle className="h-8 w-8 mx-auto mb-2" />
-                <p>{t("noAccountsConnected") || "尚未連接社群帳號"}</p>
+                <p>{t("noAccountsConnected")}</p>
                 <p className="text-sm">
-                  {t("pleaseConnectFirst") || "請先在帳號設定中連接帳號"}
+                  {t("pleaseConnectFirst")}
                 </p>
               </div>
             ) : (
@@ -445,9 +430,22 @@ export function SocialShareDialog({
             {/* 風格選擇 */}
             {generatedContent && (
               <div className="flex gap-2">
-                {(Object.keys(styleConfig) as ContentStyle[]).map((style) => {
-                  const config = styleConfig[style];
+                {(Object.keys(styleColors) as ContentStyle[]).map((style) => {
+                  const color = styleColors[style];
                   const isSelected = selectedStyle === style;
+                  // 動態取得翻譯 key
+                  const labelKey =
+                    style === "professional"
+                      ? "styleProfessional"
+                      : style === "catchy"
+                        ? "styleCatchy"
+                        : "styleStory";
+                  const descKey =
+                    style === "professional"
+                      ? "styleProfessionalDesc"
+                      : style === "catchy"
+                        ? "styleCatchyDesc"
+                        : "styleStoryDesc";
 
                   return (
                     <button
@@ -460,15 +458,13 @@ export function SocialShareDialog({
                       onClick={() => handleStyleChange(style)}
                     >
                       <div className="flex items-center gap-2 mb-1">
-                        <div
-                          className={`h-2 w-2 rounded-full ${config.color}`}
-                        />
+                        <div className={`h-2 w-2 rounded-full ${color}`} />
                         <span className="font-medium text-sm">
-                          {config.label}
+                          {t(labelKey)}
                         </span>
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        {config.description}
+                        {t(descKey)}
                       </p>
                     </button>
                   );
@@ -488,9 +484,9 @@ export function SocialShareDialog({
 
             {/* 字數統計 */}
             <div className="flex justify-between text-xs text-muted-foreground">
-              <span>{editedContent.length} 字</span>
+              <span>{t("characterCount", { count: editedContent.length })}</span>
               {editedHashtags.length > 0 && (
-                <span>{editedHashtags.length} 個標籤</span>
+                <span>{t("hashtagCount", { count: editedHashtags.length })}</span>
               )}
             </div>
 

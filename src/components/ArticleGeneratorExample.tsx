@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 
 export function ArticleGeneratorExample() {
   const [title, setTitle] = useState('');
@@ -9,16 +10,17 @@ export function ArticleGeneratorExample() {
   const [progress, setProgress] = useState(0);
   const [loading, setLoading] = useState(false);
   const [article, setArticle] = useState<any>(null);
+  const t = useTranslations('articleGenerator');
 
   // 1. 觸發文章生成
   const generateArticle = async () => {
     if (!title) {
-      alert('請輸入文章標題');
+      alert(t('enterTitleAlert'));
       return;
     }
 
     setLoading(true);
-    setStatus('提交任務中...');
+    setStatus(t('submitting'));
 
     try {
       const response = await fetch('/api/articles/generate', {
@@ -36,14 +38,14 @@ export function ArticleGeneratorExample() {
 
       if (data.success && data.articleJobId) {
         setJobId(data.articleJobId);
-        setStatus('任務已提交，開始處理...');
+        setStatus(t('submitted'));
         // 開始輪詢狀態
         pollStatus(data.articleJobId);
       } else {
-        setStatus('提交失敗: ' + (data.error || '未知錯誤'));
+        setStatus(t('submitFailed') + ': ' + (data.error || t('unknownError')));
       }
     } catch (error) {
-      setStatus('提交失敗: ' + (error as Error).message);
+      setStatus(t('submitFailed') + ': ' + (error as Error).message);
     } finally {
       setLoading(false);
     }
@@ -84,18 +86,18 @@ export function ArticleGeneratorExample() {
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6">文章生成範例</h2>
+      <h2 className="text-2xl font-bold mb-6">{t('title')}</h2>
 
       {/* 輸入區 */}
       <div className="mb-6">
         <label className="block text-sm font-medium mb-2">
-          文章標題
+          {t('articleTitle')}
         </label>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="輸入文章標題或關鍵字"
+          placeholder={t('titlePlaceholder')}
           className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
@@ -106,20 +108,20 @@ export function ArticleGeneratorExample() {
         disabled={loading || !title}
         className="w-full py-2 px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {loading ? '處理中...' : '生成文章'}
+        {loading ? t('processing') : t('generateButton')}
       </button>
 
       {/* 任務資訊 */}
       {jobId && (
         <div className="mt-6 p-4 bg-gray-100 rounded-lg">
-          <p className="text-sm text-gray-600">任務 ID: {jobId}</p>
+          <p className="text-sm text-gray-600">{t('jobId')}: {jobId}</p>
         </div>
       )}
 
       {/* 狀態顯示 */}
       {status && (
         <div className="mt-4">
-          <p className="text-sm font-medium mb-2">狀態: {status}</p>
+          <p className="text-sm font-medium mb-2">{t('status')}: {status}</p>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
               className="bg-blue-500 h-2 rounded-full transition-all duration-300"

@@ -1,6 +1,7 @@
 'use client'
 
 import { useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Button } from '@/components/ui/button'
 import { Send } from 'lucide-react'
 import { PublishControlDialog } from './PublishControlDialog'
@@ -16,6 +17,7 @@ export function ArticlePublishButton({
   currentStatus,
   onPublishSuccess,
 }: ArticlePublishButtonProps) {
+  const t = useTranslations('articles')
   const [dialogOpen, setDialogOpen] = useState(false)
 
   const handlePublishSuccess = () => {
@@ -34,7 +36,7 @@ export function ArticlePublishButton({
         onClick={() => setDialogOpen(true)}
       >
         <Send className="mr-1.5 h-3 w-3" />
-        <span className="hidden sm:inline">發布</span>
+        <span className="hidden sm:inline">{t('publish.button')}</span>
       </Button>
 
       <PublishControlDialog

@@ -13,6 +13,7 @@ import { FileText, Save, Check, Loader2, Send } from "lucide-react";
 import { TiptapEditor } from "@/components/articles/TiptapEditor";
 import { QuickPublishDialog } from "./QuickPublishDialog";
 import { marked } from "marked";
+import { useTranslations } from "next-intl";
 
 interface ArticlePreviewProps {
   articles: ArticleWithWebsite[];
@@ -40,6 +41,7 @@ async function ensureHtml(content: string): Promise<string> {
 }
 
 export function ArticlePreview({ articles }: ArticlePreviewProps) {
+  const t = useTranslations("articles.preview");
   const { previewArticleId } = useScheduleContext();
   const [editedTitle, setEditedTitle] = useState("");
   const [editedContent, setEditedContent] = useState("");
@@ -57,7 +59,7 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
 
   // 標題從列表資料取得（不需要額外請求）
   const originalTitle =
-    generatedArticle?.title || article?.keywords?.join(", ") || "未命名文章";
+    generatedArticle?.title || article?.keywords?.join(", ") || t("untitledArticle");
 
   // 當選擇的文章改變時，從快取或 API 獲取 HTML 內容
   useEffect(() => {
@@ -77,7 +79,7 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
 
           if (result.error) {
             console.error("Failed to load article HTML:", result.error);
-            setEditedContent("<p>無法載入文章內容</p>");
+            setEditedContent(`<p>${t("cannotLoadContent")}</p>`);
           } else {
             const processedContent = await ensureHtml(result.html || "");
             setEditedContent(processedContent);
@@ -85,7 +87,7 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
           }
         } catch (err) {
           console.error("Error loading article:", err);
-          setEditedContent("<p>載入失敗</p>");
+          setEditedContent(`<p>${t("loadFailed")}</p>`);
         } finally {
           setIsLoading(false);
         }
@@ -133,7 +135,7 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
     return (
       <div className="flex h-full flex-col items-center justify-center text-muted-foreground">
         <FileText className="mb-4 h-12 w-12" />
-        <p>點擊文章以預覽</p>
+        <p>{t("clickToPreview")}</p>
       </div>
     );
   }
@@ -146,7 +148,7 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
             value={editedTitle}
             onChange={handleTitleChange}
             className="text-xl font-bold border-none shadow-none focus-visible:ring-0 p-0 h-auto lg:text-2xl"
-            placeholder="輸入標題..."
+            placeholder={t("enterTitle")}
             disabled={isLoading}
           />
           <Button
@@ -156,16 +158,16 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
             variant={saveSuccess ? "outline" : "default"}
           >
             {isSaving ? (
-              "儲存中..."
+              t("saving")
             ) : saveSuccess ? (
               <>
                 <Check className="mr-1 h-4 w-4" />
-                已儲存
+                {t("saved")}
               </>
             ) : (
               <>
                 <Save className="mr-1 h-4 w-4" />
-                儲存
+                {t("save")}
               </>
             )}
           </Button>
@@ -176,10 +178,10 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
             disabled={isLoading}
           >
             <Send className="mr-1 h-4 w-4" />
-            發布
+            {t("publish")}
           </Button>
           {loadedFromCache && (
-            <span className="text-xs text-muted-foreground">⚡ 快取</span>
+            <span className="text-xs text-muted-foreground">{t("cached")}</span>
           )}
         </div>
       </header>
@@ -187,7 +189,7 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
         {isLoading ? (
           <div className="flex h-full items-center justify-center">
             <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            <span className="ml-2 text-muted-foreground">載入中...</span>
+            <span className="ml-2 text-muted-foreground">{t("loading")}</span>
           </div>
         ) : (
           <TiptapEditor

@@ -9,6 +9,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Globe } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { getUserWebsites } from "@/app/(dashboard)/dashboard/websites/actions";
 
 interface Website {
@@ -43,7 +44,7 @@ export function WebsiteSelector({
   onChange,
   onlyUserWebsites = true,
   disabled = false,
-  placeholder = "選擇網站",
+  placeholder,
   articleWebsiteId = null,
   allowNoWebsite = false,
 }: WebsiteSelectorProps) {
@@ -51,6 +52,10 @@ export function WebsiteSelector({
   const [loading, setLoading] = useState(true);
   const [companyId, setCompanyId] = useState<string | null>(null);
   const hasSetDefaultRef = useRef(false);
+  const t = useTranslations("websiteSelector");
+
+  // 使用傳入的 placeholder 或預設翻譯
+  const placeholderText = placeholder ?? t("selectWebsite");
 
   const getDefaultWebsite = useCallback(
     (
@@ -144,7 +149,7 @@ export function WebsiteSelector({
     return (
       <Select disabled>
         <SelectTrigger>
-          <SelectValue placeholder="載入中..." />
+          <SelectValue placeholder={t("loading")} />
         </SelectTrigger>
       </Select>
     );
@@ -154,7 +159,7 @@ export function WebsiteSelector({
     return (
       <Select disabled>
         <SelectTrigger>
-          <SelectValue placeholder="尚未設定網站" />
+          <SelectValue placeholder={t("noWebsite")} />
         </SelectTrigger>
       </Select>
     );
@@ -175,7 +180,7 @@ export function WebsiteSelector({
 
   function renderSelectedValue(): React.ReactNode {
     if (value === null && allowNoWebsite) {
-      return <span className="text-muted-foreground">單純寫文章</span>;
+      return <span className="text-muted-foreground">{t("writeOnly")}</span>;
     }
     if (selectedWebsite) {
       return (
@@ -195,14 +200,14 @@ export function WebsiteSelector({
       disabled={disabled}
     >
       <SelectTrigger>
-        <SelectValue placeholder={placeholder}>
+        <SelectValue placeholder={placeholderText}>
           {renderSelectedValue()}
         </SelectValue>
       </SelectTrigger>
       <SelectContent>
         {allowNoWebsite && (
           <SelectItem value="__none__">
-            <span className="text-muted-foreground">單純寫文章</span>
+            <span className="text-muted-foreground">{t("writeOnly")}</span>
           </SelectItem>
         )}
         {websites.map((website) => {
@@ -224,7 +229,7 @@ export function WebsiteSelector({
                     </span>
                     {!isActive && (
                       <span className="text-xs text-muted-foreground">
-                        （已停用）
+                        ({t("disabled")})
                       </span>
                     )}
                   </div>

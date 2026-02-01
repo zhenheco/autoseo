@@ -16,6 +16,7 @@ import { updateWebsite } from "../../actions";
 import { BrandVoiceForm } from "./BrandVoiceForm";
 import { WebsiteSettingsForm } from "./WebsiteSettingsForm";
 import { AutoScheduleForm } from "./AutoScheduleForm";
+import { getTranslations } from "next-intl/server";
 
 interface BrandVoice {
   brand_name?: string;
@@ -61,6 +62,8 @@ export default async function EditWebsitePage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const t = await getTranslations("websites");
+  const tCommon = await getTranslations("common");
   const user = await getUser();
 
   if (!user) {
@@ -72,7 +75,7 @@ export default async function EditWebsitePage({
   if (!company) {
     return (
       <div className="container mx-auto p-8">
-        <p className="text-muted-foreground">您尚未加入任何公司</p>
+        <p className="text-muted-foreground">{t("noCompanyJoined")}</p>
       </div>
     );
   }
@@ -81,17 +84,22 @@ export default async function EditWebsitePage({
   const website = await getWebsite(id, company.id);
 
   if (!website) {
-    redirect("/dashboard/websites?error=" + encodeURIComponent("找不到該網站"));
+    redirect(
+      "/dashboard/websites?error=" +
+        encodeURIComponent(t("edit.notFoundError")),
+    );
   }
 
   // 判斷網站類型並取得對應的頁面資訊
   const isPlatformBlog = website.is_platform_blog === true;
 
   // 根據網站類型設定頁面資訊
-  const pageTitle = isPlatformBlog ? "編輯官方 Blog" : "編輯 WordPress 網站";
+  const pageTitle = isPlatformBlog
+    ? t("edit.editPlatformBlog")
+    : t("edit.editWordPressSite");
   const pageDescription = isPlatformBlog
-    ? "設定官方 Blog 的文章生成參數"
-    : "更新您的 WordPress 網站設定";
+    ? t("edit.platformBlogDescription")
+    : t("edit.wordPressDescription");
 
   return (
     <div className="container mx-auto p-8 max-w-2xl">
@@ -104,9 +112,9 @@ export default async function EditWebsitePage({
         {/* 網站基本資訊卡片 */}
         <Card>
           <CardHeader>
-            <CardTitle>網站資訊</CardTitle>
+            <CardTitle>{t("edit.websiteInfo")}</CardTitle>
             <CardDescription>
-              修改您的網站資訊。留空密碼欄位表示不更改密碼。
+              {t("edit.websiteInfoDescription")}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -115,31 +123,31 @@ export default async function EditWebsitePage({
               <input type="hidden" name="companyId" value={company.id} />
 
               <div className="space-y-2">
-                <Label htmlFor="site-name">網站名稱</Label>
+                <Label htmlFor="site-name">{t("edit.websiteNameLabel")}</Label>
                 <Input
                   id="site-name"
                   name="siteName"
-                  placeholder="我的部落格"
+                  placeholder={t("edit.websiteNamePlaceholder")}
                   defaultValue={website.website_name || ""}
                   required
                 />
                 <p className="text-xs text-muted-foreground">
-                  為您的網站取一個容易辨識的名稱
+                  {t("edit.websiteNameHint")}
                 </p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="site-url">網站 URL</Label>
+                <Label htmlFor="site-url">{t("edit.websiteUrlLabel")}</Label>
                 <Input
                   id="site-url"
                   name="siteUrl"
                   type="url"
-                  placeholder="https://your-blog.com"
+                  placeholder={t("edit.websiteUrlPlaceholder")}
                   defaultValue={website.wordpress_url || ""}
                   required
                 />
                 <p className="text-xs text-muted-foreground">
-                  您的 WordPress 網站完整網址（包含 https://）
+                  {t("edit.websiteUrlHint")}
                 </p>
               </div>
 
@@ -147,37 +155,40 @@ export default async function EditWebsitePage({
               {!isPlatformBlog && (
                 <>
                   <div className="space-y-2">
-                    <Label htmlFor="wp-username">WordPress 使用者名稱</Label>
+                    <Label htmlFor="wp-username">
+                      {t("edit.wpUsernameLabel")}
+                    </Label>
                     <Input
                       id="wp-username"
                       name="wpUsername"
-                      placeholder="admin"
+                      placeholder={t("edit.wpUsernamePlaceholder")}
                       defaultValue={website.wp_username || ""}
                       required
                     />
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="wp-password">WordPress 應用密碼</Label>
+                    <Label htmlFor="wp-password">
+                      {t("edit.wpPasswordLabel")}
+                    </Label>
                     <Input
                       id="wp-password"
                       name="wpPassword"
                       type="password"
-                      placeholder="留空表示不更改"
+                      placeholder={t("edit.wpPasswordPlaceholder")}
                     />
                     <p className="text-xs text-muted-foreground">
-                      請至 WordPress 後台 → 使用者 → 個人資料 → 應用程式密碼
-                      建立新的應用密碼。留空表示不更改現有密碼。
+                      {t("edit.wpPasswordHint")}
                     </p>
                   </div>
                 </>
               )}
 
               <div className="flex gap-4">
-                <Button type="submit">儲存變更</Button>
+                <Button type="submit">{t("edit.saveChanges")}</Button>
                 <Link href="/dashboard/websites">
                   <Button type="button" variant="outline">
-                    取消
+                    {tCommon("cancel")}
                   </Button>
                 </Link>
               </div>

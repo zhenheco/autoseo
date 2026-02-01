@@ -4,6 +4,7 @@ import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import useSWR from "swr";
 import { FileText } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface ArticleQuota {
   balance: {
@@ -33,23 +34,25 @@ interface ArticleQuotaDisplayProps {
 // 自定義錯誤類別，包含 HTTP 狀態碼
 class FetchError extends Error {
   status: number;
-  constructor(message: string, status: number) {
+  errorCode: string;
+  constructor(message: string, status: number, errorCode: string) {
     super(message);
     this.status = status;
+    this.errorCode = errorCode;
   }
 }
 
 const fetcher = async (url: string) => {
   const res = await fetch(url);
   if (!res.ok) {
-    // 根據狀態碼提供更具體的錯誤訊息
+    // 根據狀態碼提供錯誤碼，讓組件使用 i18n 翻譯
     if (res.status === 401) {
-      throw new FetchError("登入已過期，請重新登入", 401);
+      throw new FetchError("Session expired", 401, "sessionExpired");
     }
     if (res.status === 404) {
-      throw new FetchError("找不到公司資料", 404);
+      throw new FetchError("Company not found", 404, "companyNotFound");
     }
-    throw new FetchError("無法取得文章額度", res.status);
+    throw new FetchError("Failed to fetch quota", res.status, "fetchFailed");
   }
   return res.json();
 };
@@ -57,6 +60,8 @@ const fetcher = async (url: string) => {
 export function ArticleQuotaDisplay({
   compact = false,
 }: ArticleQuotaDisplayProps) {
+  const t = useTranslations("dashboard.quota");
+  const tDashboard = useTranslations("dashboard");
   const router = useRouter();
   const {
     data: quota,
@@ -92,11 +97,11 @@ export function ArticleQuotaDisplay({
     if (error && error instanceof FetchError && error.status === 401) {
       // 延遲一秒後導向登入頁，讓用戶看到錯誤訊息
       const timer = setTimeout(() => {
-        router.push("/login?message=" + encodeURIComponent("登入已過期，請重新登入"));
+        router.push("/login?message=" + encodeURIComponent(t("sessionExpired")));
       }, 1500);
       return () => clearTimeout(timer);
     }
-  }, [error, router]);
+  }, [error, router, t]);
 
   if (isLoading) {
     return (
@@ -112,12 +117,15 @@ export function ArticleQuotaDisplay({
   }
 
   if (error || !quota) {
+    const errorMessage = error instanceof FetchError
+      ? t(error.errorCode as "sessionExpired" | "companyNotFound" | "fetchFailed")
+      : t("fetchFailed");
     return (
       <div
         className={`flex items-center gap-2 ${compact ? "" : "rounded-lg border border-destructive/50 bg-destructive/10 px-3 py-2"}`}
       >
         <p className="text-xs text-destructive">
-          {error?.message || "無法載入額度"}
+          {errorMessage}
         </p>
       </div>
     );
@@ -129,17 +137,17 @@ export function ArticleQuotaDisplay({
     return (
       <div className="flex items-center gap-2">
         <FileText className="h-4 w-4 text-muted-foreground" />
-        <span className="text-xs text-muted-foreground">額度:</span>
+        <span className="text-xs text-muted-foreground">{t("label")}</span>
         <span
           className={`text-sm font-semibold ${isLowQuota ? "text-destructive" : "text-foreground"}`}
         >
-          {quota.balance.available} 篇
+          {quota.balance.available} {tDashboard("articles")}
         </span>
         <a
           href="/dashboard/subscription"
           className="rounded bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
         >
-          升級
+          {t("upgrade")}
         </a>
       </div>
     );
@@ -150,14 +158,14 @@ export function ArticleQuotaDisplay({
       <div className="flex items-center gap-2">
         <FileText className="h-4 w-4 text-primary" />
         <span className="text-sm font-medium text-muted-foreground">
-          可用額度:
+          {t("availableLabel")}
         </span>
         <span
           className={`text-lg font-bold transition-all duration-500 ease-in-out ${isLowQuota ? "text-destructive" : "text-foreground"}`}
           key={quota.balance.available}
         >
           <span className="inline-block transition-transform duration-500 ease-out hover:scale-110">
-            {quota.balance.available} 篇
+            {quota.balance.available} {tDashboard("articles")}
           </span>
         </span>
       </div>
@@ -165,9 +173,9 @@ export function ArticleQuotaDisplay({
       {quota.balance.reserved > 0 && (
         <div className="flex items-center gap-3 border-l border-border pl-3 text-xs text-muted-foreground">
           <span className="transition-all duration-300 ease-in-out">
-            處理中:{" "}
+            {tDashboard("processing")}:{" "}
             <span className="font-medium text-amber-600 transition-colors duration-300">
-              {quota.balance.reserved} 篇
+              {quota.balance.reserved} {tDashboard("articles")}
             </span>
           </span>
         </div>
@@ -176,9 +184,9 @@ export function ArticleQuotaDisplay({
       {quota.balance.purchasedRemaining > 0 && (
         <div className="flex items-center gap-3 border-l border-border pl-3 text-xs text-muted-foreground">
           <span>
-            加購:{" "}
+            {t("purchase")}:{" "}
             <span className="font-medium text-purple-600">
-              {quota.balance.purchasedRemaining} 篇
+              {quota.balance.purchasedRemaining} {tDashboard("articles")}
             </span>
           </span>
         </div>
@@ -187,13 +195,13 @@ export function ArticleQuotaDisplay({
       {isLowQuota && (
         <div className="flex items-center gap-2">
           <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
-            額度不足
+            {t("lowQuota")}
           </span>
           <a
             href="/dashboard/subscription"
             className="text-xs font-medium text-destructive underline hover:text-destructive/80"
           >
-            立即升級
+            {t("upgradeNow")}
           </a>
         </div>
       )}

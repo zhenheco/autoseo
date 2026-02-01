@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { Toggle } from "@/components/ui/toggle";
 import { Separator } from "@/components/ui/separator";
+import { useTranslations } from "next-intl";
 
 interface Article {
   id: string;
@@ -55,25 +56,27 @@ function EditorToolbar({
 }: {
   editor: ReturnType<typeof useEditor> | null;
 }) {
+  const t = useTranslations("websites.articlePreview");
+
   const addLink = useCallback(() => {
     if (!editor) return;
     const previousUrl = editor.getAttributes("link").href;
-    const url = window.prompt("輸入連結 URL", previousUrl);
+    const url = window.prompt(t("enterLinkUrl"), previousUrl);
     if (url === null) return;
     if (url === "") {
       editor.chain().focus().extendMarkRange("link").unsetLink().run();
       return;
     }
     editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
-  }, [editor]);
+  }, [editor, t]);
 
   const addImage = useCallback(() => {
     if (!editor) return;
-    const url = window.prompt("輸入圖片 URL");
+    const url = window.prompt(t("enterImageUrl"));
     if (url) {
       editor.chain().focus().setImage({ src: url }).run();
     }
-  }, [editor]);
+  }, [editor, t]);
 
   if (!editor) return null;
 
@@ -187,6 +190,7 @@ export function WebsiteArticlePreview({
   article,
   onSave,
 }: WebsiteArticlePreviewProps) {
+  const t = useTranslations("websites.articlePreview");
   const [editedTitle, setEditedTitle] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
@@ -244,8 +248,8 @@ export function WebsiteArticlePreview({
       <div className="flex-1 flex items-center justify-center bg-muted/10">
         <div className="text-center text-muted-foreground">
           <FileText className="h-16 w-16 mx-auto mb-4 opacity-30" />
-          <p className="text-lg">選擇一篇文章來預覽</p>
-          <p className="text-sm mt-1">從左側列表選擇文章</p>
+          <p className="text-lg">{t("selectArticle")}</p>
+          <p className="text-sm mt-1">{t("selectFromList")}</p>
         </div>
       </div>
     );
@@ -259,7 +263,7 @@ export function WebsiteArticlePreview({
             value={editedTitle}
             onChange={(e) => setEditedTitle(e.target.value)}
             className="text-lg font-semibold"
-            placeholder="文章標題"
+            placeholder={t("titlePlaceholder")}
           />
           {article.wordpress_post_url && (
             <a
@@ -268,7 +272,7 @@ export function WebsiteArticlePreview({
               rel="noopener noreferrer"
               className="text-sm text-primary hover:underline flex items-center gap-1 mt-1"
             >
-              查看發布文章 <ExternalLink className="h-3 w-3" />
+              {t("viewPublished")} <ExternalLink className="h-3 w-3" />
             </a>
           )}
         </div>
@@ -276,7 +280,7 @@ export function WebsiteArticlePreview({
         <div className="flex items-center gap-2 ml-4">
           <Button size="sm" onClick={handleSave} disabled={isSaving}>
             <Save className="h-4 w-4 mr-1" />
-            {isSaving ? "儲存中..." : "儲存"}
+            {isSaving ? t("saving") : t("save")}
           </Button>
         </div>
       </div>

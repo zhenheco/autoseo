@@ -1,7 +1,8 @@
 "use client";
 
 import { useArticleJobRealtime } from "@/lib/hooks/useArticleJobRealtime";
-import { Loader2, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { Loader2, CheckCircle2, XCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface ArticleJobStatusProps {
   companyId: string;
@@ -17,6 +18,7 @@ interface ArticleJobStatusProps {
  * - failed → 叉叉
  */
 export function ArticleJobStatus({ companyId }: ArticleJobStatusProps) {
+  const t = useTranslations("dashboard");
   const { jobs, isConnected } = useArticleJobRealtime({
     companyId,
     onCompleted: (job) => {
@@ -39,7 +41,7 @@ export function ArticleJobStatus({ companyId }: ArticleJobStatusProps) {
             isConnected ? "bg-green-500" : "bg-gray-400"
           }`}
         />
-        {isConnected ? "即時更新已連接" : "連接中..."}
+        {isConnected ? t("realtimeConnected") : t("connecting")}
       </div>
 
       {/* 任務列表 */}
@@ -66,28 +68,28 @@ export function ArticleJobStatus({ companyId }: ArticleJobStatusProps) {
                 {job.status === "pending" && (
                   <div className="flex items-center gap-2 text-blue-500">
                     <Loader2 className="h-5 w-5 animate-spin" />
-                    <span className="text-sm">生成中</span>
+                    <span className="text-sm">{t("jobStatus.generating")}</span>
                   </div>
                 )}
 
                 {job.status === "processing" && (
                   <div className="flex items-center gap-2 text-blue-500">
                     <Loader2 className="h-5 w-5 animate-spin" />
-                    <span className="text-sm">生成中...</span>
+                    <span className="text-sm">{t("jobStatus.generating")}...</span>
                   </div>
                 )}
 
                 {job.status === "completed" && (
                   <div className="flex items-center gap-2 text-green-500">
                     <CheckCircle2 className="h-5 w-5" />
-                    <span className="text-sm">完成</span>
+                    <span className="text-sm">{t("jobStatus.completed")}</span>
                   </div>
                 )}
 
                 {job.status === "failed" && (
                   <div className="flex items-center gap-2 text-red-500">
                     <XCircle className="h-5 w-5" />
-                    <span className="text-sm">失敗</span>
+                    <span className="text-sm">{t("jobStatus.failed")}</span>
                   </div>
                 )}
               </div>
@@ -97,7 +99,7 @@ export function ArticleJobStatus({ companyId }: ArticleJobStatusProps) {
 
         {jobs.length === 0 && (
           <div className="rounded-lg border border-dashed p-8 text-center">
-            <p className="text-muted-foreground">尚無文章生成任務</p>
+            <p className="text-muted-foreground">{t("noArticleJobs")}</p>
           </div>
         )}
       </div>

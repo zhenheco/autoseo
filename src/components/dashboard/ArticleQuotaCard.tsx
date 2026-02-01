@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { FileText, Gift } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useTranslations, useLocale } from "next-intl";
 
 interface ArticleQuota {
   balance: {
@@ -26,6 +27,8 @@ interface ArticleQuota {
 }
 
 export function ArticleQuotaCard() {
+  const t = useTranslations("dashboard");
+  const locale = useLocale();
   const [quota, setQuota] = useState<ArticleQuota | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -82,7 +85,6 @@ export function ArticleQuotaCard() {
 
   const isLowBalance = quota.balance.totalAvailable <= 1;
   const isCritical = quota.balance.totalAvailable === 0;
-  const isFree = quota.plan?.slug === "free" || !quota.plan;
 
   return (
     <div
@@ -98,7 +100,7 @@ export function ArticleQuotaCard() {
       <div className="flex items-start justify-between">
         <div className="flex-1">
           <p className="text-sm font-medium text-muted-foreground mb-3">
-            文章額度
+            {t("articleQuota")}
           </p>
           <p
             className={cn(
@@ -110,7 +112,7 @@ export function ArticleQuotaCard() {
                   : "text-foreground group-hover:text-primary",
             )}
           >
-            {quota.balance.totalAvailable} 篇
+            {quota.balance.totalAvailable} {t("articles")}
           </p>
         </div>
         <div
@@ -139,37 +141,37 @@ export function ArticleQuotaCard() {
       {/* 詳細資訊 */}
       <div className="mt-4 space-y-2 text-sm">
         <div className="flex justify-between text-muted-foreground">
-          <span>本期剩餘</span>
+          <span>{t("periodRemaining")}</span>
           <span className="font-medium text-foreground">
             {quota.balance.subscriptionRemaining} / {quota.balance.monthlyQuota}{" "}
-            篇
+            {t("articles")}
           </span>
         </div>
         {quota.balance.purchasedRemaining > 0 && (
           <div className="flex justify-between text-muted-foreground">
             <span className="flex items-center gap-1">
               <Gift className="h-3 w-3" />
-              加購額度
+              {t("purchasedQuota")}
             </span>
             <span className="font-medium text-purple-600">
-              {quota.balance.purchasedRemaining} 篇
+              {quota.balance.purchasedRemaining} {t("articles")}
             </span>
           </div>
         )}
         {quota.balance.reserved > 0 && (
           <div className="flex justify-between text-muted-foreground">
-            <span>處理中</span>
+            <span>{t("processing")}</span>
             <span className="font-medium text-amber-600">
-              {quota.balance.reserved} 篇
+              {quota.balance.reserved} {t("articles")}
             </span>
           </div>
         )}
         {quota.subscription.periodEnd && (
           <div className="flex justify-between text-muted-foreground">
-            <span>重置日期</span>
+            <span>{t("resetDate")}</span>
             <span className="font-medium text-foreground">
               {new Date(quota.subscription.periodEnd).toLocaleDateString(
-                "zh-TW",
+                locale,
                 {
                   month: "short",
                   day: "numeric",
@@ -197,7 +199,7 @@ export function ArticleQuotaCard() {
             />
           </div>
           <p className="mt-1 text-xs text-muted-foreground text-right">
-            已使用 {Math.round(usagePercentage)}%
+            {t("usedPercent", { percent: Math.round(usagePercentage) })}
           </p>
         </div>
       )}
@@ -206,7 +208,7 @@ export function ArticleQuotaCard() {
       {isCritical && (
         <div className="mt-4 p-2 rounded-lg bg-red-50 border border-red-200">
           <p className="text-xs text-red-700 font-medium">
-            文章額度已用完，請升級或購買加購包
+            {t("quotaExhausted")}
           </p>
         </div>
       )}

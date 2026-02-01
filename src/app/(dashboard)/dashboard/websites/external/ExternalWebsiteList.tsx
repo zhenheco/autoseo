@@ -46,6 +46,7 @@ import type {
   ExternalWebsiteListItem,
   CreateExternalWebsiteFormData,
 } from "@/types/external-website.types";
+import { useTranslations } from "next-intl";
 
 const INITIAL_FORM_DATA: CreateExternalWebsiteFormData = {
   name: "",
@@ -59,6 +60,9 @@ const INITIAL_FORM_DATA: CreateExternalWebsiteFormData = {
 };
 
 export function ExternalWebsiteList(): React.ReactElement {
+  const t = useTranslations("externalWebsites");
+  const tCommon = useTranslations("common");
+
   const [websites, setWebsites] = useState<ExternalWebsiteListItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
@@ -77,14 +81,14 @@ export function ExternalWebsiteList(): React.ReactElement {
       if (data.success) {
         setWebsites(data.data);
       } else {
-        toast.error(data.error || "無法載入外部網站");
+        toast.error(data.error || t("loadFailed"));
       }
     } catch {
-      toast.error("載入外部網站失敗");
+      toast.error(t("loadFailed"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     fetchWebsites();
@@ -92,7 +96,7 @@ export function ExternalWebsiteList(): React.ReactElement {
 
   async function handleCreate(): Promise<void> {
     if (!formData.name || !formData.slug || !formData.webhook_url) {
-      toast.error("請填寫必填欄位");
+      toast.error(t("fillRequiredFields"));
       return;
     }
 
@@ -107,17 +111,17 @@ export function ExternalWebsiteList(): React.ReactElement {
       const data = await response.json();
 
       if (data.success) {
-        toast.success("外部網站已建立");
+        toast.success(t("createSuccess"));
         setCreateDialogOpen(false);
         setNewSecret(data.data.webhook_secret);
         setSecretDialogOpen(true);
         setFormData(INITIAL_FORM_DATA);
         fetchWebsites();
       } else {
-        toast.error(data.error || "建立失敗");
+        toast.error(data.error || t("createFailed"));
       }
     } catch {
-      toast.error("建立外部網站失敗");
+      toast.error(t("createFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -136,22 +140,20 @@ export function ExternalWebsiteList(): React.ReactElement {
       const data = await response.json();
 
       if (data.success) {
-        toast.success(website.is_active ? "已停用" : "已啟用");
+        toast.success(website.is_active ? t("disabled") : t("enabled"));
         fetchWebsites();
       } else {
-        toast.error(data.error || "操作失敗");
+        toast.error(data.error || t("operationFailed"));
       }
     } catch {
-      toast.error("操作失敗");
+      toast.error(t("operationFailed"));
     }
   }
 
   async function handleRegenerateSecret(
     website: ExternalWebsiteListItem,
   ): Promise<void> {
-    if (
-      !confirm("確定要重新生成 Webhook Secret？舊的 Secret 將立即失效。")
-    ) {
+    if (!confirm(t("confirmRegenerateSecret"))) {
       return;
     }
 
@@ -169,17 +171,15 @@ export function ExternalWebsiteList(): React.ReactElement {
         setSecretDialogOpen(true);
         fetchWebsites();
       } else {
-        toast.error(data.error || "重新生成失敗");
+        toast.error(data.error || t("regenerateFailed"));
       }
     } catch {
-      toast.error("重新生成 Secret 失敗");
+      toast.error(t("regenerateFailed"));
     }
   }
 
   async function handleDelete(website: ExternalWebsiteListItem): Promise<void> {
-    if (
-      !confirm(`確定要刪除「${website.website_name}」？此操作無法復原。`)
-    ) {
+    if (!confirm(t("confirmDelete", { name: website.website_name }))) {
       return;
     }
 
@@ -191,13 +191,13 @@ export function ExternalWebsiteList(): React.ReactElement {
       const data = await response.json();
 
       if (data.success) {
-        toast.success("已刪除");
+        toast.success(t("deleted"));
         fetchWebsites();
       } else {
-        toast.error(data.error || "刪除失敗");
+        toast.error(data.error || t("deleteFailed"));
       }
     } catch {
-      toast.error("刪除失敗");
+      toast.error(t("deleteFailed"));
     }
   }
 
@@ -223,23 +223,19 @@ export function ExternalWebsiteList(): React.ReactElement {
     <div className="container mx-auto py-6 space-y-6">
       <div className="flex justify-between items-center">
         <div>
-          <h1 className="text-2xl font-bold">外部網站管理</h1>
-          <p className="text-muted-foreground">
-            管理需要同步文章的外部專案（透過 Webhook 整合）
-          </p>
+          <h1 className="text-2xl font-bold">{t("pageTitle")}</h1>
+          <p className="text-muted-foreground">{t("pageDescription")}</p>
         </div>
         <Button onClick={() => setCreateDialogOpen(true)}>
           <Plus className="h-4 w-4 mr-2" />
-          新增外部網站
+          {t("addWebsite")}
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>外部網站列表</CardTitle>
-          <CardDescription>
-            文章發布後會自動透過 Webhook 同步到已啟用的外部網站
-          </CardDescription>
+          <CardTitle>{t("listTitle")}</CardTitle>
+          <CardDescription>{t("listDescription")}</CardDescription>
         </CardHeader>
         <CardContent>
           <WebsiteTable
@@ -249,6 +245,7 @@ export function ExternalWebsiteList(): React.ReactElement {
             onRegenerateSecret={handleRegenerateSecret}
             onDelete={handleDelete}
             formatDate={formatDate}
+            t={t}
           />
         </CardContent>
       </Card>
@@ -261,6 +258,8 @@ export function ExternalWebsiteList(): React.ReactElement {
         onUpdateField={updateFormField}
         onSubmit={handleCreate}
         submitting={submitting}
+        t={t}
+        tCommon={tCommon}
       />
 
       {/* Secret 顯示對話框 */}
@@ -270,6 +269,7 @@ export function ExternalWebsiteList(): React.ReactElement {
         secret={newSecret}
         onCopy={copyToClipboard}
         copied={copied}
+        t={t}
       />
     </div>
   );
@@ -283,6 +283,7 @@ interface WebsiteTableProps {
   onRegenerateSecret: (website: ExternalWebsiteListItem) => void;
   onDelete: (website: ExternalWebsiteListItem) => void;
   formatDate: (dateString: string | null) => string;
+  t: ReturnType<typeof useTranslations<"externalWebsites">>;
 }
 
 function WebsiteTable({
@@ -292,6 +293,7 @@ function WebsiteTable({
   onRegenerateSecret,
   onDelete,
   formatDate,
+  t,
 }: WebsiteTableProps): React.ReactElement {
   if (loading) {
     return (
@@ -304,7 +306,7 @@ function WebsiteTable({
   if (websites.length === 0) {
     return (
       <div className="text-center py-8 text-muted-foreground">
-        尚未設定任何外部網站
+        {t("noWebsites")}
       </div>
     );
   }
@@ -313,11 +315,11 @@ function WebsiteTable({
     <Table>
       <TableHeader>
         <TableRow>
-          <TableHead>名稱</TableHead>
-          <TableHead>Webhook URL</TableHead>
-          <TableHead>狀態</TableHead>
-          <TableHead>最後同步</TableHead>
-          <TableHead>操作</TableHead>
+          <TableHead>{t("table.name")}</TableHead>
+          <TableHead>{t("table.webhookUrl")}</TableHead>
+          <TableHead>{t("table.status")}</TableHead>
+          <TableHead>{t("table.lastSync")}</TableHead>
+          <TableHead>{t("table.actions")}</TableHead>
         </TableRow>
       </TableHeader>
       <TableBody>
@@ -354,7 +356,7 @@ function WebsiteTable({
                   checked={website.is_active ?? false}
                   onCheckedChange={() => onToggleActive(website)}
                 />
-                <SyncStatusBadge status={website.last_sync_status} />
+                <SyncStatusBadge status={website.last_sync_status} t={t} />
               </div>
             </TableCell>
             <TableCell>
@@ -376,7 +378,7 @@ function WebsiteTable({
                   variant="ghost"
                   size="icon"
                   onClick={() => onRegenerateSecret(website)}
-                  title="重新生成 Secret"
+                  title={t("regenerateSecret")}
                 >
                   <RefreshCw className="h-4 w-4" />
                 </Button>
@@ -399,14 +401,16 @@ function WebsiteTable({
 // 同步狀態標籤
 function SyncStatusBadge({
   status,
+  t,
 }: {
   status: string | null;
+  t: ReturnType<typeof useTranslations<"externalWebsites">>;
 }): React.ReactElement | null {
   if (status === "success") {
-    return <Badge variant="default">成功</Badge>;
+    return <Badge variant="default">{t("status.success")}</Badge>;
   }
   if (status === "failed") {
-    return <Badge variant="destructive">失敗</Badge>;
+    return <Badge variant="destructive">{t("status.failed")}</Badge>;
   }
   return null;
 }
@@ -422,6 +426,8 @@ interface CreateWebsiteDialogProps {
   ) => void;
   onSubmit: () => void;
   submitting: boolean;
+  t: ReturnType<typeof useTranslations<"externalWebsites">>;
+  tCommon: ReturnType<typeof useTranslations<"common">>;
 }
 
 function CreateWebsiteDialog({
@@ -431,35 +437,41 @@ function CreateWebsiteDialog({
   onUpdateField,
   onSubmit,
   submitting,
+  t,
+  tCommon,
 }: CreateWebsiteDialogProps): React.ReactElement {
   const syncSettings = [
-    { key: "sync_on_publish" as const, label: "發布時同步" },
-    { key: "sync_on_update" as const, label: "更新時同步" },
-    { key: "sync_on_unpublish" as const, label: "取消發布時同步" },
-    { key: "sync_translations" as const, label: "同步翻譯版本" },
+    { key: "sync_on_publish" as const, labelKey: "syncSettings.syncOnPublish" },
+    { key: "sync_on_update" as const, labelKey: "syncSettings.syncOnUpdate" },
+    {
+      key: "sync_on_unpublish" as const,
+      labelKey: "syncSettings.syncOnUnpublish",
+    },
+    {
+      key: "sync_translations" as const,
+      labelKey: "syncSettings.syncTranslations",
+    },
   ];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-w-md">
         <DialogHeader>
-          <DialogTitle>新增外部網站</DialogTitle>
-          <DialogDescription>
-            設定要透過 Webhook 同步文章的外部專案
-          </DialogDescription>
+          <DialogTitle>{t("createDialog.title")}</DialogTitle>
+          <DialogDescription>{t("createDialog.description")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="name">名稱 *</Label>
+            <Label htmlFor="name">{t("createDialog.name")} *</Label>
             <Input
               id="name"
               value={formData.name}
               onChange={(e) => onUpdateField("name", e.target.value)}
-              placeholder="例如: onehand"
+              placeholder={t("createDialog.namePlaceholder")}
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="slug">識別碼 *</Label>
+            <Label htmlFor="slug">{t("createDialog.slug")} *</Label>
             <Input
               id="slug"
               value={formData.slug}
@@ -469,14 +481,14 @@ function CreateWebsiteDialog({
                   e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, ""),
                 )
               }
-              placeholder="例如: onehand"
+              placeholder={t("createDialog.slugPlaceholder")}
             />
             <p className="text-xs text-muted-foreground">
-              只能包含小寫字母、數字和連字符
+              {t("createDialog.slugHint")}
             </p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="webhook_url">Webhook URL *</Label>
+            <Label htmlFor="webhook_url">{t("createDialog.webhookUrl")} *</Label>
             <Input
               id="webhook_url"
               value={formData.webhook_url}
@@ -485,19 +497,19 @@ function CreateWebsiteDialog({
             />
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description">描述</Label>
+            <Label htmlFor="description">{t("createDialog.description")}</Label>
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => onUpdateField("description", e.target.value)}
-              placeholder="選填"
+              placeholder={tCommon("optional")}
             />
           </div>
           <div className="space-y-3">
-            <Label>同步設定</Label>
-            {syncSettings.map(({ key, label }) => (
+            <Label>{t("syncSettingsTitle")}</Label>
+            {syncSettings.map(({ key, labelKey }) => (
               <div key={key} className="flex items-center justify-between">
-                <span className="text-sm">{label}</span>
+                <span className="text-sm">{t(labelKey)}</span>
                 <Switch
                   checked={formData[key]}
                   onCheckedChange={(checked) => onUpdateField(key, checked)}
@@ -508,11 +520,11 @@ function CreateWebsiteDialog({
         </div>
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            取消
+            {tCommon("cancel")}
           </Button>
           <Button onClick={onSubmit} disabled={submitting}>
             {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-            建立
+            {t("create")}
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -527,6 +539,7 @@ interface SecretDialogProps {
   secret: string | null;
   onCopy: (text: string) => void;
   copied: boolean;
+  t: ReturnType<typeof useTranslations<"externalWebsites">>;
 }
 
 function SecretDialog({
@@ -535,15 +548,14 @@ function SecretDialog({
   secret,
   onCopy,
   copied,
+  t,
 }: SecretDialogProps): React.ReactElement {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Webhook Secret</DialogTitle>
-          <DialogDescription>
-            請妥善保存此 Secret，關閉後將不會再顯示完整值。
-          </DialogDescription>
+          <DialogTitle>{t("secretDialog.title")}</DialogTitle>
+          <DialogDescription>{t("secretDialog.description")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
           <div className="flex items-center gap-2">
@@ -563,14 +575,16 @@ function SecretDialog({
             </Button>
           </div>
           <p className="text-sm text-muted-foreground">
-            在外部專案中設定環境變數：
+            {t("secretDialog.envHint")}
           </p>
           <code className="block bg-muted p-2 rounded text-xs">
             ONEWAYSEO_WEBHOOK_SECRET={secret}
           </code>
         </div>
         <DialogFooter>
-          <Button onClick={() => onOpenChange(false)}>我已保存</Button>
+          <Button onClick={() => onOpenChange(false)}>
+            {t("secretDialog.saved")}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

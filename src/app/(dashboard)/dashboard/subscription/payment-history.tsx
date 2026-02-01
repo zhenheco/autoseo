@@ -3,6 +3,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { CreditCard, CheckCircle2, XCircle, Clock } from 'lucide-react'
 import type { Database } from '@/types/database.types'
+import { useTranslations } from 'next-intl'
 
 type PaymentOrder = Database['public']['Tables']['payment_orders']['Row']
 
@@ -11,11 +12,13 @@ interface PaymentHistoryProps {
 }
 
 export function PaymentHistory({ orders }: PaymentHistoryProps) {
+  const t = useTranslations('billing.paymentHistory')
+
   return (
     <Card className="border-border/50 bg-card/50 backdrop-blur-sm rounded-xl">
       <CardHeader>
-        <CardTitle>付款記錄</CardTitle>
-        <CardDescription>您的付款交易歷史</CardDescription>
+        <CardTitle>{t('title')}</CardTitle>
+        <CardDescription>{t('description')}</CardDescription>
       </CardHeader>
       <CardContent>
         {orders && orders.length > 0 ? (
@@ -40,9 +43,9 @@ export function PaymentHistory({ orders }: PaymentHistoryProps) {
                     )}
                   </div>
                   <div>
-                    <p className="font-semibold">{order.item_description || '訂單'}</p>
+                    <p className="font-semibold">{order.item_description || t('order')}</p>
                     <p className="text-sm text-muted-foreground">
-                      訂單編號：{order.order_no}
+                      {t('orderNumber')}{order.order_no}
                     </p>
                     <p className="text-xs text-muted-foreground">
                       {order.created_at && new Date(order.created_at).toLocaleString('zh-TW', { timeZone: 'Asia/Taipei' })}
@@ -56,9 +59,9 @@ export function PaymentHistory({ orders }: PaymentHistoryProps) {
                     order.status === 'pending' ? 'text-yellow-500' :
                     'text-red-500'
                   }`}>
-                    {order.status === 'success' ? '已完成' :
-                     order.status === 'pending' ? '處理中' :
-                     order.status === 'failed' ? '失敗' :
+                    {order.status === 'success' ? t('statusSuccess') :
+                     order.status === 'pending' ? t('statusPending') :
+                     order.status === 'failed' ? t('statusFailed') :
                      order.status}
                   </p>
                 </div>
@@ -68,7 +71,7 @@ export function PaymentHistory({ orders }: PaymentHistoryProps) {
         ) : (
           <div className="text-center py-12">
             <CreditCard className="h-16 w-16 text-muted-foreground mx-auto mb-4 opacity-50" />
-            <p className="text-muted-foreground">尚無付款記錄</p>
+            <p className="text-muted-foreground">{t('noRecords')}</p>
           </div>
         )}
       </CardContent>

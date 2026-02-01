@@ -25,6 +25,7 @@ import { NewArticleButton } from "@/components/articles/NewArticleButton";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { MobileBottomNav } from "@/components/dashboard/mobile-bottom-nav";
 import { UILanguageSelector } from "@/components/common/UILanguageSelector";
+import { getTranslations } from "next-intl/server";
 
 async function performLogout() {
   "use server";
@@ -38,6 +39,7 @@ export default async function DashboardLayout({
   children: React.ReactNode;
 }) {
   const user = await getUser();
+  const t = await getTranslations("nav");
 
   if (!user) {
     redirect("/login");
@@ -116,7 +118,7 @@ export default async function DashboardLayout({
                           className="cursor-pointer"
                         >
                           <Settings className="mr-2 h-4 w-4" />
-                          <span>設定</span>
+                          <span>{t("settings")}</span>
                         </Link>
                       </DropdownMenuItem>
                       <DropdownMenuSeparator />

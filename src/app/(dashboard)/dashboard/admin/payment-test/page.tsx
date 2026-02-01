@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Card,
   CardContent,
@@ -35,6 +36,7 @@ type PeriodType = "week" | "month" | "year";
  * 僅 super-admin 可見（透過 sidebar 權限控制）
  */
 export default function AdminPaymentTestPage() {
+  const t = useTranslations("admin.paymentTest");
   const [loading, setLoading] = useState(false);
   const [paymentType, setPaymentType] = useState<PaymentType>("onetime");
   const [amount, setAmount] = useState(1);
@@ -67,7 +69,7 @@ export default function AdminPaymentTestPage() {
       const result = await response.json();
 
       if (!result.success) {
-        toast.error(`付款建立失敗: ${result.error?.message || "未知錯誤"}`);
+        toast.error(t("paymentCreateFailed", { error: result.error?.message || t("unknownError") }));
         return;
       }
 
@@ -77,18 +79,18 @@ export default function AdminPaymentTestPage() {
 
       if (result.payuniForm) {
         console.log("[PaymentTest] payuniForm:", result.payuniForm);
-        toast.success("正在跳轉至 PAYUNi 付款頁面...");
+        toast.success(t("redirectingToPayuni"));
         // 重要：不要在 submitPayuniForm 後設置 loading=false
         // 因為頁面會跳轉，設置狀態可能導致 React 重新渲染而中斷表單提交
         submitPayuniForm(result.payuniForm);
         return; // 跳轉後不執行 finally
       } else {
         console.error("[PaymentTest] 未收到 payuniForm，完整回應:", result);
-        toast.error("未收到付款表單資料");
+        toast.error(t("noPaymentFormReceived"));
       }
     } catch (error) {
       console.error("[PaymentTest] 付款測試失敗:", error);
-      toast.error("付款測試失敗，請查看 console");
+      toast.error(t("paymentTestFailed"));
     }
     setLoading(false);
   }
@@ -119,7 +121,7 @@ export default function AdminPaymentTestPage() {
       const result = await response.json();
 
       if (!result.success) {
-        toast.error(`付款建立失敗: ${result.error?.message || "未知錯誤"}`);
+        toast.error(t("paymentCreateFailed", { error: result.error?.message || t("unknownError") }));
         return;
       }
 
@@ -128,16 +130,16 @@ export default function AdminPaymentTestPage() {
 
       if (result.payuniForm) {
         console.log("[PaymentTest] payuniForm:", result.payuniForm);
-        toast.success("正在跳轉至 PAYUNi 付款頁面...");
+        toast.success(t("redirectingToPayuni"));
         submitPayuniForm(result.payuniForm);
         return; // 跳轉後不執行後續代碼
       } else {
         console.error("[PaymentTest] 未收到 payuniForm，完整回應:", result);
-        toast.error("未收到付款表單資料");
+        toast.error(t("noPaymentFormReceived"));
       }
     } catch (error) {
       console.error("[PaymentTest] 付款測試失敗:", error);
-      toast.error("付款測試失敗，請查看 console");
+      toast.error(t("paymentTestFailed"));
     }
     setLoading(false);
   }
@@ -159,16 +161,16 @@ export default function AdminPaymentTestPage() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <CreditCard className="h-5 w-5" />
-            PAYUNi 金流測試
+            {t("title")}
           </CardTitle>
           <CardDescription>
-            正式環境付款測試（會產生真實交易，請使用小額測試）
+            {t("description")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* 付款類型選擇 */}
           <div className="space-y-2">
-            <Label>付款類型</Label>
+            <Label>{t("paymentType")}</Label>
             <Select
               value={paymentType}
               onValueChange={(value) => setPaymentType(value as PaymentType)}
@@ -180,13 +182,13 @@ export default function AdminPaymentTestPage() {
                 <SelectItem value="onetime">
                   <div className="flex items-center gap-2">
                     <CreditCard className="h-4 w-4" />
-                    單次付款
+                    {t("onetimePayment")}
                   </div>
                 </SelectItem>
                 <SelectItem value="recurring">
                   <div className="flex items-center gap-2">
                     <Repeat className="h-4 w-4" />
-                    定期定額
+                    {t("recurringPayment")}
                   </div>
                 </SelectItem>
               </SelectContent>
@@ -196,7 +198,7 @@ export default function AdminPaymentTestPage() {
           {/* 金額 */}
           <div className="space-y-2">
             <Label htmlFor="amount">
-              {paymentType === "recurring" ? "每期金額" : "付款金額"} (TWD)
+              {paymentType === "recurring" ? t("amountPerPeriod") : t("paymentAmount")} (TWD)
             </Label>
             <Input
               id="amount"
@@ -206,13 +208,13 @@ export default function AdminPaymentTestPage() {
               onChange={(e) => setAmount(Number(e.target.value))}
             />
             <p className="text-sm text-muted-foreground">
-              建議使用 1 元進行測試
+              {t("amountHint")}
             </p>
           </div>
 
           {/* 商品描述 */}
           <div className="space-y-2">
-            <Label htmlFor="description">商品描述</Label>
+            <Label htmlFor="description">{t("productDescription")}</Label>
             <Input
               id="description"
               value={description}
@@ -222,7 +224,7 @@ export default function AdminPaymentTestPage() {
 
           {/* Email */}
           <div className="space-y-2">
-            <Label htmlFor="email">付款人 Email</Label>
+            <Label htmlFor="email">{t("payerEmail")}</Label>
             <Input
               id="email"
               type="email"
@@ -234,11 +236,11 @@ export default function AdminPaymentTestPage() {
           {/* 定期定額參數 */}
           {paymentType === "recurring" && (
             <div className="space-y-4 rounded-lg border p-4">
-              <h4 className="font-medium">定期定額設定</h4>
+              <h4 className="font-medium">{t("recurringSettings")}</h4>
 
               {/* 扣款週期 */}
               <div className="space-y-2">
-                <Label>扣款週期</Label>
+                <Label>{t("billingCycle")}</Label>
                 <Select
                   value={periodType}
                   onValueChange={(value) => setPeriodType(value as PeriodType)}
@@ -247,9 +249,9 @@ export default function AdminPaymentTestPage() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="week">每週</SelectItem>
-                    <SelectItem value="month">每月</SelectItem>
-                    <SelectItem value="year">每年</SelectItem>
+                    <SelectItem value="week">{t("cycleWeekly")}</SelectItem>
+                    <SelectItem value="month">{t("cycleMonthly")}</SelectItem>
+                    <SelectItem value="year">{t("cycleYearly")}</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -257,10 +259,10 @@ export default function AdminPaymentTestPage() {
               {/* 扣款日期 */}
               <div className="space-y-2">
                 <Label htmlFor="periodDate">
-                  扣款日期
-                  {periodType === "week" && " (1-7，星期一至日)"}
-                  {periodType === "month" && " (1-31，每月幾號)"}
-                  {periodType === "year" && " (YYYY-MM-DD)"}
+                  {t("billingDate")}
+                  {periodType === "week" && ` ${t("billingDateWeekHint")}`}
+                  {periodType === "month" && ` ${t("billingDateMonthHint")}`}
+                  {periodType === "year" && ` ${t("billingDateYearHint")}`}
                 </Label>
                 <Input
                   id="periodDate"
@@ -272,7 +274,7 @@ export default function AdminPaymentTestPage() {
 
               {/* 扣款期數 */}
               <div className="space-y-2">
-                <Label htmlFor="periodTimes">扣款期數（最多 900 期）</Label>
+                <Label htmlFor="periodTimes">{t("billingTimes")}</Label>
                 <Input
                   id="periodTimes"
                   type="number"
@@ -295,22 +297,22 @@ export default function AdminPaymentTestPage() {
             {loading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                處理中...
+                {t("processing")}
               </>
             ) : (
               <>
                 <CreditCard className="mr-2 h-4 w-4" />
                 {paymentType === "onetime"
-                  ? `付款 NT$${amount}`
-                  : `訂閱 NT$${amount}/期 × ${periodTimes} 期`}
+                  ? t("payButton", { amount })
+                  : t("subscribeButton", { amount, times: periodTimes })}
               </>
             )}
           </Button>
 
           {/* 警告訊息 */}
           <div className="rounded-lg bg-yellow-50 p-4 text-sm text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200">
-            <strong>注意：</strong>
-            此為正式環境測試，會產生真實交易。請確保金額正確後再進行付款。
+            <strong>{t("warningTitle")}</strong>
+            {t("warningMessage")}
           </div>
         </CardContent>
       </Card>

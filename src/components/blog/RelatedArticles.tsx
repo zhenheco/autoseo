@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { Card, CardContent } from "@/components/ui/card";
 import type { BlogArticleListItem } from "@/types/blog";
 
@@ -18,13 +19,15 @@ export function RelatedArticles({
   articles,
   className = "",
 }: RelatedArticlesProps) {
+  const t = useTranslations("blog");
+
   if (articles.length === 0) {
     return null;
   }
 
   return (
     <section className={className}>
-      <h2 className="mb-6 text-2xl font-bold">相關文章</h2>
+      <h2 className="mb-6 text-2xl font-bold">{t("relatedArticles")}</h2>
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {articles.map((article) => (
           <Link key={article.id} href={`/blog/${article.slug}`}>

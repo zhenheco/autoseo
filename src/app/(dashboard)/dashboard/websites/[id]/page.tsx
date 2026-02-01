@@ -8,6 +8,7 @@ import { checkPagePermission } from "@/lib/permissions";
 import { ArrowLeft, ExternalLink, FileText, Clock } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { WebsiteArticleManager } from "./components/WebsiteArticleManager";
+import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 
@@ -180,6 +181,7 @@ export default async function WebsiteDetailPage({
   params: Promise<{ id: string }>;
 }) {
   await checkPagePermission("canAccessWebsites");
+  const t = await getTranslations("websites");
 
   const user = await getUser();
   if (!user) {
@@ -216,7 +218,7 @@ export default async function WebsiteDetailPage({
             <Link href="/dashboard/websites">
               <Button variant="ghost" size="sm">
                 <ArrowLeft className="mr-2 h-4 w-4" />
-                返回網站列表
+                {t("backToList")}
               </Button>
             </Link>
             <div className="flex items-center gap-3">
@@ -233,7 +235,7 @@ export default async function WebsiteDetailPage({
                 <ExternalLink className="h-3 w-3" />
               </a>
               <Badge variant={website.is_active ? "default" : "secondary"}>
-                {website.is_active ? "啟用中" : "已停用"}
+                {website.is_active ? t("statusActive") : t("statusDisabled")}
               </Badge>
             </div>
           </div>
@@ -245,7 +247,7 @@ export default async function WebsiteDetailPage({
               <FileText className="h-8 w-8 text-blue-600" />
               <div>
                 <p className="text-2xl font-bold">{totalArticles}</p>
-                <p className="text-sm text-muted-foreground">總文章數</p>
+                <p className="text-sm text-muted-foreground">{t("totalArticles")}</p>
               </div>
             </CardContent>
           </Card>
@@ -256,7 +258,7 @@ export default async function WebsiteDetailPage({
                 <p className="text-2xl font-bold">
                   {pendingCount + jobs.length}
                 </p>
-                <p className="text-sm text-muted-foreground">待發佈</p>
+                <p className="text-sm text-muted-foreground">{t("pendingPublish")}</p>
               </div>
             </CardContent>
           </Card>
@@ -265,7 +267,7 @@ export default async function WebsiteDetailPage({
               <ExternalLink className="h-8 w-8 text-green-600" />
               <div>
                 <p className="text-2xl font-bold">{publishedCount}</p>
-                <p className="text-sm text-muted-foreground">已發佈</p>
+                <p className="text-sm text-muted-foreground">{t("published")}</p>
               </div>
             </CardContent>
           </Card>
@@ -276,7 +278,7 @@ export default async function WebsiteDetailPage({
                 <p className="text-2xl font-bold">
                   {totalWords.toLocaleString()}
                 </p>
-                <p className="text-sm text-muted-foreground">總字數</p>
+                <p className="text-sm text-muted-foreground">{t("totalWords")}</p>
               </div>
             </CardContent>
           </Card>

@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArticleDetailPublish } from "./components/ArticleDetailPublish";
 import { SocialShareDialog } from "@/components/social/SocialShareDialog";
+import { getTranslations } from "next-intl/server";
 
 async function getArticle(articleId: string) {
   const supabase = await createClient();
@@ -51,6 +52,7 @@ export default async function ArticleDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const user = await getUser();
+  const t = await getTranslations("articles.detail");
 
   if (!user) {
     redirect("/login");
@@ -60,7 +62,7 @@ export default async function ArticleDetailPage({
   const article = await getArticle(id);
 
   if (!article) {
-    redirect("/dashboard/articles?error=" + encodeURIComponent("找不到該文章"));
+    redirect("/dashboard/articles?error=" + encodeURIComponent(t("notFound")));
   }
 
   return (
@@ -70,15 +72,15 @@ export default async function ArticleDetailPage({
           <h1 className="text-3xl font-bold">
             {article.generated_articles?.title ||
               article.article_title ||
-              "未命名文章"}
+              t("untitled")}
           </h1>
           <p className="text-muted-foreground mt-2">
-            網站: {article.website_configs?.site_name || "未指定"}
+            {t("websiteLabel")} {article.website_configs?.site_name || t("unspecified")}
           </p>
         </div>
         <div className="flex gap-2">
           <Link href="/dashboard/articles/manage">
-            <Button variant="outline">返回列表</Button>
+            <Button variant="outline">{t("backToList")}</Button>
           </Link>
           {(article.status === "completed" || article.status === "draft") && (
             <ArticleDetailPublish
@@ -93,7 +95,7 @@ export default async function ArticleDetailPage({
                 articleTitle={
                   article.generated_articles?.title ||
                   article.article_title ||
-                  "未命名文章"
+                  t("untitled")
                 }
                 featuredImageUrl={
                   article.generated_articles?.featured_image_url || undefined
@@ -107,11 +109,11 @@ export default async function ArticleDetailPage({
         {/* 文章資訊 */}
         <Card>
           <CardHeader>
-            <CardTitle>文章資訊</CardTitle>
+            <CardTitle>{t("articleInfo")}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-3">
             <div className="flex justify-between">
-              <span className="text-muted-foreground">狀態</span>
+              <span className="text-muted-foreground">{t("statusLabel")}</span>
               <span
                 className={`text-sm px-3 py-1 rounded-full ${
                   article.status === "published"
@@ -123,26 +125,26 @@ export default async function ArticleDetailPage({
                         : "bg-muted text-foreground"
                 }`}
               >
-                {article.status === "published" && "已發布"}
-                {article.status === "failed" && "失敗"}
-                {article.status === "processing" && "處理中"}
-                {article.status === "draft" && "草稿"}
-                {article.status === "pending" && "待處理"}
+                {article.status === "published" && t("statusPublished")}
+                {article.status === "failed" && t("statusFailed")}
+                {article.status === "processing" && t("statusProcessing")}
+                {article.status === "draft" && t("statusDraft")}
+                {article.status === "pending" && t("statusPending")}
               </span>
             </div>
 
             <div className="flex justify-between">
-              <span className="text-muted-foreground">輸入方式</span>
+              <span className="text-muted-foreground">{t("inputMethod")}</span>
               <span>
-                {article.input_type === "keyword" && "關鍵字"}
-                {article.input_type === "url" && "URL"}
-                {article.input_type === "batch" && "批量"}
+                {article.input_type === "keyword" && t("inputTypeKeyword")}
+                {article.input_type === "url" && t("inputTypeUrl")}
+                {article.input_type === "batch" && t("inputTypeBatch")}
               </span>
             </div>
 
             {article.input_content && (
               <div className="flex justify-between">
-                <span className="text-muted-foreground">輸入內容</span>
+                <span className="text-muted-foreground">{t("inputContent")}</span>
                 <span className="text-sm">
                   {article.input_content.keyword &&
                     article.input_content.keyword}
@@ -161,17 +163,17 @@ export default async function ArticleDetailPage({
             )}
 
             <div className="flex justify-between">
-              <span className="text-muted-foreground">建立時間</span>
+              <span className="text-muted-foreground">{t("createdAt")}</span>
               <span className="text-sm">
-                {new Date(article.created_at).toLocaleString("zh-TW")}
+                {new Date(article.created_at).toLocaleString()}
               </span>
             </div>
 
             {article.published_at && (
               <div className="flex justify-between">
-                <span className="text-muted-foreground">發布時間</span>
+                <span className="text-muted-foreground">{t("publishedAt")}</span>
                 <span className="text-sm">
-                  {new Date(article.published_at).toLocaleString("zh-TW")}
+                  {new Date(article.published_at).toLocaleString()}
                 </span>
               </div>
             )}
@@ -189,8 +191,8 @@ export default async function ArticleDetailPage({
         {article.generated_articles && (
           <Card>
             <CardHeader>
-              <CardTitle>生成內容</CardTitle>
-              <CardDescription>AI 生成的文章內容預覽</CardDescription>
+              <CardTitle>{t("generatedContent")}</CardTitle>
+              <CardDescription>{t("generatedContentDescription")}</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="prose max-w-none">
@@ -216,7 +218,7 @@ export default async function ArticleDetailPage({
         {article.error_message && (
           <Card className="border-destructive">
             <CardHeader>
-              <CardTitle className="text-destructive">錯誤訊息</CardTitle>
+              <CardTitle className="text-destructive">{t("errorMessage")}</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-destructive">

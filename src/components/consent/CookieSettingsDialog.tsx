@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useCookieConsent } from "./CookieConsentProvider";
+import { useTranslations } from "next-intl";
 import {
   Cookie,
   Shield,
@@ -33,6 +34,7 @@ export function CookieSettingsDialog() {
     acceptAll,
     rejectAll,
   } = useCookieConsent();
+  const t = useTranslations("cookies");
 
   const handleSave = () => {
     closeSettings();
@@ -47,10 +49,10 @@ export function CookieSettingsDialog() {
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Cookie className="h-5 w-5" />
-            Cookie 偏好設定
+            {t("settingsTitle")}
           </DialogTitle>
           <DialogDescription>
-            選擇您允許我們使用的 Cookie 類型。您可以隨時更改這些設定。
+            {t("settingsDescription")}
           </DialogDescription>
         </DialogHeader>
 
@@ -62,10 +64,9 @@ export function CookieSettingsDialog() {
                 <Shield className="h-5 w-5 text-primary" />
               </div>
               <div>
-                <Label className="text-base font-medium">必要 Cookie</Label>
+                <Label className="text-base font-medium">{t("necessary")}</Label>
                 <p className="text-sm text-muted-foreground mt-1">
-                  這些 Cookie
-                  是網站正常運作所必需的，無法關閉。包括登入驗證、安全防護等功能。
+                  {t("necessaryDescription")}
                 </p>
               </div>
             </div>
@@ -79,10 +80,9 @@ export function CookieSettingsDialog() {
                 <BarChart3 className="h-5 w-5 text-blue-500" />
               </div>
               <div>
-                <Label className="text-base font-medium">分析 Cookie</Label>
+                <Label className="text-base font-medium">{t("analytics")}</Label>
                 <p className="text-sm text-muted-foreground mt-1">
-                  用於了解訪客如何使用我們的網站，幫助我們改善服務品質。包括
-                  Google Analytics 等分析工具。
+                  {t("analyticsDescription")}
                 </p>
                 <div className="flex flex-wrap gap-2 mt-2">
                   <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-muted">
@@ -107,16 +107,16 @@ export function CookieSettingsDialog() {
                 <Megaphone className="h-5 w-5 text-orange-500" />
               </div>
               <div>
-                <Label className="text-base font-medium">行銷 Cookie</Label>
+                <Label className="text-base font-medium">{t("marketing")}</Label>
                 <p className="text-sm text-muted-foreground mt-1">
-                  用於追蹤跨網站的瀏覽行為，以提供更相關的廣告內容。
+                  {t("marketingDescription")}
                 </p>
                 <div className="flex flex-wrap gap-2 mt-2">
                   <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-muted">
-                    廣告追蹤
+                    {t("adTracking")}
                   </span>
                   <span className="inline-flex items-center px-2 py-0.5 rounded text-xs bg-muted">
-                    再行銷
+                    {t("remarketing")}
                   </span>
                 </div>
               </div>
@@ -133,16 +133,15 @@ export function CookieSettingsDialog() {
           {/* 隱私政策連結 */}
           <div className="text-sm text-muted-foreground">
             <p>
-              如需了解更多關於我們如何使用 Cookie 的資訊，請參閱我們的{" "}
+              {t("privacyInfo")}{" "}
               <a
                 href="/privacy"
                 target="_blank"
                 className="text-primary hover:underline inline-flex items-center gap-1"
               >
-                隱私權政策
+                {t("privacyPolicy")}
                 <ExternalLink className="h-3 w-3" />
               </a>
-              。
             </p>
           </div>
         </div>
@@ -153,17 +152,17 @@ export function CookieSettingsDialog() {
             onClick={rejectAll}
             className="w-full sm:w-auto"
           >
-            僅接受必要
+            {t("acceptNecessaryOnly")}
           </Button>
           <Button
             variant="outline"
             onClick={acceptAll}
             className="w-full sm:w-auto"
           >
-            接受全部
+            {t("acceptAll")}
           </Button>
           <Button onClick={handleSave} className="w-full sm:w-auto">
-            儲存設定
+            {t("saveSettings")}
           </Button>
         </DialogFooter>
       </DialogContent>

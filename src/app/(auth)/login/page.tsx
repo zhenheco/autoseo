@@ -58,7 +58,7 @@ export default async function LoginPage({
         <div className="bg-card border border-border rounded-2xl p-8 shadow-lg">
           <Suspense
             fallback={
-              <div className="text-center text-muted-foreground">載入中...</div>
+              <div className="text-center text-muted-foreground">{t("loading")}</div>
             }
           >
             <LoginForm

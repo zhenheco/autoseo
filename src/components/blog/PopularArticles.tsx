@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { TrendingUp, Eye } from "lucide-react";
+import { useTranslations } from "next-intl";
 import type { BlogArticleListItem } from "@/types/blog";
 
 interface PopularArticlesProps {
@@ -18,6 +19,8 @@ export function PopularArticles({
   articles,
   className = "",
 }: PopularArticlesProps) {
+  const t = useTranslations("blog");
+
   if (articles.length === 0) {
     return null;
   }
@@ -26,7 +29,7 @@ export function PopularArticles({
     <div className={className}>
       <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
         <TrendingUp className="h-5 w-5" />
-        熱門文章
+        {t("popularArticles")}
       </h3>
       <div className="space-y-4">
         {articles.map((article, index) => (
@@ -50,7 +53,7 @@ export function PopularArticles({
               {article.article_views?.total_views ? (
                 <span className="mt-1 flex items-center gap-1 text-xs text-muted-foreground">
                   <Eye className="h-3 w-3" />
-                  {article.article_views.total_views.toLocaleString()} 次
+                  {t("views", { count: article.article_views.total_views.toLocaleString() })}
                 </span>
               ) : null}
             </div>

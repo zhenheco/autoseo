@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import {
   Card,
   CardContent,
@@ -68,21 +69,23 @@ interface Refund {
   rejectReason: string | null;
 }
 
-const reasonCategoryMap: Record<string, string> = {
-  product_issue: "產品功能問題",
-  service_unsatisfied: "服務不滿意",
-  billing_error: "帳務問題",
-  change_of_mind: "改變心意",
-  other: "其他",
-};
-
-const paymentTypeMap: Record<string, string> = {
-  lifetime: "終身方案",
-  token_package: "Token 包",
-  subscription: "月繳訂閱",
-};
-
 export default function AdminRefundsPage() {
+  const t = useTranslations("admin.refunds");
+  const tCommon = useTranslations("admin.common");
+
+  const reasonCategoryMap: Record<string, string> = {
+    product_issue: t("reasonCategories.productIssue"),
+    service_unsatisfied: t("reasonCategories.serviceUnsatisfied"),
+    billing_error: t("reasonCategories.billingError"),
+    change_of_mind: t("reasonCategories.changeOfMind"),
+    other: t("reasonCategories.other"),
+  };
+
+  const paymentTypeMap: Record<string, string> = {
+    lifetime: t("paymentTypes.lifetime"),
+    token_package: t("paymentTypes.tokenPackage"),
+    subscription: t("paymentTypes.subscription"),
+  };
   const [loading, setLoading] = useState(true);
   const [refunds, setRefunds] = useState<Refund[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("all");
@@ -110,19 +113,19 @@ export default function AdminRefundsPage() {
       const response = await fetch(`/api/admin/refunds?${params.toString()}`);
 
       if (response.status === 403) {
-        toast.error("您沒有權限存取此頁面");
+        toast.error(t("accessDenied"));
         return;
       }
 
       if (!response.ok) {
-        throw new Error("載入失敗");
+        throw new Error(t("loadFailed"));
       }
 
       const data = await response.json();
       setRefunds(data.data || []);
     } catch (error) {
-      console.error("載入退款記錄失敗:", error);
-      toast.error("載入失敗");
+      console.error(t("loadRefundsFailed"), error);
+      toast.error(t("loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -155,15 +158,15 @@ export default function AdminRefundsPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "核准失敗");
+        throw new Error(data.error || t("approveFailed"));
       }
 
-      toast.success("退款已核准並執行");
+      toast.success(t("approveSuccess"));
       setApproveDialogOpen(false);
       fetchRefunds();
     } catch (error) {
-      console.error("核准退款失敗:", error);
-      toast.error(error instanceof Error ? error.message : "核准失敗");
+      console.error(t("approveRefundFailed"), error);
+      toast.error(error instanceof Error ? error.message : t("approveFailed"));
     } finally {
       setUpdating(null);
     }
@@ -173,7 +176,7 @@ export default function AdminRefundsPage() {
     if (!selectedRefund) return;
 
     if (!rejectReason.trim()) {
-      toast.error("請填寫拒絕原因");
+      toast.error(t("rejectReasonRequired"));
       return;
     }
 
@@ -191,15 +194,15 @@ export default function AdminRefundsPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "拒絕失敗");
+        throw new Error(data.error || t("rejectFailed"));
       }
 
-      toast.success("退款申請已拒絕");
+      toast.success(t("rejectSuccess"));
       setRejectDialogOpen(false);
       fetchRefunds();
     } catch (error) {
-      console.error("拒絕退款失敗:", error);
-      toast.error(error instanceof Error ? error.message : "拒絕失敗");
+      console.error(t("rejectRefundFailed"), error);
+      toast.error(error instanceof Error ? error.message : t("rejectFailed"));
     } finally {
       setUpdating(null);
     }
@@ -248,63 +251,63 @@ export default function AdminRefundsPage() {
     <div className="container mx-auto space-y-6 p-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold">退款審核管理</h1>
+          <h1 className="text-3xl font-bold">{t("title")}</h1>
           <p className="text-muted-foreground">
-            審核用戶的退款申請
+            {t("description")}
             {pendingReviewCount > 0 && (
               <span className="ml-2 text-orange-600">
-                （{pendingReviewCount} 筆待審核）
+                {t("pendingReviewCount", { count: pendingReviewCount })}
               </span>
             )}
           </p>
         </div>
         <Select value={statusFilter} onValueChange={setStatusFilter}>
           <SelectTrigger className="w-40">
-            <SelectValue placeholder="篩選狀態" />
+            <SelectValue placeholder={t("filterStatus")} />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">全部狀態</SelectItem>
-            <SelectItem value="pending">待處理</SelectItem>
-            <SelectItem value="pending_review">待審核</SelectItem>
-            <SelectItem value="retention_accepted">已接受慰留</SelectItem>
-            <SelectItem value="auto_processing">自動處理中</SelectItem>
-            <SelectItem value="approved">已核准</SelectItem>
-            <SelectItem value="processing">處理中</SelectItem>
-            <SelectItem value="completed">已完成</SelectItem>
-            <SelectItem value="rejected">已拒絕</SelectItem>
-            <SelectItem value="failed">失敗</SelectItem>
+            <SelectItem value="all">{t("statusAll")}</SelectItem>
+            <SelectItem value="pending">{t("statusPending")}</SelectItem>
+            <SelectItem value="pending_review">{t("statusPendingReview")}</SelectItem>
+            <SelectItem value="retention_accepted">{t("statusRetentionAccepted")}</SelectItem>
+            <SelectItem value="auto_processing">{t("statusAutoProcessing")}</SelectItem>
+            <SelectItem value="approved">{t("statusApproved")}</SelectItem>
+            <SelectItem value="processing">{t("statusProcessing")}</SelectItem>
+            <SelectItem value="completed">{t("statusCompleted")}</SelectItem>
+            <SelectItem value="rejected">{t("statusRejected")}</SelectItem>
+            <SelectItem value="failed">{t("statusFailed")}</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>退款申請列表</CardTitle>
-          <CardDescription>共 {refunds.length} 筆記錄</CardDescription>
+          <CardTitle>{t("listTitle")}</CardTitle>
+          <CardDescription>{t("listDescription", { count: refunds.length })}</CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
             <div className="py-8 text-center text-muted-foreground">
-              載入中...
+              {t("loading")}
             </div>
           ) : refunds.length === 0 ? (
             <div className="py-8 text-center text-muted-foreground">
-              尚無退款申請
+              {t("noRefunds")}
             </div>
           ) : (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>申請時間</TableHead>
-                    <TableHead>退款編號</TableHead>
-                    <TableHead>公司名稱</TableHead>
-                    <TableHead>訂單類型</TableHead>
-                    <TableHead className="text-right">退款金額</TableHead>
-                    <TableHead>退款原因</TableHead>
-                    <TableHead>購買天數</TableHead>
-                    <TableHead>狀態</TableHead>
-                    <TableHead>操作</TableHead>
+                    <TableHead>{t("columns.requestTime")}</TableHead>
+                    <TableHead>{t("columns.refundNo")}</TableHead>
+                    <TableHead>{t("columns.companyName")}</TableHead>
+                    <TableHead>{t("columns.orderType")}</TableHead>
+                    <TableHead className="text-right">{t("columns.refundAmount")}</TableHead>
+                    <TableHead>{t("columns.refundReason")}</TableHead>
+                    <TableHead>{t("columns.daysSincePurchase")}</TableHead>
+                    <TableHead>{t("columns.status")}</TableHead>
+                    <TableHead>{t("columns.actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -343,11 +346,11 @@ export default function AdminRefundsPage() {
                               : "text-orange-600"
                           }
                         >
-                          {refund.daysSincePurchase} 天
+                          {refund.daysSincePurchase} {t("daysUnit")}
                         </span>
                         {refund.isAutoEligible && (
                           <span className="ml-1 text-xs text-green-600">
-                            (自動)
+                            {t("autoEligible")}
                           </span>
                         )}
                       </TableCell>
@@ -355,12 +358,12 @@ export default function AdminRefundsPage() {
                         {getStatusBadge(refund.status, refund.statusText)}
                         {refund.retentionAccepted && (
                           <div className="mt-1 text-xs text-green-600">
-                            已接受 {refund.retentionCredits} credits
+                            {t("retentionAccepted", { credits: refund.retentionCredits })}
                           </div>
                         )}
                         {refund.rejectReason && (
                           <div className="mt-1 text-xs text-red-600">
-                            拒絕原因: {refund.rejectReason}
+                            {t("rejectReasonLabel", { reason: refund.rejectReason })}
                           </div>
                         )}
                       </TableCell>
@@ -373,7 +376,7 @@ export default function AdminRefundsPage() {
                               onClick={() => handleApproveClick(refund)}
                               disabled={updating === refund.id}
                             >
-                              核准
+                              {t("approve")}
                             </Button>
                             <Button
                               size="sm"
@@ -381,7 +384,7 @@ export default function AdminRefundsPage() {
                               onClick={() => handleRejectClick(refund)}
                               disabled={updating === refund.id}
                             >
-                              拒絕
+                              {t("reject")}
                             </Button>
                           </div>
                         )}
@@ -399,23 +402,23 @@ export default function AdminRefundsPage() {
       <Dialog open={approveDialogOpen} onOpenChange={setApproveDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>確認核准退款</DialogTitle>
+            <DialogTitle>{t("approveDialogTitle")}</DialogTitle>
             <DialogDescription>
-              確定要核准此退款申請嗎？核准後將自動執行退款。
+              {t("approveDialogDescription")}
             </DialogDescription>
           </DialogHeader>
           {selectedRefund && (
             <div className="space-y-2 text-sm">
               <div>
-                <span className="text-muted-foreground">退款編號：</span>
+                <span className="text-muted-foreground">{t("refundNoLabel")}</span>
                 {selectedRefund.refundNo}
               </div>
               <div>
-                <span className="text-muted-foreground">公司：</span>
+                <span className="text-muted-foreground">{t("companyLabel")}</span>
                 {selectedRefund.companyName}
               </div>
               <div>
-                <span className="text-muted-foreground">退款金額：</span>
+                <span className="text-muted-foreground">{t("refundAmountLabel")}</span>
                 <span className="font-semibold text-red-600">
                   NT$ {selectedRefund.refundAmount.toLocaleString()}
                 </span>
@@ -427,10 +430,10 @@ export default function AdminRefundsPage() {
               variant="outline"
               onClick={() => setApproveDialogOpen(false)}
             >
-              取消
+              {tCommon("cancel")}
             </Button>
             <Button onClick={approveRefund} disabled={updating !== null}>
-              {updating ? "處理中..." : "確認核准"}
+              {updating ? tCommon("processing") : t("confirmApprove")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -440,29 +443,29 @@ export default function AdminRefundsPage() {
       <Dialog open={rejectDialogOpen} onOpenChange={setRejectDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>拒絕退款申請</DialogTitle>
-            <DialogDescription>請填寫拒絕此退款申請的原因。</DialogDescription>
+            <DialogTitle>{t("rejectDialogTitle")}</DialogTitle>
+            <DialogDescription>{t("rejectDialogDescription")}</DialogDescription>
           </DialogHeader>
           {selectedRefund && (
             <div className="space-y-4">
               <div className="space-y-2 text-sm">
                 <div>
-                  <span className="text-muted-foreground">退款編號：</span>
+                  <span className="text-muted-foreground">{t("refundNoLabel")}</span>
                   {selectedRefund.refundNo}
                 </div>
                 <div>
-                  <span className="text-muted-foreground">公司：</span>
+                  <span className="text-muted-foreground">{t("companyLabel")}</span>
                   {selectedRefund.companyName}
                 </div>
                 <div>
-                  <span className="text-muted-foreground">退款金額：</span>
+                  <span className="text-muted-foreground">{t("refundAmountLabel")}</span>
                   <span className="font-semibold">
                     NT$ {selectedRefund.refundAmount.toLocaleString()}
                   </span>
                 </div>
               </div>
               <Textarea
-                placeholder="請輸入拒絕原因..."
+                placeholder={t("rejectReasonPlaceholder")}
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
                 rows={3}
@@ -474,14 +477,14 @@ export default function AdminRefundsPage() {
               variant="outline"
               onClick={() => setRejectDialogOpen(false)}
             >
-              取消
+              {tCommon("cancel")}
             </Button>
             <Button
               variant="destructive"
               onClick={rejectRefund}
               disabled={updating !== null || !rejectReason.trim()}
             >
-              {updating ? "處理中..." : "確認拒絕"}
+              {updating ? tCommon("processing") : t("confirmReject")}
             </Button>
           </DialogFooter>
         </DialogContent>

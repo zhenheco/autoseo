@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import { useTranslations } from 'next-intl'
 import {
   Dialog,
   DialogContent,
@@ -39,6 +40,7 @@ export function PublishControlDialog({
   currentStatus,
   onPublishSuccess,
 }: PublishControlDialogProps) {
+  const t = useTranslations('articles')
   const [websiteId, setWebsiteId] = useState<string | null>(null)
   const [websiteName, setWebsiteName] = useState<string | null>(null)
   const [articleWebsiteId, setArticleWebsiteId] = useState<string | null>(null)
@@ -92,7 +94,7 @@ export function PublishControlDialog({
 
   const handlePublishNow = async () => {
     if (!websiteId) {
-      toast.error('請選擇目標網站')
+      toast.error(t('publish.pleaseSelectWebsite'))
       return
     }
 
@@ -112,14 +114,14 @@ export function PublishControlDialog({
 
       if (!res.ok) {
         const error = await res.json()
-        throw new Error(error.error || '發布失敗')
+        throw new Error(error.error || t('publish.failed'))
       }
 
-      toast.success('發布成功！文章已成功發布到 WordPress')
+      toast.success(t('publish.toastPublishSuccess'))
       onPublishSuccess()
       onOpenChange(false)
     } catch (error) {
-      toast.error('發布失敗: ' + (error instanceof Error ? error.message : '未知錯誤'))
+      toast.error(t('publish.failed') + ': ' + (error instanceof Error ? error.message : t('publish.unknownError')))
     } finally {
       setIsPublishing(false)
     }
@@ -127,14 +129,14 @@ export function PublishControlDialog({
 
   const handleSchedule = async () => {
     if (!scheduledDate) {
-      alert('請選擇排程發布日期')
+      alert(t('publish.selectScheduleDate'))
       return
     }
 
     const scheduleDateTime = new Date(`${scheduledDate}T${scheduledTime}:00`)
 
     if (scheduleDateTime <= new Date()) {
-      alert('排程時間必須是未來的時間')
+      alert(t('publish.scheduleMustBeFuture'))
       return
     }
 
@@ -153,14 +155,14 @@ export function PublishControlDialog({
 
       if (!res.ok) {
         const error = await res.json()
-        throw new Error(error.error || '設定排程失敗')
+        throw new Error(error.error || t('publish.scheduleFailed'))
       }
 
-      alert(`排程成功！文章將於 ${scheduledDate} ${scheduledTime} 自動發布`)
+      alert(t('publish.scheduleSuccess', { date: scheduledDate, time: scheduledTime }))
       onPublishSuccess()
       onOpenChange(false)
     } catch (error) {
-      alert('設定排程失敗: ' + (error instanceof Error ? error.message : '未知錯誤'))
+      alert(t('publish.scheduleFailed') + ': ' + (error instanceof Error ? error.message : t('publish.unknownError')))
     } finally {
       setIsPublishing(false)
     }
@@ -170,18 +172,18 @@ export function PublishControlDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>發布設定</DialogTitle>
+          <DialogTitle>{t('publish.settings')}</DialogTitle>
           <DialogDescription>
-            選擇發布目標和時間設定
+            {t('publish.selectTargetAndTime')}
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
           <div className="grid gap-2">
-            <Label htmlFor="website">目標網站</Label>
+            <Label htmlFor="website">{t('targetWebsite')}</Label>
             <WebsiteSelector
               value={websiteId}
               onChange={setWebsiteId}
-              placeholder="選擇網站"
+              placeholder={t('batchPublish.selectWebsite')}
               articleWebsiteId={articleWebsiteId}
             />
           </div>
@@ -189,12 +191,12 @@ export function PublishControlDialog({
             <Alert>
               <Info className="h-4 w-4" />
               <AlertDescription>
-                文章將發布至：<span className="font-medium">{websiteName}</span>
+                {t('publish.articleWillPublishTo')}<span className="font-medium">{websiteName}</span>
               </AlertDescription>
             </Alert>
           )}
           <div className="grid gap-2">
-            <Label htmlFor="target">發布目標</Label>
+            <Label htmlFor="target">{t('publish.publishTarget')}</Label>
             <Select defaultValue="wordpress">
               <SelectTrigger id="target">
                 <SelectValue />
@@ -205,23 +207,23 @@ export function PublishControlDialog({
             </Select>
           </div>
           <div className="grid gap-2">
-            <Label htmlFor="status">發布狀態</Label>
+            <Label htmlFor="status">{t('publish.statusLabel')}</Label>
             <Select value={status} onValueChange={setStatus}>
               <SelectTrigger id="status">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="draft">草稿</SelectItem>
-                <SelectItem value="pending">待審核</SelectItem>
-                <SelectItem value="published">已發布</SelectItem>
-                <SelectItem value="scheduled">已排程</SelectItem>
+                <SelectItem value="draft">{t('publish.statusDraft')}</SelectItem>
+                <SelectItem value="pending">{t('publish.statusPending')}</SelectItem>
+                <SelectItem value="published">{t('status.published')}</SelectItem>
+                <SelectItem value="scheduled">{t('status.scheduled')}</SelectItem>
               </SelectContent>
             </Select>
           </div>
           {status === 'scheduled' && (
             <>
               <div className="grid gap-2">
-                <Label htmlFor="date">排程日期</Label>
+                <Label htmlFor="date">{t('publish.scheduleDate')}</Label>
                 <input
                   id="date"
                   type="date"
@@ -232,7 +234,7 @@ export function PublishControlDialog({
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="time">排程時間</Label>
+                <Label htmlFor="time">{t('publish.scheduleTime')}</Label>
                 <input
                   id="time"
                   type="time"
@@ -247,11 +249,11 @@ export function PublishControlDialog({
         <DialogFooter>
           {status === 'scheduled' ? (
             <Button onClick={handleSchedule} disabled={isPublishing}>
-              {isPublishing ? '設定中...' : '設定排程'}
+              {isPublishing ? t('publish.settingUp') : t('publish.setSchedule')}
             </Button>
           ) : (
             <Button onClick={handlePublishNow} disabled={isPublishing}>
-              {isPublishing ? '發布中...' : '立即發布'}
+              {isPublishing ? t('publish.publishing') : t('publish.publishNow')}
             </Button>
           )}
         </DialogFooter>

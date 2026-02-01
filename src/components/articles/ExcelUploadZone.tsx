@@ -1,6 +1,7 @@
 'use client'
 
 import { useCallback, useState } from 'react'
+import { useTranslations } from 'next-intl'
 import { Upload, FileSpreadsheet, AlertCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Alert, AlertDescription } from '@/components/ui/alert'
@@ -12,6 +13,7 @@ interface ExcelUploadZoneProps {
 }
 
 export function ExcelUploadZone({ onFileUploaded }: ExcelUploadZoneProps) {
+  const t = useTranslations('articles')
   const [isDragging, setIsDragging] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [isProcessing, setIsProcessing] = useState(false)
@@ -24,11 +26,11 @@ export function ExcelUploadZone({ onFileUploaded }: ExcelUploadZoneProps) {
       const plans = await parseMultiColumnExcel(file)
       onFileUploaded(plans)
     } catch (err) {
-      setError(err instanceof Error ? err.message : '檔案解析失敗')
+      setError(err instanceof Error ? err.message : t('excelUpload.parseFailed'))
     } finally {
       setIsProcessing(false)
     }
-  }, [onFileUploaded])
+  }, [onFileUploaded, t])
 
   const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
@@ -89,21 +91,21 @@ export function ExcelUploadZone({ onFileUploaded }: ExcelUploadZoneProps) {
           {isProcessing ? (
             <>
               <FileSpreadsheet className="h-12 w-12 text-muted-foreground animate-pulse" />
-              <p className="text-sm text-muted-foreground">解析中...</p>
+              <p className="text-sm text-muted-foreground">{t('excelUpload.parsing')}</p>
             </>
           ) : (
             <>
               <Upload className="h-12 w-12 text-muted-foreground" />
               <div className="space-y-2">
                 <p className="text-sm font-medium">
-                  拖放 Excel 檔案到此處，或點擊選擇檔案
+                  {t('excelUpload.dropOrClick')}
                 </p>
                 <p className="text-xs text-muted-foreground">
-                  支援 .xlsx 和 .xls 格式，最大 5MB，最多 500 個關鍵字
+                  {t('excelUpload.fileFormatInfo')}
                 </p>
               </div>
               <Button variant="outline" type="button" disabled={isProcessing}>
-                選擇檔案
+                {t('excelUpload.selectFile')}
               </Button>
             </>
           )}
@@ -111,13 +113,13 @@ export function ExcelUploadZone({ onFileUploaded }: ExcelUploadZoneProps) {
       </div>
 
       <div className="text-sm text-muted-foreground space-y-2">
-        <p className="font-medium">Excel 檔案格式說明：</p>
+        <p className="font-medium">{t('excelUpload.formatTitle')}</p>
         <ul className="list-disc list-inside space-y-1 text-xs">
-          <li>第一欄：關鍵字（必填）</li>
-          <li>第二欄：網站名稱（必填）</li>
-          <li>第三欄：文章類型（選填：教學/排行榜/比較/資訊型）</li>
-          <li>第四欄：發佈時間（選填：YYYY-MM-DD HH:MM 格式）</li>
-          <li>第五欄：自訂 Slug（選填：SEO 友善的 URL 路徑）</li>
+          <li>{t('excelUpload.formatKeyword')}</li>
+          <li>{t('excelUpload.formatWebsite')}</li>
+          <li>{t('excelUpload.formatType')}</li>
+          <li>{t('excelUpload.formatTime')}</li>
+          <li>{t('excelUpload.formatSlug')}</li>
         </ul>
       </div>
     </div>

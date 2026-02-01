@@ -28,68 +28,12 @@ import {
   History,
 } from "lucide-react";
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 
 const SUPER_ADMIN_EMAILS = (process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAILS || "")
   .split(",")
   .map((e) => e.trim().toLowerCase())
   .filter(Boolean);
-
-// 主要導航項目（顯示在底部）
-const mainNavItems = [
-  {
-    title: "網站",
-    href: "/dashboard/websites",
-    icon: Globe,
-  },
-  {
-    title: "寫文章",
-    href: "/dashboard/articles",
-    icon: PenSquare,
-  },
-  {
-    title: "管理",
-    href: "/dashboard/articles/manage",
-    icon: FileText,
-  },
-  {
-    title: "訂閱",
-    href: "/dashboard/subscription",
-    icon: CreditCard,
-  },
-];
-
-// 更多選單中的項目
-const moreNavItems = [
-  {
-    title: "聯盟夥伴",
-    href: "https://affiliate.1wayseo.com",
-    icon: Handshake,
-    external: true,
-  },
-];
-
-const adminItems = [
-  {
-    title: "會員管理",
-    href: "/dashboard/admin/subscriptions",
-    icon: Users,
-  },
-  {
-    title: "優惠碼",
-    href: "/dashboard/admin/promo-codes",
-    icon: Ticket,
-  },
-  {
-    title: "操作記錄",
-    href: "/dashboard/admin/logs",
-    icon: History,
-  },
-  {
-    title: "翻譯管理",
-    href: "/dashboard/admin/translations",
-    icon: Languages,
-  },
-];
 
 interface MobileBottomNavProps {
   userEmail?: string;
@@ -103,6 +47,64 @@ export function MobileBottomNav({
   const pathname = usePathname();
   const [sheetOpen, setSheetOpen] = useState(false);
   const isSuperAdmin = SUPER_ADMIN_EMAILS.includes(userEmail.toLowerCase());
+  const t = useTranslations("nav");
+
+  // 主要導航項目（顯示在底部）
+  const mainNavItems = [
+    {
+      title: t("websites"),
+      href: "/dashboard/websites",
+      icon: Globe,
+    },
+    {
+      title: t("writeArticle"),
+      href: "/dashboard/articles",
+      icon: PenSquare,
+    },
+    {
+      title: t("manage"),
+      href: "/dashboard/articles/manage",
+      icon: FileText,
+    },
+    {
+      title: t("subscription"),
+      href: "/dashboard/subscription",
+      icon: CreditCard,
+    },
+  ];
+
+  // 更多選單中的項目
+  const moreNavItems = [
+    {
+      title: t("affiliate"),
+      href: "https://affiliate.1wayseo.com",
+      icon: Handshake,
+      external: true,
+    },
+  ];
+
+  const adminItems = [
+    {
+      title: t("subscriptionManagement"),
+      href: "/dashboard/admin/subscriptions",
+      icon: Users,
+    },
+    {
+      title: t("promoCodeManagement"),
+      href: "/dashboard/admin/promo-codes",
+      icon: Ticket,
+    },
+    {
+      title: t("operationLogs"),
+      href: "/dashboard/admin/logs",
+      icon: History,
+    },
+    {
+      title: t("translations"),
+      href: "/dashboard/admin/translations",
+      icon: Languages,
+    },
+  ];
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-background/95 backdrop-blur-md md:hidden">
@@ -138,12 +140,12 @@ export function MobileBottomNav({
               )}
             >
               <MoreHorizontal className="h-5 w-5" />
-              <span className="text-[10px] font-medium">更多</span>
+              <span className="text-[10px] font-medium">{t("more")}</span>
             </button>
           </SheetTrigger>
           <SheetContent side="bottom" className="h-auto max-h-[80vh]">
             <SheetHeader>
-              <SheetTitle className="text-left">更多選項</SheetTitle>
+              <SheetTitle className="text-left">{t("moreOptions")}</SheetTitle>
             </SheetHeader>
             <div className="mt-4 space-y-1">
               {moreNavItems.map((item) => {
@@ -190,7 +192,7 @@ export function MobileBottomNav({
                 <>
                   <div className="my-3 border-t" />
                   <p className="px-4 py-1 text-xs font-semibold text-muted-foreground uppercase">
-                    管理後台
+                    {t("adminPanel")}
                   </p>
                   {adminItems.map((item) => {
                     const Icon = item.icon;
@@ -224,7 +226,7 @@ export function MobileBottomNav({
                 className="flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-foreground hover:bg-muted transition-colors"
               >
                 <Mail className="h-5 w-5" />
-                <span>客服信箱</span>
+                <span>{t("customerService")}</span>
               </a>
 
               {/* 登出 */}
@@ -237,13 +239,13 @@ export function MobileBottomNav({
                   className="flex w-full items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium text-destructive hover:bg-destructive/10 transition-colors"
                 >
                   <LogOut className="h-5 w-5" />
-                  <span>登出</span>
+                  <span>{t("logout")}</span>
                 </button>
               )}
 
               {/* 用戶資訊 */}
               <div className="mt-4 px-4 py-3 bg-muted/50 rounded-lg">
-                <p className="text-xs text-muted-foreground">登入帳號</p>
+                <p className="text-xs text-muted-foreground">{t("loggedInAccount")}</p>
                 <p className="text-sm font-medium truncate">{userEmail}</p>
               </div>
             </div>

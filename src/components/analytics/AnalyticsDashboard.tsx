@@ -3,6 +3,7 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Search, Construction } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface AnalyticsDashboardProps {
   websiteId: string;
@@ -18,15 +19,17 @@ export function AnalyticsDashboard({
   websiteId,
   embedded = false,
 }: AnalyticsDashboardProps) {
+  const t = useTranslations("dashboard");
+
   // 開發中狀態內容
   const renderContent = () => (
     <div className="flex flex-col items-center justify-center py-12 text-center">
       <div className="rounded-full bg-amber-100 dark:bg-amber-900/30 p-4 mb-4">
         <Construction className="h-8 w-8 text-amber-600 dark:text-amber-400" />
       </div>
-      <h3 className="font-semibold mb-1">近期開發</h3>
+      <h3 className="font-semibold mb-1">{t("comingSoon")}</h3>
       <p className="text-sm text-muted-foreground max-w-sm">
-        Search Console 整合功能，敬請期待！
+        {t("searchConsoleComingSoon")}
       </p>
     </div>
   );
@@ -43,13 +46,13 @@ export function AnalyticsDashboard({
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
             <Search className="h-5 w-5" />
-            Search Console 數據
+            {t("searchConsoleData")}
           </CardTitle>
           <Badge
             variant="secondary"
             className="bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400"
           >
-            即將推出
+            {t("upcoming")}
           </Badge>
         </div>
       </CardHeader>

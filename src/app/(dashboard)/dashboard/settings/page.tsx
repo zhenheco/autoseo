@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { SettingsClient } from "./settings-client";
 import { createClient } from "@/lib/supabase/server";
 import { checkPagePermission } from "@/lib/permissions";
+import { getTranslations } from "next-intl/server";
 
 export default async function SettingsPage({
   searchParams,
@@ -13,6 +14,7 @@ export default async function SettingsPage({
 
   const params = await searchParams;
   const user = await getUser();
+  const t = await getTranslations("settings");
 
   if (!user) {
     redirect("/login");
@@ -23,7 +25,7 @@ export default async function SettingsPage({
   if (!company) {
     return (
       <div className="container mx-auto p-8">
-        <p className="text-muted-foreground">您尚未加入任何公司</p>
+        <p className="text-muted-foreground">{t("noCompanyJoined")}</p>
       </div>
     );
   }

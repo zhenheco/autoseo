@@ -204,7 +204,7 @@ export function LoginForm({
         setSuccess(t("verificationEmailSent"));
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "發送驗證信失敗");
+      setError(err instanceof Error ? err.message : t("loginFailed"));
     } finally {
       setIsEmailLoading(false);
     }

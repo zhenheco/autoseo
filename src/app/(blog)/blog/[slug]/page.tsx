@@ -16,6 +16,7 @@ import { ArticleHtmlPreview } from "@/components/article/ArticleHtmlPreview";
 import { ArticleTOC } from "@/components/article/ArticleTOC";
 import type { BlogArticle, BlogArticleListItem } from "@/types/blog";
 import type { HreflangEntry, SupportedLocale } from "@/types/translations";
+import { getTranslations } from "next-intl/server";
 
 // 🔧 優化：ISR 快取 - 每小時重新驗證
 export const revalidate = 3600;
@@ -213,16 +214,17 @@ async function getArticleTranslations(
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params;
   const article = await getArticle(slug);
+  const t = await getTranslations("blog");
 
   if (!article) {
     return {
-      title: "文章不存在 | 1waySEO Blog",
+      title: `${t("articleNotFound")} | 1waySEO Blog`,
     };
   }
 
   const title = article.seo_title || article.title;
   const description =
-    article.seo_description || article.excerpt || `閱讀 ${article.title}`;
+    article.seo_description || article.excerpt || t("read", { title: article.title });
 
   return {
     title: `${title} | 1waySEO Blog`,
@@ -255,6 +257,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function ArticlePage({ params }: Props) {
   const { slug } = await params;
   const article = await getArticle(slug);
+  const t = await getTranslations("blog");
 
   if (!article) {
     notFound();
@@ -363,7 +366,7 @@ export default async function ArticlePage({ params }: Props) {
               <div className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-700">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-sm text-slate-500 dark:text-slate-400">
-                    標籤：
+                    {t("tags")}
                   </span>
                   {article.tags.map((tag) => (
                     <Link

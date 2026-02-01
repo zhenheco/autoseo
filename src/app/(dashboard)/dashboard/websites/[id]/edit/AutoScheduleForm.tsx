@@ -21,6 +21,7 @@ import { Switch } from "@/components/ui/switch";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { updateWebsiteAutoSchedule } from "../../actions";
 import { Calendar, Clock, CalendarDays } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface AutoScheduleFormProps {
   websiteId: string;
@@ -30,32 +31,13 @@ interface AutoScheduleFormProps {
   scheduleIntervalDays: number | null;
 }
 
-// 每日篇數選項（1-5 篇）
-const DAILY_LIMITS = [
-  { value: "1", label: "1 篇" },
-  { value: "2", label: "2 篇" },
-  { value: "3", label: "3 篇" },
-  { value: "4", label: "4 篇" },
-  { value: "5", label: "5 篇" },
-];
-
-// 間隔天數選項（2-7 天）
-const INTERVAL_DAYS = [
-  { value: "2", label: "每 2 天" },
-  { value: "3", label: "每 3 天" },
-  { value: "4", label: "每 4 天" },
-  { value: "5", label: "每 5 天" },
-  { value: "6", label: "每 6 天" },
-  { value: "7", label: "每 7 天（每週）" },
-];
-
-// 時段提示
+// 時段提示（時間是固定的，不需要翻譯）
 const TIME_SLOTS_INFO: Record<number, string> = {
   1: "09:00",
-  2: "09:00、14:00",
-  3: "09:00、14:00、20:00",
-  4: "09:00、11:00、14:00、20:00",
-  5: "09:00、11:00、14:00、17:00、20:00",
+  2: "09:00, 14:00",
+  3: "09:00, 14:00, 20:00",
+  4: "09:00, 11:00, 14:00, 20:00",
+  5: "09:00, 11:00, 14:00, 17:00, 20:00",
 };
 
 export function AutoScheduleForm({
@@ -65,6 +47,7 @@ export function AutoScheduleForm({
   scheduleType: initialType,
   scheduleIntervalDays: initialInterval,
 }: AutoScheduleFormProps) {
+  const t = useTranslations("websites.autoSchedule");
   const [dailyLimit, setDailyLimit] = useState(String(initialLimit || 3));
   const [autoEnabled, setAutoEnabled] = useState(initialEnabled ?? false);
   const [scheduleType, setScheduleType] = useState<"daily" | "interval">(
@@ -78,18 +61,35 @@ export function AutoScheduleForm({
   const currentTimeSlots =
     scheduleType === "daily"
       ? TIME_SLOTS_INFO[Number(dailyLimit)] || TIME_SLOTS_INFO[3]
-      : "09:00（固定第一個黃金時段）";
+      : t("fixedFirstSlot");
+
+  // 每日篇數選項（1-5 篇）
+  const DAILY_LIMITS = [
+    { value: "1", label: t("dailyLimits.1") },
+    { value: "2", label: t("dailyLimits.2") },
+    { value: "3", label: t("dailyLimits.3") },
+    { value: "4", label: t("dailyLimits.4") },
+    { value: "5", label: t("dailyLimits.5") },
+  ];
+
+  // 間隔天數選項（2-7 天）
+  const INTERVAL_DAYS = [
+    { value: "2", label: t("intervalDays.2") },
+    { value: "3", label: t("intervalDays.3") },
+    { value: "4", label: t("intervalDays.4") },
+    { value: "5", label: t("intervalDays.5") },
+    { value: "6", label: t("intervalDays.6") },
+    { value: "7", label: t("intervalDays.7") },
+  ];
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calendar className="h-5 w-5" />
-          自動排程設定
+          {t("title")}
         </CardTitle>
-        <CardDescription>
-          設定文章生成完成後的自動排程行為。啟用後，文章會自動排入發布佇列。
-        </CardDescription>
+        <CardDescription>{t("description")}</CardDescription>
       </CardHeader>
       <CardContent>
         <form action={updateWebsiteAutoSchedule} className="space-y-6">
@@ -110,9 +110,9 @@ export function AutoScheduleForm({
           {/* 自動排程開關 */}
           <div className="flex items-center justify-between rounded-lg border p-4">
             <div className="space-y-0.5">
-              <Label className="text-base">自動排程</Label>
+              <Label className="text-base">{t("autoScheduleLabel")}</Label>
               <p className="text-sm text-muted-foreground">
-                文章生成完成後自動排入發布佇列
+                {t("autoScheduleHint")}
               </p>
             </div>
             <Switch checked={autoEnabled} onCheckedChange={setAutoEnabled} />
@@ -120,7 +120,7 @@ export function AutoScheduleForm({
 
           {/* 排程模式選擇 */}
           <div className="space-y-3">
-            <Label>排程模式</Label>
+            <Label>{t("scheduleModeLabel")}</Label>
             <RadioGroup
               value={scheduleType}
               onValueChange={(v) => setScheduleType(v as "daily" | "interval")}
@@ -134,7 +134,7 @@ export function AutoScheduleForm({
                   className="flex items-center gap-2 cursor-pointer"
                 >
                   <Clock className="h-4 w-4" />
-                  每日發布
+                  {t("dailyPublish")}
                 </Label>
               </div>
               <div className="flex items-center space-x-2 rounded-lg border p-4 cursor-pointer hover:bg-muted/50">
@@ -144,7 +144,7 @@ export function AutoScheduleForm({
                   className="flex items-center gap-2 cursor-pointer"
                 >
                   <CalendarDays className="h-4 w-4" />
-                  間隔發布
+                  {t("intervalPublish")}
                 </Label>
               </div>
             </RadioGroup>
@@ -153,14 +153,14 @@ export function AutoScheduleForm({
           {/* 每日發布模式：選擇每日篇數 */}
           {scheduleType === "daily" && (
             <div className="space-y-2">
-              <Label htmlFor="daily-limit">每日發布文章數上限</Label>
+              <Label htmlFor="daily-limit">{t("dailyLimitLabel")}</Label>
               <Select
                 value={dailyLimit}
                 onValueChange={setDailyLimit}
                 disabled={!autoEnabled}
               >
                 <SelectTrigger id="daily-limit">
-                  <SelectValue placeholder="選擇每日篇數" />
+                  <SelectValue placeholder={t("dailyLimitPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   {DAILY_LIMITS.map((limit) => (
@@ -176,14 +176,14 @@ export function AutoScheduleForm({
           {/* 間隔發布模式：選擇間隔天數 */}
           {scheduleType === "interval" && (
             <div className="space-y-2">
-              <Label htmlFor="interval-days">發布間隔</Label>
+              <Label htmlFor="interval-days">{t("intervalLabel")}</Label>
               <Select
                 value={intervalDays}
                 onValueChange={setIntervalDays}
                 disabled={!autoEnabled}
               >
                 <SelectTrigger id="interval-days">
-                  <SelectValue placeholder="選擇間隔天數" />
+                  <SelectValue placeholder={t("intervalPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
                   {INTERVAL_DAYS.map((interval) => (
@@ -194,7 +194,7 @@ export function AutoScheduleForm({
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                每隔指定天數發布 1 篇文章
+                {t("intervalHint")}
               </p>
             </div>
           )}
@@ -203,12 +203,12 @@ export function AutoScheduleForm({
           <div className="rounded-lg bg-muted/50 p-3">
             <p className="text-sm text-muted-foreground flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              <span>發布時段（台灣時間）：{currentTimeSlots}</span>
+              <span>{t("publishTimeLabel", { slots: currentTimeSlots })}</span>
             </p>
           </div>
 
           <Button type="submit" disabled={!autoEnabled}>
-            儲存設定
+            {t("saveSettings")}
           </Button>
         </form>
       </CardContent>

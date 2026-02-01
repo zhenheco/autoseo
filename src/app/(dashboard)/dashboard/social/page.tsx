@@ -133,7 +133,7 @@ export default function SocialPage() {
       {/* 使用說明 */}
       <Card>
         <CardHeader>
-          <CardTitle>{t("howToUse") || "如何使用"}</CardTitle>
+          <CardTitle>{t("howToUse")}</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="grid gap-4 md:grid-cols-3">
@@ -142,9 +142,9 @@ export default function SocialPage() {
                 1
               </div>
               <div>
-                <h4 className="font-medium">{t("step1Title") || "連接帳號"}</h4>
+                <h4 className="font-medium">{t("step1Title")}</h4>
                 <p className="text-sm text-muted-foreground">
-                  {t("step1Desc") || "在帳號設定中連接您的社群媒體帳號"}
+                  {t("step1Desc")}
                 </p>
               </div>
             </div>
@@ -153,9 +153,9 @@ export default function SocialPage() {
                 2
               </div>
               <div>
-                <h4 className="font-medium">{t("step2Title") || "選擇文章"}</h4>
+                <h4 className="font-medium">{t("step2Title")}</h4>
                 <p className="text-sm text-muted-foreground">
-                  {t("step2Desc") || "在文章詳情頁點擊「分享到社群」按鈕"}
+                  {t("step2Desc")}
                 </p>
               </div>
             </div>
@@ -164,9 +164,9 @@ export default function SocialPage() {
                 3
               </div>
               <div>
-                <h4 className="font-medium">{t("step3Title") || "發布貼文"}</h4>
+                <h4 className="font-medium">{t("step3Title")}</h4>
                 <p className="text-sm text-muted-foreground">
-                  {t("step3Desc") || "AI 自動生成文案，一鍵發布到多個平台"}
+                  {t("step3Desc")}
                 </p>
               </div>
             </div>

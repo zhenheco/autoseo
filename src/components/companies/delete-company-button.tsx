@@ -15,6 +15,7 @@ import {
 } from '@/components/ui/alert-dialog'
 import { Trash2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 
 interface DeleteCompanyButtonProps {
   companyId: string
@@ -24,6 +25,8 @@ interface DeleteCompanyButtonProps {
 export function DeleteCompanyButton({ companyId, companyName }: DeleteCompanyButtonProps) {
   const [loading, setLoading] = useState(false)
   const router = useRouter()
+  const t = useTranslations('companies')
+  const tCommon = useTranslations('common')
 
   async function handleDelete() {
     setLoading(true)
@@ -34,13 +37,13 @@ export function DeleteCompanyButton({ companyId, companyName }: DeleteCompanyBut
       })
 
       if (!response.ok) {
-        throw new Error('刪除公司失敗')
+        throw new Error(t('deleteFailed'))
       }
 
       router.refresh()
     } catch (error) {
       console.error(error)
-      alert('刪除公司失敗，請稍後再試')
+      alert(t('deleteFailedRetry'))
     } finally {
       setLoading(false)
     }
@@ -55,19 +58,19 @@ export function DeleteCompanyButton({ companyId, companyName }: DeleteCompanyBut
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle className="text-2xl">確定要刪除公司嗎？</AlertDialogTitle>
+          <AlertDialogTitle className="text-2xl">{t('deleteTitle')}</AlertDialogTitle>
           <AlertDialogDescription className="text-base">
-            您即將刪除「{companyName}」。此操作無法復原，所有相關的資料都會被永久刪除。
+            {t('deleteDescription', { companyName })}
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>取消</AlertDialogCancel>
+          <AlertDialogCancel>{tCommon('cancel')}</AlertDialogCancel>
           <AlertDialogAction
             onClick={handleDelete}
             disabled={loading}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
           >
-            {loading ? '刪除中...' : '確定刪除'}
+            {loading ? t('deleting') : t('deleteButton')}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

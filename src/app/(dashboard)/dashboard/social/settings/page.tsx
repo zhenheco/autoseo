@@ -115,13 +115,11 @@ export default function SocialSettingsPage() {
         const errorData = await configRes.json().catch(() => ({}));
         // 處理「沒有公司」的特殊錯誤
         if (errorData.code === "NO_COMPANY") {
-          setError(
-            "請先完成公司設定。前往「設定」頁面建立或加入公司後，即可使用社群發文功能。",
-          );
+          setError(t("noCompanyError"));
           return; // 不繼續載入其他資料
         } else if (configRes.status !== 401) {
           // 忽略未登入錯誤（會被重定向）
-          console.error("載入設定失敗:", errorData.error);
+          console.error("Load config failed:", errorData.error);
         }
       }
 
@@ -132,18 +130,16 @@ export default function SocialSettingsPage() {
       } else {
         const errorData = await accountsRes.json().catch(() => ({}));
         if (errorData.code === "NO_COMPANY") {
-          setError(
-            "請先完成公司設定。前往「設定」頁面建立或加入公司後，即可使用社群發文功能。",
-          );
+          setError(t("noCompanyError"));
         }
       }
     } catch (err) {
-      console.error("載入資料失敗:", err);
-      setError("載入資料時發生錯誤，請重新整理頁面");
+      console.error("Load data failed:", err);
+      setError(t("loadDataError"));
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     loadData();
@@ -152,7 +148,7 @@ export default function SocialSettingsPage() {
   // 儲存設定
   const handleSaveConfig = async () => {
     if (!basApiKey.trim() || !basUserId.trim()) {
-      setError("請填寫 API Key 和 User ID");
+      setError(t("fillApiKeyAndUserId"));
       return;
     }
 
@@ -169,10 +165,10 @@ export default function SocialSettingsPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "儲存失敗");
+        throw new Error(data.error || t("saveFailed"));
       }
 
-      setSuccess("設定已儲存！正在同步帳號...");
+      setSuccess(t("savedAndSyncing"));
       setShowForm(false);
       setBasApiKey("");
 
@@ -182,7 +178,7 @@ export default function SocialSettingsPage() {
       // 自動同步帳號
       await handleSync();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "儲存失敗");
+      setError(err instanceof Error ? err.message : t("saveFailed"));
     } finally {
       setSaving(false);
     }
@@ -201,10 +197,10 @@ export default function SocialSettingsPage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "同步失敗");
+        throw new Error(data.error || t("syncFailed"));
       }
 
-      setSuccess(`同步完成！找到 ${data.accountsCount} 個帳號`);
+      setSuccess(t("syncComplete", { count: data.accountsCount }));
 
       // 重新載入帳號
       const accountsRes = await fetch("/api/social/accounts");
@@ -222,7 +218,7 @@ export default function SocialSettingsPage() {
         }
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "同步失敗");
+      setError(err instanceof Error ? err.message : t("syncFailed"));
     } finally {
       setSyncing(false);
     }
@@ -338,7 +334,7 @@ export default function SocialSettingsPage() {
                   </Label>
                   <Input
                     id="basUserId"
-                    placeholder="請輸入 User ID"
+                    placeholder={t("enterUserId")}
                     value={basUserId}
                     onChange={(e) => setBasUserId(e.target.value)}
                   />
@@ -354,7 +350,7 @@ export default function SocialSettingsPage() {
                   <Input
                     id="basApiKey"
                     type="password"
-                    placeholder="請輸入 API Key"
+                    placeholder={t("enterApiKey")}
                     value={basApiKey}
                     onChange={(e) => setBasApiKey(e.target.value)}
                   />
@@ -386,10 +382,9 @@ export default function SocialSettingsPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>{t("connectedAccounts") || "已連結帳號"}</CardTitle>
+              <CardTitle>{t("connectedAccounts")}</CardTitle>
               <CardDescription>
-                {t("connectedAccountsDesc") ||
-                  "以下是您在發文小助手中已連接的社群帳號"}
+                {t("connectedAccountsDesc")}
               </CardDescription>
             </div>
             {config && (
@@ -480,7 +475,7 @@ export default function SocialSettingsPage() {
                       )}
                       {account.followers_count != null && (
                         <p className="text-xs text-muted-foreground">
-                          {account.followers_count.toLocaleString()} followers
+                          {account.followers_count.toLocaleString()} {t("followers")}
                         </p>
                       )}
                     </div>
@@ -518,7 +513,7 @@ export default function SocialSettingsPage() {
       {/* 說明 */}
       <Card>
         <CardHeader>
-          <CardTitle>{t("setupGuide") || "設定指南"}</CardTitle>
+          <CardTitle>{t("setupGuide")}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="flex items-start gap-3">
@@ -527,11 +522,10 @@ export default function SocialSettingsPage() {
             </div>
             <div>
               <h4 className="font-medium">
-                {t("guide1Title") || "取得 API 金鑰"}
+                {t("guide1Title")}
               </h4>
               <p className="text-sm text-muted-foreground">
-                {t("guide1Desc") ||
-                  "登入發文小助手，前往「帳號管理 > API 設定」取得 User ID 和 API Key"}
+                {t("guide1Desc")}
               </p>
             </div>
           </div>
@@ -541,11 +535,10 @@ export default function SocialSettingsPage() {
             </div>
             <div>
               <h4 className="font-medium">
-                {t("guide2Title") || "連接社群帳號"}
+                {t("guide2Title")}
               </h4>
               <p className="text-sm text-muted-foreground">
-                {t("guide2Desc") ||
-                  "在發文小助手中連接您的 Facebook、Instagram 或 Threads 帳號"}
+                {t("guide2Desc")}
               </p>
             </div>
           </div>
@@ -554,10 +547,9 @@ export default function SocialSettingsPage() {
               3
             </div>
             <div>
-              <h4 className="font-medium">{t("guide3Title") || "同步帳號"}</h4>
+              <h4 className="font-medium">{t("guide3Title")}</h4>
               <p className="text-sm text-muted-foreground">
-                {t("guide3Desc") ||
-                  "點擊「同步帳號」按鈕，系統會自動取得您已連接的社群帳號"}
+                {t("guide3Desc")}
               </p>
             </div>
           </div>

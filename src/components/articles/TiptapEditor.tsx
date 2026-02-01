@@ -29,6 +29,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 
 interface TiptapEditorProps {
   content: string;
@@ -42,6 +43,7 @@ export function TiptapEditor({
   editable = true,
 }: TiptapEditorProps) {
   const [copied, setCopied] = useState(false);
+  const t = useTranslations("editor");
 
   const editor = useEditor({
     extensions: [
@@ -97,7 +99,7 @@ export function TiptapEditor({
     if (!editor) return;
 
     const previousUrl = editor.getAttributes("link").href;
-    const url = window.prompt("輸入連結網址", previousUrl);
+    const url = window.prompt(t("enterLinkUrl"), previousUrl);
 
     if (url === null) {
       return;
@@ -109,7 +111,7 @@ export function TiptapEditor({
     }
 
     editor.chain().focus().extendMarkRange("link").setLink({ href: url }).run();
-  }, [editor]);
+  }, [editor, t]);
 
   // HTML 轉 Markdown 函式
   const htmlToMarkdown = useCallback((html: string): string => {
@@ -200,15 +202,15 @@ export function TiptapEditor({
         }),
       ]);
       setCopied(true);
-      toast.success("已複製 HTML 到剪貼簿");
+      toast.success(t("copiedHtmlToClipboard"));
       setTimeout(() => setCopied(false), 2000);
     } catch {
       await navigator.clipboard.writeText(html);
       setCopied(true);
-      toast.success("已複製 HTML 到剪貼簿");
+      toast.success(t("copiedHtmlToClipboard"));
       setTimeout(() => setCopied(false), 2000);
     }
-  }, [editor]);
+  }, [editor, t]);
 
   const copyAsMarkdown = useCallback(async () => {
     if (!editor) return;
@@ -218,9 +220,9 @@ export function TiptapEditor({
 
     await navigator.clipboard.writeText(markdown);
     setCopied(true);
-    toast.success("已複製 Markdown 到剪貼簿");
+    toast.success(t("copiedMarkdownToClipboard"));
     setTimeout(() => setCopied(false), 2000);
-  }, [editor, htmlToMarkdown]);
+  }, [editor, htmlToMarkdown, t]);
 
   if (!editor) {
     return null;
@@ -234,7 +236,7 @@ export function TiptapEditor({
           pressed={editor.isActive("bold")}
           onPressedChange={() => editor.chain().focus().toggleBold().run()}
           disabled={!editable}
-          aria-label="粗體"
+          aria-label={t("bold")}
         >
           <Bold className="h-4 w-4" />
         </Toggle>
@@ -244,7 +246,7 @@ export function TiptapEditor({
           pressed={editor.isActive("italic")}
           onPressedChange={() => editor.chain().focus().toggleItalic().run()}
           disabled={!editable}
-          aria-label="斜體"
+          aria-label={t("italic")}
         >
           <Italic className="h-4 w-4" />
         </Toggle>
@@ -258,7 +260,7 @@ export function TiptapEditor({
             editor.chain().focus().toggleHeading({ level: 1 }).run()
           }
           disabled={!editable}
-          aria-label="標題 1"
+          aria-label={t("heading1")}
         >
           <Heading1 className="h-4 w-4" />
         </Toggle>
@@ -270,7 +272,7 @@ export function TiptapEditor({
             editor.chain().focus().toggleHeading({ level: 2 }).run()
           }
           disabled={!editable}
-          aria-label="標題 2"
+          aria-label={t("heading2")}
         >
           <Heading2 className="h-4 w-4" />
         </Toggle>
@@ -284,7 +286,7 @@ export function TiptapEditor({
             editor.chain().focus().toggleBulletList().run()
           }
           disabled={!editable}
-          aria-label="項目符號清單"
+          aria-label={t("bulletList")}
         >
           <List className="h-4 w-4" />
         </Toggle>
@@ -296,7 +298,7 @@ export function TiptapEditor({
             editor.chain().focus().toggleOrderedList().run()
           }
           disabled={!editable}
-          aria-label="編號清單"
+          aria-label={t("orderedList")}
         >
           <ListOrdered className="h-4 w-4" />
         </Toggle>
@@ -309,7 +311,7 @@ export function TiptapEditor({
           onClick={setLink}
           disabled={!editable}
           className={editor.isActive("link") ? "bg-muted" : ""}
-          aria-label="插入連結"
+          aria-label={t("insertLink")}
         >
           <LinkIcon className="h-4 w-4" />
         </Button>
@@ -321,7 +323,7 @@ export function TiptapEditor({
           variant="ghost"
           onClick={() => editor.chain().focus().undo().run()}
           disabled={!editable || !editor.can().undo()}
-          aria-label="復原"
+          aria-label={t("undo")}
         >
           <Undo className="h-4 w-4" />
         </Button>
@@ -331,7 +333,7 @@ export function TiptapEditor({
           variant="ghost"
           onClick={() => editor.chain().focus().redo().run()}
           disabled={!editable || !editor.can().redo()}
-          aria-label="重做"
+          aria-label={t("redo")}
         >
           <Redo className="h-4 w-4" />
         </Button>
@@ -346,16 +348,16 @@ export function TiptapEditor({
               ) : (
                 <Copy className="h-4 w-4" />
               )}
-              <span>{copied ? "已複製" : "一鍵複製"}</span>
+              <span>{copied ? t("copied") : t("oneClickCopy")}</span>
               <ChevronDown className="h-3 w-3" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuItem onClick={copyAsHtml}>
-              複製 HTML（適合 Medium、Blogger）
+              {t("copyHtml")}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={copyAsMarkdown}>
-              複製 Markdown（適合 GitHub、Notion）
+              {t("copyMarkdown")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

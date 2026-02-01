@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState, useCallback } from "react";
+import { useTranslations } from "next-intl";
 import {
   Card,
   CardContent,
@@ -44,23 +45,6 @@ import {
 } from "@/types/translations";
 import { WebsiteSelector } from "@/components/articles/WebsiteSelector";
 
-/** 網站類型標籤對應 */
-const SITE_TYPE_LABELS: Record<string, string> = {
-  platform: "官方 Blog",
-  external: "外部網站",
-};
-
-/** 篩選狀態的空結果訊息 */
-const EMPTY_STATE_MESSAGES: Record<string, string> = {
-  translated: "沒有已翻譯的文章",
-  not_translated: "沒有未翻譯的文章",
-  all: "沒有已發布的文章可供翻譯",
-};
-
-/** 取得網站類型的顯示標籤 */
-function getSiteTypeLabel(siteType: string): string {
-  return SITE_TYPE_LABELS[siteType] ?? siteType;
-}
 
 /** 語言按鈕元件 Props */
 interface LanguageButtonProps {
@@ -118,6 +102,7 @@ function extractData<T>(result: { data?: T } | T): T {
  * 僅開放給特定帳號使用（acejou27@gmail.com）
  */
 export default function AdminTranslationsPage() {
+  const t = useTranslations("admin.translations");
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
   const [articles, setArticles] = useState<ArticleTranslationSummary[]>([]);
@@ -151,12 +136,12 @@ export default function AdminTranslationsPage() {
         return;
       }
       if (!response.ok) {
-        throw new Error("載入設定失敗");
+        throw new Error(t("loadSettingsFailed"));
       }
       const data = extractData(await response.json());
       setWebsiteSettings(data.websites || []);
     } catch (error) {
-      console.error("載入自動翻譯設定失敗:", error);
+      console.error(t("loadAutoTranslateSettingsFailed"), error);
     } finally {
       setSettingsLoading(false);
     }
@@ -182,7 +167,7 @@ export default function AdminTranslationsPage() {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || "更新失敗");
+        throw new Error(data.error || t("updateFailed"));
       }
 
       // 更新本地 state
@@ -194,10 +179,10 @@ export default function AdminTranslationsPage() {
         )
       );
 
-      toast.success("設定已儲存");
+      toast.success(t("settingsSaved"));
     } catch (error) {
-      console.error("更新自動翻譯設定失敗:", error);
-      toast.error(error instanceof Error ? error.message : "更新設定失敗");
+      console.error(t("updateAutoTranslateSettingsFailed"), error);
+      toast.error(error instanceof Error ? error.message : t("updateSettingsFailed"));
     } finally {
       setSavingSettings(null);
     }
@@ -243,20 +228,20 @@ export default function AdminTranslationsPage() {
 
       if (response.status === 403) {
         setAccessDenied(true);
-        toast.error("翻譯功能目前為 Beta 版，僅開放給特定帳號使用");
+        toast.error(t("accessDeniedToast"));
         return;
       }
 
       if (!response.ok) {
-        throw new Error("載入失敗");
+        throw new Error(t("loadFailed"));
       }
 
       const data = extractData(await response.json());
       setArticles(data.articles || []);
       setTotal(data.total || 0);
     } catch (error) {
-      console.error("載入文章失敗:", error);
-      toast.error("載入失敗");
+      console.error(t("loadArticlesFailed"), error);
+      toast.error(t("loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -286,12 +271,12 @@ export default function AdminTranslationsPage() {
 
   const handleTranslate = async () => {
     if (selectedArticles.size === 0) {
-      toast.error("請選擇至少一篇文章");
+      toast.error(t("selectAtLeastOneArticle"));
       return;
     }
 
     if (selectedLanguages.size === 0) {
-      toast.error("請選擇至少一種目標語言");
+      toast.error(t("selectAtLeastOneLanguage"));
       return;
     }
 
@@ -310,7 +295,7 @@ export default function AdminTranslationsPage() {
 
       if (!response.ok) {
         const data = await response.json();
-        throw new Error(data.error || "建立翻譯任務失敗");
+        throw new Error(data.error || t("createTranslationJobFailed"));
       }
 
       const data = await response.json();
@@ -318,23 +303,23 @@ export default function AdminTranslationsPage() {
       // 根據結果顯示不同訊息
       if (data.job_count === 0 && data.skipped?.count > 0) {
         toast.info(
-          `所有選中的文章已有該語言的翻譯，已跳過 ${data.skipped.count} 個`
+          t("allArticlesSkipped", { count: data.skipped.count })
         );
       } else if (data.skipped?.count > 0) {
         toast.success(
-          `已建立 ${data.job_count} 個翻譯任務，跳過 ${data.skipped.count} 個已有翻譯`
+          t("jobsCreatedWithSkipped", { created: data.job_count, skipped: data.skipped.count })
         );
       } else {
         toast.success(
-          `已建立 ${data.job_count} 個翻譯任務，將於 5 分鐘內開始處理`
+          t("jobsCreatedSuccess", { count: data.job_count })
         );
       }
 
       // 清空選擇
       setSelectedArticles(new Set());
     } catch (error) {
-      console.error("建立翻譯任務失敗:", error);
-      toast.error(error instanceof Error ? error.message : "建立翻譯任務失敗");
+      console.error(t("createTranslationJobFailed"), error);
+      toast.error(error instanceof Error ? error.message : t("createTranslationJobFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -381,12 +366,10 @@ export default function AdminTranslationsPage() {
           <CardContent className="flex flex-col items-center justify-center py-16">
             <Globe className="h-16 w-16 text-muted-foreground mb-4" />
             <h2 className="text-xl font-semibold mb-2">
-              翻譯功能目前為 Beta 版
+              {t("accessDeniedTitle")}
             </h2>
             <p className="text-muted-foreground text-center">
-              此功能僅開放給特定帳號使用，
-              <br />
-              如需開通權限請聯繫客服。
+              {t("accessDeniedDescription")}
             </p>
           </CardContent>
         </Card>
@@ -400,17 +383,17 @@ export default function AdminTranslationsPage() {
         <div>
           <h1 className="text-3xl font-bold flex items-center gap-2">
             <Languages className="h-8 w-8" />
-            多語系翻譯管理
+            {t("title")}
           </h1>
           <p className="text-muted-foreground mt-1">
-            將已發布的文章翻譯成多種語言，擴展國際 SEO 覆蓋範圍
+            {t("description")}
           </p>
         </div>
         <Button variant="outline" onClick={handleRefresh} disabled={loading}>
           <RefreshCw
             className={`h-4 w-4 mr-2 ${loading ? "animate-spin" : ""}`}
           />
-          重新整理
+          {t("refresh")}
         </Button>
       </div>
 
@@ -419,10 +402,10 @@ export default function AdminTranslationsPage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
-            <CardTitle className="text-lg">自動翻譯設定</CardTitle>
+            <CardTitle className="text-lg">{t("autoTranslateSettings")}</CardTitle>
           </div>
           <CardDescription>
-            啟用後，當文章排程發布時會自動觸發翻譯任務
+            {t("autoTranslateDescription")}
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -432,7 +415,7 @@ export default function AdminTranslationsPage() {
             </div>
           ) : websiteSettings.length === 0 ? (
             <p className="text-muted-foreground text-center py-4">
-              沒有可設定的網站
+              {t("noWebsitesToConfigure")}
             </p>
           ) : (
             <div className="space-y-4">
@@ -454,19 +437,19 @@ export default function AdminTranslationsPage() {
                         <div className="font-medium flex items-center gap-2">
                           {website.website_name}
                           <Badge variant="outline" className="text-xs">
-                            {getSiteTypeLabel(website.site_type)}
+                            {t(`siteTypes.${website.site_type}`)}
                           </Badge>
                           {website.auto_translate_enabled && (
                             <Badge variant="secondary" className="gap-1">
                               <Zap className="h-3 w-3" />
-                              自動翻譯
+                              {t("autoTranslate")}
                             </Badge>
                           )}
                         </div>
                         <p className="text-sm text-muted-foreground">
                           {website.auto_translate_enabled
-                            ? `排程發布時自動翻譯成 ${website.auto_translate_languages.length} 種語言`
-                            : "未啟用自動翻譯"}
+                            ? t("autoTranslateEnabledInfo", { count: website.auto_translate_languages.length })
+                            : t("autoTranslateDisabled")}
                         </p>
                       </div>
                     </div>
@@ -501,15 +484,15 @@ export default function AdminTranslationsPage() {
         {/* 網站選擇 */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">選擇網站</CardTitle>
-            <CardDescription>篩選特定網站的已發布文章</CardDescription>
+            <CardTitle className="text-lg">{t("selectWebsite")}</CardTitle>
+            <CardDescription>{t("selectWebsiteDescription")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="w-full max-w-sm">
               <WebsiteSelector
                 value={websiteId}
                 onChange={setWebsiteId}
-                placeholder="全部網站"
+                placeholder={t("allWebsites")}
                 allowNoWebsite={false}
               />
             </div>
@@ -519,9 +502,9 @@ export default function AdminTranslationsPage() {
         {/* 語言選擇 */}
         <Card>
           <CardHeader>
-            <CardTitle className="text-lg">目標語言</CardTitle>
+            <CardTitle className="text-lg">{t("targetLanguages")}</CardTitle>
             <CardDescription>
-              選擇要翻譯成的語言（{selectedLanguages.size} 種已選）
+              {t("targetLanguagesDescription", { count: selectedLanguages.size })}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -544,16 +527,16 @@ export default function AdminTranslationsPage() {
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="text-lg">文章列表</CardTitle>
+              <CardTitle className="text-lg">{t("articleList")}</CardTitle>
               <CardDescription>
-                選擇要翻譯的文章（共 {total} 篇文章）
+                {t("articleListDescription", { count: total })}
               </CardDescription>
             </div>
             <div className="flex items-center gap-4">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                 <Input
-                  placeholder="搜尋文章..."
+                  placeholder={t("searchPlaceholder")}
                   value={search}
                   onChange={(e) => {
                     setSearch(e.target.value);
@@ -575,7 +558,7 @@ export default function AdminTranslationsPage() {
                 ) : (
                   <Languages className="h-4 w-4 mr-2" />
                 )}
-                翻譯選中文章
+                {t("translateSelected")}
                 {selectedArticles.size > 0 && ` (${selectedArticles.size})`}
               </Button>
             </div>
@@ -583,9 +566,9 @@ export default function AdminTranslationsPage() {
           {/* 篩選 Tabs */}
           <Tabs value={filter} onValueChange={(v) => handleFilterChange(v as typeof filter)} className="mt-4">
             <TabsList>
-              <TabsTrigger value="all">全部</TabsTrigger>
-              <TabsTrigger value="translated">有翻譯</TabsTrigger>
-              <TabsTrigger value="not_translated">未翻譯</TabsTrigger>
+              <TabsTrigger value="all">{t("filterAll")}</TabsTrigger>
+              <TabsTrigger value="translated">{t("filterTranslated")}</TabsTrigger>
+              <TabsTrigger value="not_translated">{t("filterNotTranslated")}</TabsTrigger>
             </TabsList>
           </Tabs>
         </CardHeader>
@@ -596,7 +579,7 @@ export default function AdminTranslationsPage() {
             </div>
           ) : articles.length === 0 ? (
             <div className="text-center py-8 text-muted-foreground">
-              {EMPTY_STATE_MESSAGES[filter]}
+              {t(`emptyState.${filter}`)}
             </div>
           ) : (
             <>
@@ -614,7 +597,7 @@ export default function AdminTranslationsPage() {
                         }
                       />
                     </TableHead>
-                    <TableHead>文章資訊</TableHead>
+                    <TableHead>{t("articleInfo")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -633,14 +616,14 @@ export default function AdminTranslationsPage() {
                           <span>{article.article_title}</span>
                           <span className="flex gap-0.5">
                             {article.translations
-                              .filter((t) => t.status !== "not_translated")
-                              .map((t) => (
+                              .filter((trans) => trans.status !== "not_translated")
+                              .map((trans) => (
                                 <span
-                                  key={t.locale}
-                                  title={`${TRANSLATION_LANGUAGES[t.locale].nativeName} (${t.status})`}
+                                  key={trans.locale}
+                                  title={`${TRANSLATION_LANGUAGES[trans.locale].nativeName} (${trans.status})`}
                                   className="text-sm opacity-80"
                                 >
-                                  {TRANSLATION_LANGUAGES[t.locale].flagEmoji}
+                                  {TRANSLATION_LANGUAGES[trans.locale].flagEmoji}
                                 </span>
                               ))}
                           </span>
@@ -655,7 +638,7 @@ export default function AdminTranslationsPage() {
               {totalPages > 1 && (
                 <div className="flex items-center justify-between mt-6 pt-4 border-t">
                   <div className="text-sm text-muted-foreground">
-                    顯示 {startItem}-{endItem} 筆，共 {total} 筆
+                    {t("paginationInfo", { start: startItem, end: endItem, total })}
                   </div>
                   <div className="flex items-center gap-1">
                     <Button

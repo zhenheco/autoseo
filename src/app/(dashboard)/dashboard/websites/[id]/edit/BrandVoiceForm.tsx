@@ -18,6 +18,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { updateWebsiteBrandVoice } from "../../actions";
+import { useTranslations } from "next-intl";
 
 interface BrandVoice {
   brand_name?: string;
@@ -32,76 +33,98 @@ interface BrandVoiceFormProps {
 }
 
 export function BrandVoiceForm({ websiteId, brandVoice }: BrandVoiceFormProps) {
+  const t = useTranslations("websites.brandVoice");
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>品牌聲音設定</CardTitle>
-        <CardDescription>設定文章撰寫時使用的品牌風格和語氣</CardDescription>
+        <CardTitle>{t("title")}</CardTitle>
+        <CardDescription>{t("description")}</CardDescription>
       </CardHeader>
       <CardContent>
         <form action={updateWebsiteBrandVoice} className="space-y-4">
           <input type="hidden" name="websiteId" value={websiteId} />
           <div className="space-y-2">
-            <Label htmlFor="brand-name">品牌名稱</Label>
+            <Label htmlFor="brand-name">{t("brandNameLabel")}</Label>
             <Input
               id="brand-name"
               name="brandName"
               defaultValue={brandVoice?.brand_name || ""}
-              placeholder="請輸入您的品牌名稱"
+              placeholder={t("brandNamePlaceholder")}
             />
             <p className="text-xs text-muted-foreground">
-              文章中會適當提及此品牌名稱
+              {t("brandNameHint")}
             </p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="tone-of-voice">語氣</Label>
+            <Label htmlFor="tone-of-voice">{t("toneOfVoiceLabel")}</Label>
             <Select
               name="toneOfVoice"
-              defaultValue={brandVoice?.tone_of_voice || "專業親切"}
+              defaultValue={brandVoice?.tone_of_voice || "professionalFriendly"}
             >
               <SelectTrigger id="tone-of-voice">
-                <SelectValue placeholder="請選擇語氣" />
+                <SelectValue placeholder={t("toneOfVoicePlaceholder")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="專業正式">專業正式</SelectItem>
-                <SelectItem value="專業親切">專業親切</SelectItem>
-                <SelectItem value="輕鬆友善">輕鬆友善</SelectItem>
-                <SelectItem value="教育性">教育性</SelectItem>
-                <SelectItem value="說服性">說服性</SelectItem>
-                <SelectItem value="權威專家">權威專家</SelectItem>
+                <SelectItem value="professionalFormal">
+                  {t("tones.professionalFormal")}
+                </SelectItem>
+                <SelectItem value="professionalFriendly">
+                  {t("tones.professionalFriendly")}
+                </SelectItem>
+                <SelectItem value="casualFriendly">
+                  {t("tones.casualFriendly")}
+                </SelectItem>
+                <SelectItem value="educational">
+                  {t("tones.educational")}
+                </SelectItem>
+                <SelectItem value="persuasive">
+                  {t("tones.persuasive")}
+                </SelectItem>
+                <SelectItem value="expertAuthority">
+                  {t("tones.expertAuthority")}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="target-audience">目標受眾</Label>
+            <Label htmlFor="target-audience">{t("targetAudienceLabel")}</Label>
             <Input
               id="target-audience"
               name="targetAudience"
               defaultValue={brandVoice?.target_audience || ""}
-              placeholder="例如：B2B 專業人士、一般消費者、技術人員"
+              placeholder={t("targetAudiencePlaceholder")}
             />
             <p className="text-xs text-muted-foreground">
-              描述您的目標讀者群，文章風格會根據受眾調整
+              {t("targetAudienceHint")}
             </p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="writing-style">寫作風格</Label>
+            <Label htmlFor="writing-style">{t("writingStyleLabel")}</Label>
             <Select
               name="writingStyle"
-              defaultValue={brandVoice?.writing_style || "專業正式"}
+              defaultValue={brandVoice?.writing_style || "professionalFormal"}
             >
               <SelectTrigger id="writing-style">
-                <SelectValue placeholder="請選擇寫作風格" />
+                <SelectValue placeholder={t("writingStylePlaceholder")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="專業正式">專業正式</SelectItem>
-                <SelectItem value="輕鬆友善">輕鬆友善</SelectItem>
-                <SelectItem value="教育性">教育性</SelectItem>
-                <SelectItem value="說服性">說服性</SelectItem>
+                <SelectItem value="professionalFormal">
+                  {t("styles.professionalFormal")}
+                </SelectItem>
+                <SelectItem value="casualFriendly">
+                  {t("styles.casualFriendly")}
+                </SelectItem>
+                <SelectItem value="educational">
+                  {t("styles.educational")}
+                </SelectItem>
+                <SelectItem value="persuasive">
+                  {t("styles.persuasive")}
+                </SelectItem>
               </SelectContent>
             </Select>
           </div>
-          <Button type="submit">儲存品牌設定</Button>
+          <Button type="submit">{t("saveBrandSettings")}</Button>
         </form>
       </CardContent>
     </Card>

@@ -8,6 +8,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 
@@ -21,7 +22,7 @@ async function getAIModels() {
     .order("sort_order", { ascending: true });
 
   if (error) {
-    console.error("獲取 AI 模型失敗:", error);
+    console.error("Failed to fetch AI models:", error);
     return [];
   }
 
@@ -38,7 +39,7 @@ async function getAgentConfigs() {
     .single();
 
   if (error) {
-    console.error("獲取 Agent 配置失敗:", error);
+    console.error("Failed to fetch Agent config:", error);
     return null;
   }
 
@@ -52,6 +53,7 @@ export default async function AIModelsPage() {
     redirect("/login");
   }
 
+  const t = await getTranslations("settings.aiModelsPage");
   const models = await getAIModels();
   const config = await getAgentConfigs();
 
@@ -61,22 +63,22 @@ export default async function AIModelsPage() {
   return (
     <div className="container mx-auto p-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">AI 模型設定</h1>
+        <h1 className="text-3xl font-bold">{t("title")}</h1>
         <p className="text-muted-foreground mt-2">
-          配置各個 Agent 使用的 AI 模型
+          {t("description")}
         </p>
       </div>
 
       <div className="grid gap-6">
         <Card>
           <CardHeader>
-            <CardTitle>Research Agent</CardTitle>
-            <CardDescription>負責關鍵字研究和內容分析</CardDescription>
+            <CardTitle>{t("researchAgent.title")}</CardTitle>
+            <CardDescription>{t("researchAgent.description")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">當前模型</span>
+                <span className="text-sm font-medium">{t("currentModel")}</span>
                 <span className="text-sm text-muted-foreground">
                   {config?.research_model || "perplexity-sonar"}
                 </span>
@@ -99,13 +101,13 @@ export default async function AIModelsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Strategy Agent</CardTitle>
-            <CardDescription>負責內容策略規劃</CardDescription>
+            <CardTitle>{t("strategyAgent.title")}</CardTitle>
+            <CardDescription>{t("strategyAgent.description")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">當前模型</span>
+                <span className="text-sm font-medium">{t("currentModel")}</span>
                 <span className="text-sm text-muted-foreground">
                   {config?.strategy_model || "gpt-4"}
                 </span>
@@ -128,13 +130,13 @@ export default async function AIModelsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Writing Agent</CardTitle>
-            <CardDescription>負責文章撰寫</CardDescription>
+            <CardTitle>{t("writingAgent.title")}</CardTitle>
+            <CardDescription>{t("writingAgent.description")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">當前模型</span>
+                <span className="text-sm font-medium">{t("currentModel")}</span>
                 <span className="text-sm text-muted-foreground">
                   {config?.writing_model || "gpt-4"}
                 </span>
@@ -157,13 +159,13 @@ export default async function AIModelsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Meta Agent</CardTitle>
-            <CardDescription>負責 SEO 元數據生成</CardDescription>
+            <CardTitle>{t("metaAgent.title")}</CardTitle>
+            <CardDescription>{t("metaAgent.description")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">當前模型</span>
+                <span className="text-sm font-medium">{t("currentModel")}</span>
                 <span className="text-sm text-muted-foreground">
                   {config?.meta_model || "deepseek-chat"}
                 </span>
@@ -186,31 +188,31 @@ export default async function AIModelsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>Image Agent</CardTitle>
-            <CardDescription>負責圖片生成</CardDescription>
+            <CardTitle>{t("imageAgent.title")}</CardTitle>
+            <CardDescription>{t("imageAgent.description")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-2">
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">當前模型</span>
+                <span className="text-sm font-medium">{t("currentModel")}</span>
                 <span className="text-sm text-muted-foreground">
                   {config?.image_model || "dall-e-3"}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">畫質</span>
+                <span className="text-sm font-medium">{t("imageAgent.quality")}</span>
                 <span className="text-sm text-muted-foreground">
                   {config?.image_quality || "standard"}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">尺寸</span>
+                <span className="text-sm font-medium">{t("imageAgent.size")}</span>
                 <span className="text-sm text-muted-foreground">
                   {config?.image_size || "1024x1024"}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">生成數量</span>
+                <span className="text-sm font-medium">{t("imageAgent.count")}</span>
                 <span className="text-sm text-muted-foreground">
                   {config?.image_count || 3}
                 </span>
@@ -221,13 +223,13 @@ export default async function AIModelsPage() {
 
         <Card>
           <CardHeader>
-            <CardTitle>可用的 AI 模型</CardTitle>
-            <CardDescription>系統中可用的所有 AI 模型</CardDescription>
+            <CardTitle>{t("availableModels.title")}</CardTitle>
+            <CardDescription>{t("availableModels.description")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <div>
-                <h3 className="text-sm font-medium mb-2">文字模型</h3>
+                <h3 className="text-sm font-medium mb-2">{t("availableModels.textModels")}</h3>
                 <div className="space-y-2">
                   {textModels.map((model) => (
                     <div
@@ -244,7 +246,7 @@ export default async function AIModelsPage() {
                       </div>
                       {model.is_featured && (
                         <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
-                          推薦
+                          {t("availableModels.featured")}
                         </span>
                       )}
                     </div>
@@ -254,7 +256,7 @@ export default async function AIModelsPage() {
 
               {imageModels.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-medium mb-2">圖片模型</h3>
+                  <h3 className="text-sm font-medium mb-2">{t("availableModels.imageModels")}</h3>
                   <div className="space-y-2">
                     {imageModels.map((model) => (
                       <div
@@ -271,7 +273,7 @@ export default async function AIModelsPage() {
                         </div>
                         {model.is_featured && (
                           <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
-                            推薦
+                            {t("availableModels.featured")}
                           </span>
                         )}
                       </div>
@@ -286,8 +288,7 @@ export default async function AIModelsPage() {
         <Card className="border-yellow-200 bg-yellow-50">
           <CardContent className="pt-6">
             <p className="text-sm text-yellow-800">
-              ⚠️ 注意：AI
-              模型設定需要透過資料庫直接修改。未來版本將提供圖形界面編輯功能。
+              {t("notice")}
             </p>
           </CardContent>
         </Card>

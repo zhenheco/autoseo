@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { FolderOpen } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { cn } from "@/lib/utils";
 import type { CategoryCount } from "@/types/blog";
 
@@ -20,6 +21,7 @@ export function CategoryList({
   className = "",
 }: CategoryListProps) {
   const pathname = usePathname();
+  const t = useTranslations("blog");
 
   if (categories.length === 0) {
     return null;
@@ -29,7 +31,7 @@ export function CategoryList({
     <div className={className}>
       <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
         <FolderOpen className="h-5 w-5" />
-        分類
+        {t("categoriesTitle")}
       </h3>
       <nav className="space-y-1">
         <Link
@@ -39,7 +41,7 @@ export function CategoryList({
             pathname === "/blog" && "bg-muted font-medium",
           )}
         >
-          <span>全部文章</span>
+          <span>{t("allArticles")}</span>
         </Link>
         {categories.map((category) => {
           const href = `/blog/category/${encodeURIComponent(category.name)}`;

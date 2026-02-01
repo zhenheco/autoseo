@@ -2,12 +2,15 @@ import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Home } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 
-export default function BlogLayout({
+export default async function BlogLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const t = await getTranslations("blog");
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-blue-950 dark:to-indigo-950">
       {/* 頂部導航 */}
@@ -18,7 +21,7 @@ export default function BlogLayout({
             <Link href="/">
               <Button variant="ghost" size="sm" className="gap-2">
                 <ArrowLeft className="h-4 w-4" />
-                <span className="hidden sm:inline">返回首頁</span>
+                <span className="hidden sm:inline">{t("backToHome")}</span>
               </Button>
             </Link>
             <Link
@@ -43,7 +46,7 @@ export default function BlogLayout({
             <Link href="/">
               <Button variant="ghost" size="sm" className="gap-2">
                 <Home className="h-4 w-4" />
-                <span className="hidden sm:inline">主站</span>
+                <span className="hidden sm:inline">{t("mainSite")}</span>
               </Button>
             </Link>
           </div>
@@ -57,18 +60,18 @@ export default function BlogLayout({
       <footer className="border-t bg-background/50 py-8">
         <div className="container mx-auto px-4 text-center text-sm text-muted-foreground">
           <p className="mb-2">
-            由{" "}
+            {t("poweredBy")}{" "}
             <Link href="/" className="font-medium text-primary hover:underline">
               1waySEO
             </Link>{" "}
-            AI 驅動的 SEO 寫文平台提供
+            {t("aiPlatformDesc")}
           </p>
           <div className="flex items-center justify-center gap-4">
             <Link href="/terms" className="hover:underline">
-              服務條款
+              {t("terms")}
             </Link>
             <Link href="/privacy" className="hover:underline">
-              隱私政策
+              {t("privacy")}
             </Link>
           </div>
         </div>

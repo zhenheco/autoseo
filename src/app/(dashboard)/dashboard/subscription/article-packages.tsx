@@ -53,7 +53,7 @@ export function ArticlePackages({
           paymentType: "article_package",
           relatedId: pkg.id,
           amount: pkg.price,
-          description: `購買 ${pkg.name}（${pkg.articles} 篇文章）`,
+          description: `${pkg.name} (${pkg.articles} ${t("articles")})`,
           email: userEmail,
         }),
       });
@@ -82,7 +82,7 @@ export function ArticlePackages({
     } catch (error) {
       console.error("購買錯誤:", error);
       alert(
-        `購買失敗: ${error instanceof Error ? error.message : "請稍後再試"}`,
+        `${t("purchaseFailed")}: ${error instanceof Error ? error.message : t("processing")}`,
       );
       setLoading(null);
     }
@@ -99,7 +99,7 @@ export function ArticlePackages({
           >
             {isPopular && (
               <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-1 rounded-full text-sm font-medium">
-                {t("greatValue") || "超值選擇"}
+                {t("greatValue")}
               </div>
             )}
             <CardHeader>
@@ -108,7 +108,7 @@ export function ArticlePackages({
                 {pkg.name}
               </CardTitle>
               <CardDescription>
-                {pkg.articles?.toLocaleString()} {t("articles") || "篇"}
+                {pkg.articles?.toLocaleString()} {t("articles")}
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -124,7 +124,7 @@ export function ArticlePackages({
                   </p>
                 )}
                 <p className="text-sm text-green-600">
-                  {t("neverExpires") || "永久有效，不受訂閱週期限制"}
+                  {t("oneTimePurchaseNeverExpires")}
                 </p>
               </div>
             </CardContent>
@@ -135,7 +135,7 @@ export function ArticlePackages({
                 disabled={loading === pkg.id}
                 variant={isPopular ? "default" : "outline"}
               >
-                {loading === pkg.id ? "處理中..." : t("buyNow") || "立即購買"}
+                {loading === pkg.id ? t("processing") : t("buyNow")}
               </Button>
             </CardFooter>
           </Card>

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Tags } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import type { TagCount } from "@/types/blog";
 
@@ -20,6 +21,8 @@ export function TagCloud({
   maxTags = 15,
   className = "",
 }: TagCloudProps) {
+  const t = useTranslations("blog");
+
   if (tags.length === 0) {
     return null;
   }
@@ -30,7 +33,7 @@ export function TagCloud({
     <div className={className}>
       <h3 className="mb-4 flex items-center gap-2 text-lg font-semibold">
         <Tags className="h-5 w-5" />
-        標籤
+        {t("tagsTitle")}
       </h3>
       <div className="flex flex-wrap gap-2">
         {displayTags.map((tag) => (

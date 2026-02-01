@@ -14,35 +14,13 @@ import { Switch } from "@/components/ui/switch";
 import { RefreshCw } from "lucide-react";
 import { updateExternalWebsiteSyncSettings } from "../../actions";
 import type { SyncFormProps } from "@/types/external-website.types";
+import { useTranslations } from "next-intl";
 
-interface SyncSetting {
-  key: "syncOnPublish" | "syncOnUpdate" | "syncOnUnpublish" | "syncTranslations";
-  label: string;
-  description: string;
-}
-
-const SYNC_SETTINGS: SyncSetting[] = [
-  {
-    key: "syncOnPublish",
-    label: "發布時同步",
-    description: "文章發布時自動同步到此網站",
-  },
-  {
-    key: "syncOnUpdate",
-    label: "更新時同步",
-    description: "文章更新時自動同步變更",
-  },
-  {
-    key: "syncOnUnpublish",
-    label: "取消發布時同步",
-    description: "文章下架時通知此網站",
-  },
-  {
-    key: "syncTranslations",
-    label: "同步翻譯版本",
-    description: "同時同步文章的翻譯版本",
-  },
-];
+type SyncSettingKey =
+  | "syncOnPublish"
+  | "syncOnUpdate"
+  | "syncOnUnpublish"
+  | "syncTranslations";
 
 export function ExternalWebsiteSyncForm({
   websiteId,
@@ -51,6 +29,35 @@ export function ExternalWebsiteSyncForm({
   syncOnUnpublish: initialSyncOnUnpublish,
   syncTranslations: initialSyncTranslations,
 }: SyncFormProps): React.ReactElement {
+  const t = useTranslations("externalWebsites");
+
+  const SYNC_SETTINGS: Array<{
+    key: SyncSettingKey;
+    labelKey: string;
+    descKey: string;
+  }> = [
+    {
+      key: "syncOnPublish",
+      labelKey: "syncSettings.syncOnPublish",
+      descKey: "syncSettings.syncOnPublishDesc",
+    },
+    {
+      key: "syncOnUpdate",
+      labelKey: "syncSettings.syncOnUpdate",
+      descKey: "syncSettings.syncOnUpdateDesc",
+    },
+    {
+      key: "syncOnUnpublish",
+      labelKey: "syncSettings.syncOnUnpublish",
+      descKey: "syncSettings.syncOnUnpublishDesc",
+    },
+    {
+      key: "syncTranslations",
+      labelKey: "syncSettings.syncTranslations",
+      descKey: "syncSettings.syncTranslationsDesc",
+    },
+  ];
+
   const [settings, setSettings] = useState({
     syncOnPublish: initialSyncOnPublish ?? true,
     syncOnUpdate: initialSyncOnUpdate ?? true,
@@ -58,7 +65,7 @@ export function ExternalWebsiteSyncForm({
     syncTranslations: initialSyncTranslations ?? true,
   });
 
-  function handleToggle(key: SyncSetting["key"]): void {
+  function handleToggle(key: SyncSettingKey): void {
     setSettings((prev) => ({ ...prev, [key]: !prev[key] }));
   }
 
@@ -67,11 +74,9 @@ export function ExternalWebsiteSyncForm({
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <RefreshCw className="h-5 w-5" />
-          同步設定
+          {t("syncSettingsTitle")}
         </CardTitle>
-        <CardDescription>
-          設定何時透過 Webhook 同步文章到此外部網站
-        </CardDescription>
+        <CardDescription>{t("syncSettingsDescription")}</CardDescription>
       </CardHeader>
       <CardContent>
         <form action={updateExternalWebsiteSyncSettings} className="space-y-4">
@@ -98,14 +103,14 @@ export function ExternalWebsiteSyncForm({
           />
 
           <div className="space-y-4">
-            {SYNC_SETTINGS.map(({ key, label, description }) => (
+            {SYNC_SETTINGS.map(({ key, labelKey, descKey }) => (
               <div
                 key={key}
                 className="flex items-center justify-between rounded-lg border p-4"
               >
                 <div className="space-y-0.5">
-                  <Label className="text-base">{label}</Label>
-                  <p className="text-sm text-muted-foreground">{description}</p>
+                  <Label className="text-base">{t(labelKey)}</Label>
+                  <p className="text-sm text-muted-foreground">{t(descKey)}</p>
                 </div>
                 <Switch
                   checked={settings[key]}
@@ -115,7 +120,7 @@ export function ExternalWebsiteSyncForm({
             ))}
           </div>
 
-          <Button type="submit">儲存同步設定</Button>
+          <Button type="submit">{t("saveSyncSettings")}</Button>
         </form>
       </CardContent>
     </Card>

@@ -18,6 +18,7 @@ import {
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { trackArticleGeneration } from "@/lib/analytics/events";
+import { useTranslations } from "next-intl";
 
 interface ArticleFormProps {
   websiteId: string | null;
@@ -33,6 +34,8 @@ export function ArticleForm({
   language,
 }: ArticleFormProps) {
   const router = useRouter();
+  const t = useTranslations("articles.form");
+  const tCommon = useTranslations("common");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [retryInfo, setRetryInfo] = useState<string | null>(null);
 
@@ -62,7 +65,7 @@ export function ArticleForm({
           setArticleBalance(data.balance?.available ?? 0);
         }
       } catch (error) {
-        console.error("獲取額度失敗:", error);
+        console.error("Failed to fetch article quota:", error);
       } finally {
         setIsLoadingBalance(false);
       }
@@ -74,9 +77,7 @@ export function ArticleForm({
   const handlePreviewTitles = async () => {
     // 主題是必填的核心欄位
     if (!industry?.trim()) {
-      alert(
-        "請先填寫「主題」欄位\n\n例如：如何把AI融入行銷中\n\n填寫主題可以讓 AI 生成更精準的標題。",
-      );
+      alert(t("topicRequired"));
       return;
     }
 
@@ -99,22 +100,22 @@ export function ArticleForm({
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || "標題生成失敗");
+        throw new Error(result.error || t("titleGenerateFailed"));
       }
 
       // 修正：從 data 屬性取得 titles（符合 successResponse 統一格式）
       const titles = result.data?.titles;
       if (!titles?.length) {
-        throw new Error("無法生成標題，請稍後再試");
+        throw new Error(t("cannotGenerateTitle"));
       }
 
       setTitleOptions(titles);
       setSelectedTitles([titles[0]]);
       setShowTitleDialog(true);
     } catch (error) {
-      console.error("標題預覽失敗:", error);
+      console.error("Title preview failed:", error);
       const errorMessage =
-        error instanceof Error ? error.message : "標題生成失敗";
+        error instanceof Error ? error.message : t("titleGenerateFailed");
       alert(errorMessage);
     } finally {
       setIsLoadingTitles(false);
@@ -141,9 +142,9 @@ export function ArticleForm({
       setGeneratedTitles([...selectedTitles]);
       setShowSuccessDialog(true);
     } catch (error) {
-      console.error("批量生成失敗:", error);
+      console.error("Batch generation failed:", error);
       const errorMessage =
-        error instanceof Error ? error.message : "生成失敗，請稍後再試";
+        error instanceof Error ? error.message : t("generateFailed");
       alert(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -170,7 +171,7 @@ export function ArticleForm({
         maxRetries: 2,
         delayMs: 1500,
         onRetry: (attempt, max) => {
-          setRetryInfo(`正在重試 (${attempt}/${max})...`);
+          setRetryInfo(t("retrying", { attempt, max }));
         },
       },
     );
@@ -182,11 +183,11 @@ export function ArticleForm({
     try {
       data = JSON.parse(text);
     } catch {
-      throw new Error(`伺服器錯誤 (${response.status})`);
+      throw new Error(t("serverError", { status: response.status }));
     }
 
     if (!response.ok) {
-      throw new Error(data.message || data.error || "文章生成失敗");
+      throw new Error(data.message || data.error || t("articleGenerateFailed"));
     }
 
     // GA4 追蹤：文章生成任務已建立
@@ -207,9 +208,9 @@ export function ArticleForm({
       setGeneratedTitles(title ? [title] : []);
       setShowSuccessDialog(true);
     } catch (error) {
-      console.error("提交失敗:", error);
+      console.error("Submit failed:", error);
       const errorMessage =
-        error instanceof Error ? error.message : "生成失敗，請稍後再試";
+        error instanceof Error ? error.message : t("generateFailed");
       alert(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -224,15 +225,15 @@ export function ArticleForm({
       const generatedList: string[] = [];
       for (let i = 0; i < count; i++) {
         await submitArticleWithoutRedirect();
-        generatedList.push(`文章 ${i + 1}`);
+        generatedList.push(t("article", { index: i + 1 }));
       }
       window.dispatchEvent(new Event("tokenReserved"));
       setGeneratedTitles(generatedList);
       setShowSuccessDialog(true);
     } catch (error) {
-      console.error("批量生成失敗:", error);
+      console.error("Batch generation failed:", error);
       const errorMessage =
-        error instanceof Error ? error.message : "生成失敗，請稍後再試";
+        error instanceof Error ? error.message : t("generateFailed");
       alert(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -245,13 +246,13 @@ export function ArticleForm({
 
     // 主題是必填欄位
     if (!industry || industry.trim() === "") {
-      alert("請先填寫「主題」欄位\n\n例如：如何把AI融入行銷中");
+      alert(t("topicRequiredSimple"));
       return;
     }
 
     // 地區是必填欄位
     if (!region || region.trim() === "") {
-      alert("請選擇目標地區");
+      alert(t("regionRequired"));
       return;
     }
 
@@ -259,7 +260,7 @@ export function ArticleForm({
       await handlePreviewTitles();
     } else {
       if (isInsufficientCredits) {
-        alert(`額度不足！您目前只能生成 ${maxArticles} 篇文章`);
+        alert(t("insufficientCreditsAlert", { max: maxArticles }));
         return;
       }
       if (articleCount > 1) {
@@ -273,7 +274,7 @@ export function ArticleForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-3 rounded-lg border p-4 bg-muted/50">
-        <Label className="text-base font-medium">標題生成模式</Label>
+        <Label className="text-base font-medium">{t("titleGenerationMode")}</Label>
         <RadioGroup
           value={titleMode}
           onValueChange={(value) => setTitleMode(value as "auto" | "preview")}
@@ -282,18 +283,18 @@ export function ArticleForm({
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="auto" id="auto" />
             <Label htmlFor="auto" className="font-normal cursor-pointer">
-              AI 自動選擇最佳標題
+              {t("aiAutoSelectTitle")}
               <span className="text-xs text-muted-foreground ml-2">
-                （系統會自動評分並選擇最適合的標題）
+                {t("aiAutoSelectTitleHint")}
               </span>
             </Label>
           </div>
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="preview" id="preview" />
             <Label htmlFor="preview" className="font-normal cursor-pointer">
-              先預覽標題選項
+              {t("previewTitleOptions")}
               <span className="text-xs text-muted-foreground ml-2">
-                （AI 生成多個標題供您選擇）
+                {t("previewTitleOptionsHint")}
               </span>
             </Label>
           </div>
@@ -301,7 +302,7 @@ export function ArticleForm({
 
         {titleMode === "auto" && (
           <div className="mt-4 pt-4 border-t space-y-2">
-            <Label htmlFor="articleCount">生成文章數量</Label>
+            <Label htmlFor="articleCount">{t("articleCount")}</Label>
             <div className="flex items-center gap-3">
               <Input
                 id="articleCount"
@@ -317,13 +318,13 @@ export function ArticleForm({
               />
               <span className="text-sm text-muted-foreground">
                 {isLoadingBalance
-                  ? "載入中..."
-                  : `最多可生成 ${maxArticles} 篇（剩餘 ${articleBalance} 篇額度）`}
+                  ? t("loadingBalance")
+                  : t("maxArticlesHint", { max: maxArticles, balance: articleBalance })}
               </span>
             </div>
             {isInsufficientCredits && !isLoadingBalance && (
               <p className="text-sm text-red-500">
-                ⚠️ 額度不足！您目前只能生成 {maxArticles} 篇文章
+                {t("insufficientCredits", { max: maxArticles })}
               </p>
             )}
           </div>
@@ -340,22 +341,22 @@ export function ArticleForm({
         }
       >
         {isSubmitting
-          ? retryInfo || "正在提交任務..."
+          ? retryInfo || t("submittingTask")
           : isLoadingTitles
-            ? "正在生成標題..."
+            ? t("generatingTitles")
             : titleMode === "preview"
-              ? "生成標題選項"
+              ? t("generateTitleOptions")
               : articleCount > 1
-                ? `開始生成 ${articleCount} 篇文章`
-                : "開始生成文章"}
+                ? t("startGenerateArticles", { count: articleCount })
+                : t("startGenerateArticle")}
       </Button>
 
       <Dialog open={showTitleDialog} onOpenChange={setShowTitleDialog}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>選擇文章標題</DialogTitle>
+            <DialogTitle>{t("selectArticleTitle")}</DialogTitle>
             <DialogDescription>
-              AI 根據您的產業和地區生成了以下標題，可多選生成多篇文章
+              {t("titleDialogDescription")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-4">
@@ -381,17 +382,17 @@ export function ArticleForm({
           </div>
           <div className="flex justify-end gap-2">
             <Button variant="outline" onClick={() => setShowTitleDialog(false)}>
-              取消
+              {tCommon("cancel")}
             </Button>
             <Button
               onClick={handleConfirmTitle}
               disabled={selectedTitles.length === 0 || isSubmitting}
             >
               {isSubmitting
-                ? "生成中..."
+                ? t("generating")
                 : selectedTitles.length > 1
-                  ? `生成 ${selectedTitles.length} 篇文章`
-                  : "使用此標題生成文章"}
+                  ? t("generateMultipleArticles", { count: selectedTitles.length })
+                  : t("useThisTitleGenerate")}
             </Button>
           </div>
         </DialogContent>
@@ -402,28 +403,24 @@ export function ArticleForm({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
-              生成任務已建立
+              {t("taskCreated")}
             </DialogTitle>
             <DialogDescription className="pt-2">
               {generatedTitles.length > 1 ? (
                 <>
-                  已建立{" "}
-                  <span className="font-medium text-foreground">
-                    {generatedTitles.length}
-                  </span>{" "}
-                  篇文章生成任務
+                  {t("articlesCreatedCount", { count: generatedTitles.length })}
                 </>
               ) : (
                 <>
                   <span className="font-medium text-foreground">
                     {generatedTitles[0]}
                   </span>{" "}
-                  正在生成中
+                  {t("articleGenerating")}
                 </>
               )}
               <br />
               <span className="text-muted-foreground">
-                您可以關閉此視窗，在網站詳情頁查看進度
+                {t("closeAndViewProgress")}
               </span>
             </DialogDescription>
           </DialogHeader>
@@ -435,7 +432,7 @@ export function ArticleForm({
                 setSelectedTitles([]);
               }}
             >
-              繼續生成其他文章
+              {t("continueGenerateOther")}
             </Button>
             <Button
               onClick={() => {
@@ -443,7 +440,7 @@ export function ArticleForm({
                 router.push("/dashboard/articles/manage");
               }}
             >
-              查看文章
+              {t("viewArticles")}
             </Button>
           </DialogFooter>
         </DialogContent>

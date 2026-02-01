@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import {
   Card,
   CardContent,
@@ -57,6 +58,8 @@ interface Subscription {
 }
 
 export default function AdminSubscriptionsPage() {
+  const t = useTranslations("admin.subscriptions");
+  const tCommon = useTranslations("admin.common");
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [filteredSubscriptions, setFilteredSubscriptions] = useState<
     Subscription[]
@@ -121,10 +124,10 @@ export default function AdminSubscriptionsPage() {
         setSubscriptions(data.data);
         setFilteredSubscriptions(data.data);
       } else {
-        toast.error(data.error || "取得訂閱列表失敗");
+        toast.error(data.error || t("loadFailed"));
       }
     } catch {
-      toast.error("取得訂閱列表失敗");
+      toast.error(t("loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -148,17 +151,17 @@ export default function AdminSubscriptionsPage() {
 
       if (data.success) {
         toast.success(
-          `已延長 ${selectedCompany.companyName} 的訂閱 ${days} 天`,
+          t("extendSuccess", { companyName: selectedCompany.companyName, days }),
         );
         setExtendDialogOpen(false);
         setDays("");
         setReason("");
         fetchSubscriptions();
       } else {
-        toast.error(data.error || "延長訂閱失敗");
+        toast.error(data.error || t("extendFailed"));
       }
     } catch {
-      toast.error("延長訂閱失敗");
+      toast.error(t("extendFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -182,17 +185,17 @@ export default function AdminSubscriptionsPage() {
 
       if (data.success) {
         toast.success(
-          `已贈送 ${selectedCompany.companyName} ${articles} 篇文章`,
+          t("grantSuccess", { companyName: selectedCompany.companyName, articles }),
         );
         setGrantDialogOpen(false);
         setArticles("");
         setReason("");
         fetchSubscriptions();
       } else {
-        toast.error(data.error || "贈送篇數失敗");
+        toast.error(data.error || t("grantFailed"));
       }
     } catch {
-      toast.error("贈送篇數失敗");
+      toast.error(t("grantFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -205,15 +208,15 @@ export default function AdminSubscriptionsPage() {
 
   const getStatusBadge = (status: string, isLifetime: boolean) => {
     if (isLifetime) {
-      return <Badge variant="default">終身</Badge>;
+      return <Badge variant="default">{t("statusLifetime")}</Badge>;
     }
     switch (status) {
       case "active":
-        return <Badge variant="default">有效</Badge>;
+        return <Badge variant="default">{t("statusActive")}</Badge>;
       case "past_due":
-        return <Badge variant="destructive">已過期</Badge>;
+        return <Badge variant="destructive">{t("statusPastDue")}</Badge>;
       case "cancelled":
-        return <Badge variant="secondary">已取消</Badge>;
+        return <Badge variant="secondary">{t("statusCancelled")}</Badge>;
       default:
         return <Badge variant="outline">{status}</Badge>;
     }
@@ -230,14 +233,14 @@ export default function AdminSubscriptionsPage() {
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">會員訂閱管理</h1>
-        <p className="text-muted-foreground">查看和管理所有會員的訂閱狀態</p>
+        <h1 className="text-2xl font-bold">{t("title")}</h1>
+        <p className="text-muted-foreground">{t("description")}</p>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>訂閱列表</CardTitle>
-          <CardDescription>共 {subscriptions.length} 個訂閱</CardDescription>
+          <CardTitle>{t("listTitle")}</CardTitle>
+          <CardDescription>{t("listDescription", { count: subscriptions.length })}</CardDescription>
         </CardHeader>
         <CardContent>
           {/* 篩選區塊 */}
@@ -245,7 +248,7 @@ export default function AdminSubscriptionsPage() {
             <div className="relative flex-1 min-w-[200px] max-w-xs">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="搜尋公司名稱..."
+                placeholder={t("searchPlaceholder")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 h-9"
@@ -254,23 +257,23 @@ export default function AdminSubscriptionsPage() {
 
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[120px] h-9">
-                <SelectValue placeholder="全部狀態" />
+                <SelectValue placeholder={t("filterStatusAll")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">全部狀態</SelectItem>
-                <SelectItem value="active">有效</SelectItem>
-                <SelectItem value="past_due">已過期</SelectItem>
-                <SelectItem value="cancelled">已取消</SelectItem>
-                <SelectItem value="lifetime">終身</SelectItem>
+                <SelectItem value="all">{t("filterStatusAll")}</SelectItem>
+                <SelectItem value="active">{t("filterStatusActive")}</SelectItem>
+                <SelectItem value="past_due">{t("filterStatusPastDue")}</SelectItem>
+                <SelectItem value="cancelled">{t("filterStatusCancelled")}</SelectItem>
+                <SelectItem value="lifetime">{t("filterStatusLifetime")}</SelectItem>
               </SelectContent>
             </Select>
 
             <Select value={planFilter} onValueChange={setPlanFilter}>
               <SelectTrigger className="w-[130px] h-9">
-                <SelectValue placeholder="全部方案" />
+                <SelectValue placeholder={t("filterPlanAll")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">全部方案</SelectItem>
+                <SelectItem value="all">{t("filterPlanAll")}</SelectItem>
                 <SelectItem value="free">Free</SelectItem>
                 <SelectItem value="starter">Starter</SelectItem>
                 <SelectItem value="professional">Professional</SelectItem>
@@ -291,14 +294,14 @@ export default function AdminSubscriptionsPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[180px]">公司名稱</TableHead>
-                  <TableHead className="w-[140px]">方案</TableHead>
-                  <TableHead className="w-[80px]">狀態</TableHead>
+                  <TableHead className="w-[180px]">{t("columns.companyName")}</TableHead>
+                  <TableHead className="w-[140px]">{t("columns.plan")}</TableHead>
+                  <TableHead className="w-[80px]">{t("columns.status")}</TableHead>
                   <TableHead className="w-[100px] text-right">
-                    剩餘篇數
+                    {t("columns.remainingArticles")}
                   </TableHead>
-                  <TableHead className="w-[100px]">到期日</TableHead>
-                  <TableHead className="w-[100px] text-right">操作</TableHead>
+                  <TableHead className="w-[100px]">{t("columns.expiresAt")}</TableHead>
+                  <TableHead className="w-[100px] text-right">{t("columns.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -311,7 +314,7 @@ export default function AdminSubscriptionsPage() {
                       {sub.planName}
                       {sub.billingCycle && (
                         <span className="text-muted-foreground ml-1">
-                          ({sub.billingCycle === "yearly" ? "年繳" : "月繳"})
+                          ({sub.billingCycle === "yearly" ? t("billingCycleYearly") : t("billingCycleMonthly")})
                         </span>
                       )}
                     </TableCell>
@@ -334,7 +337,7 @@ export default function AdminSubscriptionsPage() {
                           variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0"
-                          title="延長訂閱"
+                          title={t("extendButton")}
                           onClick={() => {
                             setSelectedCompany(sub);
                             setExtendDialogOpen(true);
@@ -346,7 +349,7 @@ export default function AdminSubscriptionsPage() {
                           variant="ghost"
                           size="sm"
                           className="h-8 w-8 p-0"
-                          title="贈送篇數"
+                          title={t("grantButton")}
                           onClick={() => {
                             setSelectedCompany(sub);
                             setGrantDialogOpen(true);
@@ -368,27 +371,27 @@ export default function AdminSubscriptionsPage() {
       <Dialog open={extendDialogOpen} onOpenChange={setExtendDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>延長訂閱期限</DialogTitle>
+            <DialogTitle>{t("extendDialogTitle")}</DialogTitle>
             <DialogDescription>
-              為 {selectedCompany?.companyName} 延長訂閱期限
+              {t("extendDialogDescription", { companyName: selectedCompany?.companyName ?? "" })}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="days">延長天數</Label>
+              <Label htmlFor="days">{t("form.days")}</Label>
               <Input
                 id="days"
                 type="number"
-                placeholder="例如：30"
+                placeholder={t("form.daysPlaceholder")}
                 value={days}
                 onChange={(e) => setDays(e.target.value)}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="reason">原因（選填）</Label>
+              <Label htmlFor="reason">{t("form.reason")}</Label>
               <Textarea
                 id="reason"
-                placeholder="例如：客戶要求延長、補償方案..."
+                placeholder={t("form.reasonPlaceholder")}
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
               />
@@ -399,11 +402,11 @@ export default function AdminSubscriptionsPage() {
               variant="outline"
               onClick={() => setExtendDialogOpen(false)}
             >
-              取消
+              {tCommon("cancel")}
             </Button>
             <Button onClick={handleExtend} disabled={submitting || !days}>
               {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              確認延長
+              {t("confirmExtend")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -413,27 +416,27 @@ export default function AdminSubscriptionsPage() {
       <Dialog open={grantDialogOpen} onOpenChange={setGrantDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>贈送文章篇數</DialogTitle>
+            <DialogTitle>{t("grantDialogTitle")}</DialogTitle>
             <DialogDescription>
-              為 {selectedCompany?.companyName} 贈送額外文章篇數
+              {t("grantDialogDescription", { companyName: selectedCompany?.companyName ?? "" })}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="articles">贈送篇數</Label>
+              <Label htmlFor="articles">{t("form.articles")}</Label>
               <Input
                 id="articles"
                 type="number"
-                placeholder="例如：5"
+                placeholder={t("form.articlesPlaceholder")}
                 value={articles}
                 onChange={(e) => setArticles(e.target.value)}
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="grant-reason">原因（選填）</Label>
+              <Label htmlFor="grant-reason">{t("form.reason")}</Label>
               <Textarea
                 id="grant-reason"
-                placeholder="例如：促銷活動、客戶補償..."
+                placeholder={t("form.grantReasonPlaceholder")}
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
               />
@@ -441,11 +444,11 @@ export default function AdminSubscriptionsPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setGrantDialogOpen(false)}>
-              取消
+              {tCommon("cancel")}
             </Button>
             <Button onClick={handleGrant} disabled={submitting || !articles}>
               {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              確認贈送
+              {t("confirmGrant")}
             </Button>
           </DialogFooter>
         </DialogContent>

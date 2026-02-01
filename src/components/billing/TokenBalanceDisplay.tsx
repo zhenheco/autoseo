@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import useSWR from "swr";
 import { formatNumber } from "@/lib/utils";
+import { useTranslations } from "next-intl";
 
 interface TokenBalance {
   total: number;
@@ -17,7 +18,7 @@ interface TokenBalanceDisplayProps {
 const fetcher = async (url: string) => {
   const res = await fetch(url);
   if (!res.ok) {
-    throw new Error("無法取得 token 餘額");
+    throw new Error("FETCH_BALANCE_FAILED");
   }
   return res.json();
 };
@@ -25,6 +26,7 @@ const fetcher = async (url: string) => {
 export function TokenBalanceDisplay({
   compact = false,
 }: TokenBalanceDisplayProps) {
+  const t = useTranslations("billing");
   const {
     data: balance,
     error,
@@ -73,7 +75,7 @@ export function TokenBalanceDisplay({
         className={`flex items-center gap-2 ${compact ? "" : "rounded-lg border border-destructive/50 bg-destructive/10 px-3 py-2"}`}
       >
         <p className="text-xs text-destructive">
-          {error?.message || "無法載入餘額"}
+          {error?.message === "FETCH_BALANCE_FAILED" ? t("fetchBalanceFailed") : t("loadBalanceFailed")}
         </p>
       </div>
     );
@@ -94,7 +96,7 @@ export function TokenBalanceDisplay({
           href="/dashboard/subscription"
           className="rounded bg-primary px-2 py-0.5 text-xs font-medium text-primary-foreground hover:bg-primary/90 transition-colors"
         >
-          升級
+          {t("upgrade")}
         </a>
       </div>
     );
@@ -104,7 +106,7 @@ export function TokenBalanceDisplay({
     <div className="flex items-center gap-3 rounded-lg border border-border bg-background px-3 py-2 shadow-sm transition-all duration-300 hover:shadow-md">
       <div className="flex items-center gap-2">
         <span className="text-sm font-medium text-muted-foreground">
-          可用餘額:
+          {t("availableBalance")}
         </span>
         <span
           className={`text-lg font-bold transition-all duration-500 ease-in-out ${isLowBalance ? "text-destructive" : "text-foreground"}`}
@@ -119,7 +121,7 @@ export function TokenBalanceDisplay({
       {balance.reserved > 0 && (
         <div className="flex items-center gap-3 border-l border-border pl-3 text-xs text-muted-foreground">
           <span className="transition-all duration-300 ease-in-out">
-            處理中:{" "}
+            {t("processingBalance")}{" "}
             <span className="font-medium text-amber-600 transition-colors duration-300">
               {formatNumber(balance.reserved)}
             </span>
@@ -130,13 +132,13 @@ export function TokenBalanceDisplay({
       {isLowBalance && (
         <div className="flex items-center gap-2">
           <span className="rounded-full bg-destructive/10 px-2 py-0.5 text-xs font-medium text-destructive">
-            餘額不足
+            {t("lowBalance")}
           </span>
           <a
             href="/dashboard/billing/upgrade"
             className="text-xs font-medium text-destructive underline hover:text-destructive/80"
           >
-            立即升級
+            {t("upgradeNow")}
           </a>
         </div>
       )}

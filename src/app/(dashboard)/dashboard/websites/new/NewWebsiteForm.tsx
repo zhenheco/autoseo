@@ -33,19 +33,22 @@ import {
 import Link from "next/link";
 import { createWebsite } from "./actions";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { useTranslations } from "next-intl";
 
-const REGIONS = [
-  { value: "taiwan", label: "台灣" },
-  { value: "japan", label: "日本" },
-  { value: "usa", label: "美國" },
-  { value: "singapore", label: "新加坡" },
-  { value: "hongkong", label: "香港" },
-  { value: "china", label: "中國" },
-  { value: "korea", label: "韓國" },
-  { value: "global", label: "全球" },
-  { value: "other", label: "其他" },
-];
+// 地區選項的 value 列表（用於 Select）
+const REGION_VALUES = [
+  "taiwan",
+  "japan",
+  "usa",
+  "singapore",
+  "hongkong",
+  "china",
+  "korea",
+  "global",
+  "other",
+] as const;
 
+// 語言選項（語言名稱是原生名稱，不需要翻譯）
 const LANGUAGES = [
   { code: "zh-TW", name: "繁體中文" },
   { code: "zh-CN", name: "简体中文" },
@@ -68,23 +71,28 @@ const LANGUAGES = [
 ];
 
 // 每日篇數選項（1-5 篇）
-const DAILY_LIMITS = [
-  { value: "1", label: "1 篇" },
-  { value: "2", label: "2 篇" },
-  { value: "3", label: "3 篇" },
-  { value: "4", label: "4 篇" },
-  { value: "5", label: "5 篇" },
-];
+const DAILY_LIMIT_VALUES = ["1", "2", "3", "4", "5"] as const;
 
 // 間隔天數選項（2-7 天）
-const INTERVAL_DAYS = [
-  { value: "2", label: "每 2 天" },
-  { value: "3", label: "每 3 天" },
-  { value: "4", label: "每 4 天" },
-  { value: "5", label: "每 5 天" },
-  { value: "6", label: "每 6 天" },
-  { value: "7", label: "每 7 天（每週）" },
-];
+const INTERVAL_DAY_VALUES = ["2", "3", "4", "5", "6", "7"] as const;
+
+// 語氣選項的 value 列表
+const TONE_VALUES = [
+  "professionalFormal",
+  "professionalFriendly",
+  "casualFriendly",
+  "educational",
+  "persuasive",
+  "expertAuthority",
+] as const;
+
+// 寫作風格選項的 value 列表
+const STYLE_VALUES = [
+  "professionalFormal",
+  "casualFriendly",
+  "educational",
+  "persuasive",
+] as const;
 
 // 時段提示
 const TIME_SLOTS_INFO: Record<number, string> = {
@@ -100,6 +108,8 @@ interface NewWebsiteFormProps {
 }
 
 export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
+  const t = useTranslations("websites.new");
+
   // 文章生成設定
   const [industry, setIndustry] = useState("");
   const [region, setRegion] = useState("taiwan");
@@ -107,8 +117,8 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
   const [language, setLanguage] = useState("zh-TW");
 
   // 品牌聲音設定
-  const [toneOfVoice, setToneOfVoice] = useState("專業親切");
-  const [writingStyle, setWritingStyle] = useState("專業正式");
+  const [toneOfVoice, setToneOfVoice] = useState("professionalFriendly");
+  const [writingStyle, setWritingStyle] = useState("professionalFormal");
 
   // 自動發文設定
   const [autoScheduleEnabled, setAutoScheduleEnabled] = useState(false);
@@ -125,7 +135,17 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
   const currentTimeSlots =
     scheduleType === "daily"
       ? TIME_SLOTS_INFO[Number(dailyLimit)] || TIME_SLOTS_INFO[3]
-      : "09:00（固定第一個黃金時段）";
+      : t("fixedFirstSlot");
+
+  // 取得翻譯後的語氣值（用於提交表單）
+  const getToneValue = (key: string) => {
+    return t(`tones.${key}`);
+  };
+
+  // 取得翻譯後的風格值（用於提交表單）
+  const getStyleValue = (key: string) => {
+    return t(`styles.${key}`);
+  };
 
   return (
     <form action={createWebsite} className="space-y-6">
@@ -137,8 +157,8 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
         value={region === "other" ? customRegion : region}
       />
       <input type="hidden" name="language" value={language} />
-      <input type="hidden" name="toneOfVoice" value={toneOfVoice} />
-      <input type="hidden" name="writingStyle" value={writingStyle} />
+      <input type="hidden" name="toneOfVoice" value={getToneValue(toneOfVoice)} />
+      <input type="hidden" name="writingStyle" value={getStyleValue(writingStyle)} />
       {/* 自動發文設定 hidden fields */}
       <input
         type="hidden"
@@ -152,62 +172,60 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
       {/* 網站資訊 */}
       <Card>
         <CardHeader>
-          <CardTitle>網站資訊</CardTitle>
+          <CardTitle>{t("websiteInfoTitle")}</CardTitle>
           <CardDescription>
-            請輸入您的 WordPress 網站資訊。您需要使用 WordPress
-            應用密碼進行驗證。
+            {t("websiteInfoDescription")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="site-name">網站名稱</Label>
+            <Label htmlFor="site-name">{t("siteNameLabel")}</Label>
             <Input
               id="site-name"
               name="siteName"
-              placeholder="我的部落格"
+              placeholder={t("siteNamePlaceholder")}
               required
             />
             <p className="text-xs text-muted-foreground">
-              為您的網站取一個容易辨識的名稱
+              {t("siteNameHint")}
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="site-url">網站 URL</Label>
+            <Label htmlFor="site-url">{t("siteUrlLabel")}</Label>
             <Input
               id="site-url"
               name="siteUrl"
               type="url"
-              placeholder="https://your-blog.com"
+              placeholder={t("siteUrlPlaceholder")}
               required
             />
             <p className="text-xs text-muted-foreground">
-              您的 WordPress 網站完整網址（包含 https://）
+              {t("siteUrlHint")}
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="wp-username">WordPress 使用者名稱</Label>
+            <Label htmlFor="wp-username">{t("wpUsernameLabel")}</Label>
             <Input
               id="wp-username"
               name="wpUsername"
-              placeholder="admin"
+              placeholder={t("wpUsernamePlaceholder")}
               required
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="wp-password">WordPress 應用密碼</Label>
+            <Label htmlFor="wp-password">{t("wpPasswordLabel")}</Label>
             <Input
               id="wp-password"
               name="wpPassword"
               type="password"
-              placeholder="xxxx xxxx xxxx xxxx xxxx xxxx"
+              placeholder={t("wpPasswordPlaceholder")}
               required
             />
             <p className="text-xs text-muted-foreground">
-              請至 WordPress 後台 → 使用者 → 個人資料 → 應用程式密碼
-              建立新的應用密碼
+              {t("wpPasswordHint")}
             </p>
           </div>
 
@@ -219,7 +237,7 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
               className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
               <HelpCircle className="h-4 w-4" />
-              <span>連線失敗？查看排錯指南</span>
+              <span>{t("troubleshootToggle")}</span>
               {troubleshootOpen ? (
                 <ChevronUp className="h-4 w-4" />
               ) : (
@@ -230,88 +248,84 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
             {troubleshootOpen && (
               <Alert className="mt-3">
                 <AlertCircle className="h-4 w-4" />
-                <AlertTitle>WordPress 連線排錯指南</AlertTitle>
+                <AlertTitle>{t("troubleshootTitle")}</AlertTitle>
                 <AlertDescription className="mt-2 space-y-3">
                   <div>
                     <p className="font-medium text-sm">
-                      403 權限被拒絕 - 常見原因：
+                      {t("error403Title")}
                     </p>
                     <ul className="list-disc list-inside text-sm mt-1 space-y-1 text-muted-foreground">
                       <li>
-                        <strong>帳號權限不足</strong>：建立應用密碼的帳號必須是「編輯者」或「管理員」角色
+                        <strong>{t("error403Reason1")}</strong>
+                        {t("error403Reason1Desc")}
                       </li>
                       <li>
-                        <strong>安全外掛阻擋</strong>：Wordfence、iThemes
-                        Security 等外掛可能會阻擋 REST API 請求
+                        <strong>{t("error403Reason2")}</strong>
+                        {t("error403Reason2Desc")}
                       </li>
                       <li>
-                        <strong>REST API 被禁用</strong>：某些主機或外掛會禁用
-                        WordPress REST API
+                        <strong>{t("error403Reason3")}</strong>
+                        {t("error403Reason3Desc")}
                       </li>
                     </ul>
                   </div>
 
                   <div>
                     <p className="font-medium text-sm">
-                      401 認證失敗 - 常見原因：
+                      {t("error401Title")}
                     </p>
                     <ul className="list-disc list-inside text-sm mt-1 space-y-1 text-muted-foreground">
-                      <li>使用者名稱或應用密碼輸入錯誤</li>
-                      <li>應用密碼已過期或被撤銷</li>
-                      <li>
-                        密碼格式錯誤（應為空格分隔的 24 位字元，如 xxxx xxxx
-                        xxxx xxxx xxxx xxxx）
-                      </li>
+                      <li>{t("error401Reason1")}</li>
+                      <li>{t("error401Reason2")}</li>
+                      <li>{t("error401Reason3")}</li>
                     </ul>
                   </div>
 
                   <div>
                     <p className="font-medium text-sm">
-                      404 找不到 API - 常見原因：
+                      {t("error404Title")}
                     </p>
                     <ul className="list-disc list-inside text-sm mt-1 space-y-1 text-muted-foreground">
-                      <li>網址格式錯誤（請確認包含 https://）</li>
-                      <li>WordPress 固定網址設定問題</li>
-                      <li>REST API 被完全禁用</li>
+                      <li>{t("error404Reason1")}</li>
+                      <li>{t("error404Reason2")}</li>
+                      <li>{t("error404Reason3")}</li>
                     </ul>
                   </div>
 
                   <div className="pt-3 mt-3 border-t">
                     <p className="font-medium text-sm text-orange-600 dark:text-orange-400">
-                      🔥 Cloudways 主機用戶注意：
+                      {t("cloudwaysTitle")}
                     </p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      如果您使用 Cloudways
-                      主機，且在瀏覽器能正常訪問 REST API，但綁定時仍出現 403
-                      錯誤，請檢查：
+                      {t("cloudwaysDesc")}
                     </p>
                     <ul className="list-disc list-inside text-sm mt-1 space-y-1 text-muted-foreground">
                       <li>
-                        <strong>Bot Protection</strong>：暫時關閉機器人保護
-                        （Applications → Bot Protection）
+                        <strong>{t("cloudwaysReason1")}</strong>
+                        {t("cloudwaysReason1Desc")}
                       </li>
                       <li>
-                        <strong>WAF 防火牆</strong>：將 WAF 模式改為 Learning
-                        或暫時停用（Application Settings → WAF）
+                        <strong>{t("cloudwaysReason2")}</strong>
+                        {t("cloudwaysReason2Desc")}
                       </li>
                       <li>
-                        <strong>Cloudflare</strong>：如有開啟
-                        Cloudflare，檢查防火牆規則是否阻擋 API 請求
+                        <strong>{t("cloudwaysReason3")}</strong>
+                        {t("cloudwaysReason3Desc")}
                       </li>
                     </ul>
                     <p className="text-xs text-muted-foreground mt-2">
-                      完成網站綁定後，可以重新啟用這些安全功能。
+                      {t("cloudwaysNote")}
                     </p>
                   </div>
 
                   <div className="pt-2 border-t">
-                    <p className="text-sm font-medium">快速測試方法：</p>
+                    <p className="text-sm font-medium">{t("quickTestTitle")}</p>
                     <p className="text-sm text-muted-foreground mt-1">
-                      在瀏覽器中訪問{" "}
+                      {t("quickTestDesc")}{" "}
                       <code className="bg-muted px-1 py-0.5 rounded text-xs">
-                        您的網站網址/wp-json/wp/v2/categories
+                        {t("quickTestEndpoint")}
                       </code>
-                      ，如果顯示 JSON 格式的分類資料，表示 REST API 正常運作。
+                      {t("quickTestResult")}
                     </p>
                   </div>
 
@@ -322,7 +336,7 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
                     >
-                      查看 WordPress 應用密碼官方文件
+                      {t("wpDocsLink")}
                       <ExternalLink className="h-3 w-3" />
                     </a>
                   </div>
@@ -336,36 +350,36 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
       {/* 文章生成設定 */}
       <Card>
         <CardHeader>
-          <CardTitle>文章生成設定</CardTitle>
+          <CardTitle>{t("articleSettingsTitle")}</CardTitle>
           <CardDescription>
-            設定此網站預設的主題、目標地區和語言（選填，可稍後設定）
+            {t("articleSettingsDescription")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="industry">你想要寫哪些主題?</Label>
+            <Label htmlFor="industry">{t("topicLabel")}</Label>
             <Input
               id="industry"
               name="industryDisplay"
               value={industry}
               onChange={(e) => setIndustry(e.target.value)}
-              placeholder="如何把ai融入行銷中"
+              placeholder={t("topicPlaceholder")}
             />
             <p className="text-xs text-muted-foreground">
-              AI 會根據這個主題調整文章內容和用語
+              {t("topicHint")}
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="region">目標地區</Label>
+            <Label htmlFor="region">{t("regionLabel")}</Label>
             <Select value={region} onValueChange={setRegion}>
               <SelectTrigger id="region">
-                <SelectValue placeholder="請選擇目標地區" />
+                <SelectValue placeholder={t("regionPlaceholder")} />
               </SelectTrigger>
               <SelectContent>
-                {REGIONS.map((reg) => (
-                  <SelectItem key={reg.value} value={reg.value}>
-                    {reg.label}
+                {REGION_VALUES.map((reg) => (
+                  <SelectItem key={reg} value={reg}>
+                    {t(`regions.${reg}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -374,20 +388,20 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
               <Input
                 value={customRegion}
                 onChange={(e) => setCustomRegion(e.target.value)}
-                placeholder="請輸入您的目標地區"
+                placeholder={t("customRegionPlaceholder")}
                 className="mt-2"
               />
             )}
             <p className="text-xs text-muted-foreground">
-              AI 會針對目標地區的讀者習慣調整內容
+              {t("regionHint")}
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="language">撰寫語言</Label>
+            <Label htmlFor="language">{t("languageLabel")}</Label>
             <Select value={language} onValueChange={setLanguage}>
               <SelectTrigger id="language">
-                <SelectValue placeholder="請選擇撰寫語言" />
+                <SelectValue placeholder={t("languagePlaceholder")} />
               </SelectTrigger>
               <SelectContent>
                 {LANGUAGES.map((lang) => (
@@ -397,7 +411,7 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground">文章將以此語言撰寫</p>
+            <p className="text-xs text-muted-foreground">{t("languageHint")}</p>
           </div>
         </CardContent>
       </Card>
@@ -405,64 +419,64 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
       {/* 品牌聲音設定 */}
       <Card>
         <CardHeader>
-          <CardTitle>品牌聲音設定</CardTitle>
+          <CardTitle>{t("brandVoiceTitle")}</CardTitle>
           <CardDescription>
-            設定文章撰寫時使用的品牌風格和語氣（選填，可稍後設定）
+            {t("brandVoiceDescription")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="space-y-2">
-            <Label htmlFor="brand-name">品牌名稱</Label>
+            <Label htmlFor="brand-name">{t("brandNameLabel")}</Label>
             <Input
               id="brand-name"
               name="brandName"
-              placeholder="請輸入您的品牌名稱"
+              placeholder={t("brandNamePlaceholder")}
             />
             <p className="text-xs text-muted-foreground">
-              文章中會適當提及此品牌名稱
+              {t("brandNameHint")}
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="tone-of-voice">語氣</Label>
+            <Label htmlFor="tone-of-voice">{t("toneLabel")}</Label>
             <Select value={toneOfVoice} onValueChange={setToneOfVoice}>
               <SelectTrigger id="tone-of-voice">
-                <SelectValue placeholder="請選擇語氣" />
+                <SelectValue placeholder={t("tonePlaceholder")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="專業正式">專業正式</SelectItem>
-                <SelectItem value="專業親切">專業親切</SelectItem>
-                <SelectItem value="輕鬆友善">輕鬆友善</SelectItem>
-                <SelectItem value="教育性">教育性</SelectItem>
-                <SelectItem value="說服性">說服性</SelectItem>
-                <SelectItem value="權威專家">權威專家</SelectItem>
+                {TONE_VALUES.map((tone) => (
+                  <SelectItem key={tone} value={tone}>
+                    {t(`tones.${tone}`)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="target-audience">目標受眾</Label>
+            <Label htmlFor="target-audience">{t("targetAudienceLabel")}</Label>
             <Input
               id="target-audience"
               name="targetAudience"
-              placeholder="例如：B2B 專業人士、一般消費者、技術人員"
+              placeholder={t("targetAudiencePlaceholder")}
             />
             <p className="text-xs text-muted-foreground">
-              描述您的目標讀者群，文章風格會根據受眾調整
+              {t("targetAudienceHint")}
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="writing-style">寫作風格</Label>
+            <Label htmlFor="writing-style">{t("writingStyleLabel")}</Label>
             <Select value={writingStyle} onValueChange={setWritingStyle}>
               <SelectTrigger id="writing-style">
-                <SelectValue placeholder="請選擇寫作風格" />
+                <SelectValue placeholder={t("writingStylePlaceholder")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="專業正式">專業正式</SelectItem>
-                <SelectItem value="輕鬆友善">輕鬆友善</SelectItem>
-                <SelectItem value="教育性">教育性</SelectItem>
-                <SelectItem value="說服性">說服性</SelectItem>
+                {STYLE_VALUES.map((style) => (
+                  <SelectItem key={style} value={style}>
+                    {t(`styles.${style}`)}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           </div>
@@ -474,19 +488,19 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Calendar className="h-5 w-5" />
-            自動發文設定
+            {t("autoScheduleTitle")}
           </CardTitle>
           <CardDescription>
-            設定文章生成完成後的自動排程行為（選填，可稍後設定）
+            {t("autoScheduleDescription")}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* 自動排程開關 */}
           <div className="flex items-center justify-between rounded-lg border p-4">
             <div className="space-y-0.5">
-              <Label className="text-base">自動排程</Label>
+              <Label className="text-base">{t("autoScheduleLabel")}</Label>
               <p className="text-sm text-muted-foreground">
-                文章生成完成後自動排入發布佇列
+                {t("autoScheduleHint")}
               </p>
             </div>
             <Switch
@@ -497,7 +511,7 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
 
           {/* 排程模式選擇 */}
           <div className="space-y-3">
-            <Label>排程模式</Label>
+            <Label>{t("scheduleModeLabel")}</Label>
             <RadioGroup
               value={scheduleType}
               onValueChange={(v) => setScheduleType(v as "daily" | "interval")}
@@ -511,7 +525,7 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
                   className="flex items-center gap-2 cursor-pointer"
                 >
                   <Clock className="h-4 w-4" />
-                  每日發布
+                  {t("dailyPublish")}
                 </Label>
               </div>
               <div className="flex items-center space-x-2 rounded-lg border p-4 cursor-pointer hover:bg-muted/50">
@@ -521,7 +535,7 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
                   className="flex items-center gap-2 cursor-pointer"
                 >
                   <CalendarDays className="h-4 w-4" />
-                  間隔發布
+                  {t("intervalPublish")}
                 </Label>
               </div>
             </RadioGroup>
@@ -530,19 +544,19 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
           {/* 每日發布模式：選擇每日篇數 */}
           {scheduleType === "daily" && (
             <div className="space-y-2">
-              <Label htmlFor="daily-limit">每日發布文章數上限</Label>
+              <Label htmlFor="daily-limit">{t("dailyLimitLabel")}</Label>
               <Select
                 value={dailyLimit}
                 onValueChange={setDailyLimit}
                 disabled={!autoScheduleEnabled}
               >
                 <SelectTrigger id="daily-limit">
-                  <SelectValue placeholder="選擇每日篇數" />
+                  <SelectValue placeholder={t("dailyLimitPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {DAILY_LIMITS.map((limit) => (
-                    <SelectItem key={limit.value} value={limit.value}>
-                      {limit.label}
+                  {DAILY_LIMIT_VALUES.map((limit) => (
+                    <SelectItem key={limit} value={limit}>
+                      {t(`dailyLimits.${limit}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -553,25 +567,25 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
           {/* 間隔發布模式：選擇間隔天數 */}
           {scheduleType === "interval" && (
             <div className="space-y-2">
-              <Label htmlFor="interval-days">發布間隔</Label>
+              <Label htmlFor="interval-days">{t("intervalLabel")}</Label>
               <Select
                 value={intervalDays}
                 onValueChange={setIntervalDays}
                 disabled={!autoScheduleEnabled}
               >
                 <SelectTrigger id="interval-days">
-                  <SelectValue placeholder="選擇間隔天數" />
+                  <SelectValue placeholder={t("intervalPlaceholder")} />
                 </SelectTrigger>
                 <SelectContent>
-                  {INTERVAL_DAYS.map((interval) => (
-                    <SelectItem key={interval.value} value={interval.value}>
-                      {interval.label}
+                  {INTERVAL_DAY_VALUES.map((interval) => (
+                    <SelectItem key={interval} value={interval}>
+                      {t(`intervalDays.${interval}`)}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                每隔指定天數發布 1 篇文章
+                {t("intervalHint")}
               </p>
             </div>
           )}
@@ -581,7 +595,7 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
             <div className="rounded-lg bg-muted/50 p-3">
               <p className="text-sm text-muted-foreground flex items-center gap-2">
                 <Clock className="h-4 w-4" />
-                <span>發布時段（台灣時間）：{currentTimeSlots}</span>
+                <span>{t("publishTimeLabel", { slots: currentTimeSlots })}</span>
               </p>
             </div>
           )}
@@ -590,10 +604,10 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
 
       {/* 按鈕區 */}
       <div className="flex gap-4">
-        <Button type="submit">新增網站</Button>
+        <Button type="submit">{t("submitButton")}</Button>
         <Link href="/dashboard/websites">
           <Button type="button" variant="outline">
-            取消
+            {t("cancelButton")}
           </Button>
         </Link>
       </div>

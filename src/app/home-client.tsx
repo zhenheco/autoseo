@@ -100,10 +100,10 @@ const STAT_ICONS = {
 
 // 更有說服力的統計數據
 const STATS = [
-  { key: "users", value: "500+", suffix: "", description: "企業用戶" },
-  { key: "articles", value: "50,000+", suffix: "", description: "文章已生成" },
-  { key: "satisfaction", value: "4.9", suffix: "/5", description: "滿意度評分" },
-  { key: "costSaving", value: "95", suffix: "%", description: "成本節省" },
+  { key: "users", value: "500+", suffix: "", descKey: "enterpriseUsers" },
+  { key: "articles", value: "50,000+", suffix: "", descKey: "articlesGenerated" },
+  { key: "satisfaction", value: "4.9", suffix: "/5", descKey: "satisfactionRating" },
+  { key: "costSaving", value: "95", suffix: "%", descKey: "costSavingLabel" },
 ] as const;
 
 const AI_MODEL_KEYS = ["gpt5", "claude45", "gemini3"] as const;
@@ -112,25 +112,22 @@ const AI_MODEL_KEYS = ["gpt5", "claude45", "gemini3"] as const;
 const PAIN_POINTS = [
   {
     icon: DollarSign,
-    title: "請寫手太貴",
-    description:
-      "一篇 SEO 文章 NT$3,000-8,000，每月 10 篇就要花 NT$30,000 以上",
+    titleKey: "expensiveWriters",
+    descKey: "expensiveWritersDesc",
     color: "text-red-500",
     bgColor: "bg-red-50 dark:bg-red-950/30",
   },
   {
     icon: Clock,
-    title: "自己寫太慢",
-    description:
-      "研究關鍵字、分析競品、撰寫內容，一篇文章至少花 4-8 小時",
+    titleKey: "slowWriting",
+    descKey: "slowWritingDesc",
     color: "text-orange-500",
     bgColor: "bg-orange-50 dark:bg-orange-950/30",
   },
   {
     icon: BarChart3,
-    title: "效果不穩定",
-    description:
-      "ChatGPT 生成的文章品質參差不齊，SEO 排名總是上不去",
+    titleKey: "unstableResults",
+    descKey: "unstableResultsDesc",
     color: "text-amber-500",
     bgColor: "bg-amber-50 dark:bg-amber-950/30",
   },
@@ -183,7 +180,7 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
                   </div>
                 </div>
                 <span className="text-sm font-medium text-slate-700 dark:text-slate-300">
-                  500+ 企業信賴使用
+                  {t("hero.socialProof")}
                 </span>
                 <div className="flex items-center gap-0.5 text-amber-500">
                   {[...Array(5)].map((_, i) => (
@@ -201,26 +198,26 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
               {/* 主標題 - 更強的價值主張 */}
               <h1 className="mb-6 font-bold tracking-tight">
                 <span className="text-slate-600 dark:text-slate-400 text-lg md:text-xl block mb-2">
-                  別再花錢請寫手或 SEO 公司
+                  {t("hero.subtitle")}
                 </span>
                 <ShimmerText
                   as="span"
                   className="text-4xl md:text-6xl lg:text-7xl block font-extrabold leading-tight"
                 >
-                  AI 自動生成 SEO 文章
+                  {t("hero.mainTitle")}
                 </ShimmerText>
                 <span className="text-2xl md:text-3xl text-slate-800 dark:text-slate-200 block mt-3 font-semibold">
-                  10 分鐘內完成，每篇只要 NT$50
+                  {t("hero.valueProposition")}
                 </span>
               </h1>
 
               {/* 副標題 - 具體效益 */}
               <p className="mx-auto mb-10 max-w-3xl text-lg md:text-xl text-slate-600 dark:text-slate-400 leading-relaxed">
-                結合 GPT-5、Claude 4.5、Gemini 3 等頂尖 AI，
+                {t("hero.description")}
                 <span className="text-slate-900 dark:text-white font-medium">
-                  從關鍵字研究、競品分析、內容撰寫到自動發布 WordPress
+                  {t("hero.descriptionHighlight")}
                 </span>
-                ，全程自動化。
+                {t("hero.descriptionSuffix")}
               </p>
 
               {/* CTA 按鈕組 */}
@@ -233,7 +230,7 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
                   className="w-full sm:w-auto text-lg px-10 py-7 gap-3 font-bold"
                 >
                   <Rocket className="h-6 w-6" />
-                  免費試用 — 立即生成第一篇文章
+                  {t("cta.freeTrial")}
                   <ArrowRight className="h-5 w-5" />
                 </GlowButtonLink>
               </div>
@@ -244,18 +241,18 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
                   <CheckCircle2 className="h-5 w-5 text-green-500" />
                   <span>
                     <strong className="text-slate-900 dark:text-white">
-                      免費 3 篇
+                      {t("trustIndicators.freeArticles")}
                     </strong>{" "}
-                    文章額度
+                    {t("trustIndicators.articleQuota")}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
                   <CheckCircle2 className="h-5 w-5 text-green-500" />
-                  <span>無需信用卡</span>
+                  <span>{t("trustIndicators.noCreditCard")}</span>
                 </div>
                 <div className="flex items-center gap-2 text-slate-600 dark:text-slate-400">
                   <CheckCircle2 className="h-5 w-5 text-green-500" />
-                  <span>30 秒內開始</span>
+                  <span>{t("trustIndicators.startIn30Sec")}</span>
                 </div>
               </div>
             </div>
@@ -267,7 +264,7 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
           <div className="container mx-auto px-4">
             <div className="text-center mb-12">
               <h2 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white mb-4">
-                您是否也有這些困擾？
+                {t("painPoints.title")}
               </h2>
             </div>
 
@@ -282,10 +279,10 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
                     <CardContent className="p-6">
                       <Icon className={`h-10 w-10 ${pain.color} mb-4`} />
                       <h3 className="text-lg font-bold text-slate-900 dark:text-white mb-2">
-                        {pain.title}
+                        {t(`painPoints.${pain.titleKey}`)}
                       </h3>
                       <p className="text-slate-600 dark:text-slate-400 text-sm">
-                        {pain.description}
+                        {t(`painPoints.${pain.descKey}`)}
                       </p>
                     </CardContent>
                   </Card>
@@ -297,7 +294,7 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
             <div className="text-center mt-12">
               <div className="inline-flex items-center gap-2 text-lg font-semibold text-blue-600 dark:text-blue-400">
                 <ArrowRight className="h-5 w-5" />
-                1WaySEO 一次解決所有問題
+                {t("painPoints.solution")}
               </div>
             </div>
           </div>
@@ -309,7 +306,7 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
           <div className="container relative z-10 mx-auto px-4">
             <div className="text-center mb-10">
               <h2 className="text-xl md:text-2xl font-bold text-white">
-                已有超過 500+ 企業信賴使用
+                {t("statsBar.title")}
               </h2>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-4 gap-6 max-w-5xl mx-auto">
@@ -334,7 +331,7 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
                         )}
                       </div>
                       <div className="text-sm text-slate-400">
-                        {stat.description}
+                        {t(`statsData.${stat.descKey}`)}
                       </div>
                     </div>
                   </div>
@@ -506,15 +503,14 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
                   gradient="violet-magenta"
                   className="text-4xl md:text-5xl"
                 >
-                  {t("subscriptionPlans") || "訂閱方案"}
+                  {t("subscriptionPlans")}
                 </GradientText>
                 <span className="text-slate-900 dark:text-white text-xl md:text-2xl ml-2">
-                  {t("chooseYourPlan") || "選擇適合您的方案"}
+                  {t("chooseYourPlan")}
                 </span>
               </h2>
               <p className="text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mb-6">
-                {t("subscriptionDesc") ||
-                  "每月自動重置文章額度，讓您持續產出高品質內容"}
+                {t("subscriptionDesc")}
               </p>
 
               {/* 月繳/年繳切換器 */}
@@ -527,13 +523,13 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
                       : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
                   }`}
                 >
-                  {t("monthlyBilling") || "月繳"}
+                  {t("monthlyBilling")}
                 </button>
                 <button
                   onClick={() => setBillingCycle("yearly")}
                   className="px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 bg-gradient-to-r from-cyber-violet-600 to-cyber-magenta-600 text-white"
                 >
-                  {t("yearlyBilling") || "年繳"}
+                  {t("yearlyBilling")}
                   <span
                     className={`text-xs px-2 py-0.5 rounded-full ${
                       billingCycle === "yearly"
@@ -541,7 +537,7 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
                         : "bg-yellow-400/80 text-slate-900"
                     }`}
                   >
-                    {t("yearlyBonus") || "多送200%"}
+                    {t("yearlyBonus")}
                   </span>
                 </button>
               </div>
@@ -584,15 +580,15 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
                           <span className="text-sm text-slate-600 dark:text-slate-400">
                             /
                             {billingCycle === "yearly"
-                              ? t("year") || "年"
-                              : t("month") || "月"}
+                              ? t("year")
+                              : t("month")}
                           </span>
                         </div>
                         {billingCycle === "yearly" && (
                           <div className="text-sm mt-1 text-slate-500 dark:text-slate-400">
-                            {t("equivalentMonthly") || "約"} NT$
+                            {t("equivalentMonthly")} NT$
                             {Math.round((price || 0) / 12).toLocaleString()}/
-                            {t("month") || "月"}
+                            {t("month")}
                           </div>
                         )}
                       </div>
@@ -602,17 +598,17 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
                         <div className="flex items-center justify-center gap-2">
                           <FileText className="h-5 w-5 text-cyber-violet-500" />
                           <span className="text-lg font-bold text-slate-900 dark:text-white">
-                            {t("monthly") || "每月"}{" "}
+                            {t("monthly")}{" "}
                             {plan.articles_per_month?.toLocaleString()}{" "}
-                            {t("articles") || "篇"}
+                            {t("articles")}
                           </span>
                         </div>
                         {billingCycle === "yearly" && yearlyBonus > 0 && (
                           <div className="flex items-center justify-center gap-1 mt-2 text-sm text-cyber-magenta-500 dark:text-cyber-magenta-400">
                             <Gift className="h-4 w-4" />
                             <span className="font-medium">
-                              {t("bonusArticles") || "每月加贈"} {yearlyBonus}{" "}
-                              {t("articles") || "篇"}
+                              {t("bonusArticles")} {yearlyBonus}{" "}
+                              {t("articles")}
                             </span>
                           </div>
                         )}
@@ -660,14 +656,13 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
               <div className="text-center mb-8">
                 <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white dark:bg-transparent dark:glass shadow-md dark:shadow-none border border-slate-200 dark:border-cyber-cyan-500/30 px-4 py-2 text-sm font-medium text-cyber-cyan-600 dark:text-cyber-cyan-400">
                   <CreditCard className="h-4 w-4" />
-                  <span>{t("articlePackage") || "文章加購包"}</span>
+                  <span>{t("articlePackage")}</span>
                 </div>
                 <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">
-                  {t("needMoreArticles") || "需要更多文章額度？"}
+                  {t("needMoreArticles")}
                 </h3>
                 <p className="text-sm text-slate-600 dark:text-slate-400">
-                  {t("packageDescArticle") ||
-                    "加購額度永久有效，不受訂閱週期限制"}
+                  {t("packageDescArticle")}
                 </p>
               </div>
 
@@ -695,7 +690,7 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
                           className="text-lg font-bold block mb-1"
                         >
                           {pkg.articles?.toLocaleString()}{" "}
-                          {t("articles") || "篇"}
+                          {t("articles")}
                         </GradientText>
                         {pkg.description && (
                           <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
@@ -736,24 +731,24 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
               {/* 緊迫性標籤 */}
               <div className="mb-6 inline-flex items-center gap-2 rounded-full bg-amber-100 dark:bg-amber-900/30 px-4 py-2 text-sm font-medium text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-700">
                 <Gift className="h-4 w-4" />
-                <span>限時優惠：免費 3 篇文章額度</span>
+                <span>{t("finalCta.limitedOffer")}</span>
               </div>
 
               <h2 className="font-bold mb-6">
                 <span className="text-slate-700 dark:text-slate-300 text-lg md:text-xl block mb-2">
-                  還在猶豫要不要花錢請寫手？
+                  {t("finalCta.hesitating")}
                 </span>
                 <ShimmerText
                   as="span"
                   className="text-3xl md:text-5xl block leading-tight"
                 >
-                  讓 AI 幫你搞定 SEO 內容
+                  {t("finalCta.letAiHelp")}
                 </ShimmerText>
               </h2>
 
               <p className="text-slate-600 dark:text-slate-400 mb-8 text-lg max-w-2xl mx-auto">
-                現在註冊即可獲得 <strong className="text-slate-900 dark:text-white">免費 3 篇文章</strong>，
-                親自體驗 AI 生成的 SEO 文章品質。無需信用卡，30 秒內開始。
+                {t("finalCta.description")} <strong className="text-slate-900 dark:text-white">{t("finalCta.freeArticlesStrong")}</strong>
+                {t("finalCta.descriptionSuffix")}
               </p>
 
               {/* CTA 按鈕組 */}
@@ -766,7 +761,7 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
                   className="text-lg px-10 py-7 gap-3 group font-bold"
                 >
                   <Rocket className="h-6 w-6" />
-                  免費試用 — 立即開始
+                  {t("cta.freeTrialShort")}
                   <ArrowRight className="h-5 w-5 group-hover:translate-x-1 transition-transform" />
                 </GlowButtonLink>
               </div>
@@ -775,15 +770,15 @@ export function HomeClient({ plans, articlePackages }: HomeClientProps) {
               <div className="flex flex-wrap justify-center gap-x-6 gap-y-2 text-sm text-slate-500 dark:text-slate-400">
                 <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  <span>免費 3 篇文章</span>
+                  <span>{t("finalCta.freeArticles")}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  <span>無需綁定信用卡</span>
+                  <span>{t("finalCta.noBindCreditCard")}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="h-4 w-4 text-green-500" />
-                  <span>隨時可取消訂閱</span>
+                  <span>{t("finalCta.cancelAnytime")}</span>
                 </div>
               </div>
             </div>

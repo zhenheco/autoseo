@@ -68,7 +68,7 @@ export function ResetPasswordForm({
         }, 2000);
       }
     } catch (err) {
-      setError(err instanceof Error ? err.message : "更新密碼失敗");
+      setError(err instanceof Error ? err.message : t("passwordResetFailed"));
     } finally {
       setIsLoading(false);
     }

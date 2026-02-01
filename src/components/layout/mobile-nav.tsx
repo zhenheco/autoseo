@@ -13,16 +13,18 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-
-const navLinks = [
-  { href: "/blog", label: "Blog" },
-  { href: "/pricing", label: "定價方案" },
-  { href: "/terms", label: "服務條款" },
-  { href: "/privacy", label: "隱私政策" },
-];
+import { useTranslations } from "next-intl";
 
 export function MobileNav() {
   const [open, setOpen] = useState(false);
+  const t = useTranslations("nav");
+
+  const navLinks = [
+    { href: "/blog", label: t("blog") },
+    { href: "/pricing", label: t("pricing") },
+    { href: "/terms", label: t("termsOfService") },
+    { href: "/privacy", label: t("privacyPolicy") },
+  ];
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
@@ -31,7 +33,7 @@ export function MobileNav() {
           variant="ghost"
           size="icon"
           className="md:hidden h-10 w-10"
-          aria-label="開啟選單"
+          aria-label={t("openMenu")}
         >
           <Menu className="h-5 w-5" />
         </Button>
@@ -66,16 +68,16 @@ export function MobileNav() {
           <div className="flex flex-col gap-3">
             <Link href="/login" onClick={() => setOpen(false)}>
               <Button variant="outline" className="w-full justify-center">
-                登入
+                {t("login")}
               </Button>
             </Link>
             <Link href="/signup" onClick={() => setOpen(false)}>
-              <Button className="w-full justify-center">免費開始</Button>
+              <Button className="w-full justify-center">{t("signup")}</Button>
             </Link>
           </div>
 
           <div className="mt-6 flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">主題切換</span>
+            <span className="text-sm text-muted-foreground">{t("themeToggle")}</span>
             <ThemeToggle />
           </div>
         </nav>

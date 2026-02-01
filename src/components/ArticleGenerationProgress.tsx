@@ -1,6 +1,7 @@
 "use client";
 
 import { useArticleJobStatus } from "@/hooks/useArticleJobStatus";
+import { useTranslations, useLocale } from "next-intl";
 
 interface ArticleGenerationProgressProps {
   jobId: string;
@@ -13,6 +14,8 @@ export function ArticleGenerationProgress({
   onComplete,
   onError,
 }: ArticleGenerationProgressProps) {
+  const t = useTranslations("dashboard.progress");
+  const locale = useLocale();
   const { job, loading, error } = useArticleJobStatus(jobId, {
     interval: 60000, // 每 60 秒檢查一次
   });
@@ -32,7 +35,7 @@ export function ArticleGenerationProgress({
       <div className="border rounded-lg p-4 bg-gray-50">
         <div className="flex items-center space-x-2">
           <div className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
-          <span className="text-sm text-gray-600">載入任務狀態...</span>
+          <span className="text-sm text-gray-600">{t("loadingStatus")}</span>
         </div>
       </div>
     );
@@ -41,7 +44,7 @@ export function ArticleGenerationProgress({
   if (error) {
     return (
       <div className="border border-red-300 rounded-lg p-4 bg-red-50">
-        <h3 className="font-semibold text-red-800 mb-2">錯誤</h3>
+        <h3 className="font-semibold text-red-800 mb-2">{t("error")}</h3>
         <p className="text-sm text-red-600">{error}</p>
       </div>
     );
@@ -69,13 +72,13 @@ export function ArticleGenerationProgress({
   const getStatusText = () => {
     switch (job.status) {
       case "pending":
-        return "生成中";
+        return t("generating");
       case "processing":
-        return "處理中";
+        return t("processing");
       case "completed":
-        return "已完成";
+        return t("completed");
       case "failed":
-        return "失敗";
+        return t("failed");
       default:
         return job.status;
     }
@@ -98,18 +101,18 @@ export function ArticleGenerationProgress({
 
   return (
     <div className={`border rounded-lg p-4 ${getBorderColor()}`}>
-      <h3 className="font-semibold mb-3">文章生成進度</h3>
+      <h3 className="font-semibold mb-3">{t("title")}</h3>
 
       {/* 任務資訊 */}
       <div className="mb-3">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-gray-600">任務 ID:</span>
+          <span className="text-sm text-gray-600">{t("jobId")}</span>
           <span className="text-sm font-mono text-gray-800">
             {job.job_id.slice(0, 8)}...
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-600">狀態:</span>
+          <span className="text-sm text-gray-600">{t("status")}</span>
           <span className={`text-sm font-semibold ${getStatusColor()}`}>
             {getStatusText()}
           </span>
@@ -126,7 +129,7 @@ export function ArticleGenerationProgress({
             />
           </div>
           <p className="text-sm text-gray-600">
-            {job.current_step || "處理中..."} ({job.progress || 0}%)
+            {job.current_step || t("processingProgress")} ({job.progress || 0}%)
           </p>
         </div>
       )}
@@ -134,9 +137,9 @@ export function ArticleGenerationProgress({
       {/* 等待處理的提示 */}
       {job.status === "pending" && (
         <div className="mb-3">
-          <p className="text-sm text-gray-600">任務已排隊，等待處理...</p>
+          <p className="text-sm text-gray-600">{t("taskQueued")}</p>
           <p className="text-xs text-gray-500 mt-1">
-            每 5 分鐘會自動檢查並處理待處理的任務
+            {t("taskQueueHint")}
           </p>
         </div>
       )}
@@ -164,10 +167,10 @@ export function ArticleGenerationProgress({
                   d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
                 />
               </svg>
-              查看文章
+              {t("viewArticle")}
             </a>
           ) : (
-            <p className="text-sm text-green-600">文章生成完成</p>
+            <p className="text-sm text-green-600">{t("articleGenerated")}</p>
           )}
         </div>
       )}
@@ -175,7 +178,7 @@ export function ArticleGenerationProgress({
       {/* 錯誤訊息 */}
       {job.status === "failed" && job.error_message && (
         <div className="mt-3 p-3 bg-red-100 rounded border border-red-200">
-          <p className="text-sm text-red-800 font-semibold mb-1">錯誤訊息:</p>
+          <p className="text-sm text-red-800 font-semibold mb-1">{t("errorMessage")}</p>
           <p className="text-sm text-red-700">{job.error_message}</p>
         </div>
       )}
@@ -184,22 +187,22 @@ export function ArticleGenerationProgress({
       <div className="mt-3 pt-3 border-t border-gray-300">
         <div className="grid grid-cols-2 gap-2 text-xs text-gray-500">
           <div>
-            <span className="font-medium">建立時間:</span>
+            <span className="font-medium">{t("createdAt")}</span>
             <br />
-            {new Date(job.created_at).toLocaleString("zh-TW")}
+            {new Date(job.created_at).toLocaleString(locale)}
           </div>
           {job.started_at && (
             <div>
-              <span className="font-medium">開始時間:</span>
+              <span className="font-medium">{t("startedAt")}</span>
               <br />
-              {new Date(job.started_at).toLocaleString("zh-TW")}
+              {new Date(job.started_at).toLocaleString(locale)}
             </div>
           )}
           {job.completed_at && (
             <div className="col-span-2">
-              <span className="font-medium">完成時間:</span>
+              <span className="font-medium">{t("completedAt")}</span>
               <br />
-              {new Date(job.completed_at).toLocaleString("zh-TW")}
+              {new Date(job.completed_at).toLocaleString(locale)}
             </div>
           )}
         </div>
@@ -229,7 +232,7 @@ export function ArticleGenerationProgress({
                 d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
               />
             </svg>
-            每 60 秒自動更新狀態
+            {t("autoRefreshHint")}
           </p>
         </div>
       )}

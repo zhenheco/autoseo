@@ -1,6 +1,7 @@
 import { getUser, getUserPrimaryCompany } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { NewWebsiteForm } from "./NewWebsiteForm";
+import { getTranslations } from "next-intl/server";
 
 export default async function NewWebsitePage({
   searchParams,
@@ -8,6 +9,7 @@ export default async function NewWebsitePage({
   searchParams: Promise<{ error?: string }>;
 }) {
   const user = await getUser();
+  const t = await getTranslations("websites");
 
   if (!user) {
     redirect("/login");
@@ -18,7 +20,7 @@ export default async function NewWebsitePage({
   if (!company) {
     return (
       <div className="container mx-auto p-8">
-        <p className="text-muted-foreground">您尚未加入任何公司</p>
+        <p className="text-muted-foreground">{t("noCompanyJoined")}</p>
       </div>
     );
   }
@@ -28,9 +30,9 @@ export default async function NewWebsitePage({
   return (
     <div className="container mx-auto p-8 max-w-2xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">新增 WordPress 網站</h1>
+        <h1 className="text-3xl font-bold">{t("new.pageTitle")}</h1>
         <p className="text-muted-foreground mt-2">
-          連接您的 WordPress 網站以開始自動發布文章
+          {t("new.pageDescription")}
         </p>
       </div>
 

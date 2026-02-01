@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import {
   Card,
   CardContent,
@@ -54,6 +55,8 @@ interface PromoCode {
 }
 
 export default function AdminPromoCodesPage() {
+  const t = useTranslations("admin.promoCodes");
+  const tCommon = useTranslations("admin.common");
   const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
   const [filteredPromoCodes, setFilteredPromoCodes] = useState<PromoCode[]>([]);
   const [loading, setLoading] = useState(true);
@@ -109,10 +112,10 @@ export default function AdminPromoCodesPage() {
       if (data.success) {
         setPromoCodes(data.data);
       } else {
-        toast.error(data.error || "取得優惠碼列表失敗");
+        toast.error(data.error || t("loadFailed"));
       }
     } catch {
-      toast.error("取得優惠碼列表失敗");
+      toast.error(t("loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -131,7 +134,7 @@ export default function AdminPromoCodesPage() {
 
   const handleCreate = async () => {
     if (!formData.code || !formData.name || !formData.bonusArticles) {
-      toast.error("請填寫必要欄位");
+      toast.error(t("requiredFieldsError"));
       return;
     }
 
@@ -153,15 +156,15 @@ export default function AdminPromoCodesPage() {
       const data = await res.json();
 
       if (data.success) {
-        toast.success("優惠碼建立成功");
+        toast.success(t("createSuccess"));
         setCreateDialogOpen(false);
         resetForm();
         fetchPromoCodes();
       } else {
-        toast.error(data.error || "建立優惠碼失敗");
+        toast.error(data.error || t("createFailed"));
       }
     } catch {
-      toast.error("建立優惠碼失敗");
+      toast.error(t("createFailed"));
     } finally {
       setSubmitting(false);
     }
@@ -189,22 +192,22 @@ export default function AdminPromoCodesPage() {
       const data = await res.json();
 
       if (data.success) {
-        toast.success("優惠碼更新成功");
+        toast.success(t("updateSuccess"));
         setEditDialogOpen(false);
         resetForm();
         fetchPromoCodes();
       } else {
-        toast.error(data.error || "更新優惠碼失敗");
+        toast.error(data.error || t("updateFailed"));
       }
     } catch {
-      toast.error("更新優惠碼失敗");
+      toast.error(t("updateFailed"));
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDeactivate = async (promoCode: PromoCode) => {
-    if (!confirm(`確定要停用優惠碼「${promoCode.code}」嗎？`)) return;
+    if (!confirm(t("confirmDeactivate", { code: promoCode.code }))) return;
 
     try {
       const res = await fetch(`/api/admin/promo-codes/${promoCode.id}`, {
@@ -214,13 +217,13 @@ export default function AdminPromoCodesPage() {
       const data = await res.json();
 
       if (data.success) {
-        toast.success("優惠碼已停用");
+        toast.success(t("deactivateSuccess"));
         fetchPromoCodes();
       } else {
-        toast.error(data.error || "停用優惠碼失敗");
+        toast.error(data.error || t("deactivateFailed"));
       }
     } catch {
-      toast.error("停用優惠碼失敗");
+      toast.error(t("deactivateFailed"));
     }
   };
 
@@ -256,8 +259,8 @@ export default function AdminPromoCodesPage() {
     <div className="max-w-5xl mx-auto space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold">優惠碼管理</h1>
-          <p className="text-muted-foreground">建立和管理優惠碼</p>
+          <h1 className="text-2xl font-bold">{t("title")}</h1>
+          <p className="text-muted-foreground">{t("description")}</p>
         </div>
         <Button
           onClick={() => {
@@ -266,14 +269,14 @@ export default function AdminPromoCodesPage() {
           }}
         >
           <Plus className="h-4 w-4 mr-2" />
-          建立優惠碼
+          {t("createPromoCode")}
         </Button>
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle>優惠碼列表</CardTitle>
-          <CardDescription>共 {promoCodes.length} 個優惠碼</CardDescription>
+          <CardTitle>{t("listTitle")}</CardTitle>
+          <CardDescription>{t("listDescription", { count: promoCodes.length })}</CardDescription>
         </CardHeader>
         <CardContent>
           {/* 篩選區塊 */}
@@ -281,7 +284,7 @@ export default function AdminPromoCodesPage() {
             <div className="relative flex-1 min-w-[200px] max-w-xs">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="搜尋優惠碼..."
+                placeholder={t("searchPlaceholder")}
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 h-9"
@@ -290,12 +293,12 @@ export default function AdminPromoCodesPage() {
 
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[120px] h-9">
-                <SelectValue placeholder="全部狀態" />
+                <SelectValue placeholder={t("filterStatusAll")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">全部狀態</SelectItem>
-                <SelectItem value="active">啟用中</SelectItem>
-                <SelectItem value="inactive">已停用</SelectItem>
+                <SelectItem value="all">{t("filterStatusAll")}</SelectItem>
+                <SelectItem value="active">{t("filterStatusActive")}</SelectItem>
+                <SelectItem value="inactive">{t("filterStatusInactive")}</SelectItem>
               </SelectContent>
             </Select>
 
@@ -310,15 +313,15 @@ export default function AdminPromoCodesPage() {
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[120px]">優惠碼</TableHead>
-                  <TableHead>名稱</TableHead>
-                  <TableHead className="w-[80px] text-right">加送</TableHead>
+                  <TableHead className="w-[120px]">{t("columns.code")}</TableHead>
+                  <TableHead>{t("columns.name")}</TableHead>
+                  <TableHead className="w-[80px] text-right">{t("columns.bonus")}</TableHead>
                   <TableHead className="w-[90px] text-right">
-                    使用次數
+                    {t("columns.usageCount")}
                   </TableHead>
-                  <TableHead className="w-[100px]">到期日</TableHead>
-                  <TableHead className="w-[70px]">狀態</TableHead>
-                  <TableHead className="w-[80px] text-right">操作</TableHead>
+                  <TableHead className="w-[100px]">{t("columns.expiresAt")}</TableHead>
+                  <TableHead className="w-[70px]">{t("columns.status")}</TableHead>
+                  <TableHead className="w-[80px] text-right">{t("columns.actions")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -348,7 +351,7 @@ export default function AdminPromoCodesPage() {
                         variant={code.isActive ? "default" : "secondary"}
                         className="text-xs"
                       >
-                        {code.isActive ? "啟用" : "停用"}
+                        {code.isActive ? t("statusActive") : t("statusInactive")}
                       </Badge>
                     </TableCell>
                     <TableCell className="text-right">
@@ -357,7 +360,7 @@ export default function AdminPromoCodesPage() {
                           variant="ghost"
                           size="sm"
                           className="h-7 w-7 p-0"
-                          title="編輯"
+                          title={t("editButton")}
                           onClick={() => openEditDialog(code)}
                         >
                           <Pencil className="h-3.5 w-3.5" />
@@ -367,7 +370,7 @@ export default function AdminPromoCodesPage() {
                             variant="ghost"
                             size="sm"
                             className="h-7 w-7 p-0"
-                            title="停用"
+                            title={t("deactivateButton")}
                             onClick={() => handleDeactivate(code)}
                           >
                             <Trash2 className="h-3.5 w-3.5 text-destructive" />
@@ -387,18 +390,18 @@ export default function AdminPromoCodesPage() {
       <Dialog open={createDialogOpen} onOpenChange={setCreateDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>建立優惠碼</DialogTitle>
+            <DialogTitle>{t("createDialogTitle")}</DialogTitle>
             <DialogDescription>
-              建立新的優惠碼，每月可加送額外文章篇數
+              {t("createDialogDescription")}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="code">優惠碼 *</Label>
+                <Label htmlFor="code">{t("form.codeRequired")}</Label>
                 <Input
                   id="code"
-                  placeholder="例如：WELCOME2024"
+                  placeholder={t("form.codePlaceholder")}
                   value={formData.code}
                   onChange={(e) =>
                     setFormData({
@@ -409,10 +412,10 @@ export default function AdminPromoCodesPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="name">名稱 *</Label>
+                <Label htmlFor="name">{t("form.nameRequired")}</Label>
                 <Input
                   id="name"
-                  placeholder="例如：新用戶優惠"
+                  placeholder={t("form.namePlaceholder")}
                   value={formData.name}
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
@@ -421,10 +424,10 @@ export default function AdminPromoCodesPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="description">描述（選填）</Label>
+              <Label htmlFor="description">{t("form.descriptionOptional")}</Label>
               <Textarea
                 id="description"
-                placeholder="優惠碼描述..."
+                placeholder={t("form.descriptionPlaceholder")}
                 value={formData.description}
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
@@ -433,11 +436,11 @@ export default function AdminPromoCodesPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="bonusArticles">加送篇數 *</Label>
+                <Label htmlFor="bonusArticles">{t("form.bonusArticlesRequired")}</Label>
                 <Input
                   id="bonusArticles"
                   type="number"
-                  placeholder="例如：5"
+                  placeholder={t("form.bonusArticlesPlaceholder")}
                   value={formData.bonusArticles}
                   onChange={(e) =>
                     setFormData({ ...formData, bonusArticles: e.target.value })
@@ -445,11 +448,11 @@ export default function AdminPromoCodesPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="maxUses">使用次數上限（選填）</Label>
+                <Label htmlFor="maxUses">{t("form.maxUsesOptional")}</Label>
                 <Input
                   id="maxUses"
                   type="number"
-                  placeholder="留空為無限制"
+                  placeholder={t("form.maxUsesPlaceholder")}
                   value={formData.maxUses}
                   onChange={(e) =>
                     setFormData({ ...formData, maxUses: e.target.value })
@@ -458,7 +461,7 @@ export default function AdminPromoCodesPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="expiresAt">到期日（選填）</Label>
+              <Label htmlFor="expiresAt">{t("form.expiresAtOptional")}</Label>
               <Input
                 id="expiresAt"
                 type="date"
@@ -474,7 +477,7 @@ export default function AdminPromoCodesPage() {
               variant="outline"
               onClick={() => setCreateDialogOpen(false)}
             >
-              取消
+              {tCommon("cancel")}
             </Button>
             <Button
               onClick={handleCreate}
@@ -486,7 +489,7 @@ export default function AdminPromoCodesPage() {
               }
             >
               {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              建立
+              {t("create")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -496,14 +499,14 @@ export default function AdminPromoCodesPage() {
       <Dialog open={editDialogOpen} onOpenChange={setEditDialogOpen}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>編輯優惠碼</DialogTitle>
+            <DialogTitle>{t("editDialogTitle")}</DialogTitle>
             <DialogDescription>
-              編輯優惠碼 {selectedCode?.code}
+              {t("editDialogDescription", { code: selectedCode?.code ?? "" })}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="edit-name">名稱</Label>
+              <Label htmlFor="edit-name">{t("form.name")}</Label>
               <Input
                 id="edit-name"
                 value={formData.name}
@@ -513,7 +516,7 @@ export default function AdminPromoCodesPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-description">描述</Label>
+              <Label htmlFor="edit-description">{t("form.description")}</Label>
               <Textarea
                 id="edit-description"
                 value={formData.description}
@@ -524,7 +527,7 @@ export default function AdminPromoCodesPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="edit-bonusArticles">加送篇數</Label>
+                <Label htmlFor="edit-bonusArticles">{t("form.bonusArticles")}</Label>
                 <Input
                   id="edit-bonusArticles"
                   type="number"
@@ -535,11 +538,11 @@ export default function AdminPromoCodesPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="edit-maxUses">使用次數上限</Label>
+                <Label htmlFor="edit-maxUses">{t("form.maxUses")}</Label>
                 <Input
                   id="edit-maxUses"
                   type="number"
-                  placeholder="留空為無限制"
+                  placeholder={t("form.maxUsesPlaceholder")}
                   value={formData.maxUses}
                   onChange={(e) =>
                     setFormData({ ...formData, maxUses: e.target.value })
@@ -548,7 +551,7 @@ export default function AdminPromoCodesPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="edit-expiresAt">到期日</Label>
+              <Label htmlFor="edit-expiresAt">{t("form.expiresAt")}</Label>
               <Input
                 id="edit-expiresAt"
                 type="date"
@@ -561,11 +564,11 @@ export default function AdminPromoCodesPage() {
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setEditDialogOpen(false)}>
-              取消
+              {tCommon("cancel")}
             </Button>
             <Button onClick={handleEdit} disabled={submitting}>
               {submitting && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
-              儲存
+              {t("save")}
             </Button>
           </DialogFooter>
         </DialogContent>

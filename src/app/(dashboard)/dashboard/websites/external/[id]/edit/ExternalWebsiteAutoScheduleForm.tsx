@@ -22,23 +22,7 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { updateExternalWebsiteAutoSchedule } from "../../actions";
 import { Calendar, Clock, CalendarDays } from "lucide-react";
 import type { AutoScheduleFormProps } from "@/types/external-website.types";
-
-const DAILY_LIMITS = [
-  { value: "1", label: "1 篇" },
-  { value: "2", label: "2 篇" },
-  { value: "3", label: "3 篇" },
-  { value: "4", label: "4 篇" },
-  { value: "5", label: "5 篇" },
-];
-
-const INTERVAL_DAYS = [
-  { value: "2", label: "每 2 天" },
-  { value: "3", label: "每 3 天" },
-  { value: "4", label: "每 4 天" },
-  { value: "5", label: "每 5 天" },
-  { value: "6", label: "每 6 天" },
-  { value: "7", label: "每 7 天（每週）" },
-];
+import { useTranslations } from "next-intl";
 
 const TIME_SLOTS_INFO: Record<number, string> = {
   1: "09:00",
@@ -57,6 +41,26 @@ export function ExternalWebsiteAutoScheduleForm({
   scheduleType: initialType,
   scheduleIntervalDays: initialInterval,
 }: AutoScheduleFormProps): React.ReactElement {
+  const t = useTranslations("externalWebsites");
+  const tWebsites = useTranslations("websites");
+
+  const DAILY_LIMITS = [
+    { value: "1", label: t("dailyLimits.one") },
+    { value: "2", label: t("dailyLimits.two") },
+    { value: "3", label: t("dailyLimits.three") },
+    { value: "4", label: t("dailyLimits.four") },
+    { value: "5", label: t("dailyLimits.five") },
+  ];
+
+  const INTERVAL_DAYS = [
+    { value: "2", label: t("intervalDays.two") },
+    { value: "3", label: t("intervalDays.three") },
+    { value: "4", label: t("intervalDays.four") },
+    { value: "5", label: t("intervalDays.five") },
+    { value: "6", label: t("intervalDays.six") },
+    { value: "7", label: t("intervalDays.seven") },
+  ];
+
   const [dailyLimit, setDailyLimit] = useState(String(initialLimit || 3));
   const [autoEnabled, setAutoEnabled] = useState(initialEnabled ?? false);
   const [scheduleType, setScheduleType] = useState<ScheduleType>(
@@ -69,17 +73,17 @@ export function ExternalWebsiteAutoScheduleForm({
   const currentTimeSlots =
     scheduleType === "daily"
       ? TIME_SLOTS_INFO[Number(dailyLimit)] || TIME_SLOTS_INFO[3]
-      : "09:00（固定第一個黃金時段）";
+      : t("fixedFirstGoldenSlot");
 
   return (
     <Card>
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Calendar className="h-5 w-5" />
-          自動排程設定
+          {t("autoScheduleSettings")}
         </CardTitle>
         <CardDescription>
-          設定文章生成完成後的自動排程行為。啟用後，文章會自動排入發布佇列。
+          {t("autoScheduleDescription")}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -97,9 +101,9 @@ export function ExternalWebsiteAutoScheduleForm({
           {/* 自動排程開關 */}
           <div className="flex items-center justify-between rounded-lg border p-4">
             <div className="space-y-0.5">
-              <Label className="text-base">自動排程</Label>
+              <Label className="text-base">{tWebsites("autoSchedule")}</Label>
               <p className="text-sm text-muted-foreground">
-                文章生成完成後自動排入發布佇列
+                {t("autoScheduleHint")}
               </p>
             </div>
             <Switch checked={autoEnabled} onCheckedChange={setAutoEnabled} />
@@ -107,7 +111,7 @@ export function ExternalWebsiteAutoScheduleForm({
 
           {/* 排程模式選擇 */}
           <div className="space-y-3">
-            <Label>排程模式</Label>
+            <Label>{t("scheduleMode")}</Label>
             <RadioGroup
               value={scheduleType}
               onValueChange={(v) => setScheduleType(v as ScheduleType)}
@@ -121,7 +125,7 @@ export function ExternalWebsiteAutoScheduleForm({
                   className="flex items-center gap-2 cursor-pointer"
                 >
                   <Clock className="h-4 w-4" />
-                  每日發布
+                  {t("dailyPublish")}
                 </Label>
               </div>
               <div className="flex items-center space-x-2 rounded-lg border p-4 cursor-pointer hover:bg-muted/50">
@@ -131,7 +135,7 @@ export function ExternalWebsiteAutoScheduleForm({
                   className="flex items-center gap-2 cursor-pointer"
                 >
                   <CalendarDays className="h-4 w-4" />
-                  間隔發布
+                  {t("intervalPublish")}
                 </Label>
               </div>
             </RadioGroup>
@@ -140,14 +144,14 @@ export function ExternalWebsiteAutoScheduleForm({
           {/* 每日發布模式：選擇每日篇數 */}
           {scheduleType === "daily" && (
             <div className="space-y-2">
-              <Label htmlFor="daily-limit">每日發布文章數上限</Label>
+              <Label htmlFor="daily-limit">{t("dailyPublishLimit")}</Label>
               <Select
                 value={dailyLimit}
                 onValueChange={setDailyLimit}
                 disabled={!autoEnabled}
               >
                 <SelectTrigger id="daily-limit">
-                  <SelectValue placeholder="選擇每日篇數" />
+                  <SelectValue placeholder={t("selectDailyLimit")} />
                 </SelectTrigger>
                 <SelectContent>
                   {DAILY_LIMITS.map((limit) => (
@@ -163,14 +167,14 @@ export function ExternalWebsiteAutoScheduleForm({
           {/* 間隔發布模式：選擇間隔天數 */}
           {scheduleType === "interval" && (
             <div className="space-y-2">
-              <Label htmlFor="interval-days">發布間隔</Label>
+              <Label htmlFor="interval-days">{t("publishInterval")}</Label>
               <Select
                 value={intervalDays}
                 onValueChange={setIntervalDays}
                 disabled={!autoEnabled}
               >
                 <SelectTrigger id="interval-days">
-                  <SelectValue placeholder="選擇間隔天數" />
+                  <SelectValue placeholder={t("selectIntervalDays")} />
                 </SelectTrigger>
                 <SelectContent>
                   {INTERVAL_DAYS.map((interval) => (
@@ -181,7 +185,7 @@ export function ExternalWebsiteAutoScheduleForm({
                 </SelectContent>
               </Select>
               <p className="text-xs text-muted-foreground">
-                每隔指定天數發布 1 篇文章
+                {t("intervalHint")}
               </p>
             </div>
           )}
@@ -190,12 +194,12 @@ export function ExternalWebsiteAutoScheduleForm({
           <div className="rounded-lg bg-muted/50 p-3">
             <p className="text-sm text-muted-foreground flex items-center gap-2">
               <Clock className="h-4 w-4" />
-              <span>發布時段（台灣時間）：{currentTimeSlots}</span>
+              <span>{t("publishTimeSlots", { slots: currentTimeSlots })}</span>
             </p>
           </div>
 
           <Button type="submit" disabled={!autoEnabled}>
-            儲存設定
+            {tWebsites("saveSettings")}
           </Button>
         </form>
       </CardContent>

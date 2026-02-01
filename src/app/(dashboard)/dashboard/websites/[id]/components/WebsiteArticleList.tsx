@@ -19,8 +19,9 @@ import {
   AlertCircle,
 } from "lucide-react";
 import { formatDistanceToNow } from "date-fns";
-import { zhTW } from "date-fns/locale";
+import { zhTW, enUS, ja } from "date-fns/locale";
 import { useMemo } from "react";
+import { useTranslations, useLocale } from "next-intl";
 
 interface Article {
   id: string;
@@ -69,53 +70,17 @@ interface WebsiteArticleListProps {
   onSchedulePublish: () => void;
 }
 
-const statusConfig: Record<
-  string,
-  { label: string; color: string; icon: React.ElementType; animate?: boolean }
-> = {
-  pending: {
-    label: "生成中",
-    color: "text-blue-500 bg-blue-50",
-    icon: Loader2,
-    animate: true,
-  },
-  processing: {
-    label: "生成中",
-    color: "text-blue-500 bg-blue-50",
-    icon: Loader2,
-    animate: true,
-  },
-  generated: {
-    label: "未發佈",
-    color: "text-yellow-500 bg-yellow-50",
-    icon: FileText,
-  },
-  completed: {
-    label: "未發佈",
-    color: "text-yellow-500 bg-yellow-50",
-    icon: FileText,
-  },
-  reviewed: {
-    label: "未發佈",
-    color: "text-yellow-500 bg-yellow-50",
-    icon: FileText,
-  },
-  published: {
-    label: "已發佈",
-    color: "text-green-500 bg-green-50",
-    icon: CheckCircle,
-  },
-  scheduled: {
-    label: "已排程",
-    color: "text-purple-500 bg-purple-50",
-    icon: Calendar,
-  },
-  publish_failed: {
-    label: "發佈失敗",
-    color: "text-red-500 bg-red-50",
-    icon: AlertCircle,
-  },
-};
+// 根據語言取得 date-fns locale
+function getDateLocale(locale: string) {
+  switch (locale) {
+    case "zh-TW":
+      return zhTW;
+    case "ja-JP":
+      return ja;
+    default:
+      return enUS;
+  }
+}
 
 export function WebsiteArticleList({
   articles,
@@ -131,6 +96,59 @@ export function WebsiteArticleList({
   publishableCount,
   onSchedulePublish,
 }: WebsiteArticleListProps) {
+  const t = useTranslations("websites.articleList");
+  const locale = useLocale();
+  const dateLocale = getDateLocale(locale);
+
+  // 狀態配置（使用翻譯）
+  const statusConfig: Record<
+    string,
+    { label: string; color: string; icon: React.ElementType; animate?: boolean }
+  > = {
+    pending: {
+      label: t("status.generating"),
+      color: "text-blue-500 bg-blue-50",
+      icon: Loader2,
+      animate: true,
+    },
+    processing: {
+      label: t("status.generating"),
+      color: "text-blue-500 bg-blue-50",
+      icon: Loader2,
+      animate: true,
+    },
+    generated: {
+      label: t("status.unpublished"),
+      color: "text-yellow-500 bg-yellow-50",
+      icon: FileText,
+    },
+    completed: {
+      label: t("status.unpublished"),
+      color: "text-yellow-500 bg-yellow-50",
+      icon: FileText,
+    },
+    reviewed: {
+      label: t("status.unpublished"),
+      color: "text-yellow-500 bg-yellow-50",
+      icon: FileText,
+    },
+    published: {
+      label: t("status.published"),
+      color: "text-green-500 bg-green-50",
+      icon: CheckCircle,
+    },
+    scheduled: {
+      label: t("status.scheduled"),
+      color: "text-purple-500 bg-purple-50",
+      icon: Calendar,
+    },
+    publish_failed: {
+      label: t("status.publishFailed"),
+      color: "text-red-500 bg-red-50",
+      icon: AlertCircle,
+    },
+  };
+
   const combinedList = useMemo<ListItem[]>(() => {
     const jobItems: ListItem[] = jobs.map((j) => ({
       type: "job" as const,
@@ -160,7 +178,7 @@ export function WebsiteArticleList({
     <div className="w-full md:w-[400px] flex flex-col overflow-hidden md:border-r">
       <div className="p-4 border-b">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-semibold">文章列表</h2>
+          <h2 className="text-lg font-semibold">{t("title")}</h2>
         </div>
         <div className="flex items-center gap-2 flex-wrap">
           <Select
@@ -174,7 +192,7 @@ export function WebsiteArticleList({
             <SelectContent>
               {[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((n) => (
                 <SelectItem key={n} value={String(n)}>
-                  每天 {n} 篇
+                  {t("perDay", { count: n })}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -188,8 +206,8 @@ export function WebsiteArticleList({
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="publish">發佈</SelectItem>
-              <SelectItem value="draft">草稿</SelectItem>
+              <SelectItem value="publish">{t("publish")}</SelectItem>
+              <SelectItem value="draft">{t("draft")}</SelectItem>
             </SelectContent>
           </Select>
           <Button
@@ -202,12 +220,12 @@ export function WebsiteArticleList({
             {isScheduling ? (
               <>
                 <Loader2 className="h-3 w-3 mr-1 animate-spin" />
-                排程中...
+                {t("scheduling")}
               </>
             ) : (
               <>
                 <Calendar className="h-3 w-3 mr-1" />
-                排程發布（{publishableCount}）
+                {t("schedulePublish", { count: publishableCount })}
               </>
             )}
           </Button>
@@ -219,7 +237,7 @@ export function WebsiteArticleList({
           {combinedList.length === 0 ? (
             <div className="text-center text-muted-foreground py-8">
               <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
-              <p>沒有找到文章</p>
+              <p>{t("noArticles")}</p>
             </div>
           ) : (
             combinedList.map((item) => {
@@ -228,7 +246,7 @@ export function WebsiteArticleList({
                 const title =
                   job.metadata?.title ||
                   (job.keywords && job.keywords[0]) ||
-                  "生成中的文章";
+                  t("generatingArticle");
                 const status = statusConfig[job.status] || statusConfig.pending;
                 const StatusIcon = status.icon;
 
@@ -272,7 +290,7 @@ export function WebsiteArticleList({
                         <Clock className="h-3 w-3" />
                         {formatDistanceToNow(new Date(job.created_at), {
                           addSuffix: true,
-                          locale: zhTW,
+                          locale: dateLocale,
                         })}
                       </span>
                     </div>
@@ -303,7 +321,7 @@ export function WebsiteArticleList({
                       </h3>
                       {article.focus_keyword && (
                         <p className="text-xs text-muted-foreground truncate mt-1">
-                          關鍵字: {article.focus_keyword}
+                          {t("keyword")}: {article.focus_keyword}
                         </p>
                       )}
                     </div>
@@ -339,9 +357,10 @@ export function WebsiteArticleList({
                       <Clock className="h-3 w-3" />
                       {formatDistanceToNow(new Date(article.created_at), {
                         addSuffix: true,
-                        locale: zhTW,
+                        locale: dateLocale,
                       })}
-                      {article.word_count && ` · ${article.word_count} 字`}
+                      {article.word_count &&
+                        ` · ${t("wordCount", { count: article.word_count })}`}
                     </span>
                   </div>
                 </div>
@@ -353,7 +372,7 @@ export function WebsiteArticleList({
 
       <div className="p-3 bg-muted/50">
         <p className="text-xs text-muted-foreground text-center">
-          共 {totalCount} 篇文章
+          {t("totalArticles", { count: totalCount })}
         </p>
       </div>
     </div>

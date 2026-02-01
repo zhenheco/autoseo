@@ -2,6 +2,7 @@
 
 import { use, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 
 export default function ArticleEditRedirect({
   params,
@@ -10,6 +11,7 @@ export default function ArticleEditRedirect({
 }) {
   const resolvedParams = use(params);
   const router = useRouter();
+  const t = useTranslations("articles.detail");
 
   useEffect(() => {
     // Redirect to main articles page
@@ -18,7 +20,7 @@ export default function ArticleEditRedirect({
 
   return (
     <div className="flex items-center justify-center min-h-screen">
-      <p className="text-muted-foreground">重新導向到文章管理頁面...</p>
+      <p className="text-muted-foreground">{t("redirectingToManage")}</p>
     </div>
   );
 }

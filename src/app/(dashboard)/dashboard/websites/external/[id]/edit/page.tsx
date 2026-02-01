@@ -19,6 +19,7 @@ import { ExternalWebsiteAutoScheduleForm } from "./ExternalWebsiteAutoScheduleFo
 import { ExternalWebsiteSettingsForm } from "./ExternalWebsiteSettingsForm";
 import { updateExternalWebsite } from "../../actions";
 import type { ExternalWebsiteDetail } from "@/types/external-website.types";
+import { getTranslations } from "next-intl/server";
 
 async function getExternalWebsite(
   websiteId: string,
@@ -48,6 +49,8 @@ export default async function EditExternalWebsitePage({
   params: Promise<{ id: string }>;
 }): Promise<React.ReactElement> {
   const user = await getUser();
+  const t = await getTranslations("externalWebsites");
+  const tCommon = await getTranslations("common");
 
   if (!user) {
     redirect("/login");
@@ -55,7 +58,7 @@ export default async function EditExternalWebsitePage({
 
   if (!isAdminEmail(user.email)) {
     redirect(
-      "/dashboard/websites?error=" + encodeURIComponent("您沒有權限訪問此頁面"),
+      "/dashboard/websites?error=" + encodeURIComponent(t("noPermission")),
     );
   }
 
@@ -65,16 +68,16 @@ export default async function EditExternalWebsitePage({
   if (!website) {
     redirect(
       "/dashboard/websites/external?error=" +
-        encodeURIComponent("找不到該外部網站"),
+        encodeURIComponent(t("websiteNotFound")),
     );
   }
 
   return (
     <div className="container mx-auto p-8 max-w-2xl">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">編輯外部網站</h1>
+        <h1 className="text-3xl font-bold">{t("editTitle")}</h1>
         <p className="text-muted-foreground mt-2">
-          設定外部網站的同步參數和文章生成設定
+          {t("editDescription")}
         </p>
       </div>
 
@@ -82,32 +85,32 @@ export default async function EditExternalWebsitePage({
         {/* 網站基本資訊卡片 */}
         <Card>
           <CardHeader>
-            <CardTitle>網站資訊</CardTitle>
-            <CardDescription>修改外部網站的基本資訊</CardDescription>
+            <CardTitle>{t("websiteInfo")}</CardTitle>
+            <CardDescription>{t("websiteInfoDescription")}</CardDescription>
           </CardHeader>
           <CardContent>
             <form action={updateExternalWebsite} className="space-y-6">
               <input type="hidden" name="websiteId" value={website.id} />
 
               <div className="space-y-2">
-                <Label htmlFor="name">網站名稱</Label>
+                <Label htmlFor="name">{t("websiteName")}</Label>
                 <Input
                   id="name"
                   name="name"
-                  placeholder="外部網站名稱"
+                  placeholder={t("websiteNamePlaceholder")}
                   defaultValue={website.website_name || ""}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label>識別碼</Label>
+                <Label>{t("slug")}</Label>
                 <Input value={website.external_slug || ""} disabled />
-                <p className="text-xs text-muted-foreground">識別碼無法修改</p>
+                <p className="text-xs text-muted-foreground">{t("slugHint")}</p>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="webhookUrl">Webhook URL</Label>
+                <Label htmlFor="webhookUrl">{t("webhookUrl")}</Label>
                 <Input
                   id="webhookUrl"
                   name="webhookUrl"
@@ -116,15 +119,15 @@ export default async function EditExternalWebsitePage({
                   defaultValue={website.webhook_url || ""}
                 />
                 <p className="text-xs text-muted-foreground">
-                  文章發布時會發送 POST 請求到此 URL
+                  {t("webhookUrlHint")}
                 </p>
               </div>
 
               <div className="flex gap-4">
-                <Button type="submit">儲存變更</Button>
+                <Button type="submit">{tCommon("save")}</Button>
                 <Link href="/dashboard/websites/external">
                   <Button type="button" variant="outline">
-                    取消
+                    {tCommon("cancel")}
                   </Button>
                 </Link>
               </div>

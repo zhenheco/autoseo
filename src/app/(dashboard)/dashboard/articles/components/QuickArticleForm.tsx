@@ -16,6 +16,7 @@ import {
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 
 interface QuickArticleFormProps {
   websiteId: string | null;
@@ -31,6 +32,7 @@ export function QuickArticleForm({
   language,
 }: QuickArticleFormProps) {
   const router = useRouter();
+  const t = useTranslations("articles.quick");
   const [batchKeywords, setBatchKeywords] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
@@ -55,7 +57,7 @@ export function QuickArticleForm({
           setArticleBalance(data.balance?.available ?? 0);
         }
       } catch (error) {
-        console.error("獲取額度失敗:", error);
+        console.error("Failed to fetch article quota:", error);
       } finally {
         setIsLoadingBalance(false);
       }
@@ -88,7 +90,7 @@ export function QuickArticleForm({
         .filter((k) => k.length > 0);
 
       if (keywords.length === 0) {
-        throw new Error("請輸入至少一個關鍵字");
+        throw new Error(t("enterAtLeastOneKeyword"));
       }
 
       // 使用自動重試的 fetch
@@ -109,7 +111,7 @@ export function QuickArticleForm({
           maxRetries: 2,
           delayMs: 1500,
           onRetry: (attempt, max) => {
-            setRetryInfo(`正在重試 (${attempt}/${max})...`);
+            setRetryInfo(t("retrying", { attempt, max }));
           },
         },
       );
@@ -130,7 +132,7 @@ export function QuickArticleForm({
       try {
         data = JSON.parse(text);
       } catch {
-        throw new Error(`伺服器錯誤 (${response.status})`);
+        throw new Error(t("serverError", { status: response.status }));
       }
 
       // 處理 402 餘額不足錯誤，顯示彈跳視窗
@@ -145,11 +147,11 @@ export function QuickArticleForm({
       }
 
       if (!response.ok) {
-        throw new Error(data.error || data.message || "批量生成失敗");
+        throw new Error(data.error || data.message || t("batchGenerateFailed"));
       }
 
       if (!data.success) {
-        throw new Error(data.error || "未能建立任何任務");
+        throw new Error(data.error || t("noTaskCreated"));
       }
 
       window.dispatchEvent(new Event("tokenReserved"));
@@ -158,21 +160,21 @@ export function QuickArticleForm({
       const skippedJobs = data.skippedJobs || 0;
       let message = "";
       if (newJobs > 0) {
-        message = `${newJobs} 篇新文章`;
+        message = t("newArticles", { count: newJobs });
         if (skippedJobs > 0) {
-          message += `（${skippedJobs} 篇已在處理中）`;
+          message += t("processingArticles", { count: skippedJobs });
         }
       } else if (skippedJobs > 0) {
-        message = `${skippedJobs} 篇文章已在處理中`;
+        message = t("articlesProcessing", { count: skippedJobs });
       }
 
-      setGeneratedKeyword(message || `${keywords.length} 篇文章`);
+      setGeneratedKeyword(message || t("articlesCount", { count: keywords.length }));
       setShowSuccessDialog(true);
       setBatchKeywords("");
     } catch (error) {
-      console.error("提交失敗:", error);
+      console.error("Submit failed:", error);
       const errorMessage =
-        error instanceof Error ? error.message : "生成失敗，請稍後再試";
+        error instanceof Error ? error.message : t("generateFailed");
       alert(errorMessage);
     } finally {
       setIsSubmitting(false);
@@ -183,35 +185,32 @@ export function QuickArticleForm({
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-2">
-        <Label htmlFor="batchKeywords">關鍵字列表 *</Label>
+        <Label htmlFor="batchKeywords">{t("keywordList")}</Label>
         <Textarea
           id="batchKeywords"
           value={batchKeywords}
           onChange={(e) => setBatchKeywords(e.target.value)}
-          placeholder={
-            "AI 行銷工具\n數位轉型策略\n電商物流優化\nSEO 關鍵字研究"
-          }
+          placeholder={t("keywordPlaceholder")}
           rows={6}
           required
           disabled={isFormDisabled}
         />
         <p className="text-sm text-muted-foreground">
-          每行輸入一個關鍵字，系統會為每個關鍵字生成一篇文章（輸入單一關鍵字也可以）
+          {t("keywordHint")}
         </p>
         {batchKeywords.trim() && (
-          <p className="text-sm text-primary">將生成 {keywordCount} 篇文章</p>
+          <p className="text-sm text-primary">{t("willGenerate", { count: keywordCount })}</p>
         )}
         {!isLoadingBalance && keywordCount > 0 && !hasRemainingQuota && (
           <p className="text-sm text-red-500">
-            ⚠️ 額度不足！您目前只能生成 {maxArticles} 篇文章（剩餘{" "}
-            {articleBalance} 篇額度）
+            {t("insufficientCredits", { max: maxArticles, balance: articleBalance })}
           </p>
         )}
       </div>
 
       {isFormDisabled && (
         <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-sm text-red-600">
-          您的配額已用完，請升級方案以繼續使用
+          {t("quotaExhausted")}
         </div>
       )}
 
@@ -221,8 +220,8 @@ export function QuickArticleForm({
         disabled={isSubmitting || isFormDisabled || !hasRemainingQuota}
       >
         {isSubmitting
-          ? retryInfo || "正在提交任務..."
-          : `開始生成 (${keywordCount || 0} 篇)`}
+          ? retryInfo || t("submittingTask")
+          : t("startGenerate", { count: keywordCount || 0 })}
       </Button>
 
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
@@ -230,16 +229,16 @@ export function QuickArticleForm({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Loader2 className="h-5 w-5 animate-spin text-blue-500" />
-              生成任務已建立
+              {t("taskCreated")}
             </DialogTitle>
             <DialogDescription className="pt-2">
               <span className="font-medium text-foreground">
                 {generatedKeyword}
               </span>{" "}
-              正在生成中
+              {t("generating")}
               <br />
               <span className="text-muted-foreground">
-                您可以關閉此視窗，在網站詳情頁查看進度
+                {t("closeAndViewProgress")}
               </span>
             </DialogDescription>
           </DialogHeader>
@@ -248,7 +247,7 @@ export function QuickArticleForm({
               variant="outline"
               onClick={() => setShowSuccessDialog(false)}
             >
-              繼續生成其他文章
+              {t("continueGenerateOther")}
             </Button>
             <Button
               onClick={() => {
@@ -256,7 +255,7 @@ export function QuickArticleForm({
                 router.push("/dashboard/articles/manage");
               }}
             >
-              查看文章
+              {t("viewArticles")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -268,17 +267,19 @@ export function QuickArticleForm({
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2 text-red-600">
               <AlertCircle className="h-5 w-5" />
-              額度不足
+              {t("insufficientCreditsTitle")}
             </DialogTitle>
             <DialogDescription className="pt-2 space-y-2">
               {errorDialogData && (
                 <>
                   <p className="text-foreground font-medium">
-                    您目前的額度只能生成 {errorDialogData.maxArticles} 篇文章
+                    {t("currentQuotaLimit", { max: errorDialogData.maxArticles })}
                   </p>
                   <p className="text-sm text-muted-foreground">
-                    需要 {errorDialogData.requiredArticles} 篇額度，可用{" "}
-                    {errorDialogData.availableArticles} 篇
+                    {t("needCredits", {
+                      required: errorDialogData.requiredArticles,
+                      available: errorDialogData.availableArticles,
+                    })}
                   </p>
                 </>
               )}
@@ -286,10 +287,10 @@ export function QuickArticleForm({
           </DialogHeader>
           <DialogFooter className="flex-col sm:flex-row gap-2">
             <Button variant="outline" onClick={() => setShowErrorDialog(false)}>
-              了解
+              {t("understand")}
             </Button>
             <Button asChild>
-              <Link href="/dashboard/billing/upgrade">升級方案</Link>
+              <Link href="/dashboard/billing/upgrade">{t("upgradePlan")}</Link>
             </Button>
           </DialogFooter>
         </DialogContent>

@@ -88,11 +88,11 @@ export function SubscriptionPlans({
         setPromoData(data.data);
       } else {
         setPromoValid(false);
-        setPromoError(data.error || "優惠碼無效");
+        setPromoError(data.error || t("promoCodeInvalid"));
       }
     } catch {
       setPromoValid(false);
-      setPromoError("驗證優惠碼失敗");
+      setPromoError(t("promoCodeValidationFailed"));
     } finally {
       setPromoValidating(false);
     }
@@ -136,7 +136,7 @@ export function SubscriptionPlans({
 
       const price =
         billingCycle === "yearly" ? plan.yearly_price : plan.monthly_price;
-      const description = `${getPlanName(plan)} ${billingCycle === "yearly" ? "年繳" : "月繳"}訂閱`;
+      const description = `${getPlanName(plan)} ${billingCycle === "yearly" ? t("yearlyBilling") : t("monthlyBilling")}`;
 
       // GA4 追蹤：開始結帳
       trackBeginCheckout(
@@ -227,7 +227,7 @@ export function SubscriptionPlans({
     } catch (error) {
       console.error("訂閱錯誤:", error);
       alert(
-        `訂閱失敗: ${error instanceof Error ? error.message : "請稍後再試"}`,
+        `${t("subscribeFailed")}: ${error instanceof Error ? error.message : t("processing")}`,
       );
       setLoading(null);
     }
@@ -269,7 +269,7 @@ export function SubscriptionPlans({
           <div className="flex items-center gap-2 p-3 rounded-lg bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 shadow-sm">
             <Tag className="h-4 w-4 text-slate-400 shrink-0" />
             <Input
-              placeholder="輸入優惠碼"
+              placeholder={t("promoCodePlaceholder")}
               value={promoCode}
               onChange={(e) => {
                 setPromoCode(e.target.value.toUpperCase());
@@ -308,7 +308,7 @@ export function SubscriptionPlans({
                 {promoValidating ? (
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
-                  "套用"
+                  t("apply")
                 )}
               </Button>
             )}
@@ -322,7 +322,7 @@ export function SubscriptionPlans({
                 className="bg-green-500 hover:bg-green-600"
               >
                 <Gift className="h-3 w-3 mr-1" />
-                每月加送 {promoData.bonusArticles} 篇
+                {t("monthlyBonusArticles", { count: promoData.bonusArticles })}
               </Badge>
             </div>
           )}

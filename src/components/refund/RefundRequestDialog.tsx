@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
 import { Gift, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
+import { useTranslations } from "next-intl";
 
 interface RefundableOrder {
   id: string;
@@ -45,18 +46,21 @@ interface RefundRequestDialogProps {
 type Step = "form" | "retention" | "success";
 
 const reasonOptions = [
-  { value: "product_issue", label: "產品功能不符合預期" },
-  { value: "service_unsatisfied", label: "服務品質不滿意" },
-  { value: "billing_error", label: "帳務問題/重複扣款" },
-  { value: "change_of_mind", label: "改變心意" },
-  { value: "other", label: "其他" },
-];
+  { value: "product_issue", labelKey: "productIssue" },
+  { value: "service_unsatisfied", labelKey: "serviceUnsatisfied" },
+  { value: "billing_error", labelKey: "billingError" },
+  { value: "change_of_mind", labelKey: "changeOfMind" },
+  { value: "other", labelKey: "other" },
+] as const;
 
 export function RefundRequestDialog({
   open,
   onOpenChange,
   onSuccess,
 }: RefundRequestDialogProps) {
+  const t = useTranslations("refund");
+  const tCommon = useTranslations("common");
+
   const [step, setStep] = useState<Step>("form");
   const [loading, setLoading] = useState(false);
   const [orders, setOrders] = useState<RefundableOrder[]>([]);
@@ -71,7 +75,6 @@ export function RefundRequestDialog({
   const [refundId, setRefundId] = useState("");
   const [refundNo, setRefundNo] = useState("");
   const [retentionCredits, setRetentionCredits] = useState(0);
-  const [isAutoEligible, setIsAutoEligible] = useState(false);
 
   // Success state
   const [successMessage, setSuccessMessage] = useState("");
@@ -94,7 +97,6 @@ export function RefundRequestDialog({
     setRefundId("");
     setRefundNo("");
     setRetentionCredits(0);
-    setIsAutoEligible(false);
     setSuccessMessage("");
   };
 
@@ -105,13 +107,13 @@ export function RefundRequestDialog({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "載入訂單失敗");
+        throw new Error(data.error || t("loadOrdersFailed"));
       }
 
       setOrders(data.orders || []);
     } catch (error) {
-      console.error("載入訂單失敗:", error);
-      toast.error("載入訂單失敗");
+      console.error("Failed to load orders:", error);
+      toast.error(t("loadOrdersFailed"));
     } finally {
       setLoadingOrders(false);
     }
@@ -121,7 +123,7 @@ export function RefundRequestDialog({
 
   const handleSubmitRequest = async () => {
     if (!selectedOrderId || !reasonCategory) {
-      toast.error("請選擇訂單和退款原因");
+      toast.error(t("selectOrderAndReason"));
       return;
     }
 
@@ -140,19 +142,18 @@ export function RefundRequestDialog({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "申請退款失敗");
+        throw new Error(data.error || t("requestFailed"));
       }
 
       setRefundId(data.refundId);
       setRefundNo(data.refundNo);
       setRetentionCredits(data.retentionCredits);
-      setIsAutoEligible(data.isAutoEligible);
 
       // Show retention offer
       setStep("retention");
     } catch (error) {
-      console.error("申請退款失敗:", error);
-      toast.error(error instanceof Error ? error.message : "申請退款失敗");
+      console.error("Failed to request refund:", error);
+      toast.error(error instanceof Error ? error.message : t("requestFailed"));
     } finally {
       setLoading(false);
     }
@@ -170,18 +171,18 @@ export function RefundRequestDialog({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "接受慰留失敗");
+        throw new Error(data.error || t("acceptRetentionFailed"));
       }
 
       setSuccessStatus("retention_accepted");
       setSuccessMessage(
-        `感謝您的支持！已為您新增 ${data.creditsAdded.toLocaleString()} credits`,
+        t("retentionSuccessMessage", { credits: data.creditsAdded.toLocaleString() }),
       );
       setStep("success");
       onSuccess?.();
     } catch (error) {
-      console.error("接受慰留失敗:", error);
-      toast.error(error instanceof Error ? error.message : "接受慰留失敗");
+      console.error("Failed to accept retention:", error);
+      toast.error(error instanceof Error ? error.message : t("acceptRetentionFailed"));
     } finally {
       setLoading(false);
     }
@@ -199,7 +200,7 @@ export function RefundRequestDialog({
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "處理退款失敗");
+        throw new Error(data.error || t("proceedRefundFailed"));
       }
 
       setSuccessStatus(data.status);
@@ -207,8 +208,8 @@ export function RefundRequestDialog({
       setStep("success");
       onSuccess?.();
     } catch (error) {
-      console.error("處理退款失敗:", error);
-      toast.error(error instanceof Error ? error.message : "處理退款失敗");
+      console.error("Failed to process refund:", error);
+      toast.error(error instanceof Error ? error.message : t("proceedRefundFailed"));
     } finally {
       setLoading(false);
     }
@@ -224,24 +225,24 @@ export function RefundRequestDialog({
         {step === "form" && (
           <>
             <DialogHeader>
-              <DialogTitle>申請退款</DialogTitle>
+              <DialogTitle>{t("title")}</DialogTitle>
               <DialogDescription>
-                請選擇要退款的訂單並填寫退款原因
+                {t("description")}
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4 py-4">
               {/* Order Selection */}
               <div className="space-y-2">
-                <Label>選擇要退款的訂單</Label>
+                <Label>{t("selectOrder")}</Label>
                 {loadingOrders ? (
                   <div className="flex items-center gap-2 text-sm text-muted-foreground">
                     <Loader2 className="h-4 w-4 animate-spin" />
-                    載入中...
+                    {t("loadingOrders")}
                   </div>
                 ) : orders.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
-                    沒有可退款的訂單
+                    {t("noRefundableOrders")}
                   </p>
                 ) : (
                   <Select
@@ -249,7 +250,7 @@ export function RefundRequestDialog({
                     onValueChange={setSelectedOrderId}
                   >
                     <SelectTrigger>
-                      <SelectValue placeholder="選擇訂單" />
+                      <SelectValue placeholder={t("selectOrderPlaceholder")} />
                     </SelectTrigger>
                     <SelectContent>
                       {orders.map((order) => (
@@ -263,7 +264,7 @@ export function RefundRequestDialog({
                               {new Date(order.paidAt).toLocaleDateString(
                                 "zh-TW",
                               )}{" "}
-                              · {order.daysSincePurchase} 天前
+                              · {t("daysAgo", { days: order.daysSincePurchase })}
                             </span>
                           </div>
                         </SelectItem>
@@ -277,13 +278,13 @@ export function RefundRequestDialog({
               {selectedOrder && (
                 <div className="rounded-lg bg-muted p-3 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-muted-foreground">訂單金額</span>
+                    <span className="text-muted-foreground">{t("orderAmount")}</span>
                     <span className="font-medium">
                       NT$ {selectedOrder.amount.toLocaleString()}
                     </span>
                   </div>
                   <div className="mt-1 flex justify-between">
-                    <span className="text-muted-foreground">購買天數</span>
+                    <span className="text-muted-foreground">{t("daysSincePurchase")}</span>
                     <span
                       className={
                         selectedOrder.isAutoEligible
@@ -291,16 +292,16 @@ export function RefundRequestDialog({
                           : "text-orange-600"
                       }
                     >
-                      {selectedOrder.daysSincePurchase} 天
+                      {selectedOrder.daysSincePurchase} {tCommon("next") === "Next" ? "days" : "天"}
                       {selectedOrder.isAutoEligible
-                        ? " (符合自動退款)"
-                        : " (需人工審核)"}
+                        ? ` ${t("autoEligible")}`
+                        : ` ${t("manualReview")}`}
                     </span>
                   </div>
                   {selectedOrder.creditsToDeduct > 0 && (
                     <div className="mt-1 flex justify-between">
                       <span className="text-muted-foreground">
-                        將扣除 Credits
+                        {t("creditsToDeduct")}
                       </span>
                       <span className="text-red-600">
                         -{selectedOrder.creditsToDeduct.toLocaleString()}
@@ -312,7 +313,7 @@ export function RefundRequestDialog({
 
               {/* Reason Selection */}
               <div className="space-y-2">
-                <Label>選擇退款原因</Label>
+                <Label>{t("selectReason")}</Label>
                 <RadioGroup
                   value={reasonCategory}
                   onValueChange={setReasonCategory}
@@ -324,7 +325,7 @@ export function RefundRequestDialog({
                     >
                       <RadioGroupItem value={option.value} id={option.value} />
                       <Label htmlFor={option.value} className="font-normal">
-                        {option.label}
+                        {t(`reasons.${option.labelKey}`)}
                       </Label>
                     </div>
                   ))}
@@ -333,9 +334,9 @@ export function RefundRequestDialog({
 
               {/* Additional Details */}
               <div className="space-y-2">
-                <Label>補充說明（選填）</Label>
+                <Label>{t("additionalDetails")}</Label>
                 <Textarea
-                  placeholder="請輸入補充說明..."
+                  placeholder={t("additionalDetailsPlaceholder")}
                   value={reasonDetail}
                   onChange={(e) => setReasonDetail(e.target.value)}
                   rows={3}
@@ -345,7 +346,7 @@ export function RefundRequestDialog({
 
             <DialogFooter>
               <Button variant="outline" onClick={handleClose}>
-                取消
+                {tCommon("cancel")}
               </Button>
               <Button
                 onClick={handleSubmitRequest}
@@ -359,10 +360,10 @@ export function RefundRequestDialog({
                 {loading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    處理中...
+                    {t("processing")}
                   </>
                 ) : (
-                  "下一步"
+                  t("nextStep")
                 )}
               </Button>
             </DialogFooter>
@@ -374,24 +375,24 @@ export function RefundRequestDialog({
             <DialogHeader>
               <DialogTitle className="flex items-center gap-2">
                 <Gift className="h-5 w-5 text-primary" />
-                我們想留住您！
+                {t("retentionTitle")}
               </DialogTitle>
             </DialogHeader>
 
             <div className="space-y-4 py-4">
               <p className="text-center text-muted-foreground">
-                如果您願意繼續使用，我們將額外贈送您
+                {t("retentionDescription")}
               </p>
               <div className="text-center">
                 <span className="text-3xl font-bold text-primary">
                   {retentionCredits.toLocaleString()}
                 </span>
                 <span className="ml-2 text-lg text-muted-foreground">
-                  credits
+                  {t("retentionCredits")}
                 </span>
               </div>
               <p className="text-center text-sm text-muted-foreground">
-                （訂單金額的 50%）
+                {t("retentionPercentage")}
               </p>
             </div>
 
@@ -406,7 +407,7 @@ export function RefundRequestDialog({
                 ) : (
                   <Gift className="mr-2 h-4 w-4" />
                 )}
-                接受優惠，繼續使用
+                {t("acceptRetention")}
               </Button>
               <Button
                 variant="outline"
@@ -414,7 +415,7 @@ export function RefundRequestDialog({
                 onClick={handleProceedRefund}
                 disabled={loading}
               >
-                不，我要繼續退款
+                {t("proceedRefund")}
               </Button>
             </DialogFooter>
           </>
@@ -426,8 +427,8 @@ export function RefundRequestDialog({
               <DialogTitle className="flex items-center justify-center gap-2">
                 <CheckCircle2 className="h-6 w-6 text-green-600" />
                 {successStatus === "retention_accepted"
-                  ? "感謝您的支持！"
-                  : "退款申請已提交"}
+                  ? t("retentionAccepted")
+                  : t("refundSubmitted")}
               </DialogTitle>
             </DialogHeader>
 
@@ -438,7 +439,7 @@ export function RefundRequestDialog({
                 <>
                   <div className="rounded-lg bg-muted p-3 text-sm">
                     <div className="flex justify-between">
-                      <span className="text-muted-foreground">退款編號</span>
+                      <span className="text-muted-foreground">{t("refundNo")}</span>
                       <span className="font-mono">{refundNo}</span>
                     </div>
                   </div>
@@ -446,8 +447,7 @@ export function RefundRequestDialog({
                   <div className="flex items-start gap-2 rounded-lg bg-yellow-50 p-3 text-sm text-yellow-800">
                     <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0" />
                     <span>
-                      退款完成後，您的訂閱將降級為 Free 方案，且相關 credits
-                      將被扣除
+                      {t("refundWarning")}
                     </span>
                   </div>
                 </>
@@ -456,7 +456,7 @@ export function RefundRequestDialog({
 
             <DialogFooter>
               <Button className="w-full" onClick={handleClose}>
-                確定
+                {t("confirm")}
               </Button>
             </DialogFooter>
           </>

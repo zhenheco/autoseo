@@ -79,23 +79,21 @@ export function SettingsClient({ company, searchParams }: SettingsClientProps) {
         {/* Refund Request Card */}
         <Card>
           <CardHeader>
-            <CardTitle>退款申請</CardTitle>
+            <CardTitle>{t("refund.title")}</CardTitle>
             <CardDescription>
-              如果您對服務不滿意，可以在此申請退款
+              {t("refund.description")}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
               <p className="text-sm text-muted-foreground">
-                購買後 7 天內可自動退款，超過 7 天需經人工審核。
-                退款完成後，您的訂閱將降級為 Free 方案，且相關 credits
-                將被扣除。
+                {t("refund.policy")}
               </p>
               <Button
                 variant="outline"
                 onClick={() => setRefundDialogOpen(true)}
               >
-                申請退款
+                {t("refund.requestButton")}
               </Button>
             </div>
           </CardContent>

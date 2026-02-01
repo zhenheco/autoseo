@@ -8,6 +8,7 @@ import type {
   CategoryCount,
   TagCount,
 } from "@/types/blog";
+import { getTranslations } from "next-intl/server";
 
 // 🔧 優化：ISR 快取 - 每小時重新驗證
 export const revalidate = 3600;
@@ -150,13 +151,16 @@ async function getTags(): Promise<TagCount[]> {
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { tag } = await params;
   const decodedTag = decodeURIComponent(tag);
+  const t = await getTranslations("blog");
+
+  const description = t("tagDescription", { tag: decodedTag });
 
   return {
     title: `#${decodedTag} | 1waySEO Blog`,
-    description: `探索標籤「${decodedTag}」相關的 SEO 教學和案例文章`,
+    description,
     openGraph: {
       title: `#${decodedTag} - 1waySEO Blog`,
-      description: `探索標籤「${decodedTag}」相關的 SEO 教學和案例文章`,
+      description,
       type: "website",
       locale: "zh_TW",
     },
@@ -166,6 +170,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 export default async function TagPage({ params }: Props) {
   const { tag } = await params;
   const decodedTag = decodeURIComponent(tag);
+  const t = await getTranslations("blog");
 
   const [articles, categories, tags] = await Promise.all([
     getArticlesByTag(decodedTag),
@@ -188,7 +193,7 @@ export default async function TagPage({ params }: Props) {
             href="/blog"
             className="text-sm font-medium text-slate-600 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white transition-colors"
           >
-            ← 返回 Blog
+            {t("backToBlog")}
           </Link>
         </nav>
       </header>
@@ -198,13 +203,13 @@ export default async function TagPage({ params }: Props) {
         <div className="container mx-auto px-4 text-center">
           <div className="flex items-center justify-center gap-2 text-purple-600 dark:text-purple-400 mb-3">
             <Tags className="h-5 w-5" />
-            <span className="text-sm font-medium">標籤</span>
+            <span className="text-sm font-medium">{t("tag")}</span>
           </div>
           <h1 className="text-3xl md:text-4xl font-bold text-slate-900 dark:text-white mb-2">
             #{decodedTag}
           </h1>
           <p className="text-slate-500 dark:text-slate-400">
-            共 {articles.length} 篇文章
+            {t("totalArticles", { count: articles.length })}
           </p>
         </div>
       </div>
@@ -216,7 +221,7 @@ export default async function TagPage({ params }: Props) {
             <ArticleGrid
               articles={articles}
               showHero={false}
-              emptyMessage={`標籤「${decodedTag}」目前沒有文章`}
+              emptyMessage={t("tagNoArticles", { tag: decodedTag })}
             />
           </div>
 

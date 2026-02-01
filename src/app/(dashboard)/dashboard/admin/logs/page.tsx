@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import {
   Card,
   CardContent,
@@ -42,6 +43,7 @@ interface AdminLog {
 }
 
 export default function AdminLogsPage() {
+  const t = useTranslations("admin.logs");
   const [logs, setLogs] = useState<AdminLog[]>([]);
   const [loading, setLoading] = useState(true);
   const [total, setTotal] = useState(0);
@@ -74,10 +76,10 @@ export default function AdminLogsPage() {
         setLogs(data.data);
         setTotal(data.pagination.total);
       } else {
-        toast.error(data.error || "取得操作記錄失敗");
+        toast.error(data.error || t("loadFailed"));
       }
     } catch {
-      toast.error("取得操作記錄失敗");
+      toast.error(t("loadFailed"));
     } finally {
       setLoading(false);
     }
@@ -100,21 +102,21 @@ export default function AdminLogsPage() {
 
     if (entries.length === 0) return "-";
 
+    const labelMap: Record<string, string> = {
+      days_extended: t("detailLabels.daysExtended"),
+      articles_granted: t("detailLabels.articlesGranted"),
+      previous_remaining: t("detailLabels.previousRemaining"),
+      new_remaining: t("detailLabels.newRemaining"),
+      previous_end_date: t("detailLabels.previousEndDate"),
+      new_end_date: t("detailLabels.newEndDate"),
+      reason: t("detailLabels.reason"),
+      bonus_articles: t("detailLabels.bonusArticles"),
+      max_uses: t("detailLabels.maxUses"),
+    };
+
     return entries
       .map(([key, value]) => {
-        const label =
-          {
-            days_extended: "延長天數",
-            articles_granted: "贈送篇數",
-            previous_remaining: "原有篇數",
-            new_remaining: "新篇數",
-            previous_end_date: "原到期日",
-            new_end_date: "新到期日",
-            reason: "原因",
-            bonus_articles: "加送篇數",
-            max_uses: "使用上限",
-          }[key] || key;
-
+        const label = labelMap[key] || key;
         return `${label}: ${value}`;
       })
       .join(", ");
@@ -140,16 +142,16 @@ export default function AdminLogsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold">操作記錄</h1>
-        <p className="text-muted-foreground">查看所有管理員操作記錄</p>
+        <h1 className="text-2xl font-bold">{t("title")}</h1>
+        <p className="text-muted-foreground">{t("description")}</p>
       </div>
 
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle>操作記錄</CardTitle>
-              <CardDescription>共 {total} 筆記錄</CardDescription>
+              <CardTitle>{t("listTitle")}</CardTitle>
+              <CardDescription>{t("listDescription", { count: total })}</CardDescription>
             </div>
             <Select
               value={actionTypeFilter}
@@ -159,16 +161,16 @@ export default function AdminLogsPage() {
               }}
             >
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="篩選操作類型" />
+                <SelectValue placeholder={t("filterActionType")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">全部類型</SelectItem>
-                <SelectItem value="extend_subscription">延長訂閱</SelectItem>
-                <SelectItem value="grant_articles">贈送篇數</SelectItem>
-                <SelectItem value="create_promo_code">建立優惠碼</SelectItem>
-                <SelectItem value="update_promo_code">更新優惠碼</SelectItem>
+                <SelectItem value="all">{t("actionTypeAll")}</SelectItem>
+                <SelectItem value="extend_subscription">{t("actionTypeExtendSubscription")}</SelectItem>
+                <SelectItem value="grant_articles">{t("actionTypeGrantArticles")}</SelectItem>
+                <SelectItem value="create_promo_code">{t("actionTypeCreatePromoCode")}</SelectItem>
+                <SelectItem value="update_promo_code">{t("actionTypeUpdatePromoCode")}</SelectItem>
                 <SelectItem value="deactivate_promo_code">
-                  停用優惠碼
+                  {t("actionTypeDeactivatePromoCode")}
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -185,11 +187,11 @@ export default function AdminLogsPage() {
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>時間</TableHead>
-                      <TableHead>管理員</TableHead>
-                      <TableHead>操作類型</TableHead>
-                      <TableHead>目標</TableHead>
-                      <TableHead>詳情</TableHead>
+                      <TableHead>{t("columns.time")}</TableHead>
+                      <TableHead>{t("columns.admin")}</TableHead>
+                      <TableHead>{t("columns.actionType")}</TableHead>
+                      <TableHead>{t("columns.target")}</TableHead>
+                      <TableHead>{t("columns.details")}</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
@@ -225,7 +227,7 @@ export default function AdminLogsPage() {
               {totalPages > 1 && (
                 <div className="flex items-center justify-between mt-4">
                   <p className="text-sm text-muted-foreground">
-                    第 {currentPage} 頁，共 {totalPages} 頁
+                    {t("paginationInfo", { current: currentPage, total: totalPages })}
                   </p>
                   <div className="flex gap-2">
                     <Button
@@ -235,7 +237,7 @@ export default function AdminLogsPage() {
                       onClick={() => setOffset(Math.max(0, offset - limit))}
                     >
                       <ChevronLeft className="h-4 w-4 mr-1" />
-                      上一頁
+                      {t("prevPage")}
                     </Button>
                     <Button
                       variant="outline"
@@ -243,7 +245,7 @@ export default function AdminLogsPage() {
                       disabled={offset + limit >= total}
                       onClick={() => setOffset(offset + limit)}
                     >
-                      下一頁
+                      {t("nextPage")}
                       <ChevronRight className="h-4 w-4 ml-1" />
                     </Button>
                   </div>

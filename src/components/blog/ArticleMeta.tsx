@@ -1,6 +1,7 @@
 "use client";
 
 import { Calendar, Clock, Eye, BookOpen } from "lucide-react";
+import { useTranslations, useLocale } from "next-intl";
 
 interface ArticleMetaProps {
   publishedAt: string | null;
@@ -21,8 +22,11 @@ export function ArticleMeta({
   totalViews,
   className = "",
 }: ArticleMetaProps) {
+  const t = useTranslations("blog");
+  const locale = useLocale();
+
   const formattedDate = publishedAt
-    ? new Date(publishedAt).toLocaleDateString("zh-TW", {
+    ? new Date(publishedAt).toLocaleDateString(locale, {
         year: "numeric",
         month: "long",
         day: "numeric",
@@ -42,19 +46,19 @@ export function ArticleMeta({
       {readingTime && (
         <span className="flex items-center gap-1.5">
           <Clock className="h-4 w-4" />
-          {readingTime} 分鐘閱讀
+          {t("readingTimeMinutes", { count: readingTime })}
         </span>
       )}
       {wordCount && (
         <span className="flex items-center gap-1.5">
           <BookOpen className="h-4 w-4" />
-          {wordCount.toLocaleString()} 字
+          {t("wordCountChars", { count: wordCount.toLocaleString() })}
         </span>
       )}
       {totalViews !== undefined && totalViews !== null && (
         <span className="flex items-center gap-1.5">
           <Eye className="h-4 w-4" />
-          {totalViews.toLocaleString()} 次閱讀
+          {t("viewsCount", { count: totalViews.toLocaleString() })}
         </span>
       )}
     </div>

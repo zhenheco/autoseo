@@ -140,9 +140,9 @@ export default async function WebsitesPage({
             <div className="flex items-center gap-3">
               <Globe className="h-8 w-8 text-primary" />
               <div>
-                <h3 className="font-semibold">建立官方 Blog</h3>
+                <h3 className="font-semibold">{t("createPlatformBlog")}</h3>
                 <p className="text-sm text-muted-foreground">
-                  建立平台官方 Blog，展示 AI 生成文章並獲取 SEO 流量
+                  {t("createPlatformBlogDesc")}
                 </p>
               </div>
             </div>
@@ -150,7 +150,7 @@ export default async function WebsitesPage({
               <input type="hidden" name="companyId" value={company.id} />
               <Button type="submit" variant="default">
                 <Globe className="h-4 w-4 mr-2" />
-                建立官方 Blog
+                {t("createPlatformBlog")}
               </Button>
             </form>
           </CardContent>
@@ -160,7 +160,7 @@ export default async function WebsitesPage({
       {/* WordPress 網站列表 */}
       <div className="mb-4">
         <h2 className="text-lg font-semibold text-muted-foreground">
-          WordPress 網站
+          {t("wordpressSites")}
         </h2>
       </div>
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
@@ -184,7 +184,7 @@ export default async function WebsitesPage({
                         {website.auto_schedule_enabled && (
                           <Badge variant="secondary" className="text-xs">
                             <Clock className="h-3 w-3 mr-1" />
-                            自動排程
+                            {t("autoSchedule")}
                           </Badge>
                         )}
                         {website.is_platform_blog && (
@@ -192,7 +192,7 @@ export default async function WebsitesPage({
                             variant="default"
                             className="bg-gradient-to-r from-blue-600 to-purple-600"
                           >
-                            官方 Blog
+                            {t("platformBlog")}
                           </Badge>
                         )}
                       </div>

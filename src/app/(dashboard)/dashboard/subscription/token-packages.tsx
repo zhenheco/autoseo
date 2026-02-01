@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Coins } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
 import type { Database } from "@/types/database.types";
 
 type TokenPackage = Database["public"]["Tables"]["token_packages"]["Row"];
@@ -29,6 +30,7 @@ export function TokenPackages({
 }: TokenPackagesProps) {
   const [loading, setLoading] = useState<string | null>(null);
   const router = useRouter();
+  const t = useTranslations("subscription");
 
   const handlePurchase = async (pkg: TokenPackage) => {
     try {
@@ -42,7 +44,7 @@ export function TokenPackages({
           paymentType: "token_package",
           relatedId: pkg.id,
           amount: pkg.price,
-          description: `購買 ${pkg.name}`,
+          description: pkg.name,
           email: userEmail,
         }),
       });
@@ -71,7 +73,7 @@ export function TokenPackages({
     } catch (error) {
       console.error("購買錯誤:", error);
       alert(
-        `購買失敗: ${error instanceof Error ? error.message : "請稍後再試"}`,
+        `${t("purchaseFailed")}: ${error instanceof Error ? error.message : t("processing")}`,
       );
       setLoading(null);
     }
@@ -98,7 +100,7 @@ export function TokenPackages({
                 </span>
               </div>
               <p className="text-sm text-muted-foreground">
-                單次購買，永久有效
+                {t("oneTimePurchaseNeverExpires")}
               </p>
             </div>
           </CardContent>
@@ -108,7 +110,7 @@ export function TokenPackages({
               onClick={() => handlePurchase(pkg)}
               disabled={loading === pkg.id}
             >
-              {loading === pkg.id ? "處理中..." : "立即購買"}
+              {loading === pkg.id ? t("processing") : t("buyNow")}
             </Button>
           </CardFooter>
         </Card>

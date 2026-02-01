@@ -19,18 +19,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { updateWebsiteSettings } from "../../actions";
+import { useTranslations } from "next-intl";
 
-const REGIONS = [
-  { value: "taiwan", label: "台灣" },
-  { value: "japan", label: "日本" },
-  { value: "usa", label: "美國" },
-  { value: "singapore", label: "新加坡" },
-  { value: "hongkong", label: "香港" },
-  { value: "china", label: "中國" },
-  { value: "korea", label: "韓國" },
-  { value: "global", label: "全球" },
-  { value: "other", label: "其他" },
-];
+// 地區值常數（不翻譯）
+const REGION_VALUES = [
+  "taiwan",
+  "japan",
+  "usa",
+  "singapore",
+  "hongkong",
+  "china",
+  "korea",
+  "global",
+  "other",
+] as const;
 
 const LANGUAGES = [
   { code: "zh-TW", name: "繁體中文" },
@@ -66,6 +68,7 @@ export function WebsiteSettingsForm({
   region: initialRegion,
   language: initialLanguage,
 }: WebsiteSettingsFormProps) {
+  const t = useTranslations("websites");
   const [industry, setIndustry] = useState(initialIndustry || "");
   const [region, setRegion] = useState(initialRegion || "");
   const [customRegion, setCustomRegion] = useState("");
@@ -74,7 +77,7 @@ export function WebsiteSettingsForm({
   // Check if initial region is custom (not in predefined list)
   const isCustomRegion =
     initialRegion &&
-    !REGIONS.some((r) => r.value === initialRegion) &&
+    !REGION_VALUES.includes(initialRegion as typeof REGION_VALUES[number]) &&
     initialRegion !== "";
 
   // Initialize custom region value if needed
@@ -88,9 +91,9 @@ export function WebsiteSettingsForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle>文章生成設定</CardTitle>
+        <CardTitle>{t("settingsTitle")}</CardTitle>
         <CardDescription>
-          設定此網站預設的主題、目標地區和語言，寫文章時會自動套用這些設定
+          {t("settingsDescription")}
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -105,28 +108,28 @@ export function WebsiteSettingsForm({
           <input type="hidden" name="language" value={language} />
 
           <div className="space-y-2">
-            <Label htmlFor="industry">你想要寫哪些主題?</Label>
+            <Label htmlFor="industry">{t("topicLabel")}</Label>
             <Input
               id="industry"
               value={industry}
               onChange={(e) => setIndustry(e.target.value)}
-              placeholder="如何把ai融入行銷中"
+              placeholder={t("topicPlaceholder")}
             />
             <p className="text-xs text-muted-foreground">
-              AI 會根據這個主題調整文章內容和用語
+              {t("topicHint")}
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="region">目標地區</Label>
+            <Label htmlFor="region">{t("regionLabel")}</Label>
             <Select value={region} onValueChange={setRegion}>
               <SelectTrigger id="region">
-                <SelectValue placeholder="請選擇目標地區" />
+                <SelectValue placeholder={t("regionPlaceholder")} />
               </SelectTrigger>
               <SelectContent>
-                {REGIONS.map((reg) => (
-                  <SelectItem key={reg.value} value={reg.value}>
-                    {reg.label}
+                {REGION_VALUES.map((regValue) => (
+                  <SelectItem key={regValue} value={regValue}>
+                    {t(`regions.${regValue}`)}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -135,20 +138,20 @@ export function WebsiteSettingsForm({
               <Input
                 value={customRegion}
                 onChange={(e) => setCustomRegion(e.target.value)}
-                placeholder="請輸入您的目標地區"
+                placeholder={t("customRegionPlaceholder")}
                 className="mt-2"
               />
             )}
             <p className="text-xs text-muted-foreground">
-              AI 會針對目標地區的讀者習慣調整內容
+              {t("regionHint")}
             </p>
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="language">撰寫語言</Label>
+            <Label htmlFor="language">{t("languageLabel")}</Label>
             <Select value={language} onValueChange={setLanguage}>
               <SelectTrigger id="language">
-                <SelectValue placeholder="請選擇撰寫語言" />
+                <SelectValue placeholder={t("languagePlaceholder")} />
               </SelectTrigger>
               <SelectContent>
                 {LANGUAGES.map((lang) => (
@@ -158,10 +161,10 @@ export function WebsiteSettingsForm({
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground">文章將以此語言撰寫</p>
+            <p className="text-xs text-muted-foreground">{t("languageHint")}</p>
           </div>
 
-          <Button type="submit">儲存設定</Button>
+          <Button type="submit">{t("saveSettings")}</Button>
         </form>
       </CardContent>
     </Card>

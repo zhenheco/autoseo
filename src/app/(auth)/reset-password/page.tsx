@@ -32,7 +32,7 @@ export default async function ResetPasswordPage({
         <div className="bg-card border border-border rounded-2xl p-8 shadow-lg">
           <Suspense
             fallback={
-              <div className="text-center text-muted-foreground">載入中...</div>
+              <div className="text-center text-muted-foreground">{t("loading")}</div>
             }
           >
             <ResetPasswordForm error={params.error} success={params.success} />
