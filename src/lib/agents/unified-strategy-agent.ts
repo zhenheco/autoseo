@@ -303,10 +303,16 @@ Target word count: ${input.targetWordCount}
 Search intent: ${input.research.searchIntent}
 Content gaps: ${input.research.contentGaps.slice(0, 3).join(", ")}
 
+## Outline Principles
+1. Each H2 section should address a specific, practical aspect
+2. Section titles should be concrete (e.g., "5 個實測有效的關鍵字工具" not "關鍵字工具介紹")
+3. keyPoints should be specific enough to guide substantive writing (not vague platitudes)
+4. Each section should have distinct content (no overlap)
+
 Output a valid JSON object with this structure:
 {
   "introduction": {
-    "hook": "引人入勝的開場",
+    "hook": "具體的開場 (a real example, surprising fact, or scenario)",
     "context": "背景說明",
     "thesis": "主要觀點",
     "wordCount": 200
@@ -315,7 +321,7 @@ Output a valid JSON object with this structure:
     {
       "heading": "具體的 H2 標題",
       "subheadings": ["子標題1", "子標題2"],
-      "keyPoints": ["關鍵重點1", "關鍵重點2"],
+      "keyPoints": ["具體的要點 (specific point to guide real content, not abstract)", "Include real examples or data points"],
       "targetWordCount": 500,
       "keywords": ["相關關鍵字"]
     }
@@ -359,21 +365,23 @@ Rules:
     }
   }
 
+  /** 移除 AI 回應中的 Markdown 程式碼區塊標記 */
+  private stripCodeFences(content: string): string {
+    const trimmed = content.trim();
+    if (trimmed.startsWith("```json")) {
+      return trimmed.replace(/^```json\s*\n?/, "").replace(/\n?```$/, "");
+    }
+    if (trimmed.startsWith("```")) {
+      return trimmed.replace(/^```\s*\n?/, "").replace(/\n?```$/, "");
+    }
+    return trimmed;
+  }
+
   private parseOutlineResponse(
     content: string,
   ): StrategyOutput["outline"] | null {
     try {
-      let cleanContent = content.trim();
-      if (cleanContent.startsWith("```json")) {
-        cleanContent = cleanContent
-          .replace(/^```json\s*\n?/, "")
-          .replace(/\n?```$/, "");
-      } else if (cleanContent.startsWith("```")) {
-        cleanContent = cleanContent
-          .replace(/^```\s*\n?/, "")
-          .replace(/\n?```$/, "");
-      }
-
+      const cleanContent = this.stripCodeFences(content);
       const parsed = JSON.parse(cleanContent);
 
       if (
@@ -519,6 +527,12 @@ Rules:
     selectedTitle: string,
   ): Promise<ContentPlanOutput> {
     const targetLang = input.targetLanguage || "zh-TW";
+    let languageLabel = "English";
+    if (targetLang === "zh-TW") {
+      languageLabel = "繁體中文";
+    } else if (targetLang === "zh-CN") {
+      languageLabel = "简体中文";
+    }
 
     const prompt = `你是一位專業的內容策略專家。請根據以下資訊，為文章生成詳細的寫作計劃。
 
@@ -552,7 +566,7 @@ ${JSON.stringify(strategy.outline, null, 2)}
 6. researchInsights: 研究洞察
 
 ## 語言
-所有內容必須使用 ${targetLang === "zh-TW" ? "繁體中文" : targetLang === "zh-CN" ? "简体中文" : "English"}
+所有內容必須使用 ${languageLabel}
 
 請直接輸出 JSON，不要用 \`\`\`json 包裹。
 **重要：請確保輸出完整的 JSON，不要省略或截斷任何部分。**`;
@@ -586,17 +600,7 @@ ${JSON.stringify(strategy.outline, null, 2)}
     strategy: StrategyOutput,
   ): ContentPlanOutput {
     try {
-      let cleanContent = content.trim();
-
-      if (cleanContent.startsWith("```json")) {
-        cleanContent = cleanContent
-          .replace(/^```json\s*\n?/, "")
-          .replace(/\n?```$/, "");
-      } else if (cleanContent.startsWith("```")) {
-        cleanContent = cleanContent
-          .replace(/^```\s*\n?/, "")
-          .replace(/\n?```$/, "");
-      }
+      const cleanContent = this.stripCodeFences(content);
 
       try {
         const parsed = JSON.parse(cleanContent);

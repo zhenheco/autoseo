@@ -1,4 +1,4 @@
-import { BaseAgent, AgentExecutionContext } from "./base-agent";
+import { BaseAgent } from "./base-agent";
 import { marked } from "marked";
 import type {
   BrandVoice,
@@ -8,7 +8,6 @@ import type {
   StrategyOutput,
   SpecialBlock,
   GeneratedImage,
-  AIClientConfig,
   UnifiedWritingInput,
 } from "@/types/agents";
 import { LOCALE_FULL_NAMES } from "@/lib/i18n/locales";
@@ -43,10 +42,6 @@ export class UnifiedWritingAgent extends BaseAgent<
   UnifiedWritingInput,
   WritingOutput
 > {
-  constructor(config: AIClientConfig, context: AgentExecutionContext) {
-    super(config, context);
-  }
-
   get agentName(): string {
     return "UnifiedWritingAgent";
   }
@@ -177,8 +172,9 @@ Write an article introduction based on the following information:
 1. Word count: 150-250 words
 2. Must include an engaging opening
 3. Clearly explain the article topic and reader value
-4. Tone matches brand style
-5. Use Markdown format
+4. **Lead with a specific example, story, or surprising fact** - not generic context
+5. Tone matches brand style
+6. Use Markdown format
 
 **CRITICAL: Write ALL content in ${languageName}**
 
@@ -243,7 +239,7 @@ ${previousSummary ? `## Previous Section Summary\n${previousSummary}\n\nEnsure s
 - Target Audience: ${brandVoice.target_audience}
 
 ## Requirements
-1. Word count: ${targetWordCount - 50} ~ ${targetWordCount + 50} words
+1. Target length: ~${targetWordCount} words (quality over quantity, range: ${Math.floor(targetWordCount * 0.7)}-${Math.ceil(targetWordCount * 1.3)})
 2. Use Markdown format
 3. Include section heading (## ${heading})
 4. Use ### for subheadings if applicable
@@ -254,10 +250,17 @@ ${sectionImage ? `7. Insert image at appropriate position: ![${sectionImage.altT
 ${specialBlockSection}
 
 ## Writing Style (Important!)
-1. Present 2-3 different viewpoints or sources on key topics
-2. Compare and contrast different perspectives where relevant
-3. Provide your analysis and conclusions
-4. Give actionable recommendations to readers
+1. **Be substantive**: Provide specific examples, case studies, or real data
+2. **Be practical**: Show how readers can apply this information
+3. **Be natural**: Write conversationally - avoid academic formula
+4. **Be concise**: Cover the topic thoroughly without padding
+5. **Be specific**: When mentioning tools/courses/resources, give concrete details
+
+### Content Quality Standards
+- Discussing a tool → Name it, explain what it does, show a real use case
+- Discussing a method → Provide step-by-step with example
+- Discussing a concept → Use real-world scenario to illustrate
+- Every sentence should add specific value - no generic statements
 
 **CRITICAL: Write ALL content in ${languageName}**
 
@@ -274,29 +277,10 @@ ${specialBlockSection}
       format: "json",
     });
 
-    let markdown = "";
-    let summary = "";
-
-    try {
-      const parsed = JSON.parse(response.content);
-      markdown = parsed.content || response.content;
-      summary = parsed.summary || this.generateSummary(markdown);
-    } catch {
-      const jsonMatch = response.content.match(/\{[\s\S]*\}/);
-      if (jsonMatch) {
-        try {
-          const parsed = JSON.parse(jsonMatch[0]);
-          markdown = parsed.content || response.content;
-          summary = parsed.summary || this.generateSummary(markdown);
-        } catch {
-          markdown = response.content;
-          summary = this.generateSummary(markdown);
-        }
-      } else {
-        markdown = response.content;
-        summary = this.generateSummary(markdown);
-      }
-    }
+    const parsed = this.safeParseJSON(response.content);
+    let markdown = (parsed?.content as string) || response.content;
+    const summary =
+      (parsed?.summary as string) || this.generateSummary(markdown);
 
     if (sectionImage && !markdown.includes("![")) {
       const lines = markdown.split("\n");
@@ -420,6 +404,7 @@ Generate frequently asked questions (FAQ) for the article "${title}".
   ]
 }`;
 
+    const fallbackLang = input.targetLanguage || "zh-TW";
     let faqs: Array<{ question: string; answer: string }> = [];
 
     try {
@@ -430,28 +415,17 @@ Generate frequently asked questions (FAQ) for the article "${title}".
         format: "json",
       });
 
-      try {
-        const parsed = JSON.parse(response.content);
-        faqs = parsed.faqs || parsed;
-      } catch {
-        const jsonMatch = response.content.match(/\{[\s\S]*\}/);
-        if (jsonMatch) {
-          try {
-            const parsed = JSON.parse(jsonMatch[0]);
-            faqs = parsed.faqs || parsed;
-          } catch {
-            faqs = this.getFallbackFAQs(title, input.targetLanguage || "zh-TW");
-          }
-        } else {
-          faqs = this.getFallbackFAQs(title, input.targetLanguage || "zh-TW");
-        }
-      }
+      const parsed = this.safeParseJSON(response.content);
+      const parsedFaqs = (parsed?.faqs || parsed) as
+        | Array<{ question: string; answer: string }>
+        | undefined;
+      faqs = parsedFaqs || [];
 
       if (!Array.isArray(faqs) || faqs.length === 0) {
-        faqs = this.getFallbackFAQs(title, input.targetLanguage || "zh-TW");
+        faqs = this.getFallbackFAQs(title, fallbackLang);
       }
     } catch {
-      faqs = this.getFallbackFAQs(title, input.targetLanguage || "zh-TW");
+      faqs = this.getFallbackFAQs(title, fallbackLang);
     }
 
     const markdown = this.formatFAQsAsMarkdown(faqs, input.targetLanguage);
@@ -616,59 +590,79 @@ ${contentContext.industryContext ? `**Industry Context**: ${contentContext.indus
   ): string {
     if (!specialBlock) return "";
 
-    const brand = brandName || "";
     const locale = targetLanguage || "zh-TW";
+
+    type BlockConfig = {
+      labelKey: "tip" | "local_advantage" | "warning";
+      lengthRange: string;
+      exampleHint: string;
+      brandPrefix: boolean;
+    };
+
+    let config: BlockConfig | null = null;
 
     switch (specialBlock.type) {
       case "expert_tip":
-      case "tip_block": {
-        const tipLabel = getSpecialBlockLabel("tip", locale);
-        return `
-## Special Block Requirement
-Include a "${tipLabel}" block in this section.
-- Content hint: ${specialBlock.content}
-- Format: Use a blockquote
-- Length: 50-80 words
-
-Example format:
-> **${brand ? brand + " " : ""}${tipLabel}**
->
-> [Your practical tip here, 50-80 words]`;
-      }
-
-      case "local_advantage": {
-        const localAdvLabel = getSpecialBlockLabel("local_advantage", locale);
-        return `
-## Special Block Requirement
-Include a "${localAdvLabel}" block in this section.
-- Content hint: ${specialBlock.content}
-- Format: Use a blockquote
-- Length: 80-120 words
-
-Example format:
-> **${localAdvLabel}**
->
-> [Your local advantage description here, 80-120 words]`;
-      }
-
+      case "tip_block":
+        config = {
+          labelKey: "tip",
+          lengthRange: "50-80",
+          exampleHint: "Your practical tip here",
+          brandPrefix: true,
+        };
+        break;
+      case "local_advantage":
+        config = {
+          labelKey: "local_advantage",
+          lengthRange: "80-120",
+          exampleHint: "Your local advantage description here",
+          brandPrefix: false,
+        };
+        break;
       case "expert_warning":
-      case "warning_block": {
-        const warningLabel = getSpecialBlockLabel("warning", locale);
-        return `
-## Special Block Requirement
-Include a "${warningLabel}" block in this section.
-- Content hint: ${specialBlock.content}
-- Format: Use a blockquote
-- Length: 50-80 words
-
-Example format:
-> **${warningLabel}**
->
-> [Your warning or caution here, 50-80 words]`;
-      }
-
+      case "warning_block":
+        config = {
+          labelKey: "warning",
+          lengthRange: "50-80",
+          exampleHint: "Your warning or caution here",
+          brandPrefix: false,
+        };
+        break;
       default:
         return "";
+    }
+
+    const label = getSpecialBlockLabel(config.labelKey, locale);
+    const prefix =
+      config.brandPrefix && brandName ? `${brandName} ` : "";
+
+    return `
+## Special Block Requirement
+Include a "${label}" block in this section.
+- Content hint: ${specialBlock.content}
+- Format: Use a blockquote
+- Length: ${config.lengthRange} words
+
+Example format:
+> **${prefix}${label}**
+>
+> [${config.exampleHint}, ${config.lengthRange} words]`;
+  }
+
+  /** 嘗試解析 JSON 字串，失敗時嘗試從內容中提取 JSON 物件 */
+  private safeParseJSON(content: string): Record<string, unknown> | null {
+    try {
+      return JSON.parse(content);
+    } catch {
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        try {
+          return JSON.parse(jsonMatch[0]);
+        } catch {
+          return null;
+        }
+      }
+      return null;
     }
   }
 
@@ -698,13 +692,10 @@ Example format:
   }
 
   private cleanupMarkdown(markdown: string): string {
-    let cleaned = markdown;
-    cleaned = cleaned.replace(/#{1,6}\s+#\s+/g, (match) => {
-      return match.replace(/\s+#\s+/, " ");
-    });
-    cleaned = cleaned.replace(/\n{3,}/g, "\n\n");
-    cleaned = cleaned.trim();
-    return cleaned;
+    return markdown
+      .replace(/#{1,6}\s+#\s+/g, (match) => match.replace(/\s+#\s+/, " "))
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
   }
 
   private async convertToHTML(markdown: string): Promise<string> {

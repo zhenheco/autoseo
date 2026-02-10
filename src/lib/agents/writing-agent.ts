@@ -179,22 +179,38 @@ ${this.formatOutline(strategy.outline)}
 - Do NOT use code blocks (\`\`\`)
 - Do NOT generate FAQ sections (FAQ is handled by a dedicated Agent)
 
-# Perspective Integration & Analysis Requirements (IMPORTANT!)
+# Writing Style: Conversational & Substantive
 
-## Writing Structure (for each H2 section)
-1. **Present multiple perspectives**: Cite 2-3 different sources or angles
-   - Use phrases like: "According to [source]'s research...", "Expert [name] believes...", "Industry consensus suggests..."
-2. **Compare viewpoints**: Point out differences or controversies between perspectives
-   - Use phrases like: "In contrast...", "On the other hand...", "However, some argue..."
-3. **Author's analysis**: Synthesize perspectives and provide your conclusion
-   - Use phrases like: "Based on my analysis...", "From a practical standpoint...", "In my experience..."
-4. **Actionable advice**: Give readers concrete action items
+## Core Principles
+1. **Write like a knowledgeable friend** - not a research paper
+2. **Be specific and practical** - every H2 should teach something concrete
+3. **Quality over quantity** - write enough to cover the topic, no more
+4. **Real examples required** - don't describe concepts abstractly
 
-## Prohibited Writing Patterns
-- ❌ Listing information without analysis
-- ❌ All paragraphs following the same structure
-- ❌ Lacking opinion expressions like "I believe", "recommend", "analysis suggests"
-- ❌ Pure data repetition without personal insights
+## Content Standards (for each H2 section)
+1. **Substantive Content**: When mentioning a tool/course/method/concept:
+   - Give specific examples (real products, case studies, numbers)
+   - Show practical applications (how it works in real life)
+   - Include concrete details (features, pricing, use cases when relevant)
+
+2. **Natural Voice**:
+   - Explain like you're answering a friend's question
+   - Use natural expressions, not academic comparisons
+   - Vary sentence structure - never follow a formula
+
+3. **No Padding**:
+   - ❌ Don't add filler just to meet word count
+   - ❌ Don't repeat the same point in different phrasings
+   - ❌ Don't use generic statements like "這個工具很有用" without specifics
+   - ✅ Move to the next point when you've made your case
+
+## Good vs Bad Example
+
+❌ BAD (generic/padded):
+"這個工具很有用。它提供了許多功能來幫助用戶。使用這個工具可以提高效率。許多專家都推薦使用。"
+
+✅ GOOD (specific/substantive):
+"以 Ahrefs 為例，它的 Site Explorer 可以即時顯示任何網站的自然流量。我最常用 Top Pages report：輸入競爭對手網址，就能看到哪些文章帶來最多流量。像我曾分析某旅遊部落格，發現一篇京都賞楓文章月流量 15K，研究內容結構後套用到自己的文章，三個月流量成長 40%。"
 
 ## 🚫 Banned Phrases (NEVER use these)
 **AI-sounding phrases** (avoid in ALL languages):
@@ -204,17 +220,23 @@ ${this.formatOutline(strategy.outline)}
 - "Needless to say/Obviously"
 - "In today's world/society"
 - "As we all know"
+- "According to research..." (unless citing a specific study by name)
+- "Experts believe..." (unless naming specific experts)
+- "Many people..." (use specific data instead)
+- "不可忽視" / "不容小覷"
+- "眾所周知"
+- "隨著...的發展"
 
-**Use natural conversational alternatives instead**
+**Conversational Alternatives**:
+- "It's worth noting..." → "Here's what's interesting:"
+- "Experts believe..." → State the fact directly or cite a specific source
+- "This is crucial" → "This matters because..."
+- Academic comparisons → Natural explanation
 
-## Example Writing Pattern
-"Regarding X, the industry has different views. Group A believes we should..., while Group B advocates...
-
-**My analysis**: Based on practical experience and research data, I believe [conclusion]. For [specific reader type], I recommend [specific advice]."
-
-# Citation Requirements
-- When citing data or opinions, use expressions like "Research shows...", "Experts point out..."
-- Links will be automatically inserted in post-processing; focus on content quality
+## Length Guidance
+- Target word count is a rough guide, NOT a hard requirement
+- 500 words of dry content beats 800 words of padded content
+- Acceptable range: 70%~130% of target word count
 
 Write the complete article now. Output ONLY the Markdown content in ${languageName}.`;
 
@@ -246,15 +268,15 @@ Write the complete article now. Output ONLY the Markdown content in ${languageNa
     if (writingStyle) {
       const styleMap: Record<string, string> = {
         short_punchy:
-          "Short, punchy sentences with a fast pace - conversational yet professional",
+          "Short, punchy sentences. Direct and snappy - like texting a smart friend",
         conversational:
-          "Conversational tone, warm and natural, like chatting with a friend at a café",
+          "Warm, natural tone. Explain like helping a friend at a café - use real examples, skip formalities",
         academic:
-          "Rigorous and professional, logically clear, suitable for in-depth analysis",
+          "Professional and rigorous, but still readable. Use data and case studies, not abstract theory",
         storytelling:
-          "Narrative style, using stories and cases to engage readers",
+          "Lead with stories and real cases. Show don't tell - use specific scenarios",
         mixed:
-          "Flexible switching, adjusting pace and tone based on content needs",
+          "Flexible - technical when explaining complex topics, casual when sharing tips",
       };
       styleDescription = styleMap[writingStyle.sentence_style] || "";
     }
@@ -280,10 +302,12 @@ ${interactionGuide ? `- Reader interaction: ${interactionGuide}` : ""}
 ${brandIntegration?.value_first ? "- Always provide value first, then naturally incorporate the brand" : ""}
 ${brandIntegration?.max_brand_mentions ? `- Limit brand mentions to ${brandIntegration.max_brand_mentions} times maximum` : ""}
 
-## Your Writing Philosophy
-- Every sentence must have a reason to exist
-- Use concrete examples and data, avoid vague statements
-- Readers' time is precious - give them what they need directly`;
+## Your Writing Standards
+- **Substantive over verbose**: Every paragraph must teach something specific
+- **Real examples required**: When mentioning tools/courses/methods, provide concrete details
+- **Natural flow**: Write how you'd explain it in person, not how you'd write a thesis
+- **No padding**: If you've made your point, move on
+- **Specificity wins**: "Ahrefs costs $99/month and shows backlink data" beats "Tools exist that can help with SEO"`;
   }
 
   private buildCompetitorContext(
@@ -354,7 +378,7 @@ ${examples.bad_examples.map((ex) => `> ${ex}`).join("\n\n")}`;
         result += `### ${sub}\n`;
       });
       result += `Key points: ${section.keyPoints.join(", ")}\n`;
-      result += `Target word count: ${section.targetWordCount}\n\n`;
+      result += `Suggested length: ~${section.targetWordCount} words (cover thoroughly, don't pad)\n\n`;
     });
 
     if (outline.conclusion) {
