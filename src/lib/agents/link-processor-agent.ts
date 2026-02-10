@@ -1,11 +1,13 @@
 import type { InternalLink, ExternalReference } from "@/types/agents";
 
 export interface LinkProcessorConfig {
-  maxInternalLinks: number;
-  maxExternalLinks: number;
+  maxInternalLinks: number; // 0 = 不設上限
+  maxExternalLinks: number; // 0 = 不設上限
+  minExternalLinks: number; // 最低外部連結數
   maxLinksPerUrl: number;
   minDistanceBetweenLinks: number;
   minSemanticScore: number;
+  maxLinksPerSection: number;
 }
 
 export interface LinkProcessorInput {
@@ -59,11 +61,13 @@ export class LinkProcessorAgent {
 
   constructor(options?: Partial<LinkProcessorConfig>) {
     this.config = {
-      maxInternalLinks: options?.maxInternalLinks ?? 5,
-      maxExternalLinks: options?.maxExternalLinks ?? 3,
+      maxInternalLinks: options?.maxInternalLinks ?? 0, // 0 = 不設上限
+      maxExternalLinks: options?.maxExternalLinks ?? 0, // 0 = 不設上限
+      minExternalLinks: options?.minExternalLinks ?? 2, // 至少 2 個外部連結
       maxLinksPerUrl: options?.maxLinksPerUrl ?? 2,
-      minDistanceBetweenLinks: options?.minDistanceBetweenLinks ?? 500,
-      minSemanticScore: options?.minSemanticScore ?? 0.3,
+      minDistanceBetweenLinks: options?.minDistanceBetweenLinks ?? 300,
+      minSemanticScore: options?.minSemanticScore ?? 0.15,
+      maxLinksPerSection: options?.maxLinksPerSection ?? 3,
     };
   }
 
@@ -90,14 +94,15 @@ export class LinkProcessorAgent {
 
     let internalInserted = 0;
     for (const link of input.internalLinks) {
-      if (internalInserted >= this.config.maxInternalLinks) break;
+      // maxInternalLinks = 0 代表不設上限
+      if (this.config.maxInternalLinks > 0 && internalInserted >= this.config.maxInternalLinks) break;
 
       const urlCount = this.urlUsageCount.get(link.url) ?? 0;
       if (urlCount >= this.config.maxLinksPerUrl) continue;
 
       const keywords = link.keywords || [link.title];
       for (const keyword of keywords) {
-        if (internalInserted >= this.config.maxInternalLinks) break;
+        if (this.config.maxInternalLinks > 0 && internalInserted >= this.config.maxInternalLinks) break;
         if (!keyword || keyword.length < 2) continue;
 
         const bestMatch = await this.findBestMatch(
@@ -159,7 +164,8 @@ export class LinkProcessorAgent {
 
     let externalInserted = 0;
     for (const ref of input.externalReferences) {
-      if (externalInserted >= this.config.maxExternalLinks) break;
+      // maxExternalLinks = 0 代表不設上限
+      if (this.config.maxExternalLinks > 0 && externalInserted >= this.config.maxExternalLinks) break;
 
       const urlCount = this.urlUsageCount.get(ref.url) ?? 0;
       if (urlCount >= this.config.maxLinksPerUrl) continue;
@@ -169,7 +175,7 @@ export class LinkProcessorAgent {
         input.primaryKeyword,
       );
       for (const keyword of keywords) {
-        if (externalInserted >= this.config.maxExternalLinks) break;
+        if (this.config.maxExternalLinks > 0 && externalInserted >= this.config.maxExternalLinks) break;
         if (!keyword || keyword.length < 2) continue;
 
         const bestMatch = await this.findBestMatch(
@@ -226,6 +232,44 @@ export class LinkProcessorAgent {
             );
             break;
           }
+        }
+      }
+    }
+
+    // 保底機制：如果外部連結不足最低要求，在段落末尾插入引用
+    if (externalInserted < this.config.minExternalLinks && input.externalReferences.length > 0) {
+      console.log(
+        `[LinkProcessorAgent] 外部連結不足 (${externalInserted}/${this.config.minExternalLinks})，啟動保底機制`,
+      );
+
+      const usedUrls = new Set(insertedLinks.filter(l => l.type === "external").map(l => l.url));
+      const unusedRefs = input.externalReferences.filter(ref => !usedUrls.has(ref.url));
+      const refsToInsert = unusedRefs.slice(0, this.config.minExternalLinks - externalInserted);
+
+      for (const ref of refsToInsert) {
+        // 找到文章中第一個 </p> 並在後面插入引用
+        const paragraphEnds = [...html.matchAll(/<\/p>/gi)];
+        if (paragraphEnds.length > 1) {
+          // 在第二個段落結尾插入（跳過開頭段落）
+          const targetParagraph = paragraphEnds[Math.min(externalInserted + 1, paragraphEnds.length - 1)];
+          const insertPos = targetParagraph.index! + targetParagraph[0].length;
+          const displayText = ref.title.length > 40 ? ref.title.substring(0, 40) + "..." : ref.title;
+          const citationHtml = `\n<p><small>（參考來源：<a href="${ref.url}" target="_blank" rel="noopener noreferrer">${this.escapeHtml(displayText)}</a>）</small></p>`;
+          html = html.slice(0, insertPos) + citationHtml + html.slice(insertPos);
+
+          externalInserted++;
+          insertedLinks.push({
+            type: "external",
+            anchor: displayText,
+            url: ref.url,
+            position: "fallback-citation",
+            section: "fallback",
+            semanticScore: 0,
+          });
+
+          console.log(
+            `[LinkProcessorAgent] 保底插入外部引用: ${ref.url}`,
+          );
         }
       }
     }
@@ -346,7 +390,7 @@ export class LinkProcessorAgent {
       }
 
       const section = this.findSectionAtPosition(sections, matchIndex);
-      if (section && section.linksInserted >= 2) {
+      if (section && section.linksInserted >= this.config.maxLinksPerSection) {
         continue;
       }
 
@@ -388,7 +432,7 @@ export class LinkProcessorAgent {
     let score = 0;
     let matchCount = 0;
 
-    const titleWords = titleLower.split(/\s+/).filter((w) => w.length > 2);
+    const titleWords = titleLower.split(/\s+/).filter((w) => w.length > 1);
     for (const word of titleWords) {
       if (sectionLower.includes(word)) {
         matchCount++;
@@ -421,12 +465,12 @@ export class LinkProcessorAgent {
       content
         .toLowerCase()
         .split(/[\s,，、。]+/)
-        .filter((w) => w.length > 2),
+        .filter((w) => w.length > 1),
     );
     const titleWords = title
       .toLowerCase()
       .split(/[\s,，、。]+/)
-      .filter((w) => w.length > 2);
+      .filter((w) => w.length > 1);
 
     let overlap = 0;
     for (const word of titleWords) {

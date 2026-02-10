@@ -3,6 +3,7 @@ import type {
   IntroductionInput,
   IntroductionOutput,
   ContentContext,
+  ResearchSummary,
 } from "@/types/agents";
 import { LOCALE_FULL_NAMES } from "@/lib/i18n/locales";
 
@@ -33,10 +34,27 @@ export class IntroductionAgent extends BaseAgent<
 ---`;
   }
 
+  private buildResearchSummarySection(researchSummary?: ResearchSummary): string {
+    if (!researchSummary || !researchSummary.keyFindings) {
+      return "";
+    }
+
+    let section = `\n## Research Summary (Incorporate into introduction)\n`;
+    section += `**Key Findings:** ${researchSummary.keyFindings}\n`;
+    if (researchSummary.trendHighlight) {
+      section += `**Current Trend:** ${researchSummary.trendHighlight}\n`;
+    }
+    if (researchSummary.topCitations.length > 0) {
+      section += `**Top Sources:** ${researchSummary.topCitations.slice(0, 3).join(", ")}\n`;
+    }
+    section += `\n**Use a compelling statistic or trend from the research above to hook readers.**\n`;
+    return section;
+  }
+
   protected async process(
     input: IntroductionInput,
   ): Promise<IntroductionOutput> {
-    const { outline, brandVoice, contentContext } = input;
+    const { outline, brandVoice, contentContext, researchSummary } = input;
 
     const targetLang = input.targetLanguage || "zh-TW";
     const languageName =
@@ -44,9 +62,11 @@ export class IntroductionAgent extends BaseAgent<
 
     const topicAlignmentSection =
       this.buildTopicAlignmentSection(contentContext);
+    const researchSummarySection =
+      this.buildResearchSummarySection(researchSummary);
 
     const prompt = `${topicAlignmentSection}
-
+${researchSummarySection}
 Write an article introduction based on the following information:
 
 **Target Language: ${languageName}** (ALL content MUST be written in this language)

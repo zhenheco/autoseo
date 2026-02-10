@@ -674,6 +674,7 @@ export interface IntroductionInput {
   temperature?: number;
   maxTokens?: number;
   contentContext?: ContentContext;
+  researchSummary?: ResearchSummary;
 }
 
 export interface IntroductionOutput {
@@ -684,6 +685,18 @@ export interface IntroductionOutput {
     executionTime: number;
     tokenUsage: { input: number; output: number };
   };
+}
+
+export interface ResearchContext {
+  relevantData: string;
+  citations: string[];
+  statistics: string[];
+}
+
+export interface ResearchSummary {
+  keyFindings: string;
+  trendHighlight: string;
+  topCitations: string[];
 }
 
 export interface SectionInput {
@@ -698,6 +711,7 @@ export interface SectionInput {
   maxTokens?: number;
   contentContext?: ContentContext;
   specialBlock?: SpecialBlock;
+  researchContext?: ResearchContext;
 }
 
 export interface SectionOutput {
@@ -719,6 +733,7 @@ export interface ConclusionInput {
   temperature?: number;
   maxTokens?: number;
   contentContext?: ContentContext;
+  researchHighlights?: string;
 }
 
 export interface ConclusionOutput {
@@ -741,6 +756,7 @@ export interface QAInput {
   temperature?: number;
   maxTokens?: number;
   contentContext?: ContentContext;
+  userQuestions?: string;
 }
 
 export interface QAOutput {

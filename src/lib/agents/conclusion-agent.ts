@@ -32,7 +32,7 @@ export class ConclusionAgent extends BaseAgent<
   }
 
   protected async process(input: ConclusionInput): Promise<ConclusionOutput> {
-    const { outline, brandVoice, contentContext } = input;
+    const { outline, brandVoice, contentContext, researchHighlights } = input;
 
     const targetLang = input.targetLanguage || "zh-TW";
     const languageName =
@@ -42,8 +42,12 @@ export class ConclusionAgent extends BaseAgent<
     const topicAlignmentSection =
       this.buildTopicAlignmentSection(contentContext);
 
-    const prompt = `${topicAlignmentSection}
+    const researchHighlightsSection = researchHighlights
+      ? `\n## Key Research Findings (Reference in conclusion)\n${researchHighlights}\n\n**Reinforce credibility by referencing a key statistic or finding from the research above.**\n`
+      : "";
 
+    const prompt = `${topicAlignmentSection}
+${researchHighlightsSection}
 Write an article conclusion based on the following information:
 
 **Target Language: ${languageName}** (ALL content MUST be written in this language)

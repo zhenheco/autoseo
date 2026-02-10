@@ -142,7 +142,7 @@ export class PerplexityClient {
           ],
           temperature: options.temperature || 0.2,
           top_p: options.top_p || 0.9,
-          max_tokens: options.max_tokens || 4000,
+          max_tokens: options.max_tokens || 3000,
           search_domain_filter: options.search_domain_filter,
           search_recency_filter: options.search_recency_filter,
           return_citations: options.return_citations !== false,
@@ -206,103 +206,6 @@ export class PerplexityClient {
     }
   }
 
-  /**
-   * 專門用於競爭對手分析
-   */
-  async analyzeCompetitors(
-    keyword: string,
-    domain?: string,
-  ): Promise<{
-    topCompetitors: Array<{
-      domain: string;
-      title: string;
-      description: string;
-      strengths: string[];
-    }>;
-    contentGaps: string[];
-    recommendations: string[];
-  }> {
-    const query = `
-分析關鍵字「${keyword}」的競爭對手：
-1. 列出排名前 5 的網站
-2. 分析他們的內容策略
-3. 找出內容缺口
-4. 提供超越競爭對手的建議
-${domain ? `\n特別關注與 ${domain} 相關的競爭對手` : ""}
-    `.trim();
-
-    const result = await this.search(query, {
-      search_recency_filter: "month",
-      max_tokens: 4000,
-    });
-
-    // 解析結構化資料
-    return this.parseCompetitorAnalysis(result.content);
-  }
-
-  /**
-   * 獲取最新趨勢
-   */
-  async getTrends(
-    topic: string,
-    timeframe: "day" | "week" | "month" = "week",
-  ): Promise<{
-    trends: Array<{
-      topic: string;
-      description: string;
-      relevance: number;
-    }>;
-    insights: string[];
-  }> {
-    const query = `
-獲取「${topic}」的最新趨勢（過去${this.getTimeframeText(timeframe)}）：
-1. 熱門話題和討論
-2. 新興關鍵字
-3. 產業動態
-4. 相關統計數據
-    `.trim();
-
-    const result = await this.search(query, {
-      search_recency_filter: timeframe,
-      return_citations: true,
-    });
-
-    return this.parseTrends(result.content);
-  }
-
-  /**
-   * 深度內容研究
-   */
-  async researchTopic(
-    topic: string,
-    aspects: string[] = [],
-  ): Promise<{
-    summary: string;
-    keyPoints: string[];
-    statistics: Array<{ stat: string; source: string }>;
-    expertOpinions: string[];
-    relatedTopics: string[];
-  }> {
-    const aspectsText =
-      aspects.length > 0 ? `\n特別關注：${aspects.join("、")}` : "";
-
-    const query = `
-深度研究主題「${topic}」：
-1. 提供全面的概述
-2. 關鍵要點和發現
-3. 相關統計數據（含來源）
-4. 專家觀點
-5. 相關主題建議${aspectsText}
-    `.trim();
-
-    const result = await this.search(query, {
-      max_tokens: 5000,
-      return_citations: true,
-    });
-
-    return this.parseResearch(result.content, result.citations);
-  }
-
   // === 輔助方法 ===
 
   private extractCitations(content: string): string[] {
@@ -335,57 +238,6 @@ ${domain ? `\n特別關注與 ${domain} 相關的競爭對手` : ""}
       .replace(/\[\d+\]:\s*https?:\/\/[^\s]+/g, "")
       .replace(/\[\d+\]/g, "")
       .trim();
-  }
-
-  private getTimeframeText(timeframe: string): string {
-    const map: Record<string, string> = {
-      day: "一天",
-      week: "一週",
-      month: "一個月",
-      year: "一年",
-    };
-    return map[timeframe] || timeframe;
-  }
-
-  private parseCompetitorAnalysis(content: string): any {
-    // 簡單解析，實際可能需要更複雜的 NLP
-    return {
-      topCompetitors: [
-        {
-          domain: "example.com",
-          title: "競爭對手範例",
-          description: "從 Perplexity 內容解析",
-          strengths: ["優勢1", "優勢2"],
-        },
-      ],
-      contentGaps: ["缺口1", "缺口2"],
-      recommendations: ["建議1", "建議2"],
-    };
-  }
-
-  private parseTrends(content: string): any {
-    return {
-      trends: [
-        {
-          topic: "趨勢1",
-          description: "從內容解析",
-          relevance: 0.9,
-        },
-      ],
-      insights: ["洞察1", "洞察2"],
-    };
-  }
-
-  private parseResearch(content: string, citations?: string[]): any {
-    return {
-      summary: content.substring(0, 500),
-      keyPoints: ["要點1", "要點2", "要點3"],
-      statistics: [
-        { stat: "統計數據1", source: citations?.[0] || "Perplexity" },
-      ],
-      expertOpinions: ["專家意見1"],
-      relatedTopics: ["相關主題1", "相關主題2"],
-    };
   }
 
   private getMockResponse(query: string): any {

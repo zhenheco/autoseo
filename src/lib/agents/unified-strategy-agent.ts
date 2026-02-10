@@ -67,7 +67,7 @@ export class UnifiedStrategyAgent extends BaseAgent<
       outline,
       targetWordCount: input.targetWordCount,
       sectionWordDistribution: sectionDistribution,
-      keywordDensityTarget: 2.0,
+      keywordDensityTarget: 0,
       keywords: input.research.relatedKeywords || [],
       relatedKeywords: input.research.relatedKeywords,
       lsiKeywords: input.research.relatedKeywords.slice(0, 5),

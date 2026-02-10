@@ -37,7 +37,7 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
       outline,
       targetWordCount: input.targetWordCount,
       sectionWordDistribution: sectionDistribution,
-      keywordDensityTarget: 2.0,
+      keywordDensityTarget: 0,
       keywords: input.researchData.relatedKeywords || [],
       relatedKeywords: input.researchData.relatedKeywords,
       lsiKeywords: input.researchData.relatedKeywords.slice(0, 5),
@@ -528,9 +528,12 @@ ${JSON.stringify(outlineSchema, null, 2)}
 1. All text content (headings, hook, context, thesis, etc.) MUST be written in ${languageName}
 2. mainSections must have 2-4 items
 3. Each section's heading must be unique
-4. Total targetWordCount should be close to ${input.targetWordCount}
-5. Output JSON object directly (don't wrap with \`\`\`)
-6. **FORBIDDEN sections/subheadings** (DO NOT include any of these):
+4. **Each section's targetWordCount must NOT exceed 150** (keep content concise and focused)
+5. Introduction wordCount should be around 100-120
+6. Conclusion wordCount should be around 80-100
+7. Total targetWordCount should be close to ${input.targetWordCount}
+8. Output JSON object directly (don't wrap with \`\`\`)
+9. **FORBIDDEN sections/subheadings** (DO NOT include any of these):
    - ❌ 常見問題解決 / 常見問題 / 問題解決 / FAQ
    - ❌ 實戰案例分析 / 案例分析 / 成功案例
    - ❌ 進階應用與最佳實踐
@@ -589,7 +592,7 @@ Please output the complete JSON that conforms to the above schema in ${languageN
             hook: { type: "string", description: "吸引讀者的開場方式" },
             context: { type: "string", description: "背景說明" },
             thesis: { type: "string", description: "主要觀點" },
-            wordCount: { type: "number", description: "字數（約 200）" },
+            wordCount: { type: "number", description: "字數（約 100-120）" },
           },
         },
         mainSections: {
@@ -617,7 +620,7 @@ Please output the complete JSON that conforms to the above schema in ${languageN
                 items: { type: "string" },
                 description: "重點（2-4個）",
               },
-              targetWordCount: { type: "number", description: "目標字數" },
+              targetWordCount: { type: "number", description: "目標字數（上限 150）" },
               keywords: {
                 type: "array",
                 items: { type: "string" },
@@ -632,7 +635,7 @@ Please output the complete JSON that conforms to the above schema in ${languageN
           properties: {
             summary: { type: "string", description: "總結重點" },
             callToAction: { type: "string", description: "行動呼籲" },
-            wordCount: { type: "number", description: "字數（約 150）" },
+            wordCount: { type: "number", description: "字數（約 80-100）" },
           },
         },
         faq: {
@@ -1301,7 +1304,8 @@ ${this.buildCompetitorExclusionList(input.researchData)}
     targetWordCount: number,
   ): StrategyOutput["outline"] {
     const sectionCount = 3;
-    const sectionWordCount = Math.floor((targetWordCount - 350) / sectionCount);
+    // 每段上限 150 字
+    const sectionWordCount = Math.min(Math.floor((targetWordCount - 200) / sectionCount), 150);
 
     // 提取核心關鍵詞（避免使用完整標題）
     const extractKeyTopic = (fullTitle: string): string => {
@@ -1345,7 +1349,7 @@ ${this.buildCompetitorExclusionList(input.researchData)}
         hook: `${keyTopic}完整指南`,
         context: `關於${keyTopic}的重要資訊`,
         thesis: `本文將帶你了解${keyTopic}`,
-        wordCount: 200,
+        wordCount: 120,
       },
       mainSections: [
         {
@@ -1366,7 +1370,7 @@ ${this.buildCompetitorExclusionList(input.researchData)}
       conclusion: {
         summary: `${keyTopic}總結`,
         callToAction: `開始嘗試${keyTopic}`,
-        wordCount: 150,
+        wordCount: 100,
       },
       faq: [
         {

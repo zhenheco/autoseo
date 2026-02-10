@@ -169,6 +169,7 @@ ${this.formatOutline(strategy.outline)}
 
 # Target Specifications
 - Target word count: ${strategy.targetWordCount} words/characters
+- **STRICT: Each paragraph under H2/H3 must NOT exceed 150 words/characters**
 - Primary keywords: ${strategy.outline.mainSections.flatMap((s) => s.keywords).join(", ")}
 - LSI keywords: ${strategy.lsiKeywords.join(", ")}
 
@@ -186,6 +187,7 @@ ${this.formatOutline(strategy.outline)}
 2. **Be specific and practical** - every H2 should teach something concrete
 3. **Quality over quantity** - write enough to cover the topic, no more
 4. **Real examples required** - don't describe concepts abstractly
+5. **Keep paragraphs short** - each H2/H3 paragraph must be under 150 words
 
 ## Content Standards (for each H2 section)
 1. **Substantive Content**: When mentioning a tool/course/method/concept:
@@ -203,6 +205,12 @@ ${this.formatOutline(strategy.outline)}
    - ❌ Don't repeat the same point in different phrasings
    - ❌ Don't use generic statements like "這個工具很有用" without specifics
    - ✅ Move to the next point when you've made your case
+
+## Keyword Usage (Important!)
+- Keywords should appear **naturally** in the text - do NOT force keywords
+- If a keyword already appeared once in a paragraph, use a synonym or related term instead
+- **NEVER repeat the same keyword multiple times in consecutive sentences**
+- Let keywords flow from context, not the other way around
 
 ## Good vs Bad Example
 
@@ -234,9 +242,10 @@ ${this.formatOutline(strategy.outline)}
 - Academic comparisons → Natural explanation
 
 ## Length Guidance
-- Target word count is a rough guide, NOT a hard requirement
+- Target total: ${strategy.targetWordCount} words, but quality over quantity
+- **Each paragraph under H2/H3: MAX 150 words** (this IS a hard requirement)
 - 500 words of dry content beats 800 words of padded content
-- Acceptable range: 70%~130% of target word count
+- Keep the article concise and focused - cut anything that doesn't add value
 
 Write the complete article now. Output ONLY the Markdown content in ${languageName}.`;
 

@@ -38,6 +38,9 @@ import type {
   CompetitorAnalysisOutput,
   ContentPlanOutput,
   ContentContext,
+  ResearchOutput,
+  ResearchContext,
+  ResearchSummary,
 } from "@/types/agents";
 import type { AIModel } from "@/types/ai-models";
 import { AgentExecutionContext } from "./base-agent";
@@ -471,6 +474,7 @@ export class ParallelOrchestrator {
               targetLanguage,
               contentContext,
               contentPlan,
+              researchOutput,
             );
 
             console.log(
@@ -630,18 +634,16 @@ export class ParallelOrchestrator {
 
       writingOutput.html = htmlOutput.html;
 
-      // 保底機制：如果連結插入不足，在文末添加「延伸閱讀」區塊
-      const totalLinksInserted =
-        htmlOutput.linkStats.internalLinksInserted +
-        htmlOutput.linkStats.externalLinksInserted;
-      if (totalLinksInserted < 2 && strategyOutput.externalReferences?.length) {
+      // 保底機制：如果外部連結仍不足 2 個，在文末添加「參考資料」區塊
+      if (htmlOutput.linkStats.externalLinksInserted < 2 && strategyOutput.externalReferences?.length) {
+        const needed = 2 - htmlOutput.linkStats.externalLinksInserted;
         console.log(
-          `[Orchestrator] 連結插入不足 (${totalLinksInserted})，添加延伸閱讀區塊`,
+          `[Orchestrator] 外部連結不足 (${htmlOutput.linkStats.externalLinksInserted}/2)，添加參考資料區塊 (需要 ${needed} 個)`,
         );
         writingOutput.html = this.insertFurtherReadingSection(
           writingOutput.html,
           strategyOutput.externalReferences,
-          3,
+          needed,
         );
       }
 
@@ -1130,10 +1132,100 @@ export class ParallelOrchestrator {
     targetLanguage: string = "zh-TW",
     contentContext?: ContentContext,
     contentPlan?: ContentPlanOutput,
+    researchOutput?: ResearchOutput,
   ) {
     if (!strategyOutput) throw new Error("Strategy output is required");
 
     const { outline, selectedTitle } = strategyOutput;
+
+    // 從 researchOutput 提取研究數據，供各 writing agent 使用
+    const deepResearch = researchOutput?.deepResearch;
+    const referenceMapping = researchOutput?.referenceMapping;
+
+    // 構建文章級研究摘要（給 IntroductionAgent 和 ConclusionAgent）
+    const researchSummary: ResearchSummary | undefined = deepResearch
+      ? {
+          keyFindings: [
+            deepResearch.authorityData?.content?.substring(0, 500),
+            deepResearch.trends?.content?.substring(0, 300),
+          ]
+            .filter(Boolean)
+            .join("\n\n") || "",
+          trendHighlight:
+            deepResearch.trends?.content?.substring(0, 300) || "",
+          topCitations: [
+            ...(deepResearch.authorityData?.citations?.slice(0, 2) || []),
+            ...(deepResearch.trends?.citations?.slice(0, 1) || []),
+          ],
+        }
+      : undefined;
+
+    // 構建 section 級研究上下文（根據 referenceMapping 分配數據到各 section）
+    const buildSectionResearchContext = (
+      sectionHeading: string,
+      sectionIndex: number,
+    ): ResearchContext | undefined => {
+      if (!deepResearch && !referenceMapping) return undefined;
+
+      const relevantRefs =
+        referenceMapping?.filter((ref) =>
+          ref.suggestedSections.some(
+            (s) =>
+              s.toLowerCase().includes(sectionHeading.toLowerCase()) ||
+              sectionHeading.toLowerCase().includes(s.toLowerCase()),
+          ),
+        ) || [];
+
+      // 從 deepResearch 中按 section index 分配段落
+      const deepResearchContent = deepResearch?.authorityData?.content || "";
+      const paragraphs = deepResearchContent
+        .split("\n\n")
+        .filter((p) => p.trim());
+      const totalSections = outline.mainSections.length;
+      const paragraphsPerSection = Math.max(
+        1,
+        Math.floor(paragraphs.length / totalSections),
+      );
+      const startIdx = sectionIndex * paragraphsPerSection;
+      const relevantParagraphs = paragraphs
+        .slice(startIdx, startIdx + paragraphsPerSection)
+        .join("\n\n");
+
+      const citations = [
+        ...new Set([
+          ...relevantRefs.map((r) => r.url),
+          ...(deepResearch?.authorityData?.citations?.slice(0, 3) || []),
+        ]),
+      ];
+
+      // 從 trends 提取統計數據
+      const trendContent = deepResearch?.trends?.content || "";
+      const statisticsMatches = trendContent.match(
+        /\d+[\d.,]*%[^.。]*[.。]|[\d.,]+\s*(?:billion|million|萬|億)[^.。]*[.。]/gi,
+      );
+      const statistics = statisticsMatches?.slice(0, 3) || [];
+
+      if (!relevantParagraphs && citations.length === 0) return undefined;
+
+      return {
+        relevantData: relevantParagraphs,
+        citations: citations.slice(0, 5),
+        statistics,
+      };
+    };
+
+    // 研究亮點摘要（給 ConclusionAgent）
+    const researchHighlights = deepResearch
+      ? [
+          deepResearch.authorityData?.content?.substring(0, 300),
+          deepResearch.trends?.content?.substring(0, 200),
+        ]
+          .filter(Boolean)
+          .join("\n\n")
+      : undefined;
+
+    // 用戶問題（給 QAAgent）
+    const userQuestions = deepResearch?.userQuestions?.content;
 
     // 從 contentPlan 取得 specialBlocks（如果有的話）
     const sectionSpecialBlocks =
@@ -1150,6 +1242,7 @@ export class ParallelOrchestrator {
             brandVoice,
             targetLanguage,
             contentContext,
+            researchSummary,
             model: agentConfig.writing_model,
             temperature: agentConfig.writing_temperature,
             maxTokens: 500,
@@ -1166,6 +1259,7 @@ export class ParallelOrchestrator {
             brandVoice,
             targetLanguage,
             contentContext,
+            researchHighlights,
             model: agentConfig.writing_model,
             temperature: agentConfig.writing_temperature,
             maxTokens: 400,
@@ -1183,6 +1277,7 @@ export class ParallelOrchestrator {
             brandVoice,
             targetLanguage,
             contentContext,
+            userQuestions,
             count: contentPlan?.detailedOutline.faq.questions.length || 3,
             model: agentConfig.writing_model,
             temperature: agentConfig.writing_temperature,
@@ -1197,6 +1292,10 @@ export class ParallelOrchestrator {
       outline.mainSections.map((section, i) => {
         const sectionImage = imageOutput?.contentImages?.[i] || null;
         const specialBlock = sectionSpecialBlocks[i];
+        const sectionResearchContext = buildSectionResearchContext(
+          section.heading,
+          i,
+        );
 
         return this.executeWithRetry(
           async () => {
@@ -1209,6 +1308,7 @@ export class ParallelOrchestrator {
               targetLanguage,
               contentContext,
               specialBlock,
+              researchContext: sectionResearchContext,
               index: i,
               model: agentConfig.writing_model,
               temperature: agentConfig.writing_temperature,
@@ -1463,8 +1563,8 @@ export class ParallelOrchestrator {
         competitor_count: 10,
         content_length_min: 1000,
         content_length_max: 3000,
-        keyword_density_min: 1,
-        keyword_density_max: 3,
+        keyword_density_min: 0,
+        keyword_density_max: 10,
         quality_threshold: 80,
         auto_publish: false,
         serp_model: "perplexity-research",
@@ -1489,8 +1589,8 @@ export class ParallelOrchestrator {
         competitor_count: 10,
         content_length_min: 1000,
         content_length_max: 3000,
-        keyword_density_min: 1,
-        keyword_density_max: 3,
+        keyword_density_min: 0,
+        keyword_density_max: 10,
         quality_threshold: 80,
         auto_publish: false,
         serp_model: "perplexity-research",
@@ -1511,8 +1611,8 @@ export class ParallelOrchestrator {
         competitor_count: 10,
         content_length_min: 1000,
         content_length_max: 3000,
-        keyword_density_min: 1,
-        keyword_density_max: 3,
+        keyword_density_min: 0,
+        keyword_density_max: 10,
         quality_threshold: 80,
         auto_publish: false,
         serp_model: "perplexity-research",
@@ -1588,9 +1688,9 @@ export class ParallelOrchestrator {
       research_model:
         agentConfig.research_model ||
         agentConfig.complex_processing_model ||
-        "deepseek-reasoner",
+        "deepseek-chat",
       strategy_model:
-        agentConfig.complex_processing_model || "deepseek-reasoner",
+        agentConfig.complex_processing_model || "deepseek-chat",
       writing_model: agentConfig.simple_processing_model || "deepseek-chat",
       image_model: agentConfig.image_model || "fal-ai/qwen-image",
 
@@ -1638,7 +1738,7 @@ export class ParallelOrchestrator {
 
       const defaultConfig = {
         website_id: websiteId,
-        research_model: "deepseek-reasoner",
+        research_model: "deepseek-chat",
         complex_processing_model: "deepseek-chat",
         simple_processing_model: "deepseek-chat",
         image_model: "fal-ai/qwen-image",
@@ -1751,7 +1851,7 @@ export class ParallelOrchestrator {
     return {
       complex_processing_model: "deepseek-chat",
       simple_processing_model: "deepseek-chat",
-      research_model: "deepseek-reasoner",
+      research_model: "deepseek-chat",
       strategy_model: "deepseek-chat",
       writing_model: "deepseek-chat",
       image_model: "fal-ai/qwen-image",

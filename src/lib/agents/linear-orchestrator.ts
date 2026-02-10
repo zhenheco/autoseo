@@ -1329,8 +1329,8 @@ export class LinearOrchestrator {
       competitor_count: 10,
       content_length_min: 1000,
       content_length_max: 3000,
-      keyword_density_min: 1,
-      keyword_density_max: 3,
+      keyword_density_min: 0,
+      keyword_density_max: 10,
       quality_threshold: 80,
       auto_publish: false,
       serp_model: "perplexity-research",
@@ -1358,7 +1358,7 @@ export class LinearOrchestrator {
 
   private async getAgentConfig(websiteId: string | null): Promise<AgentConfig> {
     const defaults: AgentConfig = {
-      research_model: "deepseek-reasoner",
+      research_model: "deepseek-chat",
       strategy_model: "deepseek-chat",
       writing_model: "deepseek-chat",
       image_model: "fal-ai/qwen-image",

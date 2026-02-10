@@ -28,7 +28,7 @@ export class QAAgent extends BaseAgent<QAInput, QAOutput> {
   }
 
   protected async process(input: QAInput): Promise<QAOutput> {
-    const { title, outline, brandVoice, count = 5, contentContext } = input;
+    const { title, outline, brandVoice, count = 5, contentContext, userQuestions } = input;
 
     console.log("[QAAgent] 開始生成 FAQ...");
 
@@ -42,8 +42,12 @@ export class QAAgent extends BaseAgent<QAInput, QAOutput> {
     const topicAlignmentSection =
       this.buildTopicAlignmentSection(contentContext);
 
-    const prompt = `${topicAlignmentSection}
+    const userQuestionsSection = userQuestions
+      ? `\n## Real User Questions (from web research)\nThe following are real questions people ask about this topic. Use these as the BASIS for your FAQ:\n${userQuestions}\n\n**Prioritize answering these real user questions over generic ones.**\n`
+      : "";
 
+    const prompt = `${topicAlignmentSection}
+${userQuestionsSection}
 Generate frequently asked questions (FAQ) for the article "${title}".
 
 **Target Language: ${languageName}** (ALL content MUST be written in this language)

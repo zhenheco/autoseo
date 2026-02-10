@@ -5,6 +5,7 @@ import type {
   SectionOutput,
   ContentContext,
   SpecialBlock,
+  ResearchContext,
 } from "@/types/agents";
 import { LOCALE_FULL_NAMES } from "@/lib/i18n/locales";
 import { getSpecialBlockLabel } from "@/lib/i18n/article-translations";
@@ -104,15 +105,40 @@ Example format:
     return "SectionAgent";
   }
 
+  private buildResearchDataSection(researchContext?: ResearchContext): string {
+    if (!researchContext || !researchContext.relevantData) {
+      return "";
+    }
+
+    let section = `\n## Research Data for This Section (USE THIS DATA)\n`;
+    section += `${researchContext.relevantData}\n`;
+
+    if (researchContext.statistics.length > 0) {
+      section += `\n**Available Statistics:**\n`;
+      researchContext.statistics.forEach((stat) => {
+        section += `- ${stat}\n`;
+      });
+    }
+
+    if (researchContext.citations.length > 0) {
+      section += `\n**Citation Sources:**\n`;
+      researchContext.citations.slice(0, 5).forEach((url) => {
+        section += `- ${url}\n`;
+      });
+    }
+
+    section += `\n**IMPORTANT: Incorporate the above research data naturally into your writing. Cite statistics with attribution.**\n`;
+    return section;
+  }
+
   protected async process(input: SectionInput): Promise<SectionOutput> {
     const {
       section,
       previousSummary,
-      sectionImage,
       brandVoice,
-      index,
       contentContext,
       specialBlock,
+      researchContext,
     } = input;
 
     const targetLang = input.targetLanguage || "zh-TW";
@@ -126,9 +152,11 @@ Example format:
       contentContext?.brandName,
       targetLang,
     );
+    const researchDataSection =
+      this.buildResearchDataSection(researchContext);
 
     const prompt = `${topicAlignmentSection}
-
+${researchDataSection}
 Write an article section based on the following information:
 
 **Target Language: ${languageName}** (ALL content MUST be written in this language)
@@ -149,20 +177,38 @@ ${previousSummary ? `## Previous Section Summary\n${previousSummary}\n\nEnsure s
 - Interactivity: ${brandVoice.interactivity || "Moderate"}
 
 ## Requirements
-1. Word count: ${section.targetWordCount - 50} ~ ${section.targetWordCount + 50} words
-2. Use Markdown format
-3. Include section heading (## ${section.heading})
-4. Use ### for subheadings if applicable
-5. Cover all key points
-6. Naturally integrate related keywords
+1. **STRICT WORD LIMIT: Each paragraph under H2 or H3 must NOT exceed 150 words/characters.** This is a hard limit. Keep every paragraph concise and focused.
+2. Target total word count for this section: ${section.targetWordCount} words (but never exceed 150 words per paragraph)
+3. Use Markdown format
+4. Include section heading (## ${section.heading})
+5. Use ### for subheadings if applicable
+6. Cover all key points concisely - every sentence must add value
 7. Provide a brief summary at the end (for connecting to next section)
+8. **Keywords should appear naturally - do NOT force or repeat keywords. If a keyword has been mentioned once in a paragraph, do not repeat it in the same paragraph. Use synonyms or related terms instead.**
 ${specialBlockSection}
+
+## AI SEO Writing Rules (CRITICAL)
+
+1. **Answer-First Format**: Start each H2 section with a 40-80 word direct answer paragraph that concisely answers the heading's implied question. This is the most important paragraph - AI search engines extract this.
+
+2. **Statistics with Attribution**: When citing data, ALWAYS use format:
+   "According to [Source Name] ([Year]), [statistic]"
+   Example: "According to Ahrefs (2025), 73% of B2B companies struggle with SEO ROI measurement"
+
+3. **Preserve Specific Entities**: NEVER replace specific brand/tool/person names with generic terms.
+   ❌ "a popular project management tool"
+   ✅ "Asana, Monday.com, or ClickUp"
+
+4. **Definitive Language**: Use declarative statements, not hedging language.
+   ❌ "You might wonder what SEO involves..."
+   ✅ "SEO is the practice of optimizing web content to rank higher in search results."
 
 ## Writing Style (Important!)
 1. Present 2-3 different viewpoints or sources on key topics
 2. Compare and contrast different perspectives where relevant
 3. Provide your analysis and conclusions: use phrases like "In my analysis..." or "From a practical standpoint..." or "Based on experience..."
 4. Give actionable recommendations to readers
+5. **Be concise** - say what matters in fewer words, cut filler sentences
 
 Example structure:
 - "According to [Source A]... However, [Source B] suggests..."
@@ -172,6 +218,9 @@ Avoid:
 - Simply listing information without analysis
 - Missing "I think", "I recommend", "In conclusion" type expressions
 - Purely copying data without adding personal insights
+- **Repeating the same keyword multiple times in one paragraph**
+- **Writing more than 150 words per paragraph**
+- **Replacing specific names with vague generic terms**
 
 **CRITICAL: Write ALL content in ${languageName}**
 
