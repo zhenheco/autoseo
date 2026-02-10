@@ -17,6 +17,31 @@ import {
 
 const DEFAULT_MODEL = "fal-ai/bytedance/seedream/v4/text-to-image";
 
+/** 語系對應的視覺文化風格指引 */
+const LOCALE_VISUAL_STYLES: Record<string, string> = {
+  "zh-TW":
+    "East Asian modern aesthetic, warm and approachable tones, clean layout with subtle traditional elements",
+  "zh-CN":
+    "Contemporary Chinese design, bold and vibrant colors, dynamic composition with modern urban feel",
+  "ja-JP":
+    "Japanese minimalist aesthetic (和風), generous whitespace, soft pastel or muted earth tones, clean lines, zen-inspired simplicity",
+  "ko-KR":
+    "Korean modern aesthetic (한국 감성), bright and fresh color palette, trendy K-style design, clean with high contrast accents",
+  "en-US":
+    "Western professional style, bold typography emphasis, high contrast, editorial magazine look",
+  "de-DE":
+    "German precision aesthetic (Bauhaus-inspired), structured grid layout, industrial clean lines, restrained color palette",
+  "es-ES":
+    "Warm Mediterranean palette, vibrant and energetic colors, expressive and engaging composition",
+  "fr-FR":
+    "French elegant aesthetic, sophisticated muted tones, refined composition, editorial chic style",
+};
+
+/** 取得語系對應的視覺風格指引 */
+function getLocaleVisualStyle(locale: string): string {
+  return LOCALE_VISUAL_STYLES[locale] || LOCALE_VISUAL_STYLES["en-US"];
+}
+
 const IMAGE_PRICING: Record<string, Record<string, number>> = {
   // fal.ai Seedream v4 定價（支援文字渲染，每張圖約 $0.005）
   "fal-ai/bytedance/seedream/v4/text-to-image": {
@@ -231,7 +256,9 @@ export class FeaturedImageAgent extends BaseAgent<
       }
     }
 
+    const localeStyle = getLocaleVisualStyle(input.targetLanguage || "zh-TW");
     prompt += `\n\n視覺風格：${styleDesc}`;
+    prompt += `\n文化風格：${localeStyle}`;
     prompt += `\n\n圖片要求：`;
     prompt += `\n- 吸睛且專業`;
     prompt += `\n- 與文章主題相關`;
@@ -242,7 +269,7 @@ export class FeaturedImageAgent extends BaseAgent<
   }
 
   /**
-   * 英文 Prompt 格式 - 保留原有邏輯
+   * 英文 Prompt 格式
    */
   private buildEnglishPrompt(input: FeaturedImageInput): string {
     const targetLang = input.targetLanguage || "en-US";
@@ -303,7 +330,7 @@ ${styleGuide}
 ${textInstruction}
 
 Cultural & Visual Style:
-- Design for "${targetLang}" audience with culturally appropriate visual elements
+- ${getLocaleVisualStyle(targetLang)}
 - Use colors and aesthetics that appeal to the target region
 
 Visual Requirements:
