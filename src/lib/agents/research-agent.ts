@@ -340,55 +340,42 @@ This helps readers clearly identify each source.`;
       LOCALE_FULL_NAMES[input.targetLanguage || "zh-TW"] ||
       "Traditional Chinese (繁體中文)";
 
-    const researchContext = researchData?.deepResearch
-      ? `
-## Collected Research Data (from Perplexity)
+    const researchContext = this.buildResearchContext(researchData);
 
-### Trend Information
-${researchData.deepResearch.trends?.content || "None"}
-
-### Common Questions
-${researchData.deepResearch.userQuestions?.content || "None"}
-
-### Authoritative Data
-${researchData.deepResearch.authorityData?.content || "None"}
-
-### Reference Sources (${researchData.externalReferences?.length || 0} total)
-${
-  researchData.externalReferences
-    ?.slice(0, 5)
-    .map((ref) => `- ${ref.title} (${ref.domain})`)
-    .join("\n") || "None"
-}
-`
-      : "";
-
-    const prompt = `You are an SEO expert. Analyze the article title "${input.title}" in depth.
+    const prompt = `You are an SEO analyst. Analyze the search keyword "${input.title}" based STRICTLY on the research data below.
 
 **IMPORTANT: Provide analysis output in ${languageName}**
 
-Article Title: ${input.title}
+**CRITICAL RULES**:
+1. The keyword "${input.title}" may be a brand name, course name, product name, or specialized term — NOT necessarily a literal description
+2. You MUST determine what this keyword actually refers to from the Perplexity research data below
+3. DO NOT assume literal meaning of the characters — ONLY use research data to understand the keyword's true context
+4. If research data shows this is a specific brand/course/product/entity, ALL your analysis must reflect that context
+5. DO NOT add topics not found in the research data
+
+Search Keyword: ${input.title}
 Target Region: ${input.region || "Taiwan"}
 ${researchContext}
 
-Based on the research data above, analyze the following:
+Based STRICTLY on the research data above, analyze the following:
 
 1. **Search Intent** (searchIntent):
    - Type: informational, commercial, transactional, or navigational
    - Confidence (intentConfidence): 0-1 scale
+   - Determine intent from what the research data reveals about this keyword
 
 2. **Top Ranking Content Features** (topRankingFeatures):
    - Content length: minimum, maximum, average word count
    - Title patterns: common title structures
    - Content structure: paragraph organization
-   - Common topics: frequently discussed subtopics
+   - Common topics: subtopics found in the research data
    - Common formats: lists, tutorials, comparisons, etc.
 
 3. **Content Gaps** (contentGaps):
    - Based on research data, list angles competitors haven't covered deeply
 
 4. **Competitor Analysis** (competitorAnalysis):
-   - List 3-5 relevant authority websites
+   - List 3-5 relevant authority websites from the research sources
    - Each site's title, domain, estimated word count
    - Strengths and weaknesses
    - Unique angles
@@ -397,7 +384,7 @@ Based on the research data above, analyze the following:
    - Based on research data and analysis above, provide content creation recommendations
 
 6. **Related Keywords** (relatedKeywords):
-   - List 5-10 related search terms
+   - List 5-10 related search terms that are contextually consistent with the research data
 
 Respond in a structured manner, separating each item clearly.`;
 
@@ -442,6 +429,37 @@ Respond in a structured manner, separating each item clearly.`;
       console.warn("[ResearchAgent] Parse error, using fallback analysis");
       return this.getFallbackAnalysis(input.title);
     }
+  }
+
+  /** 將 Perplexity 研究數據格式化為 prompt 上下文區塊 */
+  private buildResearchContext(researchData?: UnifiedResearchResult): string {
+    if (!researchData?.deepResearch) return "";
+
+    const deep = researchData.deepResearch;
+    const refs = researchData.externalReferences;
+
+    const refList =
+      refs
+        ?.slice(0, 5)
+        .map((ref) => `- ${ref.title} (${ref.domain})`)
+        .join("\n") || "None";
+
+    return `
+## ⚠️ PRIMARY RESEARCH DATA (Perplexity) — YOUR ONLY SOURCE OF TRUTH
+**You MUST base ALL analysis on this data, not on your own knowledge or literal interpretation of the keyword.**
+
+### Trend Information
+${deep.trends?.content || "None"}
+
+### Common Questions
+${deep.userQuestions?.content || "None"}
+
+### Authoritative Data
+${deep.authorityData?.content || "None"}
+
+### Reference Sources (${refs?.length || 0} total)
+${refList}
+`;
   }
 
   private parseStructuredText(

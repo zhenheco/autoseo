@@ -635,7 +635,10 @@ export class ParallelOrchestrator {
       writingOutput.html = htmlOutput.html;
 
       // 保底機制：如果外部連結仍不足 2 個，在文末添加「參考資料」區塊
-      if (htmlOutput.linkStats.externalLinksInserted < 2 && strategyOutput.externalReferences?.length) {
+      if (
+        htmlOutput.linkStats.externalLinksInserted < 2 &&
+        strategyOutput.externalReferences?.length
+      ) {
         const needed = 2 - htmlOutput.linkStats.externalLinksInserted;
         console.log(
           `[Orchestrator] 外部連結不足 (${htmlOutput.linkStats.externalLinksInserted}/2)，添加參考資料區塊 (需要 ${needed} 個)`,
@@ -1145,14 +1148,14 @@ export class ParallelOrchestrator {
     // 構建文章級研究摘要（給 IntroductionAgent 和 ConclusionAgent）
     const researchSummary: ResearchSummary | undefined = deepResearch
       ? {
-          keyFindings: [
-            deepResearch.authorityData?.content?.substring(0, 500),
-            deepResearch.trends?.content?.substring(0, 300),
-          ]
-            .filter(Boolean)
-            .join("\n\n") || "",
-          trendHighlight:
-            deepResearch.trends?.content?.substring(0, 300) || "",
+          keyFindings:
+            [
+              deepResearch.authorityData?.content?.substring(0, 1200),
+              deepResearch.trends?.content?.substring(0, 800),
+            ]
+              .filter(Boolean)
+              .join("\n\n") || "",
+          trendHighlight: deepResearch.trends?.content?.substring(0, 600) || "",
           topCitations: [
             ...(deepResearch.authorityData?.citations?.slice(0, 2) || []),
             ...(deepResearch.trends?.citations?.slice(0, 1) || []),
@@ -1689,8 +1692,7 @@ export class ParallelOrchestrator {
         agentConfig.research_model ||
         agentConfig.complex_processing_model ||
         "deepseek-chat",
-      strategy_model:
-        agentConfig.complex_processing_model || "deepseek-chat",
+      strategy_model: agentConfig.complex_processing_model || "deepseek-chat",
       writing_model: agentConfig.simple_processing_model || "deepseek-chat",
       image_model: agentConfig.image_model || "fal-ai/qwen-image",
 

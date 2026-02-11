@@ -142,30 +142,31 @@ ${specialBlockGuidance}
       return "## 深度研究資料\n無深度研究資料";
     }
 
-    const sections: string[] = ["## 深度研究資料"];
+    const TRUNCATE_LIMIT = 800;
+    const deep = research.deepResearch;
 
-    if (research.deepResearch.trends?.content) {
+    const sections: string[] = [
+      "## 深度研究資料",
+      `> ⚠️ 注意：如果以下研究數據顯示「${research.title}」是特定品牌、課程、產品或機構，所有內容規劃必須以此為準，不要用字面意義或通用角度理解關鍵字。`,
+    ];
+
+    if (deep.trends?.content) {
       sections.push("\n### 最新趨勢");
-      sections.push(research.deepResearch.trends.content.substring(0, 500));
-      if (research.deepResearch.trends.citations?.length > 0) {
-        sections.push(
-          `\n來源：${research.deepResearch.trends.citations.slice(0, 3).join(", ")}`,
-        );
+      sections.push(deep.trends.content.substring(0, TRUNCATE_LIMIT));
+      if (deep.trends.citations?.length > 0) {
+        const citationList = deep.trends.citations.slice(0, 3).join(", ");
+        sections.push(`\n來源：${citationList}`);
       }
     }
 
-    if (research.deepResearch.userQuestions?.content) {
+    if (deep.userQuestions?.content) {
       sections.push("\n### 用戶常見問題");
-      sections.push(
-        research.deepResearch.userQuestions.content.substring(0, 500),
-      );
+      sections.push(deep.userQuestions.content.substring(0, TRUNCATE_LIMIT));
     }
 
-    if (research.deepResearch.authorityData?.content) {
+    if (deep.authorityData?.content) {
       sections.push("\n### 權威數據");
-      sections.push(
-        research.deepResearch.authorityData.content.substring(0, 500),
-      );
+      sections.push(deep.authorityData.content.substring(0, TRUNCATE_LIMIT));
     }
 
     return sections.join("\n");
