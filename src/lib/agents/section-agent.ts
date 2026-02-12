@@ -3,36 +3,17 @@ import { jsonrepair } from "jsonrepair";
 import type {
   SectionInput,
   SectionOutput,
-  ContentContext,
   SpecialBlock,
   ResearchContext,
 } from "@/types/agents";
-import { LOCALE_FULL_NAMES } from "@/lib/i18n/locales";
 import { getSpecialBlockLabel } from "@/lib/i18n/article-translations";
+import {
+  buildLanguageInstructions,
+  buildTopicAlignment,
+  countWords,
+} from "./prompt-utils";
 
 export class SectionAgent extends BaseAgent<SectionInput, SectionOutput> {
-  private buildTopicAlignmentSection(contentContext?: ContentContext): string {
-    if (!contentContext) {
-      return "";
-    }
-
-    return `## ⚠️ CRITICAL: Topic Alignment Requirement
-
-**Article Title**: ${contentContext.selectedTitle}
-**PRIMARY KEYWORD**: ${contentContext.primaryKeyword}
-**Search Intent**: ${contentContext.searchIntent}
-**Target Audience**: ${contentContext.targetAudience}
-**Topic Keywords**: ${contentContext.topicKeywords.slice(0, 5).join(", ")}
-${contentContext.regionContext ? `**Region Context**: ${contentContext.regionContext}` : ""}
-${contentContext.industryContext ? `**Industry Context**: ${contentContext.industryContext}` : ""}
-
-**You MUST ensure ALL content is DIRECTLY relevant to the topic "${contentContext.primaryKeyword}".**
-**Do NOT include any content that is unrelated to the main topic.**
-**Every paragraph, example, and explanation must connect back to "${contentContext.primaryKeyword}".**
-
----`;
-  }
-
   private buildSpecialBlockSection(
     specialBlock?: SpecialBlock,
     brandName?: string,
@@ -142,92 +123,48 @@ Example format:
     } = input;
 
     const targetLang = input.targetLanguage || "zh-TW";
-    const languageName =
-      LOCALE_FULL_NAMES[targetLang] || "Traditional Chinese (繁體中文)";
 
-    const topicAlignmentSection =
-      this.buildTopicAlignmentSection(contentContext);
+    const topicAlignmentSection = buildTopicAlignment(contentContext);
     const specialBlockSection = this.buildSpecialBlockSection(
       specialBlock,
       contentContext?.brandName,
       targetLang,
     );
-    const researchDataSection =
-      this.buildResearchDataSection(researchContext);
+    const researchDataSection = this.buildResearchDataSection(researchContext);
 
-    const prompt = `${topicAlignmentSection}
-${researchDataSection}
-Write an article section based on the following information:
+    const langInstructions = buildLanguageInstructions(targetLang);
 
-**Target Language: ${languageName}** (ALL content MUST be written in this language)
+    const prompt = `${topicAlignmentSection ? `${topicAlignmentSection}\n` : ""}${researchDataSection}
+Write an article section.
+
+${langInstructions}
 
 ## Section Information
 - Heading: ${section.heading}
 - Subheadings: ${section.subheadings.join(", ")}
 - Key Points: ${section.keyPoints.join(", ")}
 - Target Word Count: ${section.targetWordCount} words
-- Related Keywords: ${section.keywords.join(", ")}
+- Keywords: ${section.keywords.join(", ")}
 
-${previousSummary ? `## Previous Section Summary\n${previousSummary}\n\nEnsure smooth transition and coherence with the previous section.` : ""}
-
+${previousSummary ? `## Previous Section Summary\n${previousSummary}\n` : ""}
 ## Brand Voice
-- Tone: ${brandVoice.tone_of_voice}
-- Target Audience: ${brandVoice.target_audience}
-- Sentence Style: ${brandVoice.sentence_style || "Clear and concise"}
-- Interactivity: ${brandVoice.interactivity || "Moderate"}
-
-## Requirements
-1. **STRICT WORD LIMIT: Each paragraph under H2 or H3 must NOT exceed 150 words/characters.** This is a hard limit. Keep every paragraph concise and focused.
-2. Target total word count for this section: ${section.targetWordCount} words (but never exceed 150 words per paragraph)
-3. Use Markdown format
-4. Include section heading (## ${section.heading})
-5. Use ### for subheadings if applicable
-6. Cover all key points concisely - every sentence must add value
-7. Provide a brief summary at the end (for connecting to next section)
-8. **Keywords should appear naturally - do NOT force or repeat keywords. If a keyword has been mentioned once in a paragraph, do not repeat it in the same paragraph. Use synonyms or related terms instead.**
+- Tone: ${brandVoice.tone_of_voice} | Audience: ${brandVoice.target_audience}
+- Style: ${brandVoice.sentence_style || "Clear and concise"} | Interactivity: ${brandVoice.interactivity || "Moderate"}
 ${specialBlockSection}
 
-## AI SEO Writing Rules (CRITICAL)
-
-1. **Answer-First Format**: Start each H2 section with a 40-80 word direct answer paragraph that concisely answers the heading's implied question. This is the most important paragraph - AI search engines extract this.
-
-2. **Statistics with Attribution**: When citing data, ALWAYS use format:
-   "According to [Source Name] ([Year]), [statistic]"
-   Example: "According to Ahrefs (2025), 73% of B2B companies struggle with SEO ROI measurement"
-
-3. **Preserve Specific Entities**: NEVER replace specific brand/tool/person names with generic terms.
-   ❌ "a popular project management tool"
-   ✅ "Asana, Monday.com, or ClickUp"
-
-4. **Definitive Language**: Use declarative statements, not hedging language.
-   ❌ "You might wonder what SEO involves..."
-   ✅ "SEO is the practice of optimizing web content to rank higher in search results."
-
-## Writing Style (Important!)
-1. Present 2-3 different viewpoints or sources on key topics
-2. Compare and contrast different perspectives where relevant
-3. Provide your analysis and conclusions: use phrases like "In my analysis..." or "From a practical standpoint..." or "Based on experience..."
-4. Give actionable recommendations to readers
-5. **Be concise** - say what matters in fewer words, cut filler sentences
-
-Example structure:
-- "According to [Source A]... However, [Source B] suggests..."
-- "My analysis: Based on the evidence, I believe... For [audience], I recommend..."
-
-Avoid:
-- Simply listing information without analysis
-- Missing "I think", "I recommend", "In conclusion" type expressions
-- Purely copying data without adding personal insights
-- **Repeating the same keyword multiple times in one paragraph**
-- **Writing more than 150 words per paragraph**
-- **Replacing specific names with vague generic terms**
-
-**CRITICAL: Write ALL content in ${languageName}**
+## Writing Rules
+1. **Answer-First**: Start with a 40-80 word direct answer to the heading's implied question
+2. **Statistics with Attribution**: "According to [Source] ([Year]), [stat]"
+3. **Preserve Entities**: Use real brand/tool/person names, not generic terms
+4. **Definitive Language**: Declarative statements, no hedging
+5. **Multiple Perspectives**: Present 2-3 viewpoints, then your analysis ("In my analysis..." / "I recommend...")
+6. **Concise**: Max 150 words per paragraph, keywords appear naturally (once per paragraph, use synonyms for repeats)
+7. Markdown format, ## for heading, ### for subheadings, brief summary at the end
 
 ## Output Format (JSON)
 {
-  "content": "Section content in Markdown (in ${languageName})",
-  "summary": "Brief summary (max 50 words, in ${languageName})"
+  "content": "Section content in Markdown",
+  "summary": "Brief summary (max 50 words)"
 }`;
 
     const response = await this.complete(prompt, {
@@ -271,7 +208,7 @@ Avoid:
       }
     }
 
-    const wordCount = this.countWords(markdown);
+    const wordCount = countWords(markdown);
 
     return {
       markdown,
@@ -287,26 +224,5 @@ Avoid:
       .replace(/!\[.*?\]\(.*?\)/g, "");
     const sentences = plainText.split(/[。！？\n]/).filter((s) => s.trim());
     return sentences.slice(0, 2).join("。") + "。";
-  }
-
-  private countWords(text: string): number {
-    const plainText = text
-      .replace(/!\[.*?\]\(.*?\)/g, "")
-      .replace(/[#*`]/g, "")
-      .trim();
-
-    // 計算中文字符數
-    const chineseChars = (plainText.match(/[\u4e00-\u9fa5]/g) || []).length;
-
-    // 計算英文單詞數（排除中文後按空格分詞）
-    const nonChineseText = plainText.replace(/[\u4e00-\u9fa5]/g, "");
-    const englishWords = nonChineseText.trim()
-      ? nonChineseText.trim().split(/\s+/).length
-      : 0;
-
-    // 如果中文字符多，使用中文字符數；否則使用英文單詞數
-    return chineseChars > englishWords
-      ? chineseChars
-      : Math.max(chineseChars + englishWords, 1);
   }
 }

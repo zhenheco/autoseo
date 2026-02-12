@@ -3,8 +3,8 @@ import type {
   ContentPlanInput,
   ContentPlanOutput,
   SectionPlan,
-  SpecialBlock,
 } from "@/types/agents";
+import { buildLanguageInstructions } from "./prompt-utils";
 
 export class ContentPlanAgent extends BaseAgent<
   ContentPlanInput,
@@ -81,7 +81,10 @@ ${research.contentGaps.slice(0, 5).join("\n- ")}
 ${deepResearchSection}
 
 ## 現有大綱結構
-${JSON.stringify(strategy.outline, null, 2)}
+- 引言：${strategy.outline.introduction.hook}
+- H2 章節（${strategy.outline.mainSections.length} 個）：${strategy.outline.mainSections.map((s) => s.heading).join("、")}
+- FAQ（${strategy.outline.faq.length} 個問題）
+- 結論：${strategy.outline.conclusion.summary}
 
 ## 特殊區塊建議
 ${specialBlockGuidance}
@@ -101,26 +104,13 @@ ${specialBlockGuidance}
 6. **researchInsights**: 從深度研究中提取的洞察
 
 ## 語言
-所有內容必須使用 ${targetLang === "zh-TW" ? "繁體中文" : targetLang === "zh-CN" ? "简体中文" : "English"}
+${buildLanguageInstructions(targetLang)}
 
-## H2 結構指導原則（重要！）
-現有大綱僅供參考，你可以根據以下原則調整：
-
-1. **避免公式化結構**：不要使用固定模板如「基礎概念」→「進階應用」→「常見問題」
-2. **根據內容特性決定結構**：
-   - 教學類：可用步驟流程（第一步→第二步→...）
-   - 比較類：可用對比結構（A vs B、優缺點分析）
-   - 問題解決類：可用痛點→解決方案結構
-   - 概念介紹類：可用 What→Why→How 結構
-3. **H2 標題要具體**：避免泛泛的「基礎概念」「進階應用」，改用具體描述如「5 分鐘學會核心操作」「3 個常見錯誤及解決方法」
-4. **彈性調整**：mainSections 可以是 2-4 個，根據內容深度決定
-5. **subheadings 要有邏輯**：子標題之間要有明確的邏輯關係，不是隨意堆砌
-
-## 禁止使用的公式化 H2
-- ❌「基礎概念與準備工作」
-- ❌「進階應用與最佳實踐」
-- ❌「常見問題解決」（FAQ 已單獨處理）
-- ❌「總結與展望」
+## H2 結構指導原則
+1. 現有大綱僅供參考，可根據內容特性調整（步驟流程/對比分析/痛點→方案/What→Why→How）
+2. H2 標題必須具體（含數字/動作動詞/讀者痛點），mainSections 2-4 個
+3. subheadings 之間要有明確邏輯關係
+4. FAQ 由專門 Agent 處理，mainSections 中不要包含 FAQ 類內容
 
 ## 重要規則
 1. mainSections 數量：2-4 個（根據內容需求彈性調整）
@@ -142,7 +132,7 @@ ${specialBlockGuidance}
       return "## 深度研究資料\n無深度研究資料";
     }
 
-    const TRUNCATE_LIMIT = 800;
+    const TRUNCATE_LIMIT = 400;
     const deep = research.deepResearch;
 
     const sections: string[] = [

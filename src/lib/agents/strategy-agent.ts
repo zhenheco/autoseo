@@ -4,7 +4,7 @@ import type {
   StrategyOutput,
   ImageGuidance,
 } from "@/types/agents";
-import { LOCALE_FULL_NAMES } from "@/lib/i18n/locales";
+import { buildLanguageInstructions } from "./prompt-utils";
 
 export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
   get agentName(): string {
@@ -63,59 +63,29 @@ export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
     const searchIntent = input.researchData.searchIntent || "informational";
 
     const targetLang = input.targetLanguage || "zh-TW";
-    const languageName =
-      LOCALE_FULL_NAMES[targetLang] || "Traditional Chinese (繁體中文)";
     const titleLengthRange = this.getTitleLengthRange(targetLang);
 
-    const prompt = `You are an SEO expert. Based on research analysis, generate 3 original titles for the topic "${input.researchData.title}".
+    const langInstructions = buildLanguageInstructions(targetLang);
 
-**Target Language: ${languageName}** (ALL titles MUST be written in this language)
+    const prompt = `You are an SEO expert. Generate 3 original titles for the topic "${input.researchData.title}".
 
-## Topic Keyword (reference only, do not copy directly)
-${input.researchData.title}
+${langInstructions}
 
-## Research Analysis Results
-### Recommended Strategy
-${recommendedStrategy || "Provide professional, practical content"}
+## Research Context
+- Strategy: ${recommendedStrategy || "Provide professional, practical content"}
+- Search Intent: ${searchIntent}
+- Content Gaps: ${contentGaps.length > 0 ? contentGaps.slice(0, 3).join("; ") : "None identified"}
 
-### Content Gaps (opportunities to fill)
-${
-  contentGaps.length > 0
-    ? contentGaps
-        .slice(0, 3)
-        .map((g, i) => `${i + 1}. ${g}`)
-        .join("\n")
-    : "No specific gaps identified"
-}
+## Title Quality Standards
+1. Each title must contain: a specific number OR action verb OR reader pain point
+2. Titles must be newly created — do not copy the keyword directly
+3. Length: ${titleLengthRange.min}-${titleLengthRange.max} characters
+4. Generate 3 different styles (question, number-based, benefit-focused)
+5. No years, no "Complete Guide/Ultimate/攻略/指南", no placeholders
 
-### Search Intent
-${searchIntent}
-
-## Title Generation Principles
-1. **Originality**: Titles must be newly created, do not directly use keywords as titles
-2. **Differentiation**: Use content gaps to create unique angles
-3. **Appeal**: Design titles that resonate with the search intent
-4. **SEO-friendly**: Naturally incorporate core concepts without keyword stuffing
-
-## Title Length Requirements
-- ${titleLengthRange.min}-${titleLengthRange.max} ${targetLang.startsWith("zh") ? "characters" : "characters"}
-
-## FORBIDDEN (DO NOT USE)
-- **Direct keyword copying**: Title ≠ keyword, must be re-created
-- **Generic template words** (in any language): "Complete Guide", "Full Tutorial", "Everything You Need to Know", "Ultimate"
-- **Years**: 2024, 2025, etc.
-- **Exaggerations**: "Best Ever", "Ultimate", "Perfect"
-- **Placeholders**: <Title>, [Title1], {First Title}, etc.
-
-## Requirements
-- Generate 3 titles with different styles (e.g., question, number-based, benefit-focused)
-- Titles must resonate with target readers
-- Each title must be complete and ready to use
-- **CRITICAL: All titles MUST be in ${languageName}**
-
-## Output Format (JSON only, no other text)
+## Output Format (JSON only)
 {
-  "titles": ["First complete title in ${languageName}", "Second complete title in ${languageName}", "Third complete title in ${languageName}"]
+  "titles": ["Title 1", "Title 2", "Title 3"]
 }`;
 
     try {
@@ -297,38 +267,27 @@ ${searchIntent}
       return this.getFallbackTitles(keyword, targetLanguage);
     }
 
-    const languageName =
-      LOCALE_FULL_NAMES[targetLanguage || "zh-TW"] ||
-      "Traditional Chinese (繁體中文)";
+    const langInstructions = buildLanguageInstructions(
+      targetLanguage || "zh-TW",
+    );
     const isEnglish = targetLanguage?.startsWith("en") || false;
     const lengthGuide = isEnglish ? "50-80 characters" : "20-40 個中文字";
 
-    const prompt = `Based on the following research data, generate 3 compelling article titles for the keyword "${keyword}".
+    const prompt = `Generate 3 compelling article titles for "${keyword}" based on research data.
 
-**CRITICAL: ALL titles MUST be written in ${languageName}**
+${langInstructions}
 
 ## Research Data
-### Latest Trends
-${trendsContent.substring(0, 500) || "No trend data available"}
+- Trends: ${trendsContent.substring(0, 500) || "N/A"}
+- User Questions: ${questionsContent.substring(0, 500) || "N/A"}
 
-### Common User Questions
-${questionsContent.substring(0, 500) || "No question data available"}
-
-## Title Requirements
-1. Titles should reflect the core value and research findings
-2. Use natural language, avoid formulaic expressions
-3. Include keywords naturally without being forced
-4. Appeal to target readers
-5. Length: ${lengthGuide}
-
-## DO NOT USE
-- Years (e.g., 2024, 2025)
-- Template phrases (e.g., "Complete Guide", "Ultimate", "Everything You Need")
-- Exaggerated words
+## Requirements
+1. Reflect research findings, use natural language
+2. Length: ${lengthGuide}
+3. No years, no "Complete Guide/Ultimate", no exaggeration
 
 ## Output Format
-Output JSON array directly:
-["First title in ${languageName}", "Second title in ${languageName}", "Third title in ${languageName}"]`;
+["Title 1", "Title 2", "Title 3"]`;
 
     try {
       const response = await this.complete(prompt, {
@@ -507,40 +466,50 @@ Output JSON array directly:
     selectedTitle: string,
   ): Promise<StrategyOutput["outline"]> {
     try {
-      const outlineSchema = this.getOutlineSchema();
-
       const targetLang = input.targetLanguage || "zh-TW";
-      const languageName =
-        LOCALE_FULL_NAMES[targetLang] || "Traditional Chinese (繁體中文)";
+      const langInstructions = buildLanguageInstructions(targetLang);
 
-      const prompt = `Generate a structured outline for the article titled "${selectedTitle}".
+      const prompt = `Generate a structured outline for "${selectedTitle}".
 
-Target language: ${languageName}
+${langInstructions}
 Target word count: ${input.targetWordCount}
 Search intent: ${input.researchData.searchIntent}
 Content gaps: ${input.researchData.contentGaps.slice(0, 3).join(", ")}
 
-**Strictly follow this JSON Schema for output**:
+**Output this exact JSON structure** (fill in real content):
 
-${JSON.stringify(outlineSchema, null, 2)}
+{
+  "introduction": {
+    "hook": "An engaging opening question or data point",
+    "context": "Why this topic matters to the reader",
+    "thesis": "What the reader will learn",
+    "wordCount": 120
+  },
+  "mainSections": [
+    {
+      "heading": "A specific, actionable H2 with numbers or verbs",
+      "subheadings": ["Concrete subtopic 1", "Concrete subtopic 2"],
+      "keyPoints": ["Key insight 1", "Key insight 2"],
+      "targetWordCount": 150,
+      "keywords": ["relevant keyword 1", "relevant keyword 2"]
+    }
+  ],
+  "conclusion": {
+    "summary": "Core takeaway",
+    "callToAction": "Next step for the reader",
+    "wordCount": 100
+  },
+  "faq": [
+    { "question": "A real user question", "answerOutline": "Brief answer direction" }
+  ]
+}
 
 **Rules**:
-1. All text content (headings, hook, context, thesis, etc.) MUST be written in ${languageName}
-2. mainSections must have 2-4 items
-3. Each section's heading must be unique
-4. **Each section's targetWordCount must NOT exceed 150** (keep content concise and focused)
-5. Introduction wordCount should be around 100-120
-6. Conclusion wordCount should be around 80-100
-7. Total targetWordCount should be close to ${input.targetWordCount}
-8. Output JSON object directly (don't wrap with \`\`\`)
-9. **FORBIDDEN sections/subheadings** (DO NOT include any of these):
-   - ❌ 常見問題解決 / 常見問題 / 問題解決 / FAQ
-   - ❌ 實戰案例分析 / 案例分析 / 成功案例
-   - ❌ 進階應用與最佳實踐
-   - ❌ Any section that looks like troubleshooting or FAQ
-   (FAQ will be generated separately by another agent)
-
-Please output the complete JSON that conforms to the above schema in ${languageName}:`;
+1. mainSections: 2-4 items, each heading must include specific numbers/action verbs/reader pain points
+2. Each section targetWordCount ≤ 150 (concise and focused)
+3. Total targetWordCount ≈ ${input.targetWordCount}
+4. FAQ section is generated separately — do NOT include FAQ/troubleshooting in mainSections
+5. Output JSON directly, no \`\`\`json wrapper`;
 
       const response = await this.complete(prompt, {
         model: input.model,
@@ -555,10 +524,7 @@ Please output the complete JSON that conforms to the above schema in ${languageN
       });
 
       // 驗證並解析 JSON
-      const parsed = this.validateAndParseOutline(
-        response.content,
-        outlineSchema,
-      );
+      const parsed = this.validateAndParseOutline(response.content);
 
       if (parsed) {
         console.log(
@@ -620,7 +586,10 @@ Please output the complete JSON that conforms to the above schema in ${languageN
                 items: { type: "string" },
                 description: "重點（2-4個）",
               },
-              targetWordCount: { type: "number", description: "目標字數（上限 150）" },
+              targetWordCount: {
+                type: "number",
+                description: "目標字數（上限 150）",
+              },
               keywords: {
                 type: "array",
                 items: { type: "string" },
@@ -660,7 +629,6 @@ Please output the complete JSON that conforms to the above schema in ${languageN
    */
   private validateAndParseOutline(
     content: string,
-    schema: any,
   ): StrategyOutput["outline"] | null {
     try {
       // 清理可能的 markdown 包裹
@@ -876,16 +844,11 @@ ${gaps
 - ❌ 禁止使用「標題1」「子標題1」「常見問題1」等編號佔位符
 - ✅ 必須輸出具體、有意義的完整內容
 
-**🚫 禁止的標題模式（太通用、缺乏獨特性）**：
-- ❌ 「認識 XXX」「了解 XXX」「什麼是 XXX」開頭
-- ❌ 「XXX 的基礎/核心/入門/概念」
-- ❌ 「如何有效/正確/輕鬆 XXX」
-- ❌ 「XXX 實戰/實務/應用」
-- ❌ 「XXX 技巧/方法/步驟」
-- ❌ 「進階 XXX」「XXX 進階應用」
-- ❌ 「常見問題」「總結與展望」「結論」
-- ❌ 任何以「的」結尾的標題
-- ❌ 包含「完整」「全面」「詳解」「攻略」「指南」的標題
+**H2 標題品質標準**：
+- ✅ 包含具體數字（如「3 個關鍵步驟」「5 分鐘學會」）
+- ✅ 使用動作動詞（如「打造」「避免」「提升」）
+- ✅ 點出讀者痛點（如「為什麼你的 XX 總是失敗」）
+- ✅ 提供獨特視角，與競品不同
 
 ${this.buildCompetitorExclusionList(input.researchData)}
 
@@ -1305,7 +1268,10 @@ ${this.buildCompetitorExclusionList(input.researchData)}
   ): StrategyOutput["outline"] {
     const sectionCount = 3;
     // 每段上限 150 字
-    const sectionWordCount = Math.min(Math.floor((targetWordCount - 200) / sectionCount), 150);
+    const sectionWordCount = Math.min(
+      Math.floor((targetWordCount - 200) / sectionCount),
+      150,
+    );
 
     // 提取核心關鍵詞（避免使用完整標題）
     const extractKeyTopic = (fullTitle: string): string => {
@@ -1466,8 +1432,6 @@ ${this.buildCompetitorExclusionList(input.researchData)}
     outline: StrategyOutput["outline"],
   ): Promise<ImageGuidance> {
     const targetLang = input.targetLanguage || "zh-TW";
-    const languageName =
-      LOCALE_FULL_NAMES[targetLang] || "Traditional Chinese (繁體中文)";
 
     // 從 brandVoice 提取風格提示
     const brandStyle = input.brandVoice?.tone_of_voice || "";

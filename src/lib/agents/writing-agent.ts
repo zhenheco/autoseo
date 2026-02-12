@@ -7,6 +7,7 @@ import type {
 } from "@/types/agents";
 import { marked } from "marked";
 import { LOCALE_FULL_NAMES } from "@/lib/i18n/locales";
+import { buildLanguageInstructions } from "./prompt-utils";
 
 // 配置 marked 全局選項（使用推薦的 marked.use() 方式）
 marked.use({
@@ -139,7 +140,6 @@ export class WritingAgent extends BaseAgent<WritingInput, WritingOutput> {
       targetRegion,
     } = input;
 
-    // Get the language name for the prompt
     const languageName =
       LOCALE_FULL_NAMES[targetLanguage || "zh-TW"] ||
       "Traditional Chinese (繁體中文)";
@@ -149,16 +149,17 @@ export class WritingAgent extends BaseAgent<WritingInput, WritingOutput> {
     const competitorSection = this.buildCompetitorContext(competitorAnalysis);
     const voiceExamplesSection = this.buildVoiceExamples(brandVoice);
 
+    const langInstructions = buildLanguageInstructions(
+      targetLanguage || "zh-TW",
+    );
+
     const prompt = `${personaSection}
 
 # Your Task
 Write a complete article for "${strategy.selectedTitle}".
 
-**CRITICAL: Output Language Requirement**
-- ALL content MUST be written in ${languageName}
-- Target region/audience: ${regionName}
-- Use culturally appropriate expressions and references for the target region
-- Do NOT mix languages unless quoting specific terms
+${langInstructions}
+Target region: ${regionName}
 
 ${competitorSection}
 
@@ -167,87 +168,26 @@ ${voiceExamplesSection}
 # Article Outline
 ${this.formatOutline(strategy.outline)}
 
-# Target Specifications
-- Target word count: ${strategy.targetWordCount} words/characters
-- **STRICT: Each paragraph under H2/H3 must NOT exceed 150 words/characters**
-- Primary keywords: ${strategy.outline.mainSections.flatMap((s) => s.keywords).join(", ")}
-- LSI keywords: ${strategy.lsiKeywords.join(", ")}
+# Specifications
+- Target: ${strategy.targetWordCount} words | Max 150 words per paragraph
+- Keywords: ${strategy.outline.mainSections.flatMap((s) => s.keywords).join(", ")}
+- LSI: ${strategy.lsiKeywords.join(", ")}
+- Format: Markdown, start with ## (no H1), no code blocks, no FAQ section
 
-# Format Requirements
-- Markdown format, start directly with ## Introduction (do not repeat title)
-- H2 (##) for main sections, H3 (###) for subsections
-- Use lists and tables appropriately for readability
-- Do NOT use code blocks (\`\`\`)
-- Do NOT generate FAQ sections (FAQ is handled by a dedicated Agent)
+# Writing Rules
+1. **Specific over generic**: Real products, numbers, case studies — not abstract descriptions
+2. **Answer-First**: Each H2 starts with a 40-80 word direct answer
+3. **Statistics with Attribution**: "According to [Source] ([Year]), [stat]"
+4. **Preserve Entities**: Real brand/tool names, never generic terms
+5. **Natural keywords**: Once per paragraph, then synonyms — never force or repeat
 
-# Writing Style: Conversational & Substantive
+## Voice Quality Check
+- Write like explaining to a knowledgeable friend, not a thesis
+- No filler: if you've made the point, move on
+- No vague claims without evidence ("很有用", "Experts believe...")
+- Cite specific sources or state facts directly
 
-## Core Principles
-1. **Write like a knowledgeable friend** - not a research paper
-2. **Be specific and practical** - every H2 should teach something concrete
-3. **Quality over quantity** - write enough to cover the topic, no more
-4. **Real examples required** - don't describe concepts abstractly
-5. **Keep paragraphs short** - each H2/H3 paragraph must be under 150 words
-
-## Content Standards (for each H2 section)
-1. **Substantive Content**: When mentioning a tool/course/method/concept:
-   - Give specific examples (real products, case studies, numbers)
-   - Show practical applications (how it works in real life)
-   - Include concrete details (features, pricing, use cases when relevant)
-
-2. **Natural Voice**:
-   - Explain like you're answering a friend's question
-   - Use natural expressions, not academic comparisons
-   - Vary sentence structure - never follow a formula
-
-3. **No Padding**:
-   - ❌ Don't add filler just to meet word count
-   - ❌ Don't repeat the same point in different phrasings
-   - ❌ Don't use generic statements like "這個工具很有用" without specifics
-   - ✅ Move to the next point when you've made your case
-
-## Keyword Usage (Important!)
-- Keywords should appear **naturally** in the text - do NOT force keywords
-- If a keyword already appeared once in a paragraph, use a synonym or related term instead
-- **NEVER repeat the same keyword multiple times in consecutive sentences**
-- Let keywords flow from context, not the other way around
-
-## Good vs Bad Example
-
-❌ BAD (generic/padded):
-"這個工具很有用。它提供了許多功能來幫助用戶。使用這個工具可以提高效率。許多專家都推薦使用。"
-
-✅ GOOD (specific/substantive):
-"以 Ahrefs 為例，它的 Site Explorer 可以即時顯示任何網站的自然流量。我最常用 Top Pages report：輸入競爭對手網址，就能看到哪些文章帶來最多流量。像我曾分析某旅遊部落格，發現一篇京都賞楓文章月流量 15K，研究內容結構後套用到自己的文章，三個月流量成長 40%。"
-
-## 🚫 Banned Phrases (NEVER use these)
-**AI-sounding phrases** (avoid in ALL languages):
-- "Crucial/vital/essential" overuse
-- "In conclusion/To summarize" at every section end
-- "It's worth noting/mentioning"
-- "Needless to say/Obviously"
-- "In today's world/society"
-- "As we all know"
-- "According to research..." (unless citing a specific study by name)
-- "Experts believe..." (unless naming specific experts)
-- "Many people..." (use specific data instead)
-- "不可忽視" / "不容小覷"
-- "眾所周知"
-- "隨著...的發展"
-
-**Conversational Alternatives**:
-- "It's worth noting..." → "Here's what's interesting:"
-- "Experts believe..." → State the fact directly or cite a specific source
-- "This is crucial" → "This matters because..."
-- Academic comparisons → Natural explanation
-
-## Length Guidance
-- Target total: ${strategy.targetWordCount} words, but quality over quantity
-- **Each paragraph under H2/H3: MAX 150 words** (this IS a hard requirement)
-- 500 words of dry content beats 800 words of padded content
-- Keep the article concise and focused - cut anything that doesn't add value
-
-Write the complete article now. Output ONLY the Markdown content in ${languageName}.`;
+Write the complete article now. Output ONLY the Markdown content.`;
 
     const response = await this.complete(prompt, {
       model: input.model,

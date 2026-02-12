@@ -1,83 +1,52 @@
 import { BaseAgent } from "./base-agent";
-import type { QAInput, QAOutput, ContentContext } from "@/types/agents";
-import { LOCALE_FULL_NAMES } from "@/lib/i18n/locales";
+import type { QAInput, QAOutput } from "@/types/agents";
 import { FAQ_HEADERS, getTranslation } from "@/lib/i18n/article-translations";
+import { buildLanguageInstructions, buildTopicAlignment } from "./prompt-utils";
 
 export class QAAgent extends BaseAgent<QAInput, QAOutput> {
   get agentName(): string {
     return "QAAgent";
   }
 
-  private buildTopicAlignmentSection(contentContext?: ContentContext): string {
-    if (!contentContext) {
-      return "";
-    }
-
-    return `## ⚠️ CRITICAL: Topic Alignment Requirement
-
-**Article Title**: ${contentContext.selectedTitle}
-**PRIMARY KEYWORD**: ${contentContext.primaryKeyword}
-**Search Intent**: ${contentContext.searchIntent}
-**Target Audience**: ${contentContext.targetAudience}
-
-**All FAQ questions and answers MUST be DIRECTLY relevant to "${contentContext.primaryKeyword}".**
-**Do NOT include any questions that are unrelated to the main topic.**
-**Every question should address a real concern about "${contentContext.primaryKeyword}".**
-
----`;
-  }
-
   protected async process(input: QAInput): Promise<QAOutput> {
-    const { title, outline, brandVoice, count = 5, contentContext, userQuestions } = input;
+    const {
+      title,
+      outline,
+      brandVoice,
+      count = 5,
+      contentContext,
+      userQuestions,
+    } = input;
 
     console.log("[QAAgent] 開始生成 FAQ...");
 
-    const targetLang =
-      (input as QAInput & { targetLanguage?: string }).targetLanguage ||
-      "zh-TW";
-    const languageName =
-      LOCALE_FULL_NAMES[targetLang] || "Traditional Chinese (繁體中文)";
+    const targetLang = input.targetLanguage || "zh-TW";
+    const langInstructions = buildLanguageInstructions(targetLang);
+    const topicAlignment = buildTopicAlignment(contentContext);
 
     const mainTopics = outline.mainSections.map((s) => s.heading).join(", ");
-    const topicAlignmentSection =
-      this.buildTopicAlignmentSection(contentContext);
 
     const userQuestionsSection = userQuestions
-      ? `\n## Real User Questions (from web research)\nThe following are real questions people ask about this topic. Use these as the BASIS for your FAQ:\n${userQuestions}\n\n**Prioritize answering these real user questions over generic ones.**\n`
+      ? `\n## Real User Questions\n${userQuestions}\nPrioritize answering these real questions.\n`
       : "";
 
-    const prompt = `${topicAlignmentSection}
-${userQuestionsSection}
-Generate frequently asked questions (FAQ) for the article "${title}".
+    const prompt = `${topicAlignment ? `${topicAlignment}\n` : ""}${userQuestionsSection}
+Generate ${count} FAQ for "${title}".
 
-**Target Language: ${languageName}** (ALL content MUST be written in this language)
+${langInstructions}
 
-## Article Topics
-- Title: ${title}
-- Main Sections: ${mainTopics}
-
-## Brand Voice
-- Tone: ${brandVoice.tone_of_voice}
-- Target Audience: ${brandVoice.target_audience}
-- Sentence Style: ${brandVoice.sentence_style || "Clear and concise"}
-- Interactivity: ${brandVoice.interactivity || "Moderate"}
+## Context
+- Sections: ${mainTopics}
+- Tone: ${brandVoice.tone_of_voice} | Audience: ${brandVoice.target_audience}
 
 ## Requirements
-1. Generate ${count} frequently asked questions
-2. Each question should be something readers would actually ask
-3. Answers should be detailed and practical (at least 50 words each)
-4. Questions should cover different aspects (basic, advanced, application, etc.)
-5. Tone should match brand style
-
-**CRITICAL: Write ALL questions and answers in ${languageName}**
+1. Questions readers would actually ask, covering different aspects
+2. Answers: detailed and practical (50+ words each)
 
 ## Output Format (JSON)
 {
   "faqs": [
-    {
-      "question": "Question 1 in ${languageName}?",
-      "answer": "Detailed answer in ${languageName}"
-    }
+    { "question": "Question?", "answer": "Detailed answer" }
   ]
 }`;
 

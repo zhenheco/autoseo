@@ -4,7 +4,6 @@ import { ArticleStorageService } from "@/lib/services/article-storage";
 import { ResearchAgent } from "./research-agent";
 import { StrategyAgent } from "./strategy-agent";
 import { WritingAgent } from "./writing-agent";
-import { ImageAgent } from "./image-agent";
 import { FeaturedImageAgent } from "./featured-image-agent";
 import { ArticleImageAgent } from "./article-image-agent";
 import { MetaAgent } from "./meta-agent";
@@ -19,11 +18,18 @@ import { QAAgent } from "./qa-agent";
 import { ContentAssemblerAgent } from "./content-assembler-agent";
 import { MultiAgentOutputAdapter } from "./output-adapter";
 import { WordPressClient } from "@/lib/wordpress/client";
-import { PerplexityClient } from "@/lib/perplexity/client";
-import { getAPIRouter } from "@/lib/ai/api-router";
 import { ErrorTracker } from "./error-tracker";
 import { PipelineLogger } from "./pipeline-logger";
 import { RetryConfigs, type AgentRetryConfig } from "./retry-config";
+import {
+  getBrandVoice,
+  getWebsiteSettings,
+  getWorkflowSettings,
+  getAgentConfig,
+  getPreviousArticles,
+  getWordPressConfig,
+  getAIConfig,
+} from "./pipeline-helpers";
 import type {
   ArticleGenerationInput,
   ArticleGenerationResult,
@@ -42,7 +48,6 @@ import type {
   ResearchContext,
   ResearchSummary,
 } from "@/types/agents";
-import type { AIModel } from "@/types/ai-models";
 import { AgentExecutionContext } from "./base-agent";
 
 export class ParallelOrchestrator {
@@ -192,11 +197,11 @@ export class ParallelOrchestrator {
         previousArticles,
         websiteSettings,
       ] = await Promise.all([
-        this.getBrandVoice(input.websiteId, input.companyId),
-        this.getWorkflowSettings(input.websiteId),
-        this.getAgentConfig(input.websiteId),
-        this.getPreviousArticles(input.websiteId, input.title),
-        this.getWebsiteSettings(input.websiteId),
+        getBrandVoice(supabase, input.websiteId),
+        getWorkflowSettings(supabase, input.websiteId),
+        getAgentConfig(supabase, input.websiteId),
+        getPreviousArticles(supabase, input.websiteId, input.title),
+        getWebsiteSettings(supabase, input.websiteId),
       ]);
 
       const targetLanguage =
@@ -213,7 +218,7 @@ export class ParallelOrchestrator {
         industry: targetIndustry,
       });
 
-      const aiConfig = this.getAIConfig();
+      const aiConfig = getAIConfig();
       const context: AgentExecutionContext = {
         websiteId: input.websiteId,
         companyId: input.companyId,
@@ -669,7 +674,10 @@ export class ParallelOrchestrator {
       const phase6Start = Date.now();
 
       // 先獲取 WordPress 配置，用於抓取現有分類和標籤
-      const wordpressConfig = await this.getWordPressConfig(input.websiteId);
+      const wordpressConfig = await getWordPressConfig(
+        supabase,
+        input.websiteId,
+      );
 
       // 從 WordPress 抓取現有分類和標籤（如果配置了）
       let existingCategories: Array<{
@@ -1434,505 +1442,6 @@ export class ParallelOrchestrator {
         executionTime: totalExecutionTime,
         tokenUsage: totalTokenUsage,
       },
-    };
-  }
-
-  private async getBrandVoice(
-    websiteId: string | null,
-    companyId: string | null,
-  ): Promise<BrandVoice> {
-    const defaultBrandVoice: BrandVoice = {
-      id: "",
-      website_id: websiteId || "",
-      tone_of_voice: "專業、友善、易懂",
-      target_audience: "一般網路使用者",
-      keywords: [],
-      writing_style: {
-        sentence_style: "mixed",
-        interactivity_level: "medium",
-        use_questions: true,
-        examples_preference: "moderate",
-      },
-      brand_integration: {
-        max_brand_mentions: 3,
-        value_first: true,
-      },
-    };
-
-    if (!websiteId || websiteId === "null") {
-      console.warn("[Orchestrator] 無 websiteId，使用預設 brand_voice");
-      return defaultBrandVoice;
-    }
-
-    const supabase = await this.getSupabase();
-    const { data: website, error } = await supabase
-      .from("website_configs")
-      .select("brand_voice")
-      .eq("id", websiteId)
-      .single();
-
-    if (error || !website?.brand_voice) {
-      console.warn("[Orchestrator] 使用預設 brand_voice");
-      return defaultBrandVoice;
-    }
-
-    const bv = website.brand_voice as {
-      brand_name?: string;
-      tone_of_voice?: string;
-      target_audience?: string;
-      writing_style?: string;
-      sentence_style?: string;
-      interactivity?: string;
-      voice_examples?: {
-        good_examples?: string[];
-        bad_examples?: string[];
-      };
-    };
-    console.log("[Orchestrator] 使用 website brand_voice", bv);
-    return {
-      id: "",
-      website_id: websiteId,
-      tone_of_voice: bv.tone_of_voice || defaultBrandVoice.tone_of_voice,
-      target_audience: bv.target_audience || defaultBrandVoice.target_audience,
-      keywords: [],
-      sentence_style: bv.sentence_style || bv.writing_style || "清晰簡潔",
-      interactivity: bv.interactivity || "適度互動",
-      brand_name: bv.brand_name,
-      voice_examples: bv.voice_examples?.good_examples
-        ? {
-            good_examples: bv.voice_examples.good_examples,
-            bad_examples: bv.voice_examples.bad_examples,
-          }
-        : undefined,
-      writing_style: {
-        sentence_style:
-          (bv.sentence_style as BrandVoice["writing_style"])?.sentence_style ||
-          "mixed",
-        interactivity_level: "medium",
-        use_questions: true,
-        examples_preference: "moderate",
-      },
-      brand_integration: {
-        max_brand_mentions: 3,
-        value_first: true,
-      },
-    };
-  }
-
-  private async getWebsiteSettings(
-    websiteId: string | null,
-  ): Promise<{ language: string; industry: string | null; region: string }> {
-    const defaults = {
-      language: "zh-TW",
-      industry: null as string | null,
-      region: "台灣",
-    };
-
-    if (!websiteId || websiteId === "null") {
-      return defaults;
-    }
-
-    const supabase = await this.getSupabase();
-    const { data, error } = await supabase
-      .from("website_configs")
-      .select("language, industry, region")
-      .eq("id", websiteId)
-      .single();
-
-    if (error || !data) {
-      console.warn("[Orchestrator] 使用預設網站設定");
-      return defaults;
-    }
-
-    return {
-      language: data.language || defaults.language,
-      industry: data.industry || defaults.industry,
-      region: data.region || defaults.region,
-    };
-  }
-
-  private async getWorkflowSettings(
-    websiteId: string | null,
-  ): Promise<WorkflowSettings> {
-    // 如果 websiteId 為 null，直接返回預設值
-    if (!websiteId || websiteId === "null") {
-      console.warn(
-        "[Orchestrator] website_id 為 null，使用預設 workflow_settings",
-      );
-      return {
-        id: "",
-        website_id: websiteId || "",
-        serp_analysis_enabled: true,
-        competitor_count: 10,
-        content_length_min: 1000,
-        content_length_max: 3000,
-        keyword_density_min: 0,
-        keyword_density_max: 10,
-        quality_threshold: 80,
-        auto_publish: false,
-        serp_model: "perplexity-research",
-        content_model: "deepseek-chat",
-        meta_model: "deepseek-chat",
-      };
-    }
-
-    const supabase = await this.getSupabase();
-    const { data: workflowSettings, error } = await supabase
-      .from("workflow_settings")
-      .select("*")
-      .eq("website_id", websiteId);
-
-    if (error) {
-      console.error("[Orchestrator] 查詢 workflow_settings 失敗:", error);
-      // 返回預設 workflow settings
-      return {
-        id: "",
-        website_id: websiteId,
-        serp_analysis_enabled: true,
-        competitor_count: 10,
-        content_length_min: 1000,
-        content_length_max: 3000,
-        keyword_density_min: 0,
-        keyword_density_max: 10,
-        quality_threshold: 80,
-        auto_publish: false,
-        serp_model: "perplexity-research",
-        content_model: "deepseek-chat",
-        meta_model: "deepseek-chat",
-      };
-    }
-
-    const workflowSetting = workflowSettings?.[0];
-    if (!workflowSetting) {
-      console.warn(
-        "[Orchestrator] website_id 沒有對應的 workflow_settings，使用預設值",
-      );
-      return {
-        id: "",
-        website_id: websiteId,
-        serp_analysis_enabled: true,
-        competitor_count: 10,
-        content_length_min: 1000,
-        content_length_max: 3000,
-        keyword_density_min: 0,
-        keyword_density_max: 10,
-        quality_threshold: 80,
-        auto_publish: false,
-        serp_model: "perplexity-research",
-        content_model: "deepseek-chat",
-        meta_model: "deepseek-chat",
-      };
-    }
-
-    return workflowSetting;
-  }
-
-  private async getAgentConfig(websiteId: string | null): Promise<
-    AgentConfig & {
-      complexModel?: AIModel;
-      simpleModel?: AIModel;
-      imageModelInfo?: AIModel;
-      researchModelInfo?: AIModel;
-    }
-  > {
-    // 如果 websiteId 為 null，直接返回預設配置
-    if (!websiteId || websiteId === "null") {
-      console.warn("[Orchestrator] website_id 為 null，使用預設 agent_configs");
-      return this.getDefaultAgentConfig();
-    }
-
-    const supabase = await this.getSupabase();
-
-    const { data: agentConfigs, error: configError } = await supabase
-      .from("agent_configs")
-      .select("*")
-      .eq("website_id", websiteId);
-
-    const agentConfig = agentConfigs?.[0];
-
-    if (configError) {
-      console.error("[Orchestrator] 查詢 agent_configs 失敗:", configError);
-      console.warn("[Orchestrator] 回滾到預設配置");
-      return this.getDefaultAgentConfig();
-    }
-
-    if (!agentConfig) {
-      console.warn(
-        "[Orchestrator] website_id 沒有對應的 agent_configs，使用預設配置",
-      );
-      return this.getDefaultAgentConfig();
-    }
-
-    const modelIds = [
-      agentConfig.complex_processing_model,
-      agentConfig.simple_processing_model,
-      agentConfig.image_model,
-      agentConfig.research_model,
-    ].filter(Boolean);
-
-    const { data: models, error: modelsError } = await supabase
-      .from("ai_models")
-      .select("*")
-      .in("model_id", modelIds);
-
-    if (modelsError) {
-      console.error("[Orchestrator] 查詢 ai_models 失敗:", modelsError);
-    }
-
-    const modelsMap = new Map<string, AIModel>();
-    (models || []).forEach((model: AIModel) => {
-      modelsMap.set(model.model_id, model);
-    });
-
-    return {
-      complex_processing_model: agentConfig.complex_processing_model,
-      simple_processing_model: agentConfig.simple_processing_model,
-
-      research_model:
-        agentConfig.research_model ||
-        agentConfig.complex_processing_model ||
-        "deepseek-chat",
-      strategy_model: agentConfig.complex_processing_model || "deepseek-chat",
-      writing_model: agentConfig.simple_processing_model || "deepseek-chat",
-      image_model: agentConfig.image_model || "fal-ai/qwen-image",
-
-      research_temperature: agentConfig.research_temperature || 0.7,
-      strategy_temperature: agentConfig.strategy_temperature || 0.7,
-      writing_temperature: agentConfig.writing_temperature || 0.7,
-      research_max_tokens: agentConfig.research_max_tokens || 64000,
-      strategy_max_tokens: agentConfig.strategy_max_tokens || 64000,
-      writing_max_tokens: agentConfig.writing_max_tokens || 64000,
-
-      image_size: agentConfig.image_size || "1024x1024",
-      image_count: agentConfig.image_count || 3,
-
-      meta_enabled: agentConfig.meta_enabled !== false,
-      meta_model:
-        agentConfig.meta_model ||
-        agentConfig.simple_processing_model ||
-        "deepseek-chat",
-      meta_temperature: agentConfig.meta_temperature || 0.7,
-      meta_max_tokens: agentConfig.meta_max_tokens || 16000,
-
-      complexModel: modelsMap.get(agentConfig.complex_processing_model),
-      simpleModel: modelsMap.get(agentConfig.simple_processing_model),
-      imageModelInfo: modelsMap.get(agentConfig.image_model),
-      researchModelInfo: modelsMap.get(agentConfig.research_model),
-    };
-  }
-
-  private async ensureAgentConfigExists(
-    websiteId: string,
-  ): Promise<AgentConfig | null> {
-    const supabase = await this.getSupabase();
-
-    try {
-      const { data: existing } = await supabase
-        .from("agent_configs")
-        .select("*")
-        .eq("website_id", websiteId)
-        .limit(1);
-
-      if (existing && existing.length > 0) {
-        console.log("[Orchestrator] agent_configs 已存在");
-        return existing[0];
-      }
-
-      const defaultConfig = {
-        website_id: websiteId,
-        research_model: "deepseek-chat",
-        complex_processing_model: "deepseek-chat",
-        simple_processing_model: "deepseek-chat",
-        image_model: "fal-ai/qwen-image",
-        research_temperature: 0.7,
-        research_max_tokens: 16000,
-        strategy_temperature: 0.7,
-        strategy_max_tokens: 16000,
-        writing_temperature: 0.7,
-        writing_max_tokens: 16000,
-        image_size: "1792x1024",
-        image_count: 3,
-        meta_enabled: true,
-        meta_model: "deepseek-chat",
-        meta_temperature: 0.7,
-        meta_max_tokens: 16000,
-      };
-
-      console.log(
-        "[Orchestrator] 正在為 website_id 創建 agent_configs:",
-        websiteId,
-      );
-
-      const { data: created, error: createError } = await supabase
-        .from("agent_configs")
-        .insert(defaultConfig)
-        .select("*")
-        .single();
-
-      if (createError) {
-        console.error("[Orchestrator] 創建 agent_configs 失敗:", createError);
-        return null;
-      }
-
-      console.log("[Orchestrator] agent_configs 已成功創建:", websiteId);
-      return created;
-    } catch (error) {
-      console.error("[Orchestrator] ensureAgentConfigExists 出錯:", error);
-      return null;
-    }
-  }
-
-  private async getPreviousArticles(
-    websiteId: string | null,
-    currentArticleTitle: string,
-  ): Promise<PreviousArticle[]> {
-    // 如果 websiteId 為 null，返回空陣列（沒有網站就沒有歷史文章）
-    if (!websiteId || websiteId === "null") {
-      console.warn("[Orchestrator] website_id 為 null，返回空的歷史文章列表");
-      return [];
-    }
-
-    const supabase = await this.getSupabase();
-
-    // 1. 取得網站基礎 URL
-    const { data: websiteConfig } = await supabase
-      .from("website_configs")
-      .select("wordpress_url")
-      .eq("id", websiteId)
-      .single();
-
-    const baseUrl = websiteConfig?.wordpress_url || "";
-
-    // 2. 使用全文搜尋查詢相關文章
-    const { data, error } = await supabase
-      .from("generated_articles")
-      .select("id, title, slug, keywords, excerpt, wordpress_post_url, status")
-      .eq("website_id", websiteId)
-      .or("status.eq.published,status.eq.reviewed")
-      .textSearch("title", currentArticleTitle, {
-        type: "websearch",
-        config: "simple",
-      })
-      .limit(20);
-
-    if (error) {
-      console.error("[Orchestrator] 查詢相關文章失敗:", error);
-      return [];
-    }
-
-    console.log(`[Orchestrator] 找到 ${data?.length || 0} 篇相關文章`, {
-      websiteId,
-      searchTitle: currentArticleTitle,
-      baseUrl,
-    });
-
-    // 3. 構建 URL（已發佈用網站網址，未發佈用預覽 URL）
-    return (data || []).map((article) => {
-      const url =
-        article.status === "published" && baseUrl
-          ? `${baseUrl}/${article.slug}`
-          : `/dashboard/articles/${article.id}/preview`;
-
-      return {
-        id: article.id,
-        title: article.title,
-        slug: article.slug || "",
-        url,
-        keywords: article.keywords || [],
-        excerpt: article.excerpt || "",
-      };
-    });
-  }
-
-  private getDefaultAgentConfig(): AgentConfig & {
-    complexModel?: AIModel;
-    simpleModel?: AIModel;
-    imageModelInfo?: AIModel;
-    researchModelInfo?: AIModel;
-  } {
-    return {
-      complex_processing_model: "deepseek-chat",
-      simple_processing_model: "deepseek-chat",
-      research_model: "deepseek-chat",
-      strategy_model: "deepseek-chat",
-      writing_model: "deepseek-chat",
-      image_model: "fal-ai/qwen-image",
-      research_temperature: 0.7,
-      strategy_temperature: 0.7,
-      writing_temperature: 0.7,
-      research_max_tokens: 64000,
-      strategy_max_tokens: 64000,
-      writing_max_tokens: 64000,
-      image_size: "1792x1024",
-      image_count: 3,
-      meta_enabled: true,
-      meta_model: "deepseek-chat",
-      meta_temperature: 0.7,
-      meta_max_tokens: 64000,
-    };
-  }
-
-  private getAIConfig(): AIClientConfig {
-    return {
-      deepseekApiKey: process.env.DEEPSEEK_API_KEY,
-      openaiApiKey: process.env.OPENAI_API_KEY,
-      perplexityApiKey: process.env.PERPLEXITY_API_KEY,
-    };
-  }
-
-  private async getWordPressConfig(websiteId: string): Promise<{
-    enabled: boolean;
-    url: string;
-    username: string;
-    applicationPassword: string;
-    accessToken?: string;
-    refreshToken?: string;
-  } | null> {
-    // 驗證 websiteId 是有效的 UUID
-    if (
-      !websiteId ||
-      websiteId === "null" ||
-      websiteId === "undefined" ||
-      !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-        websiteId,
-      )
-    ) {
-      return null;
-    }
-
-    const supabase = await this.getSupabase();
-    const { data: configs, error } = await supabase
-      .from("website_configs")
-      .select(
-        "wordpress_url, wp_username, wp_app_password, wp_enabled, wordpress_access_token, wordpress_refresh_token",
-      )
-      .eq("id", websiteId);
-
-    if (error) {
-      console.error("[Orchestrator] 查詢 website_configs 失敗:", error);
-      return null;
-    }
-
-    const data = configs?.[0];
-    if (!data?.wp_enabled) {
-      return null;
-    }
-
-    // 確保配置格式正確
-    if (
-      !data.wordpress_url ||
-      (!data.wp_app_password && !data.wordpress_access_token)
-    ) {
-      return null;
-    }
-
-    return {
-      enabled: true,
-      url: data.wordpress_url,
-      username: data.wp_username,
-      applicationPassword: data.wp_app_password,
-      accessToken: data.wordpress_access_token,
-      refreshToken: data.wordpress_refresh_token,
     };
   }
 
