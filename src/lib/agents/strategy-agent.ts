@@ -415,7 +415,7 @@ ${langInstructions}
 
   private scoreTitleSEO(title: string, input: StrategyInput): number {
     let score = 0;
-    const keyword = input.researchData.title.toLowerCase();
+    const keyword = (input.researchData.title || "").toLowerCase();
 
     // 關鍵字匹配 (35分)
     if (
