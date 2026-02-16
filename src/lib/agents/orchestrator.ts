@@ -16,7 +16,13 @@ import { SectionAgent } from "./section-agent";
 import { ConclusionAgent } from "./conclusion-agent";
 import { QAAgent } from "./qa-agent";
 import { ContentAssemblerAgent } from "./content-assembler-agent";
+import { MaterialExtractorAgent } from "./material-extractor-agent";
 import { MultiAgentOutputAdapter } from "./output-adapter";
+import {
+  shouldExtractMaterials,
+  matchMaterials,
+  distributeByRoundRobin,
+} from "./writing-presets";
 import { WordPressClient } from "@/lib/wordpress/client";
 import { ErrorTracker } from "./error-tracker";
 import { PipelineLogger } from "./pipeline-logger";
@@ -34,7 +40,6 @@ import type {
   ArticleGenerationInput,
   ArticleGenerationResult,
   BrandVoice,
-  WorkflowSettings,
   AgentConfig,
   PreviousArticle,
   AIClientConfig,
@@ -47,6 +52,7 @@ import type {
   ResearchOutput,
   ResearchContext,
   ResearchSummary,
+  MaterialsProfile,
 } from "@/types/agents";
 import { AgentExecutionContext } from "./base-agent";
 
@@ -333,6 +339,7 @@ export class ParallelOrchestrator {
       let competitorAnalysis: CompetitorAnalysisOutput | undefined;
       let contentPlan: ContentPlanOutput | undefined;
       let contentContext: ContentContext | undefined;
+      let materialsProfile: MaterialsProfile | undefined;
 
       if (researchOutput && currentPhase === "strategy_completed") {
         try {
@@ -368,12 +375,21 @@ export class ParallelOrchestrator {
           competitorAnalysis = undefined;
         }
 
-        // === 階段 2.6: ContentPlanAgent（詳細內容計畫） ===
+        // === 階段 2.6: ContentPlanAgent + MaterialExtractor（並行） ===
         if (strategyOutput && researchOutput) {
-          try {
-            console.log("[Orchestrator] 📋 Starting ContentPlanAgent");
+          // 判斷是否需要素材萃取
+          const needsMaterials = shouldExtractMaterials(
+            brandVoice.writing_style,
+          );
+          console.log(
+            "[Orchestrator] 📋 Starting ContentPlan" +
+              (needsMaterials ? " + MaterialExtractor (parallel)" : ""),
+          );
+
+          // ContentPlan 和 MaterialExtractor 並行執行
+          const contentPlanPromise = (async () => {
             const contentPlanAgent = new ContentPlanAgent(aiConfig, context);
-            contentPlan = await contentPlanAgent.execute({
+            return contentPlanAgent.execute({
               strategy: strategyOutput,
               research: researchOutput,
               competitorAnalysis,
@@ -383,6 +399,38 @@ export class ParallelOrchestrator {
               temperature: 0.4,
               maxTokens: 8000,
             });
+          })();
+
+          const materialPromise = needsMaterials
+            ? (async () => {
+                const materialAgent = new MaterialExtractorAgent(
+                  aiConfig,
+                  context,
+                );
+                return materialAgent.execute({
+                  keyword: input.title,
+                  deepResearch: researchOutput.deepResearch || {
+                    trends: null,
+                    userQuestions: null,
+                    authorityData: null,
+                  },
+                  externalReferences: researchOutput.externalReferences || [],
+                  targetLanguage,
+                  model: agentConfig.strategy_model,
+                  temperature: 0.3,
+                  maxTokens: 4000,
+                });
+              })()
+            : Promise.resolve(undefined);
+
+          const [contentPlanResult, materialResult] = await Promise.allSettled([
+            contentPlanPromise,
+            materialPromise,
+          ]);
+
+          // 處理 ContentPlan 結果
+          if (contentPlanResult.status === "fulfilled") {
+            contentPlan = contentPlanResult.value;
             console.log("[Orchestrator] ✅ ContentPlan completed", {
               optimizedTitle: contentPlan.optimizedTitle.primary,
               mainSectionsCount:
@@ -390,8 +438,6 @@ export class ParallelOrchestrator {
               faqCount: contentPlan.detailedOutline.faq.questions.length,
             });
 
-            // 構建 ContentContext 供 writing agents 使用
-            // 優先使用 ContentPlan 的 optimizedTitle，否則 fallback 到 strategyOutput.selectedTitle
             contentContext = {
               primaryKeyword: researchOutput.title,
               selectedTitle:
@@ -405,16 +451,11 @@ export class ParallelOrchestrator {
               brandName: brandVoice.brand_name,
               toneGuidance: contentPlan.contentStrategy.toneGuidance,
             };
-            console.log("[Orchestrator] ✅ ContentContext built", {
-              primaryKeyword: contentContext.primaryKeyword,
-              topicKeywordsCount: contentContext.topicKeywords.length,
-            });
-          } catch (contentPlanError) {
+          } else {
             console.warn(
-              "[Orchestrator] ⚠️ ContentPlan failed, using fallback context:",
-              contentPlanError,
+              "[Orchestrator] ⚠️ ContentPlan failed:",
+              contentPlanResult.reason,
             );
-            // 即使 ContentPlan 失敗，也構建基本的 ContentContext
             contentContext = {
               primaryKeyword: researchOutput.title,
               selectedTitle: strategyOutput.selectedTitle,
@@ -425,6 +466,24 @@ export class ParallelOrchestrator {
               industryContext: targetIndustry || undefined,
               brandName: brandVoice.brand_name,
             };
+          }
+
+          // 處理 MaterialExtractor 結果
+          if (materialResult.status === "fulfilled" && materialResult.value) {
+            materialsProfile = materialResult.value;
+            console.log("[Orchestrator] ✅ MaterialExtractor completed", {
+              stories: materialsProfile.stories.length,
+              statistics: materialsProfile.statistics.length,
+              quotes: materialsProfile.quotes.length,
+              cases: materialsProfile.cases.length,
+              perplexitySufficient: materialsProfile.meta.perplexitySufficient,
+              fetchedUrls: materialsProfile.meta.fetchedUrls,
+            });
+          } else if (materialResult.status === "rejected") {
+            console.warn(
+              "[Orchestrator] ⚠️ MaterialExtractor failed (non-blocking):",
+              materialResult.reason,
+            );
           }
         }
       }
@@ -480,6 +539,7 @@ export class ParallelOrchestrator {
               contentContext,
               contentPlan,
               researchOutput,
+              materialsProfile,
             );
 
             console.log(
@@ -1144,6 +1204,7 @@ export class ParallelOrchestrator {
     contentContext?: ContentContext,
     contentPlan?: ContentPlanOutput,
     researchOutput?: ResearchOutput,
+    materialsProfile?: MaterialsProfile,
   ) {
     if (!strategyOutput) throw new Error("Strategy output is required");
 
@@ -1254,6 +1315,7 @@ export class ParallelOrchestrator {
             targetLanguage,
             contentContext,
             researchSummary,
+            materialsProfile,
             model: agentConfig.writing_model,
             temperature: agentConfig.writing_temperature,
             maxTokens: 500,
@@ -1299,6 +1361,48 @@ export class ParallelOrchestrator {
       ),
     ]);
 
+    // 素材分配：先用 tag-based matching，匹配不到時 round-robin fallback
+    const sectionCount = outline.mainSections.length;
+    const contentPlanSections = contentPlan?.detailedOutline.mainSections || [];
+    let sectionMaterialsList: (Partial<MaterialsProfile> | undefined)[] =
+      Array(sectionCount).fill(undefined);
+
+    if (materialsProfile) {
+      sectionMaterialsList = outline.mainSections.map((section, i) => {
+        const planSection = contentPlanSections[i];
+        const matched = matchMaterials(
+          {
+            h2Title: section.heading,
+            materialQuery: planSection?.materialQuery,
+          },
+          materialsProfile!,
+        );
+        // 如果匹配結果有內容，使用它；否則留 undefined 讓 fallback 處理
+        const hasContent =
+          (matched.stories?.length || 0) +
+            (matched.statistics?.length || 0) +
+            (matched.quotes?.length || 0) +
+            (matched.cases?.length || 0) >
+          0;
+        return hasContent ? matched : undefined;
+      });
+
+      // Fallback: 如果超過一半的 sections 沒匹配到，用 round-robin
+      const unmatchedCount = sectionMaterialsList.filter((m) => !m).length;
+      if (unmatchedCount > sectionCount / 2) {
+        console.log(
+          "[Orchestrator] Tag matching insufficient, using round-robin fallback",
+        );
+        const distributed = distributeByRoundRobin(
+          materialsProfile,
+          sectionCount,
+        );
+        sectionMaterialsList = sectionMaterialsList.map(
+          (m, i) => m || distributed[i],
+        );
+      }
+    }
+
     const sections: SectionOutput[] = await Promise.all(
       outline.mainSections.map((section, i) => {
         const sectionImage = imageOutput?.contentImages?.[i] || null;
@@ -1320,6 +1424,7 @@ export class ParallelOrchestrator {
               contentContext,
               specialBlock,
               researchContext: sectionResearchContext,
+              sectionMaterials: sectionMaterialsList[i],
               index: i,
               model: agentConfig.writing_model,
               temperature: agentConfig.writing_temperature,
@@ -1854,94 +1959,6 @@ ${listItems}
     }
 
     return validated;
-  }
-
-  /**
-   * 取得模型的倍率
-   * advanced 模型 (如 deepseek-reasoner) = 2.0x
-   * basic 模型 (如 deepseek-chat) = 1.0x
-   */
-  private getModelMultiplier(modelName?: string): number {
-    if (!modelName) return 1.0;
-    const advancedModels = ["deepseek-reasoner", "claude-3-5-sonnet", "gpt-4"];
-    return advancedModels.some((m) => modelName.includes(m)) ? 2.0 : 1.0;
-  }
-
-  /**
-   * 計算所有 AI 調用的總 Token 使用量
-   * 用於 Token 扣除
-   *
-   * 計費公式：實際扣除 = 官方 Token × 模型倍率 × 20%
-   */
-  private calculateTotalTokenUsage(result: ArticleGenerationResult): {
-    official: number;
-    charged: number;
-  } {
-    let officialTotal = 0;
-    let chargedTotal = 0;
-
-    const phaseNames = ["research", "strategy", "writing", "meta", "image"];
-    const phases = [
-      result.research,
-      result.strategy,
-      result.writing,
-      result.meta,
-      result.image,
-    ];
-
-    console.log("[Orchestrator] 📊 calculateTotalTokenUsage - 開始計算");
-
-    for (let i = 0; i < phases.length; i++) {
-      const phase = phases[i];
-      const phaseName = phaseNames[i];
-
-      if (!phase) {
-        console.log(`[Orchestrator]   ${phaseName}: ❌ phase 不存在`);
-        continue;
-      }
-
-      if (!phase.executionInfo) {
-        console.log(`[Orchestrator]   ${phaseName}: ❌ executionInfo 不存在`);
-        continue;
-      }
-
-      const execInfo = phase.executionInfo;
-
-      if (!("tokenUsage" in execInfo) || !execInfo.tokenUsage) {
-        continue;
-      }
-
-      const tokenUsage = execInfo.tokenUsage as {
-        input: number;
-        output: number;
-        charged?: number;
-      };
-      const rawTotal = (tokenUsage.input || 0) + (tokenUsage.output || 0);
-
-      // 取得模型倍率
-      const modelName =
-        "model" in execInfo ? (execInfo.model as string) : undefined;
-      const multiplier = this.getModelMultiplier(modelName);
-
-      // 計費公式：官方 Token × 模型倍率 × 20%
-      const charged = Math.ceil(rawTotal * multiplier * 0.2);
-
-      officialTotal += rawTotal;
-      chargedTotal += charged;
-
-      console.log(
-        `[Orchestrator]   ${phaseName}: ✅ model=${modelName}, raw=${rawTotal}, multiplier=${multiplier}, charged=${charged}`,
-      );
-    }
-
-    console.log(
-      `[Orchestrator] 📊 calculateTotalTokenUsage - 完成: official=${officialTotal}, charged=${chargedTotal}`,
-    );
-
-    return {
-      official: officialTotal,
-      charged: chargedTotal,
-    };
   }
 
   /**

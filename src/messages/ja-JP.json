@@ -763,7 +763,10 @@
         "professionalFormal": "プロフェッショナル・フォーマル",
         "casualFriendly": "カジュアル・フレンドリー",
         "educational": "教育的",
-        "persuasive": "説得的"
+        "persuasive": "説得的",
+        "zhihuViral": "バイラルストーリー",
+        "businessMedia": "ビジネスコラム",
+        "deepAnalysis": "ディープ分析"
       }
     },
     "new": {
@@ -1910,7 +1913,10 @@
       "professionalFormal": "プロフェッショナル・フォーマル",
       "casualFriendly": "カジュアル・フレンドリー",
       "educational": "教育的",
-      "persuasive": "説得力のある"
+      "persuasive": "説得力のある",
+      "zhihuViral": "バイラルストーリー",
+      "businessMedia": "ビジネスコラム",
+      "deepAnalysis": "ディープ分析"
     },
     "autoScheduleSettings": "自動スケジュール設定",
     "autoScheduleDescription": "記事生成後の自動スケジュール動作を設定します。有効にすると、記事は自動的に公開キューに入ります。",

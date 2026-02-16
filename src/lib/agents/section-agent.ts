@@ -12,6 +12,11 @@ import {
   buildTopicAlignment,
   countWords,
 } from "./prompt-utils";
+import {
+  getWritingRules,
+  getStyleConsistencyCheck,
+  buildMaterialsInjection,
+} from "./writing-presets";
 
 export class SectionAgent extends BaseAgent<SectionInput, SectionOutput> {
   private buildSpecialBlockSection(
@@ -120,6 +125,7 @@ Example format:
       contentContext,
       specialBlock,
       researchContext,
+      sectionMaterials,
     } = input;
 
     const targetLang = input.targetLanguage || "zh-TW";
@@ -131,6 +137,12 @@ Example format:
       targetLang,
     );
     const researchDataSection = this.buildResearchDataSection(researchContext);
+    const writingRules = getWritingRules(brandVoice.writing_style);
+    const styleConsistency = getStyleConsistencyCheck(brandVoice.writing_style);
+    const materialsSection = buildMaterialsInjection(
+      section.heading,
+      sectionMaterials,
+    );
 
     const langInstructions = buildLanguageInstructions(targetLang);
 
@@ -152,14 +164,14 @@ ${previousSummary ? `## Previous Section Summary\n${previousSummary}\n` : ""}
 - Style: ${brandVoice.sentence_style || "Clear and concise"} | Interactivity: ${brandVoice.interactivity || "Moderate"}
 ${specialBlockSection}
 
-## Writing Rules
-1. **Answer-First**: Start with a 40-80 word direct answer to the heading's implied question
-2. **Statistics with Attribution**: "According to [Source] ([Year]), [stat]"
-3. **Preserve Entities**: Use real brand/tool/person names, not generic terms
-4. **Definitive Language**: Declarative statements, no hedging
-5. **Multiple Perspectives**: Present 2-3 viewpoints, then your analysis ("In my analysis..." / "I recommend...")
-6. **Concise**: Max 150 words per paragraph, keywords appear naturally (once per paragraph, use synonyms for repeats)
-7. Markdown format, ## for heading, ### for subheadings, brief summary at the end
+${materialsSection}
+
+${writingRules}
+
+${styleConsistency}
+
+## Output Format
+- Markdown format, ## for heading, ### for subheadings, brief summary at the end
 
 ## Output Format (JSON)
 {

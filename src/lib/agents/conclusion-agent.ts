@@ -5,6 +5,7 @@ import {
   buildTopicAlignment,
   countWords,
 } from "./prompt-utils";
+import { getConclusionStyle } from "./writing-presets";
 
 export class ConclusionAgent extends BaseAgent<
   ConclusionInput,
@@ -27,6 +28,8 @@ export class ConclusionAgent extends BaseAgent<
       ? `\n## Key Research Findings\n${researchHighlights}\n`
       : "";
 
+    const conclusionStyleSection = getConclusionStyle(brandVoice.writing_style);
+
     const prompt = `${topicAlignment ? `${topicAlignment}\n` : ""}${researchHighlightsSection}
 Write an article conclusion.
 
@@ -39,6 +42,8 @@ ${langInstructions}
 
 ## Brand Voice
 - Tone: ${brandVoice.tone_of_voice} | Audience: ${brandVoice.target_audience}
+
+${conclusionStyleSection}
 
 ## Requirements
 1. 100-200 words, summarize core points, clear call to action

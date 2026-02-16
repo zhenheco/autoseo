@@ -32,7 +32,10 @@ interface BrandVoiceFormProps {
   brandVoice: BrandVoice | null;
 }
 
-export function BrandVoiceForm({ websiteId, brandVoice }: BrandVoiceFormProps) {
+export function BrandVoiceForm({
+  websiteId,
+  brandVoice,
+}: BrandVoiceFormProps): React.ReactElement {
   const t = useTranslations("websites.brandVoice");
 
   return (
@@ -120,6 +123,15 @@ export function BrandVoiceForm({ websiteId, brandVoice }: BrandVoiceFormProps) {
                 </SelectItem>
                 <SelectItem value="persuasive">
                   {t("styles.persuasive")}
+                </SelectItem>
+                <SelectItem value="zhihuViral">
+                  {t("styles.zhihuViral")}
+                </SelectItem>
+                <SelectItem value="businessMedia">
+                  {t("styles.businessMedia")}
+                </SelectItem>
+                <SelectItem value="deepAnalysis">
+                  {t("styles.deepAnalysis")}
                 </SelectItem>
               </SelectContent>
             </Select>

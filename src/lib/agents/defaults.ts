@@ -7,7 +7,8 @@ export const DEFAULT_BRAND_VOICE: BrandVoice = {
   target_audience: "general audience",
   keywords: [],
   brand_name: "",
-  writing_style: {
+  writing_style: "professionalFormal",
+  writing_style_config: {
     sentence_style: "mixed",
     interactivity_level: "medium",
     use_questions: true,
@@ -83,25 +84,20 @@ export function getBrandVoiceWithDefaults(
     ...partial,
   };
 
-  if (partial?.writing_style || DEFAULT_BRAND_VOICE.writing_style) {
-    result.writing_style = {
-      sentence_style:
-        partial?.writing_style?.sentence_style ??
-        DEFAULT_BRAND_VOICE.writing_style?.sentence_style ??
-        "mixed",
-      interactivity_level:
-        partial?.writing_style?.interactivity_level ??
-        DEFAULT_BRAND_VOICE.writing_style?.interactivity_level ??
-        "medium",
-      use_questions:
-        partial?.writing_style?.use_questions ??
-        DEFAULT_BRAND_VOICE.writing_style?.use_questions ??
-        true,
-      examples_preference:
-        partial?.writing_style?.examples_preference ??
-        DEFAULT_BRAND_VOICE.writing_style?.examples_preference ??
-        "moderate",
-    };
+  // writing_style is now a string preset ID
+  if (!result.writing_style) {
+    result.writing_style = DEFAULT_BRAND_VOICE.writing_style;
+  }
+
+  // Merge writing_style_config if provided
+  if (
+    partial?.writing_style_config ||
+    DEFAULT_BRAND_VOICE.writing_style_config
+  ) {
+    result.writing_style_config = {
+      ...DEFAULT_BRAND_VOICE.writing_style_config,
+      ...partial?.writing_style_config,
+    } as BrandVoice["writing_style_config"];
   }
 
   return result;

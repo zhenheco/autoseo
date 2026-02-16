@@ -763,7 +763,10 @@
         "professionalFormal": "Professional Formal",
         "casualFriendly": "Casual Friendly",
         "educational": "Educational",
-        "persuasive": "Persuasive"
+        "persuasive": "Persuasive",
+        "zhihuViral": "Viral Storytelling",
+        "businessMedia": "Business Column",
+        "deepAnalysis": "Deep Analysis"
       }
     },
     "new": {
@@ -1910,7 +1913,10 @@
       "professionalFormal": "Professional Formal",
       "casualFriendly": "Casual Friendly",
       "educational": "Educational",
-      "persuasive": "Persuasive"
+      "persuasive": "Persuasive",
+      "zhihuViral": "Viral Storytelling",
+      "businessMedia": "Business Column",
+      "deepAnalysis": "Deep Analysis"
     },
     "autoScheduleSettings": "Auto Schedule Settings",
     "autoScheduleDescription": "Configure auto-scheduling behavior after article generation. When enabled, articles will be automatically queued for publishing.",

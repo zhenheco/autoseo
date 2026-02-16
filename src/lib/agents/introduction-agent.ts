@@ -9,6 +9,10 @@ import {
   buildTopicAlignment,
   countWords,
 } from "./prompt-utils";
+import {
+  getIntroductionStrategy,
+  buildMaterialsInjection,
+} from "./writing-presets";
 
 export class IntroductionAgent extends BaseAgent<
   IntroductionInput,
@@ -40,13 +44,34 @@ export class IntroductionAgent extends BaseAgent<
   protected async process(
     input: IntroductionInput,
   ): Promise<IntroductionOutput> {
-    const { outline, brandVoice, contentContext, researchSummary } = input;
+    const {
+      outline,
+      brandVoice,
+      contentContext,
+      researchSummary,
+      materialsProfile,
+    } = input;
 
     const targetLang = input.targetLanguage || "zh-TW";
     const langInstructions = buildLanguageInstructions(targetLang);
     const topicAlignment = buildTopicAlignment(contentContext);
     const researchSummarySection =
       this.buildResearchSummarySection(researchSummary);
+
+    const hasMaterials = !!(
+      materialsProfile &&
+      (materialsProfile.stories.length > 0 ||
+        materialsProfile.statistics.length > 0 ||
+        materialsProfile.quotes.length > 0)
+    );
+    const introStrategy = getIntroductionStrategy(
+      brandVoice.writing_style,
+      hasMaterials,
+    );
+    const materialsSection = buildMaterialsInjection(
+      contentContext?.primaryKeyword || outline.introduction.hook,
+      materialsProfile,
+    );
 
     const prompt = `${topicAlignment ? `${topicAlignment}\n` : ""}${researchSummarySection}
 Write an article introduction.
@@ -61,6 +86,10 @@ ${langInstructions}
 ## Brand Voice
 - Tone: ${brandVoice.tone_of_voice} | Audience: ${brandVoice.target_audience}
 - Style: ${brandVoice.sentence_style || "Clear and concise"} | Interactivity: ${brandVoice.interactivity || "Moderate"}
+
+${introStrategy}
+
+${materialsSection}
 
 ## Requirements
 1. 150-250 words, engaging opening, explain topic value

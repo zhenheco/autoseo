@@ -16,7 +16,11 @@ export interface BrandVoice {
     bad_examples?: string[];
   };
 
-  writing_style?: {
+  /** Writing style preset ID (string stored in DB) */
+  writing_style?: string;
+
+  /** Legacy detailed writing style config (for backwards compat) */
+  writing_style_config?: {
     sentence_style:
       | "short_punchy"
       | "conversational"
@@ -31,6 +35,57 @@ export interface BrandVoice {
   brand_integration?: {
     max_brand_mentions: number;
     value_first: boolean;
+  };
+}
+
+// Writing Style Preset IDs
+export type WritingStylePreset =
+  | "professionalFormal"
+  | "casualFriendly"
+  | "educational"
+  | "persuasive"
+  | "zhihuViral"
+  | "businessMedia"
+  | "deepAnalysis";
+
+// Material Extractor Types
+export interface MaterialsProfile {
+  stories: Array<{
+    subject: string;
+    narrative: string;
+    source: string;
+    relevantTopics: string[];
+  }>;
+  statistics: Array<{
+    fact: string;
+    source: string;
+    year?: number;
+    confidence: "verified" | "inferred" | "uncertain";
+  }>;
+  quotes: Array<{
+    text: string;
+    speaker: string;
+    source: string;
+    relevantTopics: string[];
+  }>;
+  cases: Array<{
+    title: string;
+    description: string;
+    outcome: "success" | "failure" | "mixed";
+    source: string;
+    timeframe?: string;
+    relevantTopics: string[];
+  }>;
+  experts: Array<{
+    name: string;
+    title: string;
+    relevance: string;
+  }>;
+  meta: {
+    fetchedUrls: number;
+    totalUrls: number;
+    perplexitySufficient: boolean;
+    extractionModel: string;
   };
 }
 
@@ -271,6 +326,7 @@ export interface WritingInput {
   maxTokens: number;
   targetLanguage?: string;
   targetRegion?: string;
+  materialsProfile?: MaterialsProfile;
 }
 
 export interface WritingOutput {
@@ -675,6 +731,7 @@ export interface IntroductionInput {
   maxTokens?: number;
   contentContext?: ContentContext;
   researchSummary?: ResearchSummary;
+  materialsProfile?: MaterialsProfile;
 }
 
 export interface IntroductionOutput {
@@ -712,6 +769,7 @@ export interface SectionInput {
   contentContext?: ContentContext;
   specialBlock?: SpecialBlock;
   researchContext?: ResearchContext;
+  sectionMaterials?: Partial<MaterialsProfile>;
 }
 
 export interface SectionOutput {
@@ -951,6 +1009,7 @@ export interface SectionPlan {
   targetWordCount: number;
   specialBlock?: SpecialBlock;
   keyPoints: string[];
+  materialQuery?: string;
 }
 
 export interface FAQPlan {

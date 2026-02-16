@@ -763,7 +763,10 @@
         "professionalFormal": "專業正式",
         "casualFriendly": "輕鬆友善",
         "educational": "教育性",
-        "persuasive": "說服性"
+        "persuasive": "說服性",
+        "zhihuViral": "知乎爆文風格",
+        "businessMedia": "商業媒體專欄",
+        "deepAnalysis": "深度分析報導"
       }
     },
     "new": {
@@ -1910,7 +1913,10 @@
       "professionalFormal": "專業正式",
       "casualFriendly": "輕鬆友善",
       "educational": "教育性",
-      "persuasive": "說服性"
+      "persuasive": "說服性",
+      "zhihuViral": "知乎爆文風格",
+      "businessMedia": "商業媒體專欄",
+      "deepAnalysis": "深度分析報導"
     },
     "autoScheduleSettings": "自動排程設定",
     "autoScheduleDescription": "設定文章生成後的自動排程行為，啟用後文章會自動排入發布佇列",

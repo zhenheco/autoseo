@@ -96,6 +96,13 @@ Please provide the following information:
    - Can include: service provider websites, industry blogs, news articles, tutorials, official documentation
    - Prioritize practical usefulness over academic sources
 
+5. **Real Stories & Cases** (CRITICAL):
+   - Include specific person names, company names, and their detailed experiences
+   - Include exact numbers: revenue, growth %, years, rankings
+   - Include direct quotes from industry leaders or experts
+   - Include specific failure/success case studies with concrete outcomes
+   - Do NOT summarize — provide the actual details and timelines
+
 **Important: Citation Format**
 When citing sources, use this format: "[Source Title](URL)"
 Example: According to "[AI Writing Tools Guide](https://example.com)"...

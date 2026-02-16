@@ -28,7 +28,8 @@ function getDefaultBrandVoice(websiteId: string | null): BrandVoice {
     tone_of_voice: "專業、友善、易懂",
     target_audience: "一般網路使用者",
     keywords: [],
-    writing_style: {
+    writing_style: "professionalFormal",
+    writing_style_config: {
       sentence_style: "mixed",
       interactivity_level: "medium",
       use_questions: true,
@@ -139,14 +140,7 @@ export async function getBrandVoice(
           bad_examples: bv.voice_examples.bad_examples,
         }
       : undefined,
-    writing_style: {
-      sentence_style:
-        (bv.sentence_style as BrandVoice["writing_style"])?.sentence_style ||
-        "mixed",
-      interactivity_level: "medium",
-      use_questions: true,
-      examples_preference: "moderate",
-    },
+    writing_style: bv.writing_style || defaultBrandVoice.writing_style,
     brand_integration: {
       max_brand_mentions: 3,
       value_first: true,

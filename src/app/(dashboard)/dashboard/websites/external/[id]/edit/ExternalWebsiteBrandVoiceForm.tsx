@@ -41,6 +41,9 @@ export function ExternalWebsiteBrandVoiceForm({
     { value: "輕鬆友善", label: t("writingStyles.casualFriendly") },
     { value: "教育性", label: t("writingStyles.educational") },
     { value: "說服性", label: t("writingStyles.persuasive") },
+    { value: "zhihuViral", label: t("writingStyles.zhihuViral") },
+    { value: "businessMedia", label: t("writingStyles.businessMedia") },
+    { value: "deepAnalysis", label: t("writingStyles.deepAnalysis") },
   ];
 
   return (

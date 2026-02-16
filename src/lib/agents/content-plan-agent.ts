@@ -5,6 +5,7 @@ import type {
   SectionPlan,
 } from "@/types/agents";
 import { buildLanguageInstructions } from "./prompt-utils";
+import { getStructureGuidance } from "./writing-presets";
 
 export class ContentPlanAgent extends BaseAgent<
   ContentPlanInput,
@@ -96,7 +97,7 @@ ${specialBlockGuidance}
 2. **contentStrategy**: 內容策略（primaryAngle, userPainPoints, valueProposition, differentiationPoints, toneGuidance）
 3. **detailedOutline**: 詳細大綱
    - introduction: 引言計劃
-   - mainSections: 2-4 個主要區塊，每個包含 h2Title, subheadings, writingInstructions, researchInsights, targetWordCount, keyPoints, 以及選擇性的 specialBlock
+   - mainSections: 2-4 個主要區塊，每個包含 h2Title, subheadings, writingInstructions, researchInsights, targetWordCount, keyPoints, materialQuery (2-3 個素材匹配關鍵詞), 以及選擇性的 specialBlock
    - faq: FAQ 計劃（h2Title, questions 陣列，每個問題包含 question 和 answerGuidelines）
    - conclusion: 結論計劃
 4. **seoOptimization**: SEO 優化建議
@@ -111,6 +112,7 @@ ${buildLanguageInstructions(targetLang)}
 2. H2 標題必須具體（含數字/動作動詞/讀者痛點），mainSections 2-4 個
 3. subheadings 之間要有明確邏輯關係
 4. FAQ 由專門 Agent 處理，mainSections 中不要包含 FAQ 類內容
+${getStructureGuidance(brandVoice?.writing_style)}
 
 ## 重要規則
 1. mainSections 數量：2-4 個（根據內容需求彈性調整）

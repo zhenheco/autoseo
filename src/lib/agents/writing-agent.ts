@@ -8,6 +8,7 @@ import type {
 import { marked } from "marked";
 import { LOCALE_FULL_NAMES } from "@/lib/i18n/locales";
 import { buildLanguageInstructions } from "./prompt-utils";
+import { getWritingRules, buildMaterialsInjection } from "./writing-presets";
 
 // 配置 marked 全局選項（使用推薦的 marked.use() 方式）
 marked.use({
@@ -134,10 +135,10 @@ export class WritingAgent extends BaseAgent<WritingInput, WritingOutput> {
     const {
       strategy,
       brandVoice,
-      previousArticles,
       competitorAnalysis,
       targetLanguage,
       targetRegion,
+      materialsProfile,
     } = input;
 
     const languageName =
@@ -148,6 +149,11 @@ export class WritingAgent extends BaseAgent<WritingInput, WritingOutput> {
     const personaSection = this.buildPersonaFromVoice(brandVoice, languageName);
     const competitorSection = this.buildCompetitorContext(competitorAnalysis);
     const voiceExamplesSection = this.buildVoiceExamples(brandVoice);
+    const writingRules = getWritingRules(brandVoice.writing_style);
+    const materialsSection = buildMaterialsInjection(
+      strategy.outline.mainSections.flatMap((s) => s.keywords).join(", "),
+      materialsProfile,
+    );
 
     const langInstructions = buildLanguageInstructions(
       targetLanguage || "zh-TW",
@@ -165,6 +171,8 @@ ${competitorSection}
 
 ${voiceExamplesSection}
 
+${materialsSection}
+
 # Article Outline
 ${this.formatOutline(strategy.outline)}
 
@@ -174,18 +182,7 @@ ${this.formatOutline(strategy.outline)}
 - LSI: ${strategy.lsiKeywords.join(", ")}
 - Format: Markdown, start with ## (no H1), no code blocks, no FAQ section
 
-# Writing Rules
-1. **Specific over generic**: Real products, numbers, case studies — not abstract descriptions
-2. **Answer-First**: Each H2 starts with a 40-80 word direct answer
-3. **Statistics with Attribution**: "According to [Source] ([Year]), [stat]"
-4. **Preserve Entities**: Real brand/tool names, never generic terms
-5. **Natural keywords**: Once per paragraph, then synonyms — never force or repeat
-
-## Voice Quality Check
-- Write like explaining to a knowledgeable friend, not a thesis
-- No filler: if you've made the point, move on
-- No vague claims without evidence ("很有用", "Experts believe...")
-- Cite specific sources or state facts directly
+${writingRules}
 
 Write the complete article now. Output ONLY the Markdown content.`;
 
@@ -210,11 +207,11 @@ Write the complete article now. Output ONLY the Markdown content.`;
     languageName: string,
   ): string {
     const brandName = brandVoice.brand_name || "Professional Brand";
-    const writingStyle = brandVoice.writing_style;
     const brandIntegration = brandVoice.brand_integration;
+    const styleConfig = brandVoice.writing_style_config;
 
     let styleDescription = "";
-    if (writingStyle) {
+    if (styleConfig?.sentence_style) {
       const styleMap: Record<string, string> = {
         short_punchy:
           "Short, punchy sentences. Direct and snappy - like texting a smart friend",
@@ -227,11 +224,11 @@ Write the complete article now. Output ONLY the Markdown content.`;
         mixed:
           "Flexible - technical when explaining complex topics, casual when sharing tips",
       };
-      styleDescription = styleMap[writingStyle.sentence_style] || "";
+      styleDescription = styleMap[styleConfig.sentence_style] || "";
     }
 
     let interactionGuide = "";
-    if (writingStyle?.use_questions) {
+    if (styleConfig?.use_questions) {
       interactionGuide =
         "Occasionally pose questions to engage readers, but don't overuse";
     }
