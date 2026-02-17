@@ -25,6 +25,7 @@ interface ArticleFormProps {
   industry: string;
   region: string;
   language: string;
+  writingStyle?: string;
 }
 
 export function ArticleForm({
@@ -32,6 +33,7 @@ export function ArticleForm({
   industry,
   region,
   language,
+  writingStyle,
 }: ArticleFormProps) {
   const router = useRouter();
   const t = useTranslations("articles.form");
@@ -165,6 +167,7 @@ export function ArticleForm({
           language,
           ...(title && { title }),
           website_id: websiteId,
+          ...(writingStyle && { writing_style: writingStyle }),
         }),
       },
       {
@@ -271,10 +274,21 @@ export function ArticleForm({
     }
   };
 
+  function getSubmitButtonLabel(): string {
+    if (isSubmitting) return retryInfo || t("submittingTask");
+    if (isLoadingTitles) return t("generatingTitles");
+    if (titleMode === "preview") return t("generateTitleOptions");
+    if (articleCount > 1)
+      return t("startGenerateArticles", { count: articleCount });
+    return t("startGenerateArticle");
+  }
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
       <div className="space-y-3 rounded-lg border p-4 bg-muted/50">
-        <Label className="text-base font-medium">{t("titleGenerationMode")}</Label>
+        <Label className="text-base font-medium">
+          {t("titleGenerationMode")}
+        </Label>
         <RadioGroup
           value={titleMode}
           onValueChange={(value) => setTitleMode(value as "auto" | "preview")}
@@ -319,7 +333,10 @@ export function ArticleForm({
               <span className="text-sm text-muted-foreground">
                 {isLoadingBalance
                   ? t("loadingBalance")
-                  : t("maxArticlesHint", { max: maxArticles, balance: articleBalance })}
+                  : t("maxArticlesHint", {
+                      max: maxArticles,
+                      balance: articleBalance,
+                    })}
               </span>
             </div>
             {isInsufficientCredits && !isLoadingBalance && (
@@ -340,24 +357,14 @@ export function ArticleForm({
           (titleMode === "auto" && isInsufficientCredits)
         }
       >
-        {isSubmitting
-          ? retryInfo || t("submittingTask")
-          : isLoadingTitles
-            ? t("generatingTitles")
-            : titleMode === "preview"
-              ? t("generateTitleOptions")
-              : articleCount > 1
-                ? t("startGenerateArticles", { count: articleCount })
-                : t("startGenerateArticle")}
+        {getSubmitButtonLabel()}
       </Button>
 
       <Dialog open={showTitleDialog} onOpenChange={setShowTitleDialog}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
             <DialogTitle>{t("selectArticleTitle")}</DialogTitle>
-            <DialogDescription>
-              {t("titleDialogDescription")}
-            </DialogDescription>
+            <DialogDescription>{t("titleDialogDescription")}</DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-4">
             {titleOptions.map((title, index) => (
@@ -391,7 +398,9 @@ export function ArticleForm({
               {isSubmitting
                 ? t("generating")
                 : selectedTitles.length > 1
-                  ? t("generateMultipleArticles", { count: selectedTitles.length })
+                  ? t("generateMultipleArticles", {
+                      count: selectedTitles.length,
+                    })
                   : t("useThisTitleGenerate")}
             </Button>
           </div>

@@ -14,7 +14,6 @@ import { ParallelOrchestrator } from "../src/lib/agents/orchestrator";
 import {
   cacheGet,
   cacheSet,
-  cacheDelete,
   isRedisAvailable,
 } from "../src/lib/cache/redis-cache";
 import { syncCompanyOwnerToBrevo } from "../src/lib/brevo";
@@ -191,6 +190,7 @@ async function main() {
           typeof metadata?.imageCount === "string"
             ? parseInt(metadata.imageCount)
             : (metadata?.imageCount as number | undefined),
+        writingStyleOverride: metadata?.writing_style as string | undefined,
       });
 
       console.log(`[Process Jobs] ✅ 任務 ${job.id} 處理成功`);

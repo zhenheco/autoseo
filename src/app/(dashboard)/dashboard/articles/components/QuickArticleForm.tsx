@@ -23,6 +23,7 @@ interface QuickArticleFormProps {
   industry: string;
   region: string;
   language: string;
+  writingStyle?: string;
 }
 
 export function QuickArticleForm({
@@ -30,6 +31,7 @@ export function QuickArticleForm({
   industry,
   region,
   language,
+  writingStyle,
 }: QuickArticleFormProps) {
   const router = useRouter();
   const t = useTranslations("articles.quick");
@@ -105,6 +107,7 @@ export function QuickArticleForm({
             region,
             targetLanguage: language,
             website_id: websiteId,
+            ...(writingStyle && { writing_style: writingStyle }),
           }),
         },
         {
@@ -168,7 +171,9 @@ export function QuickArticleForm({
         message = t("articlesProcessing", { count: skippedJobs });
       }
 
-      setGeneratedKeyword(message || t("articlesCount", { count: keywords.length }));
+      setGeneratedKeyword(
+        message || t("articlesCount", { count: keywords.length }),
+      );
       setShowSuccessDialog(true);
       setBatchKeywords("");
     } catch (error) {
@@ -195,15 +200,18 @@ export function QuickArticleForm({
           required
           disabled={isFormDisabled}
         />
-        <p className="text-sm text-muted-foreground">
-          {t("keywordHint")}
-        </p>
+        <p className="text-sm text-muted-foreground">{t("keywordHint")}</p>
         {batchKeywords.trim() && (
-          <p className="text-sm text-primary">{t("willGenerate", { count: keywordCount })}</p>
+          <p className="text-sm text-primary">
+            {t("willGenerate", { count: keywordCount })}
+          </p>
         )}
         {!isLoadingBalance && keywordCount > 0 && !hasRemainingQuota && (
           <p className="text-sm text-red-500">
-            {t("insufficientCredits", { max: maxArticles, balance: articleBalance })}
+            {t("insufficientCredits", {
+              max: maxArticles,
+              balance: articleBalance,
+            })}
           </p>
         )}
       </div>
@@ -273,7 +281,9 @@ export function QuickArticleForm({
               {errorDialogData && (
                 <>
                   <p className="text-foreground font-medium">
-                    {t("currentQuotaLimit", { max: errorDialogData.maxArticles })}
+                    {t("currentQuotaLimit", {
+                      max: errorDialogData.maxArticles,
+                    })}
                   </p>
                   <p className="text-sm text-muted-foreground">
                     {t("needCredits", {

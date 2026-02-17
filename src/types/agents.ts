@@ -639,6 +639,7 @@ export interface ArticleGenerationInput {
   imageCount?: number;
   industry?: string | null;
   language?: string;
+  writingStyleOverride?: string;
 }
 
 export interface ArticleGenerationResult {

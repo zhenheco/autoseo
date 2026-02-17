@@ -75,6 +75,7 @@ export async function POST(request: NextRequest) {
       language,
       competitors,
       website_id,
+      writing_style,
     } = body;
 
     // 向後兼容：支持舊版 keyword/title 和新版 industry 參數
@@ -223,6 +224,18 @@ export async function POST(request: NextRequest) {
       console.log("用戶選擇不指定網站");
     }
 
+    // 構建 job metadata
+    const jobMetadata = {
+      mode: mode || "single",
+      title: articleTitle,
+      industry: industry || null,
+      region: region || null,
+      language: language || null,
+      competitors: competitors || [],
+      competitorAnalysis: null as unknown,
+      writing_style: writing_style || null,
+    };
+
     // 先創建 article_job（因為 token_reservations 有 FK 約束引用 article_jobs）
     const { error: jobError } = await supabase.from("article_jobs").insert({
       id: articleJobId,
@@ -232,15 +245,7 @@ export async function POST(request: NextRequest) {
       user_id: user.id,
       keywords: articleTitle ? [articleTitle] : industry ? [industry] : [],
       status: "pending",
-      metadata: {
-        mode: mode || "single",
-        title: articleTitle,
-        industry: industry || null,
-        region: region || null,
-        language: language || null,
-        competitors: competitors || [],
-        competitorAnalysis: null,
-      },
+      metadata: jobMetadata,
     });
 
     if (jobError) {
@@ -300,19 +305,11 @@ export async function POST(request: NextRequest) {
       }
 
       // 更新 job metadata 加入競爭對手分析結果
+      jobMetadata.competitorAnalysis =
+        competitorAnalysisResult?.results || null;
       await supabase
         .from("article_jobs")
-        .update({
-          metadata: {
-            mode: mode || "single",
-            title: articleTitle,
-            industry: industry || null,
-            region: region || null,
-            language: language || null,
-            competitors: competitors || [],
-            competitorAnalysis: competitorAnalysisResult?.results || null,
-          },
-        })
+        .update({ metadata: jobMetadata })
         .eq("id", articleJobId);
     }
 

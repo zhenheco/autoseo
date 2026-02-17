@@ -82,9 +82,7 @@ export function ExternalWebsiteAutoScheduleForm({
           <Calendar className="h-5 w-5" />
           {t("autoScheduleSettings")}
         </CardTitle>
-        <CardDescription>
-          {t("autoScheduleDescription")}
-        </CardDescription>
+        <CardDescription>{t("autoScheduleDescription")}</CardDescription>
       </CardHeader>
       <CardContent>
         <form action={updateExternalWebsiteAutoSchedule} className="space-y-6">
@@ -96,12 +94,18 @@ export function ExternalWebsiteAutoScheduleForm({
             value={String(autoEnabled)}
           />
           <input type="hidden" name="scheduleType" value={scheduleType} />
-          <input type="hidden" name="scheduleIntervalDays" value={intervalDays} />
+          <input
+            type="hidden"
+            name="scheduleIntervalDays"
+            value={intervalDays}
+          />
 
           {/* 自動排程開關 */}
           <div className="flex items-center justify-between rounded-lg border p-4">
             <div className="space-y-0.5">
-              <Label className="text-base">{tWebsites("autoSchedule")}</Label>
+              <Label className="text-base">
+                {tWebsites("autoSchedule.autoScheduleLabel")}
+              </Label>
               <p className="text-sm text-muted-foreground">
                 {t("autoScheduleHint")}
               </p>

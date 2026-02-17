@@ -25,7 +25,19 @@ const STORAGE_KEYS = {
   INDUSTRY: "preferred-industry",
   REGION: "preferred-region",
   CUSTOM_REGION: "preferred-custom-region",
+  WRITING_STYLE: "preferred-writing-style",
 };
+
+const WRITING_STYLE_KEYS = [
+  "default",
+  "professionalFormal",
+  "casualFriendly",
+  "educational",
+  "persuasive",
+  "zhihuViral",
+  "businessMedia",
+  "deepAnalysis",
+] as const;
 
 const REGION_KEYS = [
   "taiwan",
@@ -65,28 +77,22 @@ export function ArticleFormTabs({
   const [region, setRegion] = useState("");
   const [customRegion, setCustomRegion] = useState("");
   const [language, setLanguage] = useState("zh-TW");
+  const [writingStyle, setWritingStyle] = useState("default");
 
   // 初始載入 localStorage 設定
   useEffect(() => {
-    const storedLanguage = localStorage.getItem(STORAGE_KEYS.LANGUAGE);
-    if (storedLanguage) {
-      setTimeout(() => setLanguage(storedLanguage), 0);
-    }
+    const restoreFromStorage = (key: string, setter: (v: string) => void) => {
+      const stored = localStorage.getItem(key);
+      if (stored) {
+        setTimeout(() => setter(stored), 0);
+      }
+    };
 
-    const storedIndustry = localStorage.getItem(STORAGE_KEYS.INDUSTRY);
-    if (storedIndustry) {
-      setTimeout(() => setIndustry(storedIndustry), 0);
-    }
-
-    const storedRegion = localStorage.getItem(STORAGE_KEYS.REGION);
-    if (storedRegion) {
-      setTimeout(() => setRegion(storedRegion), 0);
-    }
-
-    const storedCustomRegion = localStorage.getItem(STORAGE_KEYS.CUSTOM_REGION);
-    if (storedCustomRegion) {
-      setTimeout(() => setCustomRegion(storedCustomRegion), 0);
-    }
+    restoreFromStorage(STORAGE_KEYS.LANGUAGE, setLanguage);
+    restoreFromStorage(STORAGE_KEYS.INDUSTRY, setIndustry);
+    restoreFromStorage(STORAGE_KEYS.REGION, setRegion);
+    restoreFromStorage(STORAGE_KEYS.CUSTOM_REGION, setCustomRegion);
+    restoreFromStorage(STORAGE_KEYS.WRITING_STYLE, setWritingStyle);
   }, []);
 
   // 當選擇網站時，自動載入網站設定（含超時、重試、Fallback）
@@ -248,6 +254,22 @@ export function ArticleFormTabs({
     localStorage.setItem(STORAGE_KEYS.LANGUAGE, value);
   };
 
+  const handleWritingStyleChange = (value: string) => {
+    setWritingStyle(value);
+    localStorage.setItem(STORAGE_KEYS.WRITING_STYLE, value);
+  };
+
+  const effectiveRegion = region === "other" ? customRegion : region;
+  const effectiveWritingStyle =
+    writingStyle === "default" ? undefined : writingStyle;
+  const formSharedProps = {
+    websiteId: selectedWebsiteId,
+    industry,
+    region: effectiveRegion,
+    language,
+    writingStyle: effectiveWritingStyle,
+  };
+
   return (
     <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
       <div className="lg:col-span-4 space-y-4">
@@ -321,6 +343,25 @@ export function ArticleFormTabs({
             </SelectContent>
           </Select>
         </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="writingStyle">{t("writingStyle")}</Label>
+          <Select value={writingStyle} onValueChange={handleWritingStyleChange}>
+            <SelectTrigger id="writingStyle">
+              <SelectValue placeholder={t("selectWritingStyle")} />
+            </SelectTrigger>
+            <SelectContent>
+              {WRITING_STYLE_KEYS.map((key) => (
+                <SelectItem key={key} value={key}>
+                  {t(`writingStyles.${key}`)}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-muted-foreground">
+            {t("writingStyleHint")}
+          </p>
+        </div>
       </div>
 
       <div className="lg:col-span-8">
@@ -330,20 +371,10 @@ export function ArticleFormTabs({
             <TabsTrigger value="advanced">{t("aiAutoGenerate")}</TabsTrigger>
           </TabsList>
           <TabsContent value="quick" className="mt-4">
-            <QuickArticleForm
-              websiteId={selectedWebsiteId}
-              industry={industry}
-              region={region === "other" ? customRegion : region}
-              language={language}
-            />
+            <QuickArticleForm {...formSharedProps} />
           </TabsContent>
           <TabsContent value="advanced" className="mt-4">
-            <ArticleForm
-              websiteId={selectedWebsiteId}
-              industry={industry}
-              region={region === "other" ? customRegion : region}
-              language={language}
-            />
+            <ArticleForm {...formSharedProps} />
           </TabsContent>
         </Tabs>
       </div>

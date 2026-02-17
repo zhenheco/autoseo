@@ -22,6 +22,7 @@ export async function POST(request: NextRequest) {
       targetLanguage,
       region,
       industry,
+      writing_style,
     } = body;
     const hasWebsiteIdField = "website_id" in body;
 
@@ -356,6 +357,7 @@ export async function POST(request: NextRequest) {
           region: region || options?.region || null,
           industry: industry || options?.industry || null,
           wordCount: options?.wordCount || "1500",
+          writing_style: writing_style || options?.writing_style || null,
         },
       });
     }

@@ -210,6 +210,14 @@ export class ParallelOrchestrator {
         getWebsiteSettings(supabase, input.websiteId),
       ]);
 
+      // 如果有 per-article writing style override，套用到 brandVoice
+      if (input.writingStyleOverride) {
+        brandVoice.writing_style = input.writingStyleOverride;
+        console.log(
+          `[Orchestrator] ✏️ Writing style overridden to: ${input.writingStyleOverride}`,
+        );
+      }
+
       const targetLanguage =
         input.targetLanguage ||
         input.language ||
