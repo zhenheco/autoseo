@@ -45,7 +45,6 @@ import type {
   AIClientConfig,
   GeneratedImage,
   SectionOutput,
-  ExternalReference,
   CompetitorAnalysisOutput,
   ContentPlanOutput,
   ContentContext,
@@ -206,7 +205,12 @@ export class ParallelOrchestrator {
         getBrandVoice(supabase, input.websiteId),
         getWorkflowSettings(supabase, input.websiteId),
         getAgentConfig(supabase, input.websiteId),
-        getPreviousArticles(supabase, input.websiteId, input.title),
+        getPreviousArticles(
+          supabase,
+          input.websiteId,
+          input.title,
+          input.keywords,
+        ),
         getWebsiteSettings(supabase, input.websiteId),
       ]);
 
@@ -707,21 +711,8 @@ export class ParallelOrchestrator {
 
       writingOutput.html = htmlOutput.html;
 
-      // 保底機制：如果外部連結仍不足 2 個，在文末添加「參考資料」區塊
-      if (
-        htmlOutput.linkStats.externalLinksInserted < 2 &&
-        strategyOutput.externalReferences?.length
-      ) {
-        const needed = 2 - htmlOutput.linkStats.externalLinksInserted;
-        console.log(
-          `[Orchestrator] 外部連結不足 (${htmlOutput.linkStats.externalLinksInserted}/2)，添加參考資料區塊 (需要 ${needed} 個)`,
-        );
-        writingOutput.html = this.insertFurtherReadingSection(
-          writingOutput.html,
-          strategyOutput.externalReferences,
-          needed,
-        );
-      }
+      // HTML 後處理防護：移除 AI 可能仍然生成的醜陋參考來源格式
+      writingOutput.html = this.sanitizeReferencePatterns(writingOutput.html);
 
       if (imageOutput) {
         writingOutput.html = this.insertImagesToHtml(
@@ -1287,10 +1278,30 @@ export class ParallelOrchestrator {
 
       if (!relevantParagraphs && citations.length === 0) return undefined;
 
+      // 匹配此段落可用的外部參考來源
+      const sectionExternalRefs = (researchOutput?.externalReferences || [])
+        .filter((ref) => {
+          // 優先分配有 suggestedSections 匹配的
+          const matchedMapping = referenceMapping?.find(
+            (m) => m.url === ref.url,
+          );
+          if (matchedMapping) {
+            return matchedMapping.suggestedSections.some(
+              (s) =>
+                s.toLowerCase().includes(sectionHeading.toLowerCase()) ||
+                sectionHeading.toLowerCase().includes(s.toLowerCase()),
+            );
+          }
+          return false;
+        })
+        .slice(0, 3);
+
       return {
         relevantData: relevantParagraphs,
         citations: citations.slice(0, 5),
         statistics,
+        externalReferences:
+          sectionExternalRefs.length > 0 ? sectionExternalRefs : undefined,
       };
     };
 
@@ -1619,56 +1630,33 @@ export class ParallelOrchestrator {
   }
 
   /**
-   * 在文章末尾插入「延伸閱讀」區塊（保底機制）
-   * 當 LinkProcessor 無法成功插入連結時使用
+   * HTML 後處理防護：移除 AI 可能生成的醜陋參考來源格式
    */
-  private insertFurtherReadingSection(
-    html: string,
-    externalReferences: ExternalReference[],
-    minLinks: number = 3,
-  ): string {
-    if (!externalReferences || externalReferences.length === 0) {
-      return html;
-    }
+  private sanitizeReferencePatterns(html: string): string {
+    let sanitized = html;
 
-    // 取前 minLinks 個連結
-    const linksToInsert = externalReferences.slice(0, minLinks);
+    // 移除「延伸閱讀」獨立區塊（h2/h3 標題 + 後續的 ul/ol 列表）
+    sanitized = sanitized.replace(
+      /<h[23][^>]*>\s*(?:延伸閱讀|參考(?:來源|資料|文獻)|Further\s*Reading|References)\s*<\/h[23]>\s*(?:<[uo]l>[\s\S]*?<\/[uo]l>)?/gi,
+      "",
+    );
 
-    // 生成列表項目
-    const listItems = linksToInsert
-      .map((ref) => {
-        // 優先使用 domain 作為顯示文字，因為 title 可能是文章標題而非來源標題
-        const displayText =
-          ref.domain ||
-          (ref.title.length > 30
-            ? ref.title.substring(0, 30) + "..."
-            : ref.title);
-        return `  <li><a href="${ref.url}" target="_blank" rel="noopener noreferrer">${displayText}</a></li>`;
-      })
-      .join("\n");
+    // 移除「（參考來源：...）」格式的文字（含 HTML 連結）
+    sanitized = sanitized.replace(
+      /[（(]\s*參考來源\s*[：:]\s*(?:<a[^>]*>[\s\S]*?<\/a>|[^）)]*)\s*[）)]/gi,
+      "",
+    );
 
-    const furtherReadingHtml = `
-<h2>延伸閱讀</h2>
-<ul>
-${listItems}
-</ul>`;
+    // 移除包含保底引用的 <p><small>（參考來源：...）</small></p> 區塊
+    sanitized = sanitized.replace(
+      /<p>\s*<small>\s*[（(]\s*參考來源[\s\S]*?<\/small>\s*<\/p>/gi,
+      "",
+    );
 
-    // 嘗試在 </article> 或最後一個 </section> 或 </div> 前插入
-    const insertPoints = ["</article>", "</section>", "</main>"];
-    for (const point of insertPoints) {
-      const lastIndex = html.lastIndexOf(point);
-      if (lastIndex !== -1) {
-        return (
-          html.slice(0, lastIndex) +
-          furtherReadingHtml +
-          "\n" +
-          html.slice(lastIndex)
-        );
-      }
-    }
+    // 清理可能留下的空白行
+    sanitized = sanitized.replace(/\n{3,}/g, "\n\n");
 
-    // Fallback: 直接追加到末尾
-    return html + furtherReadingHtml;
+    return sanitized;
   }
 
   private insertImagesToHtml(

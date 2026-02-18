@@ -640,6 +640,7 @@ export interface ArticleGenerationInput {
   industry?: string | null;
   language?: string;
   writingStyleOverride?: string;
+  keywords?: string[];
 }
 
 export interface ArticleGenerationResult {
@@ -749,6 +750,7 @@ export interface ResearchContext {
   relevantData: string;
   citations: string[];
   statistics: string[];
+  externalReferences?: ExternalReference[];
 }
 
 export interface ResearchSummary {

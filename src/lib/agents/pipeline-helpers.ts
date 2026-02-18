@@ -301,11 +301,13 @@ export async function getAgentConfig(
 
 /**
  * 取得相關歷史文章（用於內部連結）
+ * 三管齊下策略：textSearch + keywords overlaps + 同網站最近文章
  */
 export async function getPreviousArticles(
   supabase: SupabaseClient,
   websiteId: string | null,
   currentArticleTitle: string,
+  currentKeywords?: string[],
 ): Promise<PreviousArticle[]> {
   if (!websiteId || websiteId === "null") {
     console.warn("[Pipeline] website_id 為 null，返回空的歷史文章列表");
@@ -320,29 +322,113 @@ export async function getPreviousArticles(
 
   const baseUrl = websiteConfig?.wordpress_url || "";
 
-  const { data, error } = await supabase
-    .from("generated_articles")
-    .select("id, title, slug, keywords, excerpt, wordpress_post_url, status")
-    .eq("website_id", websiteId)
-    .or("status.eq.published,status.eq.reviewed")
-    .textSearch("title", currentArticleTitle, {
-      type: "websearch",
-      config: "simple",
-    })
-    .limit(20);
+  type ArticleRow = {
+    id: string;
+    title: string;
+    slug: string | null;
+    keywords: string[] | null;
+    excerpt: string | null;
+    wordpress_post_url: string | null;
+    status: string;
+  };
 
-  if (error) {
-    console.error("[Pipeline] 查詢相關文章失敗:", error);
-    return [];
-  }
+  // 三管齊下並行查詢
+  const [textSearchResult, keywordsResult, recentResult] =
+    await Promise.allSettled([
+      // 1. 原有 textSearch 標題搜尋
+      supabase
+        .from("generated_articles")
+        .select(
+          "id, title, slug, keywords, excerpt, wordpress_post_url, status",
+        )
+        .eq("website_id", websiteId)
+        .or("status.eq.published,status.eq.reviewed")
+        .textSearch("title", currentArticleTitle, {
+          type: "websearch",
+          config: "simple",
+        })
+        .limit(20),
 
-  console.log(`[Pipeline] 找到 ${data?.length || 0} 篇相關文章`, {
+      // 2. keywords 欄位 overlaps 查詢（關鍵字重疊匹配）
+      currentKeywords && currentKeywords.length > 0
+        ? supabase
+            .from("generated_articles")
+            .select(
+              "id, title, slug, keywords, excerpt, wordpress_post_url, status",
+            )
+            .eq("website_id", websiteId)
+            .or("status.eq.published,status.eq.reviewed")
+            .overlaps("keywords", currentKeywords)
+            .limit(20)
+        : Promise.resolve({ data: [] as ArticleRow[], error: null }),
+
+      // 3. 同網站最近 published 文章（不限搜尋條件，補足數量）
+      supabase
+        .from("generated_articles")
+        .select(
+          "id, title, slug, keywords, excerpt, wordpress_post_url, status",
+        )
+        .eq("website_id", websiteId)
+        .or("status.eq.published,status.eq.reviewed")
+        .order("created_at", { ascending: false })
+        .limit(20),
+    ]);
+
+  // 合併去重，多重命中的排序更高
+  const scoreMap = new Map<string, { article: ArticleRow; score: number }>();
+
+  const addArticles = (
+    result: PromiseSettledResult<{
+      data: ArticleRow[] | null;
+      error: unknown;
+    }>,
+    baseScore: number,
+  ) => {
+    if (
+      result.status !== "fulfilled" ||
+      result.value.error ||
+      !result.value.data
+    )
+      return;
+    for (const article of result.value.data) {
+      const existing = scoreMap.get(article.id);
+      if (existing) {
+        existing.score += baseScore;
+      } else {
+        scoreMap.set(article.id, { article, score: baseScore });
+      }
+    }
+  };
+
+  addArticles(textSearchResult, 3); // textSearch 匹配權重最高
+  addArticles(keywordsResult, 2); // keywords overlap 次之
+  addArticles(recentResult, 1); // 最近文章權重最低
+
+  // 按 score 排序，取前 40 篇
+  const sorted = [...scoreMap.values()]
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 40);
+
+  console.log(`[Pipeline] 找到 ${sorted.length} 篇相關文章（三管齊下）`, {
     websiteId,
     searchTitle: currentArticleTitle,
+    keywordsCount: currentKeywords?.length || 0,
+    textSearch:
+      textSearchResult.status === "fulfilled"
+        ? textSearchResult.value.data?.length || 0
+        : 0,
+    keywordsOverlap:
+      keywordsResult.status === "fulfilled"
+        ? keywordsResult.value.data?.length || 0
+        : 0,
+    recent:
+      recentResult.status === "fulfilled"
+        ? recentResult.value.data?.length || 0
+        : 0,
     baseUrl,
   });
 
-  return (data || []).map((article) => {
+  return sorted.map(({ article }) => {
     const url =
       article.status === "published" && baseUrl
         ? `${baseUrl}/${article.slug}`

@@ -101,16 +101,41 @@ Example format:
 
     if (researchContext.statistics.length > 0) {
       section += `\n**Available Statistics:**\n`;
-      researchContext.statistics.forEach((stat) => {
-        section += `- ${stat}\n`;
-      });
+      section +=
+        researchContext.statistics.map((stat) => `- ${stat}`).join("\n") + "\n";
     }
 
     if (researchContext.citations.length > 0) {
       section += `\n**Citation Sources:**\n`;
-      researchContext.citations.slice(0, 5).forEach((url) => {
-        section += `- ${url}\n`;
-      });
+      section +=
+        researchContext.citations
+          .slice(0, 5)
+          .map((url) => `- ${url}`)
+          .join("\n") + "\n";
+    }
+
+    // 外部參考來源融入指令
+    if (
+      researchContext.externalReferences &&
+      researchContext.externalReferences.length > 0
+    ) {
+      section += `\n## Reference Sources to Weave Into Text\n`;
+      section += `The following external sources are available. Naturally embed them as inline hyperlinks within your sentences.\n\n`;
+      section +=
+        researchContext.externalReferences
+          .map(
+            (ref, i) =>
+              `${i + 1}. [${ref.title}](${ref.url}) — ${ref.description?.substring(0, 100) || ref.domain || ""}`,
+          )
+          .join("\n") + "\n";
+      section += `
+**Reference Integration Rules:**
+- ✅ GOOD: "根據<a href="URL" target="_blank" rel="noopener noreferrer">機構名稱的研究</a>，該技術可提升 30% 效率"
+- ✅ GOOD: "這項技術已被廣泛應用於<a href="URL" target="_blank" rel="noopener noreferrer">多個產業領域</a>"
+- ❌ BAD: Do NOT create standalone "參考來源" or "延伸閱讀" sections
+- ❌ BAD: Do NOT use format like "（參考來源：URL）"
+- ❌ BAD: Do NOT list references at the end of the section
+- If a reference cannot be naturally woven into a sentence, simply omit it.\n`;
     }
 
     section += `\n**IMPORTANT: Incorporate the above research data naturally into your writing. Cite statistics with attribution.**\n`;
@@ -170,10 +195,14 @@ ${writingRules}
 
 ${styleConsistency}
 
-## Output Format
-- Markdown format, ## for heading, ### for subheadings, brief summary at the end
+## Anti-Patterns (NEVER DO THESE)
+- NEVER create a "延伸閱讀", "參考來源", "Further Reading", or "References" section
+- NEVER use the format "（參考來源：...）" or "(Source: ...)"
+- NEVER list URLs at the end of the section
+- External links must be woven naturally into sentences as inline hyperlinks, or omitted entirely
 
 ## Output Format (JSON)
+- Write content in Markdown: ## for heading, ### for subheadings
 {
   "content": "Section content in Markdown",
   "summary": "Brief summary (max 50 words)"

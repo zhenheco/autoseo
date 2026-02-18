@@ -191,6 +191,7 @@ async function main() {
             ? parseInt(metadata.imageCount)
             : (metadata?.imageCount as number | undefined),
         writingStyleOverride: metadata?.writing_style as string | undefined,
+        keywords: job.keywords || [],
       });
 
       console.log(`[Process Jobs] ✅ 任務 ${job.id} 處理成功`);

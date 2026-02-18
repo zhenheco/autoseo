@@ -95,14 +95,22 @@ export class LinkProcessorAgent {
     let internalInserted = 0;
     for (const link of input.internalLinks) {
       // maxInternalLinks = 0 代表不設上限
-      if (this.config.maxInternalLinks > 0 && internalInserted >= this.config.maxInternalLinks) break;
+      if (
+        this.config.maxInternalLinks > 0 &&
+        internalInserted >= this.config.maxInternalLinks
+      )
+        break;
 
       const urlCount = this.urlUsageCount.get(link.url) ?? 0;
       if (urlCount >= this.config.maxLinksPerUrl) continue;
 
       const keywords = link.keywords || [link.title];
       for (const keyword of keywords) {
-        if (this.config.maxInternalLinks > 0 && internalInserted >= this.config.maxInternalLinks) break;
+        if (
+          this.config.maxInternalLinks > 0 &&
+          internalInserted >= this.config.maxInternalLinks
+        )
+          break;
         if (!keyword || keyword.length < 2) continue;
 
         const bestMatch = await this.findBestMatch(
@@ -165,7 +173,11 @@ export class LinkProcessorAgent {
     let externalInserted = 0;
     for (const ref of input.externalReferences) {
       // maxExternalLinks = 0 代表不設上限
-      if (this.config.maxExternalLinks > 0 && externalInserted >= this.config.maxExternalLinks) break;
+      if (
+        this.config.maxExternalLinks > 0 &&
+        externalInserted >= this.config.maxExternalLinks
+      )
+        break;
 
       const urlCount = this.urlUsageCount.get(ref.url) ?? 0;
       if (urlCount >= this.config.maxLinksPerUrl) continue;
@@ -175,7 +187,11 @@ export class LinkProcessorAgent {
         input.primaryKeyword,
       );
       for (const keyword of keywords) {
-        if (this.config.maxExternalLinks > 0 && externalInserted >= this.config.maxExternalLinks) break;
+        if (
+          this.config.maxExternalLinks > 0 &&
+          externalInserted >= this.config.maxExternalLinks
+        )
+          break;
         if (!keyword || keyword.length < 2) continue;
 
         const bestMatch = await this.findBestMatch(
@@ -236,42 +252,14 @@ export class LinkProcessorAgent {
       }
     }
 
-    // 保底機制：如果外部連結不足最低要求，在段落末尾插入引用
-    if (externalInserted < this.config.minExternalLinks && input.externalReferences.length > 0) {
+    // 記錄外部連結不足的情況（不再強制插入醜陋的保底引用）
+    if (
+      externalInserted < this.config.minExternalLinks &&
+      input.externalReferences.length > 0
+    ) {
       console.log(
-        `[LinkProcessorAgent] 外部連結不足 (${externalInserted}/${this.config.minExternalLinks})，啟動保底機制`,
+        `[LinkProcessorAgent] 外部連結不足 (${externalInserted}/${this.config.minExternalLinks})，已跳過保底插入（寧缺勿濫）`,
       );
-
-      const usedUrls = new Set(insertedLinks.filter(l => l.type === "external").map(l => l.url));
-      const unusedRefs = input.externalReferences.filter(ref => !usedUrls.has(ref.url));
-      const refsToInsert = unusedRefs.slice(0, this.config.minExternalLinks - externalInserted);
-
-      for (const ref of refsToInsert) {
-        // 找到文章中第一個 </p> 並在後面插入引用
-        const paragraphEnds = [...html.matchAll(/<\/p>/gi)];
-        if (paragraphEnds.length > 1) {
-          // 在第二個段落結尾插入（跳過開頭段落）
-          const targetParagraph = paragraphEnds[Math.min(externalInserted + 1, paragraphEnds.length - 1)];
-          const insertPos = targetParagraph.index! + targetParagraph[0].length;
-          const displayText = ref.title.length > 40 ? ref.title.substring(0, 40) + "..." : ref.title;
-          const citationHtml = `\n<p><small>（參考來源：<a href="${ref.url}" target="_blank" rel="noopener noreferrer">${this.escapeHtml(displayText)}</a>）</small></p>`;
-          html = html.slice(0, insertPos) + citationHtml + html.slice(insertPos);
-
-          externalInserted++;
-          insertedLinks.push({
-            type: "external",
-            anchor: displayText,
-            url: ref.url,
-            position: "fallback-citation",
-            section: "fallback",
-            semanticScore: 0,
-          });
-
-          console.log(
-            `[LinkProcessorAgent] 保底插入外部引用: ${ref.url}`,
-          );
-        }
-      }
     }
 
     const totalInserted = insertedLinks.length;
@@ -306,7 +294,6 @@ export class LinkProcessorAgent {
     const sections: Section[] = [];
     const h2Regex = /<h2[^>]*>(.*?)<\/h2>/gi;
     let match;
-    let lastEnd = 0;
 
     const matches: { heading: string; index: number }[] = [];
     while ((match = h2Regex.exec(html)) !== null) {
@@ -329,8 +316,6 @@ export class LinkProcessorAgent {
         endIndex,
         linksInserted: 0,
       });
-
-      lastEnd = endIndex;
     }
 
     if (matches.length === 0) {
@@ -568,14 +553,10 @@ export class LinkProcessorAgent {
       // 產生關鍵字變體，讓不同的連結可以使用不同的錨文字
       // 對於中文：提取不同長度的子串
       if (/[\u4e00-\u9fa5]/.test(primaryKeyword)) {
-        const keywordLen: number = primaryKeyword.length;
+        const keywordLen = primaryKeyword.length;
         // 提取 3-6 字的子串作為變體
-        for (
-          let subLen: number = Math.min(6, keywordLen - 1);
-          subLen >= 3;
-          subLen--
-        ) {
-          for (let idx: number = 0; idx <= keywordLen - subLen; idx++) {
+        for (let subLen = Math.min(6, keywordLen - 1); subLen >= 3; subLen--) {
+          for (let idx = 0; idx <= keywordLen - subLen; idx++) {
             const subStr: string = primaryKeyword.slice(idx, idx + subLen);
             if (subStr !== primaryKeyword && !stopWords.has(subStr)) {
               keywords.push(subStr);
@@ -584,12 +565,10 @@ export class LinkProcessorAgent {
         }
       } else {
         // 對於英文：按空格分割取詞組
-        const words: string[] = primaryKeyword
-          .split(/\s+/)
-          .filter((w: string) => w.length >= 3);
+        const words = primaryKeyword.split(/\s+/).filter((w) => w.length >= 3);
         if (words.length >= 2) {
           // 取前 N 個詞、後 N 個詞等組合
-          for (let j: number = 2; j <= Math.min(4, words.length); j++) {
+          for (let j = 2; j <= Math.min(4, words.length); j++) {
             keywords.push(words.slice(0, j).join(" "));
             keywords.push(words.slice(-j).join(" "));
           }
