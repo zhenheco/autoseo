@@ -693,6 +693,122 @@
         "wordpressPublish": "WordPress Ein-Klick-Veröffentlichung",
         "scheduledPost": "Geplante Auto-Veröffentlichung"
       }
+    },
+    "story": {
+      "hero": {
+        "scene": "23 Uhr. Mei arbeitet immer noch am 7. Artikel.",
+        "narration": "Als Marketingleiterin weiß sie, wie wichtig SEO-Inhalte sind. Aber sie weiß auch, dass dies nicht der Grund sein sollte, jeden Abend Überstunden zu machen.",
+        "question": "\"Gibt es einen besseren Weg?\"",
+        "answer": "Ja. Und er ist einfacher als Sie denken.",
+        "cta": "Kostenlos testen"
+      },
+      "painPoints": {
+        "title": "Die Methoden, die Sie ausprobiert haben",
+        "outsource": {
+          "title": "Freie Texter beauftragen",
+          "desc": "NT$3.000-8.000 pro Artikel, NT$60.000/Monat für 10 Artikel — das Budget reicht nie",
+          "tag": "Zu teuer"
+        },
+        "diy": {
+          "title": "Selbst schreiben",
+          "desc": "2 Stunden Keyword-Recherche, 4 Stunden Schreiben, endlose Überarbeitungen — Rankings bewegen sich nicht",
+          "tag": "Zu anstrengend"
+        },
+        "chatgpt": {
+          "title": "Mit ChatGPT zusammenstückeln",
+          "desc": "Holprige Formulierungen, erfundene Daten, jeder Artikel braucht Korrektur — inkonsistente Qualität",
+          "tag": "Schlechte Qualität"
+        },
+        "closing": "Es liegt nicht daran, dass Sie sich nicht genug anstrengen. Die Methode ist falsch."
+      },
+      "turningPoint": {
+        "title": "Bis zu diesem Montagmorgen",
+        "intro": "Eine Kollegin schickte einen Link: \"Probier das mal — ich habe letzte Woche damit einen ganzen Monat Content geplant.\"",
+        "halfDoubt": "Mei klickte skeptisch darauf.",
+        "feature1": "Es recherchierte automatisch, was die Konkurrenz schreibt",
+        "feature2": "Die Daten waren echt, mit Quellenangaben",
+        "feature3": "Sogar die Bilder wurden automatisch generiert",
+        "feature4": "Es plante sogar die WordPress-Veröffentlichungszeiten",
+        "reaction": "\"Moment... das ging viel zu schnell?\""
+      },
+      "results": {
+        "title": "Mei, drei Monate später",
+        "scene1": {
+          "title": "Pünktlich Feierabend",
+          "desc": "Eine Woche Artikel an einem Nachmittag geplant",
+          "stat": "Wochenstunden -15"
+        },
+        "scene2": {
+          "title": "Kosten drastisch gesenkt",
+          "desc": "Von NT$60.000/Monat Outsourcing auf NT$4.500",
+          "stat": "92% gespart"
+        },
+        "scene3": {
+          "title": "Rankings gestiegen",
+          "desc": "3 Artikel auf Google Seite 1",
+          "stat": "Organischer Traffic +340%"
+        }
+      },
+      "socialProof": {
+        "title": "Nicht nur Mei geht es so",
+        "chat1": {
+          "name": "Ming",
+          "role": "E-Commerce-Inhaber",
+          "message": "Früher 60.000/Monat für Texter ausgegeben. Jetzt ist AI-generierter Content besser und kostet nur ein Zehntel."
+        },
+        "chat2": {
+          "name": "Jenny",
+          "role": "Marketing-Managerin",
+          "message": "Die größte Überraschung? Es analysiert automatisch die Konkurrenz. Die Artikel haben eine ganz andere Tiefe."
+        },
+        "chat3": {
+          "name": "Kevin",
+          "role": "SEO-Berater",
+          "message": "Über 20 Kunden empfohlen. Alle sagen, sie können nicht mehr zum manuellen Schreiben zurück."
+        },
+        "stats": "500+ Unternehmen | 50.000+ Artikel | 4,9/5 Zufriedenheit"
+      },
+      "threeSteps": {
+        "title": "Nur drei Schritte",
+        "step1": {
+          "title": "Sagen Sie, worüber Sie schreiben möchten",
+          "desc": "Keyword eingeben, AI recherchiert automatisch Markt und Wettbewerb",
+          "aside": "Mei sagt: \"Ich habe nur ein Keyword eingegeben und es hat alle Wettbewerber recherchiert.\""
+        },
+        "step2": {
+          "title": "Vollständiger Artikel in 10 Minuten",
+          "desc": "SEO-optimierter Titel, Struktur, Text, mit Bildern und Quellen",
+          "aside": "Mei sagt: \"Ich muss nicht mal selbst Bilder suchen. So praktisch.\""
+        },
+        "step3": {
+          "title": "Ein-Klick-Veröffentlichung auf WordPress",
+          "desc": "Geplante Veröffentlichung, Auto-Formatierung, mehrsprachige Übersetzung",
+          "aside": "Mei sagt: \"Zeitplan einrichten und vergessen. Die Artikel gehen pünktlich online.\""
+        }
+      },
+      "pricing": {
+        "intro": "Mei hat nachgerechnet",
+        "before": "Bisherige monatliche Outsourcing-Kosten",
+        "beforeAmount": "NT$60.000",
+        "after": "Jetzt mit 1WaySEO",
+        "afterAmount": "Ab NT$3.000",
+        "saving": "Die Ersparnis reicht für ein ganzes Jahr Nachmittagstee",
+        "freeNote": "3 Artikel kostenlos, keine Kreditkarte nötig",
+        "tryFirst": "Erst mal ausprobieren",
+        "serious": "Ernsthaft betreiben",
+        "team": "Team-Zusammenarbeit"
+      },
+      "closing": {
+        "title": "Ihre Geschichte beginnt hier",
+        "line1": "Vielleicht überarbeiten Sie gerade Artikel Nummer N",
+        "line2": "Vielleicht überlegen Sie, ob Sie einen Texter engagieren sollen",
+        "line3": "Vielleicht suchen Sie einfach einen smarteren Weg",
+        "message": "Egal wo Sie stehen — Sie verdienen eine bessere Wahl.",
+        "cta": "Meine Geschichte starten",
+        "trust1": "3 Artikel kostenlos",
+        "trust2": "Keine Kreditkarte nötig",
+        "trust3": "Start in 30 Sekunden"
+      }
     }
   },
   "faq": {

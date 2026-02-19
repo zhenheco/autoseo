@@ -973,24 +973,76 @@
     "oneTimePurchaseNeverExpires": "一度の購入で永久に有効"
   },
   "billing": {
-    "fetchBalanceFailed": "トークン残高の取得に失敗しました",
-    "loadBalanceFailed": "残高の読み込みに失敗しました",
-    "upgrade": "アップグレード",
-    "availableBalance": "利用可能残高:",
-    "processingBalance": "処理中:",
-    "lowBalance": "残高不足",
-    "upgradeNow": "今すぐアップグレード"
+    "authorizing": {
+      "title": "認証ページへ移動中",
+      "loading": "読み込み中...",
+      "preparingPayment": "決済データを準備中...",
+      "connectingPayment": "決済サービスに接続中...",
+      "pleaseWait": "しばらくお待ちください。このページを閉じないでください",
+      "secureConnection": "安全な暗号化接続",
+      "processFailed": "処理に失敗しました",
+      "retry": "再試行",
+      "backToBilling": "請求センターに戻る",
+      "missingPaymentForm": "決済フォームデータがありません",
+      "connectionTimeout": "決済サービスへの接続がタイムアウトしました。再試行してください",
+      "formElementNotFound": "フォーム要素が見つかりません",
+      "missingRequiredFields": "必須の決済フォーム項目が不足しています",
+      "submitFailed": "送信に失敗しました。ブラウザの設定を確認してください",
+      "invalidFormData": "決済フォームデータの形式が無効です"
+    },
+    "paymentHistory": {
+      "title": "決済履歴",
+      "description": "決済取引履歴",
+      "order": "注文",
+      "orderNumber": "注文番号：",
+      "statusSuccess": "完了",
+      "statusPending": "処理中",
+      "statusFailed": "失敗",
+      "noRecords": "決済記録がありません"
+    }
   },
   "refund": {
-    "statusPending": "保留中",
-    "statusRetentionAccepted": "引き留め承諾",
-    "statusAutoProcessing": "自動処理中",
-    "statusPendingReview": "審査待ち",
-    "statusApproved": "承認済み",
-    "statusProcessing": "処理中",
-    "statusCompleted": "完了",
-    "statusRejected": "却下",
-    "statusFailed": "失敗"
+    "title": "返金申請",
+    "description": "返金する注文を選択し、理由を入力してください",
+    "selectOrder": "返金する注文を選択",
+    "selectOrderPlaceholder": "注文を選択",
+    "loadingOrders": "読み込み中...",
+    "noRefundableOrders": "返金可能な注文がありません",
+    "loadOrdersFailed": "注文の読み込みに失敗しました",
+    "orderAmount": "注文金額",
+    "daysSincePurchase": "購入からの日数",
+    "autoEligible": "(自動返金対象)",
+    "manualReview": "(審査が必要)",
+    "creditsToDeduct": "差し引かれるクレジット",
+    "selectReason": "返金理由を選択",
+    "additionalDetails": "補足説明（任意）",
+    "additionalDetailsPlaceholder": "補足説明を入力してください...",
+    "processing": "処理中...",
+    "nextStep": "次へ",
+    "selectOrderAndReason": "注文と理由を選択してください",
+    "requestFailed": "返金申請に失敗しました",
+    "retentionTitle": "続けてご利用いただけませんか！",
+    "retentionDescription": "ご継続いただければ、追加で",
+    "retentionCredits": "クレジット",
+    "retentionPercentage": "（注文金額の50%）",
+    "acceptRetention": "特典を受け取り、継続する",
+    "proceedRefund": "いいえ、返金を続ける",
+    "acceptRetentionFailed": "特典の受け取りに失敗しました",
+    "retentionAccepted": "ありがとうございます！",
+    "retentionSuccessMessage": "ご支援ありがとうございます！{credits} クレジットを追加しました",
+    "refundSubmitted": "返金申請を受け付けました",
+    "refundNo": "返金番号",
+    "refundWarning": "返金完了後、サブスクリプションは無料プランにダウングレードされ、関連クレジットが差し引かれます",
+    "proceedRefundFailed": "返金処理に失敗しました",
+    "confirm": "確認",
+    "daysAgo": "{days}日前",
+    "reasons": {
+      "productIssue": "製品が期待に沿わない",
+      "serviceUnsatisfied": "サービス品質に不満",
+      "billingError": "請求問題 / 重複課金",
+      "changeOfMind": "気が変わった",
+      "other": "その他"
+    }
   },
   "payment": {
     "failed": "決済失敗",
@@ -1369,6 +1421,122 @@
       "freeArticles": "無料3記事",
       "noBindCreditCard": "クレジットカード登録不要",
       "cancelAnytime": "いつでもキャンセル可能"
+    },
+    "story": {
+      "hero": {
+        "scene": "午後11時、小美はまだ7本目の記事を修正している。",
+        "narration": "マーケティング責任者として、SEOコンテンツの重要性は分かっている。でも、毎晩残業する理由がこれであってはならないことも。",
+        "question": "「もっと良い方法はないの？」",
+        "answer": "あります。しかも、思っているより簡単です。",
+        "cta": "無料で試してみる"
+      },
+      "painPoints": {
+        "title": "今まで試してきた方法",
+        "outsource": {
+          "title": "外注ライターに依頼",
+          "desc": "1記事3,000〜8,000元、月10記事で60,000元 — 予算がいつも足りない",
+          "tag": "高すぎる"
+        },
+        "diy": {
+          "title": "自分で書く",
+          "desc": "キーワード調査2時間、執筆4時間、何度も修正 — それでも順位は上がらない",
+          "tag": "疲れる"
+        },
+        "chatgpt": {
+          "title": "ChatGPTで組み合わせる",
+          "desc": "不自然な文章、架空のデータ、毎回校正が必要 — 品質が不安定",
+          "tag": "品質が低い"
+        },
+        "closing": "努力が足りないのではない。方法が間違っているのです。"
+      },
+      "turningPoint": {
+        "title": "あの月曜日の朝まで",
+        "intro": "同僚がリンクを送ってきた：「これ試してみて。先週これで1ヶ月分のコンテンツを計画できたよ。」",
+        "halfDoubt": "小美は半信半疑でクリックした。",
+        "feature1": "競合が何を書いているか自動で調査してくれた",
+        "feature2": "データは本物で、引用元付き",
+        "feature3": "画像まで自動生成されていた",
+        "feature4": "WordPressの公開スケジュールまで設定してくれた",
+        "reaction": "「ちょっと待って...早すぎない？」"
+      },
+      "results": {
+        "title": "3ヶ月後の小美",
+        "scene1": {
+          "title": "定時退社",
+          "desc": "午後だけで1週間分の記事をスケジュール",
+          "stat": "週間労働時間 -15時間"
+        },
+        "scene2": {
+          "title": "コスト激減",
+          "desc": "月60,000元の外注費が4,500元に",
+          "stat": "92%削減"
+        },
+        "scene3": {
+          "title": "順位上昇",
+          "desc": "3記事がGoogle1ページ目にランクイン",
+          "stat": "自然検索流入 +340%"
+        }
+      },
+      "socialProof": {
+        "title": "小美だけではありません",
+        "chat1": {
+          "name": "明さん",
+          "role": "EC事業オーナー",
+          "message": "以前は月6万元をライターに使っていた。今はAI生成の方が品質が良く、コストは10分の1。"
+        },
+        "chat2": {
+          "name": "Jenny",
+          "role": "マーケティングマネージャー",
+          "message": "一番驚いたのは競合分析を自動でやってくれること。記事の角度も深さも全然違う。"
+        },
+        "chat3": {
+          "name": "凱さん",
+          "role": "SEOコンサルタント",
+          "message": "20社以上のクライアントに勧めた。全員が手動で書いていた頃には戻れないと言っている。"
+        },
+        "stats": "500+社が利用 | 50,000+記事 | 満足度4.9/5"
+      },
+      "threeSteps": {
+        "title": "たった3ステップ",
+        "step1": {
+          "title": "何を書きたいか伝える",
+          "desc": "キーワードを入力、AIが市場と競合を自動調査",
+          "aside": "小美：「キーワード1つ入れただけで、競合を全部調べてくれた。」"
+        },
+        "step2": {
+          "title": "10分で完成記事を生成",
+          "desc": "SEO最適化されたタイトル、構成、本文、画像と出典付き",
+          "aside": "小美：「画像も探す必要なし。本当に楽。」"
+        },
+        "step3": {
+          "title": "ワンクリックでWordPressに公開",
+          "desc": "スケジュール公開、自動レイアウト、多言語翻訳対応",
+          "aside": "小美：「スケジュール設定したら放置でOK。記事が時間通りに公開される。」"
+        }
+      },
+      "pricing": {
+        "intro": "小美が計算してみた",
+        "before": "以前の月間外注費",
+        "beforeAmount": "NT$60,000",
+        "after": "1WaySEOなら",
+        "afterAmount": "NT$3,000から",
+        "saving": "節約分で1年分のアフタヌーンティーが楽しめる",
+        "freeNote": "3記事無料、クレジットカード不要",
+        "tryFirst": "まずはお試し",
+        "serious": "本格運用",
+        "team": "チーム利用"
+      },
+      "closing": {
+        "title": "あなたの物語は、ここから始まる",
+        "line1": "もしかして、今もN本目の記事を修正中かもしれない",
+        "line2": "もしかして、ライターを雇うか迷っているかもしれない",
+        "line3": "もしかして、もっとスマートな方法を探しているだけかもしれない",
+        "message": "どの段階にいても、もっと良い選択肢を手にする価値がある。",
+        "cta": "私の物語を始める",
+        "trust1": "3記事無料",
+        "trust2": "クレジットカード不要",
+        "trust3": "30秒で開始"
+      }
     }
   },
   "faq": {
@@ -1627,49 +1795,6 @@
     "publishFailed": "投稿に失敗しました",
     "generateFailed": "生成に失敗しました",
     "followers": "フォロワー"
-  },
-  "refund": {
-    "title": "返金申請",
-    "description": "返金する注文を選択し、理由を入力してください",
-    "selectOrder": "返金する注文を選択",
-    "selectOrderPlaceholder": "注文を選択",
-    "loadingOrders": "読み込み中...",
-    "noRefundableOrders": "返金可能な注文がありません",
-    "loadOrdersFailed": "注文の読み込みに失敗しました",
-    "orderAmount": "注文金額",
-    "daysSincePurchase": "購入からの日数",
-    "autoEligible": "(自動返金対象)",
-    "manualReview": "(審査が必要)",
-    "creditsToDeduct": "差し引かれるクレジット",
-    "selectReason": "返金理由を選択",
-    "additionalDetails": "補足説明（任意）",
-    "additionalDetailsPlaceholder": "補足説明を入力してください...",
-    "processing": "処理中...",
-    "nextStep": "次へ",
-    "selectOrderAndReason": "注文と理由を選択してください",
-    "requestFailed": "返金申請に失敗しました",
-    "retentionTitle": "続けてご利用いただけませんか！",
-    "retentionDescription": "ご継続いただければ、追加で",
-    "retentionCredits": "クレジット",
-    "retentionPercentage": "（注文金額の50%）",
-    "acceptRetention": "特典を受け取り、継続する",
-    "proceedRefund": "いいえ、返金を続ける",
-    "acceptRetentionFailed": "特典の受け取りに失敗しました",
-    "retentionAccepted": "ありがとうございます！",
-    "retentionSuccessMessage": "ご支援ありがとうございます！{credits} クレジットを追加しました",
-    "refundSubmitted": "返金申請を受け付けました",
-    "refundNo": "返金番号",
-    "refundWarning": "返金完了後、サブスクリプションは無料プランにダウングレードされ、関連クレジットが差し引かれます",
-    "proceedRefundFailed": "返金処理に失敗しました",
-    "confirm": "確認",
-    "daysAgo": "{days}日前",
-    "reasons": {
-      "productIssue": "製品が期待に沿わない",
-      "serviceUnsatisfied": "サービス品質に不満",
-      "billingError": "請求問題 / 重複課金",
-      "changeOfMind": "気が変わった",
-      "other": "その他"
-    }
   },
   "legal": {
     "returnHome": "ホームに戻る",
@@ -2298,35 +2423,6 @@
     "selectWebsite": "ウェブサイトを選択",
     "writeOnly": "記事作成のみ",
     "disabled": "無効"
-  },
-  "billing": {
-    "authorizing": {
-      "title": "認証ページへ移動中",
-      "loading": "読み込み中...",
-      "preparingPayment": "決済データを準備中...",
-      "connectingPayment": "決済サービスに接続中...",
-      "pleaseWait": "しばらくお待ちください。このページを閉じないでください",
-      "secureConnection": "安全な暗号化接続",
-      "processFailed": "処理に失敗しました",
-      "retry": "再試行",
-      "backToBilling": "請求センターに戻る",
-      "missingPaymentForm": "決済フォームデータがありません",
-      "connectionTimeout": "決済サービスへの接続がタイムアウトしました。再試行してください",
-      "formElementNotFound": "フォーム要素が見つかりません",
-      "missingRequiredFields": "必須の決済フォーム項目が不足しています",
-      "submitFailed": "送信に失敗しました。ブラウザの設定を確認してください",
-      "invalidFormData": "決済フォームデータの形式が無効です"
-    },
-    "paymentHistory": {
-      "title": "決済履歴",
-      "description": "決済取引履歴",
-      "order": "注文",
-      "orderNumber": "注文番号：",
-      "statusSuccess": "完了",
-      "statusPending": "処理中",
-      "statusFailed": "失敗",
-      "noRecords": "決済記録がありません"
-    }
   },
   "unauthorized": {
     "freePlan": {

@@ -693,6 +693,122 @@
         "wordpressPublish": "Publication WordPress en un clic",
         "scheduledPost": "Publication automatique programmée"
       }
+    },
+    "story": {
+      "hero": {
+        "scene": "23h. Mei travaille encore sur son 7e article.",
+        "narration": "En tant que directrice marketing, elle sait que le contenu SEO est important. Mais elle sait aussi que ce n'est pas une raison pour faire des heures sup chaque soir.",
+        "question": "\"Y a-t-il une meilleure solution ?\"",
+        "answer": "Oui. Et c'est plus simple que vous ne le pensez.",
+        "cta": "Essayer gratuitement"
+      },
+      "painPoints": {
+        "title": "Les méthodes que vous avez essayées",
+        "outsource": {
+          "title": "Engager des rédacteurs freelance",
+          "desc": "NT$3 000-8 000 par article, NT$60 000/mois pour 10 articles — le budget ne suffit jamais",
+          "tag": "Trop cher"
+        },
+        "diy": {
+          "title": "Écrire soi-même",
+          "desc": "2h de recherche de mots-clés, 4h de rédaction, révisions sans fin — le classement ne bouge pas",
+          "tag": "Trop fatiguant"
+        },
+        "chatgpt": {
+          "title": "Bricoler avec ChatGPT",
+          "desc": "Formulations maladroites, données inventées, chaque article doit être relu — qualité irrégulière",
+          "tag": "Mauvaise qualité"
+        },
+        "closing": "Ce n'est pas que vous ne faites pas assez d'efforts. C'est la méthode qui est mauvaise."
+      },
+      "turningPoint": {
+        "title": "Jusqu'à ce lundi matin",
+        "intro": "Un collègue lui a envoyé un lien : « Essaie ça — j'ai planifié tout un mois de contenu avec la semaine dernière. »",
+        "halfDoubt": "Mei a cliqué, à moitié sceptique.",
+        "feature1": "Il a automatiquement recherché ce que la concurrence écrit",
+        "feature2": "Les données étaient réelles, avec des sources citées",
+        "feature3": "Même les images ont été générées automatiquement",
+        "feature4": "Il a même planifié les horaires de publication WordPress",
+        "reaction": "« Attendez... c'était trop rapide ? »"
+      },
+      "results": {
+        "title": "Mei, trois mois plus tard",
+        "scene1": {
+          "title": "Partir à l'heure",
+          "desc": "Une semaine d'articles planifiée en un après-midi",
+          "stat": "Heures hebdo -15"
+        },
+        "scene2": {
+          "title": "Coûts effondrés",
+          "desc": "De NT$60 000/mois d'externalisation à NT$4 500",
+          "stat": "92% économisé"
+        },
+        "scene3": {
+          "title": "Classements en hausse",
+          "desc": "3 articles en première page Google",
+          "stat": "Trafic organique +340%"
+        }
+      },
+      "socialProof": {
+        "title": "Mei n'est pas la seule",
+        "chat1": {
+          "name": "Ming",
+          "role": "Propriétaire e-commerce",
+          "message": "Je dépensais 60K/mois en rédacteurs. Le contenu IA est maintenant meilleur pour un dixième du coût."
+        },
+        "chat2": {
+          "name": "Jenny",
+          "role": "Responsable marketing",
+          "message": "La plus grande surprise ? L'analyse concurrentielle automatique. Les articles ont une tout autre profondeur."
+        },
+        "chat3": {
+          "name": "Kevin",
+          "role": "Consultant SEO",
+          "message": "Recommandé à plus de 20 clients. Tous disent qu'ils ne peuvent plus revenir à la rédaction manuelle."
+        },
+        "stats": "500+ entreprises | 50 000+ articles | 4,9/5 satisfaction"
+      },
+      "threeSteps": {
+        "title": "En seulement trois étapes",
+        "step1": {
+          "title": "Dites-lui ce que vous voulez écrire",
+          "desc": "Entrez un mot-clé, l'IA recherche automatiquement le marché et la concurrence",
+          "aside": "Mei dit : « J'ai juste tapé un mot-clé et il a analysé tous les concurrents. »"
+        },
+        "step2": {
+          "title": "Article complet en 10 minutes",
+          "desc": "Titre, structure et contenu optimisés SEO, avec images et sources",
+          "aside": "Mei dit : « Je n'ai même pas besoin de chercher des images. Tellement pratique. »"
+        },
+        "step3": {
+          "title": "Publication WordPress en un clic",
+          "desc": "Publication programmée, mise en page auto, traduction multilingue",
+          "aside": "Mei dit : « Je programme et j'oublie. Les articles se publient tout seuls. »"
+        }
+      },
+      "pricing": {
+        "intro": "Mei a fait ses calculs",
+        "before": "Ancien coût mensuel d'externalisation",
+        "beforeAmount": "NT$60 000",
+        "after": "Maintenant avec 1WaySEO",
+        "afterAmount": "À partir de NT$3 000",
+        "saving": "Les économies suffisent pour un an de thé de l'après-midi",
+        "freeNote": "3 articles gratuits, sans carte de crédit",
+        "tryFirst": "Pour commencer",
+        "serious": "Utilisation sérieuse",
+        "team": "Collaboration d'équipe"
+      },
+      "closing": {
+        "title": "Votre histoire commence ici",
+        "line1": "Peut-être que vous êtes en train de corriger l'article numéro N",
+        "line2": "Peut-être que vous hésitez à engager un rédacteur",
+        "line3": "Peut-être que vous cherchez simplement une méthode plus intelligente",
+        "message": "Peu importe où vous en êtes, vous méritez un meilleur choix.",
+        "cta": "Commencer mon histoire",
+        "trust1": "3 articles gratuits",
+        "trust2": "Sans carte de crédit",
+        "trust3": "Démarrez en 30 secondes"
+      }
     }
   },
   "faq": {

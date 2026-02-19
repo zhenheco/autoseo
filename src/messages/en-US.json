@@ -973,24 +973,76 @@
     "oneTimePurchaseNeverExpires": "One-time purchase, never expires"
   },
   "billing": {
-    "fetchBalanceFailed": "Failed to fetch token balance",
-    "loadBalanceFailed": "Failed to load balance",
-    "upgrade": "Upgrade",
-    "availableBalance": "Available:",
-    "processingBalance": "Processing:",
-    "lowBalance": "Low Balance",
-    "upgradeNow": "Upgrade Now"
+    "authorizing": {
+      "title": "Redirecting to Authorization Page",
+      "loading": "Loading...",
+      "preparingPayment": "Preparing payment data...",
+      "connectingPayment": "Connecting to payment service...",
+      "pleaseWait": "Please wait, do not close this page",
+      "secureConnection": "Secure encrypted connection",
+      "processFailed": "Processing Failed",
+      "retry": "Try Again",
+      "backToBilling": "Back to Billing Center",
+      "missingPaymentForm": "Missing payment form data",
+      "connectionTimeout": "Connection to payment service timed out, please try again",
+      "formElementNotFound": "Form element not found",
+      "missingRequiredFields": "Missing required payment form fields",
+      "submitFailed": "Submission failed, please check your browser settings",
+      "invalidFormData": "Invalid payment form data format"
+    },
+    "paymentHistory": {
+      "title": "Payment History",
+      "description": "Your payment transaction history",
+      "order": "Order",
+      "orderNumber": "Order Number: ",
+      "statusSuccess": "Completed",
+      "statusPending": "Processing",
+      "statusFailed": "Failed",
+      "noRecords": "No payment records"
+    }
   },
   "refund": {
-    "statusPending": "Pending",
-    "statusRetentionAccepted": "Retention Accepted",
-    "statusAutoProcessing": "Auto Processing",
-    "statusPendingReview": "Pending Review",
-    "statusApproved": "Approved",
-    "statusProcessing": "Processing",
-    "statusCompleted": "Completed",
-    "statusRejected": "Rejected",
-    "statusFailed": "Failed"
+    "title": "Request Refund",
+    "description": "Select the order to refund and provide the reason",
+    "selectOrder": "Select order to refund",
+    "selectOrderPlaceholder": "Select order",
+    "loadingOrders": "Loading...",
+    "noRefundableOrders": "No refundable orders",
+    "loadOrdersFailed": "Failed to load orders",
+    "orderAmount": "Order Amount",
+    "daysSincePurchase": "Days Since Purchase",
+    "autoEligible": "(Auto-refund eligible)",
+    "manualReview": "(Manual review required)",
+    "creditsToDeduct": "Credits to Deduct",
+    "selectReason": "Select refund reason",
+    "additionalDetails": "Additional Details (Optional)",
+    "additionalDetailsPlaceholder": "Enter additional details...",
+    "processing": "Processing...",
+    "nextStep": "Next",
+    "selectOrderAndReason": "Please select an order and reason",
+    "requestFailed": "Failed to request refund",
+    "retentionTitle": "We'd like to keep you!",
+    "retentionDescription": "If you stay, we'll give you extra",
+    "retentionCredits": "credits",
+    "retentionPercentage": "(50% of order amount)",
+    "acceptRetention": "Accept offer and stay",
+    "proceedRefund": "No, continue with refund",
+    "acceptRetentionFailed": "Failed to accept retention offer",
+    "retentionAccepted": "Thank you for staying!",
+    "retentionSuccessMessage": "Thank you for your support! Added {credits} credits to your account",
+    "refundSubmitted": "Refund request submitted",
+    "refundNo": "Refund No.",
+    "refundWarning": "After refund, your subscription will be downgraded to Free plan and related credits will be deducted",
+    "proceedRefundFailed": "Failed to process refund",
+    "confirm": "Confirm",
+    "daysAgo": "{days} days ago",
+    "reasons": {
+      "productIssue": "Product doesn't meet expectations",
+      "serviceUnsatisfied": "Unsatisfied with service quality",
+      "billingError": "Billing issue / duplicate charge",
+      "changeOfMind": "Changed my mind",
+      "other": "Other"
+    }
   },
   "payment": {
     "failed": "Payment Failed",
@@ -1369,6 +1421,122 @@
       "freeArticles": "3 Free Articles",
       "noBindCreditCard": "No Credit Card Required",
       "cancelAnytime": "Cancel Anytime"
+    },
+    "story": {
+      "hero": {
+        "scene": "11 PM. Mei is still editing her 7th article.",
+        "narration": "As a marketing director, she knows SEO content matters. But she also knows this shouldn't be why she works overtime every night.",
+        "question": "\"Is there a better way?\"",
+        "answer": "Yes. And it's simpler than you think.",
+        "cta": "Try it free"
+      },
+      "painPoints": {
+        "title": "The methods you've tried",
+        "outsource": {
+          "title": "Hiring freelance writers",
+          "desc": "NT$3,000-8,000 per article, NT$60,000/month for 10 articles — budget never enough",
+          "tag": "Too expensive"
+        },
+        "diy": {
+          "title": "Writing it yourself",
+          "desc": "2 hours researching keywords, 4 hours writing, endless revisions — rankings still won't budge",
+          "tag": "Too exhausting"
+        },
+        "chatgpt": {
+          "title": "Piecing together with ChatGPT",
+          "desc": "Awkward phrasing, made-up data, every article needs manual proofreading — inconsistent quality",
+          "tag": "Poor quality"
+        },
+        "closing": "It's not that you're not trying hard enough. It's the method that's wrong."
+      },
+      "turningPoint": {
+        "title": "Until that Monday morning",
+        "intro": "A colleague sent her a link: \"Try this — I planned an entire month of content with it last week.\"",
+        "halfDoubt": "Mei clicked in, half skeptical.",
+        "feature1": "It researched what competitors were writing about on its own",
+        "feature2": "The data was real, with cited sources",
+        "feature3": "Even the images were auto-generated",
+        "feature4": "It even scheduled the WordPress publishing times",
+        "reaction": "\"Wait... that was way too fast?\""
+      },
+      "results": {
+        "title": "Mei, three months later",
+        "scene1": {
+          "title": "Leaving on time",
+          "desc": "Scheduled an entire week of articles in one afternoon",
+          "stat": "Weekly hours -15"
+        },
+        "scene2": {
+          "title": "Costs plummeted",
+          "desc": "From NT$60,000/month outsourcing to NT$4,500",
+          "stat": "Saved 92%"
+        },
+        "scene3": {
+          "title": "Rankings climbed",
+          "desc": "3 articles ranked on Google page one",
+          "stat": "Organic traffic +340%"
+        }
+      },
+      "socialProof": {
+        "title": "Mei isn't the only one",
+        "chat1": {
+          "name": "Ming",
+          "role": "E-commerce owner",
+          "message": "Used to spend 60K/month on writers. Now AI-generated content is better quality at a tenth of the cost."
+        },
+        "chat2": {
+          "name": "Jenny",
+          "role": "Marketing manager",
+          "message": "The biggest surprise? It automatically researches competitors. The articles have totally different depth and angles."
+        },
+        "chat3": {
+          "name": "Kevin",
+          "role": "SEO consultant",
+          "message": "Recommended it to 20+ clients. Every one of them says they can't go back to writing manually."
+        },
+        "stats": "500+ businesses | 50,000+ articles | 4.9/5 satisfaction"
+      },
+      "threeSteps": {
+        "title": "Just three steps",
+        "step1": {
+          "title": "Tell it what to write",
+          "desc": "Enter a keyword, AI automatically researches the market and competitors",
+          "aside": "Mei says: \"I just typed one keyword and it researched all the competitors for me.\""
+        },
+        "step2": {
+          "title": "Full article in 10 minutes",
+          "desc": "SEO-optimized title, structure, content, with images and sources",
+          "aside": "Mei says: \"I don't even need to find images myself. So convenient.\""
+        },
+        "step3": {
+          "title": "One-click publish to WordPress",
+          "desc": "Scheduled publishing, auto-formatting, multi-language translation support",
+          "aside": "Mei says: \"Set the schedule and forget it. Articles go live on time.\""
+        }
+      },
+      "pricing": {
+        "intro": "Mei did the math",
+        "before": "Previous monthly outsourcing cost",
+        "beforeAmount": "NT$60,000",
+        "after": "Now with 1WaySEO",
+        "afterAmount": "From NT$3,000",
+        "saving": "The savings are enough for a whole year of afternoon tea",
+        "freeNote": "3 articles free, no credit card required",
+        "tryFirst": "Just getting started",
+        "serious": "Getting serious",
+        "team": "Team collaboration"
+      },
+      "closing": {
+        "title": "Your story starts here",
+        "line1": "Maybe you're working late editing article number N",
+        "line2": "Maybe you're debating whether to hire a writer",
+        "line3": "Maybe you just want a smarter way",
+        "message": "Wherever you are, you deserve a better choice.",
+        "cta": "Start my story",
+        "trust1": "3 articles free",
+        "trust2": "No credit card needed",
+        "trust3": "Start in 30 seconds"
+      }
     }
   },
   "faq": {
@@ -1627,49 +1795,6 @@
     "publishFailed": "Publish failed",
     "generateFailed": "Generation failed",
     "followers": "followers"
-  },
-  "refund": {
-    "title": "Request Refund",
-    "description": "Select the order to refund and provide the reason",
-    "selectOrder": "Select order to refund",
-    "selectOrderPlaceholder": "Select order",
-    "loadingOrders": "Loading...",
-    "noRefundableOrders": "No refundable orders",
-    "loadOrdersFailed": "Failed to load orders",
-    "orderAmount": "Order Amount",
-    "daysSincePurchase": "Days Since Purchase",
-    "autoEligible": "(Auto-refund eligible)",
-    "manualReview": "(Manual review required)",
-    "creditsToDeduct": "Credits to Deduct",
-    "selectReason": "Select refund reason",
-    "additionalDetails": "Additional Details (Optional)",
-    "additionalDetailsPlaceholder": "Enter additional details...",
-    "processing": "Processing...",
-    "nextStep": "Next",
-    "selectOrderAndReason": "Please select an order and reason",
-    "requestFailed": "Failed to request refund",
-    "retentionTitle": "We'd like to keep you!",
-    "retentionDescription": "If you stay, we'll give you extra",
-    "retentionCredits": "credits",
-    "retentionPercentage": "(50% of order amount)",
-    "acceptRetention": "Accept offer and stay",
-    "proceedRefund": "No, continue with refund",
-    "acceptRetentionFailed": "Failed to accept retention offer",
-    "retentionAccepted": "Thank you for staying!",
-    "retentionSuccessMessage": "Thank you for your support! Added {credits} credits to your account",
-    "refundSubmitted": "Refund request submitted",
-    "refundNo": "Refund No.",
-    "refundWarning": "After refund, your subscription will be downgraded to Free plan and related credits will be deducted",
-    "proceedRefundFailed": "Failed to process refund",
-    "confirm": "Confirm",
-    "daysAgo": "{days} days ago",
-    "reasons": {
-      "productIssue": "Product doesn't meet expectations",
-      "serviceUnsatisfied": "Unsatisfied with service quality",
-      "billingError": "Billing issue / duplicate charge",
-      "changeOfMind": "Changed my mind",
-      "other": "Other"
-    }
   },
   "legal": {
     "returnHome": "Return Home",
@@ -2298,35 +2423,6 @@
     "selectWebsite": "Select Website",
     "writeOnly": "Write article only",
     "disabled": "Disabled"
-  },
-  "billing": {
-    "authorizing": {
-      "title": "Redirecting to Authorization Page",
-      "loading": "Loading...",
-      "preparingPayment": "Preparing payment data...",
-      "connectingPayment": "Connecting to payment service...",
-      "pleaseWait": "Please wait, do not close this page",
-      "secureConnection": "Secure encrypted connection",
-      "processFailed": "Processing Failed",
-      "retry": "Try Again",
-      "backToBilling": "Back to Billing Center",
-      "missingPaymentForm": "Missing payment form data",
-      "connectionTimeout": "Connection to payment service timed out, please try again",
-      "formElementNotFound": "Form element not found",
-      "missingRequiredFields": "Missing required payment form fields",
-      "submitFailed": "Submission failed, please check your browser settings",
-      "invalidFormData": "Invalid payment form data format"
-    },
-    "paymentHistory": {
-      "title": "Payment History",
-      "description": "Your payment transaction history",
-      "order": "Order",
-      "orderNumber": "Order Number: ",
-      "statusSuccess": "Completed",
-      "statusPending": "Processing",
-      "statusFailed": "Failed",
-      "noRecords": "No payment records"
-    }
   },
   "unauthorized": {
     "freePlan": {
