@@ -158,8 +158,11 @@ export class ArticleImageAgent extends BaseAgent<
           `[ArticleImageAgent] ⚠️ Attempt ${attempt} failed: ${lastError.message}`,
         );
 
-        // NO_IMAGE 錯誤是內容安全過濾器拒絕，不需要重試
-        if (lastError.message.includes("[NO_IMAGE]")) {
+        // 內容安全過濾器拒絕，不需要重試（重試也會被拒）
+        if (
+          lastError.message.includes("[NO_IMAGE]") ||
+          lastError.message.includes("content_policy_violation")
+        ) {
           console.warn(`[ArticleImageAgent] ⚠️ 內容安全過濾器拒絕，跳過此圖片`);
           throw lastError;
         }

@@ -113,7 +113,7 @@ export const RetryConfigs = {
       "ECONNRESET",
       "ETIMEDOUT",
       "rate_limit_exceeded",
-      "content_policy_violation",
+      // content_policy_violation 不重試：重試同樣 prompt 必然被拒，浪費時間
     ],
     shouldAdjustParams: true,
     paramAdjustment: (attempt: number) => ({

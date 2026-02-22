@@ -86,7 +86,10 @@ export class FeaturedImageAgent extends BaseAgent<
     } catch (error) {
       const err = error as Error;
       // 如果是內容安全過濾器拒絕，返回 null 圖片而非失敗
-      if (err.message.includes("[NO_IMAGE]")) {
+      if (
+        err.message.includes("[NO_IMAGE]") ||
+        err.message.includes("content_policy_violation")
+      ) {
         console.warn(
           `[FeaturedImageAgent] ⚠️ 圖片生成被拒（內容安全過濾器），繼續無精選圖片`,
         );

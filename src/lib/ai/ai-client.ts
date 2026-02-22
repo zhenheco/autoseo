@@ -699,6 +699,8 @@ export class AIClient {
       prompt,
       image_size: imageSize,
       num_images: 1,
+      // 關閉 safety checker：中文商業內容經常被誤判為 content_policy_violation
+      enable_safety_checker: false,
     };
 
     // 只有 qwen-image 需要這些參數
