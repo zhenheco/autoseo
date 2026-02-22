@@ -292,63 +292,12 @@ export class ArticleImageAgent extends BaseAgent<
     section: Outline["mainSections"][0],
     sectionIndex: number,
   ): string {
-    const targetLang = input.targetLanguage || "zh-TW";
-    const isChinese = targetLang.startsWith("zh");
-
-    // 根據目標語言選擇 prompt 格式
-    if (isChinese) {
-      return this.buildChinesePrompt(input, section, sectionIndex);
-    }
+    // 一律使用英文 prompt：fal.ai Seedream v4 的 content policy 會誤判中文 prompt
     return this.buildEnglishPrompt(input, section, sectionIndex);
   }
 
   /**
-   * 中文 Prompt 格式 - 根據 BytePlus 官方文檔最佳實踐
-   */
-  private buildChinesePrompt(
-    input: ArticleImageInput,
-    section: Outline["mainSections"][0],
-    sectionIndex: number,
-  ): string {
-    // 優先使用 imageStyle，否則使用 brandStyle
-    const styleDesc = input.imageStyle
-      ? input.imageStyle
-      : input.brandStyle
-        ? `${input.brandStyle.style || "專業現代"}風格，${input.brandStyle.colorScheme?.join("、") || "清晰易懂"}`
-        : "專業現代風格，色調清晰易懂";
-
-    // 從 sectionImageTexts 取得對應的文字（如果有的話）
-    const imageText = input.sectionImageTexts?.[sectionIndex];
-
-    let prompt = `為文章「${input.title}」的段落「${section.heading}」生成一張配圖。`;
-
-    // 關鍵：使用雙引號包裹要渲染的中文文字
-    if (imageText) {
-      prompt += `\n\n在圖片中顯示文字 "${imageText}"。`;
-      prompt += `\n文字要求：使用粗體現代黑體字，清晰易讀。`;
-    }
-
-    const localeStyle = getLocaleVisualStyle(input.targetLanguage || "zh-TW");
-    prompt += `\n\n視覺風格：${styleDesc}`;
-    prompt += `\n文化風格：${localeStyle}`;
-
-    // 要點視覺化
-    if (section.keyPoints?.length > 0) {
-      prompt += `\n\n需要視覺化的要點：`;
-      prompt += `\n${section.keyPoints.slice(0, 3).join("\n")}`;
-    }
-
-    prompt += `\n\n圖片要求：`;
-    prompt += `\n- 清晰且具資訊性`;
-    prompt += `\n- 支持文章內容`;
-    prompt += `\n- 專業品質`;
-    prompt += `\n- 高解析度、細節豐富`;
-
-    return prompt;
-  }
-
-  /**
-   * 英文 Prompt 格式
+   * 英文 Prompt 格式（fal.ai Seedream v4 的 content policy 會誤判中文 prompt，一律使用英文）
    */
   private buildEnglishPrompt(
     input: ArticleImageInput,
