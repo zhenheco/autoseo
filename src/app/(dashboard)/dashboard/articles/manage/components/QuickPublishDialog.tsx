@@ -64,7 +64,10 @@ export function QuickPublishDialog({
   useEffect(() => {
     if (!open) return;
 
-    setLoadingSyncTargets(true);
+    const timer = setTimeout(() => {
+      setLoadingSyncTargets(true);
+    }, 0);
+
     fetch("/api/sync-targets")
       .then((res) => res.json())
       .then((data) => {
@@ -84,6 +87,8 @@ export function QuickPublishDialog({
       .finally(() => {
         setLoadingSyncTargets(false);
       });
+
+    return () => clearTimeout(timer);
   }, [open]);
 
   // 切換同步目標選擇

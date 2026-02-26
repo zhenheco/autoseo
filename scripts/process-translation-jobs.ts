@@ -29,24 +29,8 @@ import type {
   TranslationJobWithSource,
 } from "../src/types/translations";
 
-const MAX_RETRIES = 2;
 const CACHE_KEY_PENDING_TRANSLATION = "jobs:pending:translation";
 const CACHE_KEY_ARTICLE_PREFIX = "cache:article:full";
-
-/**
- * 判斷錯誤是否可重試
- */
-function isRetryableError(errorMessage: string): boolean {
-  const nonRetryablePatterns = [
-    "Invalid API key",
-    "Unauthorized",
-    "invalid_request",
-    "Access denied",
-  ];
-  return !nonRetryablePatterns.some((p) =>
-    errorMessage.toLowerCase().includes(p.toLowerCase()),
-  );
-}
 
 /**
  * 從 Redis 或資料庫取得文章內容
@@ -71,7 +55,7 @@ async function getArticleContent(
         );
         return cached;
       }
-    } catch (error) {
+    } catch {
       console.warn("[Translation Jobs] ⚠️ Redis 讀取失敗，查詢資料庫");
     }
   }
@@ -152,7 +136,7 @@ async function main() {
         shouldQueryDb = false;
       }
       // hasPendingJobs === null (key 不存在) → 保守處理，查詢資料庫
-    } catch (error) {
+    } catch {
       console.warn(
         "[Translation Jobs] ⚠️ Redis 檢查失敗，fallback 到資料庫查詢",
       );

@@ -63,7 +63,7 @@ async function main() {
         shouldQueryDb = false;
       }
       // hasPendingJobs === null (key 不存在) → 保守處理，查詢資料庫
-    } catch (error) {
+    } catch {
       console.warn("[Process Jobs] ⚠️ Redis 檢查失敗，fallback 到資料庫查詢");
     }
   }

@@ -1,10 +1,13 @@
 # 依賴和建置輸出
-node_modules
-.next
-.open-next
-out
-dist
-build
+node_modules/
+.next/
+.open-next/
+out/
+dist/
+**/dist/
+packages/*/dist/
+build/
+**/build/
 
 # 測試和覆蓋率
 coverage

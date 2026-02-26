@@ -1487,7 +1487,16 @@
         "trust2": "不用綁信用卡",
         "trust3": "30 秒內開始"
       }
-    }
+    },
+    "discoverMore": "探索更多",
+    "coreCapabilities": "核心能力",
+    "learnMore": "瞭解更多",
+    "joinCreators": "加入 1000+ 創作者",
+    "aiPoweredWorkflow": "AI 驅動工作流",
+    "resources": "資源",
+    "legal": "法律資訊",
+    "allRightsReserved": "© 2026 1WaySEO. 版權所有。為未來打造。",
+    "madeInTaiwan": "台灣熱情打造"
   },
   "faq": {
     "title": "常見問題",

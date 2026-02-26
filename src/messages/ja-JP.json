@@ -1539,7 +1539,16 @@
         "trust2": "クレジットカード不要",
         "trust3": "30秒で開始"
       }
-    }
+    },
+    "discoverMore": "もっと見る",
+    "coreCapabilities": "コア機能",
+    "learnMore": "詳しく見る",
+    "joinCreators": "1000人以上のクリエイターに参加",
+    "aiPoweredWorkflow": "AI搭載ワークフロー",
+    "resources": "リソース",
+    "legal": "法的情報",
+    "allRightsReserved": "© 2026 1WaySEO. All rights reserved. 未来のために。",
+    "madeInTaiwan": "Made with Passion in Taiwan"
   },
   "faq": {
     "title": "よくある質問",

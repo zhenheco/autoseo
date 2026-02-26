@@ -809,7 +809,16 @@
         "trust2": "신용카드 불필요",
         "trust3": "30초 만에 시작"
       }
-    }
+    },
+    "discoverMore": "더 알아보기",
+    "coreCapabilities": "핵심 역량",
+    "learnMore": "자세히 알아보기",
+    "joinCreators": "1000명 이상의 크리에이터와 함께하세요",
+    "aiPoweredWorkflow": "AI 기반 워크플로우",
+    "resources": "리소스",
+    "legal": "법적 고지",
+    "allRightsReserved": "© 2026 1WaySEO. All rights reserved. 미래를 위해 제작되었습니다.",
+    "madeInTaiwan": "Made with Passion in Taiwan"
   },
   "faq": {
     "title": "자주 묻는 질문",

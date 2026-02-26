@@ -48,7 +48,7 @@ async function main() {
   console.log(`   Email Confirmed: ${user.email_confirmed_at ? "Yes" : "No"}`);
 
   // 查詢公司資訊
-  const { data: member, error: memberError } = await supabase
+  const { data: member } = await supabase
     .from("company_members")
     .select(
       `

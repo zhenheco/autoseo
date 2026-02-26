@@ -2,19 +2,28 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { FileText, Gift, CheckCircle2, CreditCard } from "lucide-react";
-import { fadeUpVariants, defaultViewport } from "@/lib/animations";
+import {
+  FileText,
+  Gift,
+  CheckCircle2,
+  CreditCard,
+  ArrowRight,
+  Zap,
+  Sparkles,
+} from "lucide-react";
+import {
+  fadeUpVariants,
+  defaultViewport,
+  containerVariants,
+} from "@/lib/animations";
 import {
   createCardStyle,
   createHeadingStyle,
-  createTextStyle,
   gradientTextStyles,
-  badgeStyles,
-  buttonStyles,
 } from "@/lib/styles";
 import { PricingProps, ArticlePlan } from "@/types/pricing";
 
@@ -47,89 +56,131 @@ export function PricingStory({ plans, articlePackages }: PricingProps) {
   return (
     <section
       id="pricing"
-      className="relative py-24 bg-mp-bg bg-noise overflow-hidden"
+      className="relative py-32 bg-slate-950 overflow-hidden"
     >
-      {/* Ambient background */}
-      <div className="absolute top-0 right-1/4 w-96 h-96 bg-mp-primary/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-mp-accent/8 rounded-full blur-3xl" />
+      {/* Background decorations */}
+      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-mp-primary/5 rounded-full blur-[120px] pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-mp-accent/5 rounded-full blur-[120px] pointer-events-none" />
 
-      <div className="container mx-auto px-4 relative z-10">
-        {/* Header */}
+      <div className="container relative z-10 mx-auto px-4">
+        {/* Story Intro - Cost Comparison */}
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={defaultViewport}
+          className="max-w-4xl mx-auto mb-32"
+        >
+          <div className="text-center space-y-6 mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-slate-400 uppercase tracking-widest">
+              <Zap className="w-4 h-4 text-mp-accent" />
+              {t("story.pricing.intro")}
+            </div>
+            <h2
+              className={createHeadingStyle(
+                "hero",
+                "text-4xl md:text-6xl text-white font-bold",
+              )}
+            >
+              {t("chooseYourPlan")}
+            </h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* Before Card */}
+            <motion.div
+              variants={fadeUpVariants}
+              className="bg-slate-900/50 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-10 space-y-8 relative overflow-hidden group"
+            >
+              <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
+                <div className="w-20 h-20 border-4 border-slate-500 rounded-full flex items-center justify-center text-4xl font-black">
+                  ?
+                </div>
+              </div>
+              <div className="space-y-2">
+                <span className="text-sm font-bold text-slate-500 uppercase tracking-tighter">
+                  {t("story.pricing.before")}
+                </span>
+                <div className="text-4xl md:text-5xl font-black text-slate-400 line-through decoration-mp-primary/50 decoration-4">
+                  {t("story.pricing.beforeAmount")}
+                </div>
+              </div>
+              <p className="text-slate-500 text-lg leading-relaxed italic">
+                {t("painPoints.expensiveWritersDesc")}
+              </p>
+            </motion.div>
+
+            {/* After Card */}
+            <motion.div
+              variants={fadeUpVariants}
+              className="bg-gradient-to-br from-mp-primary/10 to-mp-accent/10 backdrop-blur-xl border border-mp-primary/20 rounded-[2.5rem] p-10 space-y-8 relative overflow-hidden group"
+            >
+              <div className="absolute top-0 right-0 p-6 opacity-20 group-hover:opacity-40 transition-opacity">
+                <Sparkles className="w-16 h-16 text-mp-primary" />
+              </div>
+              <div className="space-y-2">
+                <span className="text-sm font-bold text-mp-primary uppercase tracking-tighter">
+                  {t("story.pricing.after")}
+                </span>
+                <div className="text-4xl md:text-5xl font-black text-white">
+                  {t("story.pricing.afterAmount")}
+                </div>
+              </div>
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-mp-success/20 border border-mp-success/30 rounded-full text-mp-success font-black text-sm">
+                {t("story.pricing.saving")}
+              </div>
+            </motion.div>
+          </div>
+        </motion.div>
+
+        {/* Plan Selection Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={defaultViewport}
-          className="text-center mb-16"
+          className="text-center mb-16 space-y-8"
         >
-          <h2 className={createHeadingStyle("hero", "mb-6")}>
-            選擇最適合您的
-            <span className={`block ${gradientTextStyles.primary}`}>方案</span>
-          </h2>
-          <p
-            className={createTextStyle(
-              "secondary",
-              "",
-              "text-xl max-w-2xl mx-auto mb-12",
-            )}
-          >
-            靈活的定價方案，滿足個人創作者到企業團隊的各種需求
-          </p>
-
-          {/* Enhanced Billing Toggle */}
-          <div className="relative inline-flex items-center gap-1 p-1 rounded-2xl bg-gradient-to-r from-mp-surface/80 to-mp-surface/60 backdrop-blur-xl border border-mp-primary/20 shadow-lg mb-8">
-            <motion.div
-              className="absolute inset-y-1 rounded-xl bg-gradient-to-r from-mp-primary to-mp-accent transition-all duration-300 ease-out"
-              animate={{
-                left: billingCycle === "monthly" ? "4px" : "50%",
-                right: billingCycle === "monthly" ? "50%" : "4px",
-              }}
-            />
+          {/* Billing Toggle */}
+          <div className="relative inline-flex items-center gap-1 p-1.5 rounded-2xl bg-slate-900/80 border border-white/10 shadow-2xl">
+            <AnimatePresence mode="wait">
+              <motion.div
+                layoutId="active-pill"
+                className="absolute inset-y-1.5 rounded-xl bg-gradient-to-r from-mp-primary to-mp-accent"
+                animate={{
+                  left: billingCycle === "monthly" ? "6px" : "50%",
+                  right: billingCycle === "monthly" ? "50%" : "6px",
+                }}
+                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+              />
+            </AnimatePresence>
             <button
               onClick={() => setBillingCycle("monthly")}
-              className={`relative z-10 px-6 py-3 rounded-xl text-sm font-semibold transition-colors duration-200 ${
+              className={`relative z-10 px-8 py-3 rounded-xl text-sm font-bold transition-colors duration-200 ${
                 billingCycle === "monthly"
                   ? "text-white"
-                  : "text-mp-text-secondary hover:text-mp-text"
+                  : "text-slate-500 hover:text-slate-300"
               }`}
             >
-              月付方案
+              {t("monthlyBilling")}
             </button>
             <button
               onClick={() => setBillingCycle("yearly")}
-              className={`relative z-10 px-6 py-3 rounded-xl text-sm font-semibold transition-colors duration-200 flex items-center gap-2 ${
+              className={`relative z-10 px-8 py-3 rounded-xl text-sm font-bold transition-colors duration-200 flex items-center gap-2 ${
                 billingCycle === "yearly"
                   ? "text-white"
-                  : "text-mp-text-secondary hover:text-mp-text"
+                  : "text-slate-500 hover:text-slate-300"
               }`}
             >
-              年付方案
-              <span className="px-2 py-1 text-xs font-bold bg-mp-success/20 text-mp-success rounded-lg border border-mp-success/30">
-                省更多
+              {t("yearlyBilling")}
+              <span className="px-1.5 py-0.5 text-[10px] bg-mp-success/20 text-mp-success rounded border border-mp-success/30">
+                {tSub("yearlyBonus")}
               </span>
             </button>
           </div>
-
-          {/* Savings Badge */}
-          {billingCycle === "yearly" && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.8 }}
-              animate={{ opacity: 1, scale: 1 }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-mp-success/10 border border-mp-success/30 rounded-full text-sm text-mp-success font-semibold mb-8"
-            >
-              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
-                <path
-                  fillRule="evenodd"
-                  d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"
-                  clipRule="evenodd"
-                />
-              </svg>
-              年付最高可省 17%
-            </motion.div>
-          )}
         </motion.div>
 
-        {/* Plan cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+        {/* Plans Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-7xl mx-auto mb-32">
           {plans?.map((plan, index) => {
             const isPopular = plan.slug === "pro";
             const price =
@@ -142,218 +193,188 @@ export function PricingStory({ plans, articlePackages }: PricingProps) {
             return (
               <motion.div
                 key={plan.id}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.1, duration: 0.5 }}
-                className={`group relative ${isPopular ? "lg:scale-110" : ""}`}
+                variants={fadeUpVariants}
+                initial="hidden"
+                whileInView="visible"
+                viewport={defaultViewport}
+                transition={{ delay: index * 0.1 }}
+                className={`relative flex flex-col ${isPopular ? "lg:-mt-4 lg:mb-4" : ""}`}
               >
-                {/* Popular Badge */}
+                {/* Popular Highlight */}
                 {isPopular && (
-                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
-                    <div className="relative">
-                      <div className="absolute inset-0 bg-gradient-to-r from-mp-primary to-mp-accent blur-lg opacity-75" />
-                      <div className="relative bg-gradient-to-r from-mp-primary to-mp-accent text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg">
-                        最受歡迎
-                      </div>
+                  <div className="absolute -top-5 left-1/2 -translate-x-1/2 z-20">
+                    <div className="bg-gradient-to-r from-mp-primary to-mp-accent text-white px-6 py-1.5 rounded-full text-xs font-black uppercase tracking-[0.2em] shadow-xl">
+                      {t("mostPopular")}
                     </div>
                   </div>
                 )}
 
-                {/* Card */}
                 <div
-                  className={`relative bg-gradient-to-br from-mp-surface/80 to-mp-surface/60 backdrop-blur-xl rounded-3xl p-8 h-full border transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 ${
+                  className={`flex-1 bg-slate-900/50 backdrop-blur-2xl border rounded-[3rem] p-10 flex flex-col justify-between transition-all duration-500 hover:shadow-3xl ${
                     isPopular
-                      ? "border-mp-primary/40 shadow-xl shadow-mp-primary/10"
-                      : "border-mp-primary/20 hover:border-mp-primary/30 hover:shadow-mp-primary/5"
+                      ? "border-mp-primary/40 shadow-mp-primary/10"
+                      : "border-white/5 hover:border-white/10"
                   }`}
                 >
-                  {/* Plan Name */}
-                  <div className="mb-8">
-                    {storyLabel && (
-                      <p className="text-xs text-mp-accent font-medium mb-2 uppercase tracking-wide">
-                        {storyLabel}
-                      </p>
-                    )}
-                    <h3 className="text-2xl font-bold font-geist text-mp-text mb-4">
-                      {getPlanName(plan)}
-                    </h3>
+                  <div className="space-y-10">
+                    {/* Plan Info */}
+                    <div className="space-y-4">
+                      {storyLabel && (
+                        <span className="text-[10px] font-black text-mp-primary uppercase tracking-[0.3em] block">
+                          {storyLabel}
+                        </span>
+                      )}
+                      <h3 className="text-3xl font-bold text-white tracking-tight">
+                        {getPlanName(plan)}
+                      </h3>
 
-                    {/* Price */}
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-4xl md:text-5xl font-bold text-mp-text font-geist">
-                        ${price?.toLocaleString()}
-                      </span>
-                      <div className="flex flex-col text-sm text-mp-text-secondary">
-                        <span>/{billingCycle === "yearly" ? "年" : "月"}</span>
-                        {billingCycle === "yearly" && (
-                          <span className="text-xs">
-                            約 ${Math.round((price || 0) / 12).toLocaleString()}
-                            /月
-                          </span>
+                      <div className="flex items-baseline gap-2">
+                        <span className="text-5xl font-black text-white tracking-tighter">
+                          NT${price?.toLocaleString()}
+                        </span>
+                        <span className="text-slate-500 font-bold text-sm uppercase">
+                          /{billingCycle === "monthly" ? t("month") : t("year")}
+                        </span>
+                      </div>
+
+                      {billingCycle === "yearly" && (
+                        <div className="text-mp-success font-bold text-xs uppercase tracking-tighter">
+                          {t("equivalentMonthly")} NT$
+                          {Math.round((price || 0) / 12).toLocaleString()} /{" "}
+                          {t("month")}
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Features List */}
+                    <div className="space-y-5">
+                      <div className="p-5 rounded-3xl bg-white/5 border border-white/5 space-y-1">
+                        <div className="text-white font-black text-xl flex items-center gap-2">
+                          <FileText className="w-5 h-5 text-mp-primary" />
+                          {plan.articles_per_month?.toLocaleString()}{" "}
+                          {t("articles")}
+                        </div>
+                        <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">
+                          {tSub("monthlyQuota")}
+                        </p>
+
+                        {billingCycle === "yearly" && yearlyBonus > 0 && (
+                          <div className="pt-2 flex items-center gap-2 text-xs font-bold text-mp-success">
+                            <Gift className="w-4 h-4" />
+                            {t("bonusArticles")} {yearlyBonus} {t("articles")}
+                          </div>
                         )}
                       </div>
-                    </div>
-                  </div>
 
-                  {/* Article Count */}
-                  <div
-                    className={`rounded-2xl p-4 mb-6 border ${
-                      isPopular
-                        ? "bg-mp-primary/10 border-mp-primary/30"
-                        : "bg-mp-accent/10 border-mp-accent/30"
-                    }`}
-                  >
-                    <div className="flex items-center gap-3 mb-2">
-                      <div
-                        className={`p-2 rounded-lg ${
-                          isPopular ? "bg-mp-primary/20" : "bg-mp-accent/20"
-                        }`}
-                      >
-                        <FileText
-                          className={`h-5 w-5 ${
-                            isPopular ? "text-mp-primary" : "text-mp-accent"
-                          }`}
-                        />
-                      </div>
-                      <div>
-                        <div className="text-lg font-bold text-mp-text">
-                          {plan.articles_per_month?.toLocaleString()} 篇文章
-                        </div>
-                        <div className="text-sm text-mp-text-secondary">
-                          每月額度
-                        </div>
+                      <div className="space-y-4 pt-4">
+                        {[
+                          "allAIModels",
+                          "wordpressIntegration",
+                          "autoImageGen",
+                          "scheduledPublish",
+                        ].map((f) => (
+                          <div
+                            key={f}
+                            className="flex items-center gap-3 group/feat"
+                          >
+                            <div className="w-5 h-5 rounded-full bg-mp-success/10 border border-mp-success/20 flex items-center justify-center group-hover/feat:scale-110 transition-transform">
+                              <CheckCircle2 className="w-3 h-3 text-mp-success" />
+                            </div>
+                            <span className="text-slate-400 text-sm font-medium group-hover:text-slate-200 transition-colors">
+                              {t(f)}
+                            </span>
+                          </div>
+                        ))}
                       </div>
                     </div>
-
-                    {billingCycle === "yearly" && yearlyBonus > 0 && (
-                      <div className="flex items-center gap-2 text-sm text-mp-success">
-                        <Gift className="h-4 w-4" />
-                        <span className="font-medium">
-                          年付送 {yearlyBonus} 篇額外文章
-                        </span>
-                      </div>
-                    )}
                   </div>
 
-                  {/* Features */}
-                  <div className="space-y-3 mb-8">
-                    {[
-                      "全部 AI 模型",
-                      "WordPress 整合",
-                      "自動圖片生成",
-                      "排程發布",
-                      "50+ 語系支援",
-                    ].map((feature, i) => (
-                      <div key={i} className="flex items-center gap-3">
-                        <div className="w-5 h-5 bg-mp-success/20 rounded-full flex items-center justify-center">
-                          <CheckCircle2 className="h-3 w-3 text-mp-success" />
-                        </div>
-                        <span className="text-sm text-mp-text-secondary">
-                          {feature}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-
-                  {/* CTA Button */}
-                  <Link
-                    href="/signup"
-                    className={`group/btn relative w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-semibold text-sm transition-all duration-200 ${
-                      isPopular
-                        ? "bg-gradient-to-r from-mp-primary to-mp-accent text-white hover:shadow-xl hover:shadow-mp-primary/25 hover:-translate-y-0.5"
-                        : "border border-mp-primary/50 text-mp-text hover:bg-mp-primary/10 hover:border-mp-primary"
-                    }`}
-                  >
-                    開始使用
-                    <svg
-                      className="w-4 h-4 transition-transform group-hover/btn:translate-x-1"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
+                  {/* CTA */}
+                  <div className="mt-12">
+                    <Link
+                      href="/signup"
+                      className={`w-full inline-flex items-center justify-center gap-3 px-8 py-5 rounded-[2rem] font-black text-base transition-all duration-300 group/btn ${
+                        isPopular
+                          ? "bg-gradient-to-r from-mp-primary to-mp-accent text-white shadow-2xl shadow-mp-primary/20 hover:scale-[1.02] hover:shadow-mp-primary/40"
+                          : "bg-white/5 text-white border border-white/10 hover:bg-white/10"
+                      }`}
                     >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 8l4 4m0 0l-4 4m4-4H3"
-                      />
-                    </svg>
-                    {isPopular && (
-                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-mp-primary/20 to-mp-accent/20 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-200" />
-                    )}
-                  </Link>
+                      {t("startUsing")}
+                      <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
+                    </Link>
+                  </div>
                 </div>
               </motion.div>
             );
           })}
         </div>
 
-        {/* Article packages */}
-        <div className="max-w-4xl mx-auto">
-          <div className="text-center mb-8">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-white dark:bg-slate-800 shadow-sm border border-slate-200 dark:border-slate-700 px-4 py-2 text-sm font-medium text-amber-600 dark:text-amber-400">
-              <CreditCard className="h-4 w-4" />
-              <span>{t("articlePackage")}</span>
+        {/* Packages Section */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={defaultViewport}
+          className="max-w-5xl mx-auto pt-20 border-t border-white/5"
+        >
+          <div className="text-center space-y-4 mb-16">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-mp-accent/10 border border-mp-accent/20 text-xs font-bold text-mp-accent uppercase tracking-[0.2em]">
+              <CreditCard className="w-4 h-4" />
+              {t("articlePackage")}
             </div>
-            <h3 className="text-xl font-bold mb-2 text-slate-800 dark:text-white">
+            <h3 className="text-3xl md:text-4xl font-bold text-white">
               {t("needMoreArticles")}
             </h3>
-            <p className="text-sm text-slate-500 dark:text-slate-400">
+            <p className="text-slate-500 font-medium">
               {t("packageDescArticle")}
             </p>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 max-w-3xl mx-auto">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
             {articlePackages?.map((pkg) => {
               const isPopular = pkg.slug === "pack_5";
               return (
-                <Card
+                <div
                   key={pkg.id}
-                  className={`relative bg-white dark:bg-slate-800/50 ${
+                  className={`relative bg-slate-900/50 backdrop-blur-xl rounded-[2.5rem] p-8 border transition-all duration-300 hover:-translate-y-1 ${
                     isPopular
-                      ? "border-amber-400/50"
-                      : "border-slate-200 dark:border-slate-700"
+                      ? "border-mp-accent/50 shadow-2xl shadow-mp-accent/5"
+                      : "border-white/5 hover:border-white/10"
                   }`}
                 >
-                  {isPopular && (
-                    <span className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-400 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-                      {t("greatValue")}
-                    </span>
-                  )}
-                  <CardContent className="p-6 text-center">
-                    <span className="text-lg font-bold text-amber-600 dark:text-amber-400 block mb-1">
-                      {pkg.articles?.toLocaleString()} {t("articles")}
-                    </span>
-                    {pkg.description && (
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
-                        {pkg.description}
-                      </p>
-                    )}
-                    <div className="text-xl font-bold text-slate-800 dark:text-white mb-4">
+                  <div className="text-center space-y-6">
+                    <div className="space-y-1">
+                      <span className="text-3xl font-black text-white">
+                        {pkg.articles?.toLocaleString()} {t("articles")}
+                      </span>
+                      {pkg.description && (
+                        <p className="text-slate-500 text-xs font-bold">
+                          {pkg.description}
+                        </p>
+                      )}
+                    </div>
+                    <div className="text-2xl font-black text-mp-accent tracking-tighter">
                       NT${pkg.price?.toLocaleString()}
                     </div>
                     <Button
                       asChild
-                      size="sm"
                       variant="outline"
-                      className="w-full border-amber-400 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20 hover:border-amber-500"
+                      className="w-full h-14 rounded-2xl border-white/10 text-white hover:bg-white/5 hover:text-white font-bold"
                     >
                       <Link href="/login">{t("buy")}</Link>
                     </Button>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               );
             })}
           </div>
-        </div>
+        </motion.div>
 
-        {/* Free note */}
+        {/* Note */}
         <motion.p
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="text-center text-sm text-slate-400 mt-8"
+          viewport={defaultViewport}
+          className="text-center text-xs font-bold text-slate-600 uppercase tracking-[0.3em] mt-20"
         >
           {t("story.pricing.freeNote")}
         </motion.p>
