@@ -729,7 +729,8 @@
         "feature2": "Les données étaient réelles, avec des sources citées",
         "feature3": "Même les images ont été générées automatiquement",
         "feature4": "Il a même planifié les horaires de publication WordPress",
-        "reaction": "« Attendez... c'était trop rapide ? »"
+        "reaction": "« Attendez... c'était trop rapide ? »",
+        "badge": "Le tournant"
       },
       "results": {
         "title": "Mei, trois mois plus tard",
@@ -747,7 +748,13 @@
           "title": "Classements en hausse",
           "desc": "3 articles en première page Google",
           "stat": "Trafic organique +340%"
-        }
+        },
+        "chartTitle": "Trafic SEO doublé",
+        "chartDesc": "Basé sur les données moyennes de plus de 1000 utilisateurs réels après 3 mois",
+        "badge": "Histoire de réussite",
+        "month1": "Mois 1",
+        "month2": "Mois 2",
+        "month3": "Mois 3 (Aujourd'hui)"
       },
       "socialProof": {
         "title": "Mei n'est pas la seule",
@@ -766,7 +773,10 @@
           "role": "Consultant SEO",
           "message": "Recommandé à plus de 20 clients. Tous disent qu'ils ne peuvent plus revenir à la rédaction manuelle."
         },
-        "stats": "500+ entreprises | 50 000+ articles | 4,9/5 satisfaction"
+        "stats": "500+ entreprises | 50 000+ articles | 4,9/5 satisfaction",
+        "react": "Réagir",
+        "reply": "Répondre",
+        "verifiedResult": "Résultat vérifié"
       },
       "threeSteps": {
         "title": "En seulement trois étapes",
@@ -784,7 +794,10 @@
           "title": "Publication WordPress en un clic",
           "desc": "Publication programmée, mise en page auto, traduction multilingue",
           "aside": "Mei dit : « Je programme et j'oublie. Les articles se publient tout seuls. »"
-        }
+        },
+        "badge": "Flux simple",
+        "stepLabel": "Étape 0{step}",
+        "xiaoMeiChoice": "Le choix de Mei"
       },
       "pricing": {
         "intro": "Mei a fait ses calculs",
@@ -845,7 +858,9 @@
         "question": "Quels modes de paiement sont acceptés ?",
         "answer": "Nous acceptons les cartes de crédit (Visa, MasterCard, JCB), les virements bancaires en ligne et d'autres méthodes de paiement, traités de manière sécurisée via NewebPay."
       }
-    }
+    },
+    "stillHaveQuestions": "Encore des questions ?",
+    "contactSupport": "Contacter le support"
   },
   "errors": {
     "generic": "Une erreur s'est produite. Veuillez réessayer plus tard",

@@ -729,7 +729,8 @@
         "feature2": "Die Daten waren echt, mit Quellenangaben",
         "feature3": "Sogar die Bilder wurden automatisch generiert",
         "feature4": "Es plante sogar die WordPress-Veröffentlichungszeiten",
-        "reaction": "\"Moment... das ging viel zu schnell?\""
+        "reaction": "\"Moment... das ging viel zu schnell?\"",
+        "badge": "Der Wendepunkt"
       },
       "results": {
         "title": "Mei, drei Monate später",
@@ -747,7 +748,13 @@
           "title": "Rankings gestiegen",
           "desc": "3 Artikel auf Google Seite 1",
           "stat": "Organischer Traffic +340%"
-        }
+        },
+        "chartTitle": "SEO-Traffic verdoppelt",
+        "chartDesc": "Basierend auf Durchschnittsdaten von 1000+ echten Nutzern nach 3 Monaten",
+        "badge": "Erfolgsgeschichte",
+        "month1": "Monat 1",
+        "month2": "Monat 2",
+        "month3": "Monat 3 (Heute)"
       },
       "socialProof": {
         "title": "Nicht nur Mei geht es so",
@@ -766,7 +773,10 @@
           "role": "SEO-Berater",
           "message": "Über 20 Kunden empfohlen. Alle sagen, sie können nicht mehr zum manuellen Schreiben zurück."
         },
-        "stats": "500+ Unternehmen | 50.000+ Artikel | 4,9/5 Zufriedenheit"
+        "stats": "500+ Unternehmen | 50.000+ Artikel | 4,9/5 Zufriedenheit",
+        "react": "Reagieren",
+        "reply": "Antworten",
+        "verifiedResult": "Verifiziertes Ergebnis"
       },
       "threeSteps": {
         "title": "Nur drei Schritte",
@@ -784,7 +794,10 @@
           "title": "Ein-Klick-Veröffentlichung auf WordPress",
           "desc": "Geplante Veröffentlichung, Auto-Formatierung, mehrsprachige Übersetzung",
           "aside": "Mei sagt: \"Zeitplan einrichten und vergessen. Die Artikel gehen pünktlich online.\""
-        }
+        },
+        "badge": "Einfacher Workflow",
+        "stepLabel": "Schritt 0{step}",
+        "xiaoMeiChoice": "Meis Wahl"
       },
       "pricing": {
         "intro": "Mei hat nachgerechnet",
@@ -845,7 +858,9 @@
         "question": "Welche Zahlungsmethoden werden unterstützt?",
         "answer": "Wir unterstützen Kreditkarten (Visa, MasterCard, JCB), Online-Banküberweisungen und andere Zahlungsmethoden, sicher verarbeitet über NewebPay."
       }
-    }
+    },
+    "stillHaveQuestions": "Noch Fragen?",
+    "contactSupport": "Support kontaktieren"
   },
   "errors": {
     "generic": "Ein Fehler ist aufgetreten. Bitte versuchen Sie es später erneut",

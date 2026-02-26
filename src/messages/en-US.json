@@ -1459,7 +1459,8 @@
         "feature2": "The data was real, with cited sources",
         "feature3": "Even the images were auto-generated",
         "feature4": "It even scheduled the WordPress publishing times",
-        "reaction": "\"Wait... that was way too fast?\""
+        "reaction": "\"Wait... that was way too fast?\"",
+        "badge": "The Turning Point"
       },
       "results": {
         "title": "Mei, three months later",
@@ -1477,7 +1478,13 @@
           "title": "Rankings climbed",
           "desc": "3 articles ranked on Google page one",
           "stat": "Organic traffic +340%"
-        }
+        },
+        "chartTitle": "SEO Traffic Doubles",
+        "chartDesc": "Based on average data from 1000+ real users after 3 months",
+        "badge": "The Success Story",
+        "month1": "Month 1",
+        "month2": "Month 2",
+        "month3": "Month 3 (Today)"
       },
       "socialProof": {
         "title": "Mei isn't the only one",
@@ -1496,7 +1503,10 @@
           "role": "SEO consultant",
           "message": "Recommended it to 20+ clients. Every one of them says they can't go back to writing manually."
         },
-        "stats": "500+ businesses | 50,000+ articles | 4.9/5 satisfaction"
+        "stats": "500+ businesses | 50,000+ articles | 4.9/5 satisfaction",
+        "react": "React",
+        "reply": "Reply",
+        "verifiedResult": "Verified Result"
       },
       "threeSteps": {
         "title": "Just three steps",
@@ -1514,7 +1524,10 @@
           "title": "One-click publish to WordPress",
           "desc": "Scheduled publishing, auto-formatting, multi-language translation support",
           "aside": "Mei says: \"Set the schedule and forget it. Articles go live on time.\""
-        }
+        },
+        "badge": "Simple Workflow",
+        "stepLabel": "Step 0{step}",
+        "xiaoMeiChoice": "Mei's Choice"
       },
       "pricing": {
         "intro": "Mei did the math",
@@ -1575,7 +1588,9 @@
         "question": "What payment methods are supported?",
         "answer": "We support credit cards (Visa, MasterCard, JCB), online ATM transfers, and other payment methods, securely processed through NewebPay."
       }
-    }
+    },
+    "stillHaveQuestions": "Still have questions?",
+    "contactSupport": "Contact Support"
   },
   "errors": {
     "generic": "An error occurred. Please try again later",

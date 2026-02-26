@@ -975,24 +975,76 @@
     "oneTimePurchaseNeverExpires": "單次購買，永久有效"
   },
   "billing": {
-    "fetchBalanceFailed": "無法取得 token 餘額",
-    "loadBalanceFailed": "無法載入餘額",
-    "upgrade": "升級",
-    "availableBalance": "可用餘額:",
-    "processingBalance": "處理中:",
-    "lowBalance": "餘額不足",
-    "upgradeNow": "立即升級"
+    "authorizing": {
+      "title": "正在前往授權頁面",
+      "loading": "載入中...",
+      "preparingPayment": "正在準備付款資料...",
+      "connectingPayment": "正在連接金流服務...",
+      "pleaseWait": "請稍候，不要關閉此頁面",
+      "secureConnection": "安全加密連線",
+      "processFailed": "處理失敗",
+      "retry": "重新嘗試",
+      "backToBilling": "返回計費中心",
+      "missingPaymentForm": "缺少付款表單資料",
+      "connectionTimeout": "連接金流服務超時，請重試",
+      "formElementNotFound": "表單元素不存在",
+      "missingRequiredFields": "缺少必要的付款表單欄位",
+      "submitFailed": "提交失敗，請檢查瀏覽器設定",
+      "invalidFormData": "付款表單資料格式錯誤"
+    },
+    "paymentHistory": {
+      "title": "付款記錄",
+      "description": "您的付款交易歷史",
+      "order": "訂單",
+      "orderNumber": "訂單編號：",
+      "statusSuccess": "已完成",
+      "statusPending": "處理中",
+      "statusFailed": "失敗",
+      "noRecords": "尚無付款記錄"
+    }
   },
   "refund": {
-    "statusPending": "待處理",
-    "statusRetentionAccepted": "已接受慰留",
-    "statusAutoProcessing": "自動處理中",
-    "statusPendingReview": "待審核",
-    "statusApproved": "已核准",
-    "statusProcessing": "處理中",
-    "statusCompleted": "已完成",
-    "statusRejected": "已拒絕",
-    "statusFailed": "失敗"
+    "title": "申請退款",
+    "description": "請選擇要退款的訂單並填寫退款原因",
+    "selectOrder": "選擇要退款的訂單",
+    "selectOrderPlaceholder": "選擇訂單",
+    "loadingOrders": "載入中...",
+    "noRefundableOrders": "沒有可退款的訂單",
+    "loadOrdersFailed": "載入訂單失敗",
+    "orderAmount": "訂單金額",
+    "daysSincePurchase": "購買天數",
+    "autoEligible": "(符合自動退款)",
+    "manualReview": "(需人工審核)",
+    "creditsToDeduct": "將扣除 Credits",
+    "selectReason": "選擇退款原因",
+    "additionalDetails": "補充說明（選填）",
+    "additionalDetailsPlaceholder": "請輸入補充說明...",
+    "processing": "處理中...",
+    "nextStep": "下一步",
+    "selectOrderAndReason": "請選擇訂單和退款原因",
+    "requestFailed": "申請退款失敗",
+    "retentionTitle": "我們想留住您！",
+    "retentionDescription": "如果您願意繼續使用，我們將額外贈送您",
+    "retentionCredits": "credits",
+    "retentionPercentage": "（訂單金額的 50%）",
+    "acceptRetention": "接受優惠，繼續使用",
+    "proceedRefund": "不，我要繼續退款",
+    "acceptRetentionFailed": "接受慰留失敗",
+    "retentionAccepted": "感謝您的支持！",
+    "retentionSuccessMessage": "感謝您的支持！已為您新增 {credits} credits",
+    "refundSubmitted": "退款申請已提交",
+    "refundNo": "退款編號",
+    "refundWarning": "退款完成後，您的訂閱將降級為 Free 方案，且相關 credits 將被扣除",
+    "proceedRefundFailed": "處理退款失敗",
+    "confirm": "確定",
+    "daysAgo": "{days} 天前",
+    "reasons": {
+      "productIssue": "產品功能不符合預期",
+      "serviceUnsatisfied": "服務品質不滿意",
+      "billingError": "帳務問題/重複扣款",
+      "changeOfMind": "改變心意",
+      "other": "其他"
+    }
   },
   "payment": {
     "failed": "付款失敗",
@@ -1407,7 +1459,8 @@
         "feature2": "數據是真的，有引用來源",
         "feature3": "連圖片都自動生成好了",
         "feature4": "甚至幫我排好了 WordPress 發布時間",
-        "reaction": "「等等⋯⋯這也太快了吧？」"
+        "reaction": "「等等⋯⋯這也太快了吧？」",
+        "badge": "轉捩點"
       },
       "results": {
         "title": "三個月後的小美",
@@ -1425,7 +1478,13 @@
           "title": "排名上升",
           "desc": "3 篇文章排進 Google 第一頁",
           "stat": "自然流量 +340%"
-        }
+        },
+        "chartTitle": "SEO 流量翻倍成長",
+        "chartDesc": "基於 1000+ 真實用戶使用 3 個月後的平均數據",
+        "badge": "成功故事",
+        "month1": "第 1 個月",
+        "month2": "第 2 個月",
+        "month3": "第 3 個月（今天）"
       },
       "socialProof": {
         "title": "不只小美這樣",
@@ -1444,7 +1503,10 @@
           "role": "SEO 顧問",
           "message": "推薦給 20 幾個客戶了，每個都說回不去以前手動寫的日子。"
         },
-        "stats": "500+ 企業使用 | 50,000+ 篇文章 | 4.9/5 滿意度"
+        "stats": "500+ 企業使用 | 50,000+ 篇文章 | 4.9/5 滿意度",
+        "react": "按讚",
+        "reply": "回覆",
+        "verifiedResult": "已驗證結果"
       },
       "threeSteps": {
         "title": "只要三步驟",
@@ -1462,7 +1524,10 @@
           "title": "一鍵發布到 WordPress",
           "desc": "排程發布、自動排版，支援多語系翻譯",
           "aside": "小美說：「設好排程就不用管了，文章會自己準時上線。」"
-        }
+        },
+        "badge": "簡單流程",
+        "stepLabel": "步驟 0{step}",
+        "xiaoMeiChoice": "小美的選擇"
       },
       "pricing": {
         "intro": "小美算了一筆帳",
@@ -1523,7 +1588,9 @@
         "question": "支援哪些付款方式？",
         "answer": "我們支援信用卡（Visa、MasterCard、JCB）、網路 ATM 轉帳等多種付款方式，透過安全加密通道處理。"
       }
-    }
+    },
+    "stillHaveQuestions": "還有其他問題嗎？",
+    "contactSupport": "聯繫客服"
   },
   "errors": {
     "generic": "發生錯誤，請稍後再試",
@@ -1754,49 +1821,6 @@
     "publishFailed": "發布失敗",
     "generateFailed": "生成失敗",
     "followers": "followers"
-  },
-  "refund": {
-    "title": "申請退款",
-    "description": "請選擇要退款的訂單並填寫退款原因",
-    "selectOrder": "選擇要退款的訂單",
-    "selectOrderPlaceholder": "選擇訂單",
-    "loadingOrders": "載入中...",
-    "noRefundableOrders": "沒有可退款的訂單",
-    "loadOrdersFailed": "載入訂單失敗",
-    "orderAmount": "訂單金額",
-    "daysSincePurchase": "購買天數",
-    "autoEligible": "(符合自動退款)",
-    "manualReview": "(需人工審核)",
-    "creditsToDeduct": "將扣除 Credits",
-    "selectReason": "選擇退款原因",
-    "additionalDetails": "補充說明（選填）",
-    "additionalDetailsPlaceholder": "請輸入補充說明...",
-    "processing": "處理中...",
-    "nextStep": "下一步",
-    "selectOrderAndReason": "請選擇訂單和退款原因",
-    "requestFailed": "申請退款失敗",
-    "retentionTitle": "我們想留住您！",
-    "retentionDescription": "如果您願意繼續使用，我們將額外贈送您",
-    "retentionCredits": "credits",
-    "retentionPercentage": "（訂單金額的 50%）",
-    "acceptRetention": "接受優惠，繼續使用",
-    "proceedRefund": "不，我要繼續退款",
-    "acceptRetentionFailed": "接受慰留失敗",
-    "retentionAccepted": "感謝您的支持！",
-    "retentionSuccessMessage": "感謝您的支持！已為您新增 {credits} credits",
-    "refundSubmitted": "退款申請已提交",
-    "refundNo": "退款編號",
-    "refundWarning": "退款完成後，您的訂閱將降級為 Free 方案，且相關 credits 將被扣除",
-    "proceedRefundFailed": "處理退款失敗",
-    "confirm": "確定",
-    "daysAgo": "{days} 天前",
-    "reasons": {
-      "productIssue": "產品功能不符合預期",
-      "serviceUnsatisfied": "服務品質不滿意",
-      "billingError": "帳務問題/重複扣款",
-      "changeOfMind": "改變心意",
-      "other": "其他"
-    }
   },
   "legal": {
     "returnHome": "返回首頁",
@@ -2425,35 +2449,6 @@
     "selectWebsite": "選擇網站",
     "writeOnly": "單純寫文章",
     "disabled": "已停用"
-  },
-  "billing": {
-    "authorizing": {
-      "title": "正在前往授權頁面",
-      "loading": "載入中...",
-      "preparingPayment": "正在準備付款資料...",
-      "connectingPayment": "正在連接金流服務...",
-      "pleaseWait": "請稍候，不要關閉此頁面",
-      "secureConnection": "安全加密連線",
-      "processFailed": "處理失敗",
-      "retry": "重新嘗試",
-      "backToBilling": "返回計費中心",
-      "missingPaymentForm": "缺少付款表單資料",
-      "connectionTimeout": "連接金流服務超時，請重試",
-      "formElementNotFound": "表單元素不存在",
-      "missingRequiredFields": "缺少必要的付款表單欄位",
-      "submitFailed": "提交失敗，請檢查瀏覽器設定",
-      "invalidFormData": "付款表單資料格式錯誤"
-    },
-    "paymentHistory": {
-      "title": "付款記錄",
-      "description": "您的付款交易歷史",
-      "order": "訂單",
-      "orderNumber": "訂單編號：",
-      "statusSuccess": "已完成",
-      "statusPending": "處理中",
-      "statusFailed": "失敗",
-      "noRecords": "尚無付款記錄"
-    }
   },
   "unauthorized": {
     "freePlan": {
