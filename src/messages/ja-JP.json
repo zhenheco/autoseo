@@ -28,7 +28,9 @@
     "noData": "データがありません",
     "viewAll": "すべて表示",
     "learnMore": "詳細を見る",
-    "returnHome": "ホームに戻る"
+    "returnHome": "ホームに戻る",
+    "selectLanguage": "言語を選択",
+    "languagePreferenceSaved": "言語設定が保存されました"
   },
   "nav": {
     "home": "ホーム",

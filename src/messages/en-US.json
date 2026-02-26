@@ -28,7 +28,9 @@
     "noData": "No data",
     "viewAll": "View all",
     "learnMore": "Learn more",
-    "returnHome": "Return Home"
+    "returnHome": "Return Home",
+    "selectLanguage": "Select Language",
+    "languagePreferenceSaved": "Language preference saved"
   },
   "nav": {
     "home": "Home",

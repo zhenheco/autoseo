@@ -28,7 +28,9 @@
     "noData": "沒有資料",
     "viewAll": "查看全部",
     "learnMore": "了解更多",
-    "returnHome": "返回首頁"
+    "returnHome": "返回首頁",
+    "selectLanguage": "選擇語言",
+    "languagePreferenceSaved": "語言偏好已儲存"
   },
   "nav": {
     "home": "首頁",

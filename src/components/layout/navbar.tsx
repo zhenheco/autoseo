@@ -4,31 +4,45 @@ import Link from "next/link";
 import Image from "next/image";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { MobileNav } from "./mobile-nav";
-import { UILanguageSelector } from "@/components/common/UILanguageSelector";
+import { EnhancedUILanguageSelector } from "@/components/common/EnhancedUILanguageSelector";
 import { useTranslations } from "next-intl";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback, useMemo } from "react";
+import { ResponsiveLayout } from "./responsive-layout";
+
+// 常數定義
+const SCROLL_THRESHOLD = 20;
+const NAV_STYLES = {
+  scrolled: "glass-navbar border-b border-primary/20 shadow-lg",
+  transparent: "bg-transparent border-b border-transparent backdrop-blur-sm",
+} as const;
 
 export function Navbar() {
   const t = useTranslations("nav");
   const [scrolled, setScrolled] = useState(false);
 
-  useEffect(() => {
-    const handleScroll = () => {
-      setScrolled(window.scrollY > 20);
-    };
+  const handleScroll = useCallback(() => {
+    const isScrolled = window.scrollY > SCROLL_THRESHOLD;
+    if (isScrolled !== scrolled) {
+      setScrolled(isScrolled);
+    }
+  }, [scrolled]);
 
-    window.addEventListener("scroll", handleScroll);
+  useEffect(() => {
+    window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [handleScroll]);
+
+  const navbarClassName = useMemo(
+    () =>
+      [
+        `fixed top-0 z-50 w-full transition-all duration-300`,
+        scrolled ? NAV_STYLES.scrolled : NAV_STYLES.transparent,
+      ].join(" "),
+    [scrolled],
+  );
 
   return (
-    <header
-      className={`fixed top-0 z-50 w-full transition-all duration-300 ${
-        scrolled
-          ? "bg-mp-surface/80 border-b border-mp-primary/20 backdrop-blur-xl shadow-lg shadow-mp-primary/5"
-          : "bg-transparent border-b border-transparent backdrop-blur-sm"
-      }`}
-    >
+    <ResponsiveLayout as="header" className={navbarClassName}>
       <div className="container mx-auto flex h-16 md:h-18 items-center justify-between px-4">
         <Link
           href="/"
@@ -46,7 +60,7 @@ export function Navbar() {
 
         {/* 桌面版導航 */}
         <div className="hidden md:flex items-center gap-6">
-          <UILanguageSelector />
+          <EnhancedUILanguageSelector />
 
           <Link
             href="/blog"
@@ -79,6 +93,6 @@ export function Navbar() {
         {/* 手機版導航 */}
         <MobileNav />
       </div>
-    </header>
+    </ResponsiveLayout>
   );
 }
