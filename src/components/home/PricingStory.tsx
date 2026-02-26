@@ -6,38 +6,17 @@ import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { FileText, Gift, CheckCircle2, CreditCard } from "lucide-react";
+import { fadeUpVariants, defaultViewport } from "@/lib/animations";
 import {
-  FileText,
-  Gift,
-  CheckCircle2,
-  CreditCard,
-  ArrowRight,
-} from "lucide-react";
-
-interface ArticlePlan {
-  id: string;
-  name: string;
-  slug: string;
-  monthly_price: number;
-  yearly_price: number | null;
-  articles_per_month: number;
-  yearly_bonus_months: number;
-  features: unknown;
-}
-
-interface ArticlePackage {
-  id: string;
-  name: string;
-  slug: string;
-  articles: number;
-  price: number;
-  description: string | null;
-}
-
-interface PricingStoryProps {
-  plans: ArticlePlan[];
-  articlePackages: ArticlePackage[];
-}
+  createCardStyle,
+  createHeadingStyle,
+  createTextStyle,
+  gradientTextStyles,
+  badgeStyles,
+  buttonStyles,
+} from "@/lib/styles";
+import { PricingProps, ArticlePlan } from "@/types/pricing";
 
 const PLAN_STORY_KEYS: Record<string, string> = {
   starter: "story.pricing.tryFirst",
@@ -45,7 +24,7 @@ const PLAN_STORY_KEYS: Record<string, string> = {
   business: "story.pricing.team",
 };
 
-export function PricingStory({ plans, articlePackages }: PricingStoryProps) {
+export function PricingStory({ plans, articlePackages }: PricingProps) {
   const t = useTranslations("home");
   const tSub = useTranslations("subscription");
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">(
@@ -68,74 +47,89 @@ export function PricingStory({ plans, articlePackages }: PricingStoryProps) {
   return (
     <section
       id="pricing"
-      className="py-20 px-4 bg-gradient-to-b from-white to-amber-50/30 dark:from-slate-900 dark:to-slate-800"
+      className="relative py-24 bg-mp-bg bg-noise overflow-hidden"
     >
-      <div className="max-w-5xl mx-auto">
-        {/* Story intro */}
+      {/* Ambient background */}
+      <div className="absolute top-0 right-1/4 w-96 h-96 bg-mp-primary/10 rounded-full blur-3xl" />
+      <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-mp-accent/8 rounded-full blur-3xl" />
+
+      <div className="container mx-auto px-4 relative z-10">
+        {/* Header */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-center mb-12"
+          viewport={defaultViewport}
+          className="text-center mb-16"
         >
-          <h2 className="text-2xl md:text-3xl font-bold text-slate-800 dark:text-white mb-6">
-            {t("story.pricing.intro")}
+          <h2 className={createHeadingStyle("hero", "mb-6")}>
+            選擇最適合您的
+            <span className={`block ${gradientTextStyles.primary}`}>方案</span>
           </h2>
-
-          <div className="flex items-center justify-center gap-4 md:gap-8 mb-4">
-            <div className="text-center">
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                {t("story.pricing.before")}
-              </p>
-              <p className="text-2xl font-bold text-red-500 line-through">
-                {t("story.pricing.beforeAmount")}
-              </p>
-            </div>
-            <ArrowRight className="h-6 w-6 text-amber-500" />
-            <div className="text-center">
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                {t("story.pricing.after")}
-              </p>
-              <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">
-                {t("story.pricing.afterAmount")}
-              </p>
-            </div>
-          </div>
-
-          <p className="text-slate-500 dark:text-slate-400 italic mb-8">
-            {t("story.pricing.saving")}
+          <p
+            className={createTextStyle(
+              "secondary",
+              "",
+              "text-xl max-w-2xl mx-auto mb-12",
+            )}
+          >
+            靈活的定價方案，滿足個人創作者到企業團隊的各種需求
           </p>
 
-          {/* Billing toggle */}
-          <div className="inline-flex items-center gap-2 rounded-full bg-white dark:bg-slate-800/50 shadow-md border border-slate-200 dark:border-slate-700 p-1 mb-8">
+          {/* Enhanced Billing Toggle */}
+          <div className="relative inline-flex items-center gap-1 p-1 rounded-2xl bg-gradient-to-r from-mp-surface/80 to-mp-surface/60 backdrop-blur-xl border border-mp-primary/20 shadow-lg mb-8">
+            <motion.div
+              className="absolute inset-y-1 rounded-xl bg-gradient-to-r from-mp-primary to-mp-accent transition-all duration-300 ease-out"
+              animate={{
+                left: billingCycle === "monthly" ? "4px" : "50%",
+                right: billingCycle === "monthly" ? "50%" : "4px",
+              }}
+            />
             <button
               onClick={() => setBillingCycle("monthly")}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all ${
+              className={`relative z-10 px-6 py-3 rounded-xl text-sm font-semibold transition-colors duration-200 ${
                 billingCycle === "monthly"
-                  ? "bg-amber-500 text-white"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                  ? "text-white"
+                  : "text-mp-text-secondary hover:text-mp-text"
               }`}
             >
-              {t("monthlyBilling")}
+              月付方案
             </button>
             <button
               onClick={() => setBillingCycle("yearly")}
-              className={`px-4 py-2 rounded-full text-sm font-medium transition-all flex items-center gap-2 ${
+              className={`relative z-10 px-6 py-3 rounded-xl text-sm font-semibold transition-colors duration-200 flex items-center gap-2 ${
                 billingCycle === "yearly"
-                  ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white"
-                  : "text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white"
+                  ? "text-white"
+                  : "text-mp-text-secondary hover:text-mp-text"
               }`}
             >
-              {t("yearlyBilling")}
-              <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-400 text-slate-900">
-                {t("yearlyBonus")}
+              年付方案
+              <span className="px-2 py-1 text-xs font-bold bg-mp-success/20 text-mp-success rounded-lg border border-mp-success/30">
+                省更多
               </span>
             </button>
           </div>
+
+          {/* Savings Badge */}
+          {billingCycle === "yearly" && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="inline-flex items-center gap-2 px-4 py-2 bg-mp-success/10 border border-mp-success/30 rounded-full text-sm text-mp-success font-semibold mb-8"
+            >
+              <svg className="w-4 h-4" fill="currentColor" viewBox="0 0 20 20">
+                <path
+                  fillRule="evenodd"
+                  d="M4 4a2 2 0 00-2 2v4a2 2 0 002 2V6h10a2 2 0 00-2-2H4zm2 6a2 2 0 012-2h8a2 2 0 012 2v4a2 2 0 01-2 2H8a2 2 0 01-2-2v-4zm6 4a2 2 0 100-4 2 2 0 000 4z"
+                  clipRule="evenodd"
+                />
+              </svg>
+              年付最高可省 17%
+            </motion.div>
+          )}
         </motion.div>
 
         {/* Plan cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
           {plans?.map((plan, index) => {
             const isPopular = plan.slug === "pro";
             const price =
@@ -152,98 +146,144 @@ export function PricingStory({ plans, articlePackages }: PricingStoryProps) {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: index * 0.1, duration: 0.5 }}
+                className={`group relative ${isPopular ? "lg:scale-110" : ""}`}
               >
-                <Card
-                  className={`relative flex flex-col h-full transition-all duration-300 ${
+                {/* Popular Badge */}
+                {isPopular && (
+                  <div className="absolute -top-4 left-1/2 -translate-x-1/2 z-10">
+                    <div className="relative">
+                      <div className="absolute inset-0 bg-gradient-to-r from-mp-primary to-mp-accent blur-lg opacity-75" />
+                      <div className="relative bg-gradient-to-r from-mp-primary to-mp-accent text-white px-6 py-2 rounded-full text-sm font-bold shadow-lg">
+                        最受歡迎
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Card */}
+                <div
+                  className={`relative bg-gradient-to-br from-mp-surface/80 to-mp-surface/60 backdrop-blur-xl rounded-3xl p-8 h-full border transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 ${
                     isPopular
-                      ? "border-amber-400 shadow-lg shadow-amber-500/10 scale-105 bg-white dark:bg-slate-800"
-                      : "border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800/50 hover:border-amber-300"
+                      ? "border-mp-primary/40 shadow-xl shadow-mp-primary/10"
+                      : "border-mp-primary/20 hover:border-mp-primary/30 hover:shadow-mp-primary/5"
                   }`}
                 >
-                  {isPopular && (
-                    <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-amber-400 to-orange-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-                      {t("mostPopular")}
-                    </div>
-                  )}
-                  <CardContent className="p-6 flex flex-col h-full">
+                  {/* Plan Name */}
+                  <div className="mb-8">
                     {storyLabel && (
-                      <p className="text-xs text-amber-600 dark:text-amber-400 font-medium mb-1">
+                      <p className="text-xs text-mp-accent font-medium mb-2 uppercase tracking-wide">
                         {storyLabel}
                       </p>
                     )}
-                    <h3 className="text-xl font-bold text-slate-800 dark:text-white mb-3">
+                    <h3 className="text-2xl font-bold font-geist text-mp-text mb-4">
                       {getPlanName(plan)}
                     </h3>
-                    <div className="mb-5">
-                      <div className="flex items-baseline gap-1">
-                        <span className="text-3xl font-bold text-slate-800 dark:text-white">
-                          NT${price?.toLocaleString()}
-                        </span>
-                        <span className="text-sm text-slate-500 dark:text-slate-400">
-                          /{billingCycle === "yearly" ? t("year") : t("month")}
-                        </span>
-                      </div>
-                      {billingCycle === "yearly" && (
-                        <div className="text-sm mt-1 text-slate-500 dark:text-slate-400">
-                          {t("equivalentMonthly")} NT$
-                          {Math.round((price || 0) / 12).toLocaleString()}/
-                          {t("month")}
-                        </div>
-                      )}
-                    </div>
 
-                    <div className="rounded-lg p-3 mb-4 bg-amber-50 dark:bg-amber-900/10">
-                      <div className="flex items-center justify-center gap-2">
-                        <FileText className="h-5 w-5 text-amber-500" />
-                        <span className="text-lg font-bold text-slate-800 dark:text-white">
-                          {t("monthly")}{" "}
-                          {plan.articles_per_month?.toLocaleString()}{" "}
-                          {t("articles")}
-                        </span>
-                      </div>
-                      {billingCycle === "yearly" && yearlyBonus > 0 && (
-                        <div className="flex items-center justify-center gap-1 mt-2 text-sm text-orange-600 dark:text-orange-400">
-                          <Gift className="h-4 w-4" />
-                          <span className="font-medium">
-                            {t("bonusArticles")} {yearlyBonus} {t("articles")}
+                    {/* Price */}
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-4xl md:text-5xl font-bold text-mp-text font-geist">
+                        ${price?.toLocaleString()}
+                      </span>
+                      <div className="flex flex-col text-sm text-mp-text-secondary">
+                        <span>/{billingCycle === "yearly" ? "年" : "月"}</span>
+                        {billingCycle === "yearly" && (
+                          <span className="text-xs">
+                            約 ${Math.round((price || 0) / 12).toLocaleString()}
+                            /月
                           </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Article Count */}
+                  <div
+                    className={`rounded-2xl p-4 mb-6 border ${
+                      isPopular
+                        ? "bg-mp-primary/10 border-mp-primary/30"
+                        : "bg-mp-accent/10 border-mp-accent/30"
+                    }`}
+                  >
+                    <div className="flex items-center gap-3 mb-2">
+                      <div
+                        className={`p-2 rounded-lg ${
+                          isPopular ? "bg-mp-primary/20" : "bg-mp-accent/20"
+                        }`}
+                      >
+                        <FileText
+                          className={`h-5 w-5 ${
+                            isPopular ? "text-mp-primary" : "text-mp-accent"
+                          }`}
+                        />
+                      </div>
+                      <div>
+                        <div className="text-lg font-bold text-mp-text">
+                          {plan.articles_per_month?.toLocaleString()} 篇文章
                         </div>
-                      )}
+                        <div className="text-sm text-mp-text-secondary">
+                          每月額度
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="flex-1">
-                      <ul className="space-y-2 text-sm mb-4 text-slate-600 dark:text-slate-300">
-                        <li className="flex items-center gap-2">
-                          <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-500" />
-                          {t("allAIModels")}
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-500" />
-                          {t("wordpressIntegration")}
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-500" />
-                          {t("autoImageGen")}
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-emerald-500" />
-                          {t("scheduledPublish")}
-                        </li>
-                      </ul>
-                    </div>
-                    <Button
-                      asChild
-                      size="sm"
-                      className={`w-full mt-auto font-bold shadow-lg ${
-                        isPopular
-                          ? "bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:from-amber-400 hover:to-orange-400"
-                          : "bg-slate-800 text-white hover:bg-slate-700 dark:bg-amber-600 dark:hover:bg-amber-500"
-                      }`}
+                    {billingCycle === "yearly" && yearlyBonus > 0 && (
+                      <div className="flex items-center gap-2 text-sm text-mp-success">
+                        <Gift className="h-4 w-4" />
+                        <span className="font-medium">
+                          年付送 {yearlyBonus} 篇額外文章
+                        </span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Features */}
+                  <div className="space-y-3 mb-8">
+                    {[
+                      "全部 AI 模型",
+                      "WordPress 整合",
+                      "自動圖片生成",
+                      "排程發布",
+                      "50+ 語系支援",
+                    ].map((feature, i) => (
+                      <div key={i} className="flex items-center gap-3">
+                        <div className="w-5 h-5 bg-mp-success/20 rounded-full flex items-center justify-center">
+                          <CheckCircle2 className="h-3 w-3 text-mp-success" />
+                        </div>
+                        <span className="text-sm text-mp-text-secondary">
+                          {feature}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* CTA Button */}
+                  <Link
+                    href="/signup"
+                    className={`group/btn relative w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-2xl font-semibold text-sm transition-all duration-200 ${
+                      isPopular
+                        ? "bg-gradient-to-r from-mp-primary to-mp-accent text-white hover:shadow-xl hover:shadow-mp-primary/25 hover:-translate-y-0.5"
+                        : "border border-mp-primary/50 text-mp-text hover:bg-mp-primary/10 hover:border-mp-primary"
+                    }`}
+                  >
+                    開始使用
+                    <svg
+                      className="w-4 h-4 transition-transform group-hover/btn:translate-x-1"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
                     >
-                      <Link href="/login">{t("startUsing")}</Link>
-                    </Button>
-                  </CardContent>
-                </Card>
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17 8l4 4m0 0l-4 4m4-4H3"
+                      />
+                    </svg>
+                    {isPopular && (
+                      <div className="absolute inset-0 rounded-2xl bg-gradient-to-r from-mp-primary/20 to-mp-accent/20 opacity-0 group-hover/btn:opacity-100 transition-opacity duration-200" />
+                    )}
+                  </Link>
+                </div>
               </motion.div>
             );
           })}

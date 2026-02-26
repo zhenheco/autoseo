@@ -23,6 +23,10 @@ const config: Config = {
       },
     },
     extend: {
+      fontFamily: {
+        geist: ["var(--font-geist)", "Inter", "system-ui", "sans-serif"],
+        jakarta: ["Plus Jakarta Sans", "Inter", "system-ui", "sans-serif"],
+      },
       colors: {
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
@@ -60,10 +64,14 @@ const config: Config = {
         success: "hsl(var(--success))",
         warning: "hsl(var(--warning))",
         danger: "hsl(var(--danger))",
-        "dark-section": "var(--dark-bg)",
-        "dark-section-secondary": "var(--dark-bg-secondary)",
-        "light-section": "var(--light-bg)",
-        "light-section-secondary": "var(--light-bg-secondary)",
+        // Modern Professional Color Palette
+        "mp-bg": "#020617", // 極深藍黑
+        "mp-surface": "#0F172A", // 深石板藍
+        "mp-primary": "#3B82F6", // 科技亮藍
+        "mp-accent": "#8B5CF6", // 創意紫羅蘭
+        "mp-success": "#10B981", // 成長綠
+        "mp-text": "#F8FAFC", // 接近純白
+        "mp-text-secondary": "#94A3B8", // 灰色
         "tech-blue": {
           50: "#eff6ff",
           100: "#dbeafe",
@@ -77,21 +85,18 @@ const config: Config = {
           900: "#1e3a8a",
           950: "#172554",
         },
-        "cyber-cyan": {
-          400: "#22d3ee",
-          500: "#06b6d4",
-          600: "#0891b2",
-        },
-        "cyber-violet": {
-          400: "#a78bfa",
-          500: "#8b5cf6",
-          600: "#7c3aed",
-        },
-        "cyber-magenta": {
-          400: "#f472b6",
-          500: "#ec4899",
-          600: "#db2777",
-        },
+      },
+      backgroundImage: {
+        "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
+        "gradient-conic":
+          "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+        "border-gradient":
+          "linear-gradient(90deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2))",
+        noise:
+          "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3E%3Cpath fill='%23ffffff' fill-opacity='0.03' d='m0 0h1v1h-1zm2 2h1v1h-1z'/%3E%3C/svg%3E\")",
+      },
+      backdropBlur: {
+        xs: "2px",
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -144,6 +149,18 @@ const config: Config = {
           "50%": { transform: "translate(-5px, -25px) scale(1)" },
           "75%": { transform: "translate(-15px, -10px) scale(0.95)" },
         },
+        "hover-lift": {
+          from: { transform: "translateY(0)" },
+          to: { transform: "translateY(-4px)" },
+        },
+        "draw-line": {
+          from: { strokeDashoffset: "1000" },
+          to: { strokeDashoffset: "0" },
+        },
+        "gradient-shift": {
+          "0%, 100%": { "background-position": "0% 50%" },
+          "50%": { "background-position": "100% 50%" },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
@@ -155,6 +172,9 @@ const config: Config = {
         "pulse-glow": "pulse-glow 3s ease-in-out infinite",
         "pulse-glow-slow": "pulse-glow-slow 4s ease-in-out infinite",
         "float-orb": "float-orb 8s ease-in-out infinite",
+        "hover-lift": "hover-lift 0.2s ease-out forwards",
+        "draw-line": "draw-line 2s ease-out forwards",
+        "gradient-shift": "gradient-shift 3s ease-in-out infinite",
       },
     },
   },
