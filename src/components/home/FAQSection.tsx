@@ -5,7 +5,6 @@ import { useTranslations } from "next-intl";
 import { motion, AnimatePresence } from "framer-motion";
 import { ChevronDown, HelpCircle, Sparkles } from "lucide-react";
 import { fadeUpVariants, defaultViewport } from "@/lib/animations";
-import { createHeadingStyle } from "@/lib/styles";
 
 const faqKeys = [
   "whatIsCredits",
@@ -20,31 +19,23 @@ export function FAQSection() {
   const t = useTranslations("faq");
 
   return (
-    <section className="relative py-32 bg-slate-950 overflow-hidden">
-      {/* Background decoration */}
-      <div className="absolute top-1/2 left-0 w-96 h-96 bg-mp-primary/5 rounded-full blur-[100px] pointer-events-none" />
-
+    <section className="relative py-32 bg-slate-900 overflow-hidden">
       <div className="container relative z-10 mx-auto px-4">
         <motion.div
           initial="hidden"
           whileInView="visible"
           viewport={defaultViewport}
           variants={fadeUpVariants}
-          className="text-center mb-20 space-y-4"
+          className="text-center mb-20 space-y-6"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-slate-400 uppercase tracking-widest">
-            <HelpCircle className="w-4 h-4 text-mp-primary" />
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800 border border-slate-700 text-sm font-bold text-white uppercase tracking-widest">
+            <HelpCircle className="w-4 h-4 text-blue-500" />
             {t("title")}
           </div>
-          <h2
-            className={createHeadingStyle(
-              "hero",
-              "text-4xl md:text-5xl text-white font-bold tracking-tight",
-            )}
-          >
+          <h2 className="text-4xl md:text-5xl text-white font-bold tracking-tight">
             {t("subtitle")}
           </h2>
-          <p className="text-slate-400 text-lg max-w-2xl mx-auto font-medium">
+          <p className="text-slate-300 text-lg max-w-2xl mx-auto font-medium">
             {t("description")}
           </p>
         </motion.div>
@@ -59,28 +50,22 @@ export function FAQSection() {
               transition={{ delay: index * 0.1 }}
               className={`group overflow-hidden rounded-[2rem] border transition-all duration-500 ${
                 openIndex === index
-                  ? "bg-slate-900 border-mp-primary/30 shadow-2xl shadow-mp-primary/5"
-                  : "bg-slate-900/40 border-white/5 hover:border-white/10"
+                  ? "bg-slate-800 border-blue-500 shadow-lg shadow-blue-500/10"
+                  : "bg-slate-800 border-slate-700 hover:border-slate-600"
               }`}
             >
               <button
                 onClick={() => setOpenIndex(openIndex === index ? null : index)}
-                className="w-full px-8 py-6 text-left flex items-center justify-between gap-4"
+                className="w-full px-8 py-6 text-left flex items-center justify-between gap-4 cursor-pointer"
               >
-                <span
-                  className={`text-lg md:text-xl font-bold transition-colors duration-300 ${
-                    openIndex === index
-                      ? "text-white"
-                      : "text-slate-300 group-hover:text-white"
-                  }`}
-                >
+                <span className="text-lg md:text-xl font-bold text-white transition-colors duration-300">
                   {t(`questions.${key}.question`)}
                 </span>
                 <div
-                  className={`flex-shrink-0 w-8 h-8 rounded-full border border-white/10 flex items-center justify-center transition-all duration-500 ${
+                  className={`flex-shrink-0 w-8 h-8 rounded-full border flex items-center justify-center transition-all duration-500 ${
                     openIndex === index
-                      ? "rotate-180 bg-mp-primary border-mp-primary text-white"
-                      : "text-slate-500"
+                      ? "rotate-180 bg-blue-600 border-blue-600 text-white"
+                      : "border-slate-600 text-slate-400 group-hover:text-white"
                   }`}
                 >
                   <ChevronDown className="w-4 h-4" />
@@ -99,8 +84,8 @@ export function FAQSection() {
                     }}
                   >
                     <div className="px-8 pb-8">
-                      <div className="pt-4 border-t border-white/5">
-                        <p className="text-slate-400 text-base md:text-lg leading-relaxed font-medium">
+                      <div className="pt-4 border-t border-slate-700">
+                        <p className="text-slate-300 text-base md:text-lg leading-relaxed font-medium">
                           {t(`questions.${key}.answer`)}
                         </p>
                       </div>
@@ -119,14 +104,14 @@ export function FAQSection() {
           viewport={defaultViewport}
           className="mt-20 text-center"
         >
-          <div className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-slate-900 border border-white/5 text-sm font-bold text-slate-500">
-            <Sparkles className="w-4 h-4 text-mp-accent" />
-            Still have questions?
+          <div className="inline-flex items-center gap-2 px-6 py-3 rounded-2xl bg-slate-800 border border-slate-700 text-sm font-bold text-slate-400">
+            <Sparkles className="w-4 h-4 text-orange-500" />
+            {t("stillHaveQuestions")}
             <a
               href="mailto:service@1wayseo.com"
-              className="text-mp-primary hover:underline ml-1"
+              className="text-blue-400 hover:underline ml-1"
             >
-              Contact Support
+              {t("contactSupport")}
             </a>
           </div>
         </motion.div>

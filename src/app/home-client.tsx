@@ -21,54 +21,52 @@ export function HomeClient({ plans, articlePackages }: PricingProps) {
     <>
       <Navbar />
       <main className="relative min-h-screen overflow-hidden">
-        {/* S1: 共感開場 — 深夜加班的小美 */}
+        {/* S1: Hero - Light */}
         <HeroStory />
 
-        {/* S2: 功能展示 — Bento Grid Layout */}
+        {/* S2: Features - Dark */}
         <FeatureGrid />
 
-        {/* S3: 轉折 — 那個星期一早上 */}
+        {/* S3: Turning Point - Light */}
         <TurningPoint />
 
-        {/* S4: 成果展現 — 三個月後的小美 */}
+        {/* S4: Results - Dark */}
         <Results />
 
-        {/* S5: 社會證明 — 對話截圖風格 */}
+        {/* S5: Social Proof - Light */}
         <SocialProof />
 
-        {/* S6: 三步驟功能介紹 */}
+        {/* S6: Three Steps - Dark */}
         <ThreeSteps />
 
-        {/* S7: 故事化價格區塊 */}
+        {/* S7: Pricing - Light */}
         <PricingStory plans={plans} articlePackages={articlePackages} />
 
-        {/* FAQ */}
+        {/* FAQ - Dark */}
         <FAQSection />
 
-        {/* S8: 收尾 — 你的故事從這裡開始 */}
+        {/* S8: Closing - Light */}
         <ClosingCTA />
 
-        {/* Footer */}
-        <footer className="relative py-24 bg-slate-950 border-t border-white/5 overflow-hidden">
-          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-mp-primary/30 to-transparent" />
-
+        {/* Footer - Dark */}
+        <footer className="relative py-24 bg-slate-900 border-t border-slate-800 overflow-hidden">
           <div className="container mx-auto px-4 relative z-10">
             <div className="flex flex-col md:flex-row justify-between items-start gap-16 md:gap-8">
               {/* Brand Section */}
               <div className="flex flex-col items-start gap-6 max-w-sm">
                 <div className="text-2xl font-black text-white tracking-tighter flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-mp-primary to-mp-accent flex items-center justify-center text-sm">
+                  <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-sm">
                     1
                   </div>
                   1WaySEO
                 </div>
-                <p className="text-slate-500 text-sm leading-relaxed font-medium">
+                <p className="text-slate-400 text-sm leading-relaxed font-medium">
                   {t("heroDescription")}
                 </p>
-                <div className="flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-2xl text-[10px] text-mp-success font-black uppercase tracking-widest shadow-inner">
+                <div className="flex items-center gap-3 px-4 py-2 bg-slate-800 border border-slate-700 rounded-2xl text-[10px] text-green-400 font-black uppercase tracking-widest shadow-inner">
                   <span className="relative flex h-2 w-2">
-                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-mp-success opacity-75"></span>
-                    <span className="relative inline-flex rounded-full h-2 w-2 bg-mp-success"></span>
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
                   </span>
                   {t("aiPoweredWorkflow")}
                 </div>
@@ -80,13 +78,13 @@ export function HomeClient({ plans, articlePackages }: PricingProps) {
                   <h4 className="text-xs font-black text-white uppercase tracking-[0.3em]">
                     {t("resources")}
                   </h4>
-                  <ul className="space-y-4 text-sm font-medium text-slate-500">
+                  <ul className="space-y-4 text-sm font-medium text-slate-400">
                     {[{ href: "/blog", label: t("blog") }].map(
                       ({ href, label }) => (
                         <li key={href}>
                           <Link
                             href={href}
-                            className="hover:text-mp-primary transition-colors"
+                            className="hover:text-blue-400 transition-colors"
                           >
                             {label}
                           </Link>
@@ -99,7 +97,7 @@ export function HomeClient({ plans, articlePackages }: PricingProps) {
                   <h4 className="text-xs font-black text-white uppercase tracking-[0.3em]">
                     {t("legal")}
                   </h4>
-                  <ul className="space-y-4 text-sm font-medium text-slate-500">
+                  <ul className="space-y-4 text-sm font-medium text-slate-400">
                     {[
                       { href: "/terms", label: t("terms") },
                       { href: "/privacy", label: t("privacy") },
@@ -107,7 +105,7 @@ export function HomeClient({ plans, articlePackages }: PricingProps) {
                       <li key={href}>
                         <Link
                           href={href}
-                          className="hover:text-mp-primary transition-colors"
+                          className="hover:text-blue-400 transition-colors"
                         >
                           {label}
                         </Link>
@@ -119,14 +117,12 @@ export function HomeClient({ plans, articlePackages }: PricingProps) {
             </div>
 
             {/* Bottom Bar */}
-            <div className="mt-20 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
-              <div className="text-slate-600 text-[10px] font-bold uppercase tracking-widest">
+            <div className="mt-20 pt-8 border-t border-slate-800 flex flex-col md:flex-row justify-between items-center gap-6">
+              <div className="text-slate-400 text-[10px] font-bold uppercase tracking-widest">
                 {t("allRightsReserved")}
               </div>
               <div className="flex items-center gap-6">
-                {/* Social placeholders if needed */}
-                <div className="w-1.5 h-1.5 rounded-full bg-slate-800" />
-                <div className="text-slate-600 text-[10px] font-bold uppercase tracking-widest italic">
+                <div className="text-slate-400 text-[10px] font-bold uppercase tracking-widest italic">
                   {t("madeInTaiwan")}
                 </div>
               </div>

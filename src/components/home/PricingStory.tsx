@@ -4,8 +4,6 @@ import { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   FileText,
   Gift,
@@ -20,11 +18,6 @@ import {
   defaultViewport,
   containerVariants,
 } from "@/lib/animations";
-import {
-  createCardStyle,
-  createHeadingStyle,
-  gradientTextStyles,
-} from "@/lib/styles";
 import { PricingProps, ArticlePlan } from "@/types/pricing";
 
 const PLAN_STORY_KEYS: Record<string, string> = {
@@ -47,7 +40,6 @@ export function PricingStory({ plans, articlePackages }: PricingProps) {
   };
 
   const getYearlyBonus = (plan: ArticlePlan) => plan.articles_per_month * 2;
-
   const getPlanStoryLabel = (slug: string) => {
     const key = PLAN_STORY_KEYS[slug];
     return key ? t(key) : "";
@@ -56,12 +48,8 @@ export function PricingStory({ plans, articlePackages }: PricingProps) {
   return (
     <section
       id="pricing"
-      className="relative py-32 bg-slate-950 overflow-hidden"
+      className="relative py-32 bg-slate-50 overflow-hidden"
     >
-      {/* Background decorations */}
-      <div className="absolute top-0 left-1/4 w-[500px] h-[500px] bg-mp-primary/5 rounded-full blur-[120px] pointer-events-none" />
-      <div className="absolute bottom-0 right-1/4 w-[500px] h-[500px] bg-mp-accent/5 rounded-full blur-[120px] pointer-events-none" />
-
       <div className="container relative z-10 mx-auto px-4">
         {/* Story Intro - Cost Comparison */}
         <motion.div
@@ -72,16 +60,11 @@ export function PricingStory({ plans, articlePackages }: PricingProps) {
           className="max-w-4xl mx-auto mb-32"
         >
           <div className="text-center space-y-6 mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 text-xs font-bold text-slate-400 uppercase tracking-widest">
-              <Zap className="w-4 h-4 text-mp-accent" />
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white border border-slate-200 text-sm font-bold text-slate-800 uppercase tracking-widest shadow-sm">
+              <Zap className="w-4 h-4 text-orange-500" />
               {t("story.pricing.intro")}
             </div>
-            <h2
-              className={createHeadingStyle(
-                "hero",
-                "text-4xl md:text-6xl text-white font-bold",
-              )}
-            >
+            <h2 className="text-4xl md:text-6xl text-slate-900 font-bold tracking-tight">
               {t("chooseYourPlan")}
             </h2>
           </div>
@@ -90,22 +73,17 @@ export function PricingStory({ plans, articlePackages }: PricingProps) {
             {/* Before Card */}
             <motion.div
               variants={fadeUpVariants}
-              className="bg-slate-900/50 backdrop-blur-xl border border-white/5 rounded-[2.5rem] p-10 space-y-8 relative overflow-hidden group"
+              className="bg-white border border-slate-200 rounded-[2.5rem] p-10 space-y-8 relative overflow-hidden shadow-lg"
             >
-              <div className="absolute top-0 right-0 p-6 opacity-10 group-hover:opacity-20 transition-opacity">
-                <div className="w-20 h-20 border-4 border-slate-500 rounded-full flex items-center justify-center text-4xl font-black">
-                  ?
-                </div>
-              </div>
               <div className="space-y-2">
                 <span className="text-sm font-bold text-slate-500 uppercase tracking-tighter">
                   {t("story.pricing.before")}
                 </span>
-                <div className="text-4xl md:text-5xl font-black text-slate-400 line-through decoration-mp-primary/50 decoration-4">
+                <div className="text-4xl md:text-5xl font-black text-slate-400 line-through decoration-slate-300 decoration-4">
                   {t("story.pricing.beforeAmount")}
                 </div>
               </div>
-              <p className="text-slate-500 text-lg leading-relaxed italic">
+              <p className="text-slate-600 text-lg leading-relaxed italic">
                 {t("painPoints.expensiveWritersDesc")}
               </p>
             </motion.div>
@@ -113,20 +91,20 @@ export function PricingStory({ plans, articlePackages }: PricingProps) {
             {/* After Card */}
             <motion.div
               variants={fadeUpVariants}
-              className="bg-gradient-to-br from-mp-primary/10 to-mp-accent/10 backdrop-blur-xl border border-mp-primary/20 rounded-[2.5rem] p-10 space-y-8 relative overflow-hidden group"
+              className="bg-blue-50 border border-blue-200 rounded-[2.5rem] p-10 space-y-8 relative overflow-hidden shadow-lg"
             >
-              <div className="absolute top-0 right-0 p-6 opacity-20 group-hover:opacity-40 transition-opacity">
-                <Sparkles className="w-16 h-16 text-mp-primary" />
+              <div className="absolute top-0 right-0 p-6 opacity-20">
+                <Sparkles className="w-16 h-16 text-blue-600" />
               </div>
-              <div className="space-y-2">
-                <span className="text-sm font-bold text-mp-primary uppercase tracking-tighter">
+              <div className="space-y-2 relative z-10">
+                <span className="text-sm font-bold text-blue-600 uppercase tracking-tighter">
                   {t("story.pricing.after")}
                 </span>
-                <div className="text-4xl md:text-5xl font-black text-white">
+                <div className="text-4xl md:text-5xl font-black text-slate-900">
                   {t("story.pricing.afterAmount")}
                 </div>
               </div>
-              <div className="inline-flex items-center gap-2 px-4 py-2 bg-mp-success/20 border border-mp-success/30 rounded-full text-mp-success font-black text-sm">
+              <div className="inline-flex items-center gap-2 px-4 py-2 bg-green-100 border border-green-200 rounded-full text-green-700 font-black text-sm relative z-10">
                 {t("story.pricing.saving")}
               </div>
             </motion.div>
@@ -141,11 +119,11 @@ export function PricingStory({ plans, articlePackages }: PricingProps) {
           className="text-center mb-16 space-y-8"
         >
           {/* Billing Toggle */}
-          <div className="relative inline-flex items-center gap-1 p-1.5 rounded-2xl bg-slate-900/80 border border-white/10 shadow-2xl">
+          <div className="relative inline-flex items-center gap-1 p-1.5 rounded-2xl bg-white border border-slate-200 shadow-md">
             <AnimatePresence mode="wait">
               <motion.div
                 layoutId="active-pill"
-                className="absolute inset-y-1.5 rounded-xl bg-gradient-to-r from-mp-primary to-mp-accent"
+                className="absolute inset-y-1.5 rounded-xl bg-blue-600"
                 animate={{
                   left: billingCycle === "monthly" ? "6px" : "50%",
                   right: billingCycle === "monthly" ? "50%" : "6px",
@@ -158,7 +136,7 @@ export function PricingStory({ plans, articlePackages }: PricingProps) {
               className={`relative z-10 px-8 py-3 rounded-xl text-sm font-bold transition-colors duration-200 ${
                 billingCycle === "monthly"
                   ? "text-white"
-                  : "text-slate-500 hover:text-slate-300"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
               {t("monthlyBilling")}
@@ -168,11 +146,13 @@ export function PricingStory({ plans, articlePackages }: PricingProps) {
               className={`relative z-10 px-8 py-3 rounded-xl text-sm font-bold transition-colors duration-200 flex items-center gap-2 ${
                 billingCycle === "yearly"
                   ? "text-white"
-                  : "text-slate-500 hover:text-slate-300"
+                  : "text-slate-600 hover:text-slate-900"
               }`}
             >
               {t("yearlyBilling")}
-              <span className="px-1.5 py-0.5 text-[10px] bg-mp-success/20 text-mp-success rounded border border-mp-success/30">
+              <span
+                className={`px-1.5 py-0.5 text-[10px] rounded border ${billingCycle === "yearly" ? "bg-white/20 text-white border-white/30" : "bg-green-100 text-green-700 border-green-200"}`}
+              >
                 {tSub("yearlyBonus")}
               </span>
             </button>
@@ -200,36 +180,34 @@ export function PricingStory({ plans, articlePackages }: PricingProps) {
                 transition={{ delay: index * 0.1 }}
                 className={`relative flex flex-col ${isPopular ? "lg:-mt-4 lg:mb-4" : ""}`}
               >
-                {/* Popular Highlight */}
                 {isPopular && (
                   <div className="absolute -top-5 left-1/2 -translate-x-1/2 z-20">
-                    <div className="bg-gradient-to-r from-mp-primary to-mp-accent text-white px-6 py-1.5 rounded-full text-xs font-black uppercase tracking-[0.2em] shadow-xl">
+                    <div className="bg-orange-500 text-white px-6 py-1.5 rounded-full text-xs font-black uppercase tracking-[0.2em] shadow-lg">
                       {t("mostPopular")}
                     </div>
                   </div>
                 )}
 
                 <div
-                  className={`flex-1 bg-slate-900/50 backdrop-blur-2xl border rounded-[3rem] p-10 flex flex-col justify-between transition-all duration-500 hover:shadow-3xl ${
+                  className={`flex-1 bg-white rounded-[3rem] p-10 flex flex-col justify-between transition-all duration-500 hover:shadow-xl border ${
                     isPopular
-                      ? "border-mp-primary/40 shadow-mp-primary/10"
-                      : "border-white/5 hover:border-white/10"
+                      ? "border-blue-500 shadow-blue-500/10 shadow-2xl"
+                      : "border-slate-200"
                   }`}
                 >
                   <div className="space-y-10">
-                    {/* Plan Info */}
                     <div className="space-y-4">
                       {storyLabel && (
-                        <span className="text-[10px] font-black text-mp-primary uppercase tracking-[0.3em] block">
+                        <span className="text-[10px] font-black text-blue-600 uppercase tracking-[0.3em] block">
                           {storyLabel}
                         </span>
                       )}
-                      <h3 className="text-3xl font-bold text-white tracking-tight">
+                      <h3 className="text-3xl font-bold text-slate-900 tracking-tight">
                         {getPlanName(plan)}
                       </h3>
 
                       <div className="flex items-baseline gap-2">
-                        <span className="text-5xl font-black text-white tracking-tighter">
+                        <span className="text-5xl font-black text-slate-900 tracking-tighter">
                           NT${price?.toLocaleString()}
                         </span>
                         <span className="text-slate-500 font-bold text-sm uppercase">
@@ -238,19 +216,19 @@ export function PricingStory({ plans, articlePackages }: PricingProps) {
                       </div>
 
                       {billingCycle === "yearly" && (
-                        <div className="text-mp-success font-bold text-xs uppercase tracking-tighter">
+                        <div className="text-green-600 font-bold text-xs uppercase tracking-tighter">
                           {t("equivalentMonthly")} NT$
-                          {Math.round((price || 0) / 12).toLocaleString()} /{" "}
-                          {t("month")}
+                          {Math.round(
+                            (price || 0) / 12,
+                          ).toLocaleString()} / {t("month")}
                         </div>
                       )}
                     </div>
 
-                    {/* Features List */}
                     <div className="space-y-5">
-                      <div className="p-5 rounded-3xl bg-white/5 border border-white/5 space-y-1">
-                        <div className="text-white font-black text-xl flex items-center gap-2">
-                          <FileText className="w-5 h-5 text-mp-primary" />
+                      <div className="p-5 rounded-3xl bg-slate-50 border border-slate-200 space-y-1">
+                        <div className="text-slate-900 font-black text-xl flex items-center gap-2">
+                          <FileText className="w-5 h-5 text-blue-600" />
                           {plan.articles_per_month?.toLocaleString()}{" "}
                           {t("articles")}
                         </div>
@@ -259,7 +237,7 @@ export function PricingStory({ plans, articlePackages }: PricingProps) {
                         </p>
 
                         {billingCycle === "yearly" && yearlyBonus > 0 && (
-                          <div className="pt-2 flex items-center gap-2 text-xs font-bold text-mp-success">
+                          <div className="pt-2 flex items-center gap-2 text-xs font-bold text-green-600">
                             <Gift className="w-4 h-4" />
                             {t("bonusArticles")} {yearlyBonus} {t("articles")}
                           </div>
@@ -273,14 +251,11 @@ export function PricingStory({ plans, articlePackages }: PricingProps) {
                           "autoImageGen",
                           "scheduledPublish",
                         ].map((f) => (
-                          <div
-                            key={f}
-                            className="flex items-center gap-3 group/feat"
-                          >
-                            <div className="w-5 h-5 rounded-full bg-mp-success/10 border border-mp-success/20 flex items-center justify-center group-hover/feat:scale-110 transition-transform">
-                              <CheckCircle2 className="w-3 h-3 text-mp-success" />
+                          <div key={f} className="flex items-center gap-3">
+                            <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center">
+                              <CheckCircle2 className="w-3 h-3 text-green-600" />
                             </div>
-                            <span className="text-slate-400 text-sm font-medium group-hover:text-slate-200 transition-colors">
+                            <span className="text-slate-600 text-sm font-medium">
                               {t(f)}
                             </span>
                           </div>
@@ -289,18 +264,17 @@ export function PricingStory({ plans, articlePackages }: PricingProps) {
                     </div>
                   </div>
 
-                  {/* CTA */}
                   <div className="mt-12">
                     <Link
                       href="/signup"
-                      className={`w-full inline-flex items-center justify-center gap-3 px-8 py-5 rounded-[2rem] font-black text-base transition-all duration-300 group/btn ${
+                      className={`w-full inline-flex items-center justify-center gap-3 px-8 py-5 rounded-[2rem] font-black text-base transition-all duration-300 ${
                         isPopular
-                          ? "bg-gradient-to-r from-mp-primary to-mp-accent text-white shadow-2xl shadow-mp-primary/20 hover:scale-[1.02] hover:shadow-mp-primary/40"
-                          : "bg-white/5 text-white border border-white/10 hover:bg-white/10"
+                          ? "bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl hover:scale-[1.02]"
+                          : "bg-slate-100 text-slate-900 hover:bg-slate-200"
                       }`}
                     >
                       {t("startUsing")}
-                      <ArrowRight className="w-5 h-5 group-hover/btn:translate-x-1 transition-transform" />
+                      <ArrowRight className="w-5 h-5" />
                     </Link>
                   </div>
                 </div>
@@ -314,17 +288,17 @@ export function PricingStory({ plans, articlePackages }: PricingProps) {
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={defaultViewport}
-          className="max-w-5xl mx-auto pt-20 border-t border-white/5"
+          className="max-w-5xl mx-auto pt-20 border-t border-slate-200"
         >
           <div className="text-center space-y-4 mb-16">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-mp-accent/10 border border-mp-accent/20 text-xs font-bold text-mp-accent uppercase tracking-[0.2em]">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 border border-blue-100 text-xs font-bold text-blue-600 uppercase tracking-[0.2em]">
               <CreditCard className="w-4 h-4" />
               {t("articlePackage")}
             </div>
-            <h3 className="text-3xl md:text-4xl font-bold text-white">
+            <h3 className="text-3xl md:text-4xl font-bold text-slate-900">
               {t("needMoreArticles")}
             </h3>
-            <p className="text-slate-500 font-medium">
+            <p className="text-slate-600 font-medium">
               {t("packageDescArticle")}
             </p>
           </div>
@@ -335,15 +309,15 @@ export function PricingStory({ plans, articlePackages }: PricingProps) {
               return (
                 <div
                   key={pkg.id}
-                  className={`relative bg-slate-900/50 backdrop-blur-xl rounded-[2.5rem] p-8 border transition-all duration-300 hover:-translate-y-1 ${
+                  className={`relative bg-white rounded-[2.5rem] p-8 border transition-all duration-300 hover:-translate-y-1 ${
                     isPopular
-                      ? "border-mp-accent/50 shadow-2xl shadow-mp-accent/5"
-                      : "border-white/5 hover:border-white/10"
+                      ? "border-blue-500 shadow-xl"
+                      : "border-slate-200 shadow-sm hover:shadow-md"
                   }`}
                 >
                   <div className="text-center space-y-6">
                     <div className="space-y-1">
-                      <span className="text-3xl font-black text-white">
+                      <span className="text-3xl font-black text-slate-900">
                         {pkg.articles?.toLocaleString()} {t("articles")}
                       </span>
                       {pkg.description && (
@@ -352,16 +326,15 @@ export function PricingStory({ plans, articlePackages }: PricingProps) {
                         </p>
                       )}
                     </div>
-                    <div className="text-2xl font-black text-mp-accent tracking-tighter">
+                    <div className="text-2xl font-black text-blue-600 tracking-tighter">
                       NT${pkg.price?.toLocaleString()}
                     </div>
-                    <Button
-                      asChild
-                      variant="outline"
-                      className="w-full h-14 rounded-2xl border-white/10 text-white hover:bg-white/5 hover:text-white font-bold"
+                    <Link
+                      href="/login"
+                      className="inline-flex w-full items-center justify-center h-14 rounded-2xl border border-slate-200 text-slate-900 hover:bg-slate-50 font-bold transition-colors duration-200"
                     >
-                      <Link href="/login">{t("buy")}</Link>
-                    </Button>
+                      {t("buy")}
+                    </Link>
                   </div>
                 </div>
               );
@@ -374,7 +347,7 @@ export function PricingStory({ plans, articlePackages }: PricingProps) {
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={defaultViewport}
-          className="text-center text-xs font-bold text-slate-600 uppercase tracking-[0.3em] mt-20"
+          className="text-center text-xs font-bold text-slate-500 uppercase tracking-[0.3em] mt-20"
         >
           {t("story.pricing.freeNote")}
         </motion.p>

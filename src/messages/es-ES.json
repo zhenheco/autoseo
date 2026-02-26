@@ -729,7 +729,8 @@
         "feature2": "Los datos eran reales, con fuentes citadas",
         "feature3": "Hasta las imágenes se generaron automáticamente",
         "feature4": "Incluso programó los horarios de publicación en WordPress",
-        "reaction": "\"Espera... ¿tan rápido?\""
+        "reaction": "\"Espera... ¿tan rápido?\"",
+        "badge": "El punto de inflexión"
       },
       "results": {
         "title": "Mei, tres meses después",
@@ -747,7 +748,13 @@
           "title": "Rankings subieron",
           "desc": "3 artículos en la primera página de Google",
           "stat": "Tráfico orgánico +340%"
-        }
+        },
+        "chartTitle": "Tráfico SEO duplicado",
+        "chartDesc": "Basado en datos promedio de más de 1000 usuarios reales después de 3 meses",
+        "badge": "Caso de éxito",
+        "month1": "Mes 1",
+        "month2": "Mes 2",
+        "month3": "Mes 3 (Hoy)"
       },
       "socialProof": {
         "title": "No solo Mei lo experimenta",
@@ -766,7 +773,10 @@
           "role": "Consultor SEO",
           "message": "Lo recomendé a más de 20 clientes. Todos dicen que no pueden volver a escribir manualmente."
         },
-        "stats": "500+ empresas | 50,000+ artículos | 4.9/5 satisfacción"
+        "stats": "500+ empresas | 50,000+ artículos | 4.9/5 satisfacción",
+        "react": "Reaccionar",
+        "reply": "Responder",
+        "verifiedResult": "Resultado verificado"
       },
       "threeSteps": {
         "title": "Solo tres pasos",
@@ -784,7 +794,10 @@
           "title": "Publicar en WordPress con un clic",
           "desc": "Publicación programada, formato automático, soporte de traducción multilingüe",
           "aside": "Mei dice: \"Configuro el horario y listo. Los artículos se publican solos.\""
-        }
+        },
+        "badge": "Flujo simple",
+        "stepLabel": "Paso 0{step}",
+        "xiaoMeiChoice": "La elección de Mei"
       },
       "pricing": {
         "intro": "Mei hizo las cuentas",
@@ -845,7 +858,9 @@
         "question": "¿Qué métodos de pago se admiten?",
         "answer": "Admitimos tarjetas de crédito (Visa, MasterCard, JCB), transferencias bancarias en línea y otros métodos de pago, procesados de forma segura a través de NewebPay."
       }
-    }
+    },
+    "stillHaveQuestions": "¿Aún tienes preguntas?",
+    "contactSupport": "Contactar soporte"
   },
   "errors": {
     "generic": "Ocurrió un error. Por favor intente de nuevo más tarde",
