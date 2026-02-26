@@ -97,7 +97,7 @@
   },
   "devDependencies": {
     "@octokit/rest": "^22.0.1",
-    "@opennextjs/cloudflare": "^1.11.0",
+    "@opennextjs/cloudflare": "^1.17.1",
     "@playwright/test": "^1.56.1",
     "@tailwindcss/postcss": "^4.1.16",
     "@tailwindcss/typography": "^0.5.19",
@@ -133,7 +133,7 @@
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "vitest": "^4.0.8",
-    "wrangler": "^4.45.3"
+    "wrangler": "^4.68.1"
   },
   "packageManager": "pnpm@9.15.0",
   "pnpm": {
