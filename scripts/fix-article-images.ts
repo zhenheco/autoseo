@@ -108,9 +108,20 @@ function insertImagesToHtml(
   return modifiedHtml;
 }
 
+interface ArticleData {
+  id: string;
+  title: string;
+  html_content: string | null;
+  featured_image_url: string | null;
+  featured_image_alt?: string | null;
+  featured_image_width?: number | null;
+  featured_image_height?: number | null;
+  content_images?: any[] | null;
+}
+
 async function processArticle(
   supabase: ReturnType<typeof createClient>,
-  article: any,
+  article: ArticleData,
 ): Promise<boolean> {
   const hasImages = article.html_content?.includes("<img ");
 
@@ -124,7 +135,7 @@ async function processArticle(
     ? fixGoogleDriveUrl(article.featured_image_url)
     : null;
 
-  const fixedContentImages = (article.content_images || []).map((img: any) => ({
+  const fixedContentImages = (article.content_images || []).map((img) => ({
     ...img,
     url: fixGoogleDriveUrl(img.url),
   }));
@@ -139,15 +150,12 @@ async function processArticle(
       }
     : null;
 
-  const contentImages: GeneratedImage[] = fixedContentImages.map(
-    (img: any) => ({
-      url: img.url,
-      altText:
-        img.alt_text || img.altText || img.suggested_section || "內文圖片",
-      width: img.width || 1024,
-      height: img.height || 1024,
-    }),
-  );
+  const contentImages: GeneratedImage[] = fixedContentImages.map((img) => ({
+    url: img.url,
+    altText: img.alt_text || img.altText || img.suggested_section || "內文圖片",
+    width: img.width || 1024,
+    height: img.height || 1024,
+  }));
 
   if (!featuredImage && contentImages.length === 0) {
     console.log(
@@ -157,7 +165,7 @@ async function processArticle(
   }
 
   // 直接使用當前 HTML 並移除現有 figure 標籤
-  const htmlWithoutImages = article.html_content.replace(
+  const htmlWithoutImages = (article.html_content || "").replace(
     /<figure[^>]*>[\s\S]*?<\/figure>/g,
     "",
   );
@@ -169,7 +177,7 @@ async function processArticle(
   );
 
   // 更新資料庫
-  const updateData: any = {
+  const updateData: Record<string, any> = {
     html_content: updatedHtml,
     updated_at: new Date().toISOString(),
   };

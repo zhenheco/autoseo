@@ -24,7 +24,7 @@ export function verifyWebhookSignature(
   secret: string,
   signature: string,
   timestamp: number,
-  maxAgeMs: number = 5 * 60 * 1000
+  maxAgeMs: number = 5 * 60 * 1000,
 ): SignatureVerificationResult {
   // 檢查時間戳是否在有效範圍內
   const now = Date.now();
@@ -64,6 +64,7 @@ export function verifyWebhookSignature(
 function generateSignatureSync(payload: string, secret: string): string {
   // 嘗試使用 Node.js crypto（較快）
   try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
     const crypto = require("crypto");
     const hmac = crypto.createHmac("sha256", secret);
     hmac.update(payload, "utf8");
@@ -101,7 +102,7 @@ export class WebhookHandler {
   async handleWebhook(
     body: string,
     signature: string | null,
-    timestamp: string | null
+    timestamp: string | null,
   ): Promise<WebhookHandlerResult> {
     // 驗證簽章
     if (!signature || !timestamp) {
@@ -123,7 +124,7 @@ export class WebhookHandler {
       body,
       this.webhookSecret,
       signature,
-      timestampNum
+      timestampNum,
     );
 
     if (!verifyResult.valid) {
@@ -172,7 +173,7 @@ export class WebhookHandler {
    * 處理文章建立事件
    */
   private async handleArticleCreated(
-    payload: WebhookPayload
+    payload: WebhookPayload,
   ): Promise<WebhookHandlerResult> {
     const articleData = this.mapPayloadToArticle(payload);
 
@@ -205,7 +206,7 @@ export class WebhookHandler {
    * 處理文章更新事件
    */
   private async handleArticleUpdated(
-    payload: WebhookPayload
+    payload: WebhookPayload,
   ): Promise<WebhookHandlerResult> {
     const articleData = this.mapPayloadToArticle(payload);
 
@@ -238,7 +239,7 @@ export class WebhookHandler {
    * 處理文章刪除事件
    */
   private async handleArticleDeleted(
-    payload: WebhookPayload
+    payload: WebhookPayload,
   ): Promise<WebhookHandlerResult> {
     const sourceId = payload.article.source_id;
 
@@ -272,7 +273,9 @@ export class WebhookHandler {
   /**
    * 將 Webhook Payload 映射到文章資料
    */
-  private mapPayloadToArticle(payload: WebhookPayload): Record<string, unknown> {
+  private mapPayloadToArticle(
+    payload: WebhookPayload,
+  ): Record<string, unknown> {
     const article = payload.article;
     const now = new Date().toISOString();
 
@@ -317,7 +320,7 @@ export class WebhookHandler {
  * 建立 Webhook Handler 實例
  */
 export function createWebhookHandler(
-  config: WebhookHandlerConfig
+  config: WebhookHandlerConfig,
 ): WebhookHandler {
   return new WebhookHandler(config);
 }

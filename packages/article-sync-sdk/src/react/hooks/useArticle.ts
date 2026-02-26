@@ -25,7 +25,7 @@ import type {
 export function useArticle(
   config: SyncClientConfig,
   slug: string,
-  options: UseArticleOptions = {}
+  options: UseArticleOptions = {},
 ): UseArticleResult {
   const { enabled = true } = options;
 
@@ -48,13 +48,7 @@ export function useArticle(
     } finally {
       setIsLoading(false);
     }
-  }, [
-    config.supabaseUrl,
-    config.supabaseKey,
-    config.tableName,
-    slug,
-    enabled,
-  ]);
+  }, [config, slug, enabled]);
 
   useEffect(() => {
     fetchArticle();
@@ -79,7 +73,7 @@ export function useArticle(
 export function useArticleBySourceId(
   config: SyncClientConfig,
   sourceId: string,
-  options: UseArticleOptions = {}
+  options: UseArticleOptions = {},
 ): UseArticleResult {
   const { enabled = true } = options;
 
@@ -102,13 +96,7 @@ export function useArticleBySourceId(
     } finally {
       setIsLoading(false);
     }
-  }, [
-    config.supabaseUrl,
-    config.supabaseKey,
-    config.tableName,
-    sourceId,
-    enabled,
-  ]);
+  }, [config, sourceId, enabled]);
 
   useEffect(() => {
     fetchArticle();

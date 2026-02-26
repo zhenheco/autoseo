@@ -27,7 +27,7 @@ import type {
  */
 export function useArticles(
   config: SyncClientConfig,
-  options: UseArticlesOptions = {}
+  options: UseArticlesOptions = {},
 ): UseArticlesResult {
   const {
     limit = 10,
@@ -73,9 +73,7 @@ export function useArticles(
       setIsLoading(false);
     }
   }, [
-    config.supabaseUrl,
-    config.supabaseKey,
-    config.tableName,
+    config,
     limit,
     offset,
     language,

@@ -9,10 +9,15 @@ export default [
       ".open-next/**",
       "out/**",
       "build/**",
+      "**/build/**",
       "dist/**",
+      "**/dist/**",
+      "packages/*/dist/**",
       ".vercel/**",
       "*.config.js",
       "*.config.mjs",
+      "*.config.ts",
+      "next-env.d.ts",
     ],
   },
   ...nextCoreWebVitals,
@@ -21,6 +26,13 @@ export default [
     rules: {
       "@typescript-eslint/no-unused-vars": "warn",
       "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-require-imports": "warn",
+    },
+  },
+  {
+    files: ["**/*.js", "scripts/**/*.ts", "scripts/**/*.js"],
+    rules: {
+      "@typescript-eslint/no-require-imports": "off",
     },
   },
 ];

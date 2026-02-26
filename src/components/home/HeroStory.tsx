@@ -2,225 +2,181 @@
 
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
-import { fadeUpVariants, defaultViewport } from "@/lib/animations";
+import {
+  fadeUpVariants,
+  defaultViewport,
+  containerVariants,
+} from "@/lib/animations";
 import {
   createHeadingStyle,
   createTextStyle,
   buttonStyles,
   gradientTextStyles,
-  backgroundStyles,
 } from "@/lib/styles";
+import { Moon, Clock, Sparkles } from "lucide-react";
 
 export function HeroStory() {
   const t = useTranslations("home");
 
   return (
-    <section className="relative min-h-screen bg-mp-bg bg-noise flex items-center justify-center overflow-hidden">
-      {/* Ambient Glow Effects */}
-      <div className="absolute top-20 -left-20 w-96 h-96 bg-mp-primary/20 rounded-full blur-3xl animate-float-orb" />
-      <div
-        className="absolute bottom-40 -right-32 w-80 h-80 bg-mp-accent/15 rounded-full blur-3xl animate-float-orb"
-        style={{ animationDelay: "2s" }}
-      />
+    <section className="relative min-h-screen bg-slate-950 flex items-center justify-center overflow-hidden py-20 px-4">
+      {/* Background Decorative Elements */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-mp-primary/10 rounded-full blur-[120px] animate-pulse" />
+        <div
+          className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-mp-accent/10 rounded-full blur-[120px] animate-pulse"
+          style={{ animationDelay: "2s" }}
+        />
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-full bg-[url('/noise.png')] opacity-[0.03] mix-blend-overlay" />
+      </div>
 
-      <div className="container mx-auto px-4 py-24">
-        <div className="grid lg:grid-cols-2 gap-16 items-center max-w-7xl mx-auto">
-          {/* Left Column - Content */}
+      <div className="container relative z-10 mx-auto max-w-5xl">
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={defaultViewport}
+          className="flex flex-col items-center text-center space-y-10"
+        >
+          {/* Status Badge */}
           <motion.div
-            initial="hidden"
-            whileInView="visible"
-            viewport={defaultViewport}
-            className="space-y-8"
+            variants={fadeUpVariants}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900/50 border border-white/10 backdrop-blur-md shadow-xl"
           >
-            {/* Main Headline */}
-            <motion.h1
-              custom={0}
-              variants={fadeUpVariants}
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-mp-accent opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-mp-accent"></span>
+            </span>
+            <span className="text-xs font-medium text-slate-300 tracking-wider flex items-center gap-1.5">
+              <Clock className="w-3 h-3" />
+              {t("story.hero.scene")}
+            </span>
+          </motion.div>
+
+          {/* Emotional Headline */}
+          <motion.div variants={fadeUpVariants} className="space-y-4">
+            <h1
               className={createHeadingStyle(
                 "hero",
-                "text-6xl lg:text-7xl tracking-tight leading-[1.1]",
+                "text-4xl md:text-6xl lg:text-7xl text-white leading-tight font-bold tracking-tight",
               )}
             >
-              10 分鐘生成
-              <span className={`block ${gradientTextStyles.primary}`}>
-                排名前 1%
+              {t("heroTitle1")}
+              <span
+                className={`block md:inline-block ml-0 md:ml-3 ${gradientTextStyles.primary}`}
+              >
+                {t("heroTitle2")}
               </span>
-              <span className="block">的 SEO 文章</span>
-            </motion.h1>
-
-            {/* Subtitle */}
-            <motion.p
-              custom={1}
-              variants={fadeUpVariants}
+            </h1>
+            <p
               className={createTextStyle(
                 "secondary",
                 "",
-                "text-lg md:text-xl max-w-lg",
+                "text-xl md:text-2xl text-slate-400 max-w-3xl mx-auto font-medium",
               )}
             >
-              使用 AI
-              驅動的智慧內容生成系統，讓您的網站在搜尋結果中脫穎而出。無需複雜設定，一鍵發布至
-              WordPress。
-            </motion.p>
-
-            {/* CTA Button */}
-            <motion.div
-              custom={2}
-              variants={fadeUpVariants}
-              className="flex flex-col sm:flex-row gap-4"
-            >
-              <a
-                href="/signup"
-                className={`${buttonStyles.primary} gap-3 px-8 py-4 text-lg animate-pulse-glow`}
-              >
-                立即開始免費試用
-                <svg
-                  className="w-5 h-5 transition-transform group-hover:translate-x-1"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M17 8l4 4m0 0l-4 4m4-4H3"
-                  />
-                </svg>
-              </a>
-
-              <a
-                href="#demo"
-                className={`${buttonStyles.secondary} gap-2 px-8 py-4 text-lg rounded-2xl`}
-              >
-                觀看示範
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1M9 10V9a3 3 0 116 0v1M9 10c0 1.105.895 2 2 2h2c1.105 0 2-.895 2-2M9 10c0 1.105.895 2 2 2h2c1.105 0 2-.895 2-2"
-                  />
-                </svg>
-              </a>
-            </motion.div>
-
-            {/* Stats */}
-            <motion.div
-              custom={3}
-              variants={fadeUpVariants}
-              className="flex flex-wrap gap-8 pt-8"
-            >
-              <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-mp-primary">
-                  10 分鐘
-                </div>
-                <div className="text-sm text-mp-text-secondary">
-                  平均生成時間
-                </div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-mp-success">
-                  50+
-                </div>
-                <div className="text-sm text-mp-text-secondary">支援語系</div>
-              </div>
-              <div className="text-center">
-                <div className="text-2xl md:text-3xl font-bold text-mp-accent">
-                  1000+
-                </div>
-                <div className="text-sm text-mp-text-secondary">滿意用戶</div>
-              </div>
-            </motion.div>
+              {t("story.hero.narration")}
+            </p>
           </motion.div>
 
-          {/* Right Column - Product Preview */}
+          {/* Interactive Card/Scene Visualization */}
           <motion.div
-            custom={2}
             variants={fadeUpVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={defaultViewport}
-            className="relative"
+            className="w-full max-w-4xl aspect-[16/9] relative group mt-8"
           >
-            {/* Mock Dashboard Interface */}
-            <div className="relative bg-gradient-to-br from-mp-surface/80 to-mp-surface/60 backdrop-blur-xl border border-mp-primary/10 rounded-3xl p-8 shadow-2xl">
-              {/* Header */}
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="w-3 h-3 bg-red-500 rounded-full" />
-                  <div className="w-3 h-3 bg-yellow-500 rounded-full" />
-                  <div className="w-3 h-3 bg-green-500 rounded-full" />
-                </div>
-                <div className="text-sm text-mp-text-secondary">
-                  1WaySEO Dashboard
-                </div>
-              </div>
+            <div className="absolute inset-0 bg-gradient-to-r from-mp-primary/20 to-mp-accent/20 rounded-[2.5rem] blur-2xl group-hover:scale-105 transition-transform duration-500 opacity-50" />
+            <div className="relative h-full w-full bg-slate-900/80 backdrop-blur-2xl border border-white/10 rounded-[2.5rem] p-1 overflow-hidden shadow-2xl">
+              <div className="h-full w-full bg-slate-950 rounded-[2.25rem] relative overflow-hidden flex items-center justify-center">
+                {/* Midnight Coding Scene Mockup */}
+                <div className="absolute inset-0 bg-gradient-to-br from-slate-900/50 to-transparent" />
 
-              {/* Content */}
-              <div className="space-y-4">
-                <div className="h-4 bg-mp-primary/20 rounded animate-shimmer" />
-                <div
-                  className="h-4 bg-mp-accent/20 rounded w-3/4 animate-shimmer"
-                  style={{ animationDelay: "0.5s" }}
-                />
-                <div
-                  className="h-4 bg-mp-success/20 rounded w-1/2 animate-shimmer"
-                  style={{ animationDelay: "1s" }}
-                />
-
-                <div className="mt-8 p-4 bg-mp-primary/10 rounded-xl border border-mp-primary/20">
-                  <div className="text-sm text-mp-primary font-semibold mb-2">
-                    ✨ 文章生成中...
+                <div className="relative z-10 w-full max-w-2xl p-8 space-y-6">
+                  {/* Floating Code Snippets / UI Elements */}
+                  <div className="flex gap-4">
+                    <div className="h-3 w-3 rounded-full bg-red-500/50" />
+                    <div className="h-3 w-3 rounded-full bg-yellow-500/50" />
+                    <div className="h-3 w-3 rounded-full bg-green-500/50" />
                   </div>
-                  <div className="w-full bg-mp-surface rounded-full h-2">
+
+                  <div className="space-y-4">
+                    <div className="h-4 bg-slate-800 rounded-full w-full animate-shimmer" />
                     <div
-                      className="bg-gradient-to-r from-mp-primary to-mp-accent h-2 rounded-full animate-pulse"
-                      style={{ width: "75%" }}
+                      className="h-4 bg-slate-800 rounded-full w-[90%] animate-shimmer"
+                      style={{ animationDelay: "0.2s" }}
+                    />
+                    <div
+                      className="h-4 bg-slate-800 rounded-full w-[85%] animate-shimmer"
+                      style={{ animationDelay: "0.4s" }}
+                    />
+                    <div
+                      className="h-4 bg-slate-800 rounded-full w-[70%] animate-shimmer"
+                      style={{ animationDelay: "0.6s" }}
                     />
                   </div>
+
+                  <div className="pt-10 flex flex-col items-center gap-6">
+                    <div className="px-6 py-4 bg-white/5 border border-white/10 rounded-2xl backdrop-blur-xl animate-float">
+                      <p className="text-mp-accent font-medium italic text-lg md:text-xl">
+                        {t("story.hero.question")}
+                      </p>
+                    </div>
+
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: 2, duration: 1 }}
+                      className="px-8 py-5 bg-gradient-to-r from-mp-primary to-mp-accent rounded-3xl shadow-2xl shadow-mp-primary/20 flex items-center gap-4"
+                    >
+                      <Sparkles className="w-6 h-6 text-white animate-pulse" />
+                      <span className="text-white font-bold text-xl tracking-wide">
+                        {t("story.hero.answer")}
+                      </span>
+                    </motion.div>
+                  </div>
                 </div>
               </div>
             </div>
+          </motion.div>
 
-            {/* Floating Elements */}
-            <div className="absolute -top-4 -right-4 w-16 h-16 bg-mp-success/20 rounded-xl backdrop-blur-sm border border-mp-success/30 flex items-center justify-center">
-              <svg
-                className="w-8 h-8 text-mp-success"
-                fill="currentColor"
-                viewBox="0 0 20 20"
-              >
-                <path
-                  fillRule="evenodd"
-                  d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                  clipRule="evenodd"
-                />
-              </svg>
-            </div>
-
-            <div className="absolute -bottom-6 -left-6 w-20 h-20 bg-mp-accent/20 rounded-2xl backdrop-blur-sm border border-mp-accent/30 flex items-center justify-center">
-              <svg
-                className="w-10 h-10 text-mp-accent"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
+          {/* CTA Group */}
+          <motion.div
+            variants={fadeUpVariants}
+            className="flex flex-col sm:flex-row items-center gap-6 pt-4"
+          >
+            <a
+              href="/signup"
+              className={`${buttonStyles.primary} !px-12 !py-5 !text-xl !rounded-2xl group overflow-hidden`}
+            >
+              <span className="relative z-10 flex items-center gap-2">
+                {t("story.hero.cta")}
+                <Sparkles className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+              </span>
+              <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 -translate-x-full group-hover:translate-x-full transition-transform duration-700" />
+            </a>
+            <div className="flex items-center gap-4 text-slate-500 text-sm font-medium">
+              <span className="flex items-center gap-1.5 italic">
+                <Moon className="w-4 h-4" />
+                {t("noCreditCard")}
+              </span>
+              <div className="w-1.5 h-1.5 rounded-full bg-slate-800" />
+              <span>{t("trustIndicators.freeArticles")}</span>
             </div>
           </motion.div>
-        </div>
+        </motion.div>
       </div>
+
+      {/* Scroll Indicator */}
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 3, duration: 1 }}
+        className="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2"
+      >
+        <span className="text-[10px] uppercase tracking-[0.2em] text-slate-500 font-bold">
+          {t("discoverMore")}
+        </span>
+        <div className="w-px h-12 bg-gradient-to-b from-mp-primary to-transparent" />
+      </motion.div>
     </section>
   );
 }

@@ -49,44 +49,86 @@ export function HomeClient({ plans, articlePackages }: PricingProps) {
         <ClosingCTA />
 
         {/* Footer */}
-        <footer className="relative py-16 bg-mp-bg bg-noise border-t border-mp-primary/10">
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-mp-primary/50 to-transparent" />
-          <div className="container mx-auto px-4">
-            <div className="flex flex-col md:flex-row justify-between items-center gap-8">
-              <div className="flex flex-col items-center md:items-start gap-4">
-                <div className="text-mp-text-secondary text-sm">
-                  © 2024 1WaySEO. All rights reserved.
+        <footer className="relative py-24 bg-slate-950 border-t border-white/5 overflow-hidden">
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full h-px bg-gradient-to-r from-transparent via-mp-primary/30 to-transparent" />
+
+          <div className="container mx-auto px-4 relative z-10">
+            <div className="flex flex-col md:flex-row justify-between items-start gap-16 md:gap-8">
+              {/* Brand Section */}
+              <div className="flex flex-col items-start gap-6 max-w-sm">
+                <div className="text-2xl font-black text-white tracking-tighter flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-mp-primary to-mp-accent flex items-center justify-center text-sm">
+                    1
+                  </div>
+                  1WaySEO
                 </div>
-                <div className="flex items-center gap-2 px-4 py-2 bg-mp-success/10 border border-mp-success/30 rounded-full text-xs text-mp-success font-medium">
-                  <svg
-                    className="w-3 h-3"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path
-                      fillRule="evenodd"
-                      d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z"
-                      clipRule="evenodd"
-                    />
-                  </svg>
-                  由 AI 技術驅動
+                <p className="text-slate-500 text-sm leading-relaxed font-medium">
+                  {t("heroDescription")}
+                </p>
+                <div className="flex items-center gap-3 px-4 py-2 bg-white/5 border border-white/10 rounded-2xl text-[10px] text-mp-success font-black uppercase tracking-widest shadow-inner">
+                  <span className="relative flex h-2 w-2">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-mp-success opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-2 w-2 bg-mp-success"></span>
+                  </span>
+                  {t("aiPoweredWorkflow")}
                 </div>
               </div>
-              <div className="flex gap-8 text-sm text-mp-text-secondary">
-                {[
-                  { href: "/blog", label: t("blog") },
-                  { href: "/terms", label: t("terms") },
-                  { href: "/privacy", label: t("privacy") },
-                ].map(({ href, label }) => (
-                  <Link
-                    key={href}
-                    href={href}
-                    className="hover:text-mp-text transition-colors duration-200 relative group"
-                  >
-                    {label}
-                    <span className="absolute -bottom-1 left-0 w-0 h-0.5 bg-mp-primary transition-all duration-300 group-hover:w-full" />
-                  </Link>
-                ))}
+
+              {/* Links Sections */}
+              <div className="grid grid-cols-2 md:grid-cols-2 gap-12 md:gap-24">
+                <div className="space-y-6">
+                  <h4 className="text-xs font-black text-white uppercase tracking-[0.3em]">
+                    {t("resources")}
+                  </h4>
+                  <ul className="space-y-4 text-sm font-medium text-slate-500">
+                    {[{ href: "/blog", label: t("blog") }].map(
+                      ({ href, label }) => (
+                        <li key={href}>
+                          <Link
+                            href={href}
+                            className="hover:text-mp-primary transition-colors"
+                          >
+                            {label}
+                          </Link>
+                        </li>
+                      ),
+                    )}
+                  </ul>
+                </div>
+                <div className="space-y-6">
+                  <h4 className="text-xs font-black text-white uppercase tracking-[0.3em]">
+                    {t("legal")}
+                  </h4>
+                  <ul className="space-y-4 text-sm font-medium text-slate-500">
+                    {[
+                      { href: "/terms", label: t("terms") },
+                      { href: "/privacy", label: t("privacy") },
+                    ].map(({ href, label }) => (
+                      <li key={href}>
+                        <Link
+                          href={href}
+                          className="hover:text-mp-primary transition-colors"
+                        >
+                          {label}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+            </div>
+
+            {/* Bottom Bar */}
+            <div className="mt-20 pt-8 border-t border-white/5 flex flex-col md:flex-row justify-between items-center gap-6">
+              <div className="text-slate-600 text-[10px] font-bold uppercase tracking-widest">
+                {t("allRightsReserved")}
+              </div>
+              <div className="flex items-center gap-6">
+                {/* Social placeholders if needed */}
+                <div className="w-1.5 h-1.5 rounded-full bg-slate-800" />
+                <div className="text-slate-600 text-[10px] font-bold uppercase tracking-widest italic">
+                  {t("madeInTaiwan")}
+                </div>
               </div>
             </div>
           </div>

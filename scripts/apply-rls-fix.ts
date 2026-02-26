@@ -1,15 +1,13 @@
-import * as dotenv from 'dotenv'
-import * as path from 'path'
-import { fileURLToPath } from 'url'
-import * as fs from 'fs'
+import * as dotenv from "dotenv";
+import * as path from "path";
+import { fileURLToPath } from "url";
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-dotenv.config({ path: path.resolve(__dirname, '../.env.local') })
+dotenv.config({ path: path.resolve(__dirname, "../.env.local") });
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 
 const sql = `
 -- 修正 companies 和 company_members RLS 策略的循環依賴問題
@@ -53,29 +51,29 @@ CREATE POLICY "Company owners can update members"
       WHERE c.id = company_id AND c.owner_id = auth.uid()
     )
   );
-`
+`;
 
 async function applySql() {
-  console.log('🔧 套用 RLS 修正...')
+  console.log("🔧 套用 RLS 修正...");
 
-  const projectRef = supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1]
+  const projectRef = supabaseUrl.match(/https:\/\/([^.]+)\.supabase\.co/)?.[1];
   if (!projectRef) {
-    console.error('❌ 無法從 URL 提取 project ref:', supabaseUrl)
-    return
+    console.error("❌ 無法從 URL 提取 project ref:", supabaseUrl);
+    return;
   }
 
-  console.log('Project ref:', projectRef)
+  console.log("Project ref:", projectRef);
 
-  const dbUrl = process.env.SUPABASE_DB_URL
+  const dbUrl = process.env.SUPABASE_DB_URL;
   if (!dbUrl) {
-    console.error('❌ 找不到 SUPABASE_DB_URL')
-    return
+    console.error("❌ 找不到 SUPABASE_DB_URL");
+    return;
   }
 
-  console.log('\n請在 Supabase Dashboard 的 SQL Editor 手動執行以下 SQL:\n')
-  console.log('=' .repeat(80))
-  console.log(sql)
-  console.log('=' .repeat(80))
+  console.log("\n請在 Supabase Dashboard 的 SQL Editor 手動執行以下 SQL:\n");
+  console.log("=".repeat(80));
+  console.log(sql);
+  console.log("=".repeat(80));
 }
 
-applySql()
+applySql();

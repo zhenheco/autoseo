@@ -809,7 +809,16 @@
         "trust2": "Sin tarjeta de crédito",
         "trust3": "Empieza en 30 segundos"
       }
-    }
+    },
+    "discoverMore": "Descubre más",
+    "coreCapabilities": "Capacidades principales",
+    "learnMore": "Saber más",
+    "joinCreators": "Únete a más de 1000 creadores",
+    "aiPoweredWorkflow": "Flujo de trabajo impulsado por IA",
+    "resources": "Recursos",
+    "legal": "Legal",
+    "allRightsReserved": "© 2026 1WaySEO. Todos los derechos reservados. Construido para el futuro.",
+    "madeInTaiwan": "Made with Passion in Taiwan"
   },
   "faq": {
     "title": "Preguntas frecuentes",

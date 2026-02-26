@@ -1539,7 +1539,16 @@
         "trust2": "No credit card needed",
         "trust3": "Start in 30 seconds"
       }
-    }
+    },
+    "discoverMore": "Discover More",
+    "coreCapabilities": "Core Capabilities",
+    "learnMore": "Learn more",
+    "joinCreators": "Join 1000+ Creators",
+    "aiPoweredWorkflow": "AI Powered Workflow",
+    "resources": "Resources",
+    "legal": "Legal",
+    "allRightsReserved": "© 2026 1WaySEO. All rights reserved. Built for the future.",
+    "madeInTaiwan": "Made with Passion in Taiwan"
   },
   "faq": {
     "title": "FAQ",

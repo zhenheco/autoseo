@@ -1,21 +1,20 @@
-import { createClient } from '@supabase/supabase-js'
-import * as dotenv from 'dotenv'
-import * as path from 'path'
-import { fileURLToPath } from 'url'
-import * as fs from 'fs'
+import { createClient } from "@supabase/supabase-js";
+import * as dotenv from "dotenv";
+import * as path from "path";
+import { fileURLToPath } from "url";
 
-const __filename = fileURLToPath(import.meta.url)
-const __dirname = path.dirname(__filename)
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
-dotenv.config({ path: path.resolve(__dirname, '../.env.local') })
+dotenv.config({ path: path.resolve(__dirname, "../.env.local") });
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
-const supabase = createClient(supabaseUrl, supabaseKey)
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function fixRLSPolicies() {
-  console.log('🔧 開始修復 RLS 策略...')
+  console.log("🔧 開始修復 RLS 策略...");
 
   const sql = `
 -- 修正 companies 和 company_members RLS 策略的循環依賴問題
@@ -59,35 +58,35 @@ CREATE POLICY "Company owners can update members"
       WHERE c.id = company_id AND c.owner_id = auth.uid()
     )
   );
-`
+`;
 
   try {
-    const { data, error } = await supabase.rpc('exec_sql', { sql_query: sql })
+    const { error } = await supabase.rpc("exec_sql", { sql_query: sql });
 
     if (error) {
-      console.error('❌ 執行 SQL 失敗:', error)
+      console.error("❌ 執行 SQL 失敗:", error);
 
-      console.log('\n嘗試使用直接的 SQL 連接...')
-      const sqlLines = sql.split(';').filter(line => line.trim())
+      console.log("\n嘗試使用直接的 SQL 連接...");
+      const sqlLines = sql.split(";").filter((line) => line.trim());
 
       for (const line of sqlLines) {
         if (line.trim()) {
           try {
-            const result = await supabase.from('_sql').select('*').limit(0)
-            console.log('✅ 執行:', line.substring(0, 50) + '...')
+            await supabase.from("_sql").select("*").limit(0);
+            console.log("✅ 執行:", line.substring(0, 50) + "...");
           } catch (err) {
-            console.error('❌ 執行失敗:', line.substring(0, 50), err)
+            console.error("❌ 執行失敗:", line.substring(0, 50), err);
           }
         }
       }
     } else {
-      console.log('✅ RLS 策略修復成功！')
+      console.log("✅ RLS 策略修復成功！");
     }
   } catch (err) {
-    console.error('❌ 錯誤:', err)
-    console.log('\n請手動執行以下 SQL:')
-    console.log(sql)
+    console.error("❌ 錯誤:", err);
+    console.log("\n請手動執行以下 SQL:");
+    console.log(sql);
   }
 }
 
-fixRLSPolicies()
+fixRLSPolicies();
