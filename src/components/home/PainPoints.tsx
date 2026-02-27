@@ -2,73 +2,61 @@
 
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
-import { DollarSign, Clock, BarChart3 } from "lucide-react";
+import { DollarSign, Clock, BarChart3, LucideIcon } from "lucide-react";
+import {
+  containerVariants,
+  fadeUpVariants,
+  defaultViewport,
+} from "@/lib/animations";
 
-const painItems = [
-  {
-    key: "outsource",
-    icon: DollarSign,
-    tagColor: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400",
-    cardBg:
-      "bg-red-50/50 dark:bg-red-950/20 border-red-200/50 dark:border-red-800/30",
-  },
-  {
-    key: "diy",
-    icon: Clock,
-    tagColor:
-      "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
-    cardBg:
-      "bg-orange-50/50 dark:bg-orange-950/20 border-orange-200/50 dark:border-orange-800/30",
-  },
-  {
-    key: "chatgpt",
-    icon: BarChart3,
-    tagColor:
-      "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
-    cardBg:
-      "bg-amber-50/50 dark:bg-amber-950/20 border-amber-200/50 dark:border-amber-800/30",
-  },
-] as const;
+interface PainPoint {
+  key: "outsource" | "diy" | "chatgpt";
+  icon: LucideIcon;
+}
+
+const painItems: PainPoint[] = [
+  { key: "outsource", icon: DollarSign },
+  { key: "diy", icon: Clock },
+  { key: "chatgpt", icon: BarChart3 },
+];
 
 export function PainPoints() {
   const t = useTranslations("home");
 
   return (
-    <section className="py-20 px-4 bg-gradient-to-b from-orange-50/50 to-amber-50/30 dark:from-slate-900 dark:to-slate-800">
-      <div className="max-w-5xl mx-auto">
+    <section className="bg-bg-subtle section-padding">
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        whileInView="visible"
+        viewport={defaultViewport}
+        className="container-section"
+      >
         <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true }}
-          className="text-2xl md:text-3xl font-bold text-center text-slate-800 dark:text-white mb-12"
+          variants={fadeUpVariants}
+          className="text-center text-3xl md:text-4xl font-bold text-text-main mb-12"
         >
           {t("story.painPoints.title")}
         </motion.h2>
 
         <div className="grid md:grid-cols-3 gap-6 mb-12">
-          {painItems.map((item, index) => {
+          {painItems.map((item) => {
             const Icon = item.icon;
             return (
               <motion.div
                 key={item.key}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.15, duration: 0.5 }}
-                className={`rounded-2xl border p-6 ${item.cardBg}`}
+                variants={fadeUpVariants}
+                className="card-base card-hover-lift p-6"
               >
-                <div className="flex items-center gap-3 mb-4">
-                  <Icon className="h-6 w-6 text-slate-600 dark:text-slate-300" />
-                  <span
-                    className={`text-xs font-semibold px-2.5 py-1 rounded-full ${item.tagColor}`}
-                  >
-                    {t(`story.painPoints.${item.key}.tag`)}
-                  </span>
+                <div className="flex items-center gap-4 mb-4">
+                  <div className="bg-accent rounded-lg p-2">
+                    <Icon className="h-6 w-6 text-primary" />
+                  </div>
+                  <h3 className="text-lg font-bold text-text-main">
+                    {t(`story.painPoints.${item.key}.title`)}
+                  </h3>
                 </div>
-                <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2">
-                  {t(`story.painPoints.${item.key}.title`)}
-                </h3>
-                <p className="text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                <p className="text-text-subtle">
                   {t(`story.painPoints.${item.key}.desc`)}
                 </p>
               </motion.div>
@@ -77,15 +65,12 @@ export function PainPoints() {
         </div>
 
         <motion.p
-          initial={{ opacity: 0 }}
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.5 }}
-          className="text-center text-lg text-slate-500 dark:text-slate-400 italic"
+          variants={fadeUpVariants}
+          className="text-center text-lg text-text-subtle"
         >
           {t("story.painPoints.closing")}
         </motion.p>
-      </div>
+      </motion.div>
     </section>
   );
 }
