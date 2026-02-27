@@ -88,7 +88,7 @@ if (status === "SUCCESS") {
 
 ```
 支付流程:
-1. 藍新金流→ callback URL (GET 重定向)
+1. PAYUNi（統一金流）→ callback URL (GET 重定向)
 2. Callback Route 接收 Period 參數
 3. 解密 Period 數據 → 獲取 orderNo
 4. 調用 paymentService.handleRecurringCallback(period)
@@ -123,7 +123,7 @@ NotifyURL 用於:
 
 #### 可能性 A: Callback 從未被調用
 
-- ❓ 藍新金流是否正確發送了 Period callback？
+- ❓ PAYUNi（統一金流）是否正確發送了 Period callback？
 - ❓ 回調 URL 是否正確配置？
 - ❓ 網路請求是否被攔截？
 
@@ -238,7 +238,7 @@ CREATE POLICY "系統和擁有者可更新公司資料" ON companies
 
 **最可能** → **最不可能**:
 
-1. **藍新金流未發送回調** (60% 可能性)
+1. **PAYUNi（統一金流）未發送回調** (60% 可能性)
    - ReturnURL 配置錯誤
    - NotifyURL 配置錯誤
    - 回調 URL 格式問題
@@ -265,7 +265,7 @@ CREATE POLICY "系統和擁有者可更新公司資料" ON companies
 
 ### 立即行動項
 
-#### 1. 檢查藍新金流控制面板配置
+#### 1. 檢查PAYUNi（統一金流）控制面板配置
 
 ```
 檢查項目:
@@ -275,7 +275,7 @@ CREATE POLICY "系統和擁有者可更新公司資料" ON companies
 - ✓ NotifyURL 設定是否正確
   預期格式: https://your-domain.com/api/payment/recurring/notify
 - ✓ 測試 mandate 是否已正式發送 (pending vs submitted)
-- ✓ 藍新金流授權流程是否完成
+- ✓ PAYUNi（統一金流）授權流程是否完成
 ```
 
 #### 2. 檢查應用日誌
@@ -303,7 +303,7 @@ curl -I https://your-domain.com/api/payment/recurring/callback
 
 ```bash
 # 驗證應用可以發出 HTTPS 請求
-curl -v https://newebpay.com/
+curl -v https://api.payuni.com.tw/
 
 # 檢查防火牆規則
 # 確保允許入站流量到 callback endpoint
@@ -318,9 +318,9 @@ curl -v https://newebpay.com/
 ```typescript
 // 驗證回調來源
 const requesterIP = request.headers.get("x-forwarded-for");
-const newebpayIPs = process.env.NEWEBPAY_ALLOWED_IPS?.split(",") || [];
+const payuniIPs = process.env.PAYUNI_ALLOWED_IPS?.split(",") || [];
 
-if (!newebpayIPs.includes(requesterIP)) {
+if (!payuniIPs.includes(requesterIP)) {
   console.warn("[Security] 未授權的回調來源:", requesterIP);
 }
 ```
@@ -383,7 +383,7 @@ setInterval(
 
 完成以下檢查以確保問題已解決:
 
-- [ ] 確認藍新金流已發送授權回調
+- [ ] 確認PAYUNi（統一金流）已發送授權回調
 - [ ] 檢查應用日誌中的回調日誌
 - [ ] 驗證 Mandate 狀態已變為 `active`
 - [ ] 確認 `companies.subscription_tier` 已更新為 `basic`
@@ -436,12 +436,12 @@ token_balance_changes:
 
 代碼層面的實現是正確的，問題出在 **支付流程**層面：
 
-1. 藍新金流可能未發送回調
+1. PAYUNi（統一金流）可能未發送回調
 2. 或回調 URL 無法訪問
 3. 或參數格式不符
 
 **建議優先檢查**:
 
-1. 藍新金流控制面板的回調配置
+1. PAYUNi（統一金流）控制面板的回調配置
 2. 應用日誌是否有收到回調的記錄
 3. 回調 URL 的可訪問性和網路連接

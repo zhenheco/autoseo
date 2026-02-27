@@ -717,7 +717,7 @@
 
 - 建立環境變數範本
   - 檔案: `.env.example`
-  - 包含: Supabase, N8N, 藍新金流, AI API Keys 配置
+  - 包含: Supabase, N8N, PAYUNi（統一金流）, AI API Keys 配置
 - 建立 .gitignore
   - 檔案: `.gitignore`
 - 建立專案目錄結構

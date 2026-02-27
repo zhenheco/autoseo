@@ -1673,7 +1673,7 @@
       },
       "paymentMethods": {
         "question": "どのような支払い方法に対応していますか？",
-        "answer": "クレジットカード（Visa、MasterCard、JCB）、オンライン銀行振込などの支払い方法に対応しており、NewebPayで安全に処理されます。"
+        "answer": "クレジットカード（Visa、MasterCard、JCB）、オンライン銀行振込などの支払い方法に対応しており、PAYUNiで安全に処理されます。"
       }
     },
     "stillHaveQuestions": "まだ質問がありますか？",
@@ -1949,7 +1949,7 @@
       "section5Content": "当社は以下のサードパーティサービスを使用しています：",
       "section5List1": "Supabase - データベースおよび認証サービス",
       "section5List2": "Vercel - ウェブサイトホスティングサービス",
-      "section5List3": "NewebPay - 決済処理サービス",
+      "section5List3": "PAYUNi - 決済処理サービス",
       "section5List4": "OpenAI/Anthropic - AIコンテンツ生成サービス",
       "section5List5": "Google Search Console / Google Analytics - ウェブサイトデータ分析（ユーザー認証が必要）",
       "section6Title": "6. Google APIサービス使用に関する開示",
@@ -2022,7 +2022,7 @@
       "section3List2": "月額および年額プランは、キャンセルしない限り自動的に更新されます。",
       "section3List3": "いつでもサブスクリプションをキャンセルできますが、すでに支払われた料金は返金されません。",
       "section3List4": "価格は調整される場合があり、ユーザーには事前に通知されます。",
-      "section3List5": "支払い情報はサードパーティ決済サービスプロバイダー（NewebPayなど）によって処理され、当社は完全な支払い情報を保存しません。",
+      "section3List5": "支払い情報はサードパーティ決済サービスプロバイダー（PAYUNiなど）によって処理され、当社は完全な支払い情報を保存しません。",
       "section4Title": "4. 知的財産権",
       "section4List1": "ユーザーが生成したコンテンツはユーザーに帰属します。",
       "section4List2": "1waySEOはプラットフォームとサービスの所有権を保持します。",

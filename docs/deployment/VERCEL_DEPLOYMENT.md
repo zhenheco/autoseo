@@ -4,7 +4,7 @@
 
 ✅ **無 bundle 大小限制**（Cloudflare Workers 限制 3MB/10MB）
 ✅ **原生支援 Next.js**（零配置）
-✅ **支援外部 webhook**（NewebPay 付款回調）
+✅ **支援外部 webhook**（PAYUNi（統一金流） 付款回調）
 ✅ **可綁定自訂網域** 1wayseo.com
 ✅ **免費方案足夠使用**
 ✅ **全球 Edge Network**（效能優異）
@@ -54,10 +54,10 @@ NEXT_PUBLIC_SUPABASE_URL=<你的 Supabase URL>
 NEXT_PUBLIC_SUPABASE_ANON_KEY=<你的 Anon Key>
 SUPABASE_SERVICE_ROLE_KEY=<你的 Service Role Key>
 SUPABASE_DB_URL=<你的資料庫 URL>
-NEWEBPAY_MERCHANT_ID=<藍新商店代號>
-NEWEBPAY_HASH_KEY=<藍新 Hash Key>
-NEWEBPAY_HASH_IV=<藍新 Hash IV>
-NEWEBPAY_API_URL=https://ccore.newebpay.com
+PAYUNI_MERCHANT_ID=<PAYUNi 商店代號>
+PAYUNI_HASH_KEY=<PAYUNi Hash Key>
+PAYUNI_HASH_IV=<PAYUNi Hash IV>
+PAYUNI_API_URL=https://api.payuni.com.tw
 GMAIL_USER=<Gmail 帳號>
 GMAIL_APP_PASSWORD=<Gmail App 密碼>
 NEXT_PUBLIC_APP_URL=https://1wayseo.com
@@ -132,11 +132,11 @@ curl -I https://1wayseo.com/api/payment/recurring/callback
 
 ---
 
-## NewebPay 設定更新
+## PAYUNi（統一金流） 設定更新
 
-部署完成後，更新 NewebPay 設定：
+部署完成後，更新 PAYUNi（統一金流） 設定：
 
-1. 登入 NewebPay 後台
+1. 登入 PAYUNi（統一金流） 後台
 2. 前往 **商店設定** → **Webhook 設定**
 3. 更新回調 URL 為：
    ```
@@ -210,8 +210,8 @@ pnpm run lint
 
 ### 付款回調失敗
 
-1. 檢查 `NEWEBPAY_HASH_KEY` 和 `NEWEBPAY_HASH_IV` 是否正確
-2. 檢查 NewebPay 設定的回調 URL 是否正確
+1. 檢查 `PAYUNI_HASH_KEY` 和 `PAYUNI_HASH_IV` 是否正確
+2. 檢查 PAYUNi（統一金流） 設定的回調 URL 是否正確
 3. 查看 Vercel Logs 中的錯誤訊息
 
 ---
@@ -251,6 +251,6 @@ pnpm run lint
 2. 執行 `vercel --prod --yes` 部署
 3. 在 Vercel Dashboard 設定環境變數
 4. 綁定 1wayseo.com
-5. 更新 NewebPay webhook URL
+5. 更新 PAYUNi（統一金流） webhook URL
 6. 使用 Chrome DevTools 測試前端功能
 7. 測試付款流程

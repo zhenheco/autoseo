@@ -4,7 +4,7 @@
  * 處理金流回調的 POST 請求，然後重定向到結果頁面。
  *
  * 流程：
- * 1. 藍新金流 POST 到金流微服務 (/api/payment/callback)
+ * 1. PAYUNi（統一金流）POST 到金流微服務 (/api/payment/callback)
  * 2. 金流微服務處理後重定向到此 API
  * 3. 此 API 將 POST 轉為 GET 重定向到 /payment/result 頁面
  */
@@ -12,7 +12,7 @@
 import { NextRequest, NextResponse } from "next/server";
 
 /**
- * 處理 POST 請求（金流微服務或藍新回調）
+ * 處理 POST 請求（金流微服務或 PAYUNi 回調）
  */
 export async function POST(request: NextRequest) {
   console.log("[ResultRedirect] 收到 POST 請求");
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
         contentType.includes("application/x-www-form-urlencoded") ||
         contentType.includes("multipart/form-data")
       ) {
-        // Form data（藍新金流使用此格式）
+        // Form data（PAYUNi（統一金流）使用此格式）
         const formData = await request.formData();
         paymentId =
           (formData.get("paymentId") as string) ||

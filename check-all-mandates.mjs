@@ -45,12 +45,12 @@ async function checkAllMandates() {
     console.log(`  - Period Type: ${mandate.period_type}`)
     console.log(`  - Activated At: ${mandate.activated_at || 'NULL'}`)
     console.log(`  - Next Payment: ${mandate.next_payment_date || 'NULL'}`)
-    console.log(`  - NewebPay Period No: ${mandate.newebpay_period_no || 'NULL'}`)
+    console.log(`  - PAYUNi Period No: ${mandate.newebpay_period_no || 'NULL'}`)
     console.log(`  - Periods Paid: ${mandate.periods_paid || 0}`)
     console.log(`  - Created At: ${mandate.created_at}`)
 
     if (mandate.newebpay_response) {
-      console.log(`  - NewebPay Response: ${JSON.stringify(mandate.newebpay_response, null, 2)}`)
+      console.log(`  - PAYUNi Response: ${JSON.stringify(mandate.newebpay_response, null, 2)}`)
     }
 
     const { data: company } = await supabase

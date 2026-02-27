@@ -33,7 +33,7 @@
 
 ### 4. 支付方式
 
-- 優先整合藍新支付撥款功能
+- 優先整合PAYUNi（統一金流）撥款功能
 - 備用方案：手動銀行轉帳
 
 ---
@@ -248,7 +248,7 @@ await createCommission({
 
 ```mermaid
 sequenceDiagram
-    藍新支付->>Webhook: 定期扣款成功通知
+    PAYUNi（統一金流）->>Webhook: 定期扣款成功通知
     Webhook->>資料庫: 查詢 mandate 關聯的 company
     資料庫-->>Webhook: 返回 company 及 referred_by_affiliate_code
     Webhook->>資料庫: 檢查 affiliate 狀態是否為 active
@@ -329,20 +329,20 @@ sequenceDiagram
     管理員->>後台: 查看待處理提領申請
     管理員->>後台: 檢視證件和銀行資訊
     管理員->>後台: 核准提領
-    後台->>藍新支付: 呼叫撥款 API
-    藍新支付-->>後台: 返回批次號
+    後台->>PAYUNi（統一金流）: 呼叫撥款 API
+    PAYUNi（統一金流）-->>後台: 返回批次號
     後台->>資料庫: 更新 withdrawal (status: processing)
-    藍新支付->>Webhook: 撥款完成通知
+    PAYUNi（統一金流）->>Webhook: 撥款完成通知
     Webhook->>資料庫: 更新 withdrawal (status: completed)
     Webhook->>Email: 發送提領成功通知
 ```
 
-**藍新支付整合**（待實作）：
+**PAYUNi（統一金流）整合**（待實作）：
 
 ```typescript
-// 使用藍新支付的「金流服務 - 撥款」功能
-const newebpayPayout = {
-  MerchantID: process.env.NEWEBPAY_MERCHANT_ID,
+// 使用PAYUNi（統一金流）的「金流服務 - 撥款」功能
+const payuniPayout = {
+  MerchantID: process.env.PAYUNI_MERCHANT_ID,
   Version: "1.0",
   BankCode: withdrawal.bank_code,
   BankAccount: withdrawal.bank_account,
@@ -351,9 +351,9 @@ const newebpayPayout = {
   // ... 其他參數
 };
 
-const response = await fetch("https://ccore.newebpay.com/API/Payout", {
+const response = await fetch("https://api.payuni.com.tw/API/Payout", {
   method: "POST",
-  body: JSON.stringify(newebpayPayout),
+  body: JSON.stringify(payuniPayout),
 });
 ```
 
@@ -720,7 +720,7 @@ const response = await fetch("https://ccore.newebpay.com/API/Payout", {
 ```typescript
 {
   admin_notes?: string
-  payout_method: 'bank_transfer' | 'newebpay'
+  payout_method: 'bank_transfer' | 'payuni'
 }
 ```
 
@@ -1001,9 +1001,9 @@ if (!BANK_CODES[bank_code]) {
 - [ ] 提領審核頁面
 - [ ] 報表統計頁面
 
-### Phase 5：藍新支付整合（1-2 天）
+### Phase 5：PAYUNi（統一金流）整合（1-2 天）
 
-- [ ] 研究藍新撥款 API
+- [ ] 研究PAYUNi 撥款 API
 - [ ] 實作自動撥款
 - [ ] 測試與除錯
 
@@ -1020,8 +1020,8 @@ if (!BANK_CODES[bank_code]) {
 
 ## ✅ 待確認事項
 
-1. **藍新支付是否支援批量撥款？**
-   - 需查閱藍新支付 API 文件
+1. **PAYUNi（統一金流）是否支援批量撥款？**
+   - 需查閱PAYUNi（統一金流） API 文件
 
 2. **證件上傳儲存位置？**
    - 建議使用 Supabase Storage (Private Bucket)
@@ -1042,7 +1042,7 @@ if (!BANK_CODES[bank_code]) {
 - [台灣稅務規定](./AFFILIATE_TAX_NOTICE.md)
 - [資料庫 Schema](../supabase/migrations/20250115_affiliate_system.sql)
 - [TypeScript 類型](../src/types/affiliate.types.ts)
-- [藍新支付 API 文件](https://www.newebpay.com/website/Page/content/download_api)
+- [PAYUNi（統一金流） API 文件](https://www.payuni.com.tw/docs)
 
 ---
 

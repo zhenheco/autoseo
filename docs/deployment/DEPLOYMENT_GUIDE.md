@@ -11,7 +11,7 @@
 
 1. ✅ **無 Bundle 大小限制**(透過不同的架構)
 2. ✅ **原生支援 SSR + API Routes**
-3. ✅ **完整支援 Webhook**(NewebPay 等)
+3. ✅ **完整支援 Webhook**(PAYUNi 等)
 4. ✅ **自動 CDN 優化**
 5. ✅ **Git 整合 CI/CD**
 

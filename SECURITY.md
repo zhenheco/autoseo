@@ -54,7 +54,7 @@
 #### 簽章驗證
 
 - ✅ HMAC SHA256 簽章驗證
-- ✅ 藍新金流專用驗證函式
+- ✅ PAYUNi（統一金流）專用驗證函式
 - ✅ 時間戳驗證 (防重放攻擊)
 - ✅ Nonce 檢查機制
 
@@ -146,15 +146,15 @@ if (validateRedirectUrl(redirectUrl)) {
 
 ```typescript
 import {
-  verifyNewebPayCallback,
+  verifyPayUNiCallback,
   verifyTimestamp,
 } from "@/lib/security/webhook-validator";
 
-const isValid = verifyNewebPayCallback(
+const isValid = verifyPayUNiCallback(
   tradeInfo,
   tradeSha,
-  process.env.NEWEBPAY_HASH_KEY!,
-  process.env.NEWEBPAY_HASH_IV!,
+  process.env.PAYUNI_HASH_KEY!,
+  process.env.PAYUNI_HASH_IV!,
 );
 
 const isRecent = verifyTimestamp(request.timestamp, 300);

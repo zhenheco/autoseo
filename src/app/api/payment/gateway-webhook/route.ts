@@ -4,8 +4,8 @@
  * 接收金流微服務的付款結果 Webhook 通知。
  *
  * 這個 API 取代了原本的 /api/payment/notify，不同之處：
- * - 接收 JSON 格式（而非藍新的加密 FormData）
- * - 使用 HMAC-SHA256 簽名驗證（而非藍新的 TradeSha）
+ * - 接收 JSON 格式（而非 PAYUNi 的加密 FormData）
+ * - 使用 HMAC-SHA256 簽名驗證（而非 PAYUNi 的 TradeSha）
  * - 資料已經被金流微服務解密過
  *
  * Headers:
@@ -17,7 +17,7 @@
  * - status: 付款狀態 (SUCCESS | FAILED | CANCELLED | REFUNDED)
  * - amount: 金額
  * - paidAt: 付款時間 (ISO 8601)
- * - newebpayTradeNo: 藍新交易序號
+ * - newebpayTradeNo: PAYUNi 交易序號
  * - metadata: 額外資料
  * - errorMessage: 錯誤訊息（當 status 為 FAILED 時）
  */

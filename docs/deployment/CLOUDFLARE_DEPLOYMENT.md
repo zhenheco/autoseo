@@ -179,18 +179,18 @@ npx wrangler deployments list --name auto-pilot-seo
 npx wrangler rollback --version-id <version-id> --name auto-pilot-seo
 ```
 
-## 自訂網域（解決 NewebPay 回調問題）
+## 自訂網域（解決 PAYUNi（統一金流） 回調問題）
 
 ### 為什麼需要自訂網域？
 
 **Cloudflare Tunnel 的限制**：
 
-- ❌ 無法接收外部服務的 webhook（如 NewebPay 回調）
+- ❌ 無法接收外部服務的 webhook（如 PAYUNi（統一金流） 回調）
 - ❌ 出現 Error 1033：外部服務無法主動連接
 
 **Cloudflare Workers + 自訂網域的優勢**：
 
-- ✅ 公開可訪問的 URL，NewebPay 可以直接發送回調
+- ✅ 公開可訪問的 URL，PAYUNi（統一金流） 可以直接發送回調
 - ✅ 自動 SSL 證書
 - ✅ 全球 300+ 邊緣節點
 - ✅ DDoS 保護
@@ -229,9 +229,9 @@ npx wrangler secret put NEXT_PUBLIC_APP_URL --name auto-pilot-seo
 # 輸入: https://1wayseo.com
 ```
 
-### 更新 NewebPay 設定
+### 更新 PAYUNi（統一金流） 設定
 
-登入 NewebPay 管理後台，更新回調 URL：
+登入 PAYUNi（統一金流） 管理後台，更新回調 URL：
 
 **定期定額回調**：
 

@@ -1,8 +1,8 @@
-# NewebPay Webhook URL 更新指引
+# PAYUNi（統一金流） Webhook URL 更新指引
 
 ## 背景
 
-從 Cloudflare Tunnel 遷移到 Vercel 後，需要更新 NewebPay 的 webhook URL 設定。
+從 Cloudflare Tunnel 遷移到 Vercel 後，需要更新 PAYUNi（統一金流） 的 webhook URL 設定。
 
 ## 新的 Webhook URL
 
@@ -20,9 +20,9 @@ https://1wayseo.com/api/payment/recurring/notify
 
 ## 更新步驟
 
-### 步驟 1: 登入 NewebPay 商店後台
+### 步驟 1: 登入 PAYUNi（統一金流） 商店後台
 
-1. 前往 [NewebPay 商店後台](https://www.newebpay.com/)
+1. 前往 [PAYUNi（統一金流） 商店後台](https://www.payuni.com.tw/)
 2. 使用商店帳號登入
    - 商店代號：MS357073141
 
@@ -48,9 +48,9 @@ https://1wayseo.com/api/payment/recurring/notify
 
 ### 步驟 3: 驗證 Webhook 設定
 
-NewebPay 通常會提供測試工具或發送測試通知。請使用以下方式驗證：
+PAYUNi（統一金流） 通常會提供測試工具或發送測試通知。請使用以下方式驗證：
 
-#### 使用 NewebPay 測試工具
+#### 使用 PAYUNi（統一金流） 測試工具
 
 1. 在後台找到 **測試工具** 或 **API 測試**
 2. 發送測試請求到新的 webhook URL
@@ -83,13 +83,13 @@ https://vercel.com/acejou27s-projects/autopilot-seo/logs
 
 ### SSL/TLS 要求
 
-- ✅ NewebPay 要求 webhook URL 使用 HTTPS
+- ✅ PAYUNi（統一金流） 要求 webhook URL 使用 HTTPS
 - ✅ 我們的網站已配置 SSL 憑證（Vercel 自動提供）
 - ✅ 網址：https://1wayseo.com
 
 ### IP 白名單（如有需要）
 
-如果 NewebPay 需要設定 IP 白名單，請使用 Vercel 的 IP 範圍：
+如果 PAYUNi（統一金流） 需要設定 IP 白名單，請使用 Vercel 的 IP 範圍：
 
 ```bash
 # 查詢 Vercel 的 IP
@@ -104,14 +104,14 @@ dig 1wayseo.com +short
 
 ### 簽章驗證
 
-NewebPay 使用 HashKey 和 HashIV 進行簽章驗證，確保環境變數正確設定：
+PAYUNi（統一金流） 使用 HashKey 和 HashIV 進行簽章驗證，確保環境變數正確設定：
 
 ```bash
 # 在 Vercel Dashboard 確認這些環境變數：
-NEWEBPAY_MERCHANT_ID=MS357073141
-NEWEBPAY_HASH_KEY=7hyqDDb3qQmHfz1BDF5FqYtdlshGAvPQ
-NEWEBPAY_HASH_IV=CGFoFgbiAPYMbSlP
-NEWEBPAY_API_URL=https://ccore.newebpay.com/MPG/mpg_gateway
+PAYUNI_MERCHANT_ID=MS357073141
+PAYUNI_HASH_KEY=7hyqDDb3qQmHfz1BDF5FqYtdlshGAvPQ
+PAYUNI_HASH_IV=CGFoFgbiAPYMbSlP
+PAYUNI_API_URL=https://ccore.payuni.com.tw/MPG/mpg_gateway
 ```
 
 ## 舊 vs 新 Webhook URL
@@ -128,7 +128,7 @@ NEWEBPAY_API_URL=https://ccore.newebpay.com/MPG/mpg_gateway
 
 ## 測試檢查清單
 
-- [ ] 登入 NewebPay 後台
+- [ ] 登入 PAYUNi（統一金流） 後台
 - [ ] 更新 Callback URL
 - [ ] 更新 Notify URL
 - [ ] 儲存設定
@@ -144,7 +144,7 @@ NEWEBPAY_API_URL=https://ccore.newebpay.com/MPG/mpg_gateway
 
 **檢查項目**:
 
-1. NewebPay 後台的 URL 是否正確（包含 https://）
+1. PAYUNi（統一金流） 後台的 URL 是否正確（包含 https://）
 2. URL 是否可以從公網訪問（`curl -I https://1wayseo.com/api/payment/recurring/callback`）
 3. Vercel 是否正常運行（https://vercel.com/acejou27s-projects/autopilot-seo）
 
@@ -153,7 +153,7 @@ NEWEBPAY_API_URL=https://ccore.newebpay.com/MPG/mpg_gateway
 **檢查項目**:
 
 1. 檢查 Vercel 日誌中的錯誤訊息
-2. 確認環境變數正確設定（特別是 NEWEBPAY_HASH_KEY 和 NEWEBPAY_HASH_IV）
+2. 確認環境變數正確設定（特別是 PAYUNI_HASH_KEY 和 PAYUNI_HASH_IV）
 3. 檢查簽章驗證邏輯是否正確
 
 ### 問題 3: 資料庫未更新
@@ -166,17 +166,17 @@ NEWEBPAY_API_URL=https://ccore.newebpay.com/MPG/mpg_gateway
 
 ## 聯絡資訊
 
-### NewebPay 客服
+### PAYUNi（統一金流） 客服
 
 - 客服電話：(02) 2718-6898
 - 服務時間：週一至週五 09:00-18:00
-- Email：service@newebpay.com
+- Email：service@payuni.com.tw
 
 ### 技術支援
 
-- NewebPay 技術文件：https://www.newebpay.com/website/Page/content/download_api
-- 測試環境：https://ccore.newebpay.com/
-- 正式環境：https://core.newebpay.com/
+- PAYUNi（統一金流） 技術文件：https://www.payuni.com.tw/website/Page/content/download_api
+- 測試環境：https://ccore.payuni.com.tw/
+- 正式環境：https://core.payuni.com.tw/
 
 ## 完成確認
 

@@ -126,6 +126,6 @@ curl -X POST "https://api.cloudflare.com/client/v4/zones/${CF_ZONE_ID}/dns_recor
 DNS 設定完成並傳播後：
 
 1. ✅ 測試 https://1wayseo.com 是否可存取
-2. ✅ 更新 NewebPay webhook URL
+2. ✅ 更新 PAYUNi（統一金流）webhook URL
 3. ✅ 測試付款回調功能
 4. ✅ 驗證所有功能正常運作

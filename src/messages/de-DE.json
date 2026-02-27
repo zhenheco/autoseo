@@ -957,7 +957,7 @@
       },
       "paymentMethods": {
         "question": "Welche Zahlungsmethoden werden unterstützt?",
-        "answer": "Wir unterstützen Kreditkarten (Visa, MasterCard, JCB), Online-Banküberweisungen und andere Zahlungsmethoden, sicher verarbeitet über NewebPay."
+        "answer": "Wir unterstützen Kreditkarten (Visa, MasterCard, JCB), Online-Banküberweisungen und andere Zahlungsmethoden, sicher verarbeitet über PAYUNi."
       }
     },
     "stillHaveQuestions": "Noch Fragen?",

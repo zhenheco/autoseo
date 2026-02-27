@@ -136,7 +136,7 @@ pnpm run build
 2. `VERCEL_DEPLOYMENT.md` - Vercel 部署指引
 3. `CLOUDFLARE_DNS_SETUP.md` - DNS 設定指引
 4. `VERCEL_401_ISSUE.md` - 部署保護問題說明
-5. `NEWEBPAY_WEBHOOK_UPDATE.md` - Webhook 更新指引
+5. `PAYUNI_WEBHOOK_UPDATE.md` - Webhook 更新指引
 6. `CHROME_DEVTOOLS_TEST.md` - 前端測試指引
 7. `CODE_OPTIMIZATION_REPORT.md` - 本報告
 
@@ -264,7 +264,7 @@ const nextConfig = {
 
 ### 短期（1-2 週）
 
-1. ✅ 完成 NewebPay webhook 更新
+1. ✅ 完成 PAYUNi（統一金流） webhook 更新
 2. ✅ 使用 Chrome DevTools 進行完整前端測試
 3. ⏳ 修正次要的 404 問題（favicon, robots.txt）
 4. ⏳ 整合並歸檔過時的文件
@@ -322,7 +322,7 @@ const nextConfig = {
 
 ### 下一步
 
-1. 更新 NewebPay webhook 設定
+1. 更新 PAYUNi（統一金流） webhook 設定
 2. 使用瀏覽器進行完整功能測試
 3. 監控網站運行狀況
 4. 根據需求進行進一步優化

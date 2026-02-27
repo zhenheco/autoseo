@@ -49,7 +49,7 @@ NEXT_PUBLIC_ALLOWED_DOMAINS=api.your-domain.com,cdn.your-domain.com
 - DeepSeek API
 - OpenRouter API
 - Perplexity API
-- NewebPay 金流
+- PAYUNi（統一金流）
 - Google OAuth/Drive
 - Schema.org
 - 應用程式 URLs
@@ -113,7 +113,7 @@ PERPLEXITY_API_BASE_URL=https://api.perplexity.ai
 | DeepSeek   | `src/lib/deepseek/*.ts`   | `api-endpoints.ts` |
 | OpenRouter | `src/lib/openrouter.ts`   | `api-endpoints.ts` |
 | Perplexity | `src/lib/perplexity/*.ts` | `api-endpoints.ts` |
-| NewebPay   | `src/lib/payment/*.ts`    | `api-endpoints.ts` |
+| PAYUNi     | `src/lib/payment/*.ts`    | `api-endpoints.ts` |
 
 ### 保留的硬編碼（合理情況）
 

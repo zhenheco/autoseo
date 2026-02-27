@@ -957,7 +957,7 @@
       },
       "paymentMethods": {
         "question": "어떤 결제 방법을 지원하나요?",
-        "answer": "신용카드(Visa, MasterCard, JCB), 온라인 은행 이체 및 기타 결제 방법을 지원하며, NewebPay를 통해 안전하게 처리됩니다."
+        "answer": "신용카드(Visa, MasterCard, JCB), 온라인 은행 이체 및 기타 결제 방법을 지원하며, PAYUNi를 통해 안전하게 처리됩니다."
       }
     },
     "stillHaveQuestions": "아직 궁금한 점이 있으신가요?",

@@ -42,10 +42,10 @@ wrangler secret put NEXT_PUBLIC_SUPABASE_ANON_KEY --env production
 wrangler secret put SUPABASE_SERVICE_ROLE_KEY --env production
 wrangler secret put DATABASE_URL --env production
 
-# NewebPay 支付相關
-wrangler secret put NEWEBPAY_MERCHANT_ID --env production
-wrangler secret put NEWEBPAY_HASH_KEY --env production
-wrangler secret put NEWEBPAY_HASH_IV --env production
+# PAYUNi（統一金流）支付相關
+wrangler secret put PAYUNI_MERCHANT_ID --env production
+wrangler secret put PAYUNI_HASH_KEY --env production
+wrangler secret put PAYUNI_HASH_IV --env production
 
 # 其他服務
 wrangler secret put GMAIL_USER --env production

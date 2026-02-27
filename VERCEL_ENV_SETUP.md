@@ -89,29 +89,29 @@ Middleware 需要以下 Supabase 環境變數：
    環境: Production, Preview, Development
    ```
 
-   #### NewebPay（必要 - 用於支付功能）
+   #### PAYUNi（統一金流）（必要 - 用於支付功能）
 
    ```
-   名稱: NEWEBPAY_MERCHANT_ID
+   名稱: PAYUNI_MERCHANT_ID
    值: your-merchant-id
    環境: Production, Preview, Development
    ```
 
    ```
-   名稱: NEWEBPAY_HASH_KEY
+   名稱: PAYUNI_HASH_KEY
    值: your-hash-key
    環境: Production, Preview, Development
    ```
 
    ```
-   名稱: NEWEBPAY_HASH_IV
+   名稱: PAYUNI_HASH_IV
    值: your-hash-iv
    環境: Production, Preview, Development
    ```
 
    ```
-   名稱: NEWEBPAY_API_URL
-   值: https://ccore.newebpay.com/MPG/mpg_gateway
+   名稱: PAYUNI_API_URL
+   值: https://api.payuni.com.tw
    環境: Production, Preview, Development
    ```
 

@@ -957,7 +957,7 @@
       },
       "paymentMethods": {
         "question": "¿Qué métodos de pago se admiten?",
-        "answer": "Admitimos tarjetas de crédito (Visa, MasterCard, JCB), transferencias bancarias en línea y otros métodos de pago, procesados de forma segura a través de NewebPay."
+        "answer": "Admitimos tarjetas de crédito (Visa, MasterCard, JCB), transferencias bancarias en línea y otros métodos de pago, procesados de forma segura a través de PAYUNi."
       }
     },
     "stillHaveQuestions": "¿Aún tienes preguntas?",

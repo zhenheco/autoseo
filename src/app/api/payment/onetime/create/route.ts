@@ -6,7 +6,7 @@ import { PaymentService } from "@/lib/payment/payment-service";
  * POST /api/payment/onetime/create
  *
  * 建立一次性付款訂單。
- * 現在使用金流微服務 SDK，而非直接串接藍新金流。
+ * 現在使用金流微服務 SDK，而非直接串接 PAYUNi（統一金流）。
  */
 export async function POST(request: NextRequest) {
   try {

@@ -36,7 +36,7 @@
  *   email: 'user@example.com',
  * });
  *
- * // 提交表單到藍新金流
+ * // 提交表單到 PAYUNi（統一金流）
  * submitNewebpayForm(result.newebpayForm);
  * ```
  *
@@ -56,7 +56,7 @@
  *   },
  * });
  *
- * // 提交表單到藍新金流
+ * // 提交表單到 PAYUNi（統一金流）
  * submitNewebpayForm(result.newebpayForm);
  * ```
  *
@@ -69,7 +69,7 @@
  * }
  * ```
  *
- * ## 藍新測試卡號
+ * ## PAYUNi 測試卡號
  *
  * | 卡號 | 結果 |
  * |------|------|
@@ -170,7 +170,7 @@ export interface PaymentResult {
   success: boolean;
   /** 付款 ID */
   paymentId: string;
-  /** 藍新金流表單資料（用於前端提交） */
+  /** PAYUNi（統一金流）表單資料（用於前端提交） */
   newebpayForm?: {
     /** 表單提交網址 */
     action: string;
@@ -214,7 +214,7 @@ export interface PaymentStatusResult {
   amount: number;
   /** 付款時間（ISO 8601） */
   paidAt?: string;
-  /** 藍新金流交易序號 */
+  /** PAYUNi（統一金流）交易序號 */
   newebpayTradeNo?: string;
   /** 錯誤訊息 */
   errorMessage?: string;
@@ -234,7 +234,7 @@ export interface WebhookEvent {
   amount?: number;
   /** 付款時間 */
   paidAt?: string;
-  /** 藍新金流交易序號 */
+  /** PAYUNi（統一金流）交易序號 */
   newebpayTradeNo?: string;
   /** 額外資料 */
   metadata?: Record<string, string>;
@@ -346,7 +346,7 @@ export class PaymentGatewayClient {
    * 建立付款請求
    *
    * @param params 付款參數
-   * @returns 付款結果（包含藍新表單資料）
+   * @returns 付款結果（包含 PAYUNi 表單資料）
    *
    * @example
    * ```typescript
@@ -357,7 +357,7 @@ export class PaymentGatewayClient {
    *   email: 'user@example.com',
    * });
    *
-   * // 前端提交表單到藍新
+   * // 前端提交表單到 PAYUNi
    * if (result.newebpayForm) {
    *   const form = document.createElement('form');
    *   form.action = result.newebpayForm.action;
@@ -799,9 +799,9 @@ export function createPaymentGatewayClient(
 }
 
 /**
- * 提交藍新金流表單（瀏覽器端使用）
+ * 提交 PAYUNi（統一金流）表單（瀏覽器端使用）
  *
- * 此函數會在瀏覽器中動態建立表單並提交，將用戶導向藍新金流付款頁面。
+ * 此函數會在瀏覽器中動態建立表單並提交，將用戶導向 PAYUNi（統一金流）付款頁面。
  *
  * @param formData 從 createPayment 返回的 newebpayForm 資料
  * @throws 如果 formData 無效或不在瀏覽器環境中
@@ -817,7 +817,7 @@ export function createPaymentGatewayClient(
  *
  * if (result.newebpayForm) {
  *   submitNewebpayForm(result.newebpayForm);
- *   // 用戶會被導向藍新金流付款頁面
+ *   // 用戶會被導向 PAYUNi（統一金流）付款頁面
  * }
  * ```
  */
@@ -853,7 +853,7 @@ export function submitNewebpayForm(
 }
 
 /**
- * 取得藍新金流測試卡號
+ * 取得 PAYUNi（統一金流）測試卡號
  *
  * @returns 測試卡號資訊
  */

@@ -167,7 +167,7 @@
 
 6. **訂閱管理**
    - 方案升級介面
-   - 藍新金流整合
+   - PAYUNi（統一金流）整合
    - 用量統計和限制
 
 ### 低優先級
@@ -202,11 +202,11 @@ SUPABASE_DB_URL=
 # N8N Webhook（待設定）
 N8N_WEBHOOK_BASE_URL=https://your-n8n.com/webhook
 
-# 藍新金流（待設定）
-NEWEBPAY_MERCHANT_ID=
-NEWEBPAY_HASH_KEY=
-NEWEBPAY_HASH_IV=
-NEWEBPAY_API_URL=
+# PAYUNi（統一金流）（待設定）
+PAYUNI_MERCHANT_ID=
+PAYUNI_HASH_KEY=
+PAYUNI_HASH_IV=
+PAYUNI_API_URL=
 
 # AI 服務 API Keys（平台）
 PLATFORM_OPENAI_API_KEY=

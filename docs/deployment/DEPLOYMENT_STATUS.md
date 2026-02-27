@@ -76,10 +76,10 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key_here
 SUPABASE_SERVICE_ROLE_KEY=your_service_role_key_here
 SUPABASE_DB_URL=postgresql://postgres.your-project:your-password@region.pooler.supabase.com:5432/postgres
 
-NEWEBPAY_MERCHANT_ID=your_merchant_id
-NEWEBPAY_HASH_KEY=your_hash_key
-NEWEBPAY_HASH_IV=your_hash_iv
-NEWEBPAY_API_URL=https://ccore.newebpay.com/MPG/mpg_gateway
+PAYUNI_MERCHANT_ID=your_merchant_id
+PAYUNI_HASH_KEY=your_hash_key
+PAYUNI_HASH_IV=your_hash_iv
+PAYUNI_API_URL=https://api.payuni.com.tw
 
 GMAIL_USER=your_email@gmail.com
 GMAIL_APP_PASSWORD=your_gmail_app_password
@@ -144,9 +144,9 @@ Proxy: OFF (DNS only)
 
 5-30 分鐘後，SSL 憑證會自動配置。
 
-### 步驟 4: 更新 NewebPay Webhook
+### 步驟 4: 更新 PAYUNi（統一金流） Webhook
 
-登入 NewebPay 後台，更新回調 URL：
+登入 PAYUNi（統一金流） 後台，更新回調 URL：
 
 ```
 https://1wayseo.com/api/payment/recurring/callback
@@ -182,7 +182,7 @@ curl -I https://1wayseo.com/api/payment/recurring/callback
 2. **原生 Next.js 支援** - 零配置，自動優化
 3. **完整 SSR 支援** - 所有 Next.js 功能都可用
 4. **免費方案充足** - 100 GB 頻寬/月完全足夠
-5. **支援外部 Webhook** - NewebPay 付款回調正常運作
+5. **支援外部 Webhook** - PAYUNi（統一金流） 付款回調正常運作
 6. **全球 Edge Network** - 效能優異
 
 ## 📝 後續任務
@@ -192,7 +192,7 @@ curl -I https://1wayseo.com/api/payment/recurring/callback
 - [x] 綁定 1wayseo.com
 - [x] 設定 Cloudflare DNS
 - [ ] 等待 SSL 憑證生成（進行中）
-- [ ] 更新 NewebPay webhook URL
+- [ ] 更新 PAYUNi（統一金流） webhook URL
 - [ ] 使用 Chrome DevTools 測試前端
 - [ ] 測試付款流程
 - [ ] 驗證所有功能正常運作

@@ -1,4 +1,4 @@
-# NewebPay 測試環境驗證指引
+# PAYUNi（統一金流） 測試環境驗證指引
 
 ## 測試環境資訊
 
@@ -34,7 +34,7 @@ URL: https://1wayseo.com/api/payment/recurring/notify
 4. 選擇一個訂閱方案
 5. 填寫付款資訊（使用測試卡號）
 
-### 步驟 2: 使用 NewebPay 測試卡號
+### 步驟 2: 使用 PAYUNi（統一金流） 測試卡號
 
 #### 測試信用卡資訊
 
@@ -50,12 +50,12 @@ CVV: 任意 3 碼（如 123）
 ### 步驟 3: 觀察付款流程
 
 1. **送出付款後**
-   - 應該重定向到 NewebPay 付款頁面
+   - 應該重定向到 PAYUNi（統一金流） 付款頁面
    - 填寫測試卡號資訊
    - 確認付款
 
 2. **付款完成後**
-   - NewebPay 應該觸發 callback webhook
+   - PAYUNi（統一金流） 應該觸發 callback webhook
    - 應該重定向回您的網站
    - 檢查訂閱狀態是否更新
 
@@ -111,9 +111,9 @@ CVV: 任意 3 碼（如 123）
 - [ ] 表單驗證正常
 - [ ] 付款按鈕可點擊
 
-### NewebPay 整合
+### PAYUNi（統一金流） 整合
 
-- [ ] 正確重定向到 NewebPay
+- [ ] 正確重定向到 PAYUNi（統一金流）
 - [ ] 測試卡號可以使用
 - [ ] 付款成功後正確返回
 - [ ] Webhook 被觸發
@@ -137,7 +137,7 @@ CVV: 任意 3 碼（如 123）
 
 **檢查**:
 
-1. NewebPay 後台 webhook URL 是否正確
+1. PAYUNi（統一金流） 後台 webhook URL 是否正確
 2. URL 是否包含 `https://`
 3. 檢查 Vercel 日誌是否有請求記錄
 
@@ -154,8 +154,8 @@ curl -X POST https://1wayseo.com/api/payment/recurring/callback \
 
 **檢查**:
 
-1. NEWEBPAY_HASH_KEY 是否正確
-2. NEWEBPAY_HASH_IV 是否正確
+1. PAYUNI_HASH_KEY 是否正確
+2. PAYUNI_HASH_IV 是否正確
 3. 簽章計算邏輯是否正確
 
 **解決**:
@@ -204,7 +204,7 @@ __________
 
 ### 切換到正式環境時需要：
 
-1. 更新 NewebPay 商店設定為正式環境
+1. 更新 PAYUNi（統一金流） 商店設定為正式環境
 2. 更新環境變數（正式環境的 API URL）
 3. 使用真實信用卡測試（小額）
 4. 確保有退款機制
@@ -212,8 +212,8 @@ __________
 ### 正式環境 API URL
 
 ```
-測試環境: https://ccore.newebpay.com/MPG/mpg_gateway
-正式環境: https://core.newebpay.com/MPG/mpg_gateway
+測試環境: https://ccore.payuni.com.tw/MPG/mpg_gateway
+正式環境: https://core.payuni.com.tw/MPG/mpg_gateway
 ```
 
 ---
