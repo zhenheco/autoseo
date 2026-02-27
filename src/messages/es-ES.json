@@ -831,7 +831,108 @@
     "resources": "Recursos",
     "legal": "Legal",
     "allRightsReserved": "© 2026 1WaySEO. Todos los derechos reservados. Construido para el futuro.",
-    "madeInTaiwan": "Made with Passion in Taiwan"
+    "madeInTaiwan": "Made with Passion in Taiwan",
+    "newDesign": {
+      "trustedBy": "Trusted by 500+ SEO Professionals",
+      "traditional": "Traditional Way",
+      "1wayseo": "The 1WaySEO Way",
+      "step1Title": "1. Keyword & Strategy",
+      "step1Desc": "AI analyzes search intent and competitors.",
+      "step2Title": "2. Content Generation",
+      "step2Desc": "Writing, formatting, and auto-generating images.",
+      "step3Title": "3. Auto Publish",
+      "step3Desc": "Directly publish to WordPress with SEO metadata.",
+      "faqTitle": "Frequently Asked Questions",
+      "faqDesc": "Everything you need to know about 1WaySEO.",
+      "ctaTitle": "Ready to skyrocket your organic traffic?",
+      "ctaDesc": "Join 1000+ creators who are ranking higher with less effort.",
+      "getStarted": "Get Started Now",
+      "heroMockupTitle": "Generating AI Content...",
+      "heroMockupKeyword": "Target Keyword",
+      "heroMockupProgress": "Progress",
+      "heroMockupComplete": "Complete",
+      "testimonialTitle": "Loved by Real Users",
+      "testimonialDesc": "See how others transformed their content strategy.",
+      "painPointTitle": "Still struggling with these?",
+      "painPointDesc": "Let AI solve all these problems at once.",
+      "aiTechStack": "Multiple AI Models",
+      "aiTechDesc": "1WaySEO automatically routes tasks to the best AI engine (GPT-5, Claude 4.5, Gemini 3) for the highest quality.",
+      "statsUsers": "500+",
+      "statsUsersLabel": "Active Users",
+      "statsArticles": "50k+",
+      "statsArticlesLabel": "Articles Generated",
+      "statsTime": "10m",
+      "statsTimeLabel": "Avg Time per Article"
+    },
+    "newWay": {
+      "costDrop": "Costo reducido a ~NT$50",
+      "tenMinArticle": "10 Min / Artículo",
+      "consistentQuality": "Calidad alta constante"
+    },
+    "testimonials": {
+      "item0": {
+        "name": "María García",
+        "role": "Fundadora de e-commerce",
+        "company": "García Boutique",
+        "content": "Antes gastaba 1.000€/mes en redactores. Con 1WaySEO produzco 10 veces más artículos a una fracción del costo, ¡y mis posiciones han mejorado!",
+        "metricValue": "10x",
+        "metricLabel": "Producción de artículos"
+      },
+      "item1": {
+        "name": "Carlos Martínez",
+        "role": "Director de marketing",
+        "company": "Martínez Group",
+        "content": "La mayor sorpresa es cómo la IA investiga automáticamente a los competidores. La profundidad y los ángulos son completamente diferentes. Los clientes pensaron que habíamos contratado una agencia SEO profesional.",
+        "metricValue": "+180%",
+        "metricLabel": "Tráfico orgánico"
+      },
+      "item2": {
+        "name": "Pablo López",
+        "role": "Consultor SEO",
+        "company": "Éxito Digital",
+        "content": "Lo recomendé a más de 20 clientes. Todos dicen que no pueden volver atrás. Un artículo que tardaba 6 horas ahora tarda 10 minutos. La mejora de eficiencia es increíble.",
+        "metricValue": "96%",
+        "metricLabel": "Retención de clientes"
+      },
+      "item3": {
+        "name": "Ana Fernández",
+        "role": "Bloguera",
+        "company": "Revista Gastronómica",
+        "content": "He probado muchas herramientas de IA. 1WaySEO es la única que realmente entiende el SEO. Colocación de palabras clave, enlaces internos, todo gestionado automáticamente. Ahorra muchísimo tiempo.",
+        "metricValue": "3x",
+        "metricLabel": "Mejora de posicionamiento"
+      },
+      "item4": {
+        "name": "Javier Sánchez",
+        "role": "Vendedor de e-commerce",
+        "company": "Sánchez Trading",
+        "content": "De 5 artículos/mes a 50 artículos/mes, pero los costes apenas han aumentado. Esta es la herramienta que estaba buscando.",
+        "metricValue": "-80%",
+        "metricLabel": "Coste de contenido"
+      },
+      "item5": {
+        "name": "Laura González",
+        "role": "Marketing de marca",
+        "company": "González Diseño",
+        "content": "Diseño, imágenes, etiquetas SEO, todo completado automáticamente. Publicación en WordPress con un solo clic. La herramienta más eficiente en tiempo que he usado.",
+        "metricValue": "+240%",
+        "metricLabel": "Exposición de marca"
+      }
+    },
+    "painPoints": {
+      "title": "¿También tienes estos problemas?",
+      "solution": "1WaySEO resuelve todos los problemas de una vez",
+      "expensiveWriters": "Los redactores son demasiado caros",
+      "expensiveWritersDesc": "Un artículo SEO cuesta 100-300€, 10 artículos al mes suman más de 1.000€",
+      "slowWriting": "Escribir tú mismo es demasiado lento",
+      "slowWritingDesc": "Investigar palabras clave, analizar competidores, escribir contenido — un artículo tarda al menos 4-8 horas",
+      "unstableResults": "Los resultados son inconsistentes",
+      "unstableResultsDesc": "Los artículos generados por ChatGPT varían en calidad, los rankings SEO nunca mejoran"
+    },
+    "chooseYourPlan": "Elige tu plan",
+    "subscriptionDesc": "La cuota mensual de artículos se restablece automáticamente para producción continua de contenido de calidad",
+    "needMoreArticles": "¿Necesitas más artículos?",
+    "packageDescArticle": "La cuota adicional nunca caduca, no está limitada por el ciclo de suscripción"
   },
   "faq": {
     "title": "Preguntas frecuentes",

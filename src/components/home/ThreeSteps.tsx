@@ -4,106 +4,85 @@ import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import {
   fadeUpVariants,
-  defaultViewport,
   containerVariants,
+  defaultViewport,
 } from "@/lib/animations";
-import { Search, FileText, MousePointer2, Sparkles, Send } from "lucide-react";
-
-const steps = [
-  { key: "step1", icon: Search },
-  { key: "step2", icon: FileText },
-  { key: "step3", icon: Send },
-] as const;
+import { Target, Sparkles, Send } from "lucide-react";
 
 export function ThreeSteps() {
   const t = useTranslations("home");
 
+  const steps = [
+    {
+      icon: Target,
+      title: t("newDesign.step1Title"),
+      desc: t("newDesign.step1Desc"),
+      color: "text-amber-400",
+      bg: "bg-amber-400/10 border-amber-400/20",
+    },
+    {
+      icon: Sparkles,
+      title: t("newDesign.step2Title"),
+      desc: t("newDesign.step2Desc"),
+      color: "text-fuchsia-400",
+      bg: "bg-fuchsia-400/10 border-fuchsia-400/20",
+    },
+    {
+      icon: Send,
+      title: t("newDesign.step3Title"),
+      desc: t("newDesign.step3Desc"),
+      color: "text-sky-400",
+      bg: "bg-sky-400/10 border-sky-400/20",
+    },
+  ];
+
   return (
-    <section className="relative py-32 bg-slate-900 overflow-hidden">
-      <div className="container relative z-10 mx-auto max-w-5xl px-4">
+    <section className="py-32 bg-slate-900 relative overflow-hidden">
+      <div className="container relative z-10 mx-auto px-4 max-w-5xl">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={defaultViewport}
           className="text-center mb-24 space-y-6"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800 border border-slate-700 text-sm font-bold text-white uppercase tracking-widest">
-            <MousePointer2 className="w-4 h-4 text-blue-500" />
+          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800 border border-slate-700 text-sm font-bold text-slate-300 uppercase tracking-widest">
             {t("story.threeSteps.badge")}
           </div>
-          <h2 className="text-4xl md:text-5xl lg:text-6xl text-white font-bold tracking-tight">
+          <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight">
             {t("story.threeSteps.title")}
           </h2>
         </motion.div>
 
-        <div className="relative">
-          {/* Vertical Progress Line */}
-          <div className="absolute left-6 md:left-1/2 top-0 bottom-0 w-px bg-slate-700 hidden md:block" />
+        <motion.div
+          variants={containerVariants}
+          initial="hidden"
+          whileInView="visible"
+          viewport={defaultViewport}
+          className="grid grid-cols-1 md:grid-cols-3 gap-8 relative"
+        >
+          {/* Connector Line */}
+          <div className="hidden md:block absolute top-12 left-[16%] right-[16%] h-0.5 bg-gradient-to-r from-slate-800 via-slate-600 to-slate-800 z-0" />
 
-          <motion.div
-            variants={containerVariants}
-            initial="hidden"
-            whileInView="visible"
-            viewport={defaultViewport}
-            className="space-y-24 md:space-y-32"
-          >
-            {steps.map((step, index) => (
-              <motion.div
-                key={step.key}
-                variants={fadeUpVariants}
-                className={`relative flex flex-col md:flex-row items-center gap-8 md:gap-16 ${
-                  index % 2 === 1 ? "md:flex-row-reverse" : ""
-                }`}
+          {steps.map((step, i) => (
+            <motion.div
+              key={i}
+              variants={fadeUpVariants}
+              className="relative z-10 flex flex-col items-center text-center"
+            >
+              <div
+                className={`w-24 h-24 rounded-full flex items-center justify-center border-2 backdrop-blur-md mb-8 shadow-2xl ${step.bg}`}
               >
-                <div className="relative z-10 flex-shrink-0">
-                  <div className="w-14 h-14 md:w-20 md:h-20 rounded-3xl bg-blue-600 border-4 border-slate-900 flex items-center justify-center shadow-xl transition-transform duration-500 group-hover:scale-110 text-white">
-                    <step.icon className="w-6 h-6 md:w-10 md:h-10" />
-                  </div>
-                  <div className="absolute -top-3 -right-3 w-8 h-8 rounded-full bg-white text-slate-900 flex items-center justify-center text-xs font-black shadow-xl md:hidden">
-                    0{index + 1}
-                  </div>
-                </div>
-
-                <div
-                  className={`flex-1 w-full text-center bg-slate-800 p-8 rounded-3xl border border-slate-700 hover:border-blue-500 transition-colors duration-200 ${index % 2 === 1 ? "md:text-right" : "md:text-left"}`}
-                >
-                  <div className="space-y-4">
-                    <div className="inline-block px-4 py-1 rounded-full text-xs font-black uppercase tracking-widest bg-slate-700 text-blue-400">
-                      {t("story.threeSteps.stepLabel", {
-                        step: String(index + 1),
-                      })}
-                    </div>
-                    <h3 className="text-2xl md:text-3xl font-bold text-white tracking-tight leading-tight">
-                      {t(`story.threeSteps.${step.key}.title`)}
-                    </h3>
-                    <p className="text-lg text-slate-300 font-medium leading-relaxed max-w-lg mx-auto md:mx-0">
-                      {t(`story.threeSteps.${step.key}.desc`)}
-                    </p>
-
-                    <div
-                      className={`pt-6 flex flex-col ${index % 2 === 1 ? "md:items-end" : "md:items-start"}`}
-                    >
-                      <div className="relative inline-block max-w-xs md:max-w-md">
-                        <div className="relative px-6 py-4 bg-slate-900 border border-slate-700 rounded-2xl italic shadow-inner">
-                          <div className="absolute -top-3 left-4 md:left-auto md:right-4 flex items-center gap-1.5 px-3 py-1 bg-orange-500 rounded-full">
-                            <Sparkles className="w-3 h-3 text-white" />
-                            <span className="text-[10px] font-black text-white uppercase tracking-tighter">
-                              {t("story.threeSteps.xiaoMeiChoice")}
-                            </span>
-                          </div>
-                          <p className="text-sm md:text-base text-slate-400 leading-relaxed mt-2">
-                            &quot;{t(`story.threeSteps.${step.key}.aside`)}
-                            &quot;
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </motion.div>
-        </div>
+                <step.icon className={`w-10 h-10 ${step.color}`} />
+              </div>
+              <h3 className="text-2xl font-bold text-white mb-4">
+                {step.title}
+              </h3>
+              <p className="text-slate-400 text-lg leading-relaxed">
+                {step.desc}
+              </p>
+            </motion.div>
+          ))}
+        </motion.div>
       </div>
     </section>
   );

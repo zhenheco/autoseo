@@ -1561,7 +1561,94 @@
     "resources": "資源",
     "legal": "法律資訊",
     "allRightsReserved": "© 2026 1WaySEO. 版權所有。為未來打造。",
-    "madeInTaiwan": "台灣熱情打造"
+    "madeInTaiwan": "台灣熱情打造",
+    "newDesign": {
+      "trustedBy": "超過 500+ 位 SEO 專業人士信賴",
+      "traditional": "傳統人工方式",
+      "1wayseo": "1WaySEO 智能全自動",
+      "step1Title": "1. 關鍵字與策略分析",
+      "step1Desc": "AI 深度分析搜尋意圖與競爭對手內容",
+      "step2Title": "2. 內容與圖片生成",
+      "step2Desc": "自動撰寫高質量文章並配置精美圖片",
+      "step3Title": "3. WordPress 自動發布",
+      "step3Desc": "自動排程發布並設定完美的 SEO 中繼資料",
+      "faqTitle": "常見問題",
+      "faqDesc": "關於 1WaySEO 的所有解答",
+      "ctaTitle": "準備好讓您的自然流量起飛了嗎？",
+      "ctaDesc": "加入上千位創作者的行列，用更少的時間獲得更好的排名。",
+      "getStarted": "立即免費開始",
+      "heroMockupTitle": "AI 內容生成中...",
+      "heroMockupKeyword": "優化關鍵字",
+      "heroMockupProgress": "進度",
+      "heroMockupComplete": "完成",
+      "testimonialTitle": "來自真實用戶的肯定",
+      "testimonialDesc": "看看大家如何用 1WaySEO 改變內容策略",
+      "painPointTitle": "還在為了這些事煩惱嗎？",
+      "painPointDesc": "讓 AI 為您一次解決所有問題",
+      "aiTechStack": "整合多重 AI 模型",
+      "aiTechDesc": "1WaySEO 會針對不同任務，自動調用最適合的 AI 引擎（如 GPT-5, Claude 4.5, Gemini 3）以確保產出品質。",
+      "statsUsers": "500+",
+      "statsUsersLabel": "活躍用戶",
+      "statsArticles": "50k+",
+      "statsArticlesLabel": "生成文章數",
+      "statsTime": "10m",
+      "statsTimeLabel": "每篇平均時間"
+    },
+    "newWay": {
+      "costDrop": "成本降至約 NT$50",
+      "tenMinArticle": "10 分鐘 / 篇文章",
+      "consistentQuality": "穩定高品質"
+    },
+    "testimonials": {
+      "item0": {
+        "name": "陳美玲",
+        "role": "電商創業者",
+        "company": "美玲精品",
+        "content": "以前每月花 3 萬請寫手，現在用 1WaySEO，同樣預算可以產出 10 倍的文章，而且排名還上升了！",
+        "metricValue": "10x",
+        "metricLabel": "文章產出量"
+      },
+      "item1": {
+        "name": "林大明",
+        "role": "行銷總監",
+        "company": "大明集團",
+        "content": "最驚喜的是 AI 會自動研究競品，文章的深度和角度完全不一樣，客戶都以為我們找了專業 SEO 公司。",
+        "metricValue": "+180%",
+        "metricLabel": "自然流量"
+      },
+      "item2": {
+        "name": "王小凱",
+        "role": "SEO 顧問",
+        "company": "凱旋數位",
+        "content": "推薦給 20 幾個客戶，每個都說回不去了。一篇文章從 6 小時縮短到 10 分鐘，效率提升不是普通的高。",
+        "metricValue": "96%",
+        "metricLabel": "客戶留存率"
+      },
+      "item3": {
+        "name": "張雅惠",
+        "role": "部落客",
+        "company": "美食旅遊誌",
+        "content": "試過很多 AI 工具，1WaySEO 是唯一真的懂 SEO 的。關鍵字布局、內部連結都自動處理，省了我超多時間。",
+        "metricValue": "3x",
+        "metricLabel": "搜尋排名提升"
+      },
+      "item4": {
+        "name": "劉建志",
+        "role": "電商賣家",
+        "company": "建志商行",
+        "content": "從一個月 5 篇到現在一個月 50 篇，但成本只增加了一點點。這就是我一直在找的工具。",
+        "metricValue": "-80%",
+        "metricLabel": "內容成本"
+      },
+      "item5": {
+        "name": "許靜芬",
+        "role": "品牌行銷",
+        "company": "靜芬設計",
+        "content": "排版、圖片、SEO 標籤全部自動完成，發布到 WordPress 也是一鍵搞定。這是我用過最省時的工具。",
+        "metricValue": "+240%",
+        "metricLabel": "品牌曝光度"
+      }
+    }
   },
   "faq": {
     "title": "常見問題",
