@@ -2,15 +2,129 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
-import { FileText, Gift, CheckCircle2, ArrowRight, Star } from "lucide-react";
+import { Check, ArrowRight, Star } from "lucide-react";
 import {
   fadeUpVariants,
   defaultViewport,
   containerVariants,
 } from "@/lib/animations";
 import { PricingProps, ArticlePlan } from "@/types/pricing";
+
+const PlanToggle = ({ billingCycle, setBillingCycle, t, tSub }: any) => (
+  <div className="relative inline-flex items-center p-1 rounded-btn bg-bg-subtle border border-border">
+    <div
+      className="absolute inset-y-1 rounded-lg bg-card shadow-sm transition-transform duration-300"
+      style={{
+        width: "calc(50% - 4px)",
+        transform:
+          billingCycle === "yearly"
+            ? "translateX(calc(100% - 4px))"
+            : "translateX(0)",
+      }}
+    />
+    <button
+      onClick={() => setBillingCycle("monthly")}
+      className="relative z-10 px-6 py-2 rounded-lg text-sm font-semibold transition-colors duration-300"
+    >
+      {t("monthlyBilling")}
+    </button>
+    <button
+      onClick={() => setBillingCycle("yearly")}
+      className="relative z-10 px-6 py-2 rounded-lg text-sm font-semibold transition-colors duration-300 flex items-center gap-2"
+    >
+      {t("yearlyBilling")}
+      <span className="px-2 py-0.5 text-xs rounded-full bg-success text-white">
+        {tSub("yearlyBonus")}
+      </span>
+    </button>
+  </div>
+);
+
+const PlanCard = ({
+  plan,
+  billingCycle,
+  isPopular,
+  t,
+  tSub,
+  getPlanName,
+}: any) => {
+  const price =
+    billingCycle === "yearly" ? plan.yearly_price : plan.monthly_price;
+  const period = billingCycle === "monthly" ? t("month") : t("year");
+
+  const baseClasses =
+    "relative flex flex-col p-8 border border-border rounded-card shadow-sm transition-all duration-300";
+  const popularClasses =
+    "bg-primary text-white md:-translate-y-4 shadow-xl border-primary";
+  const standardClasses = "bg-card";
+
+  return (
+    <div
+      className={`${baseClasses} ${isPopular ? popularClasses : standardClasses}`}
+    >
+      {isPopular && (
+        <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-cta text-cta-foreground px-3 py-1 rounded-full text-xs font-bold uppercase flex items-center gap-1">
+          <Star className="w-3 h-3" />
+          {t("mostPopular")}
+        </div>
+      )}
+
+      <h3
+        className={`text-xl font-bold mb-2 text-center ${isPopular ? "text-white" : "text-text-main"}`}
+      >
+        {getPlanName(plan)}
+      </h3>
+
+      <div className="text-center mb-8">
+        <span
+          className={`text-5xl font-bold tracking-tight ${isPopular && "text-white"}`}
+        >
+          NT${price?.toLocaleString()}
+        </span>
+        <span
+          className={`${isPopular ? "text-primary-foreground/70" : "text-text-muted"}`}
+        >
+          {" "}
+          / {period}
+        </span>
+      </div>
+
+      <ul className="space-y-3 flex-1 mb-8">
+        {[
+          "allAIModels",
+          "wordpressIntegration",
+          "autoImageGen",
+          "scheduledPublish",
+        ].map((f) => (
+          <li key={f} className="flex items-center gap-3">
+            <Check
+              className={`w-5 h-5 ${isPopular ? "text-green-300" : "text-success"}`}
+            />
+            <span
+              className={`${isPopular ? "text-primary-foreground/90" : "text-text-subtle"}`}
+            >
+              {t(f)}
+            </span>
+          </li>
+        ))}
+      </ul>
+
+      <Link
+        href="/signup"
+        className={`w-full inline-flex items-center justify-center gap-2 px-6 py-3 rounded-btn font-bold text-base transition-colors duration-300 ${
+          isPopular
+            ? "bg-cta text-cta-foreground hover:bg-cta-hover"
+            : "btn-primary"
+        }`}
+      >
+        {t("startUsing")}
+        <ArrowRight className="w-4 h-4" />
+      </Link>
+    </div>
+  );
+};
 
 export function PricingStory({ plans, articlePackages }: PricingProps) {
   const t = useTranslations("home");
@@ -26,71 +140,37 @@ export function PricingStory({ plans, articlePackages }: PricingProps) {
   };
 
   return (
-    <section
-      id="pricing"
-      className="relative py-32 bg-slate-50 overflow-hidden"
-    >
-      <div className="container relative z-10 mx-auto px-4 max-w-7xl">
+    <section id="pricing" className="bg-bg-subtle section-padding">
+      <div className="container-section">
         {/* Header */}
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
+          initial="hidden"
+          whileInView="visible"
           viewport={defaultViewport}
-          className="text-center mb-16 space-y-8"
+          variants={containerVariants}
+          className="text-center mb-12 space-y-4"
         >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 border border-blue-200 text-sm font-bold text-blue-700 uppercase tracking-widest">
+          <motion.div
+            variants={fadeUpVariants}
+            className="inline-flex items-center bg-accent text-primary-dark text-sm font-bold px-4 py-1.5 rounded-full mb-4"
+          >
             {t("pricingPlan")}
-          </div>
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-slate-900 tracking-tight">
+          </motion.div>
+          <motion.h2
+            variants={fadeUpVariants}
+            className="text-3xl md:text-4xl font-bold text-text-main"
+          >
             {t("chooseYourPlan")}
-          </h2>
-          <p className="text-xl text-slate-500 font-medium max-w-2xl mx-auto">
+          </motion.h2>
+          <motion.p
+            variants={fadeUpVariants}
+            className="text-lg md:text-xl text-text-subtle max-w-2xl mx-auto"
+          >
             {t("subscriptionDesc")}
-          </p>
-
-          {/* Billing Toggle */}
-          <div className="relative inline-flex items-center gap-1 p-1.5 rounded-2xl bg-white border border-slate-200 shadow-sm mt-8">
-            <AnimatePresence mode="wait">
-              <motion.div
-                layoutId="active-pill-pricing"
-                className="absolute inset-y-1.5 rounded-xl bg-slate-900"
-                animate={{
-                  left: billingCycle === "monthly" ? "6px" : "50%",
-                  right: billingCycle === "monthly" ? "50%" : "6px",
-                }}
-                transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
-              />
-            </AnimatePresence>
-            <button
-              onClick={() => setBillingCycle("monthly")}
-              className={`relative z-10 px-8 py-3 rounded-xl text-sm font-bold transition-colors duration-200 w-32 ${
-                billingCycle === "monthly"
-                  ? "text-white"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              {t("monthlyBilling")}
-            </button>
-            <button
-              onClick={() => setBillingCycle("yearly")}
-              className={`relative z-10 px-8 py-3 rounded-xl text-sm font-bold transition-colors duration-200 flex items-center justify-center gap-2 w-48 ${
-                billingCycle === "yearly"
-                  ? "text-white"
-                  : "text-slate-600 hover:text-slate-900"
-              }`}
-            >
-              {t("yearlyBilling")}
-              <span
-                className={`px-2 py-0.5 text-[10px] rounded uppercase tracking-wider ${
-                  billingCycle === "yearly"
-                    ? "bg-white/20 text-white"
-                    : "bg-emerald-100 text-emerald-700"
-                }`}
-              >
-                {tSub("yearlyBonus")}
-              </span>
-            </button>
-          </div>
+          </motion.p>
+          <motion.div variants={fadeUpVariants} className="pt-4">
+            <PlanToggle {...{ billingCycle, setBillingCycle, t, tSub }} />
+          </motion.div>
         </motion.div>
 
         {/* Plans Grid */}
@@ -99,107 +179,20 @@ export function PricingStory({ plans, articlePackages }: PricingProps) {
           initial="hidden"
           whileInView="visible"
           viewport={defaultViewport}
-          className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-24"
+          className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-center"
         >
-          {plans?.map((plan, index) => {
-            const isPopular = plan.slug === "pro";
-            const price =
-              billingCycle === "yearly"
-                ? plan.yearly_price
-                : plan.monthly_price;
-            const yearlyBonus = plan.articles_per_month * 2;
-
-            return (
-              <motion.div
-                key={plan.id}
-                variants={fadeUpVariants}
-                className={`relative flex flex-col rounded-[2.5rem] bg-white border p-8 xl:p-10 transition-all duration-300 hover:shadow-xl ${
-                  isPopular
-                    ? "border-indigo-500 shadow-indigo-500/10 shadow-2xl md:-mt-4 md:mb-4 z-10"
-                    : "border-slate-200"
-                }`}
-              >
-                {isPopular && (
-                  <div className="absolute -top-5 left-1/2 -translate-x-1/2 bg-indigo-600 text-white px-4 py-1.5 rounded-full text-xs font-black uppercase tracking-widest shadow-lg flex items-center gap-1.5">
-                    <Star className="w-3.5 h-3.5 fill-white" />
-                    {t("mostPopular")}
-                  </div>
-                )}
-
-                <div className="flex-1 space-y-8">
-                  <div className="space-y-4 text-center">
-                    <h3 className="text-2xl font-bold text-slate-900">
-                      {getPlanName(plan)}
-                    </h3>
-                    <div className="flex items-end justify-center gap-1">
-                      <span className="text-5xl font-black text-slate-900 tracking-tighter">
-                        NT${price?.toLocaleString()}
-                      </span>
-                      <span className="text-slate-500 font-bold mb-1">
-                        /{billingCycle === "monthly" ? t("month") : t("year")}
-                      </span>
-                    </div>
-                    {billingCycle === "yearly" && (
-                      <div className="text-emerald-600 font-bold text-sm">
-                        {t("equivalentMonthly")} NT$
-                        {Math.round((price || 0) / 12).toLocaleString()} /{" "}
-                        {t("month")}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="p-6 rounded-3xl bg-slate-50 border border-slate-100 flex flex-col items-center justify-center text-center space-y-2">
-                    <div className="text-slate-900 font-black text-2xl flex items-center gap-2">
-                      <FileText className="w-6 h-6 text-indigo-600" />
-                      {plan.articles_per_month?.toLocaleString()}{" "}
-                      {t("articles")}
-                    </div>
-                    <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">
-                      {tSub("monthlyQuota")}
-                    </p>
-                    {billingCycle === "yearly" && yearlyBonus > 0 && (
-                      <div className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full mt-2">
-                        <Gift className="w-3.5 h-3.5" />
-                        {t("bonusArticles")} {yearlyBonus} {t("articles")}
-                      </div>
-                    )}
-                  </div>
-
-                  <ul className="space-y-4">
-                    {[
-                      "allAIModels",
-                      "wordpressIntegration",
-                      "autoImageGen",
-                      "scheduledPublish",
-                    ].map((f) => (
-                      <li key={f} className="flex items-center gap-3">
-                        <div className="w-5 h-5 rounded-full bg-indigo-50 flex items-center justify-center shrink-0">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-indigo-600" />
-                        </div>
-                        <span className="text-slate-600 font-medium">
-                          {t(f)}
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="mt-10">
-                  <Link
-                    href="/signup"
-                    className={`w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-2xl font-bold text-base transition-all duration-300 ${
-                      isPopular
-                        ? "bg-indigo-600 text-white hover:bg-indigo-700 shadow-md hover:shadow-xl"
-                        : "bg-slate-100 text-slate-900 hover:bg-slate-200"
-                    }`}
-                  >
-                    {t("startUsing")}
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </div>
-              </motion.div>
-            );
-          })}
+          {plans?.map((plan) => (
+            <motion.div key={plan.id} variants={fadeUpVariants}>
+              <PlanCard
+                plan={plan}
+                billingCycle={billingCycle}
+                isPopular={plan.slug === "pro"}
+                t={t}
+                tSub={tSub}
+                getPlanName={getPlanName}
+              />
+            </motion.div>
+          ))}
         </motion.div>
 
         {/* Packages Section */}
@@ -208,32 +201,26 @@ export function PricingStory({ plans, articlePackages }: PricingProps) {
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={defaultViewport}
-            className="max-w-5xl mx-auto pt-20 border-t border-slate-200"
+            className="max-w-4xl mx-auto pt-20 mt-20 border-t border-border"
           >
-            <div className="text-center space-y-4 mb-12">
-              <h3 className="text-3xl font-bold text-slate-900">
+            <div className="text-center space-y-2 mb-10">
+              <h3 className="text-3xl font-bold text-text-main">
                 {t("needMoreArticles")}
               </h3>
-              <p className="text-slate-500 font-medium">
+              <p className="text-text-subtle text-lg">
                 {t("packageDescArticle")}
               </p>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
               {articlePackages.map((pkg) => (
-                <div
-                  key={pkg.id}
-                  className="bg-white rounded-3xl p-6 border border-slate-200 hover:border-indigo-300 transition-colors duration-300 flex flex-col items-center text-center shadow-sm"
-                >
-                  <div className="text-2xl font-black text-slate-900 mb-1">
+                <div key={pkg.id} className="card-base p-6 text-center">
+                  <div className="text-2xl font-bold text-primary mb-1">
                     {pkg.articles?.toLocaleString()} {t("articles")}
                   </div>
-                  <div className="text-xl font-bold text-indigo-600 mb-6">
+                  <div className="text-xl font-semibold text-text-main mb-4">
                     NT${pkg.price?.toLocaleString()}
                   </div>
-                  <Link
-                    href="/login"
-                    className="w-full inline-flex items-center justify-center py-3 rounded-xl bg-slate-50 hover:bg-slate-100 text-slate-900 font-bold transition-colors"
-                  >
+                  <Link href="/login" className="w-full btn-secondary">
                     {t("buy")}
                   </Link>
                 </div>

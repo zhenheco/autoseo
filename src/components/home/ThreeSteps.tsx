@@ -7,79 +7,96 @@ import {
   containerVariants,
   defaultViewport,
 } from "@/lib/animations";
-import { Target, Sparkles, Send } from "lucide-react";
+import { Target, Sparkles, Send, LucideIcon } from "lucide-react";
+
+interface Step {
+  icon: LucideIcon;
+  title: string;
+  desc: string;
+}
 
 export function ThreeSteps() {
   const t = useTranslations("home");
 
-  const steps = [
+  const steps: Step[] = [
     {
       icon: Target,
       title: t("newDesign.step1Title"),
       desc: t("newDesign.step1Desc"),
-      color: "text-amber-400",
-      bg: "bg-amber-400/10 border-amber-400/20",
     },
     {
       icon: Sparkles,
       title: t("newDesign.step2Title"),
       desc: t("newDesign.step2Desc"),
-      color: "text-fuchsia-400",
-      bg: "bg-fuchsia-400/10 border-fuchsia-400/20",
     },
     {
       icon: Send,
       title: t("newDesign.step3Title"),
       desc: t("newDesign.step3Desc"),
-      color: "text-sky-400",
-      bg: "bg-sky-400/10 border-sky-400/20",
     },
   ];
 
   return (
-    <section className="py-32 bg-slate-900 relative overflow-hidden">
-      <div className="container relative z-10 mx-auto px-4 max-w-5xl">
+    <section className="bg-bg-main section-padding">
+      <div className="container-section">
         <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={defaultViewport}
-          className="text-center mb-24 space-y-6"
-        >
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-slate-800 border border-slate-700 text-sm font-bold text-slate-300 uppercase tracking-widest">
-            {t("story.threeSteps.badge")}
-          </div>
-          <h2 className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tight">
-            {t("story.threeSteps.title")}
-          </h2>
-        </motion.div>
-
-        <motion.div
-          variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={defaultViewport}
+          variants={containerVariants}
+          className="text-center mb-16"
+        >
+          <motion.div
+            variants={fadeUpVariants}
+            className="inline-flex items-center bg-accent text-primary-dark text-sm font-bold px-4 py-1.5 rounded-full mb-4"
+          >
+            {t("story.threeSteps.badge")}
+          </motion.div>
+          <motion.h2
+            variants={fadeUpVariants}
+            className="text-3xl md:text-4xl font-bold text-text-main"
+          >
+            {t("story.threeSteps.title")}
+          </motion.h2>
+        </motion.div>
+
+        <motion.div
+          initial="hidden"
+          whileInView="visible"
+          viewport={defaultViewport}
+          variants={containerVariants}
           className="grid grid-cols-1 md:grid-cols-3 gap-8 relative"
         >
-          {/* Connector Line */}
-          <div className="hidden md:block absolute top-12 left-[16%] right-[16%] h-0.5 bg-gradient-to-r from-slate-800 via-slate-600 to-slate-800 z-0" />
+          {/* Dashed Connector Line */}
+          <div className="hidden md:block absolute top-10 left-0 w-full h-px">
+            <svg width="100%" height="100%">
+              <line
+                x1="16.66%"
+                y1="0"
+                x2="83.33%"
+                y2="0"
+                strokeWidth="2"
+                strokeDasharray="8 8"
+                className="stroke-border-main"
+              />
+            </svg>
+          </div>
 
           {steps.map((step, i) => (
             <motion.div
               key={i}
               variants={fadeUpVariants}
-              className="relative z-10 flex flex-col items-center text-center"
+              className="relative z-10 flex flex-col items-center text-center p-6"
             >
-              <div
-                className={`w-24 h-24 rounded-full flex items-center justify-center border-2 backdrop-blur-md mb-8 shadow-2xl ${step.bg}`}
-              >
-                <step.icon className={`w-10 h-10 ${step.color}`} />
+              <div className="w-20 h-20 rounded-full flex items-center justify-center bg-card border-4 border-bg-main mb-6">
+                <div className="w-14 h-14 rounded-full flex items-center justify-center bg-accent">
+                  <step.icon className="w-8 h-8 text-primary" />
+                </div>
               </div>
-              <h3 className="text-2xl font-bold text-white mb-4">
+              <h3 className="text-xl font-bold text-text-main mb-2">
                 {step.title}
               </h3>
-              <p className="text-slate-400 text-lg leading-relaxed">
-                {step.desc}
-              </p>
+              <p className="text-text-subtle leading-relaxed">{step.desc}</p>
             </motion.div>
           ))}
         </motion.div>

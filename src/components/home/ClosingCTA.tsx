@@ -13,79 +13,63 @@ import Link from "next/link";
 export function ClosingCTA() {
   const t = useTranslations("home");
 
-  return (
-    <section className="relative py-32 bg-slate-950 overflow-hidden">
-      {/* Background Gradients */}
-      <div className="absolute inset-0 bg-[url('/grid-pattern.svg')] opacity-[0.03] bg-repeat pointer-events-none" />
-      <div className="absolute -top-1/2 -right-1/4 w-[800px] h-[800px] bg-indigo-600/20 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute -bottom-1/2 -left-1/4 w-[800px] h-[800px] bg-violet-600/20 blur-[120px] rounded-full pointer-events-none" />
+  const features = [
+    t("noCreditCard"),
+    t("freeCredits"),
+    t("finalCta.cancelAnytime"),
+  ];
 
-      <div className="container relative z-10 mx-auto px-4 max-w-5xl text-center">
+  return (
+    <section className="bg-primary section-padding">
+      <div className="container-section text-center">
         <motion.div
           variants={containerVariants}
           initial="hidden"
           whileInView="visible"
           viewport={defaultViewport}
-          className="bg-slate-900/50 backdrop-blur-2xl border border-slate-800 rounded-[3rem] p-12 md:p-20 shadow-2xl relative overflow-hidden"
+          className="flex flex-col items-center"
         >
-          {/* Inner Glow */}
-          <div className="absolute inset-x-0 top-0 h-1 bg-gradient-to-r from-transparent via-indigo-500 to-transparent opacity-50" />
-
           <motion.div
             variants={fadeUpVariants}
-            className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 mb-8 shadow-inner"
+            className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-white/10 mb-6"
           >
-            <Rocket className="w-8 h-8 text-indigo-400" />
+            <Rocket className="w-8 h-8 text-white" />
           </motion.div>
 
           <motion.h2
             variants={fadeUpVariants}
-            className="text-4xl md:text-6xl font-black text-white tracking-tight mb-6"
+            className="text-3xl md:text-4xl font-bold text-white tracking-tight mb-4"
           >
             {t("newDesign.ctaTitle")}
           </motion.h2>
 
           <motion.p
             variants={fadeUpVariants}
-            className="text-xl text-slate-400 mb-12 max-w-2xl mx-auto"
+            className="text-lg text-primary-foreground/80 mb-8 max-w-2xl mx-auto"
           >
             {t("newDesign.ctaDesc")}
           </motion.p>
 
-          <motion.div
-            variants={fadeUpVariants}
-            className="flex flex-col sm:flex-row items-center justify-center gap-6"
-          >
+          <motion.div variants={fadeUpVariants}>
             <Link
               href="/signup"
-              className="group relative inline-flex items-center justify-center gap-3 px-10 py-5 text-lg font-bold text-white bg-indigo-600 rounded-2xl overflow-hidden transition-all duration-300 hover:scale-105 hover:shadow-[0_0_40px_rgba(79,70,229,0.4)] w-full sm:w-auto"
+              className="btn-cta group flex items-center gap-2 text-base w-fit mx-auto"
             >
-              <div className="absolute inset-0 bg-gradient-to-r from-indigo-600 to-violet-600 transition-opacity duration-300 group-hover:opacity-90" />
-              <span className="relative flex items-center gap-2">
-                {t("newDesign.getStarted")}
-                <ArrowRight className="w-5 h-5 transition-transform duration-300 group-hover:translate-x-1" />
-              </span>
+              <span>{t("newDesign.getStarted")}</span>
+              <ArrowRight className="w-5 h-5 transition-transform duration-200 group-hover:translate-x-1" />
             </Link>
           </motion.div>
 
           <motion.div
             variants={fadeUpVariants}
-            className="flex flex-wrap items-center justify-center gap-6 text-slate-400 text-sm font-medium mt-10"
+            className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-primary-foreground/70 text-sm mt-8"
           >
-            <span className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-              {t("noCreditCard")}
-            </span>
-            <span className="hidden sm:block w-1.5 h-1.5 rounded-full bg-slate-700" />
-            <span className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-              {t("freeCredits")}
-            </span>
-            <span className="hidden sm:block w-1.5 h-1.5 rounded-full bg-slate-700" />
-            <span className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 text-emerald-500" />
-              {t("story.finalCta.cancelAnytime")}
-            </span>
+            {features.map((feature, index) => (
+              <span key={index} className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-green-300" />
+                {feature}
+              </span>
+            ))}
           </motion.div>
         </motion.div>
       </div>
