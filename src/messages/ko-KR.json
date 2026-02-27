@@ -831,7 +831,108 @@
     "resources": "리소스",
     "legal": "법적 고지",
     "allRightsReserved": "© 2026 1WaySEO. All rights reserved. 미래를 위해 제작되었습니다.",
-    "madeInTaiwan": "Made with Passion in Taiwan"
+    "madeInTaiwan": "Made with Passion in Taiwan",
+    "newDesign": {
+      "trustedBy": "Trusted by 500+ SEO Professionals",
+      "traditional": "Traditional Way",
+      "1wayseo": "The 1WaySEO Way",
+      "step1Title": "1. Keyword & Strategy",
+      "step1Desc": "AI analyzes search intent and competitors.",
+      "step2Title": "2. Content Generation",
+      "step2Desc": "Writing, formatting, and auto-generating images.",
+      "step3Title": "3. Auto Publish",
+      "step3Desc": "Directly publish to WordPress with SEO metadata.",
+      "faqTitle": "Frequently Asked Questions",
+      "faqDesc": "Everything you need to know about 1WaySEO.",
+      "ctaTitle": "Ready to skyrocket your organic traffic?",
+      "ctaDesc": "Join 1000+ creators who are ranking higher with less effort.",
+      "getStarted": "Get Started Now",
+      "heroMockupTitle": "Generating AI Content...",
+      "heroMockupKeyword": "Target Keyword",
+      "heroMockupProgress": "Progress",
+      "heroMockupComplete": "Complete",
+      "testimonialTitle": "Loved by Real Users",
+      "testimonialDesc": "See how others transformed their content strategy.",
+      "painPointTitle": "Still struggling with these?",
+      "painPointDesc": "Let AI solve all these problems at once.",
+      "aiTechStack": "Multiple AI Models",
+      "aiTechDesc": "1WaySEO automatically routes tasks to the best AI engine (GPT-5, Claude 4.5, Gemini 3) for the highest quality.",
+      "statsUsers": "500+",
+      "statsUsersLabel": "Active Users",
+      "statsArticles": "50k+",
+      "statsArticlesLabel": "Articles Generated",
+      "statsTime": "10m",
+      "statsTimeLabel": "Avg Time per Article"
+    },
+    "newWay": {
+      "costDrop": "비용 약 NT$50으로 절감",
+      "tenMinArticle": "10분 / 기사",
+      "consistentQuality": "일관된 고품질"
+    },
+    "testimonials": {
+      "item0": {
+        "name": "진유리",
+        "role": "이커머스 창업자",
+        "company": "유리샵",
+        "content": "예전에는 작가에게 월 100만원을 썼습니다. 1WaySEO로 같은 예산으로 10배 많은 글을 생산하고, 순위까지 올랐습니다!",
+        "metricValue": "10x",
+        "metricLabel": "콘텐츠 생산량"
+      },
+      "item1": {
+        "name": "박정민",
+        "role": "마케팅 디렉터",
+        "company": "정민그룹",
+        "content": "AI가 자동으로 경쟁사를 분석한다는 게 가장 놀라웠습니다. 기사의 깊이와 관점이 완전히 달랐고, 고객들은 전문 SEO 회사를 고용했다고 생각했습니다.",
+        "metricValue": "+180%",
+        "metricLabel": "유기적 트래픽"
+      },
+      "item2": {
+        "name": "이승준",
+        "role": "SEO 컨설턴트",
+        "company": "디지털 석세스",
+        "content": "20명 이상의 고객에게 추천했습니다. 모두가 이전으로 돌아갈 수 없다고 합니다. 6시간 걸리던 글이 10분 만에 완성됩니다. 효율 향상이 놀랍습니다.",
+        "metricValue": "96%",
+        "metricLabel": "고객 유지율"
+      },
+      "item3": {
+        "name": "김민지",
+        "role": "블로거",
+        "company": "맛집 여행 잡지",
+        "content": "많은 AI 도구를 써봤지만 1WaySEO가 SEO를 진짜로 이해하는 유일한 도구입니다. 키워드 배치, 내부 링크 모두 자동 처리. 시간이 많이 절약됩니다.",
+        "metricValue": "3x",
+        "metricLabel": "검색 순위 향상"
+      },
+      "item4": {
+        "name": "최동현",
+        "role": "이커머스 셀러",
+        "company": "최상회",
+        "content": "월 5편에서 월 50편으로 늘었지만 비용은 거의 늘지 않았습니다. 계속 찾던 도구입니다.",
+        "metricValue": "-80%",
+        "metricLabel": "콘텐츠 비용"
+      },
+      "item5": {
+        "name": "장수연",
+        "role": "브랜드 마케팅",
+        "company": "수연 디자인",
+        "content": "레이아웃, 이미지, SEO 태그 모두 자동 완료. WordPress 원클릭 게시. 지금까지 사용한 중 가장 시간을 절약해주는 도구입니다.",
+        "metricValue": "+240%",
+        "metricLabel": "브랜드 노출도"
+      }
+    },
+    "painPoints": {
+      "title": "이런 고민을 갖고 계신가요?",
+      "solution": "1WaySEO가 모든 문제를 한 번에 해결합니다",
+      "expensiveWriters": "작가 비용이 너무 비싸다",
+      "expensiveWritersDesc": "SEO 기사 한 편에 30만~80만원, 월 10편이면 30만원 이상",
+      "slowWriting": "직접 쓰면 너무 느리다",
+      "slowWritingDesc": "키워드 조사, 경쟁사 분석, 콘텐츠 작성으로 기사 한 편에 최소 4~8시간",
+      "unstableResults": "결과가 불안정하다",
+      "unstableResultsDesc": "ChatGPT가 생성한 기사는 품질이 일정하지 않고, SEO 순위는 좀처럼 오르지 않는다"
+    },
+    "chooseYourPlan": "플랜을 선택하세요",
+    "subscriptionDesc": "월간 기사 할당량이 자동으로 재설정되어 지속적으로 고품질 콘텐츠를 생산할 수 있습니다",
+    "needMoreArticles": "더 많은 기사가 필요하신가요?",
+    "packageDescArticle": "추가 할당량은 영구적으로 유효하며 구독 주기에 제한되지 않습니다"
   },
   "faq": {
     "title": "자주 묻는 질문",

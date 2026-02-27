@@ -1561,7 +1561,94 @@
     "resources": "リソース",
     "legal": "法的情報",
     "allRightsReserved": "© 2026 1WaySEO. All rights reserved. 未来のために。",
-    "madeInTaiwan": "Made with Passion in Taiwan"
+    "madeInTaiwan": "Made with Passion in Taiwan",
+    "newDesign": {
+      "trustedBy": "Trusted by 500+ SEO Professionals",
+      "traditional": "Traditional Way",
+      "1wayseo": "The 1WaySEO Way",
+      "step1Title": "1. Keyword & Strategy",
+      "step1Desc": "AI analyzes search intent and competitors.",
+      "step2Title": "2. Content Generation",
+      "step2Desc": "Writing, formatting, and auto-generating images.",
+      "step3Title": "3. Auto Publish",
+      "step3Desc": "Directly publish to WordPress with SEO metadata.",
+      "faqTitle": "Frequently Asked Questions",
+      "faqDesc": "Everything you need to know about 1WaySEO.",
+      "ctaTitle": "Ready to skyrocket your organic traffic?",
+      "ctaDesc": "Join 1000+ creators who are ranking higher with less effort.",
+      "getStarted": "Get Started Now",
+      "heroMockupTitle": "Generating AI Content...",
+      "heroMockupKeyword": "Target Keyword",
+      "heroMockupProgress": "Progress",
+      "heroMockupComplete": "Complete",
+      "testimonialTitle": "Loved by Real Users",
+      "testimonialDesc": "See how others transformed their content strategy.",
+      "painPointTitle": "Still struggling with these?",
+      "painPointDesc": "Let AI solve all these problems at once.",
+      "aiTechStack": "Multiple AI Models",
+      "aiTechDesc": "1WaySEO automatically routes tasks to the best AI engine (GPT-5, Claude 4.5, Gemini 3) for the highest quality.",
+      "statsUsers": "500+",
+      "statsUsersLabel": "Active Users",
+      "statsArticles": "50k+",
+      "statsArticlesLabel": "Articles Generated",
+      "statsTime": "10m",
+      "statsTimeLabel": "Avg Time per Article"
+    },
+    "newWay": {
+      "costDrop": "コスト約NT$50に削減",
+      "tenMinArticle": "10分 / 記事",
+      "consistentQuality": "安定した高品質"
+    },
+    "testimonials": {
+      "item0": {
+        "name": "陳美玲",
+        "role": "ECサイト経営者",
+        "company": "美玲ブティック",
+        "content": "以前は月3万円でライターを雇っていましたが、1WaySEOで同じ予算で10倍の記事を生成でき、しかもランキングも上がりました！",
+        "metricValue": "10x",
+        "metricLabel": "記事生産量"
+      },
+      "item1": {
+        "name": "林大明",
+        "role": "マーケティングディレクター",
+        "company": "林グループ",
+        "content": "最大の驚きはAIが自動的に競合他社をリサーチすること。記事の深みと視点が全く違い、クライアントはSEO会社を雇ったと思いました。",
+        "metricValue": "+180%",
+        "metricLabel": "オーガニックトラフィック"
+      },
+      "item2": {
+        "name": "王小凱",
+        "role": "SEOコンサルタント",
+        "company": "デジタルサクセス",
+        "content": "20人以上のクライアントに勧めました。全員が以前に戻れないと言っています。6時間かかった記事が10分で完成。効率の向上は驚異的です。",
+        "metricValue": "96%",
+        "metricLabel": "クライアント継続率"
+      },
+      "item3": {
+        "name": "張雅惠",
+        "role": "ブロガー",
+        "company": "グルメ旅行誌",
+        "content": "多くのAIツールを試しましたが、1WaySEOはSEOを本当に理解している唯一のツールです。キーワード配置、内部リンク、すべて自動処理。時間の節約になります。",
+        "metricValue": "3x",
+        "metricLabel": "検索順位向上"
+      },
+      "item4": {
+        "name": "劉建志",
+        "role": "ECセラー",
+        "company": "劉商事",
+        "content": "月5記事から月50記事になりましたが、コストはほとんど増えていません。ずっと探していたツールです。",
+        "metricValue": "-80%",
+        "metricLabel": "コンテンツコスト"
+      },
+      "item5": {
+        "name": "許靜芬",
+        "role": "ブランドマーケティング",
+        "company": "靜芬デザイン",
+        "content": "レイアウト、画像、SEOタグすべて自動完了。WordPressへのワンクリック投稿。今まで使った中で最も時間節約できるツールです。",
+        "metricValue": "+240%",
+        "metricLabel": "ブランド露出度"
+      }
+    }
   },
   "faq": {
     "title": "よくある質問",

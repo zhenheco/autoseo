@@ -1561,7 +1561,94 @@
     "resources": "Resources",
     "legal": "Legal",
     "allRightsReserved": "© 2026 1WaySEO. All rights reserved. Built for the future.",
-    "madeInTaiwan": "Made with Passion in Taiwan"
+    "madeInTaiwan": "Made with Passion in Taiwan",
+    "newDesign": {
+      "trustedBy": "Trusted by 500+ SEO Professionals",
+      "traditional": "Traditional Way",
+      "1wayseo": "The 1WaySEO Way",
+      "step1Title": "1. Keyword & Strategy",
+      "step1Desc": "AI analyzes search intent and competitors.",
+      "step2Title": "2. Content Generation",
+      "step2Desc": "Writing, formatting, and auto-generating images.",
+      "step3Title": "3. Auto Publish",
+      "step3Desc": "Directly publish to WordPress with SEO metadata.",
+      "faqTitle": "Frequently Asked Questions",
+      "faqDesc": "Everything you need to know about 1WaySEO.",
+      "ctaTitle": "Ready to skyrocket your organic traffic?",
+      "ctaDesc": "Join 1000+ creators who are ranking higher with less effort.",
+      "getStarted": "Get Started Now",
+      "heroMockupTitle": "Generating AI Content...",
+      "heroMockupKeyword": "Target Keyword",
+      "heroMockupProgress": "Progress",
+      "heroMockupComplete": "Complete",
+      "testimonialTitle": "Loved by Real Users",
+      "testimonialDesc": "See how others transformed their content strategy.",
+      "painPointTitle": "Still struggling with these?",
+      "painPointDesc": "Let AI solve all these problems at once.",
+      "aiTechStack": "Multiple AI Models",
+      "aiTechDesc": "1WaySEO automatically routes tasks to the best AI engine (GPT-5, Claude 4.5, Gemini 3) for the highest quality.",
+      "statsUsers": "500+",
+      "statsUsersLabel": "Active Users",
+      "statsArticles": "50k+",
+      "statsArticlesLabel": "Articles Generated",
+      "statsTime": "10m",
+      "statsTimeLabel": "Avg Time per Article"
+    },
+    "newWay": {
+      "costDrop": "Cost Drop to ~NT$50",
+      "tenMinArticle": "10 Mins / Article",
+      "consistentQuality": "Consistent High Quality"
+    },
+    "testimonials": {
+      "item0": {
+        "name": "Sarah Chen",
+        "role": "E-commerce Founder",
+        "company": "Chen Boutique",
+        "content": "I used to spend $1,000/month on writers. With 1WaySEO, I produce 10x more articles at a fraction of the cost, and my rankings have actually improved!",
+        "metricValue": "10x",
+        "metricLabel": "Article Output"
+      },
+      "item1": {
+        "name": "David Lin",
+        "role": "Marketing Director",
+        "company": "Lin Group",
+        "content": "The biggest surprise is how the AI automatically researches competitors. The depth and angles are completely different. Clients thought we hired a professional SEO agency.",
+        "metricValue": "+180%",
+        "metricLabel": "Organic Traffic"
+      },
+      "item2": {
+        "name": "Kevin Wang",
+        "role": "SEO Consultant",
+        "company": "Digital Success",
+        "content": "Recommended it to 20+ clients. Every single one says they can't go back. An article that took 6 hours now takes 10 minutes. Efficiency gains are incredible.",
+        "metricValue": "96%",
+        "metricLabel": "Client Retention"
+      },
+      "item3": {
+        "name": "Amy Zhang",
+        "role": "Blogger",
+        "company": "Food & Travel Journal",
+        "content": "I've tried many AI tools. 1WaySEO is the only one that truly understands SEO. Keyword placement, internal linking — all handled automatically. Saves so much time.",
+        "metricValue": "3x",
+        "metricLabel": "Search Ranking Boost"
+      },
+      "item4": {
+        "name": "Jason Liu",
+        "role": "E-commerce Seller",
+        "company": "Liu Trading",
+        "content": "Went from 5 articles/month to 50 articles/month, but costs barely increased. This is the tool I've been looking for.",
+        "metricValue": "-80%",
+        "metricLabel": "Content Cost"
+      },
+      "item5": {
+        "name": "Grace Hsu",
+        "role": "Brand Marketing",
+        "company": "Grace Design",
+        "content": "Layout, images, SEO tags all done automatically. One-click publish to WordPress. The most time-saving tool I've ever used.",
+        "metricValue": "+240%",
+        "metricLabel": "Brand Exposure"
+      }
+    }
   },
   "faq": {
     "title": "FAQ",
