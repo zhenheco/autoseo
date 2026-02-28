@@ -1648,6 +1648,194 @@
         "metricValue": "+240%",
         "metricLabel": "Brand Exposure"
       }
+    },
+    "v5": {
+      "hero": {
+        "badge": "The Next Generation of AI SEO",
+        "title1": "The End of Manual SEO.",
+        "title2": "The Era of AI Flow.",
+        "description": "Stop wasting hours on keyword research and drafting. Let our intelligence engine handle the entire flow—from data to traffic.",
+        "generateNow": "Generate Now",
+        "trustedBy": "Trusted by 500+ Businesses & Marketing Teams",
+        "typingPhrases": {
+          "p1": "How to rank #1 for 'AI marketing tools'?",
+          "p2": "Generate 100 SEO optimized articles in 5 mins",
+          "p3": "Automate internal linking for my blog",
+          "p4": "Scale my niche site to 100k visitors/mo"
+        }
+      },
+      "logoWall": {
+        "title": "Powered by the world's most capable AI engines"
+      },
+      "roi": {
+        "title": "Why pay 100x more for slower results?",
+        "description": "The traditional agency model is broken. Join the AI flow and save thousands every month.",
+        "traditional": {
+          "title": "Traditional Human SEO",
+          "cost": "$1,500+",
+          "item1": "SEO Writer (Freelancer)",
+          "item2": "SEO Tools Subscription",
+          "item3": "2-4 hours per article",
+          "item4": "$50-200 per article"
+        },
+        "oneWaySeo": {
+          "title": "1WaySEO AI Flow",
+          "cost": "$99",
+          "item1": "Top-Tier LLMs (Claude, GPT-4o, Gemini)",
+          "item2": "Automated SEO Optimization",
+          "item3": "Under 5 minutes per article",
+          "item4": "As low as $3 per article"
+        },
+        "recommended": "Recommended",
+        "perMonth": "/ mo",
+        "monthlySavings": "Your Monthly Savings:",
+        "savingsAmount": "$1,400+"
+      },
+      "features": {
+        "badge": "Capabilities",
+        "title": "Orchestrate your SEO with intelligence.",
+        "description": "Every feature is designed to work in a seamless flow, removing friction from your growth strategy.",
+        "aiBulkEngine": "AI Bulk Engine",
+        "aiBulkEngineDesc": "Generate 100+ SEO articles in minutes, not weeks.",
+        "visualAi": "Visual AI",
+        "visualAiDesc": "Auto-generate relevant, high-quality images for every post.",
+        "smartKeywords": "Smart SEO Optimization",
+        "smartKeywordsDesc": "AI automatically analyzes topic competitiveness and search trends to generate optimized article structures and content strategies.",
+        "flowCore": "The Flow Core",
+        "flowCoreDesc": "Our proprietary orchestration layer that combines multiple LLMs for the perfect output.",
+        "autoLinking": "Auto-Linking",
+        "autoLinkingDesc": "Seamlessly connect your content with smart internal link suggestions.",
+        "globalReach": "Global Reach",
+        "globalReachDesc": "Support for 50+ languages with native-level fluency and cultural nuances.",
+        "realtimeSerp": "Real-time SERP",
+        "realtimeSerpDesc": "Live data integration to ensure your content is always up-to-date with current trends."
+      },
+      "pricing": {
+        "badge": "Flexible Plans",
+        "title": "Choose the plan that fits you.",
+        "description": "From free to professional, find the plan for your growth stage. Upgrade anytime with monthly subscriptions.",
+        "free": "Free",
+        "forever": "Forever",
+        "monthly": "mo",
+        "freeDesc": "Experience the intelligence for free.",
+        "freeFeature1": "5 AI Articles / month",
+        "freeFeature2": "Standard LLM Engine",
+        "freeFeature3": "Basic SEO Optimization",
+        "freeFeature4": "Standard Support",
+        "getStarted": "Get Started",
+        "starter": "Starter",
+        "starterDesc": "Perfect for personal blogs and niche sites.",
+        "starterFeature1": "30 AI Articles / month",
+        "starterFeature2": "Turbo LLM Engine",
+        "starterFeature3": "Image Generation (30/mo)",
+        "starterFeature4": "Automated SEO Optimization",
+        "starterFeature5": "Smart Internal Linking",
+        "startTrial": "Start Free Trial",
+        "pro": "Pro",
+        "proDesc": "For agencies and power users scaling fast.",
+        "proFeature1": "100 AI Articles / month",
+        "proFeature2": "Ultra-Low Latency Flow",
+        "proFeature3": "Unlimited Image Gen",
+        "proFeature4": "Full API Access",
+        "proFeature5": "Custom Brand Voice",
+        "proFeature6": "Priority Support",
+        "scaleWithPro": "Scale with Pro",
+        "bestValue": "BEST VALUE",
+        "energyRefill": "Article Add-ons",
+        "runningOutTitle": "Need more articles?",
+        "runningOutDesc": "Purchase article add-on packs that go directly to your account balance. They never expire and work with any plan.",
+        "articles": "articles",
+        "sPack": "S-Pack",
+        "mPack": "M-Pack",
+        "lPack": "L-Pack"
+      },
+      "socialProof": {
+        "badge": "Customer Success",
+        "title": "Real results from real growth hackers.",
+        "description": "See why 500+ businesses and marketing teams trust 1WaySEO to power their digital presence.",
+        "joinUsers": "Join {count}+ users growing today."
+      },
+      "faq": {
+        "badge": "Everything you need to know",
+        "title": "Common Questions.",
+        "description": "Have a question that's not listed here? Feel free to reach out to our support team anytime.",
+        "q1": "How is 1WaySEO different from other AI writing tools?",
+        "a1": "1WaySEO is not just a writing tool—it's a \"Flow of Intelligence\" engine. We integrate multiple top-tier LLMs and deeply optimize for SEO, providing an end-to-end workflow from keyword discovery to bulk generation and automatic internal linking.",
+        "q2": "Will Google detect the content as AI-generated?",
+        "a2": "Our engine uses proprietary humanization techniques that make article structure and logic more aligned with human writing. More importantly, we focus on Helpful Content—the core factor Google values most for rankings.",
+        "q3": "How are article quotas calculated?",
+        "a3": "Each subscription plan includes a fixed monthly article quota. One article includes complete AI content generation, SEO optimization, and image generation. You can also purchase add-on packs for extra articles that never expire.",
+        "q4": "What languages are supported?",
+        "a4": "We currently have the strongest support for Traditional Chinese (Taiwan/Hong Kong), while also supporting Simplified Chinese, English, Japanese, and 50+ other languages with automatic localization handling.",
+        "q5": "Can I cancel my subscription anytime?",
+        "a5": "Yes, all subscription plans can be cancelled at any time. After cancellation, you can continue using the service until the end of your current billing period. We also offer annual plans with better pricing and bonus quotas.",
+        "q6": "Can I get a refund if unsatisfied?",
+        "a6": "We offer a 7-day satisfaction guarantee. If you find the product doesn't meet your needs and your article usage hasn't exceeded 10%, we will provide a full refund."
+      },
+      "closingCta": {
+        "badge": "The Future of SEO is here",
+        "title": "Ready to upgrade your content strategy?",
+        "description": "No more expensive SEO agencies. No more writing every article yourself. Join us and let the intelligence engine power your traffic.",
+        "startNow": "Start Now",
+        "viewFeatures": "View Feature Details",
+        "noCardRequired": "No credit card required to sign up",
+        "limitedOffer": "Limited time free trial available"
+      },
+      "footer": {
+        "description": "The Flow of Intelligence. Orchestrating the next generation of AI-driven SEO strategies for modern teams.",
+        "product": "Product",
+        "pricing": "Pricing",
+        "legal": "Legal"
+      }
+    },
+    "v6": {
+      "hero": {
+        "headline": "Wake up to a website that grows itself.",
+        "subheadline": "Imagine 30 new SEO-optimized articles, ready while you sleep.",
+        "cta": "Get Started"
+      },
+      "contrast": {
+        "line1": "Keywords are a maze.",
+        "line2": "Content is a chore.",
+        "line3": "Ranking feels like a gamble."
+      },
+      "reveal": {
+        "headline": "One click. 1waySEO takes it from here.",
+        "description": "Pure automation, from concept to publish."
+      },
+      "trust": {
+        "headline": "Built for growth",
+        "metric": "Trusted by 500+ teams worldwide"
+      },
+      "scenarios": {
+        "persona1": {
+          "name": "Lisa",
+          "role": "E-commerce Owner",
+          "story": "I stopped worrying about SEO and watched my product traffic soar.",
+          "metric": "Revenue up $1,200/mo"
+        },
+        "persona2": {
+          "name": "Kevin",
+          "role": "Marketing Lead",
+          "story": "We scaled our content without hiring a single new writer.",
+          "metric": "Saved $2,500 in outsourcing"
+        },
+        "persona3": {
+          "name": "Mia",
+          "role": "Freelancer",
+          "story": "I can now manage double the clients with half the effort.",
+          "metric": "Client capacity +150%"
+        }
+      },
+      "pricing": {
+        "headline": "Pick your pace",
+        "subheadline": "Choose the volume that fits your growth strategy."
+      },
+      "cta": {
+        "headline": "Give your business the visibility it deserves.",
+        "button": "Start for Free",
+        "note": "No credit card required"
+      }
     }
   },
   "faq": {

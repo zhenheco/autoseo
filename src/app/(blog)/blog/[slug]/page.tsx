@@ -224,7 +224,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
   const title = article.seo_title || article.title;
   const description =
-    article.seo_description || article.excerpt || t("read", { title: article.title });
+    article.seo_description ||
+    article.excerpt ||
+    t("read", { title: article.title });
 
   return {
     title: `${title} | 1waySEO Blog`,
@@ -284,9 +286,9 @@ export default async function ArticlePage({ params }: Props) {
         category={article.categories?.[0]}
       />
 
-      <article className="container mx-auto px-4 py-12">
+      <article className="container mx-auto px-6 py-16 md:py-24">
         {/* 文章頭部 */}
-        <header className="mx-auto mb-12 max-w-3xl">
+        <header className="mx-auto mb-16 max-w-3xl">
           {/* 語系切換（只有存在翻譯版本時才顯示）*/}
           {translations.length > 1 && (
             <div className="mb-6 flex justify-end">
@@ -317,7 +319,7 @@ export default async function ArticlePage({ params }: Props) {
           )}
 
           {/* 標題 */}
-          <h1 className="mb-6 text-3xl font-bold leading-tight text-slate-900 dark:text-white sm:text-4xl lg:text-[42px]">
+          <h1 className="mb-8 text-3xl font-bold leading-tight text-slate-900 dark:text-white sm:text-4xl lg:text-5xl">
             {article.title}
           </h1>
 
@@ -338,7 +340,7 @@ export default async function ArticlePage({ params }: Props) {
 
         {/* 封面圖片 - 滿版 */}
         {article.featured_image_url && (
-          <div className="mx-auto mb-12 max-w-4xl">
+          <div className="mx-auto mb-16 max-w-4xl">
             <div className="relative aspect-video overflow-hidden rounded-xl shadow-lg">
               <Image
                 src={article.featured_image_url}
@@ -353,7 +355,7 @@ export default async function ArticlePage({ params }: Props) {
         )}
 
         {/* 內文 + TOC */}
-        <div className="relative flex justify-center gap-12">
+        <div className="relative flex justify-center gap-16">
           {/* 主內容 */}
           <div className="max-w-3xl flex-1 min-w-0">
             <ArticleHtmlPreview
@@ -363,7 +365,7 @@ export default async function ArticlePage({ params }: Props) {
 
             {/* 標籤 */}
             {article.tags.length > 0 && (
-              <div className="mt-12 pt-8 border-t border-slate-200 dark:border-slate-700">
+              <div className="mt-16 pt-12 border-t border-slate-200 dark:border-slate-700">
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="text-sm text-slate-500 dark:text-slate-400">
                     {t("tags")}
@@ -396,7 +398,7 @@ export default async function ArticlePage({ params }: Props) {
 
         {/* 相關文章 */}
         {relatedArticles.length > 0 && (
-          <div className="mx-auto mt-16 max-w-6xl border-t border-slate-200 dark:border-slate-700 pt-12">
+          <div className="mx-auto mt-24 max-w-6xl border-t border-slate-200 dark:border-slate-700 pt-16">
             <RelatedArticles articles={relatedArticles} />
           </div>
         )}

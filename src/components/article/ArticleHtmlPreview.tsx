@@ -109,19 +109,19 @@ export function ArticleHtmlPreview({
       className={cn(
         "prose prose-lg max-w-none",
         // 基礎文字樣式（行距 1.9 更舒適閱讀）
-        "prose-p:text-[18px] prose-p:leading-[1.9] prose-p:my-8",
+        "prose-p:text-[18px] prose-p:leading-[1.9] prose-p:my-7",
         "prose-p:text-slate-700 dark:prose-p:text-slate-300",
         // H2: 28px, 半粗體
-        "prose-h2:text-[28px] prose-h2:font-semibold prose-h2:mt-14 prose-h2:mb-5",
+        "prose-h2:text-[28px] prose-h2:leading-[1.5] prose-h2:font-semibold prose-h2:mt-16 prose-h2:mb-6",
         "prose-h2:text-slate-900 dark:prose-h2:text-white prose-h2:scroll-mt-24",
         // H3: 22px, 半粗體
-        "prose-h3:text-[22px] prose-h3:font-semibold prose-h3:mt-10 prose-h3:mb-4",
+        "prose-h3:text-[22px] prose-h3:leading-[1.5] prose-h3:font-semibold prose-h3:mt-12 prose-h3:mb-5",
         "prose-h3:text-slate-800 dark:prose-h3:text-slate-100 prose-h3:scroll-mt-24",
         // H4
         "prose-h4:text-[18px] prose-h4:font-semibold prose-h4:mt-8 prose-h4:mb-3",
         "prose-h4:text-slate-800 dark:prose-h4:text-slate-200",
         // 圖片: 60% 寬度置中，等比縮放不裁切
-        "prose-img:w-[60%] prose-img:h-auto prose-img:mx-auto prose-img:my-12",
+        "prose-img:w-full md:prose-img:w-[80%] prose-img:h-auto prose-img:mx-auto prose-img:my-10",
         "prose-img:rounded-[10px] prose-img:shadow-md prose-img:object-contain",
         // 連結（藍色）
         "prose-a:text-blue-600 dark:prose-a:text-blue-400",
@@ -135,7 +135,7 @@ export function ArticleHtmlPreview({
         // 引用區塊
         "prose-blockquote:border-l-4 prose-blockquote:border-primary/50",
         "prose-blockquote:bg-slate-50 dark:prose-blockquote:bg-slate-800/50",
-        "prose-blockquote:py-1 prose-blockquote:px-4 prose-blockquote:my-6",
+        "prose-blockquote:py-3 prose-blockquote:px-6 prose-blockquote:my-8",
         "prose-blockquote:text-slate-600 dark:prose-blockquote:text-slate-400",
         "prose-blockquote:not-italic",
         // 程式碼
