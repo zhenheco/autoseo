@@ -164,6 +164,16 @@
   h1 { @apply text-4xl md:text-6xl lg:text-7xl; }
   h2 { @apply text-3xl md:text-5xl; }
   h3 { @apply text-2xl md:text-3xl; }
+
+  /* prose 容器內的 heading 由 prose-h2/h3 自訂 class 控制，排除全域大小 */
+  .prose h1,
+  .prose h2,
+  .prose h3 {
+    font-size: unset;
+    line-height: unset;
+    font-weight: unset;
+    margin: unset;
+  }
 }
 
 @layer utilities {
