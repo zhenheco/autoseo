@@ -5,10 +5,7 @@ import type {
   GeneratedImage,
   Outline,
 } from "@/types/agents";
-import {
-  SupabaseStorageClient,
-  getSupabaseStorageConfig,
-} from "@/lib/storage/supabase-storage-client";
+import { uploadImageToStorage } from "@/lib/storage/upload-image";
 import {
   processBase64Image,
   processImageFromUrl,
@@ -244,29 +241,14 @@ export class ArticleImageAgent extends BaseAgent<
     const filename = `article-content-${index + 1}-${timestamp}.jpg`;
     const base64Data = processed.buffer.toString("base64");
 
-    const supabaseConfig = getSupabaseStorageConfig();
-    if (supabaseConfig) {
-      try {
-        console.log(
-          `[ArticleImageAgent] 🔄 Uploading content image ${index + 1}...`,
-        );
-        const supabaseClient = new SupabaseStorageClient(supabaseConfig);
-        const uploaded = await supabaseClient.uploadImage(
-          base64Data,
-          filename,
-          "image/jpeg",
-        );
-        finalUrl = uploaded.url;
-        console.log(
-          `[ArticleImageAgent] ☁️ Upload successful (image ${index + 1}): ${uploaded.path}`,
-        );
-      } catch (error) {
-        const err = error as Error;
-        console.warn(
-          `[ArticleImageAgent] ⚠️ Upload failed (image ${index + 1}):`,
-          err.message,
-        );
-      }
+    const uploadResult = await uploadImageToStorage(
+      base64Data,
+      filename,
+      "image/jpeg",
+      `[ArticleImageAgent][image ${index + 1}]`,
+    );
+    if (uploadResult.storage !== "none") {
+      finalUrl = uploadResult.url;
     }
 
     const [width, height] = input.size.split("x").map(Number);
