@@ -156,24 +156,16 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  h1, h2, h3, h4, h5, h6 {
+  h1:not(.prose *), h2:not(.prose *), h3:not(.prose *),
+  h4:not(.prose *), h5:not(.prose *), h6:not(.prose *) {
     @apply font-bold tracking-tight;
     color: var(--color-foreground);
   }
 
-  h1 { @apply text-4xl md:text-6xl lg:text-7xl; }
-  h2 { @apply text-3xl md:text-5xl; }
-  h3 { @apply text-2xl md:text-3xl; }
-
-  /* prose 容器內的 heading 由 prose-h2/h3 自訂 class 控制，排除全域大小 */
-  .prose h1,
-  .prose h2,
-  .prose h3 {
-    font-size: unset;
-    line-height: unset;
-    font-weight: unset;
-    margin: unset;
-  }
+  /* 全域 heading 大小只套用在非 prose 容器（LP、dashboard 等） */
+  h1:not(.prose *) { @apply text-4xl md:text-6xl lg:text-7xl; }
+  h2:not(.prose *) { @apply text-3xl md:text-5xl; }
+  h3:not(.prose *) { @apply text-2xl md:text-3xl; }
 }
 
 @layer utilities {
