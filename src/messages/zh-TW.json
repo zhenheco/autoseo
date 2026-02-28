@@ -1648,6 +1648,194 @@
         "metricValue": "+240%",
         "metricLabel": "品牌曝光度"
       }
+    },
+    "v5": {
+      "hero": {
+        "badge": "新一代 AI SEO",
+        "title1": "手動 SEO 的時代結束了。",
+        "title2": "AI 智流時代來臨。",
+        "description": "不再浪費時間做關鍵字研究和撰稿。讓我們的智能引擎處理整個流程——從數據到流量。",
+        "generateNow": "立即生成",
+        "trustedBy": "超過 500+ 企業與行銷團隊信賴",
+        "typingPhrases": {
+          "p1": "如何讓「AI 行銷工具」排名第一？",
+          "p2": "5 分鐘生成 100 篇 SEO 優化文章",
+          "p3": "自動化我的部落格內部連結",
+          "p4": "讓我的利基站月訪客破 10 萬"
+        }
+      },
+      "logoWall": {
+        "title": "整合全球最強 AI 引擎"
+      },
+      "roi": {
+        "title": "為什麼要花 100 倍的錢換更慢的結果？",
+        "description": "傳統代理模式已經過時了。加入 AI 智流，每月省下數萬元。",
+        "traditional": {
+          "title": "傳統人工 SEO",
+          "cost": "NT$60,000+",
+          "item1": "SEO 寫手（外包）",
+          "item2": "SEO 工具訂閱",
+          "item3": "每篇文章 2-4 小時",
+          "item4": "每篇文章 NT$1,500-6,000"
+        },
+        "oneWaySeo": {
+          "title": "1WaySEO AI 智流",
+          "cost": "NT$299",
+          "item1": "頂尖 LLM（Claude、GPT-4o、Gemini）",
+          "item2": "自動化 SEO 優化",
+          "item3": "每篇文章不到 5 分鐘",
+          "item4": "每篇文章約 NT$30-90"
+        },
+        "recommended": "推薦",
+        "perMonth": "/ 月",
+        "monthlySavings": "每月節省金額：",
+        "savingsAmount": "NT$47,000+"
+      },
+      "features": {
+        "badge": "核心能力",
+        "title": "用智能編排你的 SEO 策略。",
+        "description": "每項功能都設計成無縫協作，消除成長策略中的摩擦。",
+        "aiBulkEngine": "AI 批量引擎",
+        "aiBulkEngineDesc": "幾分鐘內生成 100+ 篇 SEO 文章，不再花費數週。",
+        "visualAi": "視覺 AI",
+        "visualAiDesc": "為每篇文章自動生成相關的高品質圖片。",
+        "smartKeywords": "智能 SEO 優化",
+        "smartKeywordsDesc": "AI 自動分析主題競爭度與搜尋趨勢，生成最佳化的文章結構與內容策略。",
+        "flowCore": "Flow 核心引擎",
+        "flowCoreDesc": "我們獨家的編排層，結合多個 LLM 以產出最佳結果。",
+        "autoLinking": "自動連結",
+        "autoLinkingDesc": "透過智能內部連結建議無縫串聯你的內容。",
+        "globalReach": "全球觸及",
+        "globalReachDesc": "支援 50+ 語言，具備母語級別的流暢度和文化差異處理。",
+        "realtimeSerp": "即時 SERP",
+        "realtimeSerpDesc": "即時數據整合，確保你的內容始終跟上最新趨勢。"
+      },
+      "pricing": {
+        "badge": "靈活訂閱方案",
+        "title": "選擇適合你的方案。",
+        "description": "從免費到專業，找到適合你成長階段的方案。隨時升級，按月訂閱。",
+        "free": "免費",
+        "forever": "永久",
+        "monthly": "月",
+        "freeDesc": "免費體驗智能引擎。",
+        "freeFeature1": "每月 5 篇 AI 文章",
+        "freeFeature2": "標準 LLM 引擎",
+        "freeFeature3": "基礎 SEO 優化",
+        "freeFeature4": "標準客服",
+        "getStarted": "開始使用",
+        "starter": "入門版",
+        "starterDesc": "適合個人部落格和利基站。",
+        "starterFeature1": "每月 30 篇 AI 文章",
+        "starterFeature2": "Turbo LLM 引擎",
+        "starterFeature3": "圖片生成（30張/月）",
+        "starterFeature4": "自動 SEO 優化",
+        "starterFeature5": "智能內部連結",
+        "startTrial": "免費試用",
+        "pro": "專業版",
+        "proDesc": "適合代理商和追求快速擴張的進階用戶。",
+        "proFeature1": "每月 100 篇 AI 文章",
+        "proFeature2": "超低延遲 Flow",
+        "proFeature3": "無限圖片生成",
+        "proFeature4": "完整 API 存取",
+        "proFeature5": "自訂品牌語調",
+        "proFeature6": "優先客服",
+        "scaleWithPro": "用 Pro 擴展",
+        "bestValue": "最超值",
+        "energyRefill": "文章加購",
+        "runningOutTitle": "文章篇數不夠用？",
+        "runningOutDesc": "購買文章加購包，直接加入帳戶餘額。永不過期，隨時可用。",
+        "articles": "篇",
+        "sPack": "S 包",
+        "mPack": "M 包",
+        "lPack": "L 包"
+      },
+      "socialProof": {
+        "badge": "客戶成功案例",
+        "title": "來自真實成長駭客的真實成果。",
+        "description": "看看為什麼 500+ 企業與行銷團隊信任 1WaySEO 來提升他們的數位形象。",
+        "joinUsers": "加入 {count}+ 用戶，今天就開始成長。"
+      },
+      "faq": {
+        "badge": "你需要知道的一切",
+        "title": "常見問題。",
+        "description": "找不到你的問題嗎？隨時聯繫我們的客服團隊。",
+        "q1": "1WaySEO 與其他 AI 寫作工具有什麼不同？",
+        "a1": "1WaySEO 不僅僅是寫作工具，它是一個「智流感（Flow of Intelligence）」引擎。我們整合了多個頂級 LLM，並針對中文 SEO 進行了深度優化，提供從關鍵字發現、批量生成到自動內連的一站式流程。",
+        "q2": "產出的文章會被 Google 判定為 AI 內容嗎？",
+        "a2": "我們的引擎採用了獨家的「人為化」處理技術，文章結構與邏輯更符合真人寫作。更重要的是，我們注重內容的實用性（Helpful Content），這才是 Google 排名最看重的核心。",
+        "q3": "文章篇數是如何計算的？",
+        "a3": "每個訂閱方案都包含每月固定的文章篇數配額。1 篇文章包含完整的 AI 內容生成、SEO 優化和圖片生成。您也可以購買加購包來增加篇數，加購的篇數永不過期。",
+        "q4": "支持哪些語言？",
+        "a4": "目前我們對繁體中文（台灣/香港）支援度最高，同時也支援簡體中文、英文、日文等 50 多種語言，並能自動處理在地化的語法差異。",
+        "q5": "訂閱方案可以隨時取消嗎？",
+        "a5": "是的，所有訂閱方案都可以隨時取消。取消後您仍可使用至當期結束。我們也提供年繳方案，享有更優惠的價格和額外贈送的配額。",
+        "q6": "如果我不滿意可以退款嗎？",
+        "a6": "我們提供 7 天滿意保證。如果您在使用後覺得不符合需求，只要文章篇數消耗未超過 10%，我們將提供全額退款服務。"
+      },
+      "closingCta": {
+        "badge": "SEO 的未來已經到來",
+        "title": "準備好提升你的內容策略了嗎？",
+        "description": "不再需要昂貴的 SEO 機構，不再需要親自撰寫每一篇文章。加入我們，讓智能引擎為你的流量賦能。",
+        "startNow": "立即開始",
+        "viewFeatures": "查看功能詳情",
+        "noCardRequired": "不需要信用卡即可註冊",
+        "limitedOffer": "限時免費試用中"
+      },
+      "footer": {
+        "description": "智流感。為現代團隊編排新一代 AI 驅動的 SEO 策略。",
+        "product": "產品",
+        "pricing": "定價",
+        "legal": "法律"
+      }
+    },
+    "v6": {
+      "hero": {
+        "headline": "明天早上醒來，你的網站已經多了 30 篇文章。",
+        "subheadline": "讓 SEO 成為你最安靜、也最勤奮的員工。",
+        "cta": "開始探索"
+      },
+      "contrast": {
+        "line1": "關鍵字研究太過繁瑣。",
+        "line2": "高品質內容難以持續。",
+        "line3": "排名競爭令人疲憊。"
+      },
+      "reveal": {
+        "headline": "點擊一下，1waySEO 接手後續。",
+        "description": "從策略到發布，自動完成。"
+      },
+      "trust": {
+        "headline": "值得信賴的自動化夥伴",
+        "metric": "全球 500+ 專業團隊的選擇"
+      },
+      "scenarios": {
+        "persona1": {
+          "name": "Lisa",
+          "role": "電商創辦人",
+          "story": "我不再需要理解演算法，商品頁流量自然翻倍。",
+          "metric": "月營收成長 NT$40,000"
+        },
+        "persona2": {
+          "name": "Kevin",
+          "role": "行銷主管",
+          "story": "小團隊也能維持每日更新，省下龐大的外包費用。",
+          "metric": "每月節省 NT$60,000"
+        },
+        "persona3": {
+          "name": "Mia",
+          "role": "自由接案者",
+          "story": "自動化讓我能同時服務更多客戶，且品質更穩定。",
+          "metric": "案量提升 200%"
+        }
+      },
+      "pricing": {
+        "headline": "選擇適合你的節奏",
+        "subheadline": "不分功能等級，只選你需要的內容產量。"
+      },
+      "cta": {
+        "headline": "讓你的品牌，在搜尋結果中優雅轉身。",
+        "button": "免費開始使用",
+        "note": "無需信用卡，立即體驗"
+      }
     }
   },
   "faq": {
