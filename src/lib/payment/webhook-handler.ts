@@ -15,6 +15,9 @@ import {
   PaymentGatewayError,
 } from "./gateway-client";
 import { applyPromoCodeByCode } from "@/lib/admin/promo-code-service";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("payment-webhook");
 
 // ============================================================================
 // 類型定義
@@ -42,13 +45,13 @@ export async function handleGatewayWebhook(
   rawBody: string,
   signature: string | null,
 ): Promise<WebhookHandlerResult> {
-  console.log("[GatewayWebhook] 收到 Webhook 請求");
+  logger.info("收到 Webhook 請求");
 
   try {
     // 1. 驗證簽名並解析事件
     const event = await parseWebhookEvent(rawBody, signature);
 
-    console.log("[GatewayWebhook] Webhook 事件:", {
+    logger.info("Webhook 事件", {
       paymentId: event.paymentId,
       orderId: event.orderId,
       status: event.status,
@@ -70,7 +73,7 @@ export async function handleGatewayWebhook(
         await handlePaymentRefunded(event);
         break;
       default:
-        console.warn("[GatewayWebhook] 未知的付款狀態:", event.status);
+        logger.warn("未知的付款狀態", { status: event.status });
     }
 
     return {
@@ -79,7 +82,9 @@ export async function handleGatewayWebhook(
       orderId: event.orderId,
     };
   } catch (error) {
-    console.error("[GatewayWebhook] 處理失敗:", error);
+    logger.error("處理失敗", {
+      error: error instanceof Error ? error.message : String(error),
+    });
 
     if (error instanceof PaymentGatewayError) {
       return {
@@ -103,7 +108,7 @@ export async function handleGatewayWebhook(
  * 處理付款成功
  */
 async function handlePaymentSuccess(event: WebhookEvent): Promise<void> {
-  console.log("[GatewayWebhook] 處理付款成功:", event.orderId);
+  logger.info("處理付款成功", { orderId: event.orderId });
 
   const supabase = createAdminClient();
 
@@ -126,28 +131,34 @@ async function handlePaymentSuccess(event: WebhookEvent): Promise<void> {
     if (data && !error) {
       orderData = data;
       if (attempt > 0) {
-        console.log(`[GatewayWebhook] 成功找到訂單 (第 ${attempt + 1} 次嘗試)`);
+        logger.info("成功找到訂單（重試後）", {
+          orderNo,
+          attempt: attempt + 1,
+        });
       }
       break;
     }
 
     if (attempt < MAX_RETRIES - 1) {
       const delay = RETRY_DELAYS[attempt];
-      console.log(
-        `[GatewayWebhook] 訂單未找到，${delay}ms 後重試 (${attempt + 1}/${MAX_RETRIES})`,
-      );
+      logger.info("訂單未找到，即將重試", {
+        orderNo,
+        delayMs: delay,
+        attempt: attempt + 1,
+        maxRetries: MAX_RETRIES,
+      });
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
 
   if (!orderData) {
-    console.error("[GatewayWebhook] 找不到訂單:", orderNo);
+    logger.error("找不到訂單", { orderNo });
     throw new Error(`找不到訂單: ${orderNo}`);
   }
 
   // 檢查是否已處理過
   if (orderData.status === "success") {
-    console.log("[GatewayWebhook] 訂單已處理過，跳過:", orderNo);
+    logger.info("訂單已處理過，跳過", { orderNo });
     return;
   }
 
@@ -168,11 +179,14 @@ async function handlePaymentSuccess(event: WebhookEvent): Promise<void> {
     .eq("id", orderData.id);
 
   if (updateError) {
-    console.error("[GatewayWebhook] 更新訂單狀態失敗:", updateError);
+    logger.error("更新訂單狀態失敗", {
+      orderNo,
+      error: updateError.message,
+    });
     throw new Error("更新訂單狀態失敗");
   }
 
-  console.log("[GatewayWebhook] 訂單狀態已更新為成功");
+  logger.info("訂單狀態已更新為成功", { orderNo });
 
   // 執行後續業務邏輯
   await processPaymentBusinessLogic(orderData, event);
@@ -182,7 +196,7 @@ async function handlePaymentSuccess(event: WebhookEvent): Promise<void> {
  * 處理付款失敗
  */
 async function handlePaymentFailed(event: WebhookEvent): Promise<void> {
-  console.log("[GatewayWebhook] 處理付款失敗:", event.orderId);
+  logger.info("處理付款失敗", { orderId: event.orderId });
 
   const supabase = createAdminClient();
 
@@ -197,7 +211,10 @@ async function handlePaymentFailed(event: WebhookEvent): Promise<void> {
     .eq("order_no", event.orderId);
 
   if (error) {
-    console.error("[GatewayWebhook] 更新訂單狀態失敗:", error);
+    logger.error("更新訂單狀態失敗", {
+      orderId: event.orderId,
+      error: error.message,
+    });
   }
 }
 
@@ -205,7 +222,7 @@ async function handlePaymentFailed(event: WebhookEvent): Promise<void> {
  * 處理付款取消
  */
 async function handlePaymentCancelled(event: WebhookEvent): Promise<void> {
-  console.log("[GatewayWebhook] 處理付款取消:", event.orderId);
+  logger.info("處理付款取消", { orderId: event.orderId });
 
   const supabase = createAdminClient();
 
@@ -220,7 +237,10 @@ async function handlePaymentCancelled(event: WebhookEvent): Promise<void> {
     .eq("order_no", event.orderId);
 
   if (error) {
-    console.error("[GatewayWebhook] 更新訂單狀態失敗:", error);
+    logger.error("更新訂單狀態失敗", {
+      orderId: event.orderId,
+      error: error.message,
+    });
   }
 }
 
@@ -228,7 +248,7 @@ async function handlePaymentCancelled(event: WebhookEvent): Promise<void> {
  * 處理退款（目前暫不支援）
  */
 async function handlePaymentRefunded(event: WebhookEvent): Promise<void> {
-  console.log("[GatewayWebhook] 收到退款通知（暫不處理）:", event.orderId);
+  logger.info("收到退款通知（暫不處理）", { orderId: event.orderId });
   // 退款功能暫時停用
 }
 
@@ -254,11 +274,7 @@ async function processPaymentBusinessLogic(
   const relatedId = orderData.related_id as string | null;
   const amount = orderData.amount as number;
 
-  console.log("[GatewayWebhook] 執行業務邏輯:", {
-    paymentType,
-    companyId,
-    relatedId,
-  });
+  logger.info("執行業務邏輯", { paymentType, companyId, relatedId });
 
   const supabase = createAdminClient();
 
@@ -292,7 +308,7 @@ async function processPaymentBusinessLogic(
       break;
 
     default:
-      console.warn("[GatewayWebhook] 未知的付款類型:", paymentType);
+      logger.warn("未知的付款類型", { paymentType });
   }
 
   // 建立佣金記錄和同步 CRM（必須 await，Serverless 環境下 fire-and-forget 會被中斷）
@@ -302,10 +318,14 @@ async function processPaymentBusinessLogic(
   ]);
 
   if (commissionResult.status === "rejected") {
-    console.error("[GatewayWebhook] 建立佣金失敗:", commissionResult.reason);
+    logger.error("建立佣金失敗", {
+      error: String(commissionResult.reason),
+    });
   }
   if (crmResult.status === "rejected") {
-    console.error("[GatewayWebhook] 同步 CRM 失敗:", crmResult.reason);
+    logger.error("同步 CRM 失敗", {
+      error: String(crmResult.reason),
+    });
   }
 }
 
@@ -317,7 +337,7 @@ async function handleTokenPackagePurchase(
   companyId: string,
   packageId: string,
 ): Promise<void> {
-  console.log("[GatewayWebhook] 處理代幣包購買:", { companyId, packageId });
+  logger.info("處理代幣包購買", { companyId, packageId });
 
   // 查詢代幣包
   const { data: packageData, error: packageError } = await supabase
@@ -327,7 +347,7 @@ async function handleTokenPackagePurchase(
     .single();
 
   if (packageError || !packageData) {
-    console.error("[GatewayWebhook] 找不到代幣包:", packageId);
+    logger.error("找不到代幣包", { packageId });
     return;
   }
 
@@ -343,11 +363,14 @@ async function handleTokenPackagePurchase(
   );
 
   if (updateError) {
-    console.error("[GatewayWebhook] 增加代幣失敗:", updateError);
+    logger.error("增加代幣失敗", {
+      companyId,
+      error: updateError.message,
+    });
     return;
   }
 
-  console.log("[GatewayWebhook] 代幣已增加:", { companyId, tokenAmount });
+  logger.info("代幣已增加", { companyId, tokenAmount });
 }
 
 /**
@@ -363,7 +386,7 @@ async function handleSubscriptionPurchase(
   orderData: Record<string, unknown>,
   event: WebhookEvent,
 ): Promise<void> {
-  console.log("[GatewayWebhook] 處理訂閱購買:", { companyId, planId });
+  logger.info("處理訂閱購買", { companyId, planId });
 
   // 查詢訂閱方案
   const { data: plan, error: planError } = await supabase
@@ -373,7 +396,7 @@ async function handleSubscriptionPurchase(
     .single();
 
   if (planError || !plan) {
-    console.error("[GatewayWebhook] 找不到訂閱方案:", planId);
+    logger.error("找不到訂閱方案", { planId });
     return;
   }
 
@@ -412,11 +435,14 @@ async function handleSubscriptionPurchase(
       .eq("id", existingSub.id);
 
     if (updateError) {
-      console.error("[GatewayWebhook] 更新訂閱失敗:", updateError);
+      logger.error("更新訂閱失敗", {
+        companyId,
+        error: updateError.message,
+      });
       return;
     }
 
-    console.log("[GatewayWebhook] 訂閱已更新:", {
+    logger.info("訂閱已更新", {
       planName,
       articlesAdded: articlesPerMonth,
       totalArticles: newArticles,
@@ -437,11 +463,14 @@ async function handleSubscriptionPurchase(
       });
 
     if (insertError) {
-      console.error("[GatewayWebhook] 建立訂閱失敗:", insertError);
+      logger.error("建立訂閱失敗", {
+        companyId,
+        error: insertError.message,
+      });
       return;
     }
 
-    console.log("[GatewayWebhook] 新訂閱已建立:", {
+    logger.info("新訂閱已建立", {
       planName,
       articles: articlesPerMonth,
     });
@@ -452,7 +481,7 @@ async function handleSubscriptionPurchase(
   const paymentOrderId = orderData.id as string | undefined;
 
   if (promoCode) {
-    console.log("[GatewayWebhook] 套用優惠碼:", promoCode);
+    logger.info("套用優惠碼", { promoCode });
 
     try {
       const result = await applyPromoCodeByCode(
@@ -462,15 +491,18 @@ async function handleSubscriptionPurchase(
       );
 
       if (result.success) {
-        console.log("[GatewayWebhook] 優惠碼套用成功:", {
+        logger.info("優惠碼套用成功", {
           promoCode,
           bonusArticles: result.bonusArticles,
         });
       } else {
-        console.warn("[GatewayWebhook] 優惠碼套用失敗:", result.error);
+        logger.warn("優惠碼套用失敗", { promoCode, error: result.error });
       }
     } catch (error) {
-      console.error("[GatewayWebhook] 優惠碼套用異常:", error);
+      logger.error("優惠碼套用異常", {
+        promoCode,
+        error: error instanceof Error ? error.message : String(error),
+      });
       // 不阻塞主流程，優惠碼套用失敗不影響訂閱建立
     }
   }
@@ -484,10 +516,10 @@ async function handleLifetimePurchase(
   companyId: string,
   amount: number,
 ): Promise<void> {
-  console.log("[GatewayWebhook] 處理終身方案購買:", { companyId, amount });
+  logger.info("處理終身方案購買", { companyId, amount });
 
   // 這裡需要根據 AutoSEO 的實際終身方案邏輯來實作
-  console.log("[GatewayWebhook] 終身方案邏輯待實作");
+  logger.info("終身方案邏輯待實作");
 }
 
 /**
@@ -500,7 +532,7 @@ async function handleArticlePackagePurchase(
   companyId: string,
   packageId: string,
 ): Promise<void> {
-  console.log("[GatewayWebhook] 處理加購篇數:", { companyId, packageId });
+  logger.info("處理加購篇數", { companyId, packageId });
 
   // 查詢文章包
   const { data: pkg, error: pkgError } = await supabase
@@ -510,7 +542,7 @@ async function handleArticlePackagePurchase(
     .single();
 
   if (pkgError || !pkg) {
-    console.error("[GatewayWebhook] 找不到文章包:", packageId);
+    logger.error("找不到文章包", { packageId });
     return;
   }
 
@@ -525,7 +557,7 @@ async function handleArticlePackagePurchase(
     .single();
 
   if (!subscription) {
-    console.error("[GatewayWebhook] 找不到公司訂閱:", companyId);
+    logger.error("找不到公司訂閱", { companyId });
     return;
   }
 
@@ -544,11 +576,14 @@ async function handleArticlePackagePurchase(
     .eq("id", subscription.id);
 
   if (updateError) {
-    console.error("[GatewayWebhook] 更新加購篇數失敗:", updateError);
+    logger.error("更新加購篇數失敗", {
+      companyId,
+      error: updateError.message,
+    });
     return;
   }
 
-  console.log("[GatewayWebhook] 加購篇數已增加:", {
+  logger.info("加購篇數已增加", {
     packageName,
     articlesAdded: articlesToAdd,
     previousTotal: currentPurchased,
@@ -560,17 +595,17 @@ async function handleArticlePackagePurchase(
  * 異步建立佣金記錄
  */
 async function createCommissionAsync(
-  orderData: Record<string, unknown>,
-  event: WebhookEvent,
+  _orderData: Record<string, unknown>,
+  _event: WebhookEvent,
 ): Promise<void> {
   // TODO: 實作佣金記錄邏輯
-  console.log("[GatewayWebhook] 佣金記錄待實作");
+  logger.info("佣金記錄待實作");
 }
 
 /**
  * 異步同步到 CRM
  */
-async function syncToCrmAsync(companyId: string): Promise<void> {
+async function syncToCrmAsync(_companyId: string): Promise<void> {
   // TODO: 實作 CRM 同步邏輯
-  console.log("[GatewayWebhook] CRM 同步待實作");
+  logger.info("CRM 同步待實作");
 }
