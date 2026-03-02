@@ -4,6 +4,9 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { signUp as authSignUp, signIn as authSignIn } from "@/lib/auth";
 import { headers } from "next/headers";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("auth");
 
 /**
  * 使用 Google OAuth 登入
@@ -114,13 +117,15 @@ export async function resetPasswordRequest(
     });
 
     if (error) {
-      console.error("Reset password error:", error);
+      logger.error("重設密碼失敗", { error: error.message });
       return { error: "發送重設密碼郵件失敗，請稍後再試" };
     }
 
     return {};
   } catch (error) {
-    console.error("Reset password request error:", error);
+    logger.error("重設密碼請求異常", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return { error: "發送重設密碼郵件失敗，請稍後再試" };
   }
 }
@@ -148,13 +153,15 @@ export async function resendVerificationEmail(
     });
 
     if (error) {
-      console.error("Resend verification error:", error);
+      logger.error("重寄驗證郵件失敗", { error: error.message });
       return { error: "發送驗證郵件失敗，請稍後再試" };
     }
 
     return {};
   } catch (error) {
-    console.error("Resend verification request error:", error);
+    logger.error("重寄驗證郵件請求異常", {
+      error: error instanceof Error ? error.message : String(error),
+    });
     return { error: "發送驗證郵件失敗，請稍後再試" };
   }
 }
