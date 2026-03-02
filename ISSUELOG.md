@@ -415,13 +415,13 @@ URL: https://github.com/acejou27/Auto-pilot-SEO/settings/secrets/actions
 ### 問題日誌
 
 ```
-[NewebPay] ❌ Period 解密失敗: {
+[PAYUNi] ❌ Period 解密失敗: {
   error: 'error:1C800064:Provider routines::bad decrypt',
   errorCode: 'ERR_OSSL_BAD_DECRYPT',
   periodLength: 1280,
   hashKeyLength: 32,
   hashIvLength: 16,
-  suggestion: '請確認藍新金流後台的 HashKey/HashIV 設定與程式碼一致'
+  suggestion: '請確認PAYUNi（統一金流）後台的 HashKey/HashIV 設定與程式碼一致'
 }
 ```
 
@@ -448,12 +448,12 @@ URL: https://github.com/acejou27/Auto-pilot-SEO/settings/secrets/actions
 
 ```bash
 # 1. 移除舊的環境變數
-vercel env rm NEWEBPAY_HASH_KEY production --yes
-vercel env rm NEWEBPAY_HASH_IV production --yes
+vercel env rm PAYUNI_HASH_KEY production --yes
+vercel env rm PAYUNI_HASH_IV production --yes
 
 # 2. 使用 echo -n 重新設定（確保沒有換行符）
-echo -n "7hyqDDb3qQmHfz1BDF5FqYtdlshGAvPQ" | vercel env add NEWEBPAY_HASH_KEY production
-echo -n "CGFoFgbiAPYMbSlP" | vercel env add NEWEBPAY_HASH_IV production
+echo -n "7hyqDDb3qQmHfz1BDF5FqYtdlshGAvPQ" | vercel env add PAYUNI_HASH_KEY production
+echo -n "CGFoFgbiAPYMbSlP" | vercel env add PAYUNI_HASH_IV production
 
 # 3. 觸發重新部署
 vercel --prod --yes
@@ -758,7 +758,7 @@ if (
 
 ### 問題現象
 
-- **症狀**: Token 包購買後，藍新金流回調時報錯「找不到訂單」
+- **症狀**: Token 包購買後，PAYUNi（統一金流）回調時報錯「找不到訂單」
 - **影響範圍**: 所有單次購買（token 包、終身方案）
 - **正常功能**: 定期定額訂閱正常運作
 
@@ -777,7 +777,7 @@ if (
 1. **初步假設**: 資料庫複製延遲
    - ❌ 已有 20 次重試機制，應該足夠
 
-2. **第二假設**: 藍新金流回調格式問題
+2. **第二假設**: PAYUNi（統一金流）回調格式問題
    - ❌ 解密邏輯正常，定期定額使用相同邏輯成功
 
 3. **第三假設**: 訂單查詢邏輯問題
@@ -797,7 +797,7 @@ if (
 
 **問題核心**：
 
-- 藍新金流的回調請求**沒有使用者 session**
+- PAYUNi（統一金流）的回調請求**沒有使用者 session**
 - `createClient()` 需要使用者 session 才能通過 RLS (Row Level Security)
 - `createAdminClient()` 使用 Service Role Key，**繞過 RLS**
 - 定期定額一開始就用對了，所以正常
@@ -830,7 +830,7 @@ const supabase = createAdminClient();
 ### 經驗教訓
 
 1. **外部回調必須使用 Admin Client**
-   - 所有來自第三方服務（藍新金流、Line Notify 等）的回調
+   - 所有來自第三方服務（PAYUNi（統一金流）、Line Notify 等）的回調
    - 都沒有使用者 session
    - 必須使用 `createAdminClient()` 繞過 RLS
 
@@ -937,12 +937,12 @@ const supabase = createAdminClient();
 
 ```bash
 # 1. 移除舊的環境變數
-vercel env rm NEWEBPAY_HASH_KEY production --scope acejou27s-projects --yes
-vercel env rm NEWEBPAY_HASH_IV production --scope acejou27s-projects --yes
+vercel env rm PAYUNI_HASH_KEY production --scope acejou27s-projects --yes
+vercel env rm PAYUNI_HASH_IV production --scope acejou27s-projects --yes
 
 # 2. 使用 echo -n 重新設定（避免換行符）
-echo -n "7hyqDDb3qQmHfz1BDF5FqYtdlshGAvPQ" | vercel env add NEWEBPAY_HASH_KEY production --scope acejou27s-projects
-echo -n "CGFoFgbiAPYMbSlP" | vercel env add NEWEBPAY_HASH_IV production --scope acejou27s-projects
+echo -n "7hyqDDb3qQmHfz1BDF5FqYtdlshGAvPQ" | vercel env add PAYUNI_HASH_KEY production --scope acejou27s-projects
+echo -n "CGFoFgbiAPYMbSlP" | vercel env add PAYUNI_HASH_IV production --scope acejou27s-projects
 
 # 3. 觸發重新部署
 vercel --prod --scope acejou27s-projects --yes
@@ -1008,8 +1008,8 @@ vercel --prod --scope acejou27s-projects --yes
 
 ### 相關檔案
 
-- `src/lib/payment/newebpay-service.ts:51-60` - AES 加密函式
-- `src/lib/payment/newebpay-service.ts:298-316` - 環境變數載入
+- `src/lib/payment/payment-service.ts:51-60` - AES 加密函式
+- `src/lib/payment/payment-service.ts:298-316` - 環境變數載入
 
 ### 相關 Commits
 
@@ -1027,7 +1027,7 @@ vercel --prod --scope acejou27s-projects --yes
 
 通過詳細日誌發現：
 
-**藍新金流單次購買回傳 JSON 格式**：
+**PAYUNi（統一金流）單次購買回傳 JSON 格式**：
 
 ```json
 {
@@ -1087,14 +1087,14 @@ decryptPeriodCallback(period: string) {
 ✅ **2025-11-04 測試成功**
 
 - 使用者購買 token 包
-- 藍新金流回調正常
+- PAYUNi（統一金流）回調正常
 - 訂單成功查詢並更新
 - Token 正確發放
 - 定期定額訂閱依然正常運作
 
 ### 相關 Commits
 
-- `b251417`: 修正: 藍新金流單次付款格式兼容 - 支援 JSON 和扁平格式
+- `b251417`: 修正: PAYUNi（統一金流）單次付款格式兼容 - 支援 JSON 和扁平格式
 
 ---
 

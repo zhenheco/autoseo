@@ -125,8 +125,8 @@ if (isPeriodCallback) {
 **問題分析**：
 
 - ✅ 正確優先級：`Result.MerchantOrderNo` > 直接的 `MerchantOrderNo`
-- ❓ 但 `decryptedData.PeriodNo` 可能不是有效的備選（藍新文檔中未明確）
-- ⚠️ 需要驗證藍新的實際響應格式
+- ❓ 但 `decryptedData.PeriodNo` 可能不是有效的備選（PAYUNi文檔中未明確）
+- ⚠️ 需要驗證PAYUNi的實際響應格式
 
 #### 3.2 PaymentService 的 NotifyURL 處理
 
@@ -170,11 +170,11 @@ async handleRecurringCallback(period: string): Promise<{...}> {
    └─ 返回授權表單 (paymentForm)
 
 2. 前端重定向到授權頁 (/dashboard/billing/authorizing?paymentForm=...)
-   └─ 自動提交表單到藍新授權頁面
+   └─ 自動提交表單到PAYUNi授權頁面
 
-3. 使用者在藍新授權並完成付款
-   └─ 藍新發送 ReturnURL 回調 (GET)
-   └─ 藍新發送 NotifyURL 回調 (POST) [異步]
+3. 使用者在PAYUNi授權並完成付款
+   └─ PAYUNi發送 ReturnURL 回調 (GET)
+   └─ PAYUNi發送 NotifyURL 回調 (POST) [異步]
 
 4. ReturnURL 回調處理 (/api/payment/recurring/callback)
    └─ 等待 NotifyURL 完成（最多 3 秒）
@@ -191,9 +191,9 @@ async handleRecurringCallback(period: string): Promise<{...}> {
 
 #### 問題 4.1：解密函數是否正確？
 
-**檔案**：`/Volumes/500G/Claudecode/Auto-pilot-SEO/src/lib/payment/newebpay-service.ts`
+**檔案**：`/Volumes/500G/Claudecode/Auto-pilot-SEO/src/lib/payment/payment-service.ts`
 
-需要驗證 `decryptPeriodCallback()` 是否正確解密藍新的 Period 參數。
+需要驗證 `decryptPeriodCallback()` 是否正確解密PAYUNi的 Period 參數。
 
 #### 問題 4.2：Callback vs NotifyURL 的順序競合
 
@@ -361,7 +361,7 @@ const mandate = await supabase
 ### 待驗證的邏輯
 
 - ❓ `/Volumes/500G/Claudecode/Auto-pilot-SEO/src/lib/payment/payment-service.ts:408-430` - NotifyURL mandateNo 提取
-- ❓ `/Volumes/500G/Claudecode/Auto-pilot-SEO/src/lib/payment/newebpay-service.ts` - Period 解密邏輯
+- ❓ `/Volumes/500G/Claudecode/Auto-pilot-SEO/src/lib/payment/payment-service.ts` - Period 解密邏輯
 
 ---
 

@@ -6,14 +6,14 @@
 
 ## 根本原因
 
-### 1. **藍新金流的行為差異**
+### 1. **PAYUNi（統一金流）的行為差異**
 
-根據藍新金流定期定額 API 文檔（版本 1.5）:
+根據PAYUNi（統一金流）定期定額 API 文檔（版本 1.5）:
 
 - **ReturnURL**：授權成功時調用（用於前端重定向）- **同步調用**
-- **NotifyURL**：首次授權時藍新不會調用；只有在定期扣款時才會調用 - **需要自動扣款觸發**
+- **NotifyURL**：首次授權時PAYUNi不會調用；只有在定期扣款時才會調用 - **需要自動扣款觸發**
 
-**核心問題**：定期定額首次授權成功時，藍新金流 **只調用 ReturnURL，不調用 NotifyURL**。
+**核心問題**：定期定額首次授權成功時，PAYUNi（統一金流） **只調用 ReturnURL，不調用 NotifyURL**。
 
 ### 2. **代碼中的假設錯誤**
 
@@ -44,34 +44,34 @@ if (isPeriodCallback) {
 
 **問題**：代碼期望 NotifyURL 在 ReturnURL 之前或同時調用，但實際上 NotifyURL 根本不會被調用（至少在授權階段）。
 
-### 3. **正確的藍新金流流程**
+### 3. **正確的PAYUNi（統一金流）流程**
 
-#### 階段 1: 授權（用戶在藍新完成授權）
+#### 階段 1: 授權（用戶在PAYUNi完成授權）
 
 ```
 用戶提交定期定額表單
   ↓
-藍新金流授權頁面
+PAYUNi（統一金流）授權頁面
   ↓
 授權成功
   ↓
-藍新調用 ReturnURL（GET 或 POST）
+PAYUNi調用 ReturnURL（GET 或 POST）
   ↓
 前端收到回調，顯示成功
 ```
 
 ⚠️ **此時 NotifyURL 不被調用**
 
-#### 階段 2: 定期扣款（由藍新後台定時觸發）
+#### 階段 2: 定期扣款（由PAYUNi後台定時觸發）
 
 ```
-藍新后台扣款周期到達
+PAYUNi后台扣款周期到達
   ↓
-藍新從用户卡片扣款
+PAYUNi從用户卡片扣款
   ↓
 扣款成功/失敗
   ↓
-藍新調用 NotifyURL（POST）
+PAYUNi調用 NotifyURL（POST）
   ↓
 後端更新定期定額訂單狀態
 ```
@@ -94,7 +94,7 @@ if (isPeriodCallback) {
 
 ### 方案 A: 在 ReturnURL 中直接設置狀態為 active（推薦）
 
-問題：藍新 ReturnURL 回調沒有加密的訂單詳情，但可以從 Period 參數中解密。
+問題：PAYUNi ReturnURL 回調沒有加密的訂單詳情，但可以從 Period 參數中解密。
 
 **更正**：`/src/app/api/payment/recurring/callback/route.ts` 中已經通過 `Period` 參數解密了完整信息，應該直接在 ReturnURL 中設置狀態為 `active`。
 
@@ -134,16 +134,16 @@ if (isPeriodCallback) {
 
 ### 方案 B: 分離授權成功和首次扣款
 
-保持 `pending` 狀態直到第一次 NotifyURL 調用（但需要等待藍新自動扣款）。
+保持 `pending` 狀態直到第一次 NotifyURL 調用（但需要等待PAYUNi自動扣款）。
 
-**缺點**：用戶需要等待藍新後台扣款，可能要 1-2 分鐘才能看到成功。
+**缺點**：用戶需要等待PAYUNi後台扣款，可能要 1-2 分鐘才能看到成功。
 
 ## 建議方案：採用方案 A
 
 因為：
 
 1. 定期定額授權成功（ReturnURL 被調用）= 授權確認成功
-2. 第一次 NotifyURL 只在藍新扣款時調用，不適合用於授權確認
+2. 第一次 NotifyURL 只在PAYUNi扣款時調用，不適合用於授權確認
 3. NotifyURL 是用於後續定期扣款的狀態通知，與授權流程分離
 
 ## 實施步驟
@@ -167,9 +167,9 @@ if (isPeriodCallback) {
 - **回調處理**: `/src/app/api/payment/recurring/callback/route.ts:124-151`
 - **NotifyURL 端點**: `/src/app/api/payment/recurring/notify/route.ts`
 - **Payment Service**: `/src/lib/payment/payment-service.ts:408-481`
-- **NewebPay Service**: `/src/lib/payment/newebpay-service.ts:114-169`
+- **PAYUNi Service**: `/src/lib/payment/payment-service.ts:114-169`
 
-## 藍新金流 API 文檔引用
+## PAYUNi（統一金流） API 文檔引用
 
 - 定期定額 API 版本：1.5
 - 授權回調：使用 Period 參數（JSON 格式）

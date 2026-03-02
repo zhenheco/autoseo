@@ -7,7 +7,7 @@
 - 企業可管理多個 WordPress 網站
 - 自動生成 SEO 優化文章（OpenAI、DeepSeek、Perplexity）
 - 團隊協作（5種角色權限）
-- 藍新金流訂閱計費
+- PAYUNi（統一金流）訂閱計費
 - White Label 品牌白標
 - Affiliate 分潤系統
 
@@ -25,7 +25,7 @@
 - **BaaS**: Supabase (PostgreSQL + Auth + Realtime + Storage)
 - **API**: Next.js API Routes
 - **工作流**: N8N (Webhook 觸發)
-- **支付**: 藍新金流 (NewebPay)
+- **支付**: PAYUNi（統一金流） (PAYUNi)
 
 ### 部署
 
@@ -193,12 +193,12 @@
 
 ### 💳 Phase 6: 訂閱與計費 (Week 7-8)
 
-**目標**: 整合藍新金流並實作訂閱管理
+**目標**: 整合PAYUNi（統一金流）並實作訂閱管理
 
 #### 任務清單
 
-- [ ] 藍新金流整合
-  - [ ] NewebPay Service 類別
+- [ ] PAYUNi（統一金流）整合
+  - [ ] PAYUNi Service 類別
   - [ ] 加密/簽章函數
   - [ ] 付款表單生成
   - [ ] 回調處理
@@ -218,7 +218,7 @@
 
 #### 交付成果
 
-- 藍新金流完整流程
+- PAYUNi（統一金流）完整流程
 - 訂閱方案購買
 - 額度控制系統
 

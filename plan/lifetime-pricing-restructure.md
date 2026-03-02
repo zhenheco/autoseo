@@ -1467,7 +1467,7 @@ npm run dev
 # ✅ 確認 Token 包正常顯示
 # ✅ 確認 8 折優惠提示已移除
 # ✅ 測試購買按鈕（未登入 → 重定向登入頁）
-# ✅ 登入後測試購買流程（模擬到藍新金流跳轉）
+# ✅ 登入後測試購買流程（模擬到PAYUNi（統一金流）跳轉）
 ```
 
 #### 階段 6: Git 提交（5 分鐘）
@@ -1623,10 +1623,10 @@ npm run build -- --analyze
 
 ### 7.5 支付流程驗證
 
-**藍新金流整合：**
+**PAYUNi（統一金流）整合：**
 
 - [ ] ✅ 支付表單參數正確（MerchantID, TradeInfo, TradeSha）
-- [ ] ✅ 重定向到藍新授權頁面
+- [ ] ✅ 重定向到PAYUNi授權頁面
 - [ ] ✅ 授權頁面顯示正確金額
 - [ ] ✅ 支付成功後回調正常
 - [ ] ✅ 訂單記錄正確儲存
@@ -2161,7 +2161,7 @@ Error: 支付請求失敗
 
 **檢查清單：**
 
-1. 藍新金流設定是否正確（MerchantID, HashKey, HashIV）
+1. PAYUNi（統一金流）設定是否正確（MerchantID, HashKey, HashIV）
 2. API endpoint 是否可達
 3. 金額計算是否正確
 4. 環境變數是否正確設定
@@ -2266,7 +2266,7 @@ echo "回滾完成，系統已恢復到先前狀態" | notify-team
 
 - Supabase（PostgreSQL）
 - Next.js API Routes
-- 藍新金流整合
+- PAYUNi（統一金流）整合
 
 **分析工具：**
 

@@ -70,7 +70,7 @@ docs/
 │   ├── INVITATION_FEATURE_COMPLETE.md
 │   ├── MODEL_COMPARISON_REPORT.md
 │   ├── MVP-COMPLETE.md
-│   ├── NEWEBPAY_WEBHOOK_UPDATE.md
+│   ├── PAYUNI_WEBHOOK_UPDATE.md
 │   ├── SAMPLE_ARTICLES.md
 │   └── SECURITY_ALERT.md
 └── testing/             # 測試相關文檔
@@ -79,7 +79,7 @@ docs/
     ├── CHROME_DEVTOOLS_TEST.md
     ├── COMPANY_MANAGEMENT_TEST_PLAN.md
     ├── COMPANY_MANAGEMENT_TEST_REPORT.md
-    ├── NEWEBPAY_TEST_GUIDE.md
+    ├── PAYUNI_TEST_GUIDE.md
     └── VERIFICATION_REPORT.md
 
 根目錄保留:
@@ -231,7 +231,7 @@ scripts/
 - **語言**: TypeScript (嚴格模式)
 - **部署**: Vercel
 - **認證**: Supabase Auth
-- **支付**: NewebPay (測試環境)
+- **支付**: PAYUNi（統一金流）(測試環境)
 - **UI**: shadcn/ui + Tailwind CSS
 - **圖標**: Lucide React
 

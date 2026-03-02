@@ -41,7 +41,7 @@
        ▼ decodeURIComponent() + JSON.parse()
        ▼ Validate: formData.action && formData.fields
        │
-       ├─ [成功] → Submit form to 藍新金流
+       ├─ [成功] → Submit form to PAYUNi（統一金流）
        └─ [失敗] → "付款表單資料格式錯誤"
 ```
 
@@ -185,7 +185,7 @@ async createPayment(params): Promise<PaymentResult> {
 
 ## 參考資料
 
-- 藍新金流 MPG API 文件
+- PAYUNi（統一金流） MPG API 文件
 - Next.js 環境變數文件：https://nextjs.org/docs/basic-features/environment-variables
 - Vercel 環境變數設定：https://vercel.com/docs/concepts/projects/environment-variables
 

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-echo "🧪 測試 NewebPay 支付 API"
+echo "🧪 測試 PAYUNi（統一金流）支付 API"
 echo "=========================="
 echo ""
 

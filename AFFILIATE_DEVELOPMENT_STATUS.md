@@ -49,7 +49,7 @@
 
 **新增功能**:
 
-1. ✅ NewebPay Webhook 整合
+1. ✅ PAYUNi（統一金流） Webhook 整合
    - 支付成功後自動計算並創建佣金
    - 僅針對訂閱付款（Token 包不計算）
    - 異步處理，不影響支付流程
@@ -163,7 +163,7 @@
 - **語言**: TypeScript
 - **部署**: Vercel
 - **Cron**: Vercel Cron Jobs
-- **支付**: NewebPay
+- **支付**: PAYUNi（統一金流）
 
 ---
 

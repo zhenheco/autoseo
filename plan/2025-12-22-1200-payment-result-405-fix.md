@@ -6,13 +6,13 @@
 
 ### 現象
 
-- 用戶完成藍新金流授權後，被導向到 `https://1wayseo.com/payment/result?paymentId=xxx&orderId=xxx&status=success`
+- 用戶完成PAYUNi（統一金流）授權後，被導向到 `https://1wayseo.com/payment/result?paymentId=xxx&orderId=xxx&status=success`
 - 出現 **Error 405 Method Not Allowed**
 
 ### 根本原因
 
 1. **金流微服務 SDK** 的 `callbackUrl` 設定為 `/payment/result`
-2. 藍新金流授權完成後使用 **POST** 方法將用戶重定向回 `callbackUrl`
+2. PAYUNi（統一金流）授權完成後使用 **POST** 方法將用戶重定向回 `callbackUrl`
 3. `/payment/result` 只有 `page.tsx`（React 客戶端頁面），沒有 `route.ts`（API 路由）
 4. Next.js 的頁面組件（`page.tsx`）不處理 POST 請求，只處理 GET
 
@@ -22,7 +22,7 @@
 payment-service.ts:241  →  callbackUrl: `${baseUrl}/payment/result`
 payment-service.ts:490  →  callbackUrl: `${baseUrl}/payment/result`
                                  ↓
-                    藍新金流 POST 到此 URL
+                    PAYUNi（統一金流） POST 到此 URL
                                  ↓
                     /payment/result/page.tsx 無法處理
                                  ↓
@@ -35,7 +35,7 @@ payment-service.ts:490  →  callbackUrl: `${baseUrl}/payment/result`
 
 在 `/src/app/payment/result/route.ts` 新增 API 處理：
 
-- 接收藍新金流的 POST 回調
+- 接收PAYUNi（統一金流）的 POST 回調
 - 解析金流微服務回傳的參數
 - 重定向到同路徑的頁面（page.tsx 會處理顯示）
 
@@ -61,7 +61,7 @@ payment-service.ts:490  →  callbackUrl: `${baseUrl}/payment/result`
 
 - 需要修改現有的 `/api/payment/callback/route.ts` 來區分 SDK 模式和直接串接模式
 - 增加代碼複雜度
-- `/api/payment/callback` 目前的設計是處理藍新加密資料，與 SDK 的回調格式不同
+- `/api/payment/callback` 目前的設計是處理PAYUNi加密資料，與 SDK 的回調格式不同
 
 ### 決策：採用方案 A
 
@@ -75,7 +75,7 @@ payment-service.ts:490  →  callbackUrl: `${baseUrl}/payment/result`
 
 ```typescript
 // 處理金流微服務回調的 POST 請求
-// 金流微服務會將藍新的回調結果透過 query params 傳遞
+// 金流微服務會將PAYUNi的回調結果透過 query params 傳遞
 export async function POST(request: NextRequest) {
   // 1. 從 request body 或 query params 取得參數
   // 2. 驗證來源（可選：使用金流微服務的簽名驗證）
@@ -132,7 +132,7 @@ export async function GET(request: NextRequest) {
 
 ### 整合測試
 
-- 使用藍新金流測試環境
+- 使用PAYUNi（統一金流）測試環境
 - 測試卡號：4000-2211-1111-1111（成功）
 - 測試卡號：4000-2211-1111-1112（失敗）
 

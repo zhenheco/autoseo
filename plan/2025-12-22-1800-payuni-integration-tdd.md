@@ -6,7 +6,7 @@
 
 1. 建立 PAYUNi 客戶端（基於現有 SDK 文檔）
 2. 實作 Admin 付款測試頁面（1 元正式環境測試）
-3. 刪除所有藍新金流（NewebPay）相關代碼
+3. 刪除所有舊金流（已移除）相關代碼
 
 ---
 
@@ -107,12 +107,12 @@
 
 #### 任務 4.2：重構 payment-service.ts
 
-- 移除 NewebPayService 依賴
+- 移除 PAYUNiService 依賴
 - 整合 PayUniClient
 
 ---
 
-### 第五階段：刪除藍新金流代碼
+### 第五階段：刪除PAYUNi（統一金流）代碼
 
 #### 任務 5.1：刪除核心檔案
 
@@ -125,13 +125,13 @@
 
 #### 任務 5.3：清理引用
 
-- 移除 `src/lib/security/webhook-validator.ts` 中的 `verifyNewebPayCallback`
-- 移除 `src/lib/config/api-endpoints.ts` 中的 `NEWEBPAY_CONFIG`
-- 更新 `.env.example` 移除 `NEWEBPAY_*` 環境變數
+- 移除 `src/lib/security/webhook-validator.ts` 中的 `verifyPAYUNiCallback`
+- 移除 `src/lib/config/api-endpoints.ts` 中的 `PAYUNI_CONFIG`
+- 更新 `.env.example` 移除 `PAYUNI_*` 環境變數
 
 #### 任務 5.4：清理 API Routes
 
-- 重構或刪除不再需要的藍新相關 routes
+- 重構或刪除不再需要的PAYUNi相關 routes
 
 ---
 
@@ -154,18 +154,18 @@
 | 檔案路徑                               | 修改內容                      |
 | -------------------------------------- | ----------------------------- |
 | `src/components/dashboard/sidebar.tsx` | 新增付款測試連結到 adminItems |
-| `src/lib/payment/payment-service.ts`   | 移除 NewebPay，整合 PAYUNi    |
+| `src/lib/payment/payment-service.ts`   | 移除 PAYUNi，整合 PAYUNi      |
 | `src/messages/zh-TW.json`              | 新增翻譯鍵值                  |
 | `src/messages/en.json`                 | 新增翻譯鍵值                  |
 | `.env.example`                         | 更新環境變數說明              |
 
 ### 刪除檔案
 
-| 檔案路徑                               | 說明         |
-| -------------------------------------- | ------------ |
-| `src/lib/payment/newebpay-service.ts`  | 藍新核心服務 |
-| `newebpay/*.pdf`                       | 藍新技術文檔 |
-| `dist/lib/payment/newebpay-service.js` | 編譯輸出     |
+| 檔案路徑                               | 說明           |
+| -------------------------------------- | -------------- |
+| `src/lib/payment/newebpay-service.ts`  | PAYUNi核心服務 |
+| `newebpay/*.pdf`                       | PAYUNi技術文檔 |
+| `dist/lib/payment/newebpay-service.js` | 編譯輸出       |
 
 ---
 
@@ -178,11 +178,11 @@ PAYUNI_SITE_CODE=your_site_code
 PAYUNI_WEBHOOK_SECRET=your_webhook_secret
 PAYUNI_ENVIRONMENT=production
 
-# 移除以下藍新相關變數
-# NEWEBPAY_MERCHANT_ID
-# NEWEBPAY_HASH_KEY
-# NEWEBPAY_HASH_IV
-# NEWEBPAY_API_URL
+# 移除以下PAYUNi相關變數
+# PAYUNI_MERCHANT_ID
+# PAYUNI_HASH_KEY
+# PAYUNI_HASH_IV
+# PAYUNI_API_URL
 # ... 等
 ```
 
@@ -237,11 +237,11 @@ pnpm test src/lib/payment/__tests__/payuni-webhook.test.ts
 
 ## 潛在風險
 
-| 風險                       | 解決方案                             |
-| -------------------------- | ------------------------------------ |
-| 刪除藍新代碼後現有訂單失效 | 保留資料庫表格結構，只移除服務層代碼 |
-| PAYUNi API 變更            | 基於 SDK 文檔實作，保持介面一致      |
-| Webhook 驗證失敗           | 完整單元測試覆蓋簽名邏輯             |
+| 風險                         | 解決方案                             |
+| ---------------------------- | ------------------------------------ |
+| 刪除PAYUNi代碼後現有訂單失效 | 保留資料庫表格結構，只移除服務層代碼 |
+| PAYUNi API 變更              | 基於 SDK 文檔實作，保持介面一致      |
+| Webhook 驗證失敗             | 完整單元測試覆蓋簽名邏輯             |
 
 ---
 
@@ -263,5 +263,5 @@ pnpm test src/lib/payment/__tests__/payuni-webhook.test.ts
 5. 建立 Admin 測試頁面
 6. 更新側邊欄
 7. 手動測試正式環境 1 元付款
-8. 確認一切正常後刪除藍新代碼
+8. 確認一切正常後刪除PAYUNi代碼
 ```

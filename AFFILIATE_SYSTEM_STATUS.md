@@ -44,7 +44,7 @@
 
 ### 支付整合
 
-- [ ] NewebPay Webhook 整合
+- [ ] PAYUNi（統一金流） Webhook 整合
 - [ ] 自動計算並創建佣金
 
 ### 自動化任務

@@ -19,7 +19,7 @@
 
 7. **subscription_plans** - 訂閱方案（含預設方案）
 8. **subscriptions** - 公司訂閱狀態
-9. **orders** - 訂單記錄（藍新金流）
+9. **orders** - 訂單記錄（PAYUNi 統一金流）
 
 ### 進階功能 (Advanced Features)
 

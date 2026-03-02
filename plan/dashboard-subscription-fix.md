@@ -23,13 +23,13 @@
 
 - 當前配置為 `periodType: 'Y'`（年繳）
 - 但 `periodPoint: '1'` 不符合年繳格式（應為 `MM,DD`）
-- 藍新金流回傳錯誤：「**年期授權時間資料不正確，無該日期**」
+- PAYUNi（統一金流）回傳錯誤：「**年期授權時間資料不正確，無該日期**」
 
 **用戶期望**：月繳 12 期方案
 
 ---
 
-## 📚 藍新金流 API 參數說明（官方文件）
+## 📚 PAYUNi（統一金流） API 參數說明（官方文件）
 
 ### PeriodType (週期類別)
 
@@ -169,7 +169,7 @@ export default async function DashboardPage() {
 
 ### 第二部分：訂閱流程改為月繳 12 期
 
-#### 3. `/src/lib/payment/newebpay-service.ts` (line 146-201)
+#### 3. `/src/lib/payment/payment-service.ts` (line 146-201)
 
 **目標**: 修改 `createRecurringPayment()` 方法支援月繳
 
@@ -945,7 +945,7 @@ ADD COLUMN subscription_version INTEGER DEFAULT 2;
 
 **風險**: 某期扣款失敗如何處理
 
-**藍新金流機制**:
+**PAYUNi（統一金流）機制**:
 
 - 扣款失敗會重試 3 次
 - 仍失敗則通知商店
@@ -986,7 +986,7 @@ ADD COLUMN subscription_version INTEGER DEFAULT 2;
 
 ### 金流驗證
 
-- [ ] 提交到藍新金流的 `PeriodType` 為 `'M'`
+- [ ] 提交到PAYUNi（統一金流）的 `PeriodType` 為 `'M'`
 - [ ] `PeriodPoint` 為 `'01'` ~ `'31'` 格式
 - [ ] `PeriodTimes` 為 `12`
 - [ ] `PeriodAmt` 為月費金額
@@ -1019,14 +1019,14 @@ ADD COLUMN subscription_version INTEGER DEFAULT 2;
 
 **預估時間**: 2-3 小時
 
-1. `newebpay-service.ts` - 修改 `createRecurringPayment()` 支援月繳
+1. `payment-service.ts` - 修改 `createRecurringPayment()` 支援月繳
 2. `payment-service.ts` - 修改介面和實作邏輯
 3. `/api/payment/recurring/create/route.ts` - 固定月繳參數
 4. **測試**: 建立測試訂閱，確認金流參數正確
 
 **驗證重點**:
 
-- 提交到藍新金流的參數格式正確
+- 提交到PAYUNi（統一金流）的參數格式正確
 - 不會再出現「年期授權時間資料不正確」錯誤
 
 ---
@@ -1089,7 +1089,7 @@ ADD COLUMN subscription_version INTEGER DEFAULT 2;
 - [ ] 免費用戶升級 → 月繳方案 → 授權成功
 - [ ] 查看 Dashboard 統計數據正確
 - [ ] 查看訂閱頁面顯示正確
-- [ ] 模擬月繳回調（使用藍新測試環境）
+- [ ] 模擬月繳回調（使用PAYUNi測試環境）
 
 ---
 
@@ -1211,7 +1211,7 @@ ADD COLUMN subscription_version INTEGER DEFAULT 2;
 **實作建議**:
 
 1. Dashboard 訂閱頁面新增「取消訂閱」按鈕
-2. 調用藍新金流「終止委託」API
+2. 調用PAYUNi（統一金流）「終止委託」API
 3. 更新 `recurring_mandates.status = 'cancelled'`
 4. 保留已付費期間的服務權限
 5. 到期後自動降級為免費方案
@@ -1220,17 +1220,17 @@ ADD COLUMN subscription_version INTEGER DEFAULT 2;
 
 - 已付費的期數仍然有效
 - 只是不再續約新的期數
-- 藍新金流需要調用專門的終止委託 API
+- PAYUNi（統一金流）需要調用專門的終止委託 API
 
 ---
 
 ## 📚 參考資料
 
-### 藍新金流官方文件
+### PAYUNi（統一金流）官方文件
 
-- [信用卡定期定額技術串接手冊](https://www.newebpay.com/website/Page/content/download_api)
-- 測試環境: `https://ccore.newebpay.com/MPG/period`
-- 正式環境: `https://core.newebpay.com/MPG/period`
+- [信用卡定期定額技術串接手冊](https://www.payuni.com.tw/website/Page/content/download_api)
+- 測試環境: `https://ccore.payuni.com.tw/MPG/period`
+- 正式環境: `https://core.payuni.com.tw/MPG/period`
 
 ### 關鍵參數格式
 
@@ -1274,8 +1274,8 @@ ADD COLUMN subscription_version INTEGER DEFAULT 2;
 如果在實施過程中遇到問題：
 
 1. **檢查錯誤日誌**: 查看 Vercel 部署日誌或本地 console
-2. **驗證參數**: 使用 `console.log()` 確認傳送到藍新金流的參數
-3. **測試環境**: 先在藍新測試環境驗證，再部署到正式環境
+2. **驗證參數**: 使用 `console.log()` 確認傳送到PAYUNi（統一金流）的參數
+3. **測試環境**: 先在PAYUNi測試環境驗證，再部署到正式環境
 4. **資料庫檢查**: 確認 `recurring_mandates` 表的資料是否正確寫入
 
 ---

@@ -25,11 +25,11 @@ feat: 聯盟行銷佣金自動化系統
 ```markdown
 ## 📋 摘要
 
-此 PR 整合聯盟行銷系統的佣金自動化功能，包含 NewebPay Webhook 整合和 Vercel Cron Jobs 配置。此分支基於舊分支 `claude/affiliate-marketing-system-011CUq3gnVQYreQsEVhLV5jQ` 的最新提交（已合併），包含所有先前的修復和改進。
+此 PR 整合聯盟行銷系統的佣金自動化功能，包含 PAYUNi（統一金流） Webhook 整合和 Vercel Cron Jobs 配置。此分支基於舊分支 `claude/affiliate-marketing-system-011CUq3gnVQYreQsEVhLV5jQ` 的最新提交（已合併），包含所有先前的修復和改進。
 
 ## ✨ 新增功能
 
-### 1. NewebPay Webhook 整合
+### 1. PAYUNi（統一金流） Webhook 整合
 
 - ✅ 支付成功後自動計算並創建佣金
 - ✅ 僅針對訂閱付款計算（Token 包不計算）
