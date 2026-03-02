@@ -254,65 +254,68 @@ export class SubscriptionActivationService {
 
   /**
    * 處理推薦
+   * 使用 company_referral_codes 表查找推薦人公司，記錄到 referrals 表
    */
   private async processReferral(
     userId: string,
     referralCode: string,
-    amount: number,
-    plan: string,
+    _amount: number,
+    _plan: string,
   ): Promise<void> {
-    // TODO: 推薦系統需要重新設計（目前 public.users 表不存在）
-    console.log("推薦系統功能尚未實作");
+    try {
+      // 透過 company_referral_codes 查找推薦人公司
+      const { data: referrerCode } = await this.supabase
+        .from("company_referral_codes")
+        .select("company_id")
+        .eq("referral_code", referralCode)
+        .single();
 
-    // try {
-    //   const rules = BUSINESS_RULES.referral
-    //
-    //   // 查找推薦人
-    //   const { data: referrer } = await this.supabase
-    //     .from('users')
-    //     .select('id')
-    //     .eq('referral_code', referralCode)
-    //     .single()
-    //
-    //   if (!referrer) {
-    //     return
-    //   }
-    //
-    //   // 記錄推薦關係
-    //   await this.supabase.from('referrals').insert({
-    //     referrer_id: referrer.id,
-    //     referred_id: userId,
-    //     status: 'completed',
-    //     reward_amount: amount * rules.firstPaymentCommissionRate,
-    //     created_at: new Date().toISOString()
-    //   })
-    //
-    //   // 發放推薦獎勵
-    //   await this.supabase.rpc('add_referral_reward', {
-    //     p_user_id: referrer.id,
-    //     p_amount: amount * rules.firstPaymentCommissionRate
-    //   })
-    // } catch (error) {
-    //   console.error('Failed to process referral:', error)
-    //   // 推薦處理失敗不應影響主要流程
-    // }
+      if (!referrerCode) {
+        console.warn("[Referral] 找不到推薦碼:", referralCode);
+        return;
+      }
+
+      // 取得被推薦人的公司 ID
+      const { data: userProfile } = await this.supabase
+        .from("user_profiles")
+        .select("company_id")
+        .eq("id", userId)
+        .single();
+
+      if (!userProfile?.company_id) {
+        console.warn("[Referral] 找不到用戶的公司:", userId);
+        return;
+      }
+
+      // 記錄推薦關係到 referrals 表
+      await this.supabase.from("referrals").insert({
+        referrer_company_id: referrerCode.company_id,
+        referred_company_id: userProfile.company_id,
+        referral_code: referralCode,
+        status: "qualified",
+        first_payment_at: new Date().toISOString(),
+      });
+
+      console.log("[Referral] 推薦關係已記錄:", {
+        referrerCompany: referrerCode.company_id,
+        referredCompany: userProfile.company_id,
+      });
+    } catch (error) {
+      console.error("[Referral] 處理推薦失敗:", error);
+      // 推薦處理失敗不應影響主要流程
+    }
   }
 
   /**
    * 更新用戶狀態
+   * 訂閱狀態由 company_subscriptions 表管理，此處無需額外更新
    */
-  private async updateUserStatus(userId: string, plan: string): Promise<void> {
-    // TODO: 用戶狀態更新功能需要重新設計（目前 public.users 表不存在）
-    console.log("用戶狀態更新功能尚未實作");
-
-    // await this.supabase
-    //   .from('users')
-    //   .update({
-    //     subscription_plan: plan,
-    //     subscription_status: 'active',
-    //     updated_at: new Date().toISOString()
-    //   })
-    //   .eq('id', userId)
+  private async updateUserStatus(
+    _userId: string,
+    _plan: string,
+  ): Promise<void> {
+    // 訂閱狀態已在 createSubscription / upgradeSubscription 中更新 company_subscriptions
+    // 無需額外操作
   }
 
   /**
