@@ -14,9 +14,9 @@
 
 import { config } from "dotenv";
 import { createClient } from "@supabase/supabase-js";
-import { S3Client, PutObjectCommand } from "@aws-sdk/client-s3";
 import * as fs from "fs";
 import * as path from "path";
+import * as os from "os";
 
 config({ path: ".env.local" });
 
@@ -26,8 +26,6 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || "";
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || "";
 
 const R2_ACCOUNT_ID = process.env.R2_ACCOUNT_ID?.trim() || "";
-const R2_ACCESS_KEY_ID = process.env.R2_ACCESS_KEY_ID?.trim() || "";
-const R2_SECRET_ACCESS_KEY = process.env.R2_SECRET_ACCESS_KEY?.trim() || "";
 const R2_BUCKET_NAME = process.env.R2_BUCKET_NAME?.trim() || "";
 
 const R2_PUBLIC_URL = `https://pub-${R2_ACCOUNT_ID}.r2.dev`;
@@ -37,17 +35,6 @@ const BATCH_SIZE = 50;
 // ─── 初始化 ───────────────────────────────────
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
-
-const s3Client = new S3Client({
-  region: "auto",
-  endpoint: `https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com`,
-  credentials: {
-    accessKeyId: R2_ACCESS_KEY_ID,
-    secretAccessKey: R2_SECRET_ACCESS_KEY,
-  },
-  forcePathStyle: true,
-  maxAttempts: 3,
-});
 
 // ─── 型別 ───────────────────────────────────
 
@@ -77,8 +64,12 @@ interface ProgressData {
 
 // ─── 工具函式 ───────────────────────────────────
 
-function isSupabaseUrl(url: string): boolean {
-  return url.includes("supabase.co/storage");
+function needsMigration(url: string): boolean {
+  // Supabase URL 需要遷移
+  if (url.includes("supabase.co/storage")) return true;
+  // 之前遷移到本地 R2（未加 --remote）的壞 URL 也需要重新遷移
+  if (url.includes("r2.dev/images/migrated-")) return true;
+  return false;
 }
 
 function loadProgress(): ProgressData {
@@ -139,21 +130,55 @@ async function uploadToR2(buffer: Buffer, filename: string): Promise<string> {
   const fileKey = `images/migrated-${Date.now()}-${filename}`;
   const contentType = guessContentType(filename);
 
-  const command = new PutObjectCommand({
-    Bucket: R2_BUCKET_NAME,
-    Key: fileKey,
-    Body: buffer,
-    ContentType: contentType,
-    CacheControl: "public, max-age=31536000",
-  });
+  // 寫入臨時檔案供 wrangler 上傳（繞過本地 S3 endpoint TLS 問題）
+  const tmpFile = path.join(
+    os.tmpdir(),
+    `r2-migrate-${Date.now()}-${filename}`,
+  );
+  fs.writeFileSync(tmpFile, buffer);
 
-  await s3Client.send(command);
+  try {
+    // 使用 execFileSync 避免 shell injection
+    const { execFileSync } = require("child_process");
+    execFileSync(
+      "wrangler",
+      [
+        "r2",
+        "object",
+        "put",
+        `${R2_BUCKET_NAME}/${fileKey}`,
+        "--file",
+        tmpFile,
+        "--content-type",
+        contentType,
+        "--remote",
+      ],
+      { stdio: "pipe", timeout: 60000 },
+    );
+  } finally {
+    fs.unlinkSync(tmpFile);
+  }
+
   return `${R2_PUBLIC_URL}/${fileKey}`;
 }
 
+function recoverSupabaseUrl(brokenR2Url: string): string {
+  // r2.dev URL: .../images/migrated-{ts}-{original-filename}
+  // 從中提取原始 filename，重建 Supabase URL
+  const match = brokenR2Url.match(/migrated-\d+-(.+)$/);
+  if (match) {
+    return `${SUPABASE_URL}/storage/v1/object/public/article-images/articles/${match[1]}`;
+  }
+  throw new Error(`Cannot recover Supabase URL from: ${brokenR2Url}`);
+}
+
 async function migrateUrl(url: string): Promise<string> {
-  const filename = extractFilenameFromUrl(url);
-  const buffer = await downloadImage(url);
+  // 如果是壞掉的 R2 URL，先恢復原始 Supabase URL
+  const downloadUrl = url.includes("r2.dev/images/migrated-")
+    ? recoverSupabaseUrl(url)
+    : url;
+  const filename = extractFilenameFromUrl(downloadUrl);
+  const buffer = await downloadImage(downloadUrl);
   const newUrl = await uploadToR2(buffer, filename);
   return newUrl;
 }
@@ -170,15 +195,10 @@ async function main() {
   );
   console.log("=".repeat(60));
 
-  // 檢查環境變數
+  // 檢查環境變數（wrangler 用自己的 auth，只需 bucket name + public URL）
   if (!isDryRun) {
-    if (
-      !R2_ACCOUNT_ID ||
-      !R2_ACCESS_KEY_ID ||
-      !R2_SECRET_ACCESS_KEY ||
-      !R2_BUCKET_NAME
-    ) {
-      console.error("❌ R2 環境變數不完整，無法執行遷移");
+    if (!R2_BUCKET_NAME) {
+      console.error("❌ R2_BUCKET_NAME 環境變數未設定，無法執行遷移");
       process.exit(1);
     }
   }
@@ -218,7 +238,7 @@ async function main() {
 
       if (
         article.featured_image_url &&
-        isSupabaseUrl(article.featured_image_url)
+        needsMigration(article.featured_image_url)
       ) {
         urlsToMigrate.push({
           field: "featured_image_url",
@@ -226,11 +246,11 @@ async function main() {
         });
       }
 
-      if (article.og_image && isSupabaseUrl(article.og_image)) {
+      if (article.og_image && needsMigration(article.og_image)) {
         urlsToMigrate.push({ field: "og_image", url: article.og_image });
       }
 
-      if (article.twitter_image && isSupabaseUrl(article.twitter_image)) {
+      if (article.twitter_image && needsMigration(article.twitter_image)) {
         urlsToMigrate.push({
           field: "twitter_image",
           url: article.twitter_image,
@@ -240,7 +260,7 @@ async function main() {
       if (Array.isArray(article.content_images)) {
         for (let i = 0; i < article.content_images.length; i++) {
           const img = article.content_images[i];
-          if (img?.url && isSupabaseUrl(img.url)) {
+          if (img?.url && needsMigration(img.url)) {
             urlsToMigrate.push({
               field: "content_images",
               url: img.url,

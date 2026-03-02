@@ -61,3 +61,4 @@ devlog.md
 
 # Git history rewrite remnants
 .git-rewrite/
+.env*.local

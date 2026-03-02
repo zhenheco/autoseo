@@ -35,6 +35,10 @@ export const MODEL_CAPABILITIES: Record<string, ModelCapability> = {
     purpose: "image-generation",
   },
   "gemini-2.5-flash-image": { jsonMode: false, purpose: "image-generation" },
+  "gemini-3.1-flash-image-preview": {
+    jsonMode: false,
+    purpose: "image-generation",
+  },
   "gpt-image-1-mini": { jsonMode: false, purpose: "image-generation" },
   "gpt-5-mini": { jsonMode: true, purpose: "text-generation" },
   "perplexity-research": { jsonMode: false, purpose: "research" },
@@ -595,8 +599,9 @@ export class AIClient {
   }
 
   /**
-   * 圖片生成（統一使用 fal.ai qwen-image）
-   * 優點：速度快（約 3 秒）、成本低、直接返回 URL
+   * 圖片生成（主要使用 Gemini 3.1 Flash Image，fallback 到 SeedDream v4）
+   * Gemini 3.1 Flash Image: Pro 品質 + Flash 速度，成本低
+   * SeedDream v4: 支援文字渲染，作為備用
    */
   async generateImage(
     prompt: string,
@@ -608,18 +613,34 @@ export class AIClient {
   ): Promise<{ url: string; revisedPrompt?: string }> {
     const MAX_RETRIES = 3;
 
-    // 統一使用 fal-ai Seedream v4（支援文字渲染）
-    const result = await this.tryGenerateWithRetries(
+    // 主要使用 Gemini 3.1 Flash Image
+    const primaryResult = await this.tryGenerateWithRetries(
+      prompt,
+      { ...options, model: "gemini-3.1-flash-image-preview" },
+      MAX_RETRIES,
+    );
+
+    if (primaryResult.success && primaryResult.data) {
+      return primaryResult.data;
+    }
+
+    console.warn(
+      "[AIClient] ⚠️ Gemini 3.1 Flash Image failed, falling back to SeedDream v4",
+      primaryResult.error?.message,
+    );
+
+    // Fallback 到 SeedDream v4
+    const fallbackResult = await this.tryGenerateWithRetries(
       prompt,
       { ...options, model: "fal-ai/bytedance/seedream/v4/text-to-image" },
       MAX_RETRIES,
     );
 
-    if (result.success && result.data) {
-      return result.data;
+    if (fallbackResult.success && fallbackResult.data) {
+      return fallbackResult.data;
     }
 
-    throw result.error || new Error("Image generation failed");
+    throw fallbackResult.error || new Error("Image generation failed");
   }
 
   private async generateImageWithModel(
@@ -639,12 +660,13 @@ export class AIClient {
       return await this.callFalImageAPI(prompt, options);
     }
 
-    // 其他模型的 fallback（保留但不主動使用）
+    // Gemini 系列模型（包含 3.1 Flash Image）
     if (
       options.model.includes("gemini-imagen") ||
       options.model.includes("imagen-3") ||
       options.model.includes("gemini-2.5-flash-image") ||
-      options.model.includes("gemini-3-pro-image-preview")
+      options.model.includes("gemini-3-pro-image-preview") ||
+      options.model.includes("gemini-3.1-flash-image")
     ) {
       return await this.callGeminiImagenAPI(prompt, options);
     }
@@ -745,6 +767,7 @@ export class AIClient {
 
   private mapGeminiImageModel(model: string): string {
     const modelMap: Record<string, string> = {
+      "gemini-3.1-flash-image-preview": "gemini-3.1-flash-image-preview",
       "gemini-3-pro-image-preview": "gemini-3-pro-image-preview",
       "gemini-imagen-flash": "gemini-2.5-flash-image",
       "gemini-imagen": "gemini-2.5-flash-image",
