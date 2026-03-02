@@ -5,8 +5,11 @@ import {
   encryptToken,
   fetchGoogleUserInfo,
 } from "@/lib/security/token-encryption";
+import { createLogger } from "@/lib/logger";
 
 const GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token";
+
+const logger = createLogger("oauth-callback");
 
 /**
  * GET /api/google/oauth/callback
@@ -29,7 +32,7 @@ export async function GET(request: NextRequest) {
 
   // 處理錯誤
   if (error) {
-    console.error("[OAuth Callback] Google 返回錯誤:", error);
+    logger.error("Google 返回錯誤", { error });
     return redirectToWebsites({ error: error });
   }
 
@@ -39,17 +42,17 @@ export async function GET(request: NextRequest) {
   const serviceType = request.cookies.get("google_oauth_service_type")?.value;
 
   if (!state || !savedState || state !== savedState) {
-    console.error("[OAuth Callback] State 驗證失敗");
+    logger.error("State 驗證失敗");
     return redirectToWebsites({ error: "invalid_state" });
   }
 
   if (!websiteId || !serviceType) {
-    console.error("[OAuth Callback] 缺少必要的 cookie 資訊");
+    logger.error("缺少必要的 cookie 資訊");
     return redirectToWebsites({ error: "missing_session" });
   }
 
   if (!code) {
-    console.error("[OAuth Callback] 缺少授權碼");
+    logger.error("缺少授權碼");
     return redirectToWebsites({ error: "missing_code" });
   }
 
@@ -82,7 +85,7 @@ export async function GET(request: NextRequest) {
     const redirectUri = process.env.GOOGLE_OAUTH_REDIRECT_URI;
 
     if (!clientId || !clientSecret || !redirectUri) {
-      console.error("[OAuth Callback] 缺少環境變數");
+      logger.error("缺少環境變數");
       return redirectToWebsites({ error: "server_config_error" });
     }
 
@@ -101,7 +104,7 @@ export async function GET(request: NextRequest) {
     const tokens = await tokenResponse.json();
 
     if (tokens.error) {
-      console.error("[OAuth Callback] Token 交換失敗:", tokens);
+      logger.error("Token 交換失敗", { error: tokens.error });
       return redirectToWebsites({ error: tokens.error });
     }
 
@@ -134,7 +137,7 @@ export async function GET(request: NextRequest) {
       });
 
     if (upsertError) {
-      console.error("[OAuth Callback] 儲存 token 失敗:", upsertError);
+      logger.error("儲存 token 失敗", { error: upsertError.message });
       return redirectToWebsites({ error: "storage_failed" });
     }
 
@@ -151,8 +154,10 @@ export async function GET(request: NextRequest) {
     response.cookies.delete("google_oauth_service_type");
 
     return response;
-  } catch (error) {
-    console.error("[OAuth Callback] 處理錯誤:", error);
+  } catch (err) {
+    logger.error("處理錯誤", {
+      error: err instanceof Error ? err.message : String(err),
+    });
     return redirectToWebsites({ error: "server_error" });
   }
 }

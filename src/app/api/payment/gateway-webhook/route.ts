@@ -24,18 +24,21 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { handleGatewayWebhook } from "@/lib/payment/webhook-handler";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("api-gateway-webhook");
 
 export async function POST(request: NextRequest) {
-  console.log("[API GatewayWebhook] 收到請求");
+  logger.info("收到請求");
 
   try {
     // 取得原始 body 和簽名
     const rawBody = await request.text();
     const signature = request.headers.get("X-Webhook-Signature");
 
-    console.log("[API GatewayWebhook] 請求資訊:", {
-      hasBody: !!rawBody,
-      hasSignature: !!signature,
+    logger.info("請求資訊", {
+      hasBody: rawBody.length > 0 ? "true" : "false",
+      hasSignature: signature ? "true" : "false",
       bodyLength: rawBody.length,
     });
 
@@ -43,19 +46,21 @@ export async function POST(request: NextRequest) {
     const result = await handleGatewayWebhook(rawBody, signature);
 
     if (result.received) {
-      console.log("[API GatewayWebhook] 處理成功:", {
+      logger.info("處理成功", {
         paymentId: result.paymentId,
         orderId: result.orderId,
       });
 
       return NextResponse.json({ received: true }, { status: 200 });
     } else {
-      console.error("[API GatewayWebhook] 處理失敗:", result.error);
+      logger.error("處理失敗", { error: result.error });
 
       return NextResponse.json({ error: result.error }, { status: 401 });
     }
   } catch (error) {
-    console.error("[API GatewayWebhook] 未預期錯誤:", error);
+    logger.error("未預期錯誤", {
+      error: error instanceof Error ? error.message : String(error),
+    });
 
     return NextResponse.json({ error: "內部錯誤" }, { status: 500 });
   }
