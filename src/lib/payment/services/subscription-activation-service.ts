@@ -277,9 +277,9 @@ export class SubscriptionActivationService {
 
       // 取得被推薦人的公司 ID
       const { data: userProfile } = await this.supabase
-        .from("user_profiles")
+        .from("company_members")
         .select("company_id")
-        .eq("id", userId)
+        .eq("user_id", userId)
         .single();
 
       if (!userProfile?.company_id) {
