@@ -111,10 +111,12 @@ async function handlePaymentSuccess(event: WebhookEvent): Promise<void> {
   // 金流微服務的 orderId 格式是我們傳入的，需要與 payment_orders 表對應
   const orderNo = event.orderId;
 
-  // 查詢訂單（加入重試機制，應對 Supabase 複製延遲）
+  // 查詢訂單（重試機制，應對 Supabase 複製延遲）
+  const MAX_RETRIES = 3;
+  const RETRY_DELAYS = [500, 1500, 3000]; // 遞增延遲
   let orderData: Record<string, unknown> | null = null;
 
-  for (let attempt = 1; attempt <= 10; attempt++) {
+  for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     const { data, error } = await supabase
       .from("payment_orders")
       .select("*")
@@ -123,13 +125,17 @@ async function handlePaymentSuccess(event: WebhookEvent): Promise<void> {
 
     if (data && !error) {
       orderData = data;
-      console.log(`[GatewayWebhook] 成功找到訂單 (第 ${attempt} 次嘗試)`);
+      if (attempt > 0) {
+        console.log(`[GatewayWebhook] 成功找到訂單 (第 ${attempt + 1} 次嘗試)`);
+      }
       break;
     }
 
-    if (attempt < 10) {
-      const delay = Math.min(500 * attempt, 2000);
-      console.log(`[GatewayWebhook] 等待 ${delay}ms 後重試`);
+    if (attempt < MAX_RETRIES - 1) {
+      const delay = RETRY_DELAYS[attempt];
+      console.log(
+        `[GatewayWebhook] 訂單未找到，${delay}ms 後重試 (${attempt + 1}/${MAX_RETRIES})`,
+      );
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
@@ -289,15 +295,18 @@ async function processPaymentBusinessLogic(
       console.warn("[GatewayWebhook] 未知的付款類型:", paymentType);
   }
 
-  // 建立佣金記錄（異步，不阻塞）
-  createCommissionAsync(orderData, event).catch((err) => {
-    console.error("[GatewayWebhook] 建立佣金失敗:", err);
-  });
+  // 建立佣金記錄和同步 CRM（必須 await，Serverless 環境下 fire-and-forget 會被中斷）
+  const [commissionResult, crmResult] = await Promise.allSettled([
+    createCommissionAsync(orderData, event),
+    syncToCrmAsync(companyId),
+  ]);
 
-  // 同步到 CRM（異步，不阻塞）
-  syncToCrmAsync(companyId).catch((err) => {
-    console.error("[GatewayWebhook] 同步 CRM 失敗:", err);
-  });
+  if (commissionResult.status === "rejected") {
+    console.error("[GatewayWebhook] 建立佣金失敗:", commissionResult.reason);
+  }
+  if (crmResult.status === "rejected") {
+    console.error("[GatewayWebhook] 同步 CRM 失敗:", crmResult.reason);
+  }
 }
 
 /**
