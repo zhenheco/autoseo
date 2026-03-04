@@ -274,7 +274,6 @@ export class ArticleImageAgent extends BaseAgent<
     section: Outline["mainSections"][0],
     sectionIndex: number,
   ): string {
-    // 一律使用英文 prompt：fal.ai Seedream v4 的 content policy 會誤判中文 prompt
     return this.buildEnglishPrompt(input, section, sectionIndex);
   }
 
@@ -298,13 +297,14 @@ Color scheme: clear, informative`;
     // 從 sectionImageTexts 取得對應的文字（如果有的話）
     const imageText = input.sectionImageTexts?.[sectionIndex];
 
-    // 如果有指定 imageText，使用英文強調文字
+    // 如果有指定 imageText，使用目標語系的文字
     let textInstruction = "";
     if (imageText) {
       textInstruction = `
 
 📝 TEXT OVERLAY (IMPORTANT):
 Include the text "${imageText}" prominently in the image.
+- The text MUST be rendered exactly as: "${imageText}" (do NOT translate or change it)
 - Typography: bold, modern, highly readable sans-serif font
 - Position: integrated with the composition, easy to read
 - Style: clean signage style, professional typography

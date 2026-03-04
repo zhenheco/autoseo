@@ -6,6 +6,33 @@ import type {
 } from "@/types/agents";
 import { buildLanguageInstructions } from "./prompt-utils";
 
+/** 各語系的圖片文字範例（用於 AI prompt 引導） */
+const LOCALE_IMAGE_TEXT_EXAMPLES: Record<string, string[]> = {
+  "zh-TW": ["專家指南", "實用技巧", "重點整理", "必學秘訣"],
+  "zh-CN": ["专家指南", "实用技巧", "重点整理", "必学秘诀"],
+  "ja-JP": ["専門ガイド", "実用テクニック", "重要ポイント", "必須知識"],
+  "ko-KR": ["전문 가이드", "실용 팁", "핵심 정리", "필수 지식"],
+  "en-US": ["Expert Guide", "Pro Tips", "Key Insights", "Best Practice"],
+  "de-DE": [
+    "Expertenführer",
+    "Profi-Tipps",
+    "Wichtige Punkte",
+    "Best Practice",
+  ],
+  "es-ES": [
+    "Guía Experta",
+    "Consejos Pro",
+    "Puntos Clave",
+    "Mejores Prácticas",
+  ],
+  "fr-FR": [
+    "Guide Expert",
+    "Astuces Pro",
+    "Points Clés",
+    "Meilleures Pratiques",
+  ],
+};
+
 export class StrategyAgent extends BaseAgent<StrategyInput, StrategyOutput> {
   get agentName(): string {
     return "StrategyAgent";
@@ -1437,7 +1464,10 @@ ${this.buildCompetitorExclusionList(input.researchData)}
     const brandStyle = input.brandVoice?.tone_of_voice || "";
     const targetAudience = input.brandVoice?.target_audience || "";
 
-    // 總是使用英文作為圖片文字（AI 模型對英文文字渲染效果較好）
+    // 圖片文字使用與關鍵字相同的語系（Gemini 3.1 Flash Image 支援多語系文字渲染）
+    const langExamples =
+      LOCALE_IMAGE_TEXT_EXAMPLES[targetLang] ||
+      LOCALE_IMAGE_TEXT_EXAMPLES["en-US"];
     const prompt = `Generate image suggestions for an article titled: "${selectedTitle}"
 
 ## Article Outline
@@ -1446,26 +1476,27 @@ ${outline.mainSections.map((s, i) => `${i + 1}. ${s.heading}`).join("\n")}
 ## Brand Info
 - Tone: ${brandStyle || "professional, friendly"}
 - Target audience: ${targetAudience || "general readers"}
+- Target language: ${targetLang}
 
 ## Task
 Provide image generation suggestions:
 
 1. **style**: Describe the overall visual style (e.g., "professional photography, modern minimalist, warm lighting, clean background")
-2. **featuredImageText**: SHORT English text for the featured/hero image (2-4 words, like a tagline or key concept)
-3. **sectionImageTexts**: SHORT English text for each section image (2-4 words each, reinforcing the section's key message)
+2. **featuredImageText**: SHORT text for the featured/hero image (2-4 words, like a tagline or key concept)
+3. **sectionImageTexts**: SHORT text for each section image (2-4 words each, reinforcing the section's key message)
 
-## Text Guidelines (IMPORTANT)
-- ALL text MUST be in English (better AI rendering)
+## Text Language Guidelines (IMPORTANT)
+- ALL text MUST be in the SAME language as the article: ${targetLang}
 - Keep text SHORT: 2-4 words maximum
-- Use impactful keywords or phrases
-- Examples: "Expert Tips", "Save Time", "Pro Guide", "Best Practice", "Quick Start"
+- Use impactful keywords or phrases in ${targetLang}
+- Examples for ${targetLang}: ${langExamples.join(", ")}
 - Text should be suitable for overlay on images
 
 ## Output Format (JSON only)
 {
   "style": "professional photography, clean and modern, bright natural lighting, minimalist composition",
-  "featuredImageText": "Expert Guide",
-  "sectionImageTexts": ["Key Insight", "Pro Tips", "Best Practice"]
+  "featuredImageText": "${langExamples[0]}",
+  "sectionImageTexts": ["${langExamples[1]}", "${langExamples[2]}", "${langExamples[3]}"]
 }
 
 Output JSON only:`;
@@ -1482,7 +1513,7 @@ Output JSON only:`;
         console.warn(
           "[StrategyAgent] Empty imageGuidance response, using fallback",
         );
-        return this.getFallbackImageGuidance(selectedTitle, outline);
+        return this.getFallbackImageGuidance(outline, targetLang);
       }
 
       const content = response.content.trim();
@@ -1535,40 +1566,31 @@ Output JSON only:`;
       console.warn(
         "[StrategyAgent] Invalid imageGuidance format, using fallback",
       );
-      return this.getFallbackImageGuidance(selectedTitle, outline);
+      return this.getFallbackImageGuidance(outline, targetLang);
     } catch (error) {
       console.error("[StrategyAgent] imageGuidance generation failed:", error);
-      return this.getFallbackImageGuidance(selectedTitle, outline);
+      return this.getFallbackImageGuidance(outline, targetLang);
     }
   }
 
   /**
    * 獲取預設的圖片指引（當 AI 生成失敗時使用）
-   * 使用通用英文文字作為 fallback
+   * 使用目標語系的文字作為 fallback
    */
   private getFallbackImageGuidance(
-    _title: string,
     outline: StrategyOutput["outline"],
+    targetLang: string,
   ): ImageGuidance {
-    // 通用英文圖片文字
-    const genericTexts = [
-      "Key Insight",
-      "Pro Tips",
-      "Best Practice",
-      "Expert Guide",
-      "Quick Start",
-      "Essential Info",
-      "Top Methods",
-      "Smart Choice",
-    ];
+    const langTexts =
+      LOCALE_IMAGE_TEXT_EXAMPLES[targetLang] ||
+      LOCALE_IMAGE_TEXT_EXAMPLES["en-US"];
 
     return {
       style:
         "professional photography, clean and modern, bright natural lighting, high quality",
-      featuredImageText: "Expert Guide", // 預設英文標語
+      featuredImageText: langTexts[0],
       sectionImageTexts: outline.mainSections.map((_, index) => {
-        // 從通用文字列表中選取
-        return genericTexts[index % genericTexts.length];
+        return langTexts[index % langTexts.length];
       }),
     };
   }
