@@ -21,8 +21,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { companyId, planId, billingCycle, amount, description, email } =
-      body;
+    const {
+      companyId,
+      planId,
+      billingCycle,
+      amount,
+      description,
+      email,
+      invoice,
+    } = body;
 
     if (!companyId || !planId || !amount || !description || !email) {
       return NextResponse.json({ error: "缺少必要參數" }, { status: 400 });
@@ -52,6 +59,7 @@ export async function POST(request: NextRequest) {
       periodType: "M",
       periodStartType: 2,
       periodTimes: 12,
+      ...(invoice ? { invoice } : {}),
     });
 
     if (!result.success) {

@@ -9,6 +9,11 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { trackBeginCheckout, trackViewItem } from "@/lib/analytics/events";
+import {
+  InvoiceForm,
+  validateInvoiceData,
+  type InvoiceFormData,
+} from "@/components/billing/InvoiceForm";
 
 /**
  * 篇數制方案資料類型
@@ -53,6 +58,10 @@ export function SubscriptionPlans({
   );
   const router = useRouter();
   const t = useTranslations("subscription");
+
+  // 發票相關 state
+  const [invoice, setInvoice] = useState<InvoiceFormData>({});
+  const tInvoice = useTranslations("invoice");
 
   // 優惠碼相關 state
   const [promoCode, setPromoCode] = useState("");
@@ -138,11 +147,22 @@ export function SubscriptionPlans({
         billingCycle === "yearly" ? plan.yearly_price : plan.monthly_price;
       const description = `${getPlanName(plan)} ${billingCycle === "yearly" ? t("yearlyBilling") : t("monthlyBilling")}`;
 
+      // 驗證發票資料
+      const invoiceValidation = validateInvoiceData(invoice);
+      if (!invoiceValidation.valid) {
+        alert(invoiceValidation.error);
+        setLoading(null);
+        return;
+      }
+
       // GA4 追蹤：開始結帳
       trackBeginCheckout(
         [{ item_id: plan.id, item_name: getPlanName(plan), price: price || 0 }],
         price || 0,
       );
+
+      const invoiceParam =
+        Object.keys(invoice).length > 0 ? invoice : undefined;
 
       // 使用定期定額 API（目前暫時返回 410，Phase 4 會重新啟用）
       const response = await fetch("/api/payment/recurring/create", {
@@ -155,6 +175,7 @@ export function SubscriptionPlans({
           amount: price || 0,
           description,
           email: userEmail,
+          invoice: invoiceParam,
         }),
       });
 
@@ -170,6 +191,7 @@ export function SubscriptionPlans({
             amount: price || 0,
             description,
             email: userEmail,
+            invoice: invoiceParam,
             metadata: {
               billingCycle,
               promoCode: promoValid && promoData ? promoData.code : undefined,
@@ -331,6 +353,16 @@ export function SubscriptionPlans({
               {promoError}
             </p>
           )}
+        </div>
+      </div>
+
+      {/* 發票資訊 */}
+      <div className="max-w-md mx-auto">
+        <div className="p-4 rounded-lg bg-white dark:bg-slate-800/50 border border-slate-200 dark:border-white/10 shadow-sm">
+          <h3 className="text-sm font-medium text-slate-700 dark:text-slate-300 mb-3">
+            {tInvoice("title")}
+          </h3>
+          <InvoiceForm value={invoice} onChange={setInvoice} />
         </div>
       </div>
 

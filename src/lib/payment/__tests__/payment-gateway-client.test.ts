@@ -126,7 +126,7 @@ describe("createPayment", () => {
     const mockResponse = {
       success: true,
       paymentId: "pay_123",
-      newebpayForm: {
+      payuniForm: {
         action: "https://ccore.newebpay.com/MPG/mpg_gateway",
         method: "POST",
         fields: {
@@ -152,8 +152,8 @@ describe("createPayment", () => {
 
     expect(result.success).toBe(true);
     expect(result.paymentId).toBe("pay_123");
-    expect(result.newebpayForm).toBeDefined();
-    expect(result.newebpayForm?.action).toContain("newebpay.com");
+    expect(result.payuniForm).toBeDefined();
+    expect(result.payuniForm?.action).toContain("newebpay.com");
   });
 
   it("應該成功建立定期定額付款", async () => {
@@ -161,7 +161,7 @@ describe("createPayment", () => {
       success: true,
       paymentId: "pay_456",
       isPeriodPayment: true,
-      newebpayForm: {
+      payuniForm: {
         action: "https://ccore.newebpay.com/MPG/period",
         method: "POST",
         fields: {
@@ -191,7 +191,7 @@ describe("createPayment", () => {
 
     expect(result.success).toBe(true);
     expect(result.isPeriodPayment).toBe(true);
-    expect(result.newebpayForm?.fields).toHaveProperty("MerchantID_");
+    expect(result.payuniForm?.fields).toHaveProperty("MerchantID_");
   });
 
   it("金額為 0 或負數時應該拋出錯誤", async () => {

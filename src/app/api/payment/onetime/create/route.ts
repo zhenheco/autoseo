@@ -21,8 +21,15 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { companyId, paymentType, relatedId, amount, description, email } =
-      body;
+    const {
+      companyId,
+      paymentType,
+      relatedId,
+      amount,
+      description,
+      email,
+      invoice,
+    } = body;
 
     if (
       !companyId ||
@@ -56,6 +63,7 @@ export async function POST(request: NextRequest) {
       amount,
       description,
       email,
+      ...(invoice ? { invoice } : {}),
     });
 
     if (!result.success) {

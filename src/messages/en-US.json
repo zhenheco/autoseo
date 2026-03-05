@@ -2749,5 +2749,28 @@
       "backToArticles": "Back to Article Management",
       "backToHome": "Back to Home"
     }
+  },
+  "invoice": {
+    "title": "Invoice Information",
+    "invoiceType": "Invoice Type",
+    "personal": "Personal",
+    "company": "Business",
+    "donate": "Donate",
+    "carrierType": "Carrier Type",
+    "mobileBarcode": "Mobile Barcode",
+    "certificate": "Citizen Digital Certificate",
+    "certificateNumber": "Certificate Number",
+    "emailAsCarrierHint": "Email will be used as carrier if left blank",
+    "taxId": "Tax ID",
+    "companyName": "Company Name",
+    "companyNamePlaceholder": "Company name (optional)",
+    "donateOrg": "Charity Organization",
+    "donateCode": "Donation Code",
+    "donateCodePlaceholder": "Enter donation code",
+    "customDonateCode": "Other (enter manually)",
+    "invalidTaxId": "Invalid Tax ID format",
+    "invalidMobileBarcode": "Invalid mobile barcode format",
+    "invalidCertificate": "Invalid certificate format",
+    "selectDonateOrg": "Please select a charity"
   }
 }

@@ -2930,5 +2930,28 @@
       "q3": "Wie ist die Rückerstattungsrichtlinie?",
       "a3": "Sie können innerhalb von 14 Tagen nach der Zahlung eine vollständige Rückerstattung beantragen."
     }
+  },
+  "invoice": {
+    "title": "Rechnungsinformationen",
+    "invoiceType": "Rechnungstyp",
+    "personal": "Privat",
+    "company": "Unternehmen",
+    "donate": "Spende",
+    "carrierType": "Carrier-Typ",
+    "mobileBarcode": "Mobiler Barcode",
+    "certificate": "Natürliche Person Zertifikat",
+    "certificateNumber": "Zertifikatsnummer",
+    "emailAsCarrierHint": "E-Mail wird als Carrier verwendet, wenn leer",
+    "taxId": "Steuernummer",
+    "companyName": "Firmenname",
+    "companyNamePlaceholder": "Firmenname (optional)",
+    "donateOrg": "Spendenorganisation",
+    "donateCode": "Spendencode",
+    "donateCodePlaceholder": "Spendencode eingeben",
+    "customDonateCode": "Andere (manuell eingeben)",
+    "invalidTaxId": "Ungültiges Steuernummer-Format",
+    "invalidMobileBarcode": "Ungültiges Barcode-Format",
+    "invalidCertificate": "Ungültiges Zertifikat-Format",
+    "selectDonateOrg": "Bitte wählen Sie eine Organisation"
   }
 }

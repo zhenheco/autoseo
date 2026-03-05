@@ -2930,5 +2930,28 @@
       "q3": "¿Cuál es la política de reembolso?",
       "a3": "Puede solicitar un reembolso completo dentro de los 14 días posteriores al pago."
     }
+  },
+  "invoice": {
+    "title": "Informacion de factura",
+    "invoiceType": "Tipo de factura",
+    "personal": "Personal",
+    "company": "Empresa",
+    "donate": "Donacion",
+    "carrierType": "Tipo de portador",
+    "mobileBarcode": "Codigo de barras movil",
+    "certificate": "Certificado de persona natural",
+    "certificateNumber": "Numero de certificado",
+    "emailAsCarrierHint": "Se usara el email como portador si se deja vacio",
+    "taxId": "Numero de identificacion fiscal",
+    "companyName": "Nombre de la empresa",
+    "companyNamePlaceholder": "Nombre de la empresa (opcional)",
+    "donateOrg": "Organizacion benefica",
+    "donateCode": "Codigo de donacion",
+    "donateCodePlaceholder": "Ingrese el codigo de donacion",
+    "customDonateCode": "Otro (ingresar manualmente)",
+    "invalidTaxId": "Formato de numero fiscal invalido",
+    "invalidMobileBarcode": "Formato de codigo de barras invalido",
+    "invalidCertificate": "Formato de certificado invalido",
+    "selectDonateOrg": "Seleccione una organizacion"
   }
 }

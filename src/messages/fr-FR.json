@@ -2930,5 +2930,28 @@
       "q3": "Quelle est la politique de remboursement ?",
       "a3": "Vous pouvez demander un remboursement intégral dans les 14 jours suivant le paiement."
     }
+  },
+  "invoice": {
+    "title": "Informations de facturation",
+    "invoiceType": "Type de facture",
+    "personal": "Personnel",
+    "company": "Entreprise",
+    "donate": "Don",
+    "carrierType": "Type de porteur",
+    "mobileBarcode": "Code-barres mobile",
+    "certificate": "Certificat de personne physique",
+    "certificateNumber": "Numero de certificat",
+    "emailAsCarrierHint": "L'email sera utilise comme porteur si vide",
+    "taxId": "Numero d'identification fiscale",
+    "companyName": "Nom de l'entreprise",
+    "companyNamePlaceholder": "Nom de l'entreprise (optionnel)",
+    "donateOrg": "Organisation caritative",
+    "donateCode": "Code de don",
+    "donateCodePlaceholder": "Entrez le code de don",
+    "customDonateCode": "Autre (saisir manuellement)",
+    "invalidTaxId": "Format de numero fiscal invalide",
+    "invalidMobileBarcode": "Format de code-barres invalide",
+    "invalidCertificate": "Format de certificat invalide",
+    "selectDonateOrg": "Veuillez selectionner une organisation"
   }
 }

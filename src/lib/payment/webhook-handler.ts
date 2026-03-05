@@ -168,7 +168,7 @@ async function handlePaymentSuccess(event: WebhookEvent): Promise<void> {
     .update({
       status: "success",
       newebpay_status: "SUCCESS",
-      newebpay_trade_no: event.newebpayTradeNo,
+      newebpay_trade_no: event.tradeNo,
       paid_at: event.paidAt || new Date().toISOString(),
       newebpay_response: {
         source: "gateway_webhook",

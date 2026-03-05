@@ -14,6 +14,8 @@ import {
   type PaymentStatusResult,
   type WebhookEvent,
   type Environment,
+  type InvoiceInput,
+  type InvoiceCarrierType,
 } from "./payment-gateway-client";
 
 // ============================================================================
@@ -169,4 +171,6 @@ export {
   type PaymentStatusResult,
   type WebhookEvent,
   type Environment,
+  type InvoiceInput,
+  type InvoiceCarrierType,
 };

@@ -2749,5 +2749,28 @@
       "backToArticles": "返回文章管理",
       "backToHome": "返回首頁"
     }
+  },
+  "invoice": {
+    "title": "發票資訊",
+    "invoiceType": "發票類型",
+    "personal": "個人",
+    "company": "公司戶",
+    "donate": "捐贈",
+    "carrierType": "載具類型",
+    "mobileBarcode": "手機條碼",
+    "certificate": "自然人憑證",
+    "certificateNumber": "自然人憑證號碼",
+    "emailAsCarrierHint": "未填寫則使用 Email 作為載具",
+    "taxId": "統一編號",
+    "companyName": "公司名稱",
+    "companyNamePlaceholder": "公司名稱（選填）",
+    "donateOrg": "捐贈機構",
+    "donateCode": "捐贈碼",
+    "donateCodePlaceholder": "請輸入捐贈碼",
+    "customDonateCode": "其他（自行輸入）",
+    "invalidTaxId": "統一編號格式不正確",
+    "invalidMobileBarcode": "手機條碼格式不正確",
+    "invalidCertificate": "自然人憑證格式不正確",
+    "selectDonateOrg": "請選擇捐贈機構"
   }
 }

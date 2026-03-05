@@ -3,6 +3,7 @@ import type { Database } from "@/types/database.types";
 import { createCommission } from "@/lib/affiliate-client";
 import { TIER_HIERARCHY } from "@/lib/subscription/upgrade-rules";
 import { syncCompanyOwnerToBrevo } from "@/lib/brevo";
+import type { InvoiceInput } from "./gateway-client";
 
 /**
  * PAYUNi API 回應格式
@@ -104,6 +105,7 @@ export interface CreateOnetimeOrderParams {
   amount: number;
   description: string;
   email: string;
+  invoice?: InvoiceInput;
 }
 
 export interface CreateRecurringOrderParams {
@@ -116,6 +118,7 @@ export interface CreateRecurringOrderParams {
   periodPoint?: string;
   periodStartType: 2;
   periodTimes: 12;
+  invoice?: InvoiceInput;
 }
 
 export class PaymentService {
@@ -236,6 +239,7 @@ export class PaymentService {
         paymentType: params.paymentType,
         relatedId: params.relatedId,
       },
+      ...(params.invoice ? { invoice: params.invoice } : {}),
     });
 
     if (!payuniResult.success || !payuniResult.payuniForm) {
@@ -371,6 +375,7 @@ export class PaymentService {
         periodTimes: 12,
         periodStartType: 2,
       },
+      ...(params.invoice ? { invoice: params.invoice } : {}),
     });
 
     if (!payuniResult.success || !payuniResult.payuniForm) {

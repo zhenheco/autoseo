@@ -2749,5 +2749,28 @@
       "backToArticles": "記事管理に戻る",
       "backToHome": "ホームに戻る"
     }
+  },
+  "invoice": {
+    "title": "請求書情報",
+    "invoiceType": "請求書タイプ",
+    "personal": "個人",
+    "company": "法人",
+    "donate": "寄付",
+    "carrierType": "キャリアタイプ",
+    "mobileBarcode": "モバイルバーコード",
+    "certificate": "自然人憑証",
+    "certificateNumber": "憑証番号",
+    "emailAsCarrierHint": "未入力の場合はメールをキャリアとして使用します",
+    "taxId": "統一番号",
+    "companyName": "会社名",
+    "companyNamePlaceholder": "会社名（任意）",
+    "donateOrg": "寄付先団体",
+    "donateCode": "寄付コード",
+    "donateCodePlaceholder": "寄付コードを入力",
+    "customDonateCode": "その他（手入力）",
+    "invalidTaxId": "統一番号の形式が正しくありません",
+    "invalidMobileBarcode": "モバイルバーコードの形式が正しくありません",
+    "invalidCertificate": "憑証の形式が正しくありません",
+    "selectDonateOrg": "寄付先を選択してください"
   }
 }
