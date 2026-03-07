@@ -10,6 +10,9 @@
   "kv_namespaces": [
     { "binding": "CACHE_KV", "id": "770310297c7940449837f30b01b130d6", "preview_id": "bacf5ac803d24a518955f81426f2f368" }
   ],
+  "vars": {
+    "NEXT_PUBLIC_CF_ANALYTICS_TOKEN": "7e0d9b93bf7b4cd8a48c43c7271d4abf"
+  },
   "env": {
     "production": {
       "routes": [
