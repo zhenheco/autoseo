@@ -26,7 +26,7 @@ export interface NotifiableError {
   timestamp: string;
 }
 
-/** Redis 快取鍵前綴 */
+/** KV 快取鍵前綴 */
 const CACHE_KEYS = {
   /** 錯誤通知去重 - 15 分鐘 TTL */
   DEDUP: "notify:error:dedup",

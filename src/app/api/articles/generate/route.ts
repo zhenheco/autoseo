@@ -319,15 +319,15 @@ export async function POST(request: NextRequest) {
       `[Generate API] 任務已創建: ${articleJobId}，等待 GitHub Actions 處理`,
     );
 
-    // 🔧 優化：設置 Redis flag 通知有待處理任務
+    // 🔧 優化：設置 KV flag 通知有待處理任務
     if (isRedisAvailable()) {
       await cacheSet(
         CACHE_CONFIG.PENDING_ARTICLE_JOBS.prefix,
         true,
         CACHE_CONFIG.PENDING_ARTICLE_JOBS.ttl,
       ).catch((err) => {
-        // Redis 失敗不影響主流程
-        console.warn("[Generate API] Redis flag 設置失敗:", err);
+        // KV 失敗不影響主流程
+        console.warn("[Generate API] KV flag 設置失敗:", err);
       });
     }
 

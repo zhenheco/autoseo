@@ -7,6 +7,9 @@
     "directory": ".open-next/assets",
     "binding": "ASSETS"
   },
+  "kv_namespaces": [
+    { "binding": "CACHE_KV", "id": "TO_BE_CREATED" }
+  ],
   "env": {
     "production": {
       "routes": [

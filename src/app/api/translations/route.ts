@@ -177,15 +177,15 @@ export const POST = withAuth(async (request: NextRequest, { user }) => {
       return internalError("Failed to create translation jobs");
     }
 
-    // 設置 Redis flag 通知有待處理翻譯任務
+    // 設置 KV flag 通知有待處理翻譯任務
     if (isRedisAvailable()) {
       await cacheSet(
         CACHE_CONFIG.PENDING_TRANSLATION_JOBS.prefix,
         true,
         CACHE_CONFIG.PENDING_TRANSLATION_JOBS.ttl,
       ).catch((err) => {
-        // Redis 失敗不影響主流程
-        console.warn("[Translation API] Redis flag 設置失敗:", err);
+        // KV 失敗不影響主流程
+        console.warn("[Translation API] KV flag 設置失敗:", err);
       });
     }
 

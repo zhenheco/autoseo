@@ -249,7 +249,7 @@ export async function GET(request: NextRequest) {
           article.company_id,
           article.user_id,
           website.auto_translate_enabled,
-          website.auto_translate_languages
+          website.auto_translate_languages,
         );
 
         // 同步文章到外部專案（如有設定同步目標）
@@ -341,7 +341,9 @@ export async function GET(request: NextRequest) {
 
         // 使用同步服務發送 webhook
         const { syncArticle } = await import("@/lib/sync");
-        const syncResult = await syncArticle(fullArticle, "create", [website.id]);
+        const syncResult = await syncArticle(fullArticle, "create", [
+          website.id,
+        ]);
 
         if (syncResult.failed > 0) {
           const failedResult = syncResult.results.find((r) => !r.success);
@@ -382,7 +384,7 @@ export async function GET(request: NextRequest) {
           article.company_id,
           article.user_id,
           website.auto_translate_enabled,
-          website.auto_translate_languages
+          website.auto_translate_languages,
         );
 
         results.published++;
@@ -499,7 +501,7 @@ export async function GET(request: NextRequest) {
           article.company_id,
           article.user_id,
           website.auto_translate_enabled,
-          website.auto_translate_languages
+          website.auto_translate_languages,
         );
 
         // 同步文章到外部專案（如有設定同步目標）
@@ -665,7 +667,7 @@ export async function GET(request: NextRequest) {
         article.company_id,
         article.user_id,
         website.auto_translate_enabled,
-        website.auto_translate_languages
+        website.auto_translate_languages,
       );
 
       // 同步文章到外部專案（如有設定同步目標）
@@ -892,15 +894,19 @@ async function triggerAutoTranslation(
   companyId: string,
   userId: string,
   autoTranslateEnabled: boolean | null,
-  autoTranslateLanguages: string[] | null
+  autoTranslateLanguages: string[] | null,
 ): Promise<{ triggered: boolean; jobCount: number; skipped: number }> {
   // 檢查是否啟用自動翻譯
-  if (!autoTranslateEnabled || !autoTranslateLanguages || autoTranslateLanguages.length === 0) {
+  if (
+    !autoTranslateEnabled ||
+    !autoTranslateLanguages ||
+    autoTranslateLanguages.length === 0
+  ) {
     return { triggered: false, jobCount: 0, skipped: 0 };
   }
 
   console.log(
-    `[Auto Translate] Checking article ${articleId} for auto translation to: ${autoTranslateLanguages.join(", ")}`
+    `[Auto Translate] Checking article ${articleId} for auto translation to: ${autoTranslateLanguages.join(", ")}`,
   );
 
   try {
@@ -912,19 +918,20 @@ async function triggerAutoTranslation(
 
     // 建立已翻譯的 Set
     const existingSet = new Set(
-      existingTranslations?.map((t) => t.target_language) || []
+      existingTranslations?.map((t) => t.target_language) || [],
     );
 
     // 過濾掉已有翻譯的語言
     const languagesToTranslate = autoTranslateLanguages.filter(
-      (lang) => !existingSet.has(lang)
+      (lang) => !existingSet.has(lang),
     );
 
-    const skippedCount = autoTranslateLanguages.length - languagesToTranslate.length;
+    const skippedCount =
+      autoTranslateLanguages.length - languagesToTranslate.length;
 
     if (languagesToTranslate.length === 0) {
       console.log(
-        `[Auto Translate] All languages already translated for article ${articleId}, skipped ${skippedCount}`
+        `[Auto Translate] All languages already translated for article ${articleId}, skipped ${skippedCount}`,
       );
       return { triggered: false, jobCount: 0, skipped: skippedCount };
     }
@@ -949,22 +956,25 @@ async function triggerAutoTranslation(
       .insert([job]);
 
     if (insertError) {
-      console.error("[Auto Translate] Failed to create translation job:", insertError);
+      console.error(
+        "[Auto Translate] Failed to create translation job:",
+        insertError,
+      );
       return { triggered: false, jobCount: 0, skipped: skippedCount };
     }
 
     console.log(
-      `[Auto Translate] Created translation job for article ${articleId}: ${languagesToTranslate.join(", ")}`
+      `[Auto Translate] Created translation job for article ${articleId}: ${languagesToTranslate.join(", ")}`,
     );
 
-    // 設置 Redis flag 通知有待處理翻譯任務
+    // 設置 KV flag 通知有待處理翻譯任務
     if (isRedisAvailable()) {
       await cacheSet(
         CACHE_CONFIG.PENDING_TRANSLATION_JOBS.prefix,
         true,
-        CACHE_CONFIG.PENDING_TRANSLATION_JOBS.ttl
+        CACHE_CONFIG.PENDING_TRANSLATION_JOBS.ttl,
       ).catch((err) => {
-        console.warn("[Auto Translate] Redis flag 設置失敗:", err);
+        console.warn("[Auto Translate] KV flag 設置失敗:", err);
       });
     }
 
@@ -983,7 +993,7 @@ async function triggerAutoTranslation(
             body: JSON.stringify({
               event_type: "translation-jobs-created",
             }),
-          }
+          },
         );
         console.log("[Auto Translate] GitHub Actions 已觸發");
       } catch (e) {

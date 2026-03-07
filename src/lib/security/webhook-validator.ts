@@ -4,7 +4,7 @@
  */
 
 import crypto from "crypto";
-import { Redis } from "@upstash/redis";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 /**
  * 驗證 HMAC SHA256 簽章
@@ -82,39 +82,32 @@ export function generateNonce(length: number = 32): string {
 }
 
 /**
- * Upstash Redis 客戶端（延遲初始化）
- */
-let redis: Redis | null = null;
-
-/**
- * 記憶體快取作為備援（Redis 不可用時使用）
+ * 記憶體快取作為備援（KV 不可用時使用）
  */
 const memoryNonceCache = new Map<string, number>();
 
 /**
- * 取得 Redis 客戶端
+ * 取得 KV binding
  */
-function getRedis(): Redis | null {
-  if (
-    !process.env.UPSTASH_REDIS_REST_URL ||
-    !process.env.UPSTASH_REDIS_REST_TOKEN
-  ) {
+function getKV(): KVNamespace | null {
+  try {
+    const { env } = getCloudflareContext();
+    const kv = (env as Record<string, unknown>).CACHE_KV as
+      | KVNamespace
+      | undefined;
+    return kv || null;
+  } catch {
     return null;
   }
-
-  if (!redis) {
-    redis = new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,
-    });
-  }
-
-  return redis;
 }
 
 /**
  * 檢查並記錄 nonce，防止重放攻擊
- * 優先使用 Redis，不可用時使用記憶體快取
+ *
+ * 策略：memory-first, KV-assisted
+ * - 記憶體檢查是原子性的（同一 isolate 內無 race condition）
+ * - KV 提供跨節點的重放防護（eventually consistent，盡力而為）
+ * - 任一層判定已使用即拒絕
  *
  * @param nonce - 要檢查的 nonce
  * @param ttlSeconds - nonce 有效期 (秒)，預設 300 秒
@@ -128,23 +121,32 @@ export async function checkAndRecordNonce(
     return false;
   }
 
-  const client = getRedis();
+  // 記憶體層：原子性保證，永遠先檢查
+  const memResult = checkAndRecordNonceInMemory(nonce, ttlSeconds);
+  if (!memResult) {
+    return false; // 記憶體中已存在，拒絕
+  }
 
-  if (client) {
+  // KV 層：跨節點輔助（非阻塞）
+  const kv = getKV();
+  if (kv) {
     try {
       const key = `nonce:${nonce}`;
-      // 使用 SETNX（SET if Not eXists）原子操作
-      const result = await client.set(key, "1", { ex: ttlSeconds, nx: true });
-      // 如果 result 為 "OK"，表示 nonce 不存在且已設定
-      return result === "OK";
+      const existing = await kv.get(key);
+      if (existing !== null) {
+        return false; // 其他節點已記錄此 nonce
+      }
+      const effectiveTtl = Math.max(60, ttlSeconds);
+      await kv.put(key, "1", { expirationTtl: effectiveTtl });
     } catch (error) {
-      console.error("[WebhookValidator] Redis nonce check error:", error);
-      // Redis 錯誤時，fallback 到記憶體快取
+      console.error(
+        "[WebhookValidator] KV nonce check error (non-blocking):",
+        error,
+      );
     }
   }
 
-  // 記憶體快取 fallback
-  return checkAndRecordNonceInMemory(nonce, ttlSeconds);
+  return true;
 }
 
 /**

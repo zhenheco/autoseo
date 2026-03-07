@@ -1,14 +1,14 @@
 /**
- * Rate Limiting 工具（使用 Upstash）
- * 使用 HTTP-based Redis 實現分散式速率限制
+ * Rate Limiting 工具（使用 Cloudflare KV）
+ * 使用 KV 實現分散式速率限制
  *
  * 適合 serverless 環境：
  * - 無連線管理問題
- * - 無 timeout 掛起問題
  * - 全球邊緣位置，低延遲
+ * - Eventually consistent（對 rate limiting 可接受）
  */
 
-import { Redis } from "@upstash/redis";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { NextResponse } from "next/server";
 
 export interface RateLimitResult {
@@ -43,12 +43,9 @@ export const RATE_LIMIT_CONFIGS = {
   DEFAULT: { limit: 60, window: 60 },
 } as const;
 
-/** Upstash Redis 客戶端（延遲初始化） */
-let redis: Redis | null = null;
-
 /**
- * 記憶體 Rate Limit 快取（Redis 不可用時的備援）
- * 注意：Vercel serverless 環境下只能在單一實例內生效
+ * 記憶體 Rate Limit 快取（KV 不可用時的備援）
+ * 注意：serverless 環境下只能在單一實例內生效
  */
 interface MemoryRateLimitEntry {
   count: number;
@@ -57,7 +54,7 @@ interface MemoryRateLimitEntry {
 const memoryRateLimitCache = new Map<string, MemoryRateLimitEntry>();
 
 /**
- * 記憶體快取 Rate Limit（Redis 不可用時使用）
+ * 記憶體快取 Rate Limit（KV 不可用時使用）
  */
 function memoryRateLimit(
   identifier: string,
@@ -111,39 +108,35 @@ function cleanupExpiredMemoryEntries(): void {
   }
 }
 
-/**
- * 取得 Redis 客戶端
- * Upstash 使用 HTTP，每個請求都是獨立的
- */
-function getRedis(): Redis | null {
-  if (
-    !process.env.UPSTASH_REDIS_REST_URL ||
-    !process.env.UPSTASH_REDIS_REST_TOKEN
-  ) {
-    return null;
-  }
-
-  if (!redis) {
-    redis = new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,
-    });
-  }
-
-  return redis;
+/** KV rate limit 資料結構 */
+interface KVRateLimitData {
+  count: number;
+  windowStart: number;
 }
 
 /**
- * 檢查 Redis 是否啟用
+ * 取得 KV binding
  */
-function isRedisEnabled(): boolean {
-  return !!(
-    process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-  );
+function getKV(): KVNamespace | null {
+  try {
+    const { env } = getCloudflareContext();
+    const kv = (env as Record<string, unknown>).CACHE_KV as
+      | KVNamespace
+      | undefined;
+    return kv || null;
+  } catch {
+    return null;
+  }
 }
 
 /**
  * 執行 rate limiting 檢查
+ *
+ * 策略：memory-first, KV-assisted
+ * - 記憶體計數器是原子性的（同一 isolate 內無 race condition）
+ * - KV 僅作為跨節點的「盡力而為」輔助限速
+ * - 任一層超限即拒絕（取嚴格值）
+ *
  * @param identifier 識別符（user_id, ip, etc.）
  * @param config rate limit 配置
  * @returns rate limit 結果
@@ -152,39 +145,57 @@ export async function rateLimit(
   identifier: string,
   config: RateLimitConfig = RATE_LIMIT_CONFIGS.DEFAULT,
 ): Promise<RateLimitResult> {
-  // 如果 Redis 未啟用，使用記憶體快取作為備援
-  if (!isRedisEnabled()) {
-    return memoryRateLimit(identifier, config);
+  // 記憶體層：原子性保證，永遠先檢查
+  const memResult = memoryRateLimit(identifier, config);
+  if (!memResult.success) {
+    return memResult;
   }
 
-  const client = getRedis();
-  if (!client) {
-    return memoryRateLimit(identifier, config);
+  // KV 層：跨節點輔助（盡力而為，非原子性可接受）
+  const kv = getKV();
+  if (!kv) {
+    return memResult;
   }
 
   const key = `rate_limit:${identifier}`;
+  const now = Date.now();
 
   try {
-    const current = await client.incr(key);
+    const existing = await kv.get<KVRateLimitData>(key, "json");
 
-    // 如果是第一次請求，設定過期時間
-    if (current === 1) {
-      await client.expire(key, config.window);
+    if (existing && now - existing.windowStart < config.window * 1000) {
+      const newCount = existing.count + 1;
+      const remainingTtl = Math.ceil(
+        (config.window * 1000 - (now - existing.windowStart)) / 1000,
+      );
+      const effectiveTtl = Math.max(60, remainingTtl);
+
+      await kv.put(
+        key,
+        JSON.stringify({ count: newCount, windowStart: existing.windowStart }),
+        { expirationTtl: effectiveTtl },
+      );
+
+      // 如果 KV 層也超限，以 KV 結果為準（跨節點累計）
+      if (newCount > config.limit) {
+        return {
+          success: false,
+          remaining: 0,
+          reset: remainingTtl > 0 ? remainingTtl : config.window,
+          limit: config.limit,
+        };
+      }
+    } else {
+      const effectiveTtl = Math.max(60, config.window);
+      await kv.put(key, JSON.stringify({ count: 1, windowStart: now }), {
+        expirationTtl: effectiveTtl,
+      });
     }
-
-    const ttl = await client.ttl(key);
-
-    return {
-      success: current <= config.limit,
-      remaining: Math.max(0, config.limit - current),
-      reset: ttl > 0 ? ttl : config.window,
-      limit: config.limit,
-    };
   } catch (error) {
-    console.error("[RateLimit] Redis error:", error);
-    // Redis 錯誤時使用記憶體快取備援
-    return memoryRateLimit(identifier, config);
+    console.error("[RateLimit] KV error (non-blocking):", error);
   }
+
+  return memResult;
 }
 
 /**
@@ -251,7 +262,13 @@ export async function checkRateLimit(
  * @returns IP 地址
  */
 export function getClientIP(request: Request): string {
-  // Vercel 會在 x-forwarded-for header 中提供真實 IP
+  // Cloudflare 會在 CF-Connecting-IP header 中提供真實 IP
+  const cfIP = request.headers.get("cf-connecting-ip");
+  if (cfIP) {
+    return cfIP;
+  }
+
+  // Fallback: x-forwarded-for
   const forwardedFor = request.headers.get("x-forwarded-for");
   if (forwardedFor) {
     return forwardedFor.split(",")[0].trim();

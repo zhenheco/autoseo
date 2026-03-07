@@ -78,7 +78,7 @@ export async function getArticles(
 
   const companyId = membership?.company_id || user.id;
 
-  // 使用 Redis 快取
+  // 使用 KV 快取
   const cacheKey = articleListCacheKey(
     companyId,
     filter,
@@ -172,7 +172,7 @@ export async function getArticleHtml(articleJobId: string): Promise<{
     return { html: null, title: null, error: "無權限", fromCache: false };
   }
 
-  // 使用 Redis 快取
+  // 使用 KV 快取
   const cacheKey = articleHtmlCacheKey(articleJobId);
 
   // 先嘗試從快取獲取

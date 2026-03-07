@@ -1,12 +1,12 @@
 /**
- * Redis 健康檢查診斷 API（Upstash 版本）
- * 用於診斷 Redis 連線和效能問題
+ * 快取健康檢查診斷 API（Cloudflare KV 版本）
+ * 用於診斷 KV 快取連線和效能問題
  *
  * 只允許管理員訪問
  */
 
 import { NextResponse } from "next/server";
-import { Redis } from "@upstash/redis";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 import { getRedisStats } from "@/lib/cache/redis-cache";
 import { createClient } from "@/lib/supabase/server";
@@ -42,7 +42,7 @@ export async function GET(request: Request) {
   // 檢查是否有 secret key（允許 curl 訪問）
   const url = new URL(request.url);
   const secretKey = url.searchParams.get("key");
-  const validKey = process.env.DEBUG_SECRET_KEY || "redis-health-check-2024";
+  const validKey = process.env.DEBUG_SECRET_KEY || "cache-health-check-2024";
 
   const hasValidKey = secretKey === validKey;
 
@@ -57,7 +57,7 @@ export async function GET(request: Request) {
       return NextResponse.json(
         {
           error: "Unauthorized",
-          hint: "請在 URL 加上 ?key=redis-health-check-2024 或以管理員身份登入",
+          hint: "請在 URL 加上 ?key=cache-health-check-2024 或以管理員身份登入",
         },
         { status: 401 },
       );
@@ -78,66 +78,62 @@ export async function GET(request: Request) {
     }
   }
 
-  // 檢查 Upstash Redis 是否設定
-  if (
-    !process.env.UPSTASH_REDIS_REST_URL ||
-    !process.env.UPSTASH_REDIS_REST_TOKEN
-  ) {
+  // 檢查 KV binding 是否存在
+  let kv: KVNamespace | null = null;
+  try {
+    const { env } = getCloudflareContext();
+    kv = (env as Record<string, unknown>).CACHE_KV as KVNamespace | null;
+  } catch {
+    // 非 CF 環境
+  }
+
+  if (!kv) {
     return NextResponse.json({
       status: "not_configured",
       message:
-        "UPSTASH_REDIS_REST_URL 或 UPSTASH_REDIS_REST_TOKEN 環境變數未設定",
-      provider: "upstash",
+        "CACHE_KV binding 未設定，請確認 wrangler.jsonc 的 kv_namespaces 配置",
+      provider: "cloudflare-kv",
     });
   }
 
   try {
-    // 建立 Upstash Redis 客戶端
-    const redis = new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,
-    });
-
-    // 測試 PING
-    const pingResult = await measureLatency(() => redis.ping());
-
-    // 測試 SET 操作
+    // 測試 PUT 操作
     const testKey = `_health_check_${Date.now()}`;
     const testValue = "test_value";
     const setResult = await measureLatency(() =>
-      redis.setex(testKey, 60, testValue),
+      kv!.put(testKey, testValue, { expirationTtl: 60 }),
     );
 
     // 測試 GET 操作
-    const getResult = await measureLatency(() => redis.get(testKey));
+    const getResult = await measureLatency(() => kv!.get(testKey));
 
     // 清理測試 key
-    await redis.del(testKey);
+    await kv.delete(testKey);
 
-    // 取得 key 數量
-    const dbsizeResult = await measureLatency(() => redis.dbsize());
+    // 測試 LIST 操作
+    const listResult = await measureLatency(() => kv!.list({ limit: 10 }));
 
     // 計算總體狀態
     const allOperationsSuccess =
-      pingResult.success && setResult.success && getResult.success;
+      setResult.success && getResult.success && listResult.success;
     const avgLatency =
-      (pingResult.latency + setResult.latency + getResult.latency) / 3;
+      (setResult.latency + getResult.latency + listResult.latency) / 3;
 
     let status: "healthy" | "degraded" | "unhealthy";
     let recommendation: string;
 
     if (!allOperationsSuccess) {
       status = "unhealthy";
-      recommendation = "Redis 操作失敗，請檢查 Upstash 服務狀態和憑證";
+      recommendation = "KV 操作失敗，請檢查 Cloudflare KV binding 配置";
     } else if (avgLatency > 500) {
       status = "degraded";
-      recommendation = `平均延遲過高 (${Math.round(avgLatency)}ms)，建議檢查 Upstash 區域設定是否靠近 Vercel 部署區域`;
+      recommendation = `平均延遲過高 (${Math.round(avgLatency)}ms)，可能是暫時性問題`;
     } else if (avgLatency > 200) {
       status = "degraded";
       recommendation = `延遲略高 (${Math.round(avgLatency)}ms)，但在可接受範圍內`;
     } else {
       status = "healthy";
-      recommendation = "Upstash Redis 運作正常，延遲良好";
+      recommendation = "Cloudflare KV 運作正常，延遲良好";
     }
 
     // 取得執行時期統計（來自應用程式的操作記錄）
@@ -145,15 +141,10 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       status,
-      provider: "upstash",
+      provider: "cloudflare-kv",
       timestamp: new Date().toISOString(),
       operations: {
-        ping: {
-          latency: pingResult.latency,
-          success: pingResult.success,
-          error: pingResult.error,
-        },
-        set: {
+        put: {
           latency: setResult.latency,
           success: setResult.success,
           error: setResult.error,
@@ -162,10 +153,13 @@ export async function GET(request: Request) {
           latency: getResult.latency,
           success: getResult.success,
           error: getResult.error,
+          valueMatch: getResult.result === testValue,
         },
-      },
-      database: {
-        keyCount: dbsizeResult.result ?? 0,
+        list: {
+          latency: listResult.latency,
+          success: listResult.success,
+          error: listResult.error,
+        },
       },
       runtimeStats: {
         totalOperations: runtimeStats.totalOperations,
@@ -183,32 +177,22 @@ export async function GET(request: Request) {
         recommendation,
       },
       config: {
-        provider: "upstash",
-        connectionType: "HTTP (REST API)",
-        note: "Upstash 使用 HTTP API，無連線管理問題",
+        provider: "cloudflare-kv",
+        connectionType: "KV Binding (native)",
+        note: "Cloudflare KV 使用原生 binding，無連線管理問題",
       },
     });
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "Unknown error";
 
-    // 分析錯誤類型
-    let diagnosis: string;
-    if (errorMessage.includes("Unauthorized")) {
-      diagnosis = "認證失敗 - 請檢查 UPSTASH_REDIS_REST_TOKEN 是否正確";
-    } else if (errorMessage.includes("fetch")) {
-      diagnosis = "網路錯誤 - 請檢查 UPSTASH_REDIS_REST_URL 是否正確";
-    } else {
-      diagnosis = "未知錯誤 - 請檢查 Upstash Dashboard 確認服務狀態";
-    }
-
     return NextResponse.json({
       status: "unhealthy",
-      provider: "upstash",
+      provider: "cloudflare-kv",
       timestamp: new Date().toISOString(),
       error: errorMessage,
-      diagnosis,
-      recommendation: "請檢查 Upstash 憑證和服務狀態",
+      diagnosis: "KV 操作失敗 - 請檢查 wrangler.jsonc 中的 kv_namespaces 配置",
+      recommendation: "請確認 CACHE_KV binding 已正確建立",
     });
   }
 }

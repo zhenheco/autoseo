@@ -1,21 +1,21 @@
 /**
- * Redis 快取工具（使用 Upstash）
+ * KV 快取工具（使用 Cloudflare KV）
  * 用於文章列表和內容的分散式快取
  *
- * 使用 HTTP-based API，適合 serverless 環境：
- * - 無連線管理問題
- * - 無 timeout 掛起問題
+ * 使用 CF Workers KV binding，適合 serverless 環境：
  * - 全球邊緣位置，低延遲
+ * - 無連線管理問題
+ * - Eventually consistent，適合快取場景
  */
 
-import { Redis } from "@upstash/redis";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 // ============================================
 // 統計資料收集
 // ============================================
 
-/** Redis 操作統計 */
-interface RedisStats {
+/** 快取操作統計 */
+interface CacheOperationStats {
   totalOperations: number;
   successfulOperations: number;
   failedOperations: number;
@@ -31,7 +31,7 @@ interface RedisStats {
 }
 
 /** 初始化統計資料 */
-const stats: RedisStats = {
+const stats: CacheOperationStats = {
   totalOperations: 0,
   successfulOperations: 0,
   failedOperations: 0,
@@ -82,7 +82,7 @@ function updateStats(
 }
 
 /**
- * 取得 Redis 操作統計
+ * 取得快取操作統計
  */
 export function getRedisStats(): {
   totalOperations: number;
@@ -152,60 +152,51 @@ export const CACHE_CONFIG = {
   ARTICLE_FULL_CONTENT: { prefix: "cache:article:full", ttl: 600 },
 } as const;
 
-/** Upstash Redis 客戶端（延遲初始化） */
-let redis: Redis | null = null;
-
 /**
- * 取得 Redis 客戶端
- * Upstash 使用 HTTP，每個請求都是獨立的，不需要連線管理
+ * 取得 Cloudflare KV binding
+ * 透過 opennextjs-cloudflare 的 getCloudflareContext 取得
  */
-function getRedis(): Redis | null {
-  if (
-    !process.env.UPSTASH_REDIS_REST_URL ||
-    !process.env.UPSTASH_REDIS_REST_TOKEN
-  ) {
+function getKV(): KVNamespace | null {
+  try {
+    const { env } = getCloudflareContext();
+    const kv = (env as Record<string, unknown>).CACHE_KV as
+      | KVNamespace
+      | undefined;
+    return kv || null;
+  } catch {
+    // 在非 CF 環境（如本地開發、測試）中，getCloudflareContext 會拋錯
     return null;
   }
-
-  if (!redis) {
-    redis = new Redis({
-      url: process.env.UPSTASH_REDIS_REST_URL,
-      token: process.env.UPSTASH_REDIS_REST_TOKEN,
-    });
-  }
-
-  return redis;
 }
 
 /**
- * 安全執行 Redis 命令
- * Upstash 使用 HTTP，不會有連線掛起問題
+ * 安全執行 KV 命令
  *
- * @param operation - Redis 操作函數
+ * @param operation - KV 操作函數
  * @param fallback - 失敗時的回傳值
  * @param operationName - 操作名稱（用於日誌和統計）
  */
 async function safeExecute<T>(
-  operation: (redis: Redis) => Promise<T>,
+  operation: (kv: KVNamespace) => Promise<T>,
   fallback: T,
   operationName: string = "unknown",
 ): Promise<T> {
   const startTime = Date.now();
-  const client = getRedis();
+  const kv = getKV();
 
-  if (!client) {
+  if (!kv) {
     updateStats(operationName, 0, false, "connection");
     return fallback;
   }
 
   try {
-    const result = await operation(client);
+    const result = await operation(kv);
     const latency = Date.now() - startTime;
     updateStats(operationName, latency, true);
 
-    // 如果延遲超過 500ms，記錄警告（Upstash 通常很快）
+    // 如果延遲超過 500ms，記錄警告
     if (latency > 500) {
-      console.warn(`[RedisCache] ${operationName} slow: ${latency}ms`);
+      console.warn(`[KVCache] ${operationName} slow: ${latency}ms`);
     }
 
     return result;
@@ -218,7 +209,7 @@ async function safeExecute<T>(
     stats.lastErrorTime = new Date();
     updateStats(operationName, latency, false, "other");
     console.error(
-      `[RedisCache] ${operationName} error after ${latency}ms:`,
+      `[KVCache] ${operationName} error after ${latency}ms:`,
       errorMessage,
     );
     return fallback;
@@ -226,12 +217,10 @@ async function safeExecute<T>(
 }
 
 /**
- * 檢查 Redis 是否可用
+ * 檢查快取是否可用（KV binding 是否存在）
  */
 export function isRedisAvailable(): boolean {
-  return !!(
-    process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN
-  );
+  return getKV() !== null;
 }
 
 /**
@@ -241,8 +230,8 @@ export function isRedisAvailable(): boolean {
  */
 export async function cacheGet<T>(key: string): Promise<T | null> {
   return safeExecute(
-    async (client) => {
-      const data = await client.get<T>(key);
+    async (kv) => {
+      const data = await kv.get<T>(key, "json");
       return data;
     },
     null,
@@ -254,7 +243,7 @@ export async function cacheGet<T>(key: string): Promise<T | null> {
  * 設定快取資料
  * @param key 快取 key
  * @param value 要快取的資料
- * @param ttlSeconds TTL 秒數
+ * @param ttlSeconds TTL 秒數（KV 最低 60 秒，低於 60 秒會自動調整）
  */
 export async function cacheSet<T>(
   key: string,
@@ -262,8 +251,12 @@ export async function cacheSet<T>(
   ttlSeconds: number,
 ): Promise<boolean> {
   return safeExecute(
-    async (client) => {
-      await client.setex(key, ttlSeconds, value);
+    async (kv) => {
+      // KV expirationTtl 最小值為 60 秒
+      const effectiveTtl = Math.max(60, ttlSeconds);
+      await kv.put(key, JSON.stringify(value), {
+        expirationTtl: effectiveTtl,
+      });
       return true;
     },
     false,
@@ -273,28 +266,21 @@ export async function cacheSet<T>(
 
 /**
  * 刪除快取
- * @param key 快取 key（支援萬用字元）
+ * @param key 快取 key（支援 prefix:* 萬用字元模式）
  */
 export async function cacheDelete(key: string): Promise<boolean> {
-  const operationName = key.includes("*") ? "DEL_SCAN" : "DEL";
+  const operationName = key.includes("*") ? "DEL_LIST" : "DEL";
   return safeExecute(
-    async (client) => {
+    async (kv) => {
       if (key.includes("*")) {
-        // 使用 SCAN 刪除匹配的 keys
-        // Upstash scan 返回 [string, string[]]，cursor 為字串格式
-        let cursor = "0";
-        do {
-          const [nextCursor, keys] = await client.scan(cursor, {
-            match: key,
-            count: 100,
-          });
-          cursor = String(nextCursor);
-          if (keys.length > 0) {
-            await client.del(...keys);
-          }
-        } while (cursor !== "0");
+        // 使用 KV list() 取代 Redis SCAN
+        const prefix = key.replace("*", "");
+        const { keys } = await kv.list({ prefix });
+        for (const k of keys) {
+          await kv.delete(k.name);
+        }
       } else {
-        await client.del(key);
+        await kv.delete(key);
       }
       return true;
     },
@@ -374,7 +360,7 @@ export async function invalidateArticleListCache(
 ): Promise<void> {
   await cacheDelete(`${CACHE_CONFIG.ARTICLE_LIST.prefix}:${companyId}:*`);
   console.log(
-    `[RedisCache] Invalidated article list cache for company: ${companyId}`,
+    `[KVCache] Invalidated article list cache for company: ${companyId}`,
   );
 }
 
@@ -392,7 +378,7 @@ export async function invalidateArticleCache(
     cacheDelete(articleMetaCacheKey(articleId)),
     companyId ? invalidateArticleListCache(companyId) : Promise.resolve(),
   ]);
-  console.log(`[RedisCache] Invalidated cache for article: ${articleId}`);
+  console.log(`[KVCache] Invalidated cache for article: ${articleId}`);
 }
 
 /** 快取統計資訊類型 */
@@ -403,17 +389,19 @@ interface CacheStats {
 }
 
 /**
- * 快取統計資訊（來自 Redis INFO 命令）
+ * 快取統計資訊
+ * KV 沒有 Redis INFO 等價命令，使用 list() 估算 key 數量
  */
 export async function getCacheStats(): Promise<CacheStats> {
   return safeExecute<CacheStats>(
-    async (client) => {
-      const keyCount = await client.dbsize();
+    async (kv) => {
+      // KV list() 每次最多返回 1000 個 key，用來估算
+      const { keys } = await kv.list({ limit: 1000 });
 
       return {
         connected: true,
-        keyCount,
-        memoryUsage: "N/A (Upstash)",
+        keyCount: keys.length,
+        memoryUsage: "N/A (Cloudflare KV)",
       };
     },
     { connected: false, keyCount: 0, memoryUsage: "0" },
