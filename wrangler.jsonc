@@ -8,7 +8,7 @@
     "binding": "ASSETS"
   },
   "kv_namespaces": [
-    { "binding": "CACHE_KV", "id": "TO_BE_CREATED" }
+    { "binding": "CACHE_KV", "id": "770310297c7940449837f30b01b130d6", "preview_id": "bacf5ac803d24a518955f81426f2f368" }
   ],
   "env": {
     "production": {
