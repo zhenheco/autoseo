@@ -6,8 +6,6 @@ import {
   UI_LOCALE_COOKIE_KEY,
 } from "@/lib/i18n/locales";
 
-export const runtime = "nodejs";
-
 // Request Body 大小限制（10MB）
 const MAX_BODY_SIZE = 10 * 1024 * 1024;
 

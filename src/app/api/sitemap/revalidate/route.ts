@@ -91,7 +91,7 @@ export async function POST(request: NextRequest) {
  * 方便其他模組調用的 helper 函數
  * 在文章發布後調用此函數來 revalidate sitemap
  */
-export async function revalidateSitemaps(options?: {
+async function revalidateSitemaps(options?: {
   sitemaps?: SitemapType[];
   ping?: boolean;
 }): Promise<void> {
