@@ -300,7 +300,7 @@ export function QuickArticleForm({
               {t("understand")}
             </Button>
             <Button asChild>
-              <Link href="/dashboard/billing/upgrade">{t("upgradePlan")}</Link>
+              <Link href="/dashboard/subscription">{t("upgradePlan")}</Link>
             </Button>
           </DialogFooter>
         </DialogContent>

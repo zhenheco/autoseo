@@ -108,7 +108,7 @@ export default function SocialPage() {
 
         {/* 發文紀錄 */}
         <Card className="hover:border-primary transition-colors cursor-pointer group">
-          <Link href="/dashboard/social/posts">
+          <Link href="/dashboard/social">
             <CardHeader>
               <CardTitle className="flex items-center gap-2 group-hover:text-primary">
                 <History className="h-5 w-5" />

@@ -61,7 +61,7 @@ export function ArticleGenerationButtonsWrapper({
           description: data.message || "無法生成文章",
           action: {
             label: "立即升級",
-            onClick: () => router.push("/dashboard/billing/upgrade"),
+            onClick: () => router.push("/dashboard/subscription"),
           },
           duration: 10000,
         });

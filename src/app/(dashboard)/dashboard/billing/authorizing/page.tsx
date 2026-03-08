@@ -166,7 +166,9 @@ function AuthorizingContent() {
                 </svg>
               </div>
               <div className="text-center">
-                <h2 className="text-2xl font-bold text-foreground">{t("processFailed")}</h2>
+                <h2 className="text-2xl font-bold text-foreground">
+                  {t("processFailed")}
+                </h2>
                 <p className="mt-2 text-muted-foreground">{errorMessage}</p>
                 <div className="mt-6 flex gap-4 justify-center">
                   <button
@@ -176,7 +178,7 @@ function AuthorizingContent() {
                     {t("retry")}
                   </button>
                   <button
-                    onClick={() => router.push("/dashboard/billing")}
+                    onClick={() => router.push("/dashboard/subscription")}
                     className="px-4 py-2 bg-muted text-foreground rounded-md hover:bg-muted transition-colors"
                   >
                     {t("backToBilling")}

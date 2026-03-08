@@ -75,7 +75,9 @@ export function TokenBalanceDisplay({
         className={`flex items-center gap-2 ${compact ? "" : "rounded-lg border border-destructive/50 bg-destructive/10 px-3 py-2"}`}
       >
         <p className="text-xs text-destructive">
-          {error?.message === "FETCH_BALANCE_FAILED" ? t("fetchBalanceFailed") : t("loadBalanceFailed")}
+          {error?.message === "FETCH_BALANCE_FAILED"
+            ? t("fetchBalanceFailed")
+            : t("loadBalanceFailed")}
         </p>
       </div>
     );
@@ -135,7 +137,7 @@ export function TokenBalanceDisplay({
             {t("lowBalance")}
           </span>
           <a
-            href="/dashboard/billing/upgrade"
+            href="/dashboard/subscription"
             className="text-xs font-medium text-destructive underline hover:text-destructive/80"
           >
             {t("upgradeNow")}
