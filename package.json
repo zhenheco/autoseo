@@ -138,7 +138,8 @@
   "pnpm": {
     "overrides": {
       "axios@>=1.0.0 <1.13.5": ">=1.13.5",
-      "fast-xml-parser@>=4.3.6 <=5.3.3": ">=5.3.4"
+      "fast-xml-parser@>=5.0.0 <5.3.6": ">=5.3.6",
+      "minimatch@<3.1.4": ">=3.1.4"
     }
   },
   "lint-staged": {
