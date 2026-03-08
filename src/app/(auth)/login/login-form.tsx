@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { useTranslations } from "next-intl";
 import {
   signInWithGoogle,
@@ -101,6 +102,10 @@ export function LoginForm({
       }
       await signInWithGoogle();
     } catch (err) {
+      // Next.js redirect() 會拋出 NEXT_REDIRECT 錯誤，需要重新拋出讓框架處理
+      if (isRedirectError(err)) {
+        throw err;
+      }
       setError(err instanceof Error ? err.message : t("loginFailed"));
       setIsGoogleLoading(false);
     }

@@ -129,7 +129,7 @@ function FallbackPricingCards({ t }: { t: (key: string) => string }) {
             ))}
           </div>
 
-          <Link href="/auth/login">
+          <Link href="/login">
             <Button
               className={`w-full py-6 rounded-xl font-bold transition-all duration-300 ${
                 plan.popular
@@ -237,7 +237,7 @@ function RealPricingCards({
               ))}
             </div>
 
-            <Link href="/auth/login">
+            <Link href="/login">
               <Button
                 className={`w-full py-6 rounded-xl font-bold transition-all duration-300 ${
                   isPopular
