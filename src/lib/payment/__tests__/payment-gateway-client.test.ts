@@ -94,7 +94,8 @@ describe("PaymentGatewayClient", () => {
 
     it("isValidOrderId 應該驗證訂單 ID 格式", () => {
       expect(PaymentGatewayClient.isValidOrderId("ORDER-123")).toBe(true);
-      expect(PaymentGatewayClient.isValidOrderId("order_456")).toBe(true);
+      expect(PaymentGatewayClient.isValidOrderId("order-456")).toBe(true);
+      expect(PaymentGatewayClient.isValidOrderId("order_456")).toBe(false); // 底線不符合 PAYUNi 規範
       expect(PaymentGatewayClient.isValidOrderId("")).toBe(false);
       expect(PaymentGatewayClient.isValidOrderId("a".repeat(51))).toBe(false);
       expect(PaymentGatewayClient.isValidOrderId("order 123")).toBe(false); // 空格不允許
