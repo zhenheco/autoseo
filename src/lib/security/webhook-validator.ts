@@ -4,7 +4,6 @@
  */
 
 import crypto from "crypto";
-import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 /**
  * 驗證 HMAC SHA256 簽章
@@ -87,21 +86,6 @@ export function generateNonce(length: number = 32): string {
 const memoryNonceCache = new Map<string, number>();
 
 /**
- * 取得 KV binding
- */
-function getKV(): KVNamespace | null {
-  try {
-    const { env } = getCloudflareContext();
-    const kv = (env as Record<string, unknown>).CACHE_KV as
-      | KVNamespace
-      | undefined;
-    return kv || null;
-  } catch {
-    return null;
-  }
-}
-
-/**
  * 檢查並記錄 nonce，防止重放攻擊
  *
  * 策略：memory-first, KV-assisted
@@ -121,32 +105,8 @@ export async function checkAndRecordNonce(
     return false;
   }
 
-  // 記憶體層：原子性保證，永遠先檢查
-  const memResult = checkAndRecordNonceInMemory(nonce, ttlSeconds);
-  if (!memResult) {
-    return false; // 記憶體中已存在，拒絕
-  }
-
-  // KV 層：跨節點輔助（非阻塞）
-  const kv = getKV();
-  if (kv) {
-    try {
-      const key = `nonce:${nonce}`;
-      const existing = await kv.get(key);
-      if (existing !== null) {
-        return false; // 其他節點已記錄此 nonce
-      }
-      const effectiveTtl = Math.max(60, ttlSeconds);
-      await kv.put(key, "1", { expirationTtl: effectiveTtl });
-    } catch (error) {
-      console.error(
-        "[WebhookValidator] KV nonce check error (non-blocking):",
-        error,
-      );
-    }
-  }
-
-  return true;
+  // 記憶體層：原子性保證（Vercel Serverless 環境下單 isolate 有效）
+  return checkAndRecordNonceInMemory(nonce, ttlSeconds);
 }
 
 /**

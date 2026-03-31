@@ -302,10 +302,12 @@ export interface WebhookEvent {
     randomNumber?: string;
     /** 發票日期 */
     invoiceDate?: string;
-    /** 發票狀態 */
+    /** 發票狀態：'ISSUED' | 'FAILED' */
     status?: string;
     /** 錯誤訊息 */
     errorMessage?: string;
+    /** 發票 PDF URL（⚠️ Amego 10 分鐘過期，必須立即下載） */
+    pdfUrl?: string;
   };
 }
 
@@ -636,7 +638,12 @@ export class PaymentGatewayClient {
       throw new PaymentGatewayError("無效的 JSON 格式", "INVALID_JSON");
     }
 
-    const isValid = await this.verifyWebhookSignature(payload, signature);
+    // Normalize signature to lowercase（affiliate 可能回傳 mixed case hex）
+    const normalizedSignature = signature.toLowerCase();
+    const isValid = await this.verifyWebhookSignature(
+      payload,
+      normalizedSignature,
+    );
     if (!isValid) {
       throw new PaymentGatewayError(
         "Webhook 簽名驗證失敗",

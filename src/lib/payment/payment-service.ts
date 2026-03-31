@@ -3,81 +3,11 @@ import type { Database } from "@/types/database.types";
 import { createCommission } from "@/lib/affiliate-client";
 import { TIER_HIERARCHY } from "@/lib/subscription/upgrade-rules";
 import { syncCompanyOwnerToBrevo } from "@/lib/brevo";
-import type { InvoiceInput } from "./gateway-client";
-
-/**
- * PAYUNi API 回應格式
- */
-interface PayUniAPIResponse {
-  success: boolean;
-  paymentId?: string;
-  payuniForm?: {
-    action: string;
-    method: string;
-    fields: Record<string, string>;
-  };
-  error?: string;
-  message?: string;
-}
-
-/**
- * 調用 PAYUNi 金流微服務 API
- *
- * 使用正確的 PAYUNi 端點：
- * - 單次付款：/api/payment/create
- * - 定期定額：/api/payment/period
- */
-async function callPayUniAPI(
-  endpoint: string,
-  params: object,
-): Promise<PayUniAPIResponse> {
-  const baseUrl =
-    process.env.PAYMENT_GATEWAY_ENV === "production"
-      ? "https://affiliate.1wayseo.com"
-      : "https://sandbox.affiliate.1wayseo.com";
-
-  console.log("[PaymentService] 調用 PAYUNi API:", {
-    url: `${baseUrl}${endpoint}`,
-    hasApiKey: !!process.env.PAYMENT_GATEWAY_API_KEY,
-    hasSiteCode: !!process.env.PAYMENT_GATEWAY_SITE_CODE,
-  });
-
-  try {
-    const response = await fetch(`${baseUrl}${endpoint}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-API-Key": process.env.PAYMENT_GATEWAY_API_KEY || "",
-        "X-Site-Code": process.env.PAYMENT_GATEWAY_SITE_CODE || "",
-      },
-      body: JSON.stringify(params),
-    });
-
-    const data = (await response.json()) as PayUniAPIResponse;
-
-    console.log("[PaymentService] PAYUNi API 回應:", {
-      status: response.status,
-      success: data.success,
-      hasPayuniForm: !!data.payuniForm,
-      paymentId: data.paymentId,
-    });
-
-    if (!response.ok || !data.success) {
-      return {
-        success: false,
-        error: data.error || data.message || "API 呼叫失敗",
-      };
-    }
-
-    return data;
-  } catch (error) {
-    console.error("[PaymentService] PAYUNi API 呼叫失敗:", error);
-    return {
-      success: false,
-      error: error instanceof Error ? error.message : "網路錯誤",
-    };
-  }
-}
+import {
+  getPaymentGatewayClient,
+  type InvoiceInput,
+  type PaymentResult,
+} from "./gateway-client";
 
 /**
  * PAYUNi Webhook 事件資料結構
@@ -130,30 +60,27 @@ export class PaymentService {
 
   /**
    * 產生訂單編號
-   * 格式：{站點代碼前3字}O{時間戳base36}{隨機3碼}
-   * 範例：1WAOmji21wrnabc（15字元，PAYUNi 限制 20 字元）
+   * 格式：{站點代碼前3字}O{隨機8碼}
+   * 使用 crypto.randomUUID 取代 Math.random，確保足夠隨機性
    */
   private generateOrderNo(): string {
     const sitePrefix = (process.env.PAYMENT_GATEWAY_SITE_CODE || "1WS")
       .slice(0, 3)
       .toUpperCase();
-    const timestamp = Date.now().toString(36);
-    const random = Math.random().toString(36).slice(2, 5);
-    return `${sitePrefix}O${timestamp}${random}`;
+    const random = crypto.randomUUID().replace(/-/g, "").slice(0, 8);
+    return `${sitePrefix}O${random}`;
   }
 
   /**
    * 產生委託編號
-   * 格式：{站點代碼前3字}M{時間戳base36}{隨機3碼}
-   * 範例：1WAMmji21wrnabc（15字元，PAYUNi 限制 20 字元）
+   * 格式：{站點代碼前3字}M{隨機8碼}
    */
   private generateMandateNo(): string {
     const sitePrefix = (process.env.PAYMENT_GATEWAY_SITE_CODE || "1WS")
       .slice(0, 3)
       .toUpperCase();
-    const timestamp = Date.now().toString(36);
-    const random = Math.random().toString(36).slice(2, 5);
-    return `${sitePrefix}M${timestamp}${random}`;
+    const random = crypto.randomUUID().replace(/-/g, "").slice(0, 8);
+    return `${sitePrefix}M${random}`;
   }
 
   private mapPlanSlugToTier(
@@ -225,33 +152,63 @@ export class PaymentService {
       orderNo: orderData.order_no,
     });
 
-    // 2. 透過 PAYUNi 金流微服務建立付款
+    // 2. 透過金流 SDK 建立付款
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const gatewayClient = getPaymentGatewayClient();
 
-    const payuniResult = await callPayUniAPI("/api/payment/create", {
-      orderId: orderNo,
-      amount: params.amount,
-      description: params.description,
-      email: params.email,
-      callbackUrl: `${baseUrl}/api/payment/result-redirect`,
-      metadata: {
-        companyId: params.companyId,
-        paymentType: params.paymentType,
-        relatedId: params.relatedId,
-      },
-      ...(params.invoice ? { invoice: params.invoice } : {}),
-    });
-
-    if (!payuniResult.success || !payuniResult.payuniForm) {
-      console.error(
-        "[PaymentService] PAYUNi 金流微服務建立付款失敗:",
-        payuniResult,
-      );
-      return { success: false, error: payuniResult.error || "建立付款失敗" };
+    let paymentResult: PaymentResult;
+    try {
+      paymentResult = await gatewayClient.createPayment({
+        orderId: orderNo,
+        amount: params.amount,
+        description: params.description,
+        email: params.email,
+        callbackUrl: `${baseUrl}/api/payment/result-redirect`,
+        metadata: {
+          companyId: params.companyId,
+          paymentType: params.paymentType,
+          relatedId: params.relatedId,
+        },
+        ...(params.invoice ? { invoice: params.invoice } : {}),
+      });
+    } catch (error) {
+      console.error("[PaymentService] SDK 建立付款失敗:", error);
+      // 金流 API 失敗，標記 DB 訂單為失敗
+      await this.supabase
+        .from("payment_orders")
+        .update({
+          status: "failed",
+          failure_reason:
+            error instanceof Error ? error.message : "金流 API 呼叫失敗",
+          failed_at: new Date().toISOString(),
+        })
+        .eq("id", orderData.id);
+      return {
+        success: false,
+        error: error instanceof Error ? error.message : "建立付款失敗",
+      };
     }
 
-    console.log("[PaymentService] PAYUNi 金流微服務付款建立成功:", {
-      paymentId: payuniResult.paymentId,
+    const paymentForm = paymentResult.paymentForm || paymentResult.payuniForm;
+    if (!paymentResult.success || !paymentForm) {
+      console.error("[PaymentService] SDK 付款結果失敗:", paymentResult);
+      // 金流失敗，標記 DB 訂單為失敗
+      await this.supabase
+        .from("payment_orders")
+        .update({
+          status: "failed",
+          failure_reason: paymentResult.error || "金流服務回傳失敗",
+          failed_at: new Date().toISOString(),
+        })
+        .eq("id", orderData.id);
+      return {
+        success: false,
+        error: paymentResult.error || "建立付款失敗",
+      };
+    }
+
+    console.log("[PaymentService] SDK 付款建立成功:", {
+      paymentId: paymentResult.paymentId,
       orderId: orderData.id,
     });
 
@@ -259,8 +216,8 @@ export class PaymentService {
       success: true,
       orderId: orderData.id,
       orderNo: orderData.order_no,
-      paymentId: payuniResult.paymentId,
-      paymentForm: payuniResult.payuniForm,
+      paymentId: paymentResult.paymentId,
+      paymentForm,
     };
   }
 
@@ -355,42 +312,81 @@ export class PaymentService {
       .update({ first_payment_order_id: orderData.id })
       .eq("id", mandateData.id);
 
-    // 3. 透過 PAYUNi 金流微服務建立定期定額付款
+    // 3. 透過金流 SDK 建立定期定額付款
     const baseUrl = process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000";
+    const gatewayClient = getPaymentGatewayClient();
 
-    const payuniResult = await callPayUniAPI("/api/payment/create", {
-      orderId: mandateNo,
-      amount: params.amount,
-      description: params.description,
-      email: params.email,
-      callbackUrl: `${baseUrl}/api/payment/result-redirect`,
-      metadata: {
-        companyId: params.companyId,
-        planId: params.planId,
-        mandateId: mandateData.id,
-      },
-      periodParams: {
-        periodType: "M",
-        periodPoint,
-        periodTimes: 12,
-        periodStartType: 2,
-      },
-      ...(params.invoice ? { invoice: params.invoice } : {}),
-    });
-
-    if (!payuniResult.success || !payuniResult.payuniForm) {
-      console.error(
-        "[PaymentService] PAYUNi 金流微服務建立定期定額失敗:",
-        payuniResult,
-      );
+    let paymentResult: PaymentResult;
+    try {
+      paymentResult = await gatewayClient.createPayment({
+        orderId: mandateNo,
+        amount: params.amount,
+        description: params.description,
+        email: params.email,
+        callbackUrl: `${baseUrl}/api/payment/result-redirect`,
+        metadata: {
+          companyId: params.companyId,
+          planId: params.planId,
+          mandateId: mandateData.id,
+        },
+        periodParams: {
+          periodType: "M",
+          periodPoint,
+          periodTimes: 12,
+          periodStartType: 2,
+        },
+        ...(params.invoice ? { invoice: params.invoice } : {}),
+      });
+    } catch (error) {
+      console.error("[PaymentService] SDK 定期定額建立失敗:", error);
+      // 金流 API 失敗，標記訂單和委託為失敗
+      await Promise.allSettled([
+        this.supabase
+          .from("payment_orders")
+          .update({
+            status: "failed",
+            failure_reason:
+              error instanceof Error ? error.message : "金流 API 呼叫失敗",
+            failed_at: new Date().toISOString(),
+          })
+          .eq("id", orderData.id),
+        this.supabase
+          .from("recurring_mandates")
+          .update({ status: "failed" })
+          .eq("id", mandateData.id),
+      ]);
       return {
         success: false,
-        error: payuniResult.error || "建立定期定額付款失敗",
+        error: error instanceof Error ? error.message : "建立定期定額付款失敗",
       };
     }
 
-    console.log("[PaymentService] PAYUNi 金流微服務定期定額建立成功:", {
-      paymentId: payuniResult.paymentId,
+    const paymentForm = paymentResult.paymentForm || paymentResult.payuniForm;
+    if (!paymentResult.success || !paymentForm) {
+      console.error("[PaymentService] SDK 定期定額結果失敗:", paymentResult);
+      // 金流失敗，標記訂單和委託為失敗
+      await Promise.allSettled([
+        this.supabase
+          .from("payment_orders")
+          .update({
+            status: "failed",
+            failure_reason: paymentResult.error || "金流服務回傳失敗",
+            failed_at: new Date().toISOString(),
+          })
+          .eq("id", orderData.id),
+        this.supabase
+          .from("recurring_mandates")
+          .update({ status: "failed" })
+          .eq("id", mandateData.id),
+      ]);
+      return {
+        success: false,
+        error: paymentResult.error || "建立定期定額付款失敗",
+      };
+    }
+
+    console.log("[PaymentService] SDK 定期定額建立成功:", {
+      paymentId: paymentResult.paymentId,
       mandateId: mandateData.id,
     });
 
@@ -398,8 +394,8 @@ export class PaymentService {
       success: true,
       mandateId: mandateData.id,
       mandateNo: mandateData.mandate_no,
-      paymentId: payuniResult.paymentId,
-      paymentForm: payuniResult.payuniForm,
+      paymentId: paymentResult.paymentId,
+      paymentForm,
     };
   }
 

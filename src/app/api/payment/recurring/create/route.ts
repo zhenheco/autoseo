@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@/lib/supabase/server";
 import { PaymentService } from "@/lib/payment/payment-service";
 
 /**
@@ -7,6 +7,7 @@ import { PaymentService } from "@/lib/payment/payment-service";
  *
  * 建立定期定額訂閱付款。
  * 使用金流微服務 SDK 處理 PAYUNi 定期定額。
+ * 金額從 DB 取得，不信任前端傳入的 amount。
  */
 export async function POST(request: NextRequest) {
   try {
@@ -21,17 +22,9 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const {
-      companyId,
-      planId,
-      billingCycle,
-      amount,
-      description,
-      email,
-      invoice,
-    } = body;
+    const { companyId, planId, description, email, invoice } = body;
 
-    if (!companyId || !planId || !amount || !description || !email) {
+    if (!companyId || !planId || !description || !email) {
       return NextResponse.json({ error: "缺少必要參數" }, { status: 400 });
     }
 
@@ -47,13 +40,27 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "無權限存取此公司" }, { status: 403 });
     }
 
+    // 從 DB 查詢真實金額，不信任前端傳入的 amount
+    const adminSupabase = createAdminClient();
+    const { data: plan } = await adminSupabase
+      .from("subscription_plans")
+      .select("price")
+      .eq("id", planId)
+      .single();
+
+    if (!plan?.price) {
+      return NextResponse.json(
+        { error: "找不到對應的訂閱方案" },
+        { status: 400 },
+      );
+    }
+
     const paymentService = PaymentService.createInstance(supabase);
 
-    // 呼叫 PaymentService 建立定期定額付款
     const result = await paymentService.createRecurringPayment({
       companyId,
       planId,
-      amount,
+      amount: plan.price,
       description,
       email,
       periodType: "M",

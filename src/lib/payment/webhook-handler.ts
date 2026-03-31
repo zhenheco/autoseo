@@ -111,27 +111,38 @@ async function handlePaymentSuccess(event: WebhookEvent): Promise<void> {
   logger.info("處理付款成功", { orderId: event.orderId });
 
   const supabase = createAdminClient();
-
-  // 從 orderId 提取訂單編號
-  // 金流微服務的 orderId 格式是我們傳入的，需要與 payment_orders 表對應
   const orderNo = event.orderId;
 
-  // 查詢訂單（重試機制，應對 Supabase 複製延遲）
+  // CAS 原子更新：只有 status=pending 時才能更新為 success
+  // 這保證了冪等性 — 重複的 webhook 不會重複處理
   const MAX_RETRIES = 3;
-  const RETRY_DELAYS = [500, 1500, 3000]; // 遞增延遲
-  let orderData: Record<string, unknown> | null = null;
+  const RETRY_DELAYS = [500, 1500, 3000];
+
+  let updatedOrder: Record<string, unknown> | null = null;
 
   for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
     const { data, error } = await supabase
       .from("payment_orders")
-      .select("*")
+      .update({
+        status: "success",
+        newebpay_status: "SUCCESS",
+        newebpay_trade_no: event.tradeNo,
+        paid_at: event.paidAt || new Date().toISOString(),
+        newebpay_response: {
+          source: "gateway_webhook",
+          paymentId: event.paymentId,
+          metadata: event.metadata,
+        },
+      })
       .eq("order_no", orderNo)
+      .eq("status", "pending") // CAS 條件：只更新 pending 狀態的訂單
+      .select("*")
       .maybeSingle();
 
     if (data && !error) {
-      orderData = data;
+      updatedOrder = data;
       if (attempt > 0) {
-        logger.info("成功找到訂單（重試後）", {
+        logger.info("CAS 更新成功（重試後）", {
           orderNo,
           attempt: attempt + 1,
         });
@@ -139,57 +150,105 @@ async function handlePaymentSuccess(event: WebhookEvent): Promise<void> {
       break;
     }
 
-    if (attempt < MAX_RETRIES - 1) {
-      const delay = RETRY_DELAYS[attempt];
-      logger.info("訂單未找到，即將重試", {
+    // 如果 update 回傳空但沒 error，可能是訂單已處理或尚未建立
+    if (!error) {
+      // 確認訂單是否存在且已處理
+      const { data: existing } = await supabase
+        .from("payment_orders")
+        .select("status")
+        .eq("order_no", orderNo)
+        .maybeSingle();
+
+      if (existing?.status === "success") {
+        logger.info("訂單已處理過，冪等跳過", { orderNo });
+        return;
+      }
+
+      // 訂單尚未建立，等待 Supabase 複製延遲
+      if (!existing && attempt < MAX_RETRIES - 1) {
+        const delay = RETRY_DELAYS[attempt];
+        logger.info("訂單未找到，即將重試", {
+          orderNo,
+          delayMs: delay,
+          attempt: attempt + 1,
+        });
+        await new Promise((resolve) => setTimeout(resolve, delay));
+        continue;
+      }
+
+      if (!existing) {
+        logger.error("找不到訂單", { orderNo });
+        throw new Error(`找不到訂單: ${orderNo}`);
+      }
+
+      // 訂單存在但狀態不是 pending（如 failed），跳過
+      logger.warn("訂單狀態非 pending，跳過", {
         orderNo,
+        currentStatus: existing.status,
+      });
+      return;
+    }
+
+    if (error && attempt < MAX_RETRIES - 1) {
+      const delay = RETRY_DELAYS[attempt];
+      logger.warn("CAS 更新失敗，重試中", {
+        orderNo,
+        error: error.message,
         delayMs: delay,
-        attempt: attempt + 1,
-        maxRetries: MAX_RETRIES,
       });
       await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
 
-  if (!orderData) {
-    logger.error("找不到訂單", { orderNo });
-    throw new Error(`找不到訂單: ${orderNo}`);
+  if (!updatedOrder) {
+    logger.error("CAS 更新最終失敗", { orderNo });
+    throw new Error(`CAS 更新訂單失敗: ${orderNo}`);
   }
 
-  // 檢查是否已處理過
-  if (orderData.status === "success") {
-    logger.info("訂單已處理過，跳過", { orderNo });
-    return;
+  logger.info("訂單狀態已原子更新為成功", { orderNo });
+
+  // 下載發票 PDF（10 分鐘過期，必須立即處理）
+  let invoicePdfBase64: string | undefined;
+  if (event.invoice?.pdfUrl) {
+    invoicePdfBase64 = await downloadInvoicePdf(event.invoice.pdfUrl);
   }
-
-  // 更新訂單狀態
-  const { error: updateError } = await supabase
-    .from("payment_orders")
-    .update({
-      status: "success",
-      newebpay_status: "SUCCESS",
-      newebpay_trade_no: event.tradeNo,
-      paid_at: event.paidAt || new Date().toISOString(),
-      newebpay_response: {
-        source: "gateway_webhook",
-        paymentId: event.paymentId,
-        metadata: event.metadata,
-      },
-    })
-    .eq("id", orderData.id);
-
-  if (updateError) {
-    logger.error("更新訂單狀態失敗", {
-      orderNo,
-      error: updateError.message,
-    });
-    throw new Error("更新訂單狀態失敗");
-  }
-
-  logger.info("訂單狀態已更新為成功", { orderNo });
 
   // 執行後續業務邏輯
-  await processPaymentBusinessLogic(orderData, event);
+  await processPaymentBusinessLogic(updatedOrder, event, invoicePdfBase64);
+}
+
+/**
+ * 下載發票 PDF（Amego PDF URL 10 分鐘過期，必須立即下載）
+ *
+ * @returns base64 編碼的 PDF 內容，失敗時返回 undefined
+ */
+async function downloadInvoicePdf(pdfUrl: string): Promise<string | undefined> {
+  try {
+    logger.info("下載發票 PDF", { pdfUrl: pdfUrl.substring(0, 50) + "..." });
+
+    const pdfRes = await fetch(pdfUrl);
+    if (!pdfRes.ok) {
+      logger.error("發票 PDF 下載失敗", { status: pdfRes.status });
+      return undefined;
+    }
+
+    const pdfBuffer = await pdfRes.arrayBuffer();
+    const bytes = new Uint8Array(pdfBuffer);
+    let binary = "";
+    const chunkSize = 8192;
+    for (let i = 0; i < bytes.length; i += chunkSize) {
+      binary += String.fromCharCode(...bytes.subarray(i, i + chunkSize));
+    }
+    const pdfBase64 = btoa(binary);
+
+    logger.info("發票 PDF 下載成功", { sizeBytes: pdfBuffer.byteLength });
+    return pdfBase64;
+  } catch (error) {
+    logger.error("發票 PDF 下載異常", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return undefined;
+  }
 }
 
 /**
@@ -268,6 +327,7 @@ async function handlePaymentRefunded(event: WebhookEvent): Promise<void> {
 async function processPaymentBusinessLogic(
   orderData: Record<string, unknown>,
   event: WebhookEvent,
+  invoicePdfBase64?: string,
 ): Promise<void> {
   const paymentType = orderData.payment_type as string;
   const companyId = orderData.company_id as string;
@@ -309,6 +369,30 @@ async function processPaymentBusinessLogic(
 
     default:
       logger.warn("未知的付款類型", { paymentType });
+  }
+
+  // 儲存發票 PDF base64 到訂單記錄（供後續 email 附件使用）
+  if (invoicePdfBase64) {
+    const orderNo = orderData.order_no as string;
+    const { error: pdfError } = await supabase
+      .from("payment_orders")
+      .update({
+        newebpay_response: {
+          ...((orderData.newebpay_response as Record<string, unknown>) || {}),
+          invoicePdfBase64,
+          invoiceNumber: event.invoice?.invoiceNumber,
+          invoiceDate: event.invoice?.invoiceDate,
+        },
+      })
+      .eq("order_no", orderNo);
+
+    if (pdfError) {
+      logger.error("儲存發票 PDF 失敗", { error: pdfError.message });
+    } else {
+      logger.info("發票 PDF 已儲存至訂單記錄", {
+        invoiceNumber: event.invoice?.invoiceNumber,
+      });
+    }
   }
 
   // 建立佣金記錄和同步 CRM（必須 await，Serverless 環境下 fire-and-forget 會被中斷）

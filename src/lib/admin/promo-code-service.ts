@@ -415,12 +415,31 @@ export async function applyPromoCodeByCode(
     return { success: false, error: "優惠碼已停用" };
   }
 
-  // 檢查使用次數限制
-  if (promoCode.max_uses && promoCode.current_uses >= promoCode.max_uses) {
-    return { success: false, error: "優惠碼使用次數已達上限" };
-  }
-
+  // 原子預留：CAS 更新使用次數（防止 race condition）
+  // 只有 current_uses < max_uses 時才能成功更新
   try {
+    if (promoCode.max_uses) {
+      const { data: reserved, error: reserveError } = await supabase
+        .from("promo_codes")
+        .update({ current_uses: promoCode.current_uses + 1 })
+        .eq("id", promoCode.id)
+        .eq("current_uses", promoCode.current_uses) // CAS 條件
+        .lt("current_uses", promoCode.max_uses) // 確保未達上限
+        .select("id")
+        .maybeSingle();
+
+      if (reserveError || !reserved) {
+        return { success: false, error: "優惠碼使用次數已達上限" };
+      }
+    } else {
+      // 無使用次數限制，仍用 CAS 更新計數
+      await supabase
+        .from("promo_codes")
+        .update({ current_uses: promoCode.current_uses + 1 })
+        .eq("id", promoCode.id)
+        .eq("current_uses", promoCode.current_uses);
+    }
+
     // 記錄使用
     const { error: usageError } = await supabase
       .from("promo_code_usages")
@@ -437,11 +456,6 @@ export async function applyPromoCodeByCode(
         error: `記錄優惠碼使用失敗: ${usageError.message}`,
       };
     }
-
-    // 增加使用次數
-    await supabase.rpc("increment_promo_code_usage", {
-      promo_id: promoCode.id,
-    });
 
     // 贈送篇數到公司的加購篇數
     const { data: subscription } = await supabase
