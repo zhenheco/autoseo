@@ -11,7 +11,6 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { ArticleDetailPublish } from "./components/ArticleDetailPublish";
-import { SocialShareDialog } from "@/components/social/SocialShareDialog";
 import { getTranslations } from "next-intl/server";
 
 async function getArticle(articleId: string) {
@@ -75,7 +74,8 @@ export default async function ArticleDetailPage({
               t("untitled")}
           </h1>
           <p className="text-muted-foreground mt-2">
-            {t("websiteLabel")} {article.website_configs?.site_name || t("unspecified")}
+            {t("websiteLabel")}{" "}
+            {article.website_configs?.site_name || t("unspecified")}
           </p>
         </div>
         <div className="flex gap-2">
@@ -88,20 +88,6 @@ export default async function ArticleDetailPage({
               currentWebsiteId={article.website_id}
             />
           )}
-          {(article.status === "completed" || article.status === "published") &&
-            article.generated_articles?.id && (
-              <SocialShareDialog
-                articleId={article.generated_articles.id}
-                articleTitle={
-                  article.generated_articles?.title ||
-                  article.article_title ||
-                  t("untitled")
-                }
-                featuredImageUrl={
-                  article.generated_articles?.featured_image_url || undefined
-                }
-              />
-            )}
         </div>
       </div>
 
@@ -144,7 +130,9 @@ export default async function ArticleDetailPage({
 
             {article.input_content && (
               <div className="flex justify-between">
-                <span className="text-muted-foreground">{t("inputContent")}</span>
+                <span className="text-muted-foreground">
+                  {t("inputContent")}
+                </span>
                 <span className="text-sm">
                   {article.input_content.keyword &&
                     article.input_content.keyword}
@@ -171,7 +159,9 @@ export default async function ArticleDetailPage({
 
             {article.published_at && (
               <div className="flex justify-between">
-                <span className="text-muted-foreground">{t("publishedAt")}</span>
+                <span className="text-muted-foreground">
+                  {t("publishedAt")}
+                </span>
                 <span className="text-sm">
                   {new Date(article.published_at).toLocaleString()}
                 </span>
@@ -192,7 +182,9 @@ export default async function ArticleDetailPage({
           <Card>
             <CardHeader>
               <CardTitle>{t("generatedContent")}</CardTitle>
-              <CardDescription>{t("generatedContentDescription")}</CardDescription>
+              <CardDescription>
+                {t("generatedContentDescription")}
+              </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="prose max-w-none">
@@ -218,7 +210,9 @@ export default async function ArticleDetailPage({
         {article.error_message && (
           <Card className="border-destructive">
             <CardHeader>
-              <CardTitle className="text-destructive">{t("errorMessage")}</CardTitle>
+              <CardTitle className="text-destructive">
+                {t("errorMessage")}
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-sm text-destructive">

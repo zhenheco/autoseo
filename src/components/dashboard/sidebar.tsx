@@ -11,14 +11,11 @@ import {
   CreditCard,
   PenSquare,
   FileText,
-  Handshake,
   Mail,
   Languages,
-  ExternalLink,
   Users,
   Ticket,
   History,
-  Share2,
   RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -48,20 +45,9 @@ const navItems = [
     icon: FileText,
   },
   {
-    titleKey: "socialPosts",
-    href: "/dashboard/social",
-    icon: Share2,
-  },
-  {
     titleKey: "subscription",
     href: "/dashboard/subscription",
     icon: CreditCard,
-  },
-  {
-    titleKey: "affiliate",
-    href: "https://affiliate.1wayseo.com",
-    icon: Handshake,
-    external: true,
   },
 ];
 
@@ -150,33 +136,8 @@ export function Sidebar({ userEmail = "user@example.com" }: SidebarProps) {
 
         <nav className="flex-1 space-y-1 p-4">
           {navItems.map((item) => {
-            const isActive = !item.external && pathname === item.href;
+            const isActive = pathname === item.href;
             const Icon = item.icon;
-
-            // 外部連結使用 <a> 標籤
-            if (item.external) {
-              return (
-                <a
-                  key={item.href}
-                  href={item.href}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className={cn(
-                    "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all relative",
-                    "hover:bg-sidebar-foreground/10",
-                    "text-sidebar-foreground/70 hover:text-sidebar-foreground",
-                  )}
-                >
-                  <Icon className="h-5 w-5 shrink-0" />
-                  {!collapsed && (
-                    <>
-                      <span>{t(item.titleKey)}</span>
-                      <ExternalLink className="h-3 w-3 ml-auto opacity-50" />
-                    </>
-                  )}
-                </a>
-              );
-            }
 
             return (
               <Link
