@@ -53,6 +53,9 @@ yarn-error.log*
 # Supabase
 supabase/.env
 
+# Nano Banana config (contains API keys)
+.nano-banana-config.json
+
 # Cloudflare
 .open-next/
 .dev.vars

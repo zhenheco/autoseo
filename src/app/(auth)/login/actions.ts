@@ -13,11 +13,8 @@ const logger = createLogger("auth");
  */
 export async function signInWithGoogle() {
   const supabase = await createClient();
-  const headersList = await headers();
-  const origin =
-    headersList.get("origin") ||
-    process.env.NEXT_PUBLIC_APP_URL ||
-    "https://1wayseo.com";
+  // 優先使用環境變數，避免 origin header 被偽造
+  const origin = process.env.NEXT_PUBLIC_APP_URL || "https://1wayseo.com";
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",

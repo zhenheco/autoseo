@@ -106,8 +106,8 @@ export async function middleware(request: NextRequest) {
       : "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://www.googletagmanager.com https://www.google-analytics.com https://ssl.google-analytics.com https://tagmanager.google.com",
     // style-src: 需要 unsafe-inline 支援 Tailwind CSS
     "style-src 'self' 'unsafe-inline'",
-    // img-src: 允許所有 HTTPS 圖片來源（用於文章圖片）
-    "img-src 'self' data: https:",
+    // img-src: 限制圖片來源為已知域名
+    "img-src 'self' data: https://*.supabase.co https://*.r2.dev https://*.googleusercontent.com https://*.google-analytics.com https://*.doubleclick.net https://www.googletagmanager.com",
     "font-src 'self' data:",
     // connect-src: 允許 API 連接和 WebSocket，加入 Cloudflare beacon 和 Google Analytics 回報端點
     [
