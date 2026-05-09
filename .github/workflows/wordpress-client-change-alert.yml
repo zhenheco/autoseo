@@ -1,0 +1,27 @@
+name: WordPress Client Change Alert
+on:
+  pull_request:
+    paths: ['src/lib/wordpress/client.ts']
+  push:
+    branches: [main]
+    paths: ['src/lib/wordpress/client.ts']
+
+jobs:
+  alert-edgeseo:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Create issue in edgeseo
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.EDGESEO_REPO_PAT }}
+          script: |
+            const ref = context.payload.pull_request?.html_url || context.payload.head_commit?.url || context.sha;
+            await github.rest.issues.create({
+              owner: 'zhenheco',
+              repo: 'edgeseo',
+              title: `autoseo WordPressClient 變更需評估 backport (${context.eventName})`,
+              body: `autoseo \`${context.eventName}\` touched \`src/lib/wordpress/client.ts\`.\n\nPR/commit: ${ref}\n\n請評估是否要 backport 進 \`edgeseo/src/lib/wordpress/client.ts\`。\n\n備註：edgeseo 端已移除 Node \`Buffer\` 依賴 + 改用 \`base64Encode()\` UTF-8 helper，backport 時需重做這兩處轉換。\n\n相關 spec: edgeseo/docs/superpowers/specs/2026-05-08-shopline-wordpress-poc-step1-design.md §9 FORK_NOTES`,
+              labels: ['backport-eval', 'autoseo-sync']
+            });
