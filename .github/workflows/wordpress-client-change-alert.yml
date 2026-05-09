@@ -1,9 +1,7 @@
 name: WordPress Client Change Alert
 on:
   pull_request:
-    paths: ['src/lib/wordpress/client.ts']
-  push:
-    branches: [main]
+    types: [opened, synchronize, reopened]
     paths: ['src/lib/wordpress/client.ts']
 
 jobs:
