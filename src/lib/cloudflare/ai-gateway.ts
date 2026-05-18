@@ -19,7 +19,10 @@ interface GatewayConfig {
 
 function getGatewayConfig(): GatewayConfig {
   return {
-    accountId: process.env.CF_AI_GATEWAY_ACCOUNT_ID || "",
+    accountId:
+      process.env.CF_AI_GATEWAY_ACCOUNT_ID ||
+      process.env.CF_AI_ACCOUNT_ID ||
+      "",
     gatewayId: process.env.CF_AI_GATEWAY_ID || "",
     token: process.env.CF_AI_GATEWAY_TOKEN || "",
     enabled: process.env.CF_AI_GATEWAY_ENABLED === "true",

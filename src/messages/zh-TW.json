@@ -750,7 +750,17 @@
       "wpPasswordPlaceholder": "留空表示不更改",
       "wpPasswordHint": "請至 WordPress 後台 → 使用者 → 個人資料 → 應用程式密碼建立新的應用密碼。留空表示不更改現有密碼。",
       "saveChanges": "儲存變更",
-      "notFoundError": "找不到該網站"
+      "notFoundError": "找不到該網站",
+      "shoplineIntegration": "SHOPLINE 串接",
+      "shoplineIntegrationDescription": "讓店主透過 SHOPLINE 授權 1waySEO 讀寫 SEO 相關資料，不需要提供帳號密碼。",
+      "shoplineConnected": "SHOPLINE 已連線",
+      "shoplineNotConnected": "SHOPLINE 尚未連線",
+      "shoplineNeedsReconnect": "SHOPLINE 需要重新授權",
+      "shoplineReconnectRequired": "需重新授權",
+      "shoplineReconnectHint": "授權已失效或發生錯誤，請重新連線 SHOPLINE 後再操作。",
+      "shoplineAuthorizeHint": "連線後即可用 CLI 或後台協助檢查與更新商品、頁面與內容 SEO。",
+      "shoplineNoScopes": "未記錄權限",
+      "shoplineConnect": "連線 SHOPLINE"
     },
     "brandVoice": {
       "title": "品牌聲音設定",

@@ -851,7 +851,17 @@
       "wpPasswordPlaceholder": "Leave empty to keep unchanged",
       "wpPasswordHint": "Go to WordPress Admin → Users → Profile → Application Passwords to create a new application password. Leave empty to keep existing password.",
       "saveChanges": "Save Changes",
-      "notFoundError": "Website not found"
+      "notFoundError": "Website not found",
+      "shoplineIntegration": "SHOPLINE 연동",
+      "shoplineIntegrationDescription": "계정 정보를 공유하지 않고 1waySEO가 SEO 데이터를 읽고 쓸 수 있도록 승인합니다.",
+      "shoplineConnected": "SHOPLINE 연결됨",
+      "shoplineNotConnected": "SHOPLINE 미연결",
+      "shoplineNeedsReconnect": "SHOPLINE 재연결 필요",
+      "shoplineReconnectRequired": "재연결 필요",
+      "shoplineReconnectHint": "인증이 유효하지 않거나 오류가 있습니다. 계속하기 전에 SHOPLINE을 다시 연결하세요.",
+      "shoplineAuthorizeHint": "연결 후 CLI와 대시보드에서 상품, 페이지, 콘텐츠 SEO를 확인하고 업데이트할 수 있습니다.",
+      "shoplineNoScopes": "권한 기록 없음",
+      "shoplineConnect": "SHOPLINE 연결"
     },
     "brandVoice": {
       "title": "Brand Voice Settings",

@@ -851,7 +851,17 @@
       "wpPasswordPlaceholder": "Leave empty to keep unchanged",
       "wpPasswordHint": "Go to WordPress Admin → Users → Profile → Application Passwords to create a new application password. Leave empty to keep existing password.",
       "saveChanges": "Save Changes",
-      "notFoundError": "Website not found"
+      "notFoundError": "Website not found",
+      "shoplineIntegration": "Integración SHOPLINE",
+      "shoplineIntegrationDescription": "Permite que 1waySEO lea y escriba datos SEO sin compartir credenciales de cuenta.",
+      "shoplineConnected": "SHOPLINE conectado",
+      "shoplineNotConnected": "SHOPLINE no conectado",
+      "shoplineNeedsReconnect": "SHOPLINE requiere reconexión",
+      "shoplineReconnectRequired": "Reconexión requerida",
+      "shoplineReconnectHint": "La autorización no es válida o tiene un error. Vuelve a conectar SHOPLINE antes de continuar.",
+      "shoplineAuthorizeHint": "Tras conectar, el CLI y el panel podrán revisar y actualizar SEO de productos, páginas y contenido.",
+      "shoplineNoScopes": "Sin permisos registrados",
+      "shoplineConnect": "Conectar SHOPLINE"
     },
     "brandVoice": {
       "title": "Brand Voice Settings",

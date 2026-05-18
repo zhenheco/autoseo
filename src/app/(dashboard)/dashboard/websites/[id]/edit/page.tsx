@@ -1,6 +1,12 @@
 import { getUser, getUserPrimaryCompany } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  createSupabaseShoplineConnectionStore,
+  getShoplineConnectionStatus,
+} from "@/lib/shopline/connections";
+import { getShoplineDashboardStatusView } from "@/lib/shopline/status-view";
 import {
   Card,
   CardContent,
@@ -8,6 +14,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +24,7 @@ import { BrandVoiceForm } from "./BrandVoiceForm";
 import { WebsiteSettingsForm } from "./WebsiteSettingsForm";
 import { AutoScheduleForm } from "./AutoScheduleForm";
 import { getTranslations } from "next-intl/server";
+import { ShoppingBag } from "lucide-react";
 
 interface BrandVoice {
   brand_name?: string;
@@ -57,6 +65,29 @@ async function getWebsite(websiteId: string, companyId: string) {
   };
 }
 
+async function getShoplineStatus(websiteId: string, companyId: string) {
+  try {
+    return await getShoplineConnectionStatus(
+      createSupabaseShoplineConnectionStore(createAdminClient()),
+      { companyId, websiteId },
+    );
+  } catch (error) {
+    console.error("[SHOPLINE Status] Failed to load connection status:", error);
+    return { connected: false };
+  }
+}
+
+function deriveShoplineHandle(siteUrl: string | null): string | null {
+  if (!siteUrl) return null;
+  try {
+    const hostname = new URL(siteUrl).hostname;
+    if (!hostname.endsWith(".myshopline.com")) return null;
+    return hostname.slice(0, -".myshopline.com".length);
+  } catch {
+    return null;
+  }
+}
+
 export default async function EditWebsitePage({
   params,
 }: {
@@ -92,6 +123,15 @@ export default async function EditWebsitePage({
 
   // 判斷網站類型並取得對應的頁面資訊
   const isPlatformBlog = website.is_platform_blog === true;
+  const shoplineStatus = await getShoplineStatus(website.id, company.id);
+  const derivedShopHandle = deriveShoplineHandle(website.wordpress_url);
+  const shoplineInstallHref = derivedShopHandle
+    ? `/api/oauth/shopline/install?shopHandle=${encodeURIComponent(derivedShopHandle)}&workspaceId=${encodeURIComponent(company.id)}&siteId=${encodeURIComponent(website.id)}&returnTo=${encodeURIComponent(`/dashboard/websites/${website.id}/edit`)}`
+    : null;
+  const shoplineStatusView = getShoplineDashboardStatusView(
+    shoplineStatus,
+    Boolean(shoplineInstallHref),
+  );
 
   // 根據網站類型設定頁面資訊
   const pageTitle = isPlatformBlog
@@ -193,6 +233,40 @@ export default async function EditWebsitePage({
                 </Link>
               </div>
             </form>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <ShoppingBag className="h-5 w-5" />
+              {t("edit.shoplineIntegration")}
+            </CardTitle>
+            <CardDescription>
+              {t("edit.shoplineIntegrationDescription")}
+            </CardDescription>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="flex items-center justify-between gap-4">
+              <div>
+                <p className="font-medium">{t(shoplineStatusView.titleKey)}</p>
+                <p className="text-sm text-muted-foreground">
+                  {shoplineStatus.connected && shoplineStatus.shopHandle
+                    ? `${shoplineStatus.shopHandle} · ${shoplineStatus.grantedScopes?.join(", ") || t("edit.shoplineNoScopes")}`
+                    : t(shoplineStatusView.descriptionKey)}
+                </p>
+              </div>
+              <Badge variant={shoplineStatusView.badgeVariant}>
+                {t(shoplineStatusView.badgeKey)}
+              </Badge>
+            </div>
+            {shoplineStatusView.showConnectAction && shoplineInstallHref && (
+              <Link href={shoplineInstallHref}>
+                <Button type="button" variant="outline">
+                  {t("edit.shoplineConnect")}
+                </Button>
+              </Link>
+            )}
           </CardContent>
         </Card>
 

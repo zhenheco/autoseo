@@ -4,6 +4,10 @@
 
 import { withFullAuth, extractPathParams } from "@/lib/api/auth-middleware";
 import { successResponse, notFound } from "@/lib/api/response-helpers";
+import {
+  createSupabaseShoplineConnectionStore,
+  getShoplineConnectionStatus,
+} from "@/lib/shopline/connections";
 import type { WebsiteOAuthStatus } from "@/types/google-analytics.types";
 
 /**
@@ -43,6 +47,13 @@ export const GET = withFullAuth(
       gsc_connected: !!gscToken,
       gsc_email: gscToken?.google_account_email || null,
       gsc_site_url: gscToken?.gsc_site_url || null,
+      shopline: await getShoplineConnectionStatus(
+        createSupabaseShoplineConnectionStore(adminClient),
+        {
+          companyId,
+          websiteId,
+        },
+      ),
     };
 
     return successResponse(status);

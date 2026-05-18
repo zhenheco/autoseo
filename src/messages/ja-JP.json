@@ -750,7 +750,17 @@
       "wpPasswordPlaceholder": "空のままにすると変更しません",
       "wpPasswordHint": "WordPress管理画面 → ユーザー → プロフィール → アプリケーションパスワードで新しいアプリケーションパスワードを作成してください。空のままにすると既存のパスワードを維持します。",
       "saveChanges": "変更を保存",
-      "notFoundError": "ウェブサイトが見つかりません"
+      "notFoundError": "ウェブサイトが見つかりません",
+      "shoplineIntegration": "SHOPLINE 連携",
+      "shoplineIntegrationDescription": "アカウント情報を共有せず、1waySEO に SEO データの読み書きを許可します。",
+      "shoplineConnected": "SHOPLINE 連携済み",
+      "shoplineNotConnected": "SHOPLINE 未連携",
+      "shoplineNeedsReconnect": "SHOPLINE の再連携が必要です",
+      "shoplineReconnectRequired": "再連携が必要",
+      "shoplineReconnectHint": "認証が無効、またはエラーが発生しています。続行する前に SHOPLINE を再連携してください。",
+      "shoplineAuthorizeHint": "連携後、CLI と管理画面で商品、ページ、コンテンツ SEO を確認・更新できます。",
+      "shoplineNoScopes": "権限記録なし",
+      "shoplineConnect": "SHOPLINE を連携"
     },
     "brandVoice": {
       "title": "ブランドボイス設定",

@@ -251,11 +251,20 @@ export interface GoogleUserInfo {
 // 網站 OAuth 狀態
 // ================================================
 
-/** 網站 OAuth 連接狀態（目前僅支援 GSC） */
+/** 網站 OAuth 連接狀態 */
 export interface WebsiteOAuthStatus {
   gsc_connected: boolean;
   gsc_email: string | null;
   gsc_site_url: string | null;
+  shopline?: {
+    connected: boolean;
+    shopHandle?: string;
+    shopDomain?: string;
+    grantedScopes?: string[];
+    status?: "active" | "error" | "revoked";
+    lastVerifiedAt?: string | null;
+    updatedAt?: string | null;
+  };
 }
 
 // ================================================

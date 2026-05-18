@@ -750,7 +750,17 @@
       "wpPasswordPlaceholder": "Leave empty to keep unchanged",
       "wpPasswordHint": "Go to WordPress Admin → Users → Profile → Application Passwords to create a new application password. Leave empty to keep existing password.",
       "saveChanges": "Save Changes",
-      "notFoundError": "Website not found"
+      "notFoundError": "Website not found",
+      "shoplineIntegration": "SHOPLINE integration",
+      "shoplineIntegrationDescription": "Let the merchant authorize 1waySEO to read and write SEO data without sharing account credentials.",
+      "shoplineConnected": "SHOPLINE connected",
+      "shoplineNotConnected": "SHOPLINE not connected",
+      "shoplineNeedsReconnect": "SHOPLINE needs reconnection",
+      "shoplineReconnectRequired": "Reconnect required",
+      "shoplineReconnectHint": "Authorization is invalid or has an error. Reconnect SHOPLINE before continuing.",
+      "shoplineAuthorizeHint": "After connection, CLI and dashboard workflows can inspect and update product, page, and content SEO.",
+      "shoplineNoScopes": "No scopes recorded",
+      "shoplineConnect": "Connect SHOPLINE"
     },
     "brandVoice": {
       "title": "Brand Voice Settings",
