@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { Save, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Save, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -50,9 +50,13 @@ export function ShoplineProductsPanel({
   const [products, setProducts] = useState<ShoplineProduct[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [cursorStack, setCursorStack] = useState<(string | null)[]>([null]);
+  const [nextCursor, setNextCursor] = useState<string | undefined>();
   const [selectedProduct, setSelectedProduct] =
     useState<ShoplineProduct | null>(null);
   const [seoTitle, setSeoTitle] = useState("");
+  const currentCursor = cursorStack[cursorStack.length - 1] ?? null;
+  const currentPageNumber = cursorStack.length;
 
   useEffect(() => {
     let cancelled = false;
@@ -61,11 +65,20 @@ export function ShoplineProductsPanel({
       setLoading(true);
 
       try {
-        const response = await fetch(`/api/shopline/${websiteId}/products`);
+        const requestUrl =
+          currentCursor === null
+            ? `/api/shopline/${websiteId}/products`
+            : `/api/shopline/${websiteId}/products?cursor=${encodeURIComponent(
+                currentCursor,
+              )}`;
+        const response = await fetch(requestUrl);
         if (!response.ok) throw new Error("shopline_products_fetch_failed");
 
         const data = (await response.json()) as ProductsResponse;
-        if (!cancelled) setProducts(data.products ?? []);
+        if (!cancelled) {
+          setProducts(data.products ?? []);
+          setNextCursor(data.nextCursor);
+        }
       } catch {
         if (!cancelled) toast.error(saveErrorMessage);
       } finally {
@@ -78,13 +91,24 @@ export function ShoplineProductsPanel({
     return () => {
       cancelled = true;
     };
-  }, [saveErrorMessage, websiteId]);
+  }, [currentCursor, saveErrorMessage, websiteId]);
 
   const selectedTitleLength = useMemo(() => seoTitle.length, [seoTitle]);
 
   function openEditor(product: ShoplineProduct) {
     setSelectedProduct(product);
     setSeoTitle(product.seo?.title ?? "");
+  }
+
+  function goToNextPage() {
+    if (!nextCursor) return;
+    setCursorStack((currentStack) => [...currentStack, nextCursor]);
+  }
+
+  function goToPreviousPage() {
+    setCursorStack((currentStack) =>
+      currentStack.length > 1 ? currentStack.slice(0, -1) : currentStack,
+    );
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -166,6 +190,34 @@ export function ShoplineProductsPanel({
             </TableBody>
           </Table>
         )}
+        <div className="mt-4 flex items-center justify-end gap-3">
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={loading || cursorStack.length === 1}
+            onClick={goToPreviousPage}
+          >
+            <ChevronLeft className="h-4 w-4" />
+            {t("pagination.prev")}
+          </Button>
+          <span
+            className="min-w-8 text-center text-sm text-muted-foreground"
+            aria-label={`Page ${currentPageNumber}`}
+          >
+            {currentPageNumber}
+          </span>
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={loading || !nextCursor}
+            onClick={goToNextPage}
+          >
+            {t("pagination.next")}
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </CardContent>
 
       <Dialog

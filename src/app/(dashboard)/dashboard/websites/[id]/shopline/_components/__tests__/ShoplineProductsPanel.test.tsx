@@ -77,6 +77,87 @@ describe("ShoplineProductsPanel", () => {
     expect(screen.getByText("未設定")).toBeInTheDocument();
   });
 
+  it("loads next and previous product pages with cursor pagination", async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          products: [
+            {
+              id: "product-1",
+              title: "Product 1",
+              handle: "product-1",
+              seo: {},
+            },
+          ],
+          nextCursor: "cursor-2",
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          products: [
+            {
+              id: "product-2",
+              title: "Product 2",
+              handle: "product-2",
+              seo: {},
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          products: [
+            {
+              id: "product-1",
+              title: "Product 1",
+              handle: "product-1",
+              seo: {},
+            },
+          ],
+          nextCursor: "cursor-2",
+        }),
+      });
+
+    render(<ShoplineProductsPanel websiteId="website-1" />);
+
+    expect(await screen.findByText("Product 1")).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      1,
+      "/api/shopline/website-1/products",
+    );
+    expect(screen.getByRole("button", { name: "Previous" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Next" })).toBeEnabled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenNthCalledWith(
+        2,
+        "/api/shopline/website-1/products?cursor=cursor-2",
+      );
+    });
+    expect(await screen.findByText("Product 2")).toBeInTheDocument();
+    expect(screen.queryByText("Product 1")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Previous" })).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Next" })).toBeDisabled();
+
+    fireEvent.click(screen.getByRole("button", { name: "Previous" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenNthCalledWith(
+        3,
+        "/api/shopline/website-1/products",
+      );
+    });
+    expect(await screen.findByText("Product 1")).toBeInTheDocument();
+    expect(screen.queryByText("Product 2")).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Previous" })).toBeDisabled();
+    expect(screen.getByRole("button", { name: "Next" })).toBeEnabled();
+  });
+
   it("opens the edit modal with the current SEO title when a row is clicked", async () => {
     fetchMock.mockResolvedValueOnce({
       ok: true,
