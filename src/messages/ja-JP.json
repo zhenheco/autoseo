@@ -2779,7 +2779,8 @@
         "title": "編輯商品 SEO",
         "tabs": {
           "seoMeta": "SEO meta",
-          "images": "圖片"
+          "images": "画像",
+          "categories": "カテゴリ"
         },
         "seoTitleLabel": "SEO 標題",
         "seoDescriptionLabel": "SEO 描述",
@@ -2795,6 +2796,14 @@
           "save": "儲存",
           "empty": "此商品沒有圖片",
           "imageNumber": "圖片 {number}"
+        },
+        "categories": {
+          "addLabel": "追加する collection IDs",
+          "removeLabel": "削除する collection IDs",
+          "placeholder": "カンマまたは改行で区切る",
+          "submit": "カテゴリを更新",
+          "successCount": "{count} 件成功",
+          "failedCount": "{count} 件失敗"
         }
       },
       "toast": {

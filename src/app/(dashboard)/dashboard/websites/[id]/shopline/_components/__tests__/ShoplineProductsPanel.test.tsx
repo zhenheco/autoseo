@@ -20,6 +20,7 @@ vi.mock("next-intl", () => ({
       "edit.title": "Edit SEO",
       "edit.tabs.seoMeta": "SEO meta",
       "edit.tabs.images": "Images",
+      "edit.tabs.categories": "Categories",
       "edit.seoTitleLabel": "SEO title",
       "edit.seoDescriptionLabel": "SEO description",
       "edit.handleLabel": "Handle",
@@ -34,6 +35,12 @@ vi.mock("next-intl", () => ({
       "edit.images.save": "Save",
       "edit.images.empty": "No product images",
       "edit.images.imageNumber": `Image ${values?.number ?? 0}`,
+      "edit.categories.addLabel": "Add collection IDs",
+      "edit.categories.removeLabel": "Remove collection IDs",
+      "edit.categories.placeholder": "Separate with commas or new lines",
+      "edit.categories.submit": "Update categories",
+      "edit.categories.successCount": `${values?.count ?? 0} succeeded`,
+      "edit.categories.failedCount": `${values?.count ?? 0} failed`,
       "toast.saveSuccess": "Saved",
       "toast.saveError": "Save failed",
       "error.scopeMissing.title": "Need reauthorization",
@@ -199,6 +206,7 @@ describe("ShoplineProductsPanel", () => {
     expect(screen.getByRole("dialog")).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "SEO meta" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Images" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Categories" })).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "SEO title" })).toHaveValue(
       "Original SEO title",
     );
@@ -240,6 +248,163 @@ describe("ShoplineProductsPanel", () => {
     expect(
       screen.getByRole("textbox", { name: "Image 1 Alt text" }),
     ).toHaveValue("Original image alt");
+  });
+
+  it("shows category inputs in the Categories tab", async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          products: [
+            {
+              id: "product-1",
+              title: "Product 1",
+              handle: "product-1",
+              seo: { title: "Original SEO title" },
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          collects: [
+            {
+              id: "collect-1",
+              collection_id: "collection-current",
+              product_id: "product-1",
+            },
+          ],
+        }),
+      });
+
+    render(<ShoplineProductsPanel websiteId="website-1" />);
+
+    fireEvent.click(await screen.findByText("Product 1"));
+    fireEvent.click(screen.getByRole("tab", { name: "Categories" }));
+
+    expect(
+      await screen.findByRole("textbox", { name: "Add collection IDs" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: "Remove collection IDs" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("collection-current")).toBeInTheDocument();
+  });
+
+  it("submits category add and remove PATCH with parsed collection IDs", async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          products: [
+            {
+              id: "product-1",
+              title: "Product 1",
+              handle: "product-1",
+              seo: { title: "Original SEO title" },
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ collects: [] }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          added: [{ collection_id: "collection-add-1", success: true }],
+          removed: [{ collection_id: "collection-remove-1", success: true }],
+        }),
+      });
+
+    render(<ShoplineProductsPanel websiteId="website-1" />);
+
+    fireEvent.click(await screen.findByText("Product 1"));
+    fireEvent.click(screen.getByRole("tab", { name: "Categories" }));
+    fireEvent.change(
+      await screen.findByRole("textbox", { name: "Add collection IDs" }),
+      {
+        target: { value: "collection-add-1, collection-add-2" },
+      },
+    );
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Remove collection IDs" }),
+      {
+        target: { value: "collection-remove-1\ncollection-remove-2" },
+      },
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Update categories" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "/api/shopline/website-1/products/product-1/categories",
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          add: ["collection-add-1", "collection-add-2"],
+          remove: ["collection-remove-1", "collection-remove-2"],
+        }),
+      },
+    );
+  });
+
+  it("shows category success and failure counts after submit", async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          products: [
+            {
+              id: "product-1",
+              title: "Product 1",
+              handle: "product-1",
+              seo: { title: "Original SEO title" },
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ collects: [] }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          added: [
+            { collection_id: "collection-add-ok", success: true },
+            {
+              collection_id: "collection-add-fail",
+              success: false,
+              error: "assign failed",
+            },
+          ],
+          removed: [],
+        }),
+      });
+
+    render(<ShoplineProductsPanel websiteId="website-1" />);
+
+    fireEvent.click(await screen.findByText("Product 1"));
+    fireEvent.click(screen.getByRole("tab", { name: "Categories" }));
+    fireEvent.change(
+      await screen.findByRole("textbox", { name: "Add collection IDs" }),
+      {
+        target: { value: "collection-add-ok,collection-add-fail" },
+      },
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Update categories" }));
+
+    expect(await screen.findByText("1 succeeded")).toBeInTheDocument();
+    expect(screen.getByText("1 failed")).toBeInTheDocument();
+    expect(screen.getAllByText("collection-add-ok").length).toBeGreaterThan(0);
+    expect(screen.getByText("collection-add-fail")).toBeInTheDocument();
+    expect(screen.getByText("assign failed")).toBeInTheDocument();
   });
 
   it("submits image alt PATCH with the edited alt", async () => {

@@ -56,6 +56,27 @@ type ProductsResponse = {
   nextCursor?: string;
 };
 
+type ProductCollect = {
+  id: string;
+  collection_id: string;
+  product_id: string;
+};
+
+type ProductCollectsResponse = {
+  collects?: ProductCollect[];
+};
+
+type CategoryMutationResultItem = {
+  collection_id: string;
+  success: boolean;
+  error?: string;
+};
+
+type CategoryMutationResponse = {
+  added: CategoryMutationResultItem[];
+  removed: CategoryMutationResultItem[];
+};
+
 type ShoplineSaveErrorResponse = {
   error?: string;
   retryAfter?: number;
@@ -87,6 +108,12 @@ export function ShoplineProductsPanel({
   const [imageAlts, setImageAlts] = useState<Record<string, string>>({});
   const [savingImageId, setSavingImageId] = useState<string | null>(null);
   const [editTab, setEditTab] = useState("seo-meta");
+  const [currentCollects, setCurrentCollects] = useState<ProductCollect[]>([]);
+  const [loadingCollects, setLoadingCollects] = useState(false);
+  const [categoryAddInput, setCategoryAddInput] = useState("");
+  const [categoryRemoveInput, setCategoryRemoveInput] = useState("");
+  const [categoryResult, setCategoryResult] =
+    useState<CategoryMutationResponse | null>(null);
   const currentCursor = cursorStack[cursorStack.length - 1] ?? null;
   const currentPageNumber = cursorStack.length;
 
@@ -125,6 +152,36 @@ export function ShoplineProductsPanel({
     };
   }, [currentCursor, saveErrorMessage, websiteId]);
 
+  useEffect(() => {
+    if (!selectedProduct || editTab !== "categories") return;
+
+    let cancelled = false;
+
+    async function loadProductCollects() {
+      setLoadingCollects(true);
+
+      try {
+        const response = await fetch(
+          `/api/shopline/${websiteId}/products/${selectedProduct.id}/collects`,
+        );
+        if (!response.ok) throw new Error("shopline_product_collects_failed");
+
+        const data = (await response.json()) as ProductCollectsResponse;
+        if (!cancelled) setCurrentCollects(data.collects ?? []);
+      } catch {
+        if (!cancelled) toast.error(saveErrorMessage);
+      } finally {
+        if (!cancelled) setLoadingCollects(false);
+      }
+    }
+
+    void loadProductCollects();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [editTab, saveErrorMessage, selectedProduct, websiteId]);
+
   const selectedTitleLength = useMemo(() => seoTitle.length, [seoTitle]);
   const selectedDescriptionLength = useMemo(
     () => seoDescription.length,
@@ -141,6 +198,10 @@ export function ShoplineProductsPanel({
     setSeoDescription(product.seo?.description ?? "");
     setHandle(product.handle);
     setEditTab("seo-meta");
+    setCurrentCollects([]);
+    setCategoryAddInput("");
+    setCategoryRemoveInput("");
+    setCategoryResult(null);
     setImageAlts(
       Object.fromEntries(
         (product.images ?? []).map((image) => [image.id, image.alt ?? ""]),
@@ -281,6 +342,63 @@ export function ShoplineProductsPanel({
     }
   }
 
+  async function handleCategorySubmit() {
+    if (!selectedProduct) return;
+
+    const add = parseCollectionIds(categoryAddInput);
+    const remove = parseCollectionIds(categoryRemoveInput);
+
+    setSaving(true);
+    setScopeMissing(null);
+
+    try {
+      const response = await fetch(
+        `/api/shopline/${websiteId}/products/${selectedProduct.id}/categories`,
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ add, remove }),
+        },
+      );
+
+      if (!response.ok) {
+        const errorBody = await readShoplineSaveError(response);
+
+        if (
+          errorBody.error === "shopline_scope_missing" &&
+          errorBody.reauthorize_url
+        ) {
+          setScopeMissing({ reauthorizeUrl: errorBody.reauthorize_url });
+          return;
+        }
+
+        if (errorBody.error === "shopline_rate_limited") {
+          toast.error(
+            t("error.rateLimited", {
+              seconds: errorBody.retryAfter ?? 60,
+            }),
+          );
+          return;
+        }
+
+        throw new Error("shopline_product_categories_update_failed");
+      }
+
+      const result = (await response.json()) as CategoryMutationResponse;
+      setCategoryResult(result);
+      setCurrentCollects((collects) =>
+        applyCategoryResultToCollects(collects, selectedProduct.id, result),
+      );
+      setCategoryAddInput("");
+      setCategoryRemoveInput("");
+      toast.success(t("toast.saveSuccess"));
+    } catch {
+      toast.error(t("toast.saveError"));
+    } finally {
+      setSaving(false);
+    }
+  }
+
   return (
     <Card>
       <CardHeader>
@@ -406,6 +524,12 @@ export function ShoplineProductsPanel({
                   onClick={() => setEditTab("images")}
                 >
                   {t("edit.tabs.images")}
+                </TabsTrigger>
+                <TabsTrigger
+                  value="categories"
+                  onClick={() => setEditTab("categories")}
+                >
+                  {t("edit.tabs.categories")}
                 </TabsTrigger>
               </TabsList>
               <TabsContent value="seo-meta" className="space-y-4">
@@ -555,12 +679,161 @@ export function ShoplineProductsPanel({
                   })
                 )}
               </TabsContent>
+              <TabsContent value="categories" className="space-y-4">
+                <div className="space-y-2">
+                  <div className="flex flex-wrap gap-2">
+                    {loadingCollects ? (
+                      <span className="text-sm text-muted-foreground">
+                        {t("products.empty")}
+                      </span>
+                    ) : currentCollects.length === 0 ? (
+                      <span className="text-sm text-muted-foreground">
+                        {t("products.column.notSet")}
+                      </span>
+                    ) : (
+                      currentCollects.map((collect) => (
+                        <span
+                          key={`${collect.id}-${collect.collection_id}`}
+                          className="rounded-md border bg-muted px-2 py-1 text-xs"
+                        >
+                          {collect.collection_id}
+                        </span>
+                      ))
+                    )}
+                  </div>
+                </div>
+                <div className="grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="shopline-category-add">
+                      {t("edit.categories.addLabel")}
+                    </Label>
+                    <Textarea
+                      id="shopline-category-add"
+                      value={categoryAddInput}
+                      rows={5}
+                      placeholder={t("edit.categories.placeholder")}
+                      onChange={(event) =>
+                        setCategoryAddInput(event.target.value)
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="shopline-category-remove">
+                      {t("edit.categories.removeLabel")}
+                    </Label>
+                    <Textarea
+                      id="shopline-category-remove"
+                      value={categoryRemoveInput}
+                      rows={5}
+                      placeholder={t("edit.categories.placeholder")}
+                      onChange={(event) =>
+                        setCategoryRemoveInput(event.target.value)
+                      }
+                    />
+                  </div>
+                </div>
+                {categoryResult ? (
+                  <div className="space-y-2 rounded-md border p-3 text-sm">
+                    <div className="flex gap-3">
+                      <span>
+                        {t("edit.categories.successCount", {
+                          count: countCategoryResults(categoryResult, true),
+                        })}
+                      </span>
+                      <span>
+                        {t("edit.categories.failedCount", {
+                          count: countCategoryResults(categoryResult, false),
+                        })}
+                      </span>
+                    </div>
+                    <div className="space-y-1">
+                      {[...categoryResult.added, ...categoryResult.removed].map(
+                        (item, index) => (
+                          <div
+                            key={`${item.collection_id}-${index}`}
+                            className="flex items-center justify-between gap-3"
+                          >
+                            <span>{item.collection_id}</span>
+                            <span
+                              className={
+                                item.success
+                                  ? "text-emerald-700"
+                                  : "text-destructive"
+                              }
+                            >
+                              {item.success ? "success" : item.error}
+                            </span>
+                          </div>
+                        ),
+                      )}
+                    </div>
+                  </div>
+                ) : null}
+                <DialogFooter>
+                  <Button
+                    type="button"
+                    disabled={saving}
+                    onClick={() => {
+                      void handleCategorySubmit();
+                    }}
+                  >
+                    <Save className="h-4 w-4" />
+                    {t("edit.categories.submit")}
+                  </Button>
+                </DialogFooter>
+              </TabsContent>
             </Tabs>
           </form>
         </DialogContent>
       </Dialog>
     </Card>
   );
+}
+
+function parseCollectionIds(value: string): string[] {
+  return value
+    .split(/[,\n\r]+/)
+    .map((item) => item.trim())
+    .filter(Boolean);
+}
+
+function countCategoryResults(
+  result: CategoryMutationResponse,
+  success: boolean,
+): number {
+  return [...result.added, ...result.removed].filter(
+    (item) => item.success === success,
+  ).length;
+}
+
+function applyCategoryResultToCollects(
+  collects: ProductCollect[],
+  productId: string,
+  result: CategoryMutationResponse,
+): ProductCollect[] {
+  const collectByCollectionId = new Map(
+    collects.map((collect) => [collect.collection_id, collect]),
+  );
+
+  for (const item of result.added) {
+    if (!item.success || collectByCollectionId.has(item.collection_id)) {
+      continue;
+    }
+
+    collectByCollectionId.set(item.collection_id, {
+      id: `pending-${item.collection_id}`,
+      collection_id: item.collection_id,
+      product_id: productId,
+    });
+  }
+
+  for (const item of result.removed) {
+    if (item.success) {
+      collectByCollectionId.delete(item.collection_id);
+    }
+  }
+
+  return Array.from(collectByCollectionId.values());
 }
 
 function updateProductImage(

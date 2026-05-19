@@ -2960,7 +2960,8 @@
         "title": "編輯商品 SEO",
         "tabs": {
           "seoMeta": "SEO meta",
-          "images": "圖片"
+          "images": "이미지",
+          "categories": "카테고리"
         },
         "seoTitleLabel": "SEO 標題",
         "seoDescriptionLabel": "SEO 描述",
@@ -2976,6 +2977,14 @@
           "save": "儲存",
           "empty": "此商品沒有圖片",
           "imageNumber": "圖片 {number}"
+        },
+        "categories": {
+          "addLabel": "추가할 collection IDs",
+          "removeLabel": "제거할 collection IDs",
+          "placeholder": "쉼표 또는 줄바꿈으로 구분",
+          "submit": "카테고리 업데이트",
+          "successCount": "{count}개 성공",
+          "failedCount": "{count}개 실패"
         }
       },
       "toast": {
