@@ -8,7 +8,17 @@ import { getOpenAIImageClient } from "@/lib/openai/image-client";
 import { getOpenAITextClient } from "@/lib/openai/text-client";
 import { getOpenRouterClient } from "@/lib/openrouter/client";
 import { getPerplexityClient } from "@/lib/perplexity/client";
-import type { APIProvider, UnifiedAPIResponse } from "@/types/ai-models";
+import {
+  detectAIProvider,
+  getFallbackChain,
+  getNextFallbackModel,
+  isRetryableProviderError,
+} from "@/lib/ai/fallback-policy";
+import {
+  DEFAULT_FALLBACK_CHAINS,
+  type APIProvider,
+  type UnifiedAPIResponse,
+} from "@/types/ai-models";
 import type { AIMessage } from "@/types/agents";
 
 export interface APIRouterConfig {
@@ -48,25 +58,7 @@ export class APIRouter {
 
   constructor(config: APIRouterConfig = {}) {
     this.config = config;
-
-    // 預設 Fallback 鏈
-    this.fallbackChains = {
-      complex: [
-        "deepseek-reasoner",
-        "openai/gpt-5",
-        "openai/gpt-4o",
-        "google/gemini-2.5-pro",
-        "google/gemini-2.5-flash",
-        "anthropic/claude-sonnet-4.5",
-      ],
-      simple: [
-        "deepseek-chat",
-        "openai/gpt-5-mini",
-        "openai/gpt-4o-mini",
-        "openai/gpt-4o",
-        "anthropic/claude-sonnet-4.5",
-      ],
-    };
+    this.fallbackChains = DEFAULT_FALLBACK_CHAINS;
   }
 
   /**
@@ -82,9 +74,7 @@ export class APIRouter {
     const enableFallback = this.config.enableFallback !== false;
     const maxAttempts = enableFallback ? 3 : 1;
 
-    // 取得 Fallback 鏈
-    const tier = this.detectProcessingTier(options.model);
-    const fallbackChain = [...(this.fallbackChains[tier] || [])];
+    const fallbackChain = getFallbackChain(options.model, this.fallbackChains);
     let currentModel = options.model;
     let currentProvider = options.apiProvider;
 
@@ -112,23 +102,12 @@ export class APIRouter {
         const errorMessage = (error as Error).message || "";
 
         // Rate limit 或服務器錯誤，嘗試 fallback
-        const isRateLimitOrServerError =
-          errorMessage.includes("429") ||
-          errorMessage.includes("rate-limited") ||
-          errorMessage.includes("Rate limit") ||
-          errorMessage.includes("500") ||
-          errorMessage.includes("502") ||
-          errorMessage.includes("503");
-
         if (
-          isRateLimitOrServerError &&
+          isRetryableProviderError(error) &&
           enableFallback &&
           attempt < maxAttempts
         ) {
-          const nextModel = this.getNextFallbackModel(
-            currentModel,
-            fallbackChain,
-          );
+          const nextModel = getNextFallbackModel(currentModel, fallbackChain);
 
           if (nextModel) {
             console.log(
@@ -137,7 +116,7 @@ export class APIRouter {
             console.log(`[APIRouter] 🔄 切換到 Fallback: ${nextModel}`);
 
             currentModel = nextModel;
-            currentProvider = this.detectAPIProvider(nextModel);
+            currentProvider = detectAIProvider(nextModel);
             continue;
           }
         }
@@ -421,67 +400,6 @@ export class APIRouter {
   }
 
   /**
-   * 偵測模型的處理階段
-   */
-  private detectProcessingTier(model: string): string {
-    if (
-      model.includes("reasoner") ||
-      model.includes("gpt-5") ||
-      model.includes("gemini-2.5-pro")
-    ) {
-      return "complex";
-    }
-    return "simple";
-  }
-
-  /**
-   * 偵測模型的 API Provider
-   */
-  private detectAPIProvider(model: string): APIProvider {
-    if (
-      model.startsWith("deepseek") ||
-      model === "deepseek-reasoner" ||
-      model === "deepseek-chat"
-    ) {
-      return "deepseek";
-    }
-    if (
-      model.startsWith("openai/") ||
-      model.includes("gpt-") ||
-      model.includes("dall-e") ||
-      model.includes("gpt-image")
-    ) {
-      return "openai";
-    }
-    // google/* 前綴是 OpenRouter 模型識別格式
-    if (model.startsWith("google/")) {
-      return "openrouter";
-    }
-    // 純 gemini-* 模型（無前綴）用於 Direct Gemini API
-    if (model.includes("gemini")) {
-      return "gemini";
-    }
-    if (model.includes("sonar")) {
-      return "perplexity";
-    }
-    return "deepseek";
-  }
-
-  /**
-   * 取得下一個 Fallback 模型
-   */
-  private getNextFallbackModel(
-    currentModel: string,
-    chain: string[],
-  ): string | null {
-    const currentIndex = chain.indexOf(currentModel);
-    if (currentIndex === -1 || currentIndex >= chain.length - 1) {
-      return null;
-    }
-    return chain[currentIndex + 1];
-  }
-
-  /**
    * Sleep 工具函數
    */
   private sleep(ms: number): Promise<void> {
@@ -521,34 +439,7 @@ export function resetAPIRouter(): void {
  * 偵測模型的 API Provider（獨立函數版本）
  */
 export function detectAPIProvider(model: string): APIProvider {
-  if (
-    model.startsWith("deepseek") ||
-    model === "deepseek-reasoner" ||
-    model === "deepseek-chat"
-  ) {
-    return "deepseek";
-  }
-  if (
-    model.startsWith("openai/") ||
-    model.includes("gpt-") ||
-    model.includes("dall-e") ||
-    model.includes("gpt-image")
-  ) {
-    return "openai";
-  }
-  // google/* 前綴是 OpenRouter 模型識別格式
-  if (model.startsWith("google/")) {
-    return "openrouter";
-  }
-  // 純 gemini-* 模型（無前綴）用於 Direct Gemini API
-  // 目前文字生成不使用，圖片生成在 ai-client.ts 處理
-  if (model.includes("gemini")) {
-    return "gemini";
-  }
-  if (model.includes("sonar")) {
-    return "perplexity";
-  }
-  return "deepseek";
+  return detectAIProvider(model);
 }
 
 // 預設導出
