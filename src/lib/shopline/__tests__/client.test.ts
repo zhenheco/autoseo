@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ShoplineClient } from "../client";
-import { ShoplineAuthError, ShoplineRateLimitError } from "../types";
+import {
+  ShoplineAuthError,
+  ShoplineCollectionSchema,
+  ShoplineRateLimitError,
+} from "../types";
 
 const fetchMock = vi.fn();
 global.fetch = fetchMock as unknown as typeof fetch;
@@ -132,6 +136,62 @@ describe("ShoplineClient", () => {
     expect(res.next?.pageInfo).toBe("next-token");
   });
 
+  it("parses collections and exposes cursor pagination", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      headers: new Headers({
+        Link: '<https://demo-shop.myshopline.com/admin/openapi/v20260301/products/collections.json?page_info=collection-next>; rel="next"',
+      }),
+      json: async () => ({
+        collections: [
+          {
+            id: 101,
+            title: "Summer Collection",
+            handle: "summer",
+            body_html: null,
+            seo: { title: "Summer SEO" },
+            image: {
+              id: "image-1",
+              src: "https://img.myshopline.com/collection.jpg",
+              alt: null,
+            },
+            products_count: 12,
+            published_at: null,
+            updated_at: "2026-05-19T00:00:00Z",
+          },
+        ],
+      }),
+    });
+
+    const parsed = ShoplineCollectionSchema.parse({
+      id: 101,
+      title: "Summer Collection",
+      handle: "summer",
+      body_html: null,
+    });
+    const result = await client().listCollections({
+      pageInfo: "collection-cursor",
+      limit: 25,
+    });
+
+    const [url] = fetchMock.mock.calls[0];
+    expect(parsed.body_html).toBe("");
+    expect(url).toMatch(/\/products\/collections\.json\?/);
+    expect(url).toContain("page_info=collection-cursor");
+    expect(url).toContain("limit=25");
+    expect(result.collections).toEqual([
+      expect.objectContaining({
+        id: "101",
+        title: "Summer Collection",
+        handle: "summer",
+        body_html: "",
+        products_count: 12,
+        seo: { title: "Summer SEO" },
+      }),
+    ]);
+    expect(result.next?.pageInfo).toBe("collection-next");
+  });
+
   it("throws a dedicated auth error for 401 responses", async () => {
     fetchMock.mockResolvedValueOnce({
       ok: false,
@@ -199,6 +259,64 @@ describe("ShoplineClient", () => {
     await expect(client().updateProduct("42", {})).rejects.toThrow(
       /shopline_update_product_no_fields/,
     );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("updates collection SEO via PUT with seo, handle, and title", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers(),
+      json: async () => ({
+        collection: {
+          id: "collection-1",
+          title: "New Collection Title",
+          handle: "new-collection",
+          body_html: "",
+          seo: { title: "New SEO Title", description: "New SEO Desc" },
+          updated_at: "2026-05-19T00:00:00Z",
+        },
+      }),
+    });
+
+    const updated = await client().updateCollection("collection-1", {
+      seo: { title: "New SEO Title", description: "New SEO Desc" },
+      handle: "new-collection",
+      title: "New Collection Title",
+    });
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toMatch(
+      /\/admin\/openapi\/v20260301\/products\/collections\/collection-1\.json$/,
+    );
+    expect(init.method).toBe("PUT");
+    expect(JSON.parse(init.body as string)).toEqual({
+      collection: {
+        id: "collection-1",
+        seo: { title: "New SEO Title", description: "New SEO Desc" },
+        handle: "new-collection",
+        title: "New Collection Title",
+      },
+    });
+    expect(updated).toMatchObject({
+      id: "collection-1",
+      title: "New Collection Title",
+      handle: "new-collection",
+      seo: { title: "New SEO Title", description: "New SEO Desc" },
+    });
+  });
+
+  it("rejects updateCollection when no fields are supplied", async () => {
+    await expect(client().updateCollection("collection-1", {})).rejects.toThrow(
+      /shopline_update_collection_no_fields/,
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects updateCollection with invalid collection ids", async () => {
+    await expect(
+      client().updateCollection("invalid/id", { title: "Collection" }),
+    ).rejects.toThrow(/invalid_shopline_collection_id/);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 

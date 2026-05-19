@@ -1,5 +1,6 @@
 import {
   ShoplineAuthError,
+  ShoplineCollectionSchema,
   ShoplineCollectSchema,
   ShoplineImageSchema,
   ShoplineProductSchema,
@@ -8,6 +9,7 @@ import {
 } from "./types";
 import type {
   ShoplineCollect,
+  ShoplineCollection,
   ShoplineImage,
   ShoplineProduct,
   ShoplineShop,
@@ -191,6 +193,55 @@ export class ShoplineClient {
     return ShoplineProductSchema.parse(data.product);
   }
 
+  async listCollections(params?: {
+    pageInfo?: string;
+    limit?: number;
+  }): Promise<{
+    collections: ShoplineCollection[];
+    next?: { page?: number; pageInfo?: string };
+  }> {
+    const qs = new URLSearchParams();
+    if (params?.pageInfo) qs.set("page_info", params.pageInfo);
+    qs.set("limit", String(params?.limit ?? 50));
+
+    const resp = await this.fetch(
+      `/products/collections.json?${qs.toString()}`,
+    );
+    if (!resp.ok) {
+      throw new Error(`shopline_list_collections_failed: ${resp.status}`);
+    }
+
+    const data = (await resp.json()) as { collections?: unknown[] };
+    const collections = (data.collections ?? []).flatMap((collection) => {
+      const parsed = ShoplineCollectionSchema.safeParse(collection);
+      if (!parsed.success) {
+        console.warn(
+          "[shopline] skipping collection with invalid schema:",
+          parsed.error.flatten(),
+        );
+        return [];
+      }
+      return [parsed.data];
+    });
+
+    return {
+      collections,
+      next: this.parseNextPage(resp.headers.get("Link")),
+    };
+  }
+
+  async getCollection(collectionId: string): Promise<ShoplineCollection> {
+    assertShoplineId(collectionId, "invalid_shopline_collection_id");
+
+    const resp = await this.fetch(`/products/collections/${collectionId}.json`);
+    if (!resp.ok) {
+      throw new Error(`shopline_get_collection_failed: ${resp.status}`);
+    }
+
+    const data = (await resp.json()) as { collection: unknown };
+    return ShoplineCollectionSchema.parse(data.collection);
+  }
+
   async updateProduct(
     productId: string,
     payload: {
@@ -227,6 +278,52 @@ export class ShoplineClient {
 
     const data = (await resp.json()) as { product: unknown };
     return ShoplineProductSchema.parse(data.product);
+  }
+
+  async updateCollection(
+    collectionId: string,
+    payload: {
+      seo?: { title?: string; description?: string };
+      handle?: string;
+      title?: string;
+    },
+  ): Promise<ShoplineCollection> {
+    assertShoplineId(collectionId, "invalid_shopline_collection_id");
+
+    const collectionPatch: Record<string, unknown> = {};
+    if (payload.seo) {
+      const seo: Record<string, string> = {};
+      if (typeof payload.seo.title === "string") seo.title = payload.seo.title;
+      if (typeof payload.seo.description === "string") {
+        seo.description = payload.seo.description;
+      }
+      if (Object.keys(seo).length > 0) collectionPatch.seo = seo;
+    }
+    if (typeof payload.handle === "string") {
+      collectionPatch.handle = payload.handle;
+    }
+    if (typeof payload.title === "string")
+      collectionPatch.title = payload.title;
+
+    if (Object.keys(collectionPatch).length === 0) {
+      throw new Error("shopline_update_collection_no_fields");
+    }
+
+    const resp = await this.fetch(
+      `/products/collections/${collectionId}.json`,
+      {
+        method: "PUT",
+        body: JSON.stringify({
+          collection: { id: collectionId, ...collectionPatch },
+        }),
+      },
+    );
+    if (!resp.ok) {
+      throw new Error(`shopline_update_collection_failed: ${resp.status}`);
+    }
+
+    const data = (await resp.json()) as { collection: unknown };
+    return ShoplineCollectionSchema.parse(data.collection);
   }
 
   async updateProductImage(

@@ -43,6 +43,20 @@ export const ShoplineProductSchema = z
   })
   .passthrough();
 
+export const ShoplineCollectionSchema = z
+  .object({
+    id: ShoplineIdSchema,
+    title: z.string(),
+    handle: z.string(),
+    body_html: NullableStringDefault,
+    seo: ShoplineSeoSchema.optional(),
+    image: ShoplineImageSchema.nullable().optional(),
+    products_count: z.number().optional(),
+    published_at: z.string().nullable().optional(),
+    updated_at: z.string().optional(),
+  })
+  .passthrough();
+
 export const ShoplineShopSchema = z
   .object({
     id: z.number(),
@@ -64,6 +78,7 @@ export const ShoplineCollectSchema = z
   .passthrough();
 
 export type ShoplineCollect = z.infer<typeof ShoplineCollectSchema>;
+export type ShoplineCollection = z.infer<typeof ShoplineCollectionSchema>;
 export type ShoplineImage = z.infer<typeof ShoplineImageSchema>;
 export type ShoplineSeo = z.infer<typeof ShoplineSeoSchema>;
 export type ShoplineProduct = z.infer<typeof ShoplineProductSchema>;
