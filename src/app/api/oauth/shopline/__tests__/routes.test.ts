@@ -26,15 +26,21 @@ const { websiteQuery, supabaseMock } = vi.hoisted(() => {
   return { websiteQuery, supabaseMock };
 });
 
-vi.mock("@/lib/api/route-auth", () => ({
-  withRouteAuth: (_mode: string, handler: unknown) => (request: Request) =>
-    (handler as CallableFunction)(request, {
-      authMode: "company",
-      companyId: "company-1",
-      supabase: supabaseMock,
-      user: { id: "user-1" },
-    }),
-}));
+vi.mock("@/lib/api/auth-middleware", async (importOriginal) => {
+  const actual =
+    await importOriginal<typeof import("@/lib/api/auth-middleware")>();
+
+  return {
+    ...actual,
+    withCompany: (handler: unknown) => (request: Request) =>
+      (handler as CallableFunction)(request, {
+        authMode: "company",
+        companyId: "company-1",
+        supabase: supabaseMock,
+        user: { id: "user-1" },
+      }),
+  };
+});
 
 vi.mock("@/lib/shopline/connections", async (importOriginal) => {
   const actual =
