@@ -637,6 +637,9 @@
     "createPlatformBlog": "公式ブログを作成",
     "createPlatformBlogDesc": "公式プラットフォームブログを作成してAI生成記事を展示し、SEOトラフィックを獲得",
     "wordpressSites": "WordPressサイト",
+    "shopline": {
+      "seoEditButton": "SEO編集"
+    },
     "autoSchedule": {
       "title": "自動スケジュール設定",
       "description": "記事生成完了後の自動スケジュール動作を設定します。有効にすると、記事は自動的に公開キューに追加されます。",

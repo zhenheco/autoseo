@@ -5,23 +5,21 @@ import { getTranslations } from "next-intl/server";
 export const dynamic = "force-dynamic";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import {
+  createSupabaseShoplineConnectionStore,
+  getShoplineConnectionStatus,
+} from "@/lib/shopline/connections";
 
 type WebsiteConfig = Database["public"]["Tables"]["website_configs"]["Row"];
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
 import Link from "next/link";
 import { deleteWebsite, createPlatformBlog } from "./actions";
 import { checkPagePermission } from "@/lib/permissions";
-import { WebsiteStatusToggle } from "./website-status-toggle";
 import { WebsiteAddedTracker } from "./WebsiteAddedTracker";
-import { Globe, ExternalLink, Clock } from "lucide-react";
+import { Globe } from "lucide-react";
+import { WebsiteCard } from "./_components/WebsiteCard";
 
 async function getCompanyWebsites(companyId: string) {
   try {
@@ -70,6 +68,39 @@ async function checkPlatformBlogExists() {
   }
 }
 
+async function getShoplineConnectionStatuses(
+  companyId: string,
+  websites: WebsiteConfig[],
+) {
+  const statuses = new Map<string, boolean>();
+  if (websites.length === 0) return statuses;
+
+  const store = createSupabaseShoplineConnectionStore(createAdminClient());
+  const results = await Promise.all(
+    websites.map(async (website) => {
+      try {
+        const status = await getShoplineConnectionStatus(store, {
+          companyId,
+          websiteId: website.id,
+        });
+        return [website.id, status.connected] as const;
+      } catch (error) {
+        console.error(
+          "[SHOPLINE Status] Failed to load website connection status:",
+          error,
+        );
+        return [website.id, false] as const;
+      }
+    }),
+  );
+
+  for (const [websiteId, connected] of results) {
+    statuses.set(websiteId, connected);
+  }
+
+  return statuses;
+}
+
 export default async function WebsitesPage({
   searchParams,
 }: {
@@ -104,7 +135,20 @@ export default async function WebsitesPage({
     getCompanyWebsites(company.id),
     checkPlatformBlogExists(),
   ]);
+  const shoplineConnectionStatuses = await getShoplineConnectionStatuses(
+    company.id,
+    websites,
+  );
   const params = await searchParams;
+  const websiteCardLabels = {
+    autoSchedule: t("autoSchedule.autoScheduleLabel"),
+    platformBlog: t("platformBlog"),
+    seoEditButton: t("shopline.seoEditButton"),
+    status: t("status"),
+    viewArticles: t("viewArticles"),
+    edit: tCommon("edit"),
+    delete: tCommon("delete"),
+  };
 
   return (
     <div className="container mx-auto p-8">
@@ -166,101 +210,16 @@ export default async function WebsitesPage({
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
         {websites && websites.length > 0 ? (
           websites.map((website: WebsiteConfig) => (
-              <Card
-                key={website.id}
-                className={`hover:shadow-lg transition-shadow ${
-                  website.is_platform_blog
-                    ? "border-primary/50 bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-950/30 dark:to-purple-950/30"
-                    : ""
-                }`}
-              >
-                <Link href={`/dashboard/websites/${website.id}`}>
-                  <CardHeader className="cursor-pointer">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">
-                        {website.website_name}
-                      </CardTitle>
-                      <div className="flex gap-1">
-                        {website.auto_schedule_enabled && (
-                          <Badge variant="secondary" className="text-xs">
-                            <Clock className="h-3 w-3 mr-1" />
-                            {t("autoSchedule")}
-                          </Badge>
-                        )}
-                        {website.is_platform_blog && (
-                          <Badge
-                            variant="default"
-                            className="bg-gradient-to-r from-blue-600 to-purple-600"
-                          >
-                            {t("platformBlog")}
-                          </Badge>
-                        )}
-                      </div>
-                    </div>
-                    <CardDescription className="break-all">
-                      {website.is_platform_blog ? (
-                        <a
-                          href="/blog"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-1 text-primary hover:underline"
-                        >
-                          /blog
-                          <ExternalLink className="h-3 w-3" />
-                        </a>
-                      ) : (
-                        website.wordpress_url
-                      )}
-                    </CardDescription>
-                  </CardHeader>
-                </Link>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex justify-between items-center">
-                      <span className="text-sm text-muted-foreground">
-                        {t("status")}
-                      </span>
-                      <WebsiteStatusToggle
-                        websiteId={website.id}
-                        initialStatus={website.is_active ?? true}
-                      />
-                    </div>
-                    <div className="flex gap-2 pt-2">
-                      <Link
-                        href={`/dashboard/websites/${website.id}`}
-                        className="flex-1"
-                      >
-                        <Button variant="default" size="sm" className="w-full">
-                          {t("viewArticles")}
-                        </Button>
-                      </Link>
-                      <Link href={`/dashboard/websites/${website.id}/edit`}>
-                        <Button variant="outline" size="sm">
-                          {tCommon("edit")}
-                        </Button>
-                      </Link>
-                      {!website.is_platform_blog && (
-                        <form action={deleteWebsite} className="inline">
-                          <input
-                            type="hidden"
-                            name="websiteId"
-                            value={website.id}
-                          />
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            type="submit"
-                            className="text-destructive hover:text-destructive"
-                          >
-                            {tCommon("delete")}
-                          </Button>
-                        </form>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))
+            <WebsiteCard
+              key={website.id}
+              website={website}
+              labels={websiteCardLabels}
+              shoplineConnected={
+                shoplineConnectionStatuses.get(website.id) ?? false
+              }
+              deleteWebsiteAction={deleteWebsite}
+            />
+          ))
         ) : (
           <div className="col-span-full">
             <Card>

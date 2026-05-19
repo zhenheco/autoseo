@@ -637,6 +637,9 @@
     "createPlatformBlog": "建立官方 Blog",
     "createPlatformBlogDesc": "建立平台官方 Blog，展示 AI 生成文章並獲取 SEO 流量",
     "wordpressSites": "WordPress 網站",
+    "shopline": {
+      "seoEditButton": "SEO 編輯"
+    },
     "autoSchedule": {
       "title": "自動排程設定",
       "description": "設定文章生成完成後的自動排程行為。啟用後，文章會自動排入發布佇列。",

@@ -738,6 +738,9 @@
     "createPlatformBlog": "Create Platform Blog",
     "createPlatformBlogDesc": "Create the official platform blog to showcase AI-generated articles and gain SEO traffic",
     "wordpressSites": "WordPress Sites",
+    "shopline": {
+      "seoEditButton": "SEO bearbeiten"
+    },
     "autoSchedule": {
       "title": "Auto Schedule Settings",
       "description": "Configure auto-scheduling behavior after article generation. When enabled, articles will be automatically queued for publishing.",
