@@ -3030,6 +3030,14 @@
           "titleLabel": "Nom du produit"
         }
       },
+      "ai": {
+        "generate": {
+          "button": "Brouillon AI",
+          "loading": "Generation...",
+          "error": "Echec du brouillon AI : {error}",
+          "source": "Brouillon AI ({model})"
+        }
+      },
       "shop": {
         "title": "Shop meta",
         "titleTemplate": {

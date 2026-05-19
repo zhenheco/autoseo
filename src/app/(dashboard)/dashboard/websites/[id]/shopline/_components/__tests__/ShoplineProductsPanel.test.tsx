@@ -38,6 +38,11 @@ vi.mock("next-intl", () => ({
       "edit.images.save": "Save",
       "edit.images.empty": "No product images",
       "edit.images.imageNumber": `Image ${values?.number ?? 0}`,
+      "ai.generate.button": "AI draft",
+      "ai.generate.loading": "Generating...",
+      "ai.generate.error": `AI draft failed: ${values?.error ?? ""}`,
+      "ai.generate.source": `AI draft (${values?.model ?? ""})`,
+      "ai.image.generate": "AI alt",
       "edit.categories.addLabel": "Add collection IDs",
       "edit.categories.removeLabel": "Remove collection IDs",
       "edit.categories.placeholder": "Separate with commas or new lines",
@@ -733,6 +738,185 @@ describe("ShoplineProductsPanel", () => {
     );
     expect(await screen.findByText("Updated SEO title")).toBeInTheDocument();
     expect(toastMock.success).toHaveBeenCalledWith("Saved");
+  });
+
+  it("generates a product AI SEO draft and submits AI source metadata", async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          products: [
+            {
+              id: "product-1",
+              title: "Product 1",
+              handle: "product-1",
+              seo: { title: "Original SEO title" },
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          drafts: {
+            seoTitle: "AI SEO title",
+            seoDescription: "AI SEO description",
+          },
+          model: "deepseek-chat",
+          generatedAt: "2026-05-19T18:00:00.000Z",
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: "product-1",
+          title: "Product 1",
+          handle: "product-1",
+          seo: {
+            title: "AI SEO title",
+            description: "AI SEO description edited",
+          },
+        }),
+      });
+
+    render(<ShoplineProductsPanel websiteId="website-1" />);
+
+    fireEvent.click(await screen.findByText("Product 1"));
+    fireEvent.click(screen.getByRole("button", { name: "AI draft" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/api/shopline/website-1/ai-seo",
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          entityType: "product",
+          entityId: "product-1",
+          fields: ["seoTitle", "seoDescription"],
+        }),
+      },
+    );
+    expect(screen.getByRole("textbox", { name: "SEO title" })).toHaveValue(
+      "AI SEO title",
+    );
+    expect(
+      screen.getByRole("textbox", { name: "SEO description" }),
+    ).toHaveValue("AI SEO description");
+    expect(screen.getByText("AI draft (deepseek-chat)")).toBeInTheDocument();
+
+    fireEvent.change(screen.getByRole("textbox", { name: "SEO description" }), {
+      target: { value: "AI SEO description edited" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(3);
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "/api/shopline/website-1/products/product-1/seo",
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          seo: {
+            title: "AI SEO title",
+            description: "AI SEO description edited",
+          },
+          handle: "product-1",
+          title: "Product 1",
+          source: "ai",
+          model: "deepseek-chat",
+        }),
+      },
+    );
+  });
+
+  it("shows loading state while generating product AI SEO draft", async () => {
+    let resolveAiDraft: (value: {
+      ok: boolean;
+      json: () => Promise<unknown>;
+    }) => void = () => {};
+    const aiDraftPromise = new Promise<{
+      ok: boolean;
+      json: () => Promise<unknown>;
+    }>((resolve) => {
+      resolveAiDraft = resolve;
+    });
+
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          products: [
+            {
+              id: "product-1",
+              title: "Product 1",
+              handle: "product-1",
+              seo: {},
+            },
+          ],
+        }),
+      })
+      .mockReturnValueOnce(aiDraftPromise);
+
+    render(<ShoplineProductsPanel websiteId="website-1" />);
+
+    fireEvent.click(await screen.findByText("Product 1"));
+    fireEvent.click(screen.getByRole("button", { name: "AI draft" }));
+
+    expect(
+      screen.getByRole("button", { name: "Generating..." }),
+    ).toBeDisabled();
+
+    resolveAiDraft({
+      ok: true,
+      json: async () => ({
+        drafts: { seoTitle: "AI SEO title" },
+        model: "deepseek-chat",
+        generatedAt: "2026-05-19T18:00:00.000Z",
+      }),
+    });
+
+    await waitFor(() => {
+      expect(screen.getByRole("button", { name: "AI draft" })).toBeEnabled();
+    });
+  });
+
+  it("shows provider errors when product AI SEO draft generation fails", async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          products: [
+            {
+              id: "product-1",
+              title: "Product 1",
+              handle: "product-1",
+              seo: {},
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        json: async () => ({ error: "provider unavailable" }),
+      });
+
+    render(<ShoplineProductsPanel websiteId="website-1" />);
+
+    fireEvent.click(await screen.findByText("Product 1"));
+    fireEvent.click(screen.getByRole("button", { name: "AI draft" }));
+
+    await waitFor(() => {
+      expect(toastMock.error).toHaveBeenCalledWith(
+        "AI draft failed: provider unavailable",
+      );
+    });
   });
 
   it("submits PATCH with the SEO description and handle", async () => {

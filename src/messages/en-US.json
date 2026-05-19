@@ -2849,6 +2849,14 @@
           "titleLabel": "Product title"
         }
       },
+      "ai": {
+        "generate": {
+          "button": "AI draft",
+          "loading": "Generating...",
+          "error": "AI draft failed: {error}",
+          "source": "AI draft ({model})"
+        }
+      },
       "shop": {
         "title": "Shop meta",
         "titleTemplate": {

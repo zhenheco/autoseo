@@ -3030,6 +3030,14 @@
           "titleLabel": "상품명"
         }
       },
+      "ai": {
+        "generate": {
+          "button": "AI 초안",
+          "loading": "생성 중...",
+          "error": "AI 초안 실패: {error}",
+          "source": "AI 초안 ({model})"
+        }
+      },
       "shop": {
         "title": "Shop meta",
         "titleTemplate": {

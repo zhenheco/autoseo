@@ -3030,6 +3030,14 @@
           "titleLabel": "Produktname"
         }
       },
+      "ai": {
+        "generate": {
+          "button": "AI-Entwurf",
+          "loading": "Wird erstellt...",
+          "error": "AI-Entwurf fehlgeschlagen: {error}",
+          "source": "AI-Entwurf ({model})"
+        }
+      },
       "shop": {
         "title": "Shop meta",
         "titleTemplate": {

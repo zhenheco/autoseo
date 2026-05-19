@@ -2849,6 +2849,14 @@
           "titleLabel": "商品名"
         }
       },
+      "ai": {
+        "generate": {
+          "button": "AI下書き",
+          "loading": "生成中...",
+          "error": "AI下書きに失敗しました: {error}",
+          "source": "AI下書き ({model})"
+        }
+      },
       "shop": {
         "title": "Shop meta",
         "titleTemplate": {

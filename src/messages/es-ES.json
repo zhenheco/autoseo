@@ -3030,6 +3030,14 @@
           "titleLabel": "Nombre del producto"
         }
       },
+      "ai": {
+        "generate": {
+          "button": "Borrador AI",
+          "loading": "Generando...",
+          "error": "Error al generar borrador AI: {error}",
+          "source": "Borrador AI ({model})"
+        }
+      },
       "shop": {
         "title": "Shop meta",
         "titleTemplate": {

@@ -106,6 +106,14 @@ type ShoplineSaveErrorResponse = {
   reauthorize_url?: string;
 };
 
+type ShoplineAiSeoDraftResponse = {
+  drafts?: {
+    seoTitle?: string;
+    seoDescription?: string;
+  };
+  model?: string;
+};
+
 type ShoplineProductsPanelProps = {
   websiteId: string;
 };
@@ -129,6 +137,8 @@ export function ShoplineProductsPanel({
   const [seoTitle, setSeoTitle] = useState("");
   const [seoDescription, setSeoDescription] = useState("");
   const [handle, setHandle] = useState("");
+  const [aiSeoGenerating, setAiSeoGenerating] = useState(false);
+  const [aiSeoModel, setAiSeoModel] = useState<string | null>(null);
   const [imageAlts, setImageAlts] = useState<Record<string, string>>({});
   const [shopMeta, setShopMeta] = useState<ShoplineShopMeta | null>(null);
   const [savingImageId, setSavingImageId] = useState<string | null>(null);
@@ -252,6 +262,8 @@ export function ShoplineProductsPanel({
     setSeoTitle(product.seo?.title ?? "");
     setSeoDescription(product.seo?.description ?? "");
     setHandle(product.handle);
+    setAiSeoModel(null);
+    setAiSeoGenerating(false);
     setEditTab("seo-meta");
     setCurrentCollects([]);
     setAvailableCollections([]);
@@ -266,7 +278,9 @@ export function ShoplineProductsPanel({
     );
 
     if (product.seo && !product.seo.title) {
-      void loadShopMeta();
+      window.setTimeout(() => {
+        void loadShopMeta();
+      }, 0);
     }
   }
 
@@ -311,6 +325,7 @@ export function ShoplineProductsPanel({
             seo: { title: seoTitle, description: seoDescription },
             handle,
             title,
+            ...(aiSeoModel ? { source: "ai" as const, model: aiSeoModel } : {}),
           }),
         },
       );
@@ -350,6 +365,44 @@ export function ShoplineProductsPanel({
       toast.error(t("toast.saveError"));
     } finally {
       setSaving(false);
+    }
+  }
+
+  async function handleAiSeoDraftGenerate() {
+    if (!selectedProduct) return;
+
+    setAiSeoGenerating(true);
+
+    try {
+      const response = await fetch(`/api/shopline/${websiteId}/ai-seo`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          entityType: "product",
+          entityId: selectedProduct.id,
+          fields: ["seoTitle", "seoDescription"],
+        }),
+      });
+
+      if (!response.ok) {
+        const errorBody = await readShoplineSaveError(response);
+        throw new Error(errorBody.error ?? "shopline_ai_seo_failed");
+      }
+
+      const data = (await response.json()) as ShoplineAiSeoDraftResponse;
+      if (typeof data.drafts?.seoTitle === "string") {
+        setSeoTitle(data.drafts.seoTitle);
+      }
+      if (typeof data.drafts?.seoDescription === "string") {
+        setSeoDescription(data.drafts.seoDescription);
+      }
+      setAiSeoModel(data.model ?? null);
+    } catch (error) {
+      const message =
+        error instanceof Error ? error.message : "shopline_ai_seo_failed";
+      toast.error(t("ai.generate.error", { error: message }));
+    } finally {
+      setAiSeoGenerating(false);
     }
   }
 
@@ -716,6 +769,27 @@ export function ShoplineProductsPanel({
                     {t("redirects.warning.autoCreated")}
                   </div>
                 ) : null}
+                <div className="flex items-center justify-between gap-3">
+                  {aiSeoModel ? (
+                    <span className="text-sm text-muted-foreground">
+                      {t("ai.generate.source", { model: aiSeoModel })}
+                    </span>
+                  ) : (
+                    <span />
+                  )}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    disabled={aiSeoGenerating}
+                    onClick={() => {
+                      void handleAiSeoDraftGenerate();
+                    }}
+                  >
+                    {aiSeoGenerating
+                      ? t("ai.generate.loading")
+                      : t("ai.generate.button")}
+                  </Button>
+                </div>
                 <DialogFooter>
                   <Button
                     type="button"

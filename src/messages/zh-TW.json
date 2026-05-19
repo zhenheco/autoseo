@@ -2849,6 +2849,14 @@
           "titleLabel": "商品名稱"
         }
       },
+      "ai": {
+        "generate": {
+          "button": "AI 產草稿",
+          "loading": "產生中...",
+          "error": "AI 草稿失敗：{error}",
+          "source": "AI 草稿（{model}）"
+        }
+      },
       "shop": {
         "title": "商店 Meta",
         "titleTemplate": {
