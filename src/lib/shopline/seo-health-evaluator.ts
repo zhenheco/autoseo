@@ -6,6 +6,13 @@ export type SeoHealthFlag =
   | "missing_alt"
   | "duplicate_title";
 
+export type SeoHealthFilter =
+  | "missing-seo"
+  | "missing-alt"
+  | "title-too-long"
+  | "description-too-long"
+  | "duplicate-title";
+
 export interface SeoHealthInput {
   entityType: "product" | "collection";
   entity: {
@@ -65,4 +72,31 @@ export function evaluateBatchSeoHealth(
       return [item.id, flags];
     }),
   );
+}
+
+export function matchesSeoHealthFilter(
+  flags: SeoHealthFlag[],
+  filter: string | null | undefined,
+  options: { includeMissingAlt?: boolean } = {},
+): boolean | null {
+  if (!filter) return null;
+
+  switch (filter) {
+    case "missing-seo":
+      return (
+        flags.includes("missing_seo_title") ||
+        flags.includes("missing_seo_description")
+      );
+    case "missing-alt":
+      if (options.includeMissingAlt === false) return null;
+      return flags.includes("missing_alt");
+    case "title-too-long":
+      return flags.includes("seo_title_too_long");
+    case "description-too-long":
+      return flags.includes("seo_description_too_long");
+    case "duplicate-title":
+      return flags.includes("duplicate_title");
+    default:
+      return null;
+  }
 }

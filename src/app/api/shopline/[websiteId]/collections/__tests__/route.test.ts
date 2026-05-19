@@ -81,6 +81,51 @@ function params(websiteId = "website-1") {
   };
 }
 
+const filterCollections = [
+  {
+    id: "collection-missing-title",
+    title: "Missing SEO title",
+    handle: "missing-seo-title",
+    seo: { title: "", description: "SEO description" },
+  },
+  {
+    id: "collection-missing-description",
+    title: "Missing SEO description",
+    handle: "missing-seo-description",
+    seo: { title: "SEO title", description: "" },
+  },
+  {
+    id: "collection-title-too-long",
+    title: "Title too long",
+    handle: "title-too-long",
+    seo: { title: "t".repeat(71), description: "SEO description" },
+  },
+  {
+    id: "collection-description-too-long",
+    title: "Description too long",
+    handle: "description-too-long",
+    seo: { title: "SEO title", description: "d".repeat(161) },
+  },
+  {
+    id: "collection-duplicate-a",
+    title: "Duplicate title",
+    handle: "duplicate-a",
+    seo: { title: "SEO title", description: "SEO description" },
+  },
+  {
+    id: "collection-duplicate-b",
+    title: "Duplicate title",
+    handle: "duplicate-b",
+    seo: { title: "SEO title", description: "SEO description" },
+  },
+  {
+    id: "collection-healthy",
+    title: "Healthy collection",
+    handle: "healthy",
+    seo: { title: "SEO title", description: "SEO description" },
+  },
+];
+
 describe("GET /api/shopline/[websiteId]/collections", () => {
   beforeEach(() => {
     vi.resetModules();
@@ -208,6 +253,41 @@ describe("GET /api/shopline/[websiteId]/collections", () => {
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
       collections,
+      nextCursor: "cursor-next",
+    });
+  });
+
+  it.each([
+    [
+      "missing-seo",
+      ["collection-missing-title", "collection-missing-description"],
+    ],
+    ["title-too-long", ["collection-title-too-long"]],
+    ["description-too-long", ["collection-description-too-long"]],
+    ["duplicate-title", ["collection-duplicate-a", "collection-duplicate-b"]],
+    ["missing-alt", filterCollections.map((collection) => collection.id)],
+    ["unknown-filter", filterCollections.map((collection) => collection.id)],
+  ])("filters collections by %s", async (filter, expectedIds) => {
+    collectionFetcher.fetchShoplineCollections.mockResolvedValueOnce({
+      collections: filterCollections,
+      nextCursor: "cursor-next",
+    });
+    const { GET } = await import("../route");
+
+    const response = await GET(
+      new Request(
+        `https://1wayseo.com/api/shopline/website-1/collections?filter=${filter}`,
+      ) as never,
+      params(),
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      collections: expectedIds.map((id) =>
+        expect.objectContaining({
+          id,
+        }),
+      ),
       nextCursor: "cursor-next",
     });
   });

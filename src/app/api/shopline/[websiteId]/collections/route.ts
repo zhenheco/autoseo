@@ -4,6 +4,10 @@ import { forbidden, handleApiError } from "@/lib/api/response-helpers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseShoplineConnectionStore } from "@/lib/shopline/connections";
 import { fetchShoplineCollections } from "@/lib/shopline/collection-fetcher";
+import {
+  evaluateBatchSeoHealth,
+  matchesSeoHealthFilter,
+} from "@/lib/shopline/seo-health-evaluator";
 import { ShoplineAuthError } from "@/lib/shopline/types";
 
 type RouteContext = {
@@ -47,6 +51,9 @@ export const GET = withRouteAuth(
       const cursor =
         request.nextUrl?.searchParams.get("cursor") ??
         new URL(request.url).searchParams.get("cursor");
+      const filter =
+        request.nextUrl?.searchParams.get("filter") ??
+        new URL(request.url).searchParams.get("filter");
       const result = await fetchShoplineCollections(
         companyId,
         websiteId,
@@ -55,8 +62,23 @@ export const GET = withRouteAuth(
           store: createSupabaseShoplineConnectionStore(adminClient),
         },
       );
+      const healthById = evaluateBatchSeoHealth(
+        result.collections.map((collection) => ({
+          id: collection.id,
+          entityType: "collection" as const,
+          entity: collection,
+        })),
+      );
+      const collections = result.collections.filter((collection) => {
+        const matches = matchesSeoHealthFilter(
+          healthById.get(collection.id) ?? [],
+          filter,
+          { includeMissingAlt: false },
+        );
+        return matches ?? true;
+      });
 
-      return NextResponse.json(result);
+      return NextResponse.json({ ...result, collections });
     } catch (error) {
       if (
         error instanceof ShoplineAuthError ||

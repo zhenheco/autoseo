@@ -81,6 +81,65 @@ function params(websiteId = "website-1") {
   };
 }
 
+const filterProducts = [
+  {
+    id: "product-missing-title",
+    title: "Missing SEO title",
+    handle: "missing-seo-title",
+    seo: { title: "", description: "SEO description" },
+    images: [{ id: "image-1", alt: "Hero" }],
+  },
+  {
+    id: "product-missing-description",
+    title: "Missing SEO description",
+    handle: "missing-seo-description",
+    seo: { title: "SEO title", description: "" },
+    images: [{ id: "image-2", alt: "Hero" }],
+  },
+  {
+    id: "product-missing-alt",
+    title: "Missing alt",
+    handle: "missing-alt",
+    seo: { title: "SEO title", description: "SEO description" },
+    images: [{ id: "image-3", alt: "" }],
+  },
+  {
+    id: "product-title-too-long",
+    title: "Title too long",
+    handle: "title-too-long",
+    seo: { title: "t".repeat(71), description: "SEO description" },
+    images: [{ id: "image-4", alt: "Hero" }],
+  },
+  {
+    id: "product-description-too-long",
+    title: "Description too long",
+    handle: "description-too-long",
+    seo: { title: "SEO title", description: "d".repeat(161) },
+    images: [{ id: "image-5", alt: "Hero" }],
+  },
+  {
+    id: "product-duplicate-a",
+    title: "Duplicate title",
+    handle: "duplicate-a",
+    seo: { title: "SEO title", description: "SEO description" },
+    images: [{ id: "image-6", alt: "Hero" }],
+  },
+  {
+    id: "product-duplicate-b",
+    title: "Duplicate title",
+    handle: "duplicate-b",
+    seo: { title: "SEO title", description: "SEO description" },
+    images: [{ id: "image-7", alt: "Hero" }],
+  },
+  {
+    id: "product-healthy",
+    title: "Healthy product",
+    handle: "healthy",
+    seo: { title: "SEO title", description: "SEO description" },
+    images: [{ id: "image-8", alt: "Hero" }],
+  },
+];
+
 describe("GET /api/shopline/[websiteId]/products", () => {
   beforeEach(() => {
     vi.resetModules();
@@ -208,6 +267,38 @@ describe("GET /api/shopline/[websiteId]/products", () => {
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual({
       products,
+      nextCursor: "cursor-next",
+    });
+  });
+
+  it.each([
+    ["missing-seo", ["product-missing-title", "product-missing-description"]],
+    ["missing-alt", ["product-missing-alt"]],
+    ["title-too-long", ["product-title-too-long"]],
+    ["description-too-long", ["product-description-too-long"]],
+    ["duplicate-title", ["product-duplicate-a", "product-duplicate-b"]],
+    ["unknown-filter", filterProducts.map((product) => product.id)],
+  ])("filters products by %s", async (filter, expectedIds) => {
+    productFetcher.fetchShoplineProducts.mockResolvedValueOnce({
+      products: filterProducts,
+      nextCursor: "cursor-next",
+    });
+    const { GET } = await import("../route");
+
+    const response = await GET(
+      new Request(
+        `https://1wayseo.com/api/shopline/website-1/products?filter=${filter}`,
+      ) as never,
+      params(),
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      products: expectedIds.map((id) =>
+        expect.objectContaining({
+          id,
+        }),
+      ),
       nextCursor: "cursor-next",
     });
   });

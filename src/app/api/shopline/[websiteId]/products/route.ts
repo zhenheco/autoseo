@@ -4,6 +4,10 @@ import { forbidden, handleApiError } from "@/lib/api/response-helpers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseShoplineConnectionStore } from "@/lib/shopline/connections";
 import { fetchShoplineProducts } from "@/lib/shopline/product-fetcher";
+import {
+  evaluateBatchSeoHealth,
+  matchesSeoHealthFilter,
+} from "@/lib/shopline/seo-health-evaluator";
 import { ShoplineAuthError } from "@/lib/shopline/types";
 
 type RouteContext = {
@@ -48,11 +52,28 @@ export const GET = withRouteAuth(
         request.nextUrl?.searchParams.get("cursor") ??
         new URL(request.url).searchParams.get("cursor") ??
         undefined;
+      const filter =
+        request.nextUrl?.searchParams.get("filter") ??
+        new URL(request.url).searchParams.get("filter");
       const result = await fetchShoplineProducts(companyId, websiteId, cursor, {
         store: createSupabaseShoplineConnectionStore(adminClient),
       });
+      const healthById = evaluateBatchSeoHealth(
+        result.products.map((product) => ({
+          id: product.id,
+          entityType: "product" as const,
+          entity: product,
+        })),
+      );
+      const products = result.products.filter((product) => {
+        const matches = matchesSeoHealthFilter(
+          healthById.get(product.id) ?? [],
+          filter,
+        );
+        return matches ?? true;
+      });
 
-      return NextResponse.json(result);
+      return NextResponse.json({ ...result, products });
     } catch (error) {
       if (
         error instanceof ShoplineAuthError ||
