@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, type FormEvent } from "react";
-import { ChevronLeft, ChevronRight, Save, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, RefreshCw, Save, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -40,6 +40,12 @@ type ProductsResponse = {
   nextCursor?: string;
 };
 
+type ShoplineSaveErrorResponse = {
+  error?: string;
+  retryAfter?: number;
+  reauthorize_url?: string;
+};
+
 type ShoplineProductsPanelProps = {
   websiteId: string;
 };
@@ -56,6 +62,9 @@ export function ShoplineProductsPanel({
   const [nextCursor, setNextCursor] = useState<string | undefined>();
   const [selectedProduct, setSelectedProduct] =
     useState<ShoplineProduct | null>(null);
+  const [scopeMissing, setScopeMissing] = useState<{
+    reauthorizeUrl: string;
+  } | null>(null);
   const [seoTitle, setSeoTitle] = useState("");
   const [seoDescription, setSeoDescription] = useState("");
   const [handle, setHandle] = useState("");
@@ -108,6 +117,7 @@ export function ShoplineProductsPanel({
 
   function openEditor(product: ShoplineProduct) {
     setSelectedProduct(product);
+    setScopeMissing(null);
     setSeoTitle(product.seo?.title ?? "");
     setSeoDescription(product.seo?.description ?? "");
     setHandle(product.handle);
@@ -129,6 +139,7 @@ export function ShoplineProductsPanel({
     if (!selectedProduct || isDescriptionTooLong) return;
 
     setSaving(true);
+    setScopeMissing(null);
 
     try {
       const response = await fetch(
@@ -143,7 +154,28 @@ export function ShoplineProductsPanel({
         },
       );
 
-      if (!response.ok) throw new Error("shopline_product_update_failed");
+      if (!response.ok) {
+        const errorBody = await readShoplineSaveError(response);
+
+        if (
+          errorBody.error === "shopline_scope_missing" &&
+          errorBody.reauthorize_url
+        ) {
+          setScopeMissing({ reauthorizeUrl: errorBody.reauthorize_url });
+          return;
+        }
+
+        if (errorBody.error === "shopline_rate_limited") {
+          toast.error(
+            t("error.rateLimited", {
+              seconds: errorBody.retryAfter ?? 60,
+            }),
+          );
+          return;
+        }
+
+        throw new Error("shopline_product_update_failed");
+      }
 
       const updatedProduct = (await response.json()) as ShoplineProduct;
       setProducts((currentProducts) =>
@@ -247,6 +279,27 @@ export function ShoplineProductsPanel({
             <DialogTitle>{t("edit.title")}</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleSubmit} className="space-y-4">
+            {scopeMissing ? (
+              <div
+                role="alert"
+                className="flex items-start justify-between gap-3 rounded-md border border-amber-300 bg-amber-50 px-3 py-3 text-sm text-amber-950"
+              >
+                <div className="space-y-1">
+                  <p className="font-medium">{t("error.scopeMissing.title")}</p>
+                  <p>{t("error.scopeMissing.description")}</p>
+                </div>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={() => {
+                    window.location.assign(scopeMissing.reauthorizeUrl);
+                  }}
+                >
+                  <RefreshCw className="h-4 w-4" />
+                  {t("error.scopeMissing.reauthorize")}
+                </Button>
+              </div>
+            ) : null}
             <div className="space-y-2">
               <div className="flex items-center justify-between gap-4">
                 <Label htmlFor="shopline-seo-title">
@@ -323,4 +376,19 @@ export function ShoplineProductsPanel({
       </Dialog>
     </Card>
   );
+}
+
+async function readShoplineSaveError(
+  response: Response,
+): Promise<ShoplineSaveErrorResponse> {
+  try {
+    const body = (await response.json()) as unknown;
+    if (typeof body === "object" && body !== null) {
+      return body as ShoplineSaveErrorResponse;
+    }
+  } catch {
+    return {};
+  }
+
+  return {};
 }

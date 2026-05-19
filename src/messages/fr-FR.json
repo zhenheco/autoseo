@@ -2971,6 +2971,14 @@
         "saveSuccess": "已儲存 SEO 標題",
         "saveError": "儲存 SEO 標題失敗"
       },
+      "error": {
+        "scopeMissing": {
+          "title": "Nouvelle autorisation SHOPLINE requise",
+          "description": "Cette connexion SHOPLINE n'a pas l'autorisation requise pour cette mise a jour.",
+          "reauthorize": "Reautoriser"
+        },
+        "rateLimited": "Trop d'operations. Reessayez dans {seconds} secondes."
+      },
       "pagination": {
         "next": "下一頁",
         "prev": "上一頁"

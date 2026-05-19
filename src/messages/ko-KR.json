@@ -2971,6 +2971,14 @@
         "saveSuccess": "已儲存 SEO 標題",
         "saveError": "儲存 SEO 標題失敗"
       },
+      "error": {
+        "scopeMissing": {
+          "title": "SHOPLINE 재인증이 필요합니다",
+          "description": "이 SHOPLINE 연결에는 이번 업데이트에 필요한 권한이 없습니다.",
+          "reauthorize": "재인증"
+        },
+        "rateLimited": "작업이 너무 잦습니다. {seconds}초 후 다시 시도하세요."
+      },
       "pagination": {
         "next": "下一頁",
         "prev": "上一頁"

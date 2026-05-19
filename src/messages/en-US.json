@@ -2790,6 +2790,14 @@
         "saveSuccess": "已儲存 SEO 標題",
         "saveError": "儲存 SEO 標題失敗"
       },
+      "error": {
+        "scopeMissing": {
+          "title": "SHOPLINE reauthorization required",
+          "description": "This SHOPLINE connection is missing the permission required for this update.",
+          "reauthorize": "Reauthorize"
+        },
+        "rateLimited": "Too many operations. Try again in {seconds} seconds."
+      },
       "pagination": {
         "next": "下一頁",
         "prev": "上一頁"

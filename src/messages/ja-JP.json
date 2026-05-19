@@ -2790,6 +2790,14 @@
         "saveSuccess": "已儲存 SEO 標題",
         "saveError": "儲存 SEO 標題失敗"
       },
+      "error": {
+        "scopeMissing": {
+          "title": "SHOPLINE の再認証が必要です",
+          "description": "この SHOPLINE 連携には今回の更新に必要な権限がありません。",
+          "reauthorize": "再認証"
+        },
+        "rateLimited": "操作が多すぎます。{seconds} 秒後に再試行してください。"
+      },
       "pagination": {
         "next": "下一頁",
         "prev": "上一頁"

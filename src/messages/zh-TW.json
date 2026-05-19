@@ -2790,6 +2790,14 @@
         "saveSuccess": "已儲存 SEO 標題",
         "saveError": "儲存 SEO 標題失敗"
       },
+      "error": {
+        "scopeMissing": {
+          "title": "需重新授權",
+          "description": "SHOPLINE 連線缺少本次寫入所需權限，請重新授權後再試。",
+          "reauthorize": "重新授權"
+        },
+        "rateLimited": "操作太頻繁，請 {seconds} 秒後再試"
+      },
       "pagination": {
         "next": "下一頁",
         "prev": "上一頁"

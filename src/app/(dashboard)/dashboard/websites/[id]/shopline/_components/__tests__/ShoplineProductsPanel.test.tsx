@@ -29,6 +29,13 @@ vi.mock("next-intl", () => ({
       "edit.cancel": "Cancel",
       "toast.saveSuccess": "Saved",
       "toast.saveError": "Save failed",
+      "error.scopeMissing.title": "Need reauthorization",
+      "error.scopeMissing.description":
+        "SHOPLINE permission is missing for this update.",
+      "error.scopeMissing.reauthorize": "Reauthorize",
+      "error.rateLimited": `Too many operations. Try again in ${
+        values?.seconds ?? 0
+      } seconds.`,
       "pagination.next": "Next",
       "pagination.prev": "Previous",
     };
@@ -328,6 +335,82 @@ describe("ShoplineProductsPanel", () => {
         }),
       },
     );
+  });
+
+  it("shows a reauthorization banner when SHOPLINE scope is missing", async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          products: [
+            {
+              id: "product-1",
+              title: "Product 1",
+              handle: "product-1",
+              seo: { title: "Original SEO title" },
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 403,
+        json: async () => ({
+          error: "shopline_scope_missing",
+          missing_scopes: ["write_products"],
+          reauthorize_url: "/api/oauth/shopline/install?siteId=website-1",
+        }),
+      });
+
+    render(<ShoplineProductsPanel websiteId="website-1" />);
+
+    fireEvent.click(await screen.findByText("Product 1"));
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(await screen.findByText("Need reauthorization")).toBeInTheDocument();
+    expect(
+      screen.getByText("SHOPLINE permission is missing for this update."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Reauthorize" }),
+    ).toBeInTheDocument();
+    expect(toastMock.error).not.toHaveBeenCalledWith("Save failed");
+  });
+
+  it("shows a rate limit toast when SHOPLINE writes are throttled", async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          products: [
+            {
+              id: "product-1",
+              title: "Product 1",
+              handle: "product-1",
+              seo: { title: "Original SEO title" },
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 429,
+        json: async () => ({
+          error: "shopline_rate_limited",
+          retryAfter: 17,
+        }),
+      });
+
+    render(<ShoplineProductsPanel websiteId="website-1" />);
+
+    fireEvent.click(await screen.findByText("Product 1"));
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => {
+      expect(toastMock.error).toHaveBeenCalledWith(
+        "Too many operations. Try again in 17 seconds.",
+      );
+    });
   });
 
   it("shows a warning banner when the handle changes", async () => {
