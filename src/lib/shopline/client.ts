@@ -159,6 +159,20 @@ export class ShoplineClient {
     };
   }
 
+  async getProduct(productId: string): Promise<ShoplineProduct> {
+    if (!/^[a-zA-Z0-9_-]+$/.test(productId)) {
+      throw new Error("invalid_shopline_product_id");
+    }
+
+    const resp = await this.fetch(`/products/products/${productId}.json`);
+    if (!resp.ok) {
+      throw new Error(`shopline_get_product_failed: ${resp.status}`);
+    }
+
+    const data = (await resp.json()) as { product: unknown };
+    return ShoplineProductSchema.parse(data.product);
+  }
+
   async updateProduct(
     productId: string,
     payload: {

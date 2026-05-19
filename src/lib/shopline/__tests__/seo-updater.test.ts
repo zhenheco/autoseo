@@ -4,10 +4,12 @@ import type { ShoplineConnectionStore } from "../connections";
 import type { ShoplineProduct } from "../types";
 
 const updateProduct = vi.fn();
+const getProduct = vi.fn();
 
 vi.mock("../client", () => ({
   ShoplineClient: vi.fn(function ShoplineClient() {
     return {
+      getProduct,
       updateProduct,
     };
   }),
@@ -26,6 +28,15 @@ const updatedProduct: ShoplineProduct = {
   created_at: "2026-05-19T00:00:00.000Z",
   updated_at: "2026-05-19T00:00:00.000Z",
   seo: { title: "Updated SEO title" },
+};
+
+const currentProduct: ShoplineProduct = {
+  ...updatedProduct,
+  handle: "old-product-1",
+  seo: {
+    title: "Old SEO title",
+    description: "Old SEO description",
+  },
 };
 
 function createStore(overrides: Partial<ShoplineConnectionStore> = {}) {
@@ -49,9 +60,21 @@ function createStore(overrides: Partial<ShoplineConnectionStore> = {}) {
   } satisfies ShoplineConnectionStore;
 }
 
+function createSupabaseAuditClient() {
+  const insert = vi.fn(async () => ({ error: null }));
+  const from = vi.fn(() => ({ insert }));
+
+  return {
+    supabase: { from },
+    from,
+    insert,
+  };
+}
+
 describe("updateShoplineProductSeo", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    getProduct.mockResolvedValue(currentProduct);
   });
 
   it("updates seo.title and returns the updated product", async () => {
@@ -109,5 +132,147 @@ describe("updateShoplineProductSeo", () => {
         { store },
       ),
     ).rejects.toThrow("shopline_no_connection");
+  });
+
+  it("writes one audit row when seo.title changes", async () => {
+    const store = createStore();
+    const { supabase, from, insert } = createSupabaseAuditClient();
+    updateProduct.mockResolvedValueOnce(updatedProduct);
+
+    await updateShoplineProductSeo(
+      "company_1",
+      "website_1",
+      "product_1",
+      { seo: { title: "Updated SEO title" } },
+      {
+        store,
+        auditOptions: {
+          supabase,
+          source: "ui",
+          userId: "user_1",
+        },
+      },
+    );
+
+    expect(from).toHaveBeenCalledWith("shopline_seo_audit_log");
+    expect(insert).toHaveBeenCalledWith([
+      {
+        company_id: "company_1",
+        website_id: "website_1",
+        entity_type: "product",
+        entity_id: "product_1",
+        field: "seo.title",
+        before_value: "Old SEO title",
+        after_value: "Updated SEO title",
+        source: "ui",
+        model: null,
+        user_id: "user_1",
+      },
+    ]);
+  });
+
+  it("writes one audit row when handle changes", async () => {
+    const store = createStore();
+    const { supabase, insert } = createSupabaseAuditClient();
+    updateProduct.mockResolvedValueOnce({
+      ...updatedProduct,
+      handle: "new-product-1",
+    });
+
+    await updateShoplineProductSeo(
+      "company_1",
+      "website_1",
+      "product_1",
+      { handle: "new-product-1" },
+      {
+        store,
+        auditOptions: {
+          supabase,
+          source: "ui",
+        },
+      },
+    );
+
+    expect(insert).toHaveBeenCalledWith([
+      expect.objectContaining({
+        field: "handle",
+        before_value: "old-product-1",
+        after_value: "new-product-1",
+      }),
+    ]);
+  });
+
+  it("writes one audit row when seo.description changes", async () => {
+    const store = createStore();
+    const { supabase, insert } = createSupabaseAuditClient();
+    updateProduct.mockResolvedValueOnce({
+      ...updatedProduct,
+      seo: {
+        title: "Old SEO title",
+        description: "New SEO description",
+      },
+    });
+
+    await updateShoplineProductSeo(
+      "company_1",
+      "website_1",
+      "product_1",
+      { seo: { description: "New SEO description" } },
+      {
+        store,
+        auditOptions: {
+          supabase,
+          source: "ui",
+        },
+      },
+    );
+
+    expect(insert).toHaveBeenCalledWith([
+      expect.objectContaining({
+        field: "seo.description",
+        before_value: "Old SEO description",
+        after_value: "New SEO description",
+      }),
+    ]);
+  });
+
+  it("does not write audit rows when audit options are omitted", async () => {
+    const store = createStore();
+    updateProduct.mockResolvedValueOnce(updatedProduct);
+
+    await updateShoplineProductSeo(
+      "company_1",
+      "website_1",
+      "product_1",
+      { seo: { title: "Updated SEO title" } },
+      { store },
+    );
+
+    expect(getProduct).not.toHaveBeenCalled();
+  });
+
+  it("does not write an audit row when a patched field is unchanged", async () => {
+    const store = createStore();
+    const { supabase, insert } = createSupabaseAuditClient();
+    updateProduct.mockResolvedValueOnce({
+      ...updatedProduct,
+      handle: "old-product-1",
+    });
+
+    await updateShoplineProductSeo(
+      "company_1",
+      "website_1",
+      "product_1",
+      { handle: "old-product-1" },
+      {
+        store,
+        auditOptions: {
+          supabase,
+          source: "ui",
+        },
+      },
+    );
+
+    expect(insert).not.toHaveBeenCalled();
   });
 });
