@@ -5,6 +5,9 @@ import type { ShoplineCollection } from "../types";
 
 const updateCollection = vi.fn();
 const getCollection = vi.fn();
+const { createShoplineRedirect } = vi.hoisted(() => ({
+  createShoplineRedirect: vi.fn(),
+}));
 
 vi.mock("../client", () => ({
   ShoplineClient: vi.fn(function ShoplineClient() {
@@ -13,6 +16,10 @@ vi.mock("../client", () => ({
       updateCollection,
     };
   }),
+}));
+
+vi.mock("../redirect-store", () => ({
+  createShoplineRedirect,
 }));
 
 const updatedCollection: ShoplineCollection = {
@@ -73,6 +80,7 @@ function createSupabaseAuditClient() {
 describe("updateShoplineCollectionSeo", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    createShoplineRedirect.mockResolvedValue(undefined);
     getCollection.mockResolvedValue(currentCollection);
   });
 
@@ -301,5 +309,111 @@ describe("updateShoplineCollectionSeo", () => {
     );
 
     expect(insert).not.toHaveBeenCalled();
+  });
+
+  it("creates a collection redirect when handle changes", async () => {
+    const store = createStore();
+    const { supabase } = createSupabaseAuditClient();
+    updateCollection.mockResolvedValueOnce(updatedCollection);
+
+    await updateShoplineCollectionSeo(
+      "company_1",
+      "website_1",
+      "collection_1",
+      { handle: "updated-collection" },
+      {
+        store,
+        auditOptions: {
+          supabase,
+          source: "ui",
+        },
+      },
+    );
+
+    expect(createShoplineRedirect).toHaveBeenCalledWith(supabase, {
+      websiteId: "website_1",
+      entityType: "collection",
+      entityId: "collection_1",
+      handleFrom: "old-collection",
+      handleTo: "updated-collection",
+    });
+  });
+
+  it("does not create a collection redirect when handle is unchanged", async () => {
+    const store = createStore();
+    const { supabase } = createSupabaseAuditClient();
+    updateCollection.mockResolvedValueOnce({
+      ...updatedCollection,
+      handle: "old-collection",
+    });
+
+    await updateShoplineCollectionSeo(
+      "company_1",
+      "website_1",
+      "collection_1",
+      { handle: "old-collection" },
+      {
+        store,
+        auditOptions: {
+          supabase,
+          source: "ui",
+        },
+      },
+    );
+
+    expect(createShoplineRedirect).not.toHaveBeenCalled();
+  });
+
+  it("does not create a collection redirect without a before handle", async () => {
+    const store = createStore();
+    const { supabase } = createSupabaseAuditClient();
+    updateCollection.mockResolvedValueOnce(updatedCollection);
+
+    await updateShoplineCollectionSeo(
+      "company_1",
+      "website_1",
+      "collection_1",
+      { handle: "updated-collection" },
+      {
+        store,
+        before: { seo: { title: "Old SEO title" } },
+        auditOptions: {
+          supabase,
+          source: "ui",
+        },
+      },
+    );
+
+    expect(createShoplineRedirect).not.toHaveBeenCalled();
+  });
+
+  it("warns and returns the updated collection when redirect creation fails", async () => {
+    const store = createStore();
+    const { supabase } = createSupabaseAuditClient();
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    createShoplineRedirect.mockRejectedValueOnce(new Error("rls denied"));
+    updateCollection.mockResolvedValueOnce(updatedCollection);
+
+    await expect(
+      updateShoplineCollectionSeo(
+        "company_1",
+        "website_1",
+        "collection_1",
+        { handle: "updated-collection" },
+        {
+          store,
+          auditOptions: {
+            supabase,
+            source: "ui",
+          },
+        },
+      ),
+    ).resolves.toEqual(updatedCollection);
+
+    expect(warn).toHaveBeenCalledWith(
+      "[shopline-collection-seo-updater] redirect create failed:",
+      "rls denied",
+    );
+    warn.mockRestore();
   });
 });

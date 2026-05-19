@@ -3,6 +3,10 @@ import {
   resolveShoplineAccessToken,
   type ShoplineConnectionStore,
 } from "./connections";
+import {
+  createShoplineRedirect,
+  type RedirectStoreSupabase,
+} from "./redirect-store";
 import type { Database } from "@/types/database.types";
 import type { ShoplineCollection } from "./types";
 
@@ -39,9 +43,10 @@ type ShoplineSeoAuditInsertResult = PromiseLike<{
 
 export interface ShoplineCollectionSeoAuditOptions {
   supabase: {
-    from: (table: "shopline_seo_audit_log") => {
+    from: ((table: "shopline_seo_audit_log") => {
       insert: (rows: ShoplineSeoAuditInsert[]) => ShoplineSeoAuditInsertResult;
-    };
+    }) &
+      RedirectStoreSupabase["from"];
   };
   userId?: string | null;
   source: ShoplineCollectionSeoUpdateSource;
@@ -187,6 +192,28 @@ export async function updateShoplineCollectionSeo(
     collectionId,
     payload,
   );
+
+  if (
+    options.auditOptions &&
+    beforeCollection?.handle &&
+    typeof patch.handle === "string" &&
+    patch.handle !== beforeCollection.handle
+  ) {
+    try {
+      await createShoplineRedirect(options.auditOptions.supabase, {
+        websiteId,
+        entityType: "collection",
+        entityId: collectionId,
+        handleFrom: beforeCollection.handle,
+        handleTo: patch.handle,
+      });
+    } catch (error) {
+      console.warn(
+        "[shopline-collection-seo-updater] redirect create failed:",
+        error instanceof Error ? error.message : "unknown",
+      );
+    }
+  }
 
   if (options.auditOptions && beforeCollection) {
     const auditRows = buildCollectionAuditRows({

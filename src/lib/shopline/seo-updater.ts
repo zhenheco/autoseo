@@ -3,6 +3,10 @@ import {
   resolveShoplineAccessToken,
   type ShoplineConnectionStore,
 } from "./connections";
+import {
+  createShoplineRedirect,
+  type RedirectStoreSupabase,
+} from "./redirect-store";
 import type { Database } from "@/types/database.types";
 import type { ShoplineProduct } from "./types";
 
@@ -32,9 +36,10 @@ type ShoplineSeoAuditInsertResult = PromiseLike<{
 
 export interface ShoplineSeoAuditOptions {
   supabase: {
-    from: (table: "shopline_seo_audit_log") => {
+    from: ((table: "shopline_seo_audit_log") => {
       insert: (rows: ShoplineSeoAuditInsert[]) => ShoplineSeoAuditInsertResult;
-    };
+    }) &
+      RedirectStoreSupabase["from"];
   };
   userId?: string | null;
   source: ShoplineSeoUpdateSource;
@@ -173,6 +178,28 @@ export async function updateShoplineProductSeo(
     ? await client.getProduct(productId)
     : null;
   const updatedProduct = await client.updateProduct(productId, payload);
+
+  if (
+    deps.auditOptions &&
+    beforeProduct?.handle &&
+    typeof patch.handle === "string" &&
+    patch.handle !== beforeProduct.handle
+  ) {
+    try {
+      await createShoplineRedirect(deps.auditOptions.supabase, {
+        websiteId,
+        entityType: "product",
+        entityId: productId,
+        handleFrom: beforeProduct.handle,
+        handleTo: patch.handle,
+      });
+    } catch (error) {
+      console.warn(
+        "[shopline-seo-updater] redirect create failed:",
+        error instanceof Error ? error.message : "unknown",
+      );
+    }
+  }
 
   if (deps.auditOptions && beforeProduct) {
     const auditRows = buildProductAuditRows({
