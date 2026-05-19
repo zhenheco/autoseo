@@ -2778,6 +2778,10 @@
       "edit": {
         "title": "編輯商品 SEO",
         "seoTitleLabel": "SEO 標題",
+        "seoDescriptionLabel": "SEO 描述",
+        "handleLabel": "URL slug",
+        "handleChangeWarning": "⚠️ 變更 URL slug 可能導致舊連結 404，slice 6 將補 301 redirect 自動建立",
+        "charLimitExceeded": "SEO 描述不可超過 160 字",
         "charCount": "{count}/70",
         "save": "儲存",
         "cancel": "取消"

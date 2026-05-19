@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import {
   Table,
   TableBody,
@@ -30,6 +31,7 @@ type ShoplineProduct = {
   handle: string;
   seo?: {
     title?: string;
+    description?: string;
   };
 };
 
@@ -55,6 +57,8 @@ export function ShoplineProductsPanel({
   const [selectedProduct, setSelectedProduct] =
     useState<ShoplineProduct | null>(null);
   const [seoTitle, setSeoTitle] = useState("");
+  const [seoDescription, setSeoDescription] = useState("");
+  const [handle, setHandle] = useState("");
   const currentCursor = cursorStack[cursorStack.length - 1] ?? null;
   const currentPageNumber = cursorStack.length;
 
@@ -94,10 +98,19 @@ export function ShoplineProductsPanel({
   }, [currentCursor, saveErrorMessage, websiteId]);
 
   const selectedTitleLength = useMemo(() => seoTitle.length, [seoTitle]);
+  const selectedDescriptionLength = useMemo(
+    () => seoDescription.length,
+    [seoDescription],
+  );
+  const isDescriptionTooLong = selectedDescriptionLength > 160;
+  const isHandleChanged =
+    selectedProduct !== null && handle !== selectedProduct.handle;
 
   function openEditor(product: ShoplineProduct) {
     setSelectedProduct(product);
     setSeoTitle(product.seo?.title ?? "");
+    setSeoDescription(product.seo?.description ?? "");
+    setHandle(product.handle);
   }
 
   function goToNextPage() {
@@ -113,7 +126,7 @@ export function ShoplineProductsPanel({
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!selectedProduct) return;
+    if (!selectedProduct || isDescriptionTooLong) return;
 
     setSaving(true);
 
@@ -123,7 +136,10 @@ export function ShoplineProductsPanel({
         {
           method: "PATCH",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ seo: { title: seoTitle } }),
+          body: JSON.stringify({
+            seo: { title: seoTitle, description: seoDescription },
+            handle,
+          }),
         },
       );
 
@@ -247,6 +263,47 @@ export function ShoplineProductsPanel({
                 onChange={(event) => setSeoTitle(event.target.value)}
               />
             </div>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between gap-4">
+                <Label htmlFor="shopline-seo-description">
+                  {t("edit.seoDescriptionLabel")}
+                </Label>
+                <span
+                  className={`text-xs ${
+                    isDescriptionTooLong
+                      ? "text-destructive"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  {selectedDescriptionLength}/160
+                </span>
+              </div>
+              <Textarea
+                id="shopline-seo-description"
+                value={seoDescription}
+                rows={4}
+                aria-invalid={isDescriptionTooLong}
+                onChange={(event) => setSeoDescription(event.target.value)}
+              />
+              {isDescriptionTooLong ? (
+                <p className="text-sm text-destructive">
+                  {t("edit.charLimitExceeded")}
+                </p>
+              ) : null}
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="shopline-handle">{t("edit.handleLabel")}</Label>
+              <Input
+                id="shopline-handle"
+                value={handle}
+                onChange={(event) => setHandle(event.target.value)}
+              />
+            </div>
+            {isHandleChanged ? (
+              <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
+                {t("edit.handleChangeWarning")}
+              </div>
+            ) : null}
             <DialogFooter>
               <Button
                 type="button"
@@ -256,7 +313,7 @@ export function ShoplineProductsPanel({
                 <X className="h-4 w-4" />
                 {t("edit.cancel")}
               </Button>
-              <Button type="submit" disabled={saving}>
+              <Button type="submit" disabled={saving || isDescriptionTooLong}>
                 <Save className="h-4 w-4" />
                 {t("edit.save")}
               </Button>

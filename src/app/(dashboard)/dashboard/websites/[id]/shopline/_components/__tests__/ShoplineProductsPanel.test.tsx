@@ -19,6 +19,11 @@ vi.mock("next-intl", () => ({
       "products.column.notSet": "未設定",
       "edit.title": "Edit SEO",
       "edit.seoTitleLabel": "SEO title",
+      "edit.seoDescriptionLabel": "SEO description",
+      "edit.handleLabel": "Handle",
+      "edit.handleChangeWarning":
+        "⚠️ Changing URL slug may cause old links to 404. Slice 6 will add automatic 301 redirects.",
+      "edit.charLimitExceeded": "Description must be 160 characters or less",
       "edit.charCount": `${values?.count ?? 0}/70`,
       "edit.save": "Save",
       "edit.cancel": "Cancel",
@@ -184,6 +189,36 @@ describe("ShoplineProductsPanel", () => {
     expect(screen.getByText("18/70")).toBeInTheDocument();
   });
 
+  it("opens the edit modal with description and handle fields", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        products: [
+          {
+            id: "product-1",
+            title: "Product 1",
+            handle: "product-1",
+            seo: {
+              title: "Original SEO title",
+              description: "Original SEO description",
+            },
+          },
+        ],
+      }),
+    });
+
+    render(<ShoplineProductsPanel websiteId="website-1" />);
+
+    fireEvent.click(await screen.findByText("Product 1"));
+
+    expect(
+      screen.getByRole("textbox", { name: "SEO description" }),
+    ).toHaveValue("Original SEO description");
+    expect(screen.getByRole("textbox", { name: "Handle" })).toHaveValue(
+      "product-1",
+    );
+  });
+
   it("submits PATCH with the SEO title and updates the row after success", async () => {
     fetchMock
       .mockResolvedValueOnce({
@@ -226,10 +261,127 @@ describe("ShoplineProductsPanel", () => {
       {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ seo: { title: "Updated SEO title" } }),
+        body: JSON.stringify({
+          seo: { title: "Updated SEO title", description: "" },
+          handle: "product-1",
+        }),
       },
     );
     expect(await screen.findByText("Updated SEO title")).toBeInTheDocument();
     expect(toastMock.success).toHaveBeenCalledWith("Saved");
+  });
+
+  it("submits PATCH with the SEO description and handle", async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          products: [
+            {
+              id: "product-1",
+              title: "Product 1",
+              handle: "product-1",
+              seo: {
+                title: "Original SEO title",
+                description: "Original description",
+              },
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: "product-1",
+          title: "Product 1",
+          handle: "product-1",
+          seo: {
+            title: "Original SEO title",
+            description: "Updated description",
+          },
+        }),
+      });
+
+    render(<ShoplineProductsPanel websiteId="website-1" />);
+
+    fireEvent.click(await screen.findByText("Product 1"));
+    fireEvent.change(screen.getByRole("textbox", { name: "SEO description" }), {
+      target: { value: "Updated description" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/api/shopline/website-1/products/product-1/seo",
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          seo: {
+            title: "Original SEO title",
+            description: "Updated description",
+          },
+          handle: "product-1",
+        }),
+      },
+    );
+  });
+
+  it("shows a warning banner when the handle changes", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        products: [
+          {
+            id: "product-1",
+            title: "Product 1",
+            handle: "product-1",
+            seo: { title: "Original SEO title" },
+          },
+        ],
+      }),
+    });
+
+    render(<ShoplineProductsPanel websiteId="website-1" />);
+
+    fireEvent.click(await screen.findByText("Product 1"));
+    fireEvent.change(screen.getByRole("textbox", { name: "Handle" }), {
+      target: { value: "new-product-1" },
+    });
+
+    expect(
+      screen.getByText(
+        "⚠️ Changing URL slug may cause old links to 404. Slice 6 will add automatic 301 redirects.",
+      ),
+    ).toBeInTheDocument();
+  });
+
+  it("disables save when the SEO description exceeds 160 characters", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        products: [
+          {
+            id: "product-1",
+            title: "Product 1",
+            handle: "product-1",
+            seo: { title: "Original SEO title" },
+          },
+        ],
+      }),
+    });
+
+    render(<ShoplineProductsPanel websiteId="website-1" />);
+
+    fireEvent.click(await screen.findByText("Product 1"));
+    fireEvent.change(screen.getByRole("textbox", { name: "SEO description" }), {
+      target: { value: "x".repeat(161) },
+    });
+
+    expect(screen.getByText("Description must be 160 characters or less"));
+    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
   });
 });
