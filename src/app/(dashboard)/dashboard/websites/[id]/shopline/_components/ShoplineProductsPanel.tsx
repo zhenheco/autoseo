@@ -1126,7 +1126,7 @@ function buildShoplineListUrl(
 }
 
 function getSeoFilterLabel(
-  t: (key: string, values?: Record<string, unknown>) => string,
+  t: (key: string) => string,
   filter: ShoplineSeoFilter,
 ): string {
   const keys: Record<ShoplineSeoFilter, string> = {
