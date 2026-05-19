@@ -145,6 +145,30 @@ export class ShoplineClient {
     return ShoplineShopSchema.parse(data.shop);
   }
 
+  async updateShop(
+    payload: Partial<Pick<ShoplineShop, "name" | "country" | "currency">> &
+      Record<string, unknown>,
+  ): Promise<ShoplineShop> {
+    const shopPatch = Object.fromEntries(
+      Object.entries(payload).filter(([, value]) => value !== undefined),
+    );
+
+    if (Object.keys(shopPatch).length === 0) {
+      throw new Error("shopline_update_shop_no_fields");
+    }
+
+    const resp = await this.fetch("/shop.json", {
+      method: "PUT",
+      body: JSON.stringify({ shop: shopPatch }),
+    });
+    if (!resp.ok) {
+      throw new Error(`shopline_update_shop_failed: ${resp.status}`);
+    }
+
+    const data = (await resp.json()) as { shop: unknown };
+    return ShoplineShopSchema.parse(data.shop);
+  }
+
   async listProducts(params?: {
     page?: number;
     pageInfo?: string;

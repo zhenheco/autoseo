@@ -217,6 +217,70 @@ describe("ShoplineClient", () => {
     expect(fetchMock).toHaveBeenCalledTimes(4);
   });
 
+  it("gets the shop via /shop.json and parses the response", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers(),
+      json: async () => ({
+        shop: {
+          id: 123,
+          name: "Demo Shop",
+          domain: "example.com",
+          myshopline_domain: "demo-shop.myshopline.com",
+          country: "TW",
+          currency: "TWD",
+          timezone: "Asia/Taipei",
+        },
+      }),
+    });
+
+    const shop = await client().getShop();
+
+    expect(fetchMock.mock.calls[0][0]).toMatch(
+      /\/admin\/openapi\/v20260301\/shop\.json$/,
+    );
+    expect(shop).toMatchObject({
+      id: 123,
+      name: "Demo Shop",
+      domain: "example.com",
+      myshopline_domain: "demo-shop.myshopline.com",
+    });
+  });
+
+  it("updates writable shop fields via PUT /shop.json", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers(),
+      json: async () => ({
+        shop: {
+          id: 123,
+          name: "Updated Shop",
+          domain: "example.com",
+          myshopline_domain: "demo-shop.myshopline.com",
+        },
+      }),
+    });
+
+    const updated = await client().updateShop({ name: "Updated Shop" });
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toMatch(/\/admin\/openapi\/v20260301\/shop\.json$/);
+    expect(init.method).toBe("PUT");
+    expect(JSON.parse(init.body as string)).toEqual({
+      shop: { name: "Updated Shop" },
+    });
+    expect(updated.name).toBe("Updated Shop");
+  });
+
+  it("rejects updateShop when no writable fields are supplied", async () => {
+    await expect(client().updateShop({})).rejects.toThrow(
+      /shopline_update_shop_no_fields/,
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("updates product SEO via PUT with seo title/description and handle", async () => {
     fetchMock.mockResolvedValueOnce({
       ok: true,
