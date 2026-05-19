@@ -1,6 +1,8 @@
 import { z } from "zod";
 
-const ShoplineIdSchema = z.union([z.string(), z.number()]).transform(String);
+export const ShoplineIdSchema = z
+  .union([z.string(), z.number()])
+  .transform(String);
 const NullableStringDefault = z
   .string()
   .nullable()
@@ -53,6 +55,15 @@ export const ShoplineShopSchema = z
   })
   .passthrough();
 
+export const ShoplineCollectSchema = z
+  .object({
+    id: ShoplineIdSchema,
+    collection_id: ShoplineIdSchema,
+    product_id: ShoplineIdSchema,
+  })
+  .passthrough();
+
+export type ShoplineCollect = z.infer<typeof ShoplineCollectSchema>;
 export type ShoplineImage = z.infer<typeof ShoplineImageSchema>;
 export type ShoplineSeo = z.infer<typeof ShoplineSeoSchema>;
 export type ShoplineProduct = z.infer<typeof ShoplineProductSchema>;

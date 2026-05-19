@@ -1,11 +1,17 @@
 import {
   ShoplineAuthError,
+  ShoplineCollectSchema,
   ShoplineImageSchema,
   ShoplineProductSchema,
   ShoplineRateLimitError,
   ShoplineShopSchema,
 } from "./types";
-import type { ShoplineImage, ShoplineProduct, ShoplineShop } from "./types";
+import type {
+  ShoplineCollect,
+  ShoplineImage,
+  ShoplineProduct,
+  ShoplineShop,
+} from "./types";
 
 export const SHOPLINE_ADMIN_API_VERSION = "v20260301";
 
@@ -18,6 +24,19 @@ export interface ShoplineClientOptions {
   shopHandle: string;
   accessToken: string;
   retryDelaysMs?: number[];
+}
+
+function assertShoplineId(
+  value: string,
+  errorCode:
+    | "invalid_shopline_product_id"
+    | "invalid_shopline_collection_id"
+    | "invalid_shopline_collect_id"
+    | "invalid_shopline_image_id",
+): void {
+  if (!/^[a-zA-Z0-9_-]+$/.test(value)) {
+    throw new Error(errorCode);
+  }
 }
 
 export class ShoplineClient {
@@ -161,9 +180,7 @@ export class ShoplineClient {
   }
 
   async getProduct(productId: string): Promise<ShoplineProduct> {
-    if (!/^[a-zA-Z0-9_-]+$/.test(productId)) {
-      throw new Error("invalid_shopline_product_id");
-    }
+    assertShoplineId(productId, "invalid_shopline_product_id");
 
     const resp = await this.fetch(`/products/products/${productId}.json`);
     if (!resp.ok) {
@@ -182,9 +199,7 @@ export class ShoplineClient {
       title?: string;
     },
   ): Promise<ShoplineProduct> {
-    if (!/^[a-zA-Z0-9_-]+$/.test(productId)) {
-      throw new Error("invalid_shopline_product_id");
-    }
+    assertShoplineId(productId, "invalid_shopline_product_id");
 
     const productPatch: Record<string, unknown> = {};
     if (payload.seo) {
@@ -219,12 +234,8 @@ export class ShoplineClient {
     imageId: string,
     payload: { alt?: string },
   ): Promise<ShoplineImage> {
-    if (!/^[a-zA-Z0-9_-]+$/.test(productId)) {
-      throw new Error("invalid_shopline_product_id");
-    }
-    if (!/^[a-zA-Z0-9_-]+$/.test(imageId)) {
-      throw new Error("invalid_shopline_image_id");
-    }
+    assertShoplineId(productId, "invalid_shopline_product_id");
+    assertShoplineId(imageId, "invalid_shopline_image_id");
     if (typeof payload.alt !== "string") {
       throw new Error("shopline_update_image_no_fields");
     }
@@ -242,6 +253,64 @@ export class ShoplineClient {
 
     const data = (await resp.json()) as { image: unknown };
     return ShoplineImageSchema.parse(data.image);
+  }
+
+  async listProductCollects(
+    productId: string,
+  ): Promise<{ collects: ShoplineCollect[] }> {
+    assertShoplineId(productId, "invalid_shopline_product_id");
+
+    const qs = new URLSearchParams({ product_id: productId });
+    const resp = await this.fetch(`/products/collects.json?${qs.toString()}`);
+    if (!resp.ok) {
+      throw new Error(`shopline_list_product_collects_failed: ${resp.status}`);
+    }
+
+    const data = (await resp.json()) as { collects?: unknown[] };
+    return {
+      collects: (data.collects ?? []).map((collect) =>
+        ShoplineCollectSchema.parse(collect),
+      ),
+    };
+  }
+
+  async assignProductToCollection(
+    productId: string,
+    collectionId: string,
+  ): Promise<ShoplineCollect> {
+    assertShoplineId(productId, "invalid_shopline_product_id");
+    assertShoplineId(collectionId, "invalid_shopline_collection_id");
+
+    const resp = await this.fetch("/products/collects.json", {
+      method: "POST",
+      body: JSON.stringify({
+        collect: {
+          collection_id: collectionId,
+          product_id: productId,
+        },
+      }),
+    });
+    if (!resp.ok) {
+      throw new Error(
+        `shopline_assign_product_collection_failed: ${resp.status}`,
+      );
+    }
+
+    const data = (await resp.json()) as { collect: unknown };
+    return ShoplineCollectSchema.parse(data.collect);
+  }
+
+  async removeProductFromCollection(collectId: string): Promise<void> {
+    assertShoplineId(collectId, "invalid_shopline_collect_id");
+
+    const resp = await this.fetch(`/products/collects/${collectId}.json`, {
+      method: "DELETE",
+    });
+    if (!resp.ok) {
+      throw new Error(
+        `shopline_remove_product_collection_failed: ${resp.status}`,
+      );
+    }
   }
 
   async getSitemapUrls(): Promise<string[]> {

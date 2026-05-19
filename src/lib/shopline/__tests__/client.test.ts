@@ -254,6 +254,117 @@ describe("ShoplineClient", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it("lists product collects and parses ids as strings", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers(),
+      json: async () => ({
+        collects: [
+          {
+            id: 1001,
+            collection_id: "collection_1",
+            product_id: 42,
+            extra: "kept by passthrough",
+          },
+        ],
+      }),
+    });
+
+    const result = await client().listProductCollects("42");
+
+    const [url] = fetchMock.mock.calls[0];
+    expect(url).toMatch(
+      /\/admin\/openapi\/v20260301\/products\/collects\.json\?product_id=42$/,
+    );
+    expect(result.collects).toEqual([
+      expect.objectContaining({
+        id: "1001",
+        collection_id: "collection_1",
+        product_id: "42",
+      }),
+    ]);
+  });
+
+  it("assigns a product to a collection via POST", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 201,
+      headers: new Headers(),
+      json: async () => ({
+        collect: {
+          id: "collect_1",
+          collection_id: "collection_1",
+          product_id: "product_1",
+        },
+      }),
+    });
+
+    const result = await client().assignProductToCollection(
+      "product_1",
+      "collection_1",
+    );
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toMatch(
+      /\/admin\/openapi\/v20260301\/products\/collects\.json$/,
+    );
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(init.body as string)).toEqual({
+      collect: { collection_id: "collection_1", product_id: "product_1" },
+    });
+    expect(result).toEqual({
+      id: "collect_1",
+      collection_id: "collection_1",
+      product_id: "product_1",
+    });
+  });
+
+  it("removes a product collect via DELETE and accepts 204 or 200", async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 204,
+        headers: new Headers(),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: new Headers(),
+      });
+
+    await expect(
+      client().removeProductFromCollection("collect_1"),
+    ).resolves.toBeUndefined();
+    await expect(
+      client().removeProductFromCollection("collect_2"),
+    ).resolves.toBeUndefined();
+
+    expect(fetchMock.mock.calls[0][0]).toMatch(
+      /\/admin\/openapi\/v20260301\/products\/collects\/collect_1\.json$/,
+    );
+    expect(fetchMock.mock.calls[0][1].method).toBe("DELETE");
+    expect(fetchMock.mock.calls[1][0]).toMatch(
+      /\/admin\/openapi\/v20260301\/products\/collects\/collect_2\.json$/,
+    );
+  });
+
+  it("rejects collect operations with invalid ids", async () => {
+    await expect(client().listProductCollects("invalid/id")).rejects.toThrow(
+      /invalid_shopline_product_id/,
+    );
+    await expect(
+      client().assignProductToCollection("product_1", "invalid/id"),
+    ).rejects.toThrow(/invalid_shopline_collection_id/);
+    await expect(
+      client().assignProductToCollection("invalid/id", "collection_1"),
+    ).rejects.toThrow(/invalid_shopline_product_id/);
+    await expect(
+      client().removeProductFromCollection("invalid/id"),
+    ).rejects.toThrow(/invalid_shopline_collect_id/);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("reads sitemap URLs for CLI discovery checks", async () => {
     fetchMock.mockResolvedValueOnce({
       ok: true,
