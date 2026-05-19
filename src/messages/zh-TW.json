@@ -2785,6 +2785,20 @@
           "handle": "Handle",
           "seoTitle": "SEO 標題",
           "productsCount": "商品數"
+        },
+        "view": {
+          "tree": "樹狀檢視",
+          "list": "列表檢視"
+        },
+        "hierarchy": {
+          "move": "移動",
+          "parent": "上層分類",
+          "displayOrder": "顯示順序",
+          "noParent": "無上層"
+        },
+        "products": {
+          "reorder": "產品排序",
+          "position": "位置"
         }
       },
       "edit": {

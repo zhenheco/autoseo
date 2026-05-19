@@ -2966,6 +2966,20 @@
           "handle": "Handle",
           "seoTitle": "SEO 제목",
           "productsCount": "상품 수"
+        },
+        "view": {
+          "tree": "트리 보기",
+          "list": "목록 보기"
+        },
+        "hierarchy": {
+          "move": "이동",
+          "parent": "상위 컬렉션",
+          "displayOrder": "표시 순서",
+          "noParent": "상위 없음"
+        },
+        "products": {
+          "reorder": "상품 순서 변경",
+          "position": "위치"
         }
       },
       "edit": {

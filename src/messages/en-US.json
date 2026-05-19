@@ -2785,6 +2785,20 @@
           "handle": "Handle",
           "seoTitle": "SEO title",
           "productsCount": "Products"
+        },
+        "view": {
+          "tree": "Tree view",
+          "list": "List view"
+        },
+        "hierarchy": {
+          "move": "Move",
+          "parent": "Parent",
+          "displayOrder": "Display order",
+          "noParent": "No parent"
+        },
+        "products": {
+          "reorder": "Reorder products",
+          "position": "Position"
         }
       },
       "edit": {

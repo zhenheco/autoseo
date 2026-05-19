@@ -2785,6 +2785,20 @@
           "handle": "Handle",
           "seoTitle": "SEO タイトル",
           "productsCount": "商品数"
+        },
+        "view": {
+          "tree": "ツリー表示",
+          "list": "リスト表示"
+        },
+        "hierarchy": {
+          "move": "移動",
+          "parent": "親コレクション",
+          "displayOrder": "表示順",
+          "noParent": "親なし"
+        },
+        "products": {
+          "reorder": "商品を並べ替え",
+          "position": "位置"
         }
       },
       "edit": {

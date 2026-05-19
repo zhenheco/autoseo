@@ -17,7 +17,16 @@ vi.mock("next-intl", () => ({
       "collections.column.handle": "Handle",
       "collections.column.seoTitle": "SEO title",
       "collections.column.productsCount": "Products",
+      "collections.view.tree": "Tree view",
+      "collections.view.list": "List view",
+      "collections.hierarchy.move": "Move",
+      "collections.hierarchy.parent": "Parent",
+      "collections.hierarchy.displayOrder": "Display order",
+      "collections.hierarchy.noParent": "No parent",
+      "collections.products.reorder": "Reorder products",
+      "collections.products.position": "Position",
       "products.column.notSet": "Not set",
+      "products.column.title": "Product title",
       "edit.collection.title": "Edit collection SEO",
       "edit.collection.titleLabel": "Collection title",
       "edit.collection.seoTitleLabel": "SEO title",
@@ -189,5 +198,171 @@ describe("ShoplineCollectionsPanel", () => {
         "Redirects are automatically created when a handle changes.",
       ),
     ).toBeInTheDocument();
+  });
+
+  it("toggles to tree view and loads hierarchy", async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          collections: [
+            { id: "parent", title: "Parent", handle: "parent" },
+            { id: "child", title: "Child", handle: "child" },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          hierarchy: [
+            {
+              collection_id: "child",
+              parent_collection_id: "parent",
+              display_order: 2,
+            },
+          ],
+        }),
+      });
+
+    render(<ShoplineCollectionsPanel websiteId="website-1" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Tree view" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/shopline/website-1/collections/hierarchy",
+      );
+    });
+    expect(
+      screen.getByRole("button", { name: "List view" }),
+    ).toBeInTheDocument();
+    expect(await screen.findByText("Parent")).toBeInTheDocument();
+    expect(screen.getByText("Child")).toBeInTheDocument();
+  });
+
+  it("opens the move modal from tree view and submits hierarchy PATCH", async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          collections: [
+            { id: "parent", title: "Parent", handle: "parent" },
+            { id: "child", title: "Child", handle: "child" },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          hierarchy: [
+            {
+              collection_id: "child",
+              parent_collection_id: "parent",
+              display_order: 2,
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ok: true }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          hierarchy: [
+            {
+              collection_id: "child",
+              parent_collection_id: null,
+              display_order: 4,
+            },
+          ],
+        }),
+      });
+
+    render(<ShoplineCollectionsPanel websiteId="website-1" />);
+
+    fireEvent.click(await screen.findByRole("button", { name: "Tree view" }));
+    fireEvent.click(
+      await screen
+        .findAllByRole("button", { name: "Move" })
+        .then((buttons) => buttons[1]),
+    );
+    fireEvent.change(screen.getByLabelText("Parent"), {
+      target: { value: "" },
+    });
+    fireEvent.change(screen.getByLabelText("Display order"), {
+      target: { value: "4" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/shopline/website-1/collections/child/hierarchy",
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            parentCollectionId: null,
+            displayOrder: 4,
+          }),
+        },
+      );
+    });
+  });
+
+  it("opens product reorder mode and submits product order PATCH", async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          collections: [
+            {
+              id: "collection-1",
+              title: "Summer Collection",
+              handle: "summer",
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          products: [
+            { id: "product-1", title: "Hat", handle: "hat" },
+            { id: "product-2", title: "Shirt", handle: "shirt" },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({ ok: true }),
+      });
+
+    render(<ShoplineCollectionsPanel websiteId="website-1" />);
+
+    fireEvent.click(await screen.findByText("Summer Collection"));
+    fireEvent.click(screen.getByRole("button", { name: "Reorder products" }));
+    expect(await screen.findByText("Hat")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("Position Hat"), {
+      target: { value: "3" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/shopline/website-1/collections/collection-1/products/order",
+        {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            order: [
+              { productId: "product-1", position: 3 },
+              { productId: "product-2", position: 2 },
+            ],
+          }),
+        },
+      );
+    });
   });
 });
