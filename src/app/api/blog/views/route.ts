@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { requestErrorResponse } from "@/lib/api/request-error-response";
+import { safeJson } from "@/lib/api/request-body";
+import { withRouteAuth } from "@/lib/api/route-auth";
 
 // 使用 service role key 繞過 RLS
 const supabase = createClient(
@@ -14,9 +17,14 @@ const supabase = createClient(
  * Body:
  * - articleId: 文章 ID
  */
-export async function POST(request: NextRequest) {
+export const POST = withRouteAuth("public", async (request: NextRequest) => {
   try {
-    const body = await request.json();
+    const bodyResult = await safeJson<{ articleId?: string }>(request);
+    if (!bodyResult.success) {
+      return requestErrorResponse(bodyResult.error);
+    }
+
+    const body = bodyResult.data;
     const { articleId } = body;
 
     if (!articleId) {
@@ -101,4 +109,4 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});

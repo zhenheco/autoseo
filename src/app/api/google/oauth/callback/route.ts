@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { withRouteAuth } from "@/lib/api/route-auth";
 import {
   encryptToken,
   fetchGoogleUserInfo,
@@ -15,7 +16,7 @@ const logger = createLogger("oauth-callback");
  * GET /api/google/oauth/callback
  * 處理 Google OAuth 回調
  */
-export async function GET(request: NextRequest) {
+export const GET = withRouteAuth("public", async (request: NextRequest) => {
   const searchParams = request.nextUrl.searchParams;
   const code = searchParams.get("code");
   const state = searchParams.get("state");
@@ -160,4 +161,4 @@ export async function GET(request: NextRequest) {
     });
     return redirectToWebsites({ error: "server_error" });
   }
-}
+});

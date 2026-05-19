@@ -12,6 +12,8 @@
 
 import { revalidatePath } from "next/cache";
 import { NextRequest, NextResponse } from "next/server";
+import { requestErrorResponse } from "@/lib/api/request-error-response";
+import { safeJson } from "@/lib/api/request-body";
 
 export async function GET(request: NextRequest) {
   const secret = request.nextUrl.searchParams.get("secret");
@@ -59,7 +61,14 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body = await request.json();
+    const bodyResult = await safeJson<{ secret?: string; paths?: string[] }>(
+      request,
+    );
+    if (!bodyResult.success) {
+      return requestErrorResponse(bodyResult.error);
+    }
+
+    const body = bodyResult.data;
     const { secret, paths } = body as { secret?: string; paths?: string[] };
 
     // 驗證 secret
@@ -93,6 +102,6 @@ export async function POST(request: NextRequest) {
       timestamp: new Date().toISOString(),
     });
   } catch {
-    return NextResponse.json({ error: "Invalid JSON body" }, { status: 400 });
+    return NextResponse.json({ error: "Revalidation failed" }, { status: 500 });
   }
 }

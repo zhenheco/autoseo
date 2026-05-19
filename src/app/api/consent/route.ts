@@ -1,13 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requestErrorResponse } from "@/lib/api/request-error-response";
+import { safeJson } from "@/lib/api/request-body";
+import { withRouteAuth } from "@/lib/api/route-auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 
 /**
  * POST /api/consent
  * 記錄用戶的 Cookie 同意狀態（GDPR 合規）
  */
-export async function POST(request: NextRequest) {
+export const POST = withRouteAuth("public", async (request: NextRequest) => {
   try {
-    const body = await request.json();
+    const bodyResult = await safeJson<{
+      visitor_id?: string;
+      analytics_consent?: boolean;
+      marketing_consent?: boolean;
+      consent_version?: string;
+    }>(request);
+    if (!bodyResult.success) {
+      return requestErrorResponse(bodyResult.error);
+    }
+
+    const body = bodyResult.data;
 
     const {
       visitor_id,
@@ -58,4 +71,4 @@ export async function POST(request: NextRequest) {
     // 即使發生錯誤，也不影響用戶體驗
     return NextResponse.json({ success: true, stored: false });
   }
-}
+});

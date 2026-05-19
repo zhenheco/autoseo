@@ -35,19 +35,23 @@ export interface FullAuthContext extends CompanyAuthContext {
 }
 
 // Handler 類型定義
-type AuthHandler<T extends AuthContext> = (
+type AuthHandler<T extends AuthContext, TArgs extends unknown[] = []> = (
   request: NextRequest,
   context: T,
-) => Promise<NextResponse>;
+  ...args: TArgs
+) => Promise<NextResponse> | NextResponse;
 
 /**
  * 基礎認證包裝器
  * 檢查用戶是否已登入
  */
-export function withAuth<T extends AuthContext = AuthContext>(
-  handler: AuthHandler<T>,
-): (request: NextRequest) => Promise<NextResponse> {
-  return async (request: NextRequest) => {
+export function withAuth<
+  T extends AuthContext = AuthContext,
+  TArgs extends unknown[] = [],
+>(
+  handler: AuthHandler<T, TArgs>,
+): (request: NextRequest, ...args: TArgs) => Promise<NextResponse> {
+  return async (request: NextRequest, ...args: TArgs) => {
     try {
       const supabase = await createClient();
       const {
@@ -64,7 +68,7 @@ export function withAuth<T extends AuthContext = AuthContext>(
         supabase,
       } as T;
 
-      return handler(request, context);
+      return handler(request, context, ...args);
     } catch (error) {
       return handleApiError(error);
     }
@@ -75,55 +79,67 @@ export function withAuth<T extends AuthContext = AuthContext>(
  * 公司認證包裝器
  * 檢查用戶是否有活躍的公司成員資格
  */
-export function withCompany(
-  handler: AuthHandler<CompanyAuthContext>,
-): (request: NextRequest) => Promise<NextResponse> {
-  return withAuth(async (request, { user, supabase }) => {
-    try {
-      const { data: membership, error } = await supabase
-        .from("company_members")
-        .select("company_id")
-        .eq("user_id", user.id)
-        .eq("status", "active")
-        .limit(1)
-        .maybeSingle();
+export function withCompany<TArgs extends unknown[] = []>(
+  handler: AuthHandler<CompanyAuthContext, TArgs>,
+): (request: NextRequest, ...args: TArgs) => Promise<NextResponse> {
+  return withAuth<AuthContext, TArgs>(
+    async (request, { user, supabase }, ...args) => {
+      try {
+        const { data: membership, error } = await supabase
+          .from("company_members")
+          .select("company_id")
+          .eq("user_id", user.id)
+          .eq("status", "active")
+          .limit(1)
+          .maybeSingle();
 
-      if (error || !membership) {
-        return noCompanyMembership();
+        if (error || !membership) {
+          return noCompanyMembership();
+        }
+
+        return handler(
+          request,
+          {
+            user,
+            supabase,
+            companyId: membership.company_id,
+          },
+          ...args,
+        );
+      } catch (error) {
+        return handleApiError(error);
       }
-
-      return handler(request, {
-        user,
-        supabase,
-        companyId: membership.company_id,
-      });
-    } catch (error) {
-      return handleApiError(error);
-    }
-  });
+    },
+  );
 }
 
 /**
  * 完整認證包裝器
  * 包含用戶認證、公司檢查和管理員客戶端
  */
-export function withFullAuth(
-  handler: AuthHandler<FullAuthContext>,
-): (request: NextRequest) => Promise<NextResponse> {
-  return withCompany(async (request, { user, supabase, companyId }) => {
-    try {
-      const adminClient = createAdminClient();
+export function withFullAuth<TArgs extends unknown[] = []>(
+  handler: AuthHandler<FullAuthContext, TArgs>,
+): (request: NextRequest, ...args: TArgs) => Promise<NextResponse> {
+  return withCompany<TArgs>(
+    async (request, { user, supabase, companyId }, ...args) => {
+      try {
+        const adminClient = createAdminClient();
 
-      return handler(request, {
-        user,
-        supabase,
-        companyId,
-        adminClient,
-      });
-    } catch (error) {
-      return handleApiError(error);
-    }
-  });
+        return handler(
+          request,
+          {
+            user,
+            supabase,
+            companyId,
+            adminClient,
+          },
+          ...args,
+        );
+      } catch (error) {
+        return handleApiError(error);
+      }
+    },
+  );
 }
 
 /**
@@ -187,28 +203,34 @@ export async function getBillingId(userId: string): Promise<string> {
  * 管理員認證包裝器
  * 檢查用戶是否為管理員（透過 email 白名單）
  */
-export function withAdmin(
-  handler: AuthHandler<AdminAuthContext>,
-): (request: NextRequest) => Promise<NextResponse> {
-  return withAuth(async (request, { user, supabase }) => {
-    try {
-      // 動態 import 避免循環依賴
-      const { isAdminEmail } = await import("@/lib/utils/admin-check");
+export function withAdmin<TArgs extends unknown[] = []>(
+  handler: AuthHandler<AdminAuthContext, TArgs>,
+): (request: NextRequest, ...args: TArgs) => Promise<NextResponse> {
+  return withAuth<AuthContext, TArgs>(
+    async (request, { user, supabase }, ...args) => {
+      try {
+        // 動態 import 避免循環依賴
+        const { isAdminEmail } = await import("@/lib/utils/admin-check");
 
-      if (!isAdminEmail(user.email)) {
-        const { forbidden } = await import("./response-helpers");
-        return forbidden("無管理員權限");
+        if (!isAdminEmail(user.email)) {
+          const { forbidden } = await import("./response-helpers");
+          return forbidden("無管理員權限");
+        }
+
+        const adminClient = createAdminClient();
+
+        return handler(
+          request,
+          {
+            user,
+            supabase,
+            adminClient,
+          },
+          ...args,
+        );
+      } catch (error) {
+        return handleApiError(error);
       }
-
-      const adminClient = createAdminClient();
-
-      return handler(request, {
-        user,
-        supabase,
-        adminClient,
-      });
-    } catch (error) {
-      return handleApiError(error);
-    }
-  });
+    },
+  );
 }

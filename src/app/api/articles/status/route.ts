@@ -1,5 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { resolveRequestUser } from "@/lib/api/request-user";
+import { createAdminClient } from "@/lib/supabase/server";
+import { asSupabaseRepositoryClient } from "@/lib/article-jobs/supabase-repositories";
+import {
+  createSupabaseArticleJobStatusAccessRepository,
+  findVisibleArticleJobStatus,
+} from "@/lib/article-jobs/status-access";
+
+function recordValue(value: unknown): Record<string, unknown> | null {
+  if (!value || typeof value !== "object" || Array.isArray(value)) {
+    return null;
+  }
+
+  return value as Record<string, unknown>;
+}
+
+function metadataValue(
+  metadata: Record<string, unknown> | null | undefined,
+  key: string,
+) {
+  return metadata?.[key];
+}
 
 export async function GET(request: NextRequest) {
   try {
@@ -13,46 +34,33 @@ export async function GET(request: NextRequest) {
       );
     }
 
-    const cookieClient = await createClient();
-    const {
-      data: { user },
-    } = await cookieClient.auth.getUser();
-
-    if (!user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    const userResult = await resolveRequestUser(request);
+    if (!userResult.success) {
+      return userResult.response;
     }
+    const { user } = userResult;
 
-    // 使用 service role client 避免 RLS 問題
-    const { createClient: createSupabaseClient } = await import(
-      "@supabase/supabase-js"
+    const repository = createSupabaseArticleJobStatusAccessRepository(
+      asSupabaseRepositoryClient(createAdminClient()),
     );
-    const supabase = createSupabaseClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    );
+    const statusResult = await findVisibleArticleJobStatus({
+      repository,
+      userId: user.id,
+      jobId,
+    });
 
-    const { data: job, error } = await supabase
-      .from("article_jobs")
-      .select("*")
-      .eq("id", jobId)
-      .single();
-
-    if (error || !job) {
+    if (!statusResult.success && statusResult.reason === "not_found") {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
 
-    if (job.user_id !== user.id) {
-      const { data: membership } = await supabase
-        .from("company_members")
-        .select("company_id")
-        .eq("user_id", user.id)
-        .eq("status", "active")
-        .single();
-
-      if (!membership || membership.company_id !== job.company_id) {
-        return NextResponse.json({ error: "Access denied" }, { status: 403 });
-      }
+    if (!statusResult.success) {
+      return NextResponse.json({ error: "Access denied" }, { status: 403 });
     }
+    const { job } = statusResult;
+    const metadata = recordValue(job.metadata);
+    const result = recordValue(metadataValue(metadata, "result"));
+    const meta = recordValue(metadataValue(result, "meta"));
+    const metaDescription = metadataValue(meta, "description");
 
     // 如果任務已完成，返回生成的內容
     if (job.status === "completed") {
@@ -62,10 +70,11 @@ export async function GET(request: NextRequest) {
         article: {
           title: job.article_title,
           content: job.generated_content,
-          meta_description: job.metadata?.result?.meta?.description,
+          meta_description:
+            typeof metaDescription === "string" ? metaDescription : undefined,
         },
-        fullResult: job.metadata?.result, // 完整結果
-        metadata: job.metadata,
+        fullResult: result, // 完整結果
+        metadata,
         completedAt: job.completed_at,
       });
     }
@@ -83,11 +92,11 @@ export async function GET(request: NextRequest) {
         progress = 50;
         message = "正在生成文章...";
         // 如果有更詳細的進度資訊
-        if (job.metadata?.progress) {
-          progress = job.metadata.progress;
+        if (typeof metadata?.progress === "number") {
+          progress = metadata.progress;
         }
-        if (job.metadata?.currentStep) {
-          message = job.metadata.currentStep;
+        if (typeof metadata?.currentStep === "string") {
+          message = metadata.currentStep;
         }
         break;
       case "completed":
@@ -104,7 +113,7 @@ export async function GET(request: NextRequest) {
       status: job.status,
       progress,
       message,
-      metadata: job.metadata,
+      metadata,
       startedAt: job.started_at,
       completedAt: job.completed_at,
       error: job.error_message,

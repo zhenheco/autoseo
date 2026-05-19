@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { cookies, headers } from "next/headers";
+import { safeJson } from "@/lib/api/request-body";
 import { trackClick } from "@/lib/affiliate-client";
 
 /**
@@ -25,7 +26,14 @@ export async function POST(request: NextRequest) {
     }
 
     // 取得請求資料
-    const body = await request.json().catch(() => ({}));
+    const bodyResult = await safeJson<{
+      sessionId?: string;
+      landingUrl?: string;
+      utmSource?: string;
+      utmMedium?: string;
+      utmCampaign?: string;
+    }>(request);
+    const body = bodyResult.success ? bodyResult.data : {};
     const headersList = await headers();
 
     // 呼叫 Affiliate System 追蹤點擊

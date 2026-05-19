@@ -1,29 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/server";
 import { ParallelOrchestrator } from "@/lib/agents/orchestrator";
+import { withRouteAuth } from "@/lib/api/route-auth";
+import { decideArticlePipelineAction } from "@/lib/article-jobs/pipeline-state";
 
 export const maxDuration = 300;
 export const dynamic = "force-dynamic";
 
-export async function GET(request: NextRequest) {
+export const GET = withRouteAuth("cron", async (_request: NextRequest) => {
   try {
-    // 驗證 Cron Job 認證
-    const authHeader = request.headers.get("authorization");
-    const cronSecret = process.env.CRON_SECRET;
-
-    if (!cronSecret) {
-      console.error("[Cron] CRON_SECRET not configured");
-      return NextResponse.json(
-        { error: "Server configuration error" },
-        { status: 500 },
-      );
-    }
-
-    if (authHeader !== `Bearer ${cronSecret}`) {
-      console.warn("[Cron] Unauthorized access attempt");
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
     const supabase = createAdminClient();
 
     const { data: jobs, error: queryError } = await supabase
@@ -90,6 +75,13 @@ export async function GET(request: NextRequest) {
         const orchestrator = new ParallelOrchestrator();
 
         const metadata = job.metadata as Record<string, unknown>;
+        const pipelineAction = decideArticlePipelineAction({ job });
+        if (pipelineAction.action === "fail_terminal") {
+          throw new Error(
+            `Unknown article pipeline phase: ${pipelineAction.phase}`,
+          );
+        }
+
         const title =
           (metadata?.title as string) || job.keywords?.[0] || "Untitled";
 
@@ -151,4 +143,4 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});

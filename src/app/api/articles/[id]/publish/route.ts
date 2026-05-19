@@ -5,7 +5,10 @@
 
 import { NextRequest } from "next/server";
 import { revalidatePath } from "next/cache";
-import { withCompany, extractPathParams } from "@/lib/api/auth-middleware";
+import { extractPathParams } from "@/lib/api/auth-middleware";
+import { withRouteAuth } from "@/lib/api/route-auth";
+import { safeJson } from "@/lib/api/request-body";
+import { requestErrorResponse } from "@/lib/api/request-error-response";
 import {
   successResponse,
   notFound,
@@ -43,7 +46,8 @@ async function revalidateSitemapAndPing(): Promise<void> {
   }
 }
 
-export const POST = withCompany(
+export const POST = withRouteAuth(
+  "company",
   async (request: NextRequest, { supabase, companyId }) => {
     const { id } = extractPathParams(request);
 
@@ -51,18 +55,23 @@ export const POST = withCompany(
       return notFound("文章");
     }
 
-    const body = await request.json();
+    const jsonResult = await safeJson<{
+      target: string;
+      website_id: string;
+      status?: "publish" | "draft";
+      syncTargetIds?: string[]; // 可選：指定同步目標 ID 列表
+    }>(request);
+
+    if (!jsonResult.success) {
+      return requestErrorResponse(jsonResult.error);
+    }
+
     const {
       target,
       website_id,
       status: publishStatus = "publish",
       syncTargetIds,
-    } = body as {
-      target: string;
-      website_id: string;
-      status?: "publish" | "draft";
-      syncTargetIds?: string[]; // 可選：指定同步目標 ID 列表
-    };
+    } = jsonResult.data;
 
     if (target !== "wordpress" && target !== "platform") {
       return validationError("目前支援 WordPress 和 Platform Blog");

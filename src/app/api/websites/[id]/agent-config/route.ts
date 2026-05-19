@@ -3,7 +3,10 @@
  */
 
 import { NextRequest } from "next/server";
-import { withCompany, extractPathParams } from "@/lib/api/auth-middleware";
+import { extractPathParams } from "@/lib/api/auth-middleware";
+import { withRouteAuth } from "@/lib/api/route-auth";
+import { requestErrorResponse } from "@/lib/api/request-error-response";
+import { safeJson } from "@/lib/api/request-body";
 import {
   successResponse,
   notFound,
@@ -16,7 +19,8 @@ import type { UpdateAgentConfigRequest } from "@/types/ai-models";
  * GET /api/websites/[id]/agent-config
  * 取得網站的 AI Agent 配置
  */
-export const GET = withCompany(
+export const GET = withRouteAuth(
+  "company",
   async (request: NextRequest, { supabase, companyId }) => {
     const { id: websiteId } = extractPathParams(request);
 
@@ -60,13 +64,21 @@ export const GET = withCompany(
  * PUT /api/websites/[id]/agent-config
  * 更新網站的 AI Agent 配置
  */
-export const PUT = withCompany(
+export const PUT = withRouteAuth(
+  "company",
   async (request: NextRequest, { supabase, companyId }) => {
     const { id: websiteId } = extractPathParams(request);
 
     if (!websiteId) {
       return notFound("網站");
     }
+
+    const bodyResult = await safeJson<UpdateAgentConfigRequest>(request);
+    if (!bodyResult.success) {
+      return requestErrorResponse(bodyResult.error);
+    }
+
+    const body = bodyResult.data;
 
     // 驗證網站屬於該公司
     const { data: website, error: websiteError } = await supabase
@@ -79,8 +91,6 @@ export const PUT = withCompany(
     if (websiteError || !website) {
       return notFound("網站");
     }
-
-    const body: UpdateAgentConfigRequest = await request.json();
 
     const updates: Record<string, unknown> = {};
 

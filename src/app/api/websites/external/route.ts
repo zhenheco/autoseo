@@ -6,7 +6,9 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-import { withAdmin } from "@/lib/api/auth-middleware";
+import { withRouteAuth } from "@/lib/api/route-auth";
+import { requestErrorResponse } from "@/lib/api/request-error-response";
+import { safeJson } from "@/lib/api/request-body";
 import {
   successResponse,
   validationError,
@@ -35,7 +37,7 @@ function sanitizeWebsite<T extends { webhook_secret?: string | null }>(
  * GET /api/websites/external
  * 取得所有外部網站
  */
-export const GET = withAdmin(async (_request, { adminClient }) => {
+export const GET = withRouteAuth("admin", async (_request, { adminClient }) => {
   const { data, error } = await adminClient
     .from("website_configs")
     .select("*")
@@ -54,9 +56,24 @@ export const GET = withAdmin(async (_request, { adminClient }) => {
  * POST /api/websites/external
  * 建立新的外部網站
  */
-export async function POST(request: NextRequest): Promise<NextResponse> {
-  return withAdmin(async (_req, { adminClient }) => {
-    const body = await request.json();
+export const POST = withRouteAuth(
+  "admin",
+  async (request: NextRequest, { adminClient }): Promise<NextResponse> => {
+    const bodyResult = await safeJson<{
+      name?: string;
+      slug?: string;
+      webhook_url?: string;
+      sync_on_publish?: boolean;
+      sync_on_update?: boolean;
+      sync_on_unpublish?: boolean;
+      sync_translations?: boolean;
+      sync_languages?: string[];
+    }>(request);
+    if (!bodyResult.success) {
+      return requestErrorResponse(bodyResult.error);
+    }
+
+    const body = bodyResult.data;
     const {
       name,
       slug,
@@ -121,5 +138,5 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       "建立成功。請妥善保存 webhook_secret，此後將不會再顯示完整值。",
       HTTP_STATUS.CREATED,
     );
-  })(request);
-}
+  },
+);

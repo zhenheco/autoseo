@@ -5,7 +5,10 @@
 import { NextRequest } from "next/server";
 import * as cheerio from "cheerio";
 import sanitizeHtml from "sanitize-html";
-import { withCompany, extractPathParams } from "@/lib/api/auth-middleware";
+import { extractPathParams } from "@/lib/api/auth-middleware";
+import { withRouteAuth } from "@/lib/api/route-auth";
+import { safeJson } from "@/lib/api/request-body";
+import { requestErrorResponse } from "@/lib/api/request-error-response";
 import {
   successResponse,
   notFound,
@@ -17,7 +20,8 @@ import {
  * PATCH /api/articles/[id]
  * 更新文章內容
  */
-export const PATCH = withCompany(
+export const PATCH = withRouteAuth(
+  "company",
   async (request: NextRequest, { supabase, companyId }) => {
     const { id } = extractPathParams(request);
 
@@ -25,7 +29,21 @@ export const PATCH = withCompany(
       return notFound("文章");
     }
 
-    const body = await request.json();
+    const jsonResult = await safeJson<{
+      html_content?: string;
+      content_json?: Record<string, unknown>;
+      title?: string;
+      published_to_website_id?: unknown;
+      published_to_website_at?: unknown;
+      seo_title?: string;
+      seo_description?: string;
+    }>(request);
+
+    if (!jsonResult.success) {
+      return requestErrorResponse(jsonResult.error);
+    }
+
+    const body = jsonResult.data;
     const {
       html_content,
       content_json,
@@ -150,7 +168,8 @@ export const PATCH = withCompany(
  * DELETE /api/articles/[id]
  * 刪除文章（及關聯的任務）
  */
-export const DELETE = withCompany(
+export const DELETE = withRouteAuth(
+  "company",
   async (request: NextRequest, { supabase, companyId }) => {
     const { id } = extractPathParams(request);
 

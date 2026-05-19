@@ -1,4 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requestErrorResponse } from "@/lib/api/request-error-response";
+import { safeJson } from "@/lib/api/request-body";
 
 /**
  * 觸發 GitHub Actions 處理文章生成
@@ -6,7 +8,15 @@ import { NextRequest, NextResponse } from "next/server";
  */
 export async function POST(request: NextRequest) {
   try {
-    const { jobId, title } = await request.json();
+    const bodyResult = await safeJson<{
+      jobId?: string;
+      title?: string;
+    }>(request);
+    if (!bodyResult.success) {
+      return requestErrorResponse(bodyResult.error);
+    }
+
+    const { jobId, title } = bodyResult.data;
 
     if (!jobId) {
       return NextResponse.json({ error: "jobId is required" }, { status: 400 });

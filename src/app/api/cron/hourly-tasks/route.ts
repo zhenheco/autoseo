@@ -1,13 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { processPendingJobs } from "@/lib/article-processor";
+import { withRouteAuth } from "@/lib/api/route-auth";
 
-export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export const GET = withRouteAuth("cron", async (request: NextRequest) => {
+  const authHeader = request.headers.get("authorization") ?? "";
   const currentHour = new Date().getUTCHours();
   const results: Record<
     string,
@@ -108,4 +104,4 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});

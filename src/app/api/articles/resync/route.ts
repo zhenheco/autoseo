@@ -13,6 +13,8 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { requestErrorResponse } from "@/lib/api/request-error-response";
+import { safeJson } from "@/lib/api/request-body";
 import {
   successResponse,
   validationError,
@@ -57,7 +59,12 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
       // 使用 admin client（secret 認證通過）
       const supabase = createAdminClient();
-      const body = (await request.json()) as ResyncRequest;
+      const bodyResult = await safeJson<ResyncRequest>(request);
+      if (!bodyResult.success) {
+        return requestErrorResponse(bodyResult.error);
+      }
+
+      const body = bodyResult.data;
       const { articleIds, syncTargetIds, companyId } = body;
 
       if (!companyId) {
@@ -69,13 +76,15 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
 
     // 沒有 secret，返回需要登入的錯誤
     return NextResponse.json(
-      { error: "Authentication required. Use x-resync-secret header or login." },
-      { status: 401 }
+      {
+        error: "Authentication required. Use x-resync-secret header or login.",
+      },
+      { status: 401 },
     );
   } catch (error) {
     console.error("[Resync] 錯誤:", error);
     return internalError(
-      error instanceof Error ? error.message : "重新同步失敗"
+      error instanceof Error ? error.message : "重新同步失敗",
     );
   }
 }
@@ -87,7 +96,7 @@ async function resyncArticles(
   supabase: ReturnType<typeof createAdminClient>,
   companyId: string,
   articleIds?: string[],
-  syncTargetIds?: string[]
+  syncTargetIds?: string[],
 ): Promise<NextResponse> {
   // 查詢已發布的文章
   let query = supabase
@@ -125,7 +134,7 @@ async function resyncArticles(
       const result = await syncArticle(
         article as GeneratedArticle,
         "update",
-        syncTargetIds
+        syncTargetIds,
       );
 
       results.push({

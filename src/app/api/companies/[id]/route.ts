@@ -3,7 +3,8 @@
  */
 
 import { NextRequest } from "next/server";
-import { withAuth, extractPathParams } from "@/lib/api/auth-middleware";
+import { extractPathParams } from "@/lib/api/auth-middleware";
+import { withRouteAuth } from "@/lib/api/route-auth";
 import {
   successResponse,
   notFound,
@@ -15,7 +16,8 @@ import {
  * DELETE /api/companies/[id]
  * 刪除公司（僅擁有者可執行）
  */
-export const DELETE = withAuth(
+export const DELETE = withRouteAuth(
+  "authenticated",
   async (request: NextRequest, { user, supabase }) => {
     const { id } = extractPathParams(request);
 

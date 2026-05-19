@@ -4,7 +4,9 @@
  */
 
 import { NextRequest } from "next/server";
-import { withAuth } from "@/lib/api/auth-middleware";
+import { requestErrorResponse } from "@/lib/api/request-error-response";
+import { safeJson } from "@/lib/api/request-body";
+import { withRouteAuth } from "@/lib/api/route-auth";
 import {
   successResponse,
   validationError,
@@ -15,9 +17,15 @@ import { ParallelOrchestrator } from "@/lib/agents/orchestrator";
 
 export const maxDuration = 300;
 
-export const POST = withAuth(
+export const POST = withRouteAuth(
+  "authenticated",
   async (request: NextRequest, { user, supabase }) => {
-    const { articleJobId } = await request.json();
+    const bodyResult = await safeJson<{ articleJobId?: string }>(request);
+    if (!bodyResult.success) {
+      return requestErrorResponse(bodyResult.error);
+    }
+
+    const { articleJobId } = bodyResult.data;
 
     if (!articleJobId) {
       return validationError("Article job ID is required");

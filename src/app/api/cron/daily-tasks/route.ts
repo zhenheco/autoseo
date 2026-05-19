@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { withRouteAuth } from "@/lib/api/route-auth";
 
 /**
  * 每日定時任務合併端點
@@ -8,13 +9,8 @@ import { NextRequest, NextResponse } from "next/server";
  * 1. 處理排程發布文章
  * 2. 同步 AI 模型
  */
-export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export const GET = withRouteAuth("cron", async (request: NextRequest) => {
+  const authHeader = request.headers.get("authorization") ?? "";
   const results: Record<string, { status: string; error: string | null }> = {
     processScheduledArticles: { status: "pending", error: null },
     syncModels: { status: "pending", error: null },
@@ -82,4 +78,4 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});

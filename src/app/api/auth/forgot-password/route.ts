@@ -1,9 +1,16 @@
 import { NextRequest, NextResponse } from "next/server";
+import { requestErrorResponse } from "@/lib/api/request-error-response";
+import { safeJson } from "@/lib/api/request-body";
 import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: NextRequest) {
   try {
-    const { email } = await request.json();
+    const bodyResult = await safeJson<{ email?: string }>(request);
+    if (!bodyResult.success) {
+      return requestErrorResponse(bodyResult.error);
+    }
+
+    const { email } = bodyResult.data;
 
     if (!email) {
       return NextResponse.json(

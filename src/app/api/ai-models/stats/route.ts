@@ -3,10 +3,11 @@
  */
 
 import { NextRequest } from "next/server";
-import { withCompany } from "@/lib/api/auth-middleware";
+import { withRouteAuth } from "@/lib/api/route-auth";
 import { successResponse, internalError } from "@/lib/api/response-helpers";
 
-export const GET = withCompany(
+export const GET = withRouteAuth(
+  "company",
   async (request: NextRequest, { supabase, companyId }) => {
     const { searchParams } = new URL(request.url);
     const startDate = searchParams.get("startDate");

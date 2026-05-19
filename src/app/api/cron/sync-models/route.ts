@@ -1,16 +1,11 @@
 import { NextResponse } from "next/server";
 import { ModelSyncService } from "@/lib/model-sync/model-sync-service";
+import { withRouteAuth } from "@/lib/api/route-auth";
 
 export const dynamic = "force-dynamic";
 export const maxDuration = 300;
 
-export async function GET(request: Request) {
-  const authHeader = request.headers.get("authorization");
-
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export const GET = withRouteAuth("cron", async () => {
   try {
     const syncService = new ModelSyncService(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -56,4 +51,4 @@ export async function GET(request: Request) {
       { status: 500 },
     );
   }
-}
+});

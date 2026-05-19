@@ -5,7 +5,9 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
-import { withAdmin } from "@/lib/api/auth-middleware";
+import { withRouteAuth } from "@/lib/api/route-auth";
+import { requestErrorResponse } from "@/lib/api/request-error-response";
+import { safeJson } from "@/lib/api/request-body";
 import {
   successResponse,
   validationError,
@@ -22,13 +24,15 @@ type RouteParams = { params: Promise<{ id: string }> };
  * GET /api/websites/external/[id]
  * 取得單個外部網站
  */
-export async function GET(
-  request: NextRequest,
-  { params }: RouteParams,
-): Promise<NextResponse> {
-  const { id } = await params;
+export const GET = withRouteAuth(
+  "admin",
+  async (
+    _request: NextRequest,
+    { adminClient },
+    { params }: RouteParams,
+  ): Promise<NextResponse> => {
+    const { id } = await params;
 
-  return withAdmin(async (_req, { adminClient }) => {
     const { data, error } = await adminClient
       .from("website_configs")
       .select("*")
@@ -41,27 +45,38 @@ export async function GET(
     }
 
     return successResponse({ ...data, webhook_secret: "******" });
-  })(request);
-}
+  },
+);
 
 /**
  * PATCH /api/websites/external/[id]
  * 更新外部網站
  */
-export async function PATCH(
-  request: NextRequest,
-  { params }: RouteParams,
-): Promise<NextResponse> {
-  const { id } = await params;
+export const PATCH = withRouteAuth(
+  "admin",
+  async (
+    request: NextRequest,
+    { adminClient },
+    { params }: RouteParams,
+  ): Promise<NextResponse> => {
+    const { id } = await params;
 
-  return withAdmin(async (_req, { adminClient }) => {
-    const body = await request.json();
+    const bodyResult = await safeJson<Record<string, unknown>>(request);
+    if (!bodyResult.success) {
+      return requestErrorResponse(bodyResult.error);
+    }
+
+    const body = bodyResult.data;
 
     // 建立更新物件，只包含有傳入的欄位
     const updateData = buildUpdateData(body);
 
     // 驗證 webhook_url 格式
     if (body.webhook_url !== undefined) {
+      if (typeof body.webhook_url !== "string") {
+        return validationError("webhook_url 格式無效");
+      }
+
       try {
         new URL(body.webhook_url);
         updateData.webhook_url = body.webhook_url;
@@ -111,20 +126,22 @@ export async function PATCH(
     }
 
     return NextResponse.json(response);
-  })(request);
-}
+  },
+);
 
 /**
  * DELETE /api/websites/external/[id]
  * 刪除外部網站
  */
-export async function DELETE(
-  request: NextRequest,
-  { params }: RouteParams,
-): Promise<NextResponse> {
-  const { id } = await params;
+export const DELETE = withRouteAuth(
+  "admin",
+  async (
+    _request: NextRequest,
+    { adminClient },
+    { params }: RouteParams,
+  ): Promise<NextResponse> => {
+    const { id } = await params;
 
-  return withAdmin(async (_req, { adminClient }) => {
     // 先檢查是否存在且為外部網站
     const { data: existing } = await adminClient
       .from("website_configs")
@@ -150,8 +167,8 @@ export async function DELETE(
     }
 
     return successResponse(null, `已刪除外部網站: ${existing.website_name}`);
-  })(request);
-}
+  },
+);
 
 /**
  * 從請求 body 建立更新資料物件

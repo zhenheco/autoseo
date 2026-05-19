@@ -4,7 +4,7 @@
  * 現在從 website_configs 查詢 website_type = 'external' 的資料
  */
 
-import { withCompany } from "@/lib/api/auth-middleware";
+import { withRouteAuth } from "@/lib/api/route-auth";
 import { successResponse, handleApiError } from "@/lib/api/response-helpers";
 import { createAdminClient } from "@/lib/supabase/admin";
 
@@ -16,13 +16,14 @@ export const dynamic = "force-dynamic";
  * 從 website_configs 查詢 website_type = 'external' 的資料
  * 僅返回必要欄位，脫敏敏感資訊
  */
-export const GET = withCompany(async () => {
+export const GET = withRouteAuth("company", async (_request, { companyId }) => {
   try {
     const adminSupabase = createAdminClient();
 
     const { data, error } = await adminSupabase
       .from("website_configs")
       .select("id, website_name, external_slug, is_active, sync_on_publish")
+      .eq("company_id", companyId)
       .eq("website_type", "external")
       .eq("is_active", true)
       .eq("sync_on_publish", true)

@@ -6,7 +6,9 @@
 import { NextRequest } from "next/server";
 import { getAPIRouter } from "@/lib/ai/api-router";
 import { getOpenRouterClient } from "@/lib/openrouter/client";
-import { withCompany } from "@/lib/api/auth-middleware";
+import { withRouteAuth } from "@/lib/api/route-auth";
+import { safeJson } from "@/lib/api/request-body";
+import { requestErrorResponse } from "@/lib/api/request-error-response";
 import {
   successResponse,
   validationError,
@@ -108,9 +110,19 @@ const LANGUAGE_MAP: Record<string, { name: string; example: string }> = {
   },
 };
 
-export const POST = withCompany(
+export const POST = withRouteAuth(
+  "company",
   async (request: NextRequest, { supabase, companyId }) => {
-    const { keyword, targetLanguage = "zh-TW" } = await request.json();
+    const jsonResult = await safeJson<{
+      keyword?: string;
+      targetLanguage?: string;
+    }>(request);
+
+    if (!jsonResult.success) {
+      return requestErrorResponse(jsonResult.error);
+    }
+
+    const { keyword, targetLanguage = "zh-TW" } = jsonResult.data;
 
     if (!keyword || typeof keyword !== "string") {
       return validationError("Keyword is required");

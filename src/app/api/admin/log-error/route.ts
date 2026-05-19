@@ -4,6 +4,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { safeJson } from "@/lib/api/request-body";
 import { createClient } from "@/lib/supabase/server";
 
 export const dynamic = "force-dynamic";
@@ -23,7 +24,12 @@ interface ErrorReport {
  */
 export async function POST(request: NextRequest) {
   try {
-    const body: ErrorReport = await request.json();
+    const bodyResult = await safeJson<ErrorReport>(request);
+    if (!bodyResult.success) {
+      return NextResponse.json({ success: true, received: false });
+    }
+
+    const body = bodyResult.data;
 
     // 基本驗證
     if (!body.errorType || !body.errorMessage) {

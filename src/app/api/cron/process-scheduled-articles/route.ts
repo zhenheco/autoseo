@@ -2,28 +2,28 @@ import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { v4 as uuidv4 } from "uuid";
 import { createAdminClient } from "@/lib/supabase/server";
-import { WordPressClient } from "@/lib/wordpress/client";
-import {
-  decryptWordPressPassword,
-  isEncrypted,
-} from "@/lib/security/token-encryption";
 import { pingAllSearchEngines } from "@/lib/sitemap/ping-service";
 import {
   cacheSet,
   isRedisAvailable,
   CACHE_CONFIG,
 } from "@/lib/cache/redis-cache";
+import { withRouteAuth } from "@/lib/api/route-auth";
+import { resolveScheduledPublishTarget } from "@/lib/publishing/scheduled-target";
+import {
+  createScheduledPublishResults,
+  recordScheduledPublishFailure,
+} from "@/lib/publishing/scheduled-results";
+import { publishPlatformBlogArticle } from "@/lib/publishing/platform-blog-target";
+import { publishExternalWebhookArticle } from "@/lib/publishing/external-webhook-target";
+import { publishWordPressDraftArticle } from "@/lib/publishing/wordpress-draft-target";
+import { publishNewWordPressArticle } from "@/lib/publishing/wordpress-new-target";
+import { runScheduledPostPublishEffects } from "@/lib/publishing/post-publish-effects";
 
 const MAX_RETRY_COUNT = 3;
 const RETRY_DELAYS_MINUTES = [5, 30, 120];
 
-export async function GET(request: NextRequest) {
-  const authHeader = request.headers.get("authorization");
-
-  if (authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export const GET = withRouteAuth("cron", async (_request: NextRequest) => {
   const supabase = createAdminClient();
   const now = new Date().toISOString();
 
@@ -96,18 +96,7 @@ export async function GET(request: NextRequest) {
     `[Process Scheduled Articles] Found ${articles.length} articles to process`,
   );
 
-  const results = {
-    processed: 0,
-    published: 0,
-    failed: 0,
-    retried: 0,
-    details: [] as Array<{
-      articleId: string;
-      title: string | null;
-      status: "published" | "failed" | "retried";
-      error?: string;
-    }>,
-  };
+  const results = createScheduledPublishResults();
 
   for (const article of articles) {
     results.processed++;
@@ -121,73 +110,34 @@ export async function GET(request: NextRequest) {
         article.publish_retry_count || 0,
         "網站配置不存在",
       );
-      results.failed++;
-      results.details.push({
+      recordScheduledPublishFailure(results, {
         articleId: article.id,
         title: article.article_title,
-        status: "failed",
         error: "網站配置不存在",
+        wasRetried: false,
       });
       continue;
     }
 
-    // 判斷網站類型
-    const isPlatformBlog = website.is_platform_blog === true;
-    const isExternalWebsite = website.website_type === "external";
-
-    // 檢查網站是否啟用
-    if (!website.is_active) {
+    const targetResult = resolveScheduledPublishTarget(website);
+    if (!targetResult.success) {
       await handlePublishError(
         supabase,
         article.id,
         article.publish_retry_count || 0,
-        "網站已停用",
+        targetResult.error,
       );
-      results.failed++;
-      results.details.push({
+      recordScheduledPublishFailure(results, {
         articleId: article.id,
         title: article.article_title,
-        status: "failed",
-        error: "網站已停用",
+        error: targetResult.error,
+        wasRetried: false,
       });
       continue;
     }
 
-    // 外部網站需要 webhook_url
-    if (isExternalWebsite && !website.webhook_url) {
-      await handlePublishError(
-        supabase,
-        article.id,
-        article.publish_retry_count || 0,
-        "外部網站未設定 webhook URL",
-      );
-      results.failed++;
-      results.details.push({
-        articleId: article.id,
-        title: article.article_title,
-        status: "failed",
-        error: "外部網站未設定 webhook URL",
-      });
-      continue;
-    }
-
-    // 非 Platform Blog 且非外部網站才需要檢查 WordPress 功能
-    if (!isPlatformBlog && !isExternalWebsite && !website.wp_enabled) {
-      await handlePublishError(
-        supabase,
-        article.id,
-        article.publish_retry_count || 0,
-        "WordPress 功能未啟用",
-      );
-      results.failed++;
-      results.details.push({
-        articleId: article.id,
-        title: article.article_title,
-        status: "failed",
-        error: "WordPress 功能未啟用",
-      });
-      continue;
-    }
+    const isPlatformBlog = targetResult.target === "platform_blog";
+    const isExternalWebsite = targetResult.target === "external_webhook";
 
     if (!generatedArticle) {
       await handlePublishError(
@@ -196,12 +146,11 @@ export async function GET(request: NextRequest) {
         article.publish_retry_count || 0,
         "找不到文章內容",
       );
-      results.failed++;
-      results.details.push({
+      recordScheduledPublishFailure(results, {
         articleId: article.id,
         title: article.article_title,
-        status: "failed",
         error: "找不到文章內容",
+        wasRetried: false,
       });
       continue;
     }
@@ -213,65 +162,24 @@ export async function GET(request: NextRequest) {
       );
 
       try {
-        const publishedAt = new Date().toISOString();
-
-        // 更新 article_jobs
-        await supabase
-          .from("article_jobs")
-          .update({
-            status: "published",
-            published_at: publishedAt,
-            publish_retry_count: 0,
-            last_publish_error: null,
-          })
-          .eq("id", article.id);
-
-        // 更新 generated_articles（發布到 Platform Blog）
-        await supabase
-          .from("generated_articles")
-          .update({
-            status: "published",
-            published_at: publishedAt,
-            published_to_website_id: website.id,
-            published_to_website_at: publishedAt,
-          })
-          .eq("id", generatedArticle.id);
+        await publishPlatformBlogArticle({
+          supabase,
+          article,
+          generatedArticle,
+          website,
+        });
 
         console.log(
           `[Process Scheduled Articles] Published to Platform Blog: ${article.id} - ${generatedArticle.title}`,
         );
 
-        // 觸發自動翻譯
-        await triggerAutoTranslation(
+        await runScheduledPostPublishEffects({
           supabase,
-          generatedArticle.id,
-          website.id,
-          article.company_id,
-          article.user_id,
-          website.auto_translate_enabled,
-          website.auto_translate_languages,
-        );
-
-        // 同步文章到外部專案（如有設定同步目標）
-        const syncTargetIds = article.sync_target_ids as string[] | null;
-        if (syncTargetIds && syncTargetIds.length > 0) {
-          // 查詢完整的文章資料以供同步
-          const { data: fullArticle } = await supabase
-            .from("generated_articles")
-            .select("*")
-            .eq("id", generatedArticle.id)
-            .single();
-
-          if (fullArticle) {
-            const { syncArticle } = await import("@/lib/sync");
-            syncArticle(fullArticle, "create", syncTargetIds).catch((error) => {
-              console.error(
-                `[Process Scheduled Articles] Sync failed for ${article.id}:`,
-                error,
-              );
-            });
-          }
-        }
+          article,
+          generatedArticle,
+          website,
+          triggerAutoTranslation,
+        });
 
         results.published++;
         results.details.push({
@@ -298,23 +206,12 @@ export async function GET(request: NextRequest) {
           errorMessage,
         );
 
-        if (wasRetried) {
-          results.retried++;
-          results.details.push({
-            articleId: article.id,
-            title: generatedArticle.title,
-            status: "retried",
-            error: errorMessage,
-          });
-        } else {
-          results.failed++;
-          results.details.push({
-            articleId: article.id,
-            title: generatedArticle.title,
-            status: "failed",
-            error: errorMessage,
-          });
-        }
+        recordScheduledPublishFailure(results, {
+          articleId: article.id,
+          title: generatedArticle.title,
+          error: errorMessage,
+          wasRetried,
+        });
         continue;
       }
     }
@@ -326,66 +223,26 @@ export async function GET(request: NextRequest) {
       );
 
       try {
-        const publishedAt = new Date().toISOString();
-
-        // 查詢完整的文章資料
-        const { data: fullArticle } = await supabase
-          .from("generated_articles")
-          .select("*")
-          .eq("id", generatedArticle.id)
-          .single();
-
-        if (!fullArticle) {
-          throw new Error("無法取得完整文章資料");
-        }
-
-        // 使用同步服務發送 webhook
         const { syncArticle } = await import("@/lib/sync");
-        const syncResult = await syncArticle(fullArticle, "create", [
-          website.id,
-        ]);
-
-        if (syncResult.failed > 0) {
-          const failedResult = syncResult.results.find((r) => !r.success);
-          throw new Error(failedResult?.error_message || "同步失敗");
-        }
-
-        // 更新 article_jobs
-        await supabase
-          .from("article_jobs")
-          .update({
-            status: "published",
-            published_at: publishedAt,
-            publish_retry_count: 0,
-            last_publish_error: null,
-          })
-          .eq("id", article.id);
-
-        // 更新 generated_articles
-        await supabase
-          .from("generated_articles")
-          .update({
-            status: "published",
-            published_at: publishedAt,
-            published_to_website_id: website.id,
-            published_to_website_at: publishedAt,
-          })
-          .eq("id", generatedArticle.id);
+        await publishExternalWebhookArticle({
+          supabase,
+          syncArticle,
+          article,
+          generatedArticle,
+          website,
+        });
 
         console.log(
           `[Process Scheduled Articles] Published to External Website: ${article.id} - ${generatedArticle.title}`,
         );
 
-        // 觸發自動翻譯
-        await triggerAutoTranslation(
+        await runScheduledPostPublishEffects({
           supabase,
-          generatedArticle.id,
-          website.id,
-          article.company_id,
-          article.user_id,
-          website.auto_translate_enabled,
-          website.auto_translate_languages,
-        );
+          article: { ...article, sync_target_ids: null },
+          generatedArticle,
+          website,
+          triggerAutoTranslation,
+        });
 
         results.published++;
         results.details.push({
@@ -412,23 +269,12 @@ export async function GET(request: NextRequest) {
           errorMessage,
         );
 
-        if (wasRetried) {
-          results.retried++;
-          results.details.push({
-            articleId: article.id,
-            title: generatedArticle.title,
-            status: "retried",
-            error: errorMessage,
-          });
-        } else {
-          results.failed++;
-          results.details.push({
-            articleId: article.id,
-            title: generatedArticle.title,
-            status: "failed",
-            error: errorMessage,
-          });
-        }
+        recordScheduledPublishFailure(results, {
+          articleId: article.id,
+          title: generatedArticle.title,
+          error: errorMessage,
+          wasRetried,
+        });
         continue;
       }
     }
@@ -443,87 +289,24 @@ export async function GET(request: NextRequest) {
       );
 
       try {
-        // 解密 WordPress 密碼（支援舊資料的明文格式）
-        const wpPassword = website.wp_app_password
-          ? isEncrypted(website.wp_app_password)
-            ? decryptWordPressPassword(website.wp_app_password)
-            : website.wp_app_password
-          : "";
-
-        const wordpressClient = new WordPressClient({
-          url: website.wordpress_url,
-          username: website.wp_username || "",
-          applicationPassword: wpPassword,
-          accessToken: website.wordpress_access_token || undefined,
-          refreshToken: website.wordpress_refresh_token || undefined,
+        await publishWordPressDraftArticle({
+          supabase,
+          article,
+          generatedArticle,
+          website,
         });
-
-        // 使用現有的 updatePost 方法更新狀態為已發布
-        await wordpressClient.updatePost(generatedArticle.wordpress_post_id, {
-          status: "publish",
-        });
-
-        const publishedAt = new Date().toISOString();
-
-        // 更新 article_jobs
-        await supabase
-          .from("article_jobs")
-          .update({
-            status: "published",
-            published_at: publishedAt,
-            wordpress_post_id: generatedArticle.wordpress_post_id?.toString(),
-            publish_retry_count: 0,
-            last_publish_error: null,
-          })
-          .eq("id", article.id);
-
-        // 更新 generated_articles
-        await supabase
-          .from("generated_articles")
-          .update({
-            wordpress_status: "publish",
-            published_at: publishedAt,
-            status: "published",
-            published_to_website_id: website.id,
-            published_to_website_at: publishedAt,
-          })
-          .eq("id", generatedArticle.id);
 
         console.log(
           `[Process Scheduled Articles] Draft updated to publish: ${article.id} - ${article.article_title}`,
         );
 
-        // 觸發自動翻譯
-        await triggerAutoTranslation(
+        await runScheduledPostPublishEffects({
           supabase,
-          generatedArticle.id,
-          website.id,
-          article.company_id,
-          article.user_id,
-          website.auto_translate_enabled,
-          website.auto_translate_languages,
-        );
-
-        // 同步文章到外部專案（如有設定同步目標）
-        const syncTargetIds = article.sync_target_ids as string[] | null;
-        if (syncTargetIds && syncTargetIds.length > 0) {
-          // 查詢完整的文章資料以供同步
-          const { data: fullArticle } = await supabase
-            .from("generated_articles")
-            .select("*")
-            .eq("id", generatedArticle.id)
-            .single();
-
-          if (fullArticle) {
-            const { syncArticle } = await import("@/lib/sync");
-            syncArticle(fullArticle, "create", syncTargetIds).catch((error) => {
-              console.error(
-                `[Process Scheduled Articles] Sync failed for ${article.id}:`,
-                error,
-              );
-            });
-          }
-        }
+          article,
+          generatedArticle,
+          website,
+          triggerAutoTranslation,
+        });
 
         results.published++;
         results.details.push({
@@ -549,23 +332,12 @@ export async function GET(request: NextRequest) {
           `更新草稿為已發布失敗: ${errorMessage}`,
         );
 
-        if (wasRetried) {
-          results.retried++;
-          results.details.push({
-            articleId: article.id,
-            title: article.article_title,
-            status: "retried",
-            error: errorMessage,
-          });
-        } else {
-          results.failed++;
-          results.details.push({
-            articleId: article.id,
-            title: article.article_title,
-            status: "failed",
-            error: errorMessage,
-          });
-        }
+        recordScheduledPublishFailure(results, {
+          articleId: article.id,
+          title: article.article_title,
+          error: errorMessage,
+          wasRetried,
+        });
         continue;
       }
     }
@@ -598,98 +370,24 @@ export async function GET(request: NextRequest) {
     // 情況 3：沒有 wordpress_post_id → 新發布（方案 B：未來新文章）
 
     try {
-      // 解密 WordPress 密碼（支援舊資料的明文格式）
-      const wpPasswordForNew = website.wp_app_password
-        ? isEncrypted(website.wp_app_password)
-          ? decryptWordPressPassword(website.wp_app_password)
-          : website.wp_app_password
-        : "";
-
-      const wordpressClient = new WordPressClient({
-        url: website.wordpress_url,
-        username: website.wp_username || "",
-        applicationPassword: wpPasswordForNew,
-        accessToken: website.wordpress_access_token || undefined,
-        refreshToken: website.wordpress_refresh_token || undefined,
+      await publishNewWordPressArticle({
+        supabase,
+        article,
+        generatedArticle,
+        website,
       });
-
-      const publishResult = await wordpressClient.publishArticle(
-        {
-          title: generatedArticle.seo_title || generatedArticle.title,
-          content: generatedArticle.html_content || "",
-          excerpt: generatedArticle.seo_description || "",
-          slug: generatedArticle.slug || "",
-          featuredImageUrl: generatedArticle.og_image || undefined,
-          categories: generatedArticle.categories || [],
-          tags: generatedArticle.tags || [],
-          seoTitle: generatedArticle.seo_title || generatedArticle.title,
-          seoDescription: generatedArticle.seo_description || "",
-          focusKeyword: generatedArticle.focus_keyword || "",
-        },
-        "publish",
-      );
-
-      const publishedAt = new Date().toISOString();
-
-      await supabase
-        .from("article_jobs")
-        .update({
-          status: "published",
-          published_at: publishedAt,
-          wordpress_post_id: publishResult.post.id?.toString(),
-          publish_retry_count: 0,
-          last_publish_error: null,
-        })
-        .eq("id", article.id);
-
-      await supabase
-        .from("generated_articles")
-        .update({
-          wordpress_post_id: publishResult.post.id,
-          wordpress_post_url: publishResult.post.link,
-          wordpress_status: publishResult.post.status,
-          published_at: publishedAt,
-          status: "published",
-          published_to_website_id: website.id,
-          published_to_website_at: publishedAt,
-        })
-        .eq("id", generatedArticle.id);
 
       console.log(
         `[Process Scheduled Articles] Published: ${article.id} - ${article.article_title}`,
       );
 
-      // 觸發自動翻譯
-      await triggerAutoTranslation(
+      await runScheduledPostPublishEffects({
         supabase,
-        generatedArticle.id,
-        website.id,
-        article.company_id,
-        article.user_id,
-        website.auto_translate_enabled,
-        website.auto_translate_languages,
-      );
-
-      // 同步文章到外部專案（如有設定同步目標）
-      const syncTargetIds = article.sync_target_ids as string[] | null;
-      if (syncTargetIds && syncTargetIds.length > 0) {
-        // 查詢完整的文章資料以供同步
-        const { data: fullArticle } = await supabase
-          .from("generated_articles")
-          .select("*")
-          .eq("id", generatedArticle.id)
-          .single();
-
-        if (fullArticle) {
-          const { syncArticle } = await import("@/lib/sync");
-          syncArticle(fullArticle, "create", syncTargetIds).catch((error) => {
-            console.error(
-              `[Process Scheduled Articles] Sync failed for ${article.id}:`,
-              error,
-            );
-          });
-        }
-      }
+        article,
+        generatedArticle,
+        website,
+        triggerAutoTranslation,
+      });
 
       results.published++;
       results.details.push({
@@ -712,23 +410,12 @@ export async function GET(request: NextRequest) {
         errorMessage,
       );
 
-      if (wasRetried) {
-        results.retried++;
-        results.details.push({
-          articleId: article.id,
-          title: article.article_title,
-          status: "retried",
-          error: errorMessage,
-        });
-      } else {
-        results.failed++;
-        results.details.push({
-          articleId: article.id,
-          title: article.article_title,
-          status: "failed",
-          error: errorMessage,
-        });
-      }
+      recordScheduledPublishFailure(results, {
+        articleId: article.id,
+        title: article.article_title,
+        error: errorMessage,
+        wasRetried,
+      });
     }
   }
 
@@ -768,7 +455,7 @@ export async function GET(request: NextRequest) {
     translations: translationResults,
     completedAt: new Date().toISOString(),
   });
-}
+});
 
 /**
  * 處理排程的翻譯版本發布

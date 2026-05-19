@@ -10,6 +10,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { safeJson } from "@/lib/api/request-body";
 
 /**
  * 處理 POST 請求（金流微服務或 PAYUNi 回調）
@@ -39,13 +40,24 @@ export async function POST(request: NextRequest) {
 
       if (contentType.includes("application/json")) {
         // JSON body
-        const body = await request.json();
-        paymentId = body.paymentId || paymentId;
-        orderId = body.orderId || orderId;
-        status = body.status || status;
-        message = body.message || message;
+        const bodyResult = await safeJson<{
+          paymentId?: string;
+          orderId?: string;
+          status?: string;
+          message?: string;
+        }>(request);
 
-        console.log("[ResultRedirect] JSON body 參數:", body);
+        if (bodyResult.success) {
+          const body = bodyResult.data;
+          paymentId = body.paymentId || paymentId;
+          orderId = body.orderId || orderId;
+          status = body.status || status;
+          message = body.message || message;
+
+          console.log("[ResultRedirect] JSON body 參數:", body);
+        } else {
+          console.error("[ResultRedirect] 解析 body 失敗:", bodyResult.error);
+        }
       } else if (
         contentType.includes("application/x-www-form-urlencoded") ||
         contentType.includes("multipart/form-data")

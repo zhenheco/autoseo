@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
+import { withRouteAuth } from "@/lib/api/route-auth";
 import type { CategoriesResponse, CategoryCount } from "@/types/blog";
 
 // 使用 service role key 繞過 RLS
@@ -12,7 +13,7 @@ const supabase = createClient(
  * GET /api/blog/categories
  * 取得所有分類及其文章數量
  */
-export async function GET() {
+export const GET = withRouteAuth("public-read", async () => {
   try {
     // 先取得平台 Blog 站點 ID
     const { data: platformBlog, error: blogError } = await supabase
@@ -76,4 +77,4 @@ export async function GET() {
       { status: 500 },
     );
   }
-}
+});

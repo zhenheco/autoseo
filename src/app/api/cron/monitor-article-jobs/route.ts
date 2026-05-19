@@ -4,6 +4,7 @@ import { ParallelOrchestrator } from "@/lib/agents/orchestrator";
 import { ArticleStorageService } from "@/lib/services/article-storage";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { Database } from "@/types/database.types";
+import { withRouteAuth } from "@/lib/api/route-auth";
 
 type ArticleJob = Database["public"]["Tables"]["article_jobs"]["Row"];
 
@@ -14,15 +15,7 @@ type ArticleJob = Database["public"]["Tables"]["article_jobs"]["Row"];
  * - 檢查已完成但未儲存的任務
  * - 自動重試失敗的任務
  */
-export async function POST(request: NextRequest) {
-  // 驗證 Authorization header
-  const authHeader = request.headers.get("authorization");
-  const token = authHeader?.replace("Bearer ", "");
-
-  if (token !== process.env.CRON_SECRET) {
-    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-  }
-
+export const POST = withRouteAuth("cron", async (_request: NextRequest) => {
   console.log("[Monitor] 開始監控文章生成任務");
 
   try {
@@ -169,7 +162,7 @@ export async function POST(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});
 
 /**
  * 重試任務

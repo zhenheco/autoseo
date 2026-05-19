@@ -7,6 +7,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
+import { safeJson } from "@/lib/api/request-body";
 import { pingAllSearchEngines } from "@/lib/sitemap/ping-service";
 
 // 定義可 revalidate 的 sitemap 類型
@@ -42,7 +43,11 @@ export async function POST(request: NextRequest) {
     }
 
     // 解析請求內容
-    const body = await request.json().catch(() => ({}));
+    const bodyResult = await safeJson<{
+      sitemaps?: SitemapType[];
+      ping?: boolean;
+    }>(request);
+    const body = bodyResult.success ? bodyResult.data : {};
     const sitemapsToRevalidate: SitemapType[] = body.sitemaps || [
       "post",
       "category",

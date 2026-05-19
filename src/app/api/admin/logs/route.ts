@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { isAdminEmail } from "@/lib/utils/admin-check";
+import { withRouteAuth } from "@/lib/api/route-auth";
 import { getAdminActionLogs } from "@/lib/admin/admin-service";
 
 export const dynamic = "force-dynamic";
@@ -9,31 +8,8 @@ export const dynamic = "force-dynamic";
  * GET /api/admin/logs
  * 取得 Admin 操作記錄
  */
-export async function GET(request: NextRequest) {
+export const GET = withRouteAuth("admin", async (request: NextRequest) => {
   try {
-    const supabase = await createClient();
-
-    // 驗證用戶登入
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, error: "請先登入" },
-        { status: 401 },
-      );
-    }
-
-    // 驗證管理員權限
-    if (!isAdminEmail(user.email)) {
-      return NextResponse.json(
-        { success: false, error: "無管理員權限" },
-        { status: 403 },
-      );
-    }
-
     // 解析查詢參數
     const { searchParams } = new URL(request.url);
     const limit = parseInt(searchParams.get("limit") || "50");
@@ -99,4 +75,4 @@ export async function GET(request: NextRequest) {
       { status: 500 },
     );
   }
-}
+});

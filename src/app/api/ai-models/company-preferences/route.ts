@@ -3,7 +3,9 @@
  */
 
 import { NextRequest } from "next/server";
-import { withCompany } from "@/lib/api/auth-middleware";
+import { withRouteAuth } from "@/lib/api/route-auth";
+import { requestErrorResponse } from "@/lib/api/request-error-response";
+import { safeJson } from "@/lib/api/request-body";
 import {
   successResponse,
   validationError,
@@ -14,7 +16,8 @@ import {
  * GET /api/ai-models/company-preferences
  * 取得公司的 AI 模型偏好設定
  */
-export const GET = withCompany(
+export const GET = withRouteAuth(
+  "company",
   async (request: NextRequest, { supabase, companyId }) => {
     try {
       const { data, error } = await supabase.rpc("get_company_ai_models", {
@@ -36,9 +39,17 @@ export const GET = withCompany(
  * POST /api/ai-models/company-preferences
  * 更新公司的 AI 模型偏好設定
  */
-export const POST = withCompany(
+export const POST = withRouteAuth(
+  "company",
   async (request: NextRequest, { supabase, companyId }) => {
-    const body = await request.json();
+    const bodyResult = await safeJson<{
+      preferences?: unknown;
+    }>(request);
+    if (!bodyResult.success) {
+      return requestErrorResponse(bodyResult.error);
+    }
+
+    const body = bodyResult.data;
     const { preferences } = body;
 
     if (!preferences) {

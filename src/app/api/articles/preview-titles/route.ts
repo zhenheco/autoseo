@@ -10,7 +10,9 @@
 
 import { NextRequest } from "next/server";
 import { getOpenRouterClient } from "@/lib/openrouter/client";
-import { withAuth } from "@/lib/api/auth-middleware";
+import { withRouteAuth } from "@/lib/api/route-auth";
+import { safeJson } from "@/lib/api/request-body";
+import { requestErrorResponse } from "@/lib/api/request-error-response";
 import {
   successResponse,
   validationError,
@@ -133,21 +135,34 @@ const LANGUAGE_CONFIG: Record<string, { name: string; instruction: string }> = {
   "ko-KR": { name: "한국어", instruction: "한국어로 작성해주세요" },
 };
 
-export const POST = withAuth(async (request: NextRequest) => {
-  const { industry, region, language, competitors = [] } = await request.json();
+export const POST = withRouteAuth(
+  "authenticated",
+  async (request: NextRequest) => {
+    const jsonResult = await safeJson<{
+      industry?: string;
+      region?: string;
+      language?: string;
+      competitors?: string[];
+    }>(request);
 
-  if (!industry || !region || !language) {
-    return validationError("缺少必要參數：產業、地區、語言");
-  }
+    if (!jsonResult.success) {
+      return requestErrorResponse(jsonResult.error);
+    }
 
-  const industryLabel = INDUSTRY_LABELS[industry] || industry;
-  const regionLabel = REGION_LABELS[region] || region;
-  const langConfig = LANGUAGE_CONFIG[language] || LANGUAGE_CONFIG["zh-TW"];
+    const { industry, region, language, competitors = [] } = jsonResult.data;
 
-  const competitorContext =
-    competitors.length > 0 ? `\n競爭對手網站: ${competitors.join(", ")}` : "";
+    if (!industry || !region || !language) {
+      return validationError("缺少必要參數：產業、地區、語言");
+    }
 
-  const prompt = `你是一位專業的 SEO 內容策略師。
+    const industryLabel = INDUSTRY_LABELS[industry] || industry;
+    const regionLabel = REGION_LABELS[region] || region;
+    const langConfig = LANGUAGE_CONFIG[language] || LANGUAGE_CONFIG["zh-TW"];
+
+    const competitorContext =
+      competitors.length > 0 ? `\n競爭對手網站: ${competitors.join(", ")}` : "";
+
+    const prompt = `你是一位專業的 SEO 內容策略師。
 
 根據以下資訊，生成 5 個具有高點擊率潛力的文章標題：
 
@@ -166,112 +181,113 @@ ${langConfig.instruction}
 
 請直接輸出 5 個標題，每行一個，不要編號：`;
 
-  let responseContent: string = "";
+    let responseContent: string = "";
 
-  // Layer 1: OpenRouter Gemini（透過 AI Gateway，優先使用免費模型）
-  try {
-    const openRouterClient = getOpenRouterClient();
-    const response = await openRouterClient.complete({
-      model: "google/gemini-2.0-flash-exp:free",
-      prompt,
-      temperature: 0.8,
-      max_tokens: 500,
-    });
-    responseContent = response.content;
-    console.log("[preview-titles] ✅ OpenRouter Gemini 成功");
-  } catch (openRouterError) {
-    console.warn(
-      "[preview-titles] ⚠️ OpenRouter Gemini 失敗:",
-      (openRouterError as Error).message,
-    );
-
-    // Layer 2: Gemini Direct API（備用，繞過 OpenRouter 限制）
+    // Layer 1: OpenRouter Gemini（透過 AI Gateway，優先使用免費模型）
     try {
-      responseContent = await callGeminiDirectAPI(prompt);
-      console.log("[preview-titles] ✅ Gemini Direct 成功");
-    } catch (geminiDirectError) {
+      const openRouterClient = getOpenRouterClient();
+      const response = await openRouterClient.complete({
+        model: "google/gemini-2.0-flash-exp:free",
+        prompt,
+        temperature: 0.8,
+        max_tokens: 500,
+      });
+      responseContent = response.content;
+      console.log("[preview-titles] ✅ OpenRouter Gemini 成功");
+    } catch (openRouterError) {
       console.warn(
-        "[preview-titles] ⚠️ Gemini Direct 失敗:",
-        (geminiDirectError as Error).message,
+        "[preview-titles] ⚠️ OpenRouter Gemini 失敗:",
+        (openRouterError as Error).message,
       );
-      // responseContent 保持為空，將觸發模板回退
-    }
-  }
 
-  // Layer 3: 模板回退（所有 Gemini 都失敗時）
-  if (!responseContent || responseContent.trim() === "") {
-    console.log("[preview-titles] ⚠️ 所有 Gemini 層失敗，使用模板回退");
-    try {
-      const templateTitles = await getTitlesFromTemplates(
-        { language, keyword: industry },
-        5,
-      );
-      if (templateTitles.length > 0) {
-        return successResponse({
-          titles: templateTitles,
-          metadata: {
-            industry: industryLabel,
-            region: regionLabel,
-            language: langConfig.name,
-            source: "template",
-          },
-        });
+      // Layer 2: Gemini Direct API（備用，繞過 OpenRouter 限制）
+      try {
+        responseContent = await callGeminiDirectAPI(prompt);
+        console.log("[preview-titles] ✅ Gemini Direct 成功");
+      } catch (geminiDirectError) {
+        console.warn(
+          "[preview-titles] ⚠️ Gemini Direct 失敗:",
+          (geminiDirectError as Error).message,
+        );
+        // responseContent 保持為空，將觸發模板回退
       }
-    } catch (templateError) {
-      console.error(
-        "[preview-titles] ⚠️ 模板回退也失敗:",
-        (templateError as Error).message,
-      );
     }
-    // 如果連模板都失敗，返回錯誤
-    return internalError("標題生成失敗，請稍後再試");
-  }
 
-  // 解析標題：先用標準格式，失敗則用寬鬆格式
-  let titles = parseStandardFormat(responseContent);
-
-  if (titles.length === 0) {
-    console.log("[preview-titles] 標準解析無結果，嘗試寬鬆解析");
-    titles = parseLenientFormat(responseContent);
-  }
-
-  // 如果兩種解析都失敗，嘗試模板回退
-  if (titles.length === 0) {
-    console.warn(
-      "[preview-titles] 解析失敗，原始內容:",
-      responseContent.substring(0, 200),
-    );
-    try {
-      const templateTitles = await getTitlesFromTemplates(
-        { language, keyword: industry },
-        5,
-      );
-      if (templateTitles.length > 0) {
-        return successResponse({
-          titles: templateTitles,
-          metadata: {
-            industry: industryLabel,
-            region: regionLabel,
-            language: langConfig.name,
-            source: "template",
-          },
-        });
+    // Layer 3: 模板回退（所有 Gemini 都失敗時）
+    if (!responseContent || responseContent.trim() === "") {
+      console.log("[preview-titles] ⚠️ 所有 Gemini 層失敗，使用模板回退");
+      try {
+        const templateTitles = await getTitlesFromTemplates(
+          { language, keyword: industry },
+          5,
+        );
+        if (templateTitles.length > 0) {
+          return successResponse({
+            titles: templateTitles,
+            metadata: {
+              industry: industryLabel,
+              region: regionLabel,
+              language: langConfig.name,
+              source: "template",
+            },
+          });
+        }
+      } catch (templateError) {
+        console.error(
+          "[preview-titles] ⚠️ 模板回退也失敗:",
+          (templateError as Error).message,
+        );
       }
-    } catch (templateError) {
-      console.error(
-        "[preview-titles] 模板回退失敗:",
-        (templateError as Error).message,
-      );
+      // 如果連模板都失敗，返回錯誤
+      return internalError("標題生成失敗，請稍後再試");
     }
-    return internalError("標題生成失敗，請稍後再試");
-  }
 
-  return successResponse({
-    titles,
-    metadata: {
-      industry: industryLabel,
-      region: regionLabel,
-      language: langConfig.name,
-    },
-  });
-});
+    // 解析標題：先用標準格式，失敗則用寬鬆格式
+    let titles = parseStandardFormat(responseContent);
+
+    if (titles.length === 0) {
+      console.log("[preview-titles] 標準解析無結果，嘗試寬鬆解析");
+      titles = parseLenientFormat(responseContent);
+    }
+
+    // 如果兩種解析都失敗，嘗試模板回退
+    if (titles.length === 0) {
+      console.warn(
+        "[preview-titles] 解析失敗，原始內容:",
+        responseContent.substring(0, 200),
+      );
+      try {
+        const templateTitles = await getTitlesFromTemplates(
+          { language, keyword: industry },
+          5,
+        );
+        if (templateTitles.length > 0) {
+          return successResponse({
+            titles: templateTitles,
+            metadata: {
+              industry: industryLabel,
+              region: regionLabel,
+              language: langConfig.name,
+              source: "template",
+            },
+          });
+        }
+      } catch (templateError) {
+        console.error(
+          "[preview-titles] 模板回退失敗:",
+          (templateError as Error).message,
+        );
+      }
+      return internalError("標題生成失敗，請稍後再試");
+    }
+
+    return successResponse({
+      titles,
+      metadata: {
+        industry: industryLabel,
+        region: regionLabel,
+        language: langConfig.name,
+      },
+    });
+  },
+);

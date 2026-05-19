@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { isAdminEmail } from "@/lib/utils/admin-check";
+import { withRouteAuth } from "@/lib/api/route-auth";
 import { getAllSubscriptions } from "@/lib/admin/admin-service";
 
 export const dynamic = "force-dynamic";
@@ -9,31 +8,8 @@ export const dynamic = "force-dynamic";
  * GET /api/admin/subscriptions
  * 取得所有會員訂閱資訊
  */
-export async function GET() {
+export const GET = withRouteAuth("admin", async () => {
   try {
-    const supabase = await createClient();
-
-    // 驗證用戶登入
-    const {
-      data: { user },
-      error: authError,
-    } = await supabase.auth.getUser();
-
-    if (authError || !user) {
-      return NextResponse.json(
-        { success: false, error: "請先登入" },
-        { status: 401 },
-      );
-    }
-
-    // 驗證管理員權限
-    if (!isAdminEmail(user.email)) {
-      return NextResponse.json(
-        { success: false, error: "無管理員權限" },
-        { status: 403 },
-      );
-    }
-
     // 取得所有訂閱
     const subscriptions = await getAllSubscriptions();
 
@@ -71,4 +47,4 @@ export async function GET() {
       { status: 500 },
     );
   }
-}
+});

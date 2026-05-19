@@ -3,6 +3,7 @@
  */
 
 import { createClient } from "@/lib/supabase/server";
+import { withRouteAuth } from "@/lib/api/route-auth";
 import { successResponse, internalError } from "@/lib/api/response-helpers";
 
 interface AIModel {
@@ -18,7 +19,7 @@ interface AIModel {
   tags: string[];
 }
 
-export async function GET() {
+export const GET = withRouteAuth("public-read", async () => {
   const supabase = await createClient();
 
   try {
@@ -59,4 +60,4 @@ export async function GET() {
   } catch (error: unknown) {
     return internalError((error as Error).message);
   }
-}
+});

@@ -6,6 +6,7 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
+import { safeJson } from "@/lib/api/request-body";
 import {
   pingAllSearchEngines,
   getAllSitemapUrls,
@@ -32,7 +33,11 @@ export async function POST(request: NextRequest) {
     }
 
     // 解析請求內容
-    const body = await request.json().catch(() => ({}));
+    const bodyResult = await safeJson<{
+      sitemapUrl?: string;
+      all?: boolean;
+    }>(request);
+    const body = bodyResult.success ? bodyResult.data : {};
     const sitemapUrl = body.sitemapUrl;
     const pingAll = body.all === true;
 

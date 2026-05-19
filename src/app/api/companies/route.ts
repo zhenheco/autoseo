@@ -3,7 +3,9 @@
  */
 
 import { NextRequest } from "next/server";
-import { withAuth } from "@/lib/api/auth-middleware";
+import { withRouteAuth } from "@/lib/api/route-auth";
+import { requestErrorResponse } from "@/lib/api/request-error-response";
+import { safeJson } from "@/lib/api/request-body";
 import {
   successResponse,
   validationError,
@@ -28,9 +30,15 @@ function generateSlug(name: string): string {
  * POST /api/companies
  * 建立新公司
  */
-export const POST = withAuth(
+export const POST = withRouteAuth(
+  "authenticated",
   async (request: NextRequest, { user, supabase }) => {
-    const body = await request.json();
+    const bodyResult = await safeJson<{ name?: unknown }>(request);
+    if (!bodyResult.success) {
+      return requestErrorResponse(bodyResult.error);
+    }
+
+    const body = bodyResult.data;
     const { name } = body;
 
     if (!name || typeof name !== "string") {

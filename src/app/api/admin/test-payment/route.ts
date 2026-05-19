@@ -11,6 +11,8 @@
  */
 
 import { NextResponse } from "next/server";
+import { requestErrorResponse } from "@/lib/api/request-error-response";
+import { safeJson } from "@/lib/api/request-body";
 import { createClient } from "@/lib/supabase/server";
 import { isSuperAdmin } from "@/lib/auth-guard";
 
@@ -129,7 +131,12 @@ export async function POST(request: Request) {
     }
 
     // 解析請求
-    const body: TestPaymentRequest = await request.json();
+    const bodyResult = await safeJson<TestPaymentRequest>(request);
+    if (!bodyResult.success) {
+      return requestErrorResponse(bodyResult.error);
+    }
+
+    const body = bodyResult.data;
     const { type, amount, description, email, periodParams } = body;
 
     // 驗證金額
