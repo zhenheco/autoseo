@@ -26,6 +26,7 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import Link from "next/link";
+import { ShoplineHealthSummary } from "./_components/ShoplineHealthSummary";
 import { ShoplineSeoTabs } from "./_components/ShoplineSeoTabs";
 
 type SearchParams = {
@@ -201,7 +202,8 @@ export default async function ShoplineConnectPage({
       </Card>
 
       {status.connected === true && (
-        <div className="mt-6">
+        <div className="mt-6 space-y-6">
+          <ShoplineHealthSummary websiteId={website.id} />
           <ShoplineSeoTabs websiteId={website.id} />
         </div>
       )}

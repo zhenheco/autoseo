@@ -2768,6 +2768,24 @@
         "redirects": "Redirects",
         "shop": "Shop"
       },
+      "health": {
+        "title": "SEO health summary",
+        "empty": "No SEO health issues found",
+        "flag": {
+          "missingSeoTitle": "Missing SEO title",
+          "seoTitleTooLong": "SEO title too long",
+          "missingSeoDescription": "Missing SEO description",
+          "seoDescriptionTooLong": "SEO description too long",
+          "missingAlt": "Missing image alt",
+          "duplicateTitle": "Duplicate title"
+        }
+      },
+      "filter": {
+        "label": "SEO filter",
+        "all": "All",
+        "clear": "Clear",
+        "count": "{filter}: {count} items"
+      },
       "products": {
         "title": "SHOPLINE Products",
         "empty": "No products",

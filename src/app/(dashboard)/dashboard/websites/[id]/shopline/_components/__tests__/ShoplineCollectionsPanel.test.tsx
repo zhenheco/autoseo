@@ -27,6 +27,15 @@ vi.mock("next-intl", () => ({
       "collections.products.position": "Position",
       "products.column.notSet": "Not set",
       "products.column.title": "Product title",
+      "filter.label": "SEO filter",
+      "filter.all": "All",
+      "filter.clear": "Clear",
+      "filter.count": `${values?.filter ?? ""}: ${values?.count ?? 0} items`,
+      "health.flag.missingSeoTitle": "Missing SEO title",
+      "health.flag.seoTitleTooLong": "SEO title too long",
+      "health.flag.missingSeoDescription": "Missing SEO description",
+      "health.flag.seoDescriptionTooLong": "SEO description too long",
+      "health.flag.duplicateTitle": "Duplicate title",
       "edit.collection.title": "Edit collection SEO",
       "edit.collection.titleLabel": "Collection title",
       "edit.collection.seoTitleLabel": "SEO title",
@@ -95,6 +104,74 @@ describe("ShoplineCollectionsPanel", () => {
     expect(screen.getByText("summer")).toBeInTheDocument();
     expect(screen.getByText("Summer SEO")).toBeInTheDocument();
     expect(screen.getByText("12")).toBeInTheDocument();
+  });
+
+  it("changes and clears the SEO filter when loading collections", async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          collections: [
+            {
+              id: "collection-1",
+              title: "Summer Collection",
+              handle: "summer",
+              seo: {},
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          collections: [
+            {
+              id: "collection-duplicate",
+              title: "Duplicate",
+              handle: "duplicate",
+              seo: {},
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          collections: [
+            {
+              id: "collection-1",
+              title: "Summer Collection",
+              handle: "summer",
+              seo: {},
+            },
+          ],
+        }),
+      });
+
+    render(<ShoplineCollectionsPanel websiteId="website-1" />);
+
+    expect(await screen.findByText("Summer Collection")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("SEO filter"), {
+      target: { value: "duplicate-title" },
+    });
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenNthCalledWith(
+        2,
+        "/api/shopline/website-1/collections?filter=duplicate-title",
+      );
+    });
+    expect(await screen.findByText("Duplicate")).toBeInTheDocument();
+    expect(screen.getByText("Duplicate title: 1 items")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Clear" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenNthCalledWith(
+        3,
+        "/api/shopline/website-1/collections",
+      );
+    });
   });
 
   it("submits PATCH from the edit modal and updates the row", async () => {

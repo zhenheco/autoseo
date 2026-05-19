@@ -2949,6 +2949,24 @@
         "redirects": "Redirects",
         "shop": "Shop"
       },
+      "health": {
+        "title": "Resumen de salud SEO",
+        "empty": "No hay problemas SEO",
+        "flag": {
+          "missingSeoTitle": "Falta titulo SEO",
+          "seoTitleTooLong": "Titulo SEO demasiado largo",
+          "missingSeoDescription": "Falta descripcion SEO",
+          "seoDescriptionTooLong": "Descripcion SEO demasiado larga",
+          "missingAlt": "Falta Alt de imagen",
+          "duplicateTitle": "Titulo duplicado"
+        }
+      },
+      "filter": {
+        "label": "Filtro SEO",
+        "all": "Todo",
+        "clear": "Limpiar",
+        "count": "{filter}: {count} elementos"
+      },
       "products": {
         "title": "SHOPLINE 商品",
         "empty": "尚無商品",

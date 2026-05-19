@@ -2768,6 +2768,24 @@
         "redirects": "Redirects",
         "shop": "Shop"
       },
+      "health": {
+        "title": "SEO ヘルス概要",
+        "empty": "SEO ヘルスの問題はありません",
+        "flag": {
+          "missingSeoTitle": "SEO タイトル未設定",
+          "seoTitleTooLong": "SEO タイトルが長すぎます",
+          "missingSeoDescription": "SEO 説明未設定",
+          "seoDescriptionTooLong": "SEO 説明が長すぎます",
+          "missingAlt": "画像 Alt 未設定",
+          "duplicateTitle": "タイトル重複"
+        }
+      },
+      "filter": {
+        "label": "SEO フィルター",
+        "all": "すべて",
+        "clear": "クリア",
+        "count": "{filter}：{count} 件"
+      },
       "products": {
         "title": "SHOPLINE 商品",
         "empty": "尚無商品",

@@ -2768,6 +2768,24 @@
         "redirects": "Redirects",
         "shop": "商店"
       },
+      "health": {
+        "title": "SEO 健康摘要",
+        "empty": "目前沒有 SEO 健康問題",
+        "flag": {
+          "missingSeoTitle": "缺少 SEO 標題",
+          "seoTitleTooLong": "SEO 標題過長",
+          "missingSeoDescription": "缺少 SEO 描述",
+          "seoDescriptionTooLong": "SEO 描述過長",
+          "missingAlt": "缺少圖片 Alt",
+          "duplicateTitle": "標題重複"
+        }
+      },
+      "filter": {
+        "label": "SEO 篩選",
+        "all": "全部",
+        "clear": "清除",
+        "count": "{filter}：{count} 筆"
+      },
       "products": {
         "title": "SHOPLINE 商品",
         "empty": "尚無商品",

@@ -43,6 +43,16 @@ vi.mock("next-intl", () => ({
       "ai.generate.error": `AI draft failed: ${values?.error ?? ""}`,
       "ai.generate.source": `AI draft (${values?.model ?? ""})`,
       "ai.image.generate": "AI alt",
+      "filter.label": "SEO filter",
+      "filter.all": "All",
+      "filter.clear": "Clear",
+      "filter.count": `${values?.filter ?? ""}: ${values?.count ?? 0} items`,
+      "health.flag.missingSeoTitle": "Missing SEO title",
+      "health.flag.seoTitleTooLong": "SEO title too long",
+      "health.flag.missingSeoDescription": "Missing SEO description",
+      "health.flag.seoDescriptionTooLong": "SEO description too long",
+      "health.flag.missingAlt": "Missing alt",
+      "health.flag.duplicateTitle": "Duplicate title",
       "edit.categories.addLabel": "Add collection IDs",
       "edit.categories.removeLabel": "Remove collection IDs",
       "edit.categories.placeholder": "Separate with commas or new lines",
@@ -193,6 +203,74 @@ describe("ShoplineProductsPanel", () => {
     expect(screen.queryByText("Product 2")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Previous" })).toBeDisabled();
     expect(screen.getByRole("button", { name: "Next" })).toBeEnabled();
+  });
+
+  it("changes and clears the SEO filter when loading products", async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          products: [
+            {
+              id: "product-1",
+              title: "Product 1",
+              handle: "product-1",
+              seo: {},
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          products: [
+            {
+              id: "product-missing-alt",
+              title: "Needs alt",
+              handle: "needs-alt",
+              seo: {},
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          products: [
+            {
+              id: "product-1",
+              title: "Product 1",
+              handle: "product-1",
+              seo: {},
+            },
+          ],
+        }),
+      });
+
+    render(<ShoplineProductsPanel websiteId="website-1" />);
+
+    expect(await screen.findByText("Product 1")).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText("SEO filter"), {
+      target: { value: "missing-alt" },
+    });
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenNthCalledWith(
+        2,
+        "/api/shopline/website-1/products?filter=missing-alt",
+      );
+    });
+    expect(await screen.findByText("Needs alt")).toBeInTheDocument();
+    expect(screen.getByText("Missing alt: 1 items")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Clear" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenNthCalledWith(
+        3,
+        "/api/shopline/website-1/products",
+      );
+    });
   });
 
   it("opens the edit modal with the current SEO title when a row is clicked", async () => {

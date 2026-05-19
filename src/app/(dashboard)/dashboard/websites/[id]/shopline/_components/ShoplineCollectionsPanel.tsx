@@ -39,6 +39,14 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import {
+  getSeoFilterOptions,
+  normalizeShoplineSeoFilter,
+  readShoplineSeoFilterFromUrl,
+  SHOPLINE_SEO_FILTER_EVENT,
+  updateShoplineSeoFilterUrl,
+  type ShoplineSeoFilter,
+} from "./seo-filter-events";
 
 type ShoplineCollection = {
   id: string;
@@ -125,6 +133,9 @@ export function ShoplineCollectionsPanel({
   const [seoTitle, setSeoTitle] = useState("");
   const [seoDescription, setSeoDescription] = useState("");
   const [handle, setHandle] = useState("");
+  const [seoFilter, setSeoFilter] = useState<ShoplineSeoFilter | "">(() =>
+    readShoplineSeoFilterFromUrl("collection"),
+  );
   const currentCursor = cursorStack[cursorStack.length - 1] ?? null;
   const currentPageNumber = cursorStack.length;
   const selectedCollectionTitleLength = useMemo(() => title.length, [title]);
@@ -147,17 +158,18 @@ export function ShoplineCollectionsPanel({
     () => buildCollectionTreeRows(collections, hierarchy),
     [collections, hierarchy],
   );
+  const filterOptions = getSeoFilterOptions("collection");
+  const activeFilterLabel = seoFilter ? getSeoFilterLabel(t, seoFilter) : "";
 
   const loadCollections = useCallback(async () => {
     setLoading(true);
 
     try {
-      const requestUrl =
-        currentCursor === null
-          ? `/api/shopline/${websiteId}/collections`
-          : `/api/shopline/${websiteId}/collections?cursor=${encodeURIComponent(
-              currentCursor,
-            )}`;
+      const requestUrl = buildShoplineListUrl(
+        `/api/shopline/${websiteId}/collections`,
+        currentCursor,
+        seoFilter,
+      );
       const response = await fetch(requestUrl);
       if (!response.ok) throw new Error("shopline_collections_fetch_failed");
 
@@ -169,11 +181,32 @@ export function ShoplineCollectionsPanel({
     } finally {
       setLoading(false);
     }
-  }, [currentCursor, saveErrorMessage, websiteId]);
+  }, [currentCursor, saveErrorMessage, seoFilter, websiteId]);
 
   useEffect(() => {
     void loadCollections();
   }, [loadCollections]);
+
+  useEffect(() => {
+    function handleSeoFilterChange(event: Event) {
+      const nextFilter = normalizeShoplineSeoFilter(
+        (event as CustomEvent<{ filter?: string }>).detail?.filter,
+        "collection",
+      );
+
+      setSeoFilter(nextFilter);
+      setCursorStack([null]);
+    }
+
+    window.addEventListener(SHOPLINE_SEO_FILTER_EVENT, handleSeoFilterChange);
+
+    return () => {
+      window.removeEventListener(
+        SHOPLINE_SEO_FILTER_EVENT,
+        handleSeoFilterChange,
+      );
+    };
+  }, []);
 
   const loadHierarchy = useCallback(async () => {
     try {
@@ -233,6 +266,12 @@ export function ShoplineCollectionsPanel({
     setCursorStack((currentStack) =>
       currentStack.length > 1 ? currentStack.slice(0, -1) : currentStack,
     );
+  }
+
+  function handleFilterChange(filter: ShoplineSeoFilter | "") {
+    setSeoFilter(filter);
+    setCursorStack([null]);
+    updateShoplineSeoFilterUrl(filter);
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -421,6 +460,46 @@ export function ShoplineCollectionsPanel({
         </Button>
       </CardHeader>
       <CardContent>
+        <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+          <div className="space-y-1">
+            <Label htmlFor="shopline-collections-filter">
+              {t("filter.label")}
+            </Label>
+            <select
+              id="shopline-collections-filter"
+              className="flex h-9 w-full min-w-48 rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+              value={seoFilter}
+              onChange={(event) =>
+                handleFilterChange(event.target.value as ShoplineSeoFilter | "")
+              }
+            >
+              <option value="">{t("filter.all")}</option>
+              {filterOptions.map((filter) => (
+                <option key={filter} value={filter}>
+                  {getSeoFilterLabel(t, filter)}
+                </option>
+              ))}
+            </select>
+          </div>
+          {seoFilter ? (
+            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+              <span>
+                {t("filter.count", {
+                  filter: activeFilterLabel,
+                  count: collections.length,
+                })}
+              </span>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => handleFilterChange("")}
+              >
+                {t("filter.clear")}
+              </Button>
+            </div>
+          ) : null}
+        </div>
         {loading ? (
           <p className="text-sm text-muted-foreground">
             {t("collections.empty")}
@@ -862,6 +941,34 @@ function buildCollectionTreeRows(
   }
 
   return rows;
+}
+
+function buildShoplineListUrl(
+  basePath: string,
+  cursor: string | null,
+  filter: ShoplineSeoFilter | "",
+): string {
+  const params = new URLSearchParams();
+  if (cursor) params.set("cursor", cursor);
+  if (filter) params.set("filter", filter);
+
+  const queryString = params.toString();
+  return queryString ? `${basePath}?${queryString}` : basePath;
+}
+
+function getSeoFilterLabel(
+  t: (key: string, values?: Record<string, unknown>) => string,
+  filter: ShoplineSeoFilter,
+): string {
+  const keys: Record<ShoplineSeoFilter, string> = {
+    "missing-seo": "health.flag.missingSeoTitle",
+    "missing-alt": "health.flag.missingAlt",
+    "title-too-long": "health.flag.seoTitleTooLong",
+    "description-too-long": "health.flag.seoDescriptionTooLong",
+    "duplicate-title": "health.flag.duplicateTitle",
+  };
+
+  return t(keys[filter]);
 }
 
 async function readShoplineSaveError(

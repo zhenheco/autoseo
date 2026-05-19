@@ -2949,6 +2949,24 @@
         "redirects": "Redirects",
         "shop": "Shop"
       },
+      "health": {
+        "title": "SEO 상태 요약",
+        "empty": "SEO 문제가 없습니다",
+        "flag": {
+          "missingSeoTitle": "SEO 제목 없음",
+          "seoTitleTooLong": "SEO 제목이 너무 김",
+          "missingSeoDescription": "SEO 설명 없음",
+          "seoDescriptionTooLong": "SEO 설명이 너무 김",
+          "missingAlt": "이미지 Alt 없음",
+          "duplicateTitle": "중복 제목"
+        }
+      },
+      "filter": {
+        "label": "SEO 필터",
+        "all": "전체",
+        "clear": "초기화",
+        "count": "{filter}: {count}개"
+      },
       "products": {
         "title": "SHOPLINE 商品",
         "empty": "尚無商品",
