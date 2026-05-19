@@ -98,7 +98,9 @@ describe("GET /api/shopline/[websiteId]/products", () => {
     const { GET } = await import("../route");
 
     const response = await GET(
-      new Request("https://1wayseo.com/api/shopline/website-1/products"),
+      new Request(
+        "https://1wayseo.com/api/shopline/website-1/products",
+      ) as never,
       params(),
     );
 
@@ -113,7 +115,9 @@ describe("GET /api/shopline/[websiteId]/products", () => {
     const { GET } = await import("../route");
 
     const response = await GET(
-      new Request("https://1wayseo.com/api/shopline/website-1/products"),
+      new Request(
+        "https://1wayseo.com/api/shopline/website-1/products",
+      ) as never,
       params(),
     );
 
@@ -131,7 +135,9 @@ describe("GET /api/shopline/[websiteId]/products", () => {
     const { GET } = await import("../route");
 
     const response = await GET(
-      new Request("https://1wayseo.com/api/shopline/website-1/products"),
+      new Request(
+        "https://1wayseo.com/api/shopline/website-1/products",
+      ) as never,
       params(),
     );
 
@@ -159,7 +165,7 @@ describe("GET /api/shopline/[websiteId]/products", () => {
     const response = await GET(
       new Request(
         "https://1wayseo.com/api/shopline/website-1/products?cursor=cursor-1",
-      ),
+      ) as never,
       params(),
     );
 

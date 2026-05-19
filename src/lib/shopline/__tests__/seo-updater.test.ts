@@ -41,7 +41,7 @@ function createStore(overrides: Partial<ShoplineConnectionStore> = {}) {
       shop_domain: "demo-shop.myshopline.com",
       access_token_encrypted: "encrypted-token",
       granted_scopes: ["read_products", "write_products"],
-      status: "active",
+      status: "active" as const,
       last_verified_at: null,
       updated_at: null,
     })),

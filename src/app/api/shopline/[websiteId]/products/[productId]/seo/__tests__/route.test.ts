@@ -117,7 +117,7 @@ describe("PATCH /api/shopline/[websiteId]/products/[productId]/seo", () => {
           method: "PATCH",
           body: JSON.stringify({ seo: { title: "Updated SEO title" } }),
         },
-      ),
+      ) as never,
       params(),
     );
 
@@ -138,7 +138,7 @@ describe("PATCH /api/shopline/[websiteId]/products/[productId]/seo", () => {
           method: "PATCH",
           body: JSON.stringify({ seo: { title: "Updated SEO title" } }),
         },
-      ),
+      ) as never,
       params(),
     );
 
@@ -166,7 +166,7 @@ describe("PATCH /api/shopline/[websiteId]/products/[productId]/seo", () => {
           method: "PATCH",
           body: JSON.stringify({ seo: { title: "Updated SEO title" } }),
         },
-      ),
+      ) as never,
       params(),
     );
 
@@ -198,7 +198,7 @@ describe("PATCH /api/shopline/[websiteId]/products/[productId]/seo", () => {
           method: "PATCH",
           body: JSON.stringify({ seo: { title: "Updated SEO title" } }),
         },
-      ),
+      ) as never,
       params(),
     );
 
