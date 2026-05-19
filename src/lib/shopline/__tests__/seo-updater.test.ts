@@ -236,6 +236,39 @@ describe("updateShoplineProductSeo", () => {
     ]);
   });
 
+  it("warns and returns the updated product when audit log insert fails", async () => {
+    const store = createStore();
+    const insert = vi.fn(async () => ({
+      error: { message: "relation does not exist" },
+    }));
+    const from = vi.fn(() => ({ insert }));
+    const supabase = { from };
+    const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
+    updateProduct.mockResolvedValueOnce(updatedProduct);
+
+    await expect(
+      updateShoplineProductSeo(
+        "company_1",
+        "website_1",
+        "product_1",
+        { seo: { title: "Updated SEO title" } },
+        {
+          store,
+          auditOptions: {
+            supabase,
+            source: "ui",
+          },
+        },
+      ),
+    ).resolves.toEqual(updatedProduct);
+
+    expect(warn).toHaveBeenCalledWith(
+      "[shopline-seo-updater] audit log insert failed:",
+      "relation does not exist",
+    );
+    warn.mockRestore();
+  });
+
   it("does not write audit rows when audit options are omitted", async () => {
     const store = createStore();
     updateProduct.mockResolvedValueOnce(updatedProduct);

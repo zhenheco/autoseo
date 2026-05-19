@@ -190,9 +190,11 @@ export async function updateShoplineProductSeo(
         .from("shopline_seo_audit_log")
         .insert(auditRows);
       if (error) {
-        throw new Error(
-          `shopline_seo_audit_log_insert_failed: ${error.message ?? "unknown"}`,
+        console.warn(
+          "[shopline-seo-updater] audit log insert failed:",
+          error.message ?? "unknown",
         );
+        return updatedProduct;
       }
     }
   }
