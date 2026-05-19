@@ -4,6 +4,38 @@ const { persistShoplineConnectionMock } = vi.hoisted(() => ({
   persistShoplineConnectionMock: vi.fn(),
 }));
 
+const { websiteQuery, supabaseMock } = vi.hoisted(() => {
+  const websiteQuery = {
+    select: vi.fn(() => websiteQuery),
+    eq: vi.fn(() => websiteQuery),
+    maybeSingle: vi.fn(
+      async (): Promise<{ data: { id: string } | null; error: null }> => ({
+        data: { id: "website-1" },
+        error: null,
+      }),
+    ),
+  };
+
+  const supabaseMock = {
+    from: vi.fn((table: string) => {
+      if (table === "website_configs") return websiteQuery;
+      throw new Error(`unexpected table: ${table}`);
+    }),
+  };
+
+  return { websiteQuery, supabaseMock };
+});
+
+vi.mock("@/lib/api/route-auth", () => ({
+  withRouteAuth: (_mode: string, handler: unknown) => (request: Request) =>
+    (handler as CallableFunction)(request, {
+      authMode: "company",
+      companyId: "company-1",
+      supabase: supabaseMock,
+      user: { id: "user-1" },
+    }),
+}));
+
 vi.mock("@/lib/shopline/connections", async (importOriginal) => {
   const actual =
     await importOriginal<typeof import("@/lib/shopline/connections")>();
@@ -37,6 +69,14 @@ beforeEach(() => {
     "https://{shopHandle}.myshopline.com/admin/oauth-web/#/oauth/authorize?appKey={clientId}&responseType=code&scope={scope}&redirectUri={redirectUri}&customField={state}",
   );
   vi.restoreAllMocks();
+  websiteQuery.select.mockClear();
+  websiteQuery.eq.mockClear();
+  websiteQuery.maybeSingle.mockClear();
+  websiteQuery.maybeSingle.mockResolvedValue({
+    data: { id: "website-1" },
+    error: null,
+  });
+  supabaseMock.from.mockClear();
   persistShoplineConnectionMock.mockReset();
   persistShoplineConnectionMock.mockResolvedValue({
     connected: true,
@@ -75,11 +115,11 @@ async function signShoplineParams(params: URLSearchParams): Promise<string> {
 }
 
 describe("SHOPLINE install route", () => {
-  it("redirects customized app installs with signed state and a nonce cookie", async () => {
+  it("redirects owned customized app installs with signed state and a nonce cookie", async () => {
     const resp = await installGet(
       new Request(
-        "https://1wayseo.com/api/oauth/shopline/install?shopHandle=demo-shop&workspaceId=company-1&siteId=website-1",
-      ),
+        "https://1wayseo.com/api/oauth/shopline/install?shopHandle=demo-shop.myshopline.com&siteId=website-1",
+      ) as unknown as NextRequest,
     );
 
     expect(resp.status).toBe(302);
@@ -98,11 +138,15 @@ describe("SHOPLINE install route", () => {
     expect(resp.headers.get("set-cookie")).toMatch(
       /shopline_oauth_nonce=.*HttpOnly.*Path=\/api\/oauth\/shopline\/callback/,
     );
+    expect(websiteQuery.eq).toHaveBeenCalledWith("id", "website-1");
+    expect(websiteQuery.eq).toHaveBeenCalledWith("company_id", "company-1");
   });
 
   it("rejects missing shop handles before building an external URL", async () => {
     const resp = await installGet(
-      new Request("https://1wayseo.com/api/oauth/shopline/install"),
+      new Request(
+        "https://1wayseo.com/api/oauth/shopline/install",
+      ) as unknown as NextRequest,
     );
 
     expect(resp.status).toBe(400);
@@ -111,16 +155,34 @@ describe("SHOPLINE install route", () => {
     });
   });
 
-  it("rejects SaaS installs without company and website identifiers", async () => {
+  it("rejects SaaS installs without a website identifier", async () => {
     const resp = await installGet(
       new Request(
         "https://1wayseo.com/api/oauth/shopline/install?shopHandle=demo-shop",
-      ),
+      ) as unknown as NextRequest,
     );
 
     expect(resp.status).toBe(400);
     await expect(resp.json()).resolves.toEqual({
-      error: "missing_workspace_or_site",
+      error: "missing_site_id",
+    });
+  });
+
+  it("rejects installs for websites outside the signed-in company", async () => {
+    websiteQuery.maybeSingle.mockResolvedValueOnce({
+      data: null,
+      error: null,
+    });
+
+    const resp = await installGet(
+      new Request(
+        "https://1wayseo.com/api/oauth/shopline/install?shopHandle=demo-shop&siteId=website-2",
+      ) as unknown as NextRequest,
+    );
+
+    expect(resp.status).toBe(404);
+    await expect(resp.json()).resolves.toEqual({
+      error: "website_not_found",
     });
   });
 });
@@ -152,16 +214,12 @@ describe("SHOPLINE callback route", () => {
       },
     } as unknown as NextRequest);
 
-    const body = await resp.json();
-    expect(resp.status).toBe(400);
-    expect(body).toEqual({
-      connected: false,
-      error: "shopline_authorization_cancelled",
-      reason: "access_denied",
-    });
-    expect(JSON.stringify(body)).not.toContain(
-      "merchant rejected authorization",
+    expect(resp.status).toBe(302);
+    expect(resp.headers.get("location")).toBe(
+      "https://1wayseo.com/dashboard/websites/s1/shopline?shopline=cancelled&reason=access_denied",
     );
+    const body = await resp.text();
+    expect(body).not.toContain("merchant rejected authorization");
     expect(fetchMock).not.toHaveBeenCalled();
     expect(persistShoplineConnectionMock).not.toHaveBeenCalled();
     expect(resp.headers.get("set-cookie")).toContain("shopline_oauth_nonce=;");
@@ -200,15 +258,11 @@ describe("SHOPLINE callback route", () => {
       },
     } as unknown as NextRequest);
 
-    const body = await resp.json();
-    expect(resp.status, JSON.stringify(body)).toBe(200);
-    expect(body).toMatchObject({
-      connected: true,
-      shopHandle: "demo-shop",
-      scope: "read_products",
-      tokenReceived: true,
-      tokenStorage: "stored",
-    });
+    expect(resp.status).toBe(302);
+    expect(resp.headers.get("location")).toBe(
+      "https://1wayseo.com/dashboard/websites/s1/shopline?shopline=connected&shopHandle=demo-shop",
+    );
+    const body = await resp.text();
     expect(JSON.stringify(body)).not.toContain("token-never-returned");
     expect(persistShoplineConnectionMock).toHaveBeenCalledWith(
       { store: true },
@@ -221,6 +275,45 @@ describe("SHOPLINE callback route", () => {
       }),
     );
     expect(resp.headers.get("set-cookie")).toContain("shopline_oauth_nonce=;");
+  });
+
+  it("falls back to the connection page when callback state has an unsafe returnTo", async () => {
+    const { url, cookieNonce } = await buildAuthorizeUrl({
+      workspaceId: "w1",
+      siteId: "s1",
+      shopHandle: "demo-shop",
+      returnTo: "https://evil.example/callback",
+    });
+    const installUrl = new URL(url);
+    const installParams = new URLSearchParams(installUrl.hash.split("?")[1]);
+    const params = new URLSearchParams({
+      code: "auth-code",
+      customField: installParams.get("customField")!,
+      handle: "demo-shop",
+      timestamp: "1778379980000",
+    });
+    params.set("sign", await signShoplineParams(params));
+
+    global.fetch = vi.fn().mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        code: 200,
+        data: { accessToken: "token-never-returned", scope: "read_products" },
+      }),
+    }) as unknown as typeof fetch;
+
+    const resp = await callbackGet({
+      url: `https://1wayseo.com/api/oauth/shopline/callback?${params.toString()}`,
+      cookies: {
+        get: (name: string) =>
+          name === "shopline_oauth_nonce" ? { value: cookieNonce } : undefined,
+      },
+    } as unknown as NextRequest);
+
+    expect(resp.status).toBe(302);
+    expect(resp.headers.get("location")).toBe(
+      "https://1wayseo.com/dashboard/websites/s1/shopline?shopline=connected&shopHandle=demo-shop",
+    );
   });
 
   it("returns a non-secret error when SHOPLINE token exchange fails", async () => {
@@ -254,13 +347,12 @@ describe("SHOPLINE callback route", () => {
       },
     } as unknown as NextRequest);
 
-    const body = await resp.json();
-    expect(resp.status).toBe(502);
-    expect(body).toEqual({
-      connected: false,
-      error: "shopline_token_exchange_failed",
-    });
-    expect(JSON.stringify(body)).not.toContain("invalid client secret");
+    expect(resp.status).toBe(302);
+    expect(resp.headers.get("location")).toBe(
+      "https://1wayseo.com/dashboard/websites/s1/shopline?shopline=error&error=shopline_token_exchange_failed",
+    );
+    const body = await resp.text();
+    expect(body).not.toContain("invalid client secret");
     expect(persistShoplineConnectionMock).not.toHaveBeenCalled();
   });
 });

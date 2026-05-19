@@ -1,14 +1,14 @@
 ## 1. Foundation
 
 - [ ] Create encrypted customer SHOPLINE connection storage with company/website ownership and RLS-safe access.
-- [ ] Persist OAuth callback tokens server-side without printing or returning token values.
-- [ ] Add connection status API and dashboard status surface.
-- [ ] Add tests for state validation, HMAC validation, token persistence, and ownership checks.
+- [x] Persist OAuth callback tokens server-side without printing or returning token values.
+- [x] Add connection status API and dashboard status surface.
+- [x] Add tests for state validation, HMAC validation, token persistence, and ownership checks.
 
 ## 2. Customer Authorization
 
-- [ ] Add dashboard flow to collect shop handle and generate a customer install link.
-- [ ] Add post-callback success/error UX that confirms connected shop and granted scopes.
+- [x] Add dashboard flow to collect shop handle and generate a customer install link.
+- [x] Add post-callback success/error UX that confirms connected shop and granted scopes.
 - [ ] Document exact customer-facing permission language.
 - [ ] Verify production install flow against a real SHOPLINE test store.
 

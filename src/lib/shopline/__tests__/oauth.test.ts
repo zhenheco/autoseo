@@ -79,6 +79,17 @@ describe("buildAuthorizeUrl", () => {
     expect(cookieNonce).toMatch(/^[A-Za-z0-9_-]+$/);
   });
 
+  it("requests the SEO write scopes needed for assisted SHOPLINE operations", () => {
+    expect(SHOPLINE_OAUTH_SCOPES).toEqual([
+      "read_products",
+      "write_products",
+      "read_product_listings",
+      "read_content",
+      "write_content",
+      "write_page",
+    ]);
+  });
+
   it("falls back to oauth-web URL when the customized template is not configured", async () => {
     vi.stubEnv("SHOPLINE_CUSTOMIZED_INSTALL_URL_TEMPLATE", "");
 

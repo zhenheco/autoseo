@@ -2,7 +2,11 @@ import { base64UrlDecode, base64UrlEncode } from "./base64";
 
 export const SHOPLINE_OAUTH_SCOPES = [
   "read_products",
+  "write_products",
   "read_product_listings",
+  "read_content",
+  "write_content",
+  "write_page",
 ] as const;
 
 export type ShoplineScope = (typeof SHOPLINE_OAUTH_SCOPES)[number];
@@ -23,6 +27,26 @@ type StatePayload = VerifiedShoplineOAuthState & {
 
 const STATE_MAX_AGE_MS = 10 * 60 * 1000;
 const SKEW_TOLERANCE_MS = 30 * 1000;
+
+export function normalizeShoplineShopHandle(shopHandle: string): string {
+  const trimmed = shopHandle.trim();
+  let normalized = trimmed;
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    normalized = new URL(trimmed).hostname;
+  }
+
+  normalized = normalized
+    .replace(/^https?:\/\//i, "")
+    .replace(/\/.*$/, "")
+    .replace(/\.myshopline\.com$/i, "");
+
+  if (!/^[a-zA-Z0-9-]+$/.test(normalized)) {
+    throw new Error("invalid_shopline_shop_handle");
+  }
+
+  return normalized;
+}
 
 function encodeUtf8(value: string): Uint8Array<ArrayBuffer> {
   const encoded = new TextEncoder().encode(value);
@@ -227,15 +251,13 @@ export async function buildAuthorizeUrl(params: {
   shopHandle: string;
   returnTo?: string;
 }): Promise<{ url: string; cookieNonce: string }> {
-  if (!/^[a-zA-Z0-9-]+$/.test(params.shopHandle)) {
-    throw new Error("invalid_shopline_shop_handle");
-  }
+  const shopHandle = normalizeShoplineShopHandle(params.shopHandle);
 
   const cookieNonce = generateNonce();
   const payload: StatePayload = {
     workspaceId: params.workspaceId,
     siteId: params.siteId,
-    shopHandle: params.shopHandle,
+    shopHandle,
     returnTo: params.returnTo,
     nonce: cookieNonce,
     ts: Date.now(),
@@ -246,17 +268,15 @@ export async function buildAuthorizeUrl(params: {
   const url = buildInstallUrl({
     clientId: requireEnv("SHOPLINE_CLIENT_ID"),
     redirectUri: requireEnv("SHOPLINE_REDIRECT_URI"),
-    shopHandle: params.shopHandle,
+    shopHandle,
     state,
   });
 
+  const scope = SHOPLINE_OAUTH_SCOPES.join(",");
   return {
     url: url
       .toString()
-      .replace(
-        "scope=read_products%2Cread_product_listings",
-        `scope=${SHOPLINE_OAUTH_SCOPES.join(",")}`,
-      ),
+      .replace(`scope=${encodeURIComponent(scope)}`, `scope=${scope}`),
     cookieNonce,
   };
 }
@@ -336,11 +356,9 @@ export async function exchangeCodeForToken(
   shopHandle: string,
   code: string,
 ): Promise<{ access_token: string; scope: string }> {
-  if (!/^[a-zA-Z0-9-]+$/.test(shopHandle)) {
-    throw new Error("invalid_shopline_shop_handle");
-  }
+  const normalizedShopHandle = normalizeShoplineShopHandle(shopHandle);
 
-  const tokenUrl = `https://${shopHandle}.myshopline.com/admin/oauth/token/create`;
+  const tokenUrl = `https://${normalizedShopHandle}.myshopline.com/admin/oauth/token/create`;
   const body = JSON.stringify({ code });
   const timestamp = String(Date.now());
   const resp = await fetch(tokenUrl, {

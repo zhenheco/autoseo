@@ -125,12 +125,14 @@ export default async function EditWebsitePage({
   const isPlatformBlog = website.is_platform_blog === true;
   const shoplineStatus = await getShoplineStatus(website.id, company.id);
   const derivedShopHandle = deriveShoplineHandle(website.wordpress_url);
-  const shoplineInstallHref = derivedShopHandle
-    ? `/api/oauth/shopline/install?shopHandle=${encodeURIComponent(derivedShopHandle)}&workspaceId=${encodeURIComponent(company.id)}&siteId=${encodeURIComponent(website.id)}&returnTo=${encodeURIComponent(`/dashboard/websites/${website.id}/edit`)}`
-    : null;
+  const shoplineConnectHref = `/dashboard/websites/${website.id}/shopline${
+    derivedShopHandle
+      ? `?shopHandle=${encodeURIComponent(derivedShopHandle)}`
+      : ""
+  }`;
   const shoplineStatusView = getShoplineDashboardStatusView(
     shoplineStatus,
-    Boolean(shoplineInstallHref),
+    true,
   );
 
   // 根據網站類型設定頁面資訊
@@ -260,8 +262,8 @@ export default async function EditWebsitePage({
                 {t(shoplineStatusView.badgeKey)}
               </Badge>
             </div>
-            {shoplineStatusView.showConnectAction && shoplineInstallHref && (
-              <Link href={shoplineInstallHref}>
+            {shoplineStatusView.showConnectAction && (
+              <Link href={shoplineConnectHref}>
                 <Button type="button" variant="outline">
                   {t("edit.shoplineConnect")}
                 </Button>
