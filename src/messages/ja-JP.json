@@ -2765,19 +2765,19 @@
       "tabs": {
         "products": "商品",
         "collections": "コレクション",
-        "redirects": "Redirects",
-        "shop": "Shop"
+        "redirects": "リダイレクト",
+        "shop": "ショップ"
       },
       "health": {
-        "title": "SEO ヘルス概要",
-        "empty": "SEO ヘルスの問題はありません",
+        "title": "SEO ヘルスサマリー",
+        "empty": "現在 SEO ヘルス上の問題はありません",
         "flag": {
-          "missingSeoTitle": "SEO タイトル未設定",
+          "missingSeoTitle": "SEO タイトルが未設定です",
           "seoTitleTooLong": "SEO タイトルが長すぎます",
-          "missingSeoDescription": "SEO 説明未設定",
-          "seoDescriptionTooLong": "SEO 説明が長すぎます",
-          "missingAlt": "画像 Alt 未設定",
-          "duplicateTitle": "タイトル重複"
+          "missingSeoDescription": "メタディスクリプションが未設定です",
+          "seoDescriptionTooLong": "メタディスクリプションが長すぎます",
+          "missingAlt": "画像の代替テキストが未設定です",
+          "duplicateTitle": "SEO タイトルが重複しています"
         }
       },
       "filter": {
@@ -2788,11 +2788,11 @@
       },
       "products": {
         "title": "SHOPLINE 商品",
-        "empty": "尚無商品",
+        "empty": "商品はまだありません",
         "column": {
-          "title": "商品名稱",
-          "handle": "Handle",
-          "seoTitle": "SEO 標題",
+          "title": "商品名",
+          "handle": "ハンドル",
+          "seoTitle": "SEO タイトル",
           "notSet": "未設定"
         }
       },
@@ -2801,7 +2801,7 @@
         "empty": "コレクションはありません",
         "column": {
           "title": "コレクション名",
-          "handle": "Handle",
+          "handle": "ハンドル",
           "seoTitle": "SEO タイトル",
           "productsCount": "商品数"
         },
@@ -2821,47 +2821,47 @@
         }
       },
       "edit": {
-        "title": "編輯商品 SEO",
+        "title": "商品 SEO を編集",
         "collection": {
           "title": "コレクション SEO を編集",
           "titleLabel": "コレクション名",
           "seoTitleLabel": "SEO タイトル",
-          "seoDescriptionLabel": "SEO 説明",
-          "handleLabel": "URL slug",
-          "handleChangeWarning": "URL slug を変更すると旧リンクが 404 になる可能性があります。slice 6 で 301 redirect を追加します。"
+          "seoDescriptionLabel": "メタディスクリプション",
+          "handleLabel": "URL スラッグ",
+          "handleChangeWarning": "URL スラッグを変更すると、旧リンクが 404 になる可能性があります。slice 6 で 301 リダイレクトの自動作成を追加します。"
         },
         "tabs": {
-          "seoMeta": "SEO meta",
+          "seoMeta": "SEO メタデータ",
           "images": "画像",
-          "categories": "カテゴリ"
+          "categories": "コレクション"
         },
-        "seoTitleLabel": "SEO 標題",
-        "seoDescriptionLabel": "SEO 描述",
-        "handleLabel": "URL slug",
-        "handleChangeWarning": "⚠️ 變更 URL slug 可能導致舊連結 404，slice 6 將補 301 redirect 自動建立",
-        "applyTemplate": "Apply template",
-        "templatePreview": "Preview: {preview}",
-        "charLimitExceeded": "SEO 描述不可超過 160 字",
+        "seoTitleLabel": "SEO タイトル",
+        "seoDescriptionLabel": "メタディスクリプション",
+        "handleLabel": "URL スラッグ",
+        "handleChangeWarning": "⚠️ URL スラッグを変更すると、旧リンクが 404 になる可能性があります。slice 6 で 301 リダイレクトの自動作成を追加します。",
+        "applyTemplate": "テンプレートを適用",
+        "templatePreview": "プレビュー：{preview}",
+        "charLimitExceeded": "メタディスクリプションは 160 文字以内で入力してください",
         "charCount": "{count}/70",
-        "save": "儲存",
-        "cancel": "取消",
+        "save": "保存する",
+        "cancel": "キャンセル",
         "images": {
-          "altLabel": "Alt text",
-          "altPlaceholder": "描述這張圖片",
-          "save": "儲存",
-          "empty": "此商品沒有圖片",
-          "imageNumber": "圖片 {number}"
+          "altLabel": "代替テキスト",
+          "altPlaceholder": "この画像の内容を説明してください",
+          "save": "保存する",
+          "empty": "この商品には画像がありません",
+          "imageNumber": "画像 {number}"
         },
         "categories": {
-          "addLabel": "追加する collection IDs",
-          "removeLabel": "削除する collection IDs",
-          "placeholder": "カンマまたは改行で区切る",
-          "submit": "カテゴリを更新",
+          "addLabel": "追加するコレクション ID",
+          "removeLabel": "削除するコレクション ID",
+          "placeholder": "カンマまたは改行で区切って入力",
+          "submit": "コレクションを更新",
           "successCount": "{count} 件成功",
           "failedCount": "{count} 件失敗",
           "loading": "コレクションを読み込み中",
           "selectLabel": "コレクション",
-          "advanced": "高度な manual IDs"
+          "advanced": "手動 ID の詳細設定"
         },
         "product": {
           "titleLabel": "商品名"
@@ -2869,62 +2869,62 @@
       },
       "ai": {
         "generate": {
-          "button": "AI下書き",
+          "button": "AI で下書きを生成",
           "loading": "生成中...",
-          "error": "AI下書きに失敗しました: {error}",
-          "source": "AI下書き ({model})"
+          "error": "AI 下書きの生成に失敗しました：{error}",
+          "source": "AI 下書き（{model}）"
         }
       },
       "shop": {
-        "title": "Shop meta",
+        "title": "ショップメタデータ",
         "titleTemplate": {
-          "label": "Title template",
+          "label": "タイトルテンプレート",
           "placeholder": "{{product.title}} | {{shop.name}}",
-          "variables": "Variables"
+          "variables": "変数"
         },
         "defaultDescription": {
-          "label": "Default description"
+          "label": "デフォルト説明"
         },
         "robots": {
-          "products": "Index products",
-          "collections": "Index collections"
+          "products": "商品をインデックス",
+          "collections": "コレクションをインデックス"
         },
         "sitemap": {
-          "enabled": "Sitemap enabled"
+          "enabled": "Sitemap を有効にする"
         },
         "ogImage": {
-          "label": "Default OG image"
+          "label": "デフォルト OG 画像"
         },
         "hreflang": {
           "label": "Hreflang JSON"
         },
-        "save": "Save"
+        "save": "保存する"
       },
       "toast": {
-        "saveSuccess": "已儲存 SEO 標題",
-        "saveError": "儲存 SEO 標題失敗"
+        "saveSuccess": "SEO タイトルを保存しました",
+        "saveError": "SEO タイトルの保存に失敗しました"
       },
       "error": {
         "scopeMissing": {
           "title": "SHOPLINE の再認証が必要です",
-          "description": "この SHOPLINE 連携には今回の更新に必要な権限がありません。",
+          "description": "この SHOPLINE 連携には、今回の更新に必要な権限がありません。再認証してからもう一度お試しください。",
           "reauthorize": "再認証"
         },
         "rateLimited": "操作が多すぎます。{seconds} 秒後に再試行してください。"
       },
       "pagination": {
-        "next": "下一頁",
-        "prev": "上一頁"
+        "next": "次へ",
+        "prev": "前へ"
       },
       "redirects": {
-        "title": "SHOPLINE Redirects",
-        "empty": "リダイレクトはありません",
+        "title": "SHOPLINE リダイレクト",
+        "empty": "リダイレクトはまだありません",
         "add": "追加",
         "delete": "削除",
         "column": {
           "entityType": "種類",
-          "handleFrom": "From",
-          "handleTo": "To",
+          "handleFrom": "転送元ハンドル",
+          "handleTo": "転送先ハンドル",
           "createdAt": "作成日時",
           "hitCount": "ヒット数"
         },
@@ -2934,7 +2934,7 @@
           "page": "ページ"
         },
         "warning": {
-          "autoCreated": "Handle が変更されると 301 redirect が自動作成されます。"
+          "autoCreated": "ハンドルを変更すると、301 リダイレクトが自動作成されます。"
         }
       }
     }

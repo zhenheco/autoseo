@@ -2769,19 +2769,19 @@
         "shop": "Shop"
       },
       "health": {
-        "title": "SEO health summary",
+        "title": "SEO Health Summary",
         "empty": "No SEO health issues found",
         "flag": {
-          "missingSeoTitle": "Missing SEO title",
-          "seoTitleTooLong": "SEO title too long",
-          "missingSeoDescription": "Missing SEO description",
-          "seoDescriptionTooLong": "SEO description too long",
-          "missingAlt": "Missing image alt",
-          "duplicateTitle": "Duplicate title"
+          "missingSeoTitle": "Missing SEO Title",
+          "seoTitleTooLong": "SEO Title is too long",
+          "missingSeoDescription": "Missing SEO Description",
+          "seoDescriptionTooLong": "SEO Description is too long",
+          "missingAlt": "Missing image alt text",
+          "duplicateTitle": "Duplicate SEO Title"
         }
       },
       "filter": {
-        "label": "SEO filter",
+        "label": "SEO Filter",
         "all": "All",
         "clear": "Clear",
         "count": "{filter}: {count} items"
@@ -2790,9 +2790,9 @@
         "title": "SHOPLINE Products",
         "empty": "No products",
         "column": {
-          "title": "Product title",
+          "title": "Product name",
           "handle": "Handle",
-          "seoTitle": "SEO title",
+          "seoTitle": "SEO Title",
           "notSet": "Not set"
         }
       },
@@ -2800,10 +2800,10 @@
         "title": "SHOPLINE Collections",
         "empty": "No collections",
         "column": {
-          "title": "Collection title",
+          "title": "Collection name",
           "handle": "Handle",
-          "seoTitle": "SEO title",
-          "productsCount": "Products"
+          "seoTitle": "SEO Title",
+          "productsCount": "Product count"
         },
         "view": {
           "tree": "Tree view",
@@ -2811,7 +2811,7 @@
         },
         "hierarchy": {
           "move": "Move",
-          "parent": "Parent",
+          "parent": "Parent collection",
           "displayOrder": "Display order",
           "noParent": "No parent"
         },
@@ -2824,32 +2824,32 @@
         "title": "Edit product SEO",
         "collection": {
           "title": "Edit collection SEO",
-          "titleLabel": "Collection title",
-          "seoTitleLabel": "SEO title",
-          "seoDescriptionLabel": "SEO description",
+          "titleLabel": "Collection name",
+          "seoTitleLabel": "SEO Title",
+          "seoDescriptionLabel": "SEO Description",
           "handleLabel": "URL slug",
           "handleChangeWarning": "Changing URL slug may cause old links to 404. Slice 6 will add automatic 301 redirects."
         },
         "tabs": {
-          "seoMeta": "SEO meta",
+          "seoMeta": "SEO Metadata",
           "images": "Images",
           "categories": "Categories"
         },
-        "seoTitleLabel": "SEO title",
-        "seoDescriptionLabel": "SEO description",
+        "seoTitleLabel": "SEO Title",
+        "seoDescriptionLabel": "SEO Description",
         "handleLabel": "URL slug",
         "handleChangeWarning": "Changing URL slug may cause old links to 404. Slice 6 will add automatic 301 redirects.",
-        "applyTemplate": "Apply template",
+        "applyTemplate": "Apply Template",
         "templatePreview": "Preview: {preview}",
-        "charLimitExceeded": "SEO description must be 160 characters or less",
+        "charLimitExceeded": "SEO Description must be 160 characters or less",
         "charCount": "{count}/70",
         "save": "Save",
         "cancel": "Cancel",
         "images": {
-          "altLabel": "Alt text",
+          "altLabel": "Image alt text",
           "altPlaceholder": "Describe this image",
           "save": "Save",
-          "empty": "No product images",
+          "empty": "This product has no images",
           "imageNumber": "Image {number}"
         },
         "categories": {
@@ -2857,26 +2857,26 @@
           "removeLabel": "Remove collection IDs",
           "placeholder": "Separate with commas or new lines",
           "submit": "Update categories",
-          "successCount": "{count} succeeded",
+          "successCount": "{count} successful",
           "failedCount": "{count} failed",
           "loading": "Loading collections",
-          "selectLabel": "Collections",
+          "selectLabel": "Collection",
           "advanced": "Advanced manual IDs"
         },
         "product": {
-          "titleLabel": "Product title"
+          "titleLabel": "Product name"
         }
       },
       "ai": {
         "generate": {
-          "button": "AI draft",
+          "button": "Generate with AI",
           "loading": "Generating...",
           "error": "AI draft failed: {error}",
-          "source": "AI draft ({model})"
+          "source": "AI-generated draft ({model})"
         }
       },
       "shop": {
-        "title": "Shop meta",
+        "title": "Shop metadata",
         "titleTemplate": {
           "label": "Title template",
           "placeholder": "{{product.title}} | {{shop.name}}",
@@ -2901,13 +2901,13 @@
         "save": "Save"
       },
       "toast": {
-        "saveSuccess": "Saved",
-        "saveError": "Save failed"
+        "saveSuccess": "SEO Title saved",
+        "saveError": "Failed to save SEO Title"
       },
       "error": {
         "scopeMissing": {
-          "title": "SHOPLINE reauthorization required",
-          "description": "This SHOPLINE connection is missing the permission required for this update.",
+          "title": "Reauthorization required",
+          "description": "This SHOPLINE connection is missing the permission required for this update. Reauthorize and try again.",
           "reauthorize": "Reauthorize"
         },
         "rateLimited": "Too many operations. Try again in {seconds} seconds."
@@ -2923,10 +2923,10 @@
         "delete": "Delete",
         "column": {
           "entityType": "Type",
-          "handleFrom": "From",
-          "handleTo": "To",
-          "createdAt": "Created",
-          "hitCount": "Hits"
+          "handleFrom": "Source handle",
+          "handleTo": "Target handle",
+          "createdAt": "Created at",
+          "hitCount": "Hit count"
         },
         "entityType": {
           "product": "Product",
@@ -2934,7 +2934,7 @@
           "page": "Page"
         },
         "warning": {
-          "autoCreated": "Redirects are automatically created when a handle changes."
+          "autoCreated": "A 301 redirect is automatically created when a handle changes."
         }
       }
     }
