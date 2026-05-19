@@ -410,6 +410,46 @@ export class ShoplineClient {
     }
   }
 
+  async reorderCollectionProducts(
+    collectionId: string,
+    productOrder: Array<{ productId: string; position: number }>,
+  ): Promise<void> {
+    assertShoplineId(collectionId, "invalid_shopline_collection_id");
+
+    for (const item of productOrder) {
+      assertShoplineId(item.productId, "invalid_shopline_product_id");
+      if (!Number.isFinite(item.position)) {
+        throw new Error("invalid_shopline_collect_position");
+      }
+
+      const current = await this.listProductCollects(item.productId);
+      const collect = current.collects.find(
+        (candidate) => candidate.collection_id === collectionId,
+      );
+
+      if (!collect) {
+        throw new Error("shopline_collect_not_found");
+      }
+
+      assertShoplineId(collect.id, "invalid_shopline_collect_id");
+      const resp = await this.fetch(`/products/collects/${collect.id}.json`, {
+        method: "PUT",
+        body: JSON.stringify({
+          collect: {
+            id: collect.id,
+            position: item.position,
+          },
+        }),
+      });
+
+      if (!resp.ok) {
+        throw new Error(
+          `shopline_reorder_collection_products_failed: ${resp.status}`,
+        );
+      }
+    }
+  }
+
   async getSitemapUrls(): Promise<string[]> {
     const resp = await fetch(
       `https://${this.shopHandle}.myshopline.com/sitemap.xml`,

@@ -467,6 +467,124 @@ describe("ShoplineClient", () => {
     );
   });
 
+  it("reorders collection products with the collect PUT URL and body", async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: new Headers(),
+        json: async () => ({
+          collects: [
+            {
+              id: "collect_1",
+              collection_id: "collection_1",
+              product_id: "product_1",
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 200,
+        headers: new Headers(),
+        json: async () => ({
+          collect: {
+            id: "collect_1",
+            collection_id: "collection_1",
+            product_id: "product_1",
+            position: 2,
+          },
+        }),
+      });
+
+    await client().reorderCollectionProducts("collection_1", [
+      { productId: "product_1", position: 2 },
+    ]);
+
+    expect(fetchMock.mock.calls[0][0]).toMatch(
+      /\/admin\/openapi\/v20260301\/products\/collects\.json\?product_id=product_1$/,
+    );
+    expect(fetchMock.mock.calls[1][0]).toMatch(
+      /\/admin\/openapi\/v20260301\/products\/collects\/collect_1\.json$/,
+    );
+    expect(fetchMock.mock.calls[1][1].method).toBe("PUT");
+    expect(JSON.parse(fetchMock.mock.calls[1][1].body as string)).toEqual({
+      collect: { id: "collect_1", position: 2 },
+    });
+  });
+
+  it("reorders multiple collection products with sequential PUT calls", async () => {
+    const callOrder: string[] = [];
+    fetchMock
+      .mockImplementationOnce(async () => {
+        callOrder.push("list-product-1");
+        return {
+          ok: true,
+          status: 200,
+          headers: new Headers(),
+          json: async () => ({
+            collects: [
+              {
+                id: "collect_1",
+                collection_id: "collection_1",
+                product_id: "product_1",
+              },
+            ],
+          }),
+        };
+      })
+      .mockImplementationOnce(async () => {
+        callOrder.push("put-collect-1");
+        return {
+          ok: true,
+          status: 200,
+          headers: new Headers(),
+          json: async () => ({ collect: { id: "collect_1" } }),
+        };
+      })
+      .mockImplementationOnce(async () => {
+        callOrder.push("list-product-2");
+        return {
+          ok: true,
+          status: 200,
+          headers: new Headers(),
+          json: async () => ({
+            collects: [
+              {
+                id: "collect_2",
+                collection_id: "collection_1",
+                product_id: "product_2",
+              },
+            ],
+          }),
+        };
+      })
+      .mockImplementationOnce(async () => {
+        callOrder.push("put-collect-2");
+        return {
+          ok: true,
+          status: 200,
+          headers: new Headers(),
+          json: async () => ({ collect: { id: "collect_2" } }),
+        };
+      });
+
+    await client().reorderCollectionProducts("collection_1", [
+      { productId: "product_1", position: 1 },
+      { productId: "product_2", position: 2 },
+    ]);
+
+    expect(callOrder).toEqual([
+      "list-product-1",
+      "put-collect-1",
+      "list-product-2",
+      "put-collect-2",
+    ]);
+    expect(JSON.parse(fetchMock.mock.calls[3][1].body as string)).toEqual({
+      collect: { id: "collect_2", position: 2 },
+    });
+  });
+
   it("rejects collect operations with invalid ids", async () => {
     await expect(client().listProductCollects("invalid/id")).rejects.toThrow(
       /invalid_shopline_product_id/,
@@ -480,6 +598,16 @@ describe("ShoplineClient", () => {
     await expect(
       client().removeProductFromCollection("invalid/id"),
     ).rejects.toThrow(/invalid_shopline_collect_id/);
+    await expect(
+      client().reorderCollectionProducts("invalid/id", [
+        { productId: "product_1", position: 1 },
+      ]),
+    ).rejects.toThrow(/invalid_shopline_collection_id/);
+    await expect(
+      client().reorderCollectionProducts("collection_1", [
+        { productId: "invalid/id", position: 1 },
+      ]),
+    ).rejects.toThrow(/invalid_shopline_product_id/);
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
