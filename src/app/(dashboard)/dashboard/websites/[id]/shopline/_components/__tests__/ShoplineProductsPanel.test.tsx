@@ -18,6 +18,8 @@ vi.mock("next-intl", () => ({
       "products.column.seoTitle": "SEO title",
       "products.column.notSet": "未設定",
       "edit.title": "Edit SEO",
+      "edit.tabs.seoMeta": "SEO meta",
+      "edit.tabs.images": "Images",
       "edit.seoTitleLabel": "SEO title",
       "edit.seoDescriptionLabel": "SEO description",
       "edit.handleLabel": "Handle",
@@ -27,6 +29,11 @@ vi.mock("next-intl", () => ({
       "edit.charCount": `${values?.count ?? 0}/70`,
       "edit.save": "Save",
       "edit.cancel": "Cancel",
+      "edit.images.altLabel": "Alt text",
+      "edit.images.altPlaceholder": "Describe this image",
+      "edit.images.save": "Save",
+      "edit.images.empty": "No product images",
+      "edit.images.imageNumber": `Image ${values?.number ?? 0}`,
       "toast.saveSuccess": "Saved",
       "toast.saveError": "Save failed",
       "error.scopeMissing.title": "Need reauthorization",
@@ -190,10 +197,161 @@ describe("ShoplineProductsPanel", () => {
     fireEvent.click(await screen.findByText("Product 1"));
 
     expect(screen.getByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "SEO meta" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Images" })).toBeInTheDocument();
     expect(screen.getByRole("textbox", { name: "SEO title" })).toHaveValue(
       "Original SEO title",
     );
     expect(screen.getByText("18/70")).toBeInTheDocument();
+  });
+
+  it("lists product images in the Images tab", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      json: async () => ({
+        products: [
+          {
+            id: "product-1",
+            title: "Product 1",
+            handle: "product-1",
+            seo: { title: "Original SEO title" },
+            images: [
+              {
+                id: "image-1",
+                src: "https://img.myshopline.com/example-1.jpg",
+                alt: "Original image alt",
+                position: 1,
+              },
+            ],
+          },
+        ],
+      }),
+    });
+
+    render(<ShoplineProductsPanel websiteId="website-1" />);
+
+    fireEvent.click(await screen.findByText("Product 1"));
+    fireEvent.click(screen.getByRole("tab", { name: "Images" }));
+
+    expect(screen.getByRole("img", { name: "Image 1" })).toHaveAttribute(
+      "src",
+      "https://img.myshopline.com/example-1.jpg",
+    );
+    expect(
+      screen.getByRole("textbox", { name: "Image 1 Alt text" }),
+    ).toHaveValue("Original image alt");
+  });
+
+  it("submits image alt PATCH with the edited alt", async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          products: [
+            {
+              id: "product-1",
+              title: "Product 1",
+              handle: "product-1",
+              seo: { title: "Original SEO title" },
+              images: [
+                {
+                  id: "image-1",
+                  src: "https://img.myshopline.com/example-1.jpg",
+                  alt: "Original image alt",
+                  position: 1,
+                },
+              ],
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: "image-1",
+          src: "https://img.myshopline.com/example-1.jpg",
+          alt: "Updated image alt",
+          position: 1,
+        }),
+      });
+
+    render(<ShoplineProductsPanel websiteId="website-1" />);
+
+    fireEvent.click(await screen.findByText("Product 1"));
+    fireEvent.click(screen.getByRole("tab", { name: "Images" }));
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Image 1 Alt text" }),
+      {
+        target: { value: "Updated image alt" },
+      },
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Save Image 1" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/api/shopline/website-1/products/product-1/images/image-1/alt",
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ alt: "Updated image alt" }),
+      },
+    );
+  });
+
+  it("updates the edited image row alt after save succeeds", async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          products: [
+            {
+              id: "product-1",
+              title: "Product 1",
+              handle: "product-1",
+              seo: { title: "Original SEO title" },
+              images: [
+                {
+                  id: "image-1",
+                  src: "https://img.myshopline.com/example-1.jpg",
+                  alt: "Original image alt",
+                  position: 1,
+                },
+              ],
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: "image-1",
+          src: "https://img.myshopline.com/example-1.jpg",
+          alt: "Updated image alt",
+          position: 1,
+        }),
+      });
+
+    render(<ShoplineProductsPanel websiteId="website-1" />);
+
+    fireEvent.click(await screen.findByText("Product 1"));
+    fireEvent.click(screen.getByRole("tab", { name: "Images" }));
+    fireEvent.change(
+      screen.getByRole("textbox", { name: "Image 1 Alt text" }),
+      {
+        target: { value: "Updated image alt" },
+      },
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Save Image 1" }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByRole("textbox", { name: "Image 1 Alt text" }),
+      ).toHaveValue("Updated image alt");
+    });
+    expect(toastMock.success).toHaveBeenCalledWith("Saved");
   });
 
   it("opens the edit modal with description and handle fields", async () => {

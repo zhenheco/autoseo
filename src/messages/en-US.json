@@ -2777,6 +2777,10 @@
       },
       "edit": {
         "title": "編輯商品 SEO",
+        "tabs": {
+          "seoMeta": "SEO meta",
+          "images": "圖片"
+        },
         "seoTitleLabel": "SEO 標題",
         "seoDescriptionLabel": "SEO 描述",
         "handleLabel": "URL slug",
@@ -2784,7 +2788,14 @@
         "charLimitExceeded": "SEO 描述不可超過 160 字",
         "charCount": "{count}/70",
         "save": "儲存",
-        "cancel": "取消"
+        "cancel": "取消",
+        "images": {
+          "altLabel": "Alt text",
+          "altPlaceholder": "描述這張圖片",
+          "save": "儲存",
+          "empty": "此商品沒有圖片",
+          "imageNumber": "圖片 {number}"
+        }
       },
       "toast": {
         "saveSuccess": "已儲存 SEO 標題",
