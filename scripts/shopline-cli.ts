@@ -10,6 +10,7 @@ import {
   exchangeCodeForToken,
 } from "../src/lib/shopline/oauth";
 import { updateShoplineProductSeo } from "../src/lib/shopline/seo-updater";
+import { createAdminClient } from "../src/lib/supabase/admin";
 
 type Args = Record<string, string | boolean>;
 
@@ -114,17 +115,20 @@ async function createSeoUpdateStore(args: Args): Promise<{
   companyId: string;
   websiteId: string;
   store: ShoplineConnectionStore;
+  canAudit: boolean;
 }> {
   const auth = await resolveShoplineCliAuth({
     args,
     env: process.env,
   });
-  const companyId = arg(args, "company-id", "SHOPLINE_COMPANY_ID") ?? "cli";
+  const requestedCompanyId = arg(args, "company-id", "SHOPLINE_COMPANY_ID");
+  const companyId = requestedCompanyId ?? "cli";
   const websiteId = arg(args, "website-id", "SHOPLINE_WEBSITE_ID") ?? "cli";
 
   return {
     companyId,
     websiteId,
+    canAudit: Boolean(requestedCompanyId),
     store: {
       encryptToken: async (token) => token,
       decryptToken: async () => auth.accessToken,
@@ -145,6 +149,20 @@ async function createSeoUpdateStore(args: Args): Promise<{
       }),
     },
   };
+}
+
+function createCliAuditOptions(canAudit: boolean) {
+  if (!canAudit) return undefined;
+
+  try {
+    return {
+      supabase: createAdminClient(),
+      userId: null,
+      source: "cli" as const,
+    };
+  } catch {
+    return undefined;
+  }
 }
 
 async function check(args: Args): Promise<void> {
@@ -184,7 +202,9 @@ export async function seoUpdate(args: Args): Promise<void> {
     );
   }
 
-  const { companyId, websiteId, store } = await createSeoUpdateStore(args);
+  const { companyId, websiteId, store, canAudit } =
+    await createSeoUpdateStore(args);
+  const auditOptions = createCliAuditOptions(canAudit);
   const updated = await updateShoplineProductSeo(
     companyId,
     websiteId,
@@ -197,7 +217,7 @@ export async function seoUpdate(args: Args): Promise<void> {
       handle,
       source: "cli",
     },
-    { store },
+    auditOptions ? { store, auditOptions } : { store },
   );
 
   console.log("shopline_seo_update=pass");

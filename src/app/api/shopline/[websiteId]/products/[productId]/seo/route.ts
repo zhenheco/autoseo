@@ -51,7 +51,11 @@ async function assertWebsiteOwner(
 
 export const PATCH = withRouteAuth(
   "company",
-  async (_request: NextRequest, { companyId }, context: RouteContext) => {
+  async (
+    _request: NextRequest,
+    { companyId, user, supabase },
+    context: RouteContext,
+  ) => {
     const request = _request as Pick<Request, "json"> & NextRequest;
 
     try {
@@ -92,7 +96,14 @@ export const PATCH = withRouteAuth(
         websiteId,
         productId,
         { ...parsedBody.data, source: "ui" },
-        { store: createSupabaseShoplineConnectionStore(adminClient) },
+        {
+          store: createSupabaseShoplineConnectionStore(adminClient),
+          auditOptions: {
+            supabase,
+            userId: user.id,
+            source: "ui",
+          },
+        },
       );
 
       return NextResponse.json(updatedProduct);

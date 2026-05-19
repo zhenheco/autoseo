@@ -3,6 +3,7 @@ import { ShoplineAuthError } from "@/lib/shopline/types";
 
 const authState = vi.hoisted(() => ({
   authenticated: true,
+  supabase: { from: vi.fn() },
 }));
 
 const routeAuth = vi.hoisted(() => ({
@@ -27,7 +28,7 @@ const routeAuth = vi.hoisted(() => ({
             authMode: "company",
             companyId: "company-1",
             user: { id: "user-1" },
-            supabase: {},
+            supabase: authState.supabase,
           },
           ...args,
         );
@@ -79,6 +80,7 @@ describe("PATCH /api/shopline/[websiteId]/products/[productId]/seo", () => {
     vi.resetModules();
     vi.clearAllMocks();
     authState.authenticated = true;
+    authState.supabase = { from: vi.fn() };
     adminState.website = { id: "website-1" };
     seoUpdater.updateShoplineProductSeo.mockResolvedValue({
       id: "product-1",
@@ -179,10 +181,40 @@ describe("PATCH /api/shopline/[websiteId]/products/[productId]/seo", () => {
       "website-1",
       "product-1",
       { seo: { title: "Updated SEO title" }, source: "ui" },
-      { store: { store: true } },
+      expect.objectContaining({ store: { store: true } }),
     );
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual(updatedProduct);
+  });
+
+  it("passes UI audit options with the authenticated user id", async () => {
+    const { PATCH } = await import("../route");
+
+    await PATCH(
+      new Request(
+        "https://1wayseo.com/api/shopline/website-1/products/product-1/seo",
+        {
+          method: "PATCH",
+          body: JSON.stringify({ seo: { title: "Updated SEO title" } }),
+        },
+      ) as never,
+      params(),
+    );
+
+    expect(seoUpdater.updateShoplineProductSeo).toHaveBeenCalledWith(
+      "company-1",
+      "website-1",
+      "product-1",
+      { seo: { title: "Updated SEO title" }, source: "ui" },
+      {
+        store: { store: true },
+        auditOptions: {
+          supabase: authState.supabase,
+          userId: "user-1",
+          source: "ui",
+        },
+      },
+    );
   });
 
   it("maps SHOPLINE 401 errors to shopline_auth_invalid with reauthorize_url", async () => {
