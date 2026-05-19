@@ -202,6 +202,58 @@ describe("ShoplineClient", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
+  it("updates product image alt via PUT and parses the returned image", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers(),
+      json: async () => ({
+        image: {
+          id: "image_1",
+          src: "https://img.myshopline.com/example.jpg",
+          alt: "Updated alt",
+          position: 1,
+        },
+      }),
+    });
+
+    const updated = await client().updateProductImage("42", "image_1", {
+      alt: "Updated alt",
+    });
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toMatch(
+      /\/admin\/openapi\/v20260301\/products\/products\/42\/images\/image_1\.json$/,
+    );
+    expect(init.method).toBe("PUT");
+    expect(JSON.parse(init.body as string)).toEqual({
+      image: { id: "image_1", alt: "Updated alt" },
+    });
+    expect(updated).toEqual({
+      id: "image_1",
+      src: "https://img.myshopline.com/example.jpg",
+      alt: "Updated alt",
+      position: 1,
+    });
+  });
+
+  it("rejects updateProductImage for invalid product or image ids", async () => {
+    await expect(
+      client().updateProductImage("invalid/id", "image_1", { alt: "Alt" }),
+    ).rejects.toThrow(/invalid_shopline_product_id/);
+    await expect(
+      client().updateProductImage("42", "invalid/id", { alt: "Alt" }),
+    ).rejects.toThrow(/invalid_shopline_image_id/);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("rejects updateProductImage when alt is undefined", async () => {
+    await expect(
+      client().updateProductImage("42", "image_1", { alt: undefined }),
+    ).rejects.toThrow(/shopline_update_image_no_fields/);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("reads sitemap URLs for CLI discovery checks", async () => {
     fetchMock.mockResolvedValueOnce({
       ok: true,

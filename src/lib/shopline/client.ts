@@ -1,10 +1,11 @@
 import {
   ShoplineAuthError,
+  ShoplineImageSchema,
   ShoplineProductSchema,
   ShoplineRateLimitError,
   ShoplineShopSchema,
 } from "./types";
-import type { ShoplineProduct, ShoplineShop } from "./types";
+import type { ShoplineImage, ShoplineProduct, ShoplineShop } from "./types";
 
 export const SHOPLINE_ADMIN_API_VERSION = "v20260301";
 
@@ -211,6 +212,36 @@ export class ShoplineClient {
 
     const data = (await resp.json()) as { product: unknown };
     return ShoplineProductSchema.parse(data.product);
+  }
+
+  async updateProductImage(
+    productId: string,
+    imageId: string,
+    payload: { alt?: string },
+  ): Promise<ShoplineImage> {
+    if (!/^[a-zA-Z0-9_-]+$/.test(productId)) {
+      throw new Error("invalid_shopline_product_id");
+    }
+    if (!/^[a-zA-Z0-9_-]+$/.test(imageId)) {
+      throw new Error("invalid_shopline_image_id");
+    }
+    if (typeof payload.alt !== "string") {
+      throw new Error("shopline_update_image_no_fields");
+    }
+
+    const resp = await this.fetch(
+      `/products/products/${productId}/images/${imageId}.json`,
+      {
+        method: "PUT",
+        body: JSON.stringify({ image: { id: imageId, alt: payload.alt } }),
+      },
+    );
+    if (!resp.ok) {
+      throw new Error(`shopline_update_image_failed: ${resp.status}`);
+    }
+
+    const data = (await resp.json()) as { image: unknown };
+    return ShoplineImageSchema.parse(data.image);
   }
 
   async getSitemapUrls(): Promise<string[]> {
