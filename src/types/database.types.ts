@@ -616,6 +616,50 @@ export type Database = {
           },
         ];
       };
+      shopline_redirects: {
+        Row: {
+          id: string;
+          website_id: string;
+          entity_type: "product" | "collection" | "page";
+          entity_id: string | null;
+          handle_from: string;
+          handle_to: string;
+          created_at: string;
+          last_hit_at: string | null;
+          hit_count: number;
+        };
+        Insert: {
+          id?: string;
+          website_id: string;
+          entity_type: "product" | "collection" | "page";
+          entity_id?: string | null;
+          handle_from: string;
+          handle_to: string;
+          created_at?: string;
+          last_hit_at?: string | null;
+          hit_count?: number;
+        };
+        Update: {
+          id?: string;
+          website_id?: string;
+          entity_type?: "product" | "collection" | "page";
+          entity_id?: string | null;
+          handle_from?: string;
+          handle_to?: string;
+          created_at?: string;
+          last_hit_at?: string | null;
+          hit_count?: number;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "shopline_redirects_website_id_fkey";
+            columns: ["website_id"];
+            isOneToOne: false;
+            referencedRelation: "website_configs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       subscription_plans: {
         Row: {
           id: string;
