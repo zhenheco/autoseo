@@ -303,6 +303,41 @@ describe("PATCH /api/shopline/[websiteId]/products/[productId]/seo", () => {
     );
   });
 
+  it("passes AI source and model to product SEO audit options", async () => {
+    const { PATCH } = await import("../route");
+
+    await PATCH(
+      new Request(
+        "https://1wayseo.com/api/shopline/website-1/products/product-1/seo",
+        {
+          method: "PATCH",
+          body: JSON.stringify({
+            seo: { title: "AI SEO title" },
+            source: "ai",
+            model: "deepseek-chat",
+          }),
+        },
+      ) as never,
+      params(),
+    );
+
+    expect(seoUpdater.updateShoplineProductSeo).toHaveBeenCalledWith(
+      "company-1",
+      "website-1",
+      "product-1",
+      { seo: { title: "AI SEO title" }, source: "ai" },
+      {
+        store: { store: true },
+        auditOptions: {
+          supabase: authState.supabase,
+          userId: "user-1",
+          source: "ai",
+          model: "deepseek-chat",
+        },
+      },
+    );
+  });
+
   it("maps SHOPLINE 401 errors to shopline_auth_invalid with reauthorize_url", async () => {
     seoUpdater.updateShoplineProductSeo.mockRejectedValueOnce(
       new ShoplineAuthError(),

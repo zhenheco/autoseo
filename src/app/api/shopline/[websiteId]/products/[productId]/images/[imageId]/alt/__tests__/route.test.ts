@@ -325,4 +325,40 @@ describe("PATCH /api/shopline/[websiteId]/products/[productId]/images/[imageId]/
     expect(response.status).toBe(200);
     await expect(response.json()).resolves.toEqual(updatedImage);
   });
+
+  it("passes AI source and model to image alt audit options", async () => {
+    const { PATCH } = await import("../route");
+
+    await PATCH(
+      new Request(
+        "https://1wayseo.com/api/shopline/website-1/products/product-1/images/image-1/alt",
+        {
+          method: "PATCH",
+          body: JSON.stringify({
+            alt: "AI generated alt",
+            source: "ai",
+            model: "deepseek-chat",
+          }),
+        },
+      ) as never,
+      params(),
+    );
+
+    expect(imageAltUpdater.updateShoplineImageAlt).toHaveBeenCalledWith(
+      "company-1",
+      "website-1",
+      "product-1",
+      "image-1",
+      "AI generated alt",
+      {
+        store: { store: true },
+        auditOptions: {
+          supabase: authState.supabase,
+          userId: "user-1",
+          source: "ai",
+          model: "deepseek-chat",
+        },
+      },
+    );
+  });
 });

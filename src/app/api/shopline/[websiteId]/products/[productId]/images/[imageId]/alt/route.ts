@@ -29,6 +29,8 @@ type RouteContext = {
 
 const ImageAltPatchSchema = z.object({
   alt: z.string().min(0).max(125),
+  source: z.enum(["ui", "cli", "ai"]).optional(),
+  model: z.string().optional(),
 });
 
 const REQUIRED_PRODUCT_WRITE_SCOPES = ["write_products"] as const;
@@ -194,6 +196,7 @@ export const PATCH = withRouteAuth(
         );
       }
 
+      const auditSource = parsedBody.data.source ?? "ui";
       const updatedImage = await updateShoplineImageAlt(
         companyId,
         websiteId,
@@ -205,7 +208,8 @@ export const PATCH = withRouteAuth(
           auditOptions: {
             supabase,
             userId: user.id,
-            source: "ui",
+            source: auditSource,
+            model: parsedBody.data.model,
           },
         },
       );

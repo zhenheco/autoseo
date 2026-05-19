@@ -318,6 +318,43 @@ describe("PATCH /api/shopline/[websiteId]/collections/[collectionId]/seo", () =>
     await expect(response.json()).resolves.toEqual(updatedCollection);
   });
 
+  it("passes AI source and model to collection SEO audit options", async () => {
+    const { PATCH } = await import("../route");
+
+    await PATCH(
+      new Request(
+        "https://1wayseo.com/api/shopline/website-1/collections/collection-1/seo",
+        {
+          method: "PATCH",
+          body: JSON.stringify({
+            seo: { title: "AI SEO title" },
+            source: "ai",
+            model: "openai/gpt-5-mini",
+          }),
+        },
+      ) as never,
+      params(),
+    );
+
+    expect(
+      collectionSeoUpdater.updateShoplineCollectionSeo,
+    ).toHaveBeenCalledWith(
+      "company-1",
+      "website-1",
+      "collection-1",
+      { seo: { title: "AI SEO title" } },
+      {
+        store: { store: true },
+        auditOptions: {
+          supabase: authState.supabase,
+          userId: "user-1",
+          source: "ai",
+          model: "openai/gpt-5-mini",
+        },
+      },
+    );
+  });
+
   it("maps SHOPLINE auth errors to shopline_auth_invalid with reauthorize_url", async () => {
     collectionSeoUpdater.updateShoplineCollectionSeo.mockRejectedValueOnce(
       new ShoplineAuthError(),

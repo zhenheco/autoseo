@@ -38,6 +38,8 @@ const CollectionSeoPatchSchema = z.object({
     .regex(/^[a-z0-9-]+$/)
     .optional(),
   title: z.string().optional(),
+  source: z.enum(["ui", "cli", "ai"]).optional(),
+  model: z.string().optional(),
 });
 
 const REQUIRED_COLLECTION_WRITE_SCOPES = ["write_content"] as const;
@@ -204,17 +206,20 @@ export const PATCH = withRouteAuth(
         );
       }
 
+      const { source, model, ...collectionPatch } = parsedBody.data;
+      const auditSource = source ?? "ui";
       const updatedCollection = await updateShoplineCollectionSeo(
         companyId,
         websiteId,
         collectionId,
-        parsedBody.data,
+        collectionPatch,
         {
           store: connectionStore,
           auditOptions: {
             supabase,
             userId: user.id,
-            source: "ui",
+            source: auditSource,
+            model,
           },
         },
       );
