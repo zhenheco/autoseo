@@ -157,6 +157,51 @@ describe("ShoplineClient", () => {
     expect(fetchMock).toHaveBeenCalledTimes(4);
   });
 
+  it("updates product SEO via PUT with seo title/description and handle", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers(),
+      json: async () => ({
+        product: {
+          id: "42",
+          title: "P",
+          handle: "new-handle",
+          status: "active",
+          images: [],
+          variants: [],
+          created_at: "2026-05-01T00:00:00Z",
+          updated_at: "2026-05-01T00:00:00Z",
+          seo: { title: "New SEO Title", description: "New SEO Desc" },
+        },
+      }),
+    });
+
+    const updated = await client().updateProduct("42", {
+      seo: { title: "New SEO Title", description: "New SEO Desc" },
+      handle: "new-handle",
+    });
+
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toMatch(
+      /\/admin\/openapi\/v20260301\/products\/products\/42\.json$/,
+    );
+    expect(init.method).toBe("PUT");
+    const body = JSON.parse(init.body as string);
+    expect(body.product.seo.title).toBe("New SEO Title");
+    expect(body.product.seo.description).toBe("New SEO Desc");
+    expect(body.product.handle).toBe("new-handle");
+    expect(updated.handle).toBe("new-handle");
+    expect(updated.seo?.title).toBe("New SEO Title");
+  });
+
+  it("rejects updateProduct when no SEO fields supplied", async () => {
+    await expect(client().updateProduct("42", {})).rejects.toThrow(
+      /shopline_update_product_no_fields/,
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("reads sitemap URLs for CLI discovery checks", async () => {
     fetchMock.mockResolvedValueOnce({
       ok: true,

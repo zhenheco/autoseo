@@ -50,6 +50,8 @@ function printHelp(): void {
   pnpm shopline:cli check --company-id <companyId> --website-id <websiteId>
   pnpm shopline:cli products --shop-handle <handle> --access-token <token> [--limit 5]
   pnpm shopline:cli products --company-id <companyId> --shop-handle <handle> [--limit 5]
+  pnpm shopline:cli seo-update --product-id <id> --seo-title <t> --seo-description <d> [--handle <h>] [--shop-handle <handle> --access-token <token>]
+  pnpm shopline:cli seo-update --product-id <id> --seo-title <t> --company-id <companyId> --website-id <websiteId>
   pnpm shopline:cli exchange-code --shop-handle <handle> --code <oauth-code>
 
 Env fallbacks:
@@ -129,6 +131,35 @@ async function products(args: Args): Promise<void> {
   if (result.next?.page) console.log(`next_page=${result.next.page}`);
 }
 
+async function seoUpdate(args: Args): Promise<void> {
+  const productId = requireValue(arg(args, "product-id"), "product id");
+  const seoTitle = arg(args, "seo-title");
+  const seoDescription = arg(args, "seo-description");
+  const handle = arg(args, "handle");
+
+  if (!seoTitle && !seoDescription && !handle) {
+    throw new Error(
+      "at least one of --seo-title, --seo-description, --handle is required",
+    );
+  }
+
+  const { client } = await getClient(args);
+  const updated = await client.updateProduct(productId, {
+    seo:
+      seoTitle || seoDescription
+        ? { title: seoTitle, description: seoDescription }
+        : undefined,
+    handle,
+  });
+
+  console.log("shopline_seo_update=pass");
+  console.log(`product_id=${updated.id}`);
+  console.log(`handle=${updated.handle}`);
+  if (updated.seo?.title) console.log(`seo_title=${updated.seo.title}`);
+  if (updated.seo?.description)
+    console.log(`seo_description_len=${updated.seo.description.length}`);
+}
+
 async function exchangeCode(args: Args): Promise<void> {
   const shopHandle = requireValue(
     arg(args, "shop-handle", "SHOPLINE_SHOP_HANDLE"),
@@ -157,6 +188,9 @@ async function main(): Promise<void> {
       return;
     case "products":
       await products(args);
+      return;
+    case "seo-update":
+      await seoUpdate(args);
       return;
     case "exchange-code":
       await exchangeCode(args);

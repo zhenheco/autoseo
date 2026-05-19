@@ -159,6 +159,46 @@ export class ShoplineClient {
     };
   }
 
+  async updateProduct(
+    productId: string,
+    payload: {
+      seo?: { title?: string; description?: string };
+      handle?: string;
+      title?: string;
+    },
+  ): Promise<ShoplineProduct> {
+    if (!/^[a-zA-Z0-9_-]+$/.test(productId)) {
+      throw new Error("invalid_shopline_product_id");
+    }
+
+    const productPatch: Record<string, unknown> = {};
+    if (payload.seo) {
+      const seo: Record<string, string> = {};
+      if (typeof payload.seo.title === "string") seo.title = payload.seo.title;
+      if (typeof payload.seo.description === "string")
+        seo.description = payload.seo.description;
+      if (Object.keys(seo).length > 0) productPatch.seo = seo;
+    }
+    if (typeof payload.handle === "string")
+      productPatch.handle = payload.handle;
+    if (typeof payload.title === "string") productPatch.title = payload.title;
+
+    if (Object.keys(productPatch).length === 0) {
+      throw new Error("shopline_update_product_no_fields");
+    }
+
+    const resp = await this.fetch(`/products/products/${productId}.json`, {
+      method: "PUT",
+      body: JSON.stringify({ product: { id: productId, ...productPatch } }),
+    });
+    if (!resp.ok) {
+      throw new Error(`shopline_update_product_failed: ${resp.status}`);
+    }
+
+    const data = (await resp.json()) as { product: unknown };
+    return ShoplineProductSchema.parse(data.product);
+  }
+
   async getSitemapUrls(): Promise<string[]> {
     const resp = await fetch(
       `https://${this.shopHandle}.myshopline.com/sitemap.xml`,
