@@ -390,6 +390,81 @@ describe("ArticleQuotaService", () => {
       expect(result.message).toBe("額度不足");
       expect(result.availableArticles).toBe(0);
     });
+
+    it("並發預扣壓力下同一公司只允許可用額度內的預扣成功", async () => {
+      const activeReservations: Array<{
+        id: string;
+        reserved_amount: number;
+      }> = [];
+      let reservationSequence = 0;
+
+      mockSupabase.rpc.mockResolvedValue({ data: null, error: null });
+      mockSupabase.from.mockImplementation((table: string) => {
+        if (table === "company_subscriptions") {
+          return {
+            select: vi.fn().mockReturnThis(),
+            eq: vi.fn().mockReturnThis(),
+            maybeSingle: vi.fn().mockResolvedValue({
+              data: {
+                subscription_articles_remaining: 1,
+                purchased_articles_remaining: 0,
+                articles_per_month: 1,
+                current_period_end: null,
+                billing_cycle: null,
+              },
+              error: null,
+            }),
+          };
+        }
+
+        if (table === "token_reservations") {
+          return {
+            select: vi.fn(() => {
+              const snapshot = [...activeReservations];
+
+              return {
+                eq: vi.fn().mockReturnValue({
+                  eq: vi.fn(
+                    () =>
+                      new Promise<{
+                        data: Array<{ reserved_amount: number }>;
+                      }>((resolve) => {
+                        setTimeout(() => resolve({ data: snapshot }), 5);
+                      }),
+                  ),
+                }),
+              };
+            }),
+            insert: vi.fn((values) => ({
+              select: vi.fn(() => ({
+                single: vi.fn(async () => {
+                  reservationSequence += 1;
+                  activeReservations.push({
+                    id: `reservation-${reservationSequence}`,
+                    reserved_amount: values.reserved_amount,
+                  });
+
+                  return {
+                    data: { id: `reservation-${reservationSequence}` },
+                    error: null,
+                  };
+                }),
+              })),
+            })),
+          };
+        }
+
+        throw new Error(`Unexpected table: ${table}`);
+      });
+
+      const [first, second] = await Promise.all([
+        service.reserveArticles("company-uuid", "job-1", 1),
+        service.reserveArticles("company-uuid", "job-2", 1),
+      ]);
+
+      expect([first.success, second.success].filter(Boolean)).toHaveLength(1);
+      expect(activeReservations).toHaveLength(1);
+    });
   });
 
   // ========================================

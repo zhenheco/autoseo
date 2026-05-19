@@ -145,16 +145,22 @@ export async function callGoogleApi<T>(
 export async function getWebsiteOAuthToken(
   websiteId: string,
   serviceType: "gsc" | "ga4",
+  companyId?: string,
 ): Promise<GoogleOAuthToken | null> {
   const adminClient = createAdminClient();
 
-  const { data, error } = await adminClient
+  let query = adminClient
     .from("google_oauth_tokens")
     .select("*")
     .eq("website_id", websiteId)
     .eq("service_type", serviceType)
-    .eq("status", "active")
-    .single();
+    .eq("status", "active");
+
+  if (companyId) {
+    query = query.eq("company_id", companyId);
+  }
+
+  const { data, error } = await query.single();
 
   if (error || !data) {
     return null;

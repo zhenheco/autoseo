@@ -95,6 +95,32 @@ export interface UsageLog {
   createdAt: string;
 }
 
+const articleReservationLocks = new Map<string, Promise<void>>();
+
+async function withArticleReservationLock<T>(
+  companyId: string,
+  operation: () => Promise<T>,
+): Promise<T> {
+  const previous = articleReservationLocks.get(companyId) ?? Promise.resolve();
+  let releaseCurrent: () => void = () => undefined;
+  const current = new Promise<void>((resolve) => {
+    releaseCurrent = resolve;
+  });
+  const lock = previous.catch(() => undefined).then(() => current);
+  articleReservationLocks.set(companyId, lock);
+
+  await previous.catch(() => undefined);
+
+  try {
+    return await operation();
+  } finally {
+    releaseCurrent();
+    if (articleReservationLocks.get(companyId) === lock) {
+      articleReservationLocks.delete(companyId);
+    }
+  }
+}
+
 // ===== 服務類別 =====
 
 export class ArticleQuotaService {
@@ -393,64 +419,66 @@ export class ArticleQuotaService {
     jobId: string,
     count: number = 1,
   ): Promise<ReservationResult> {
-    // 先檢查餘額
-    const balance = await this.getBalance(companyId);
+    return withArticleReservationLock(companyId, async () => {
+      // 先檢查餘額
+      const balance = await this.getBalance(companyId);
 
-    if (balance.totalAvailable < count) {
-      return {
-        success: false,
-        reservationId: null,
-        availableArticles: balance.totalAvailable,
-        totalReserved: 0,
-        message: "額度不足",
-      };
-    }
-
-    // 建立預扣記錄（複用現有的 token_reservations 表）
-    // 註：token_reservations 可能不在 database.types.ts 中，使用類型斷言
-    const { data, error } = await (
-      this.supabase.from("token_reservations" as "companies") as unknown as {
-        insert: (values: {
-          company_id: string;
-          job_id: string;
-          reserved_amount: number;
-          status: string;
-        }) => {
-          select: (columns: string) => {
-            single: () => Promise<{
-              data: { id: string } | null;
-              error: { message: string } | null;
-            }>;
-          };
+      if (balance.totalAvailable < count) {
+        return {
+          success: false,
+          reservationId: null,
+          availableArticles: balance.totalAvailable,
+          totalReserved: 0,
+          message: "額度不足",
         };
       }
-    )
-      .insert({
-        company_id: companyId,
-        job_id: jobId,
-        reserved_amount: count, // 1 篇 = 1 單位
-        status: "active", // token_reservations 使用 active/released/consumed
-      })
-      .select("id")
-      .single();
 
-    if (error) {
-      console.error("[ArticleQuotaService] reserveArticles error:", error);
+      // 建立預扣記錄（複用現有的 token_reservations 表）
+      // 註：token_reservations 可能不在 database.types.ts 中，使用類型斷言
+      const { data, error } = await (
+        this.supabase.from("token_reservations" as "companies") as unknown as {
+          insert: (values: {
+            company_id: string;
+            job_id: string;
+            reserved_amount: number;
+            status: string;
+          }) => {
+            select: (columns: string) => {
+              single: () => Promise<{
+                data: { id: string } | null;
+                error: { message: string } | null;
+              }>;
+            };
+          };
+        }
+      )
+        .insert({
+          company_id: companyId,
+          job_id: jobId,
+          reserved_amount: count, // 1 篇 = 1 單位
+          status: "active", // token_reservations 使用 active/released/consumed
+        })
+        .select("id")
+        .single();
+
+      if (error) {
+        console.error("[ArticleQuotaService] reserveArticles error:", error);
+        return {
+          success: false,
+          reservationId: null,
+          availableArticles: balance.totalAvailable,
+          totalReserved: 0,
+          message: error.message,
+        };
+      }
+
       return {
-        success: false,
-        reservationId: null,
-        availableArticles: balance.totalAvailable,
-        totalReserved: 0,
-        message: error.message,
+        success: true,
+        reservationId: data?.id || null,
+        availableArticles: balance.totalAvailable - count,
+        totalReserved: count,
       };
-    }
-
-    return {
-      success: true,
-      reservationId: data?.id || null,
-      availableArticles: balance.totalAvailable - count,
-      totalReserved: count,
-    };
+    });
   }
 
   /**
