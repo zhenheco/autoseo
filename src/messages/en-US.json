@@ -2764,7 +2764,8 @@
     "seo": {
       "tabs": {
         "products": "Products",
-        "collections": "Collections"
+        "collections": "Collections",
+        "redirects": "Redirects"
       },
       "products": {
         "title": "SHOPLINE Products",
@@ -2826,6 +2827,9 @@
           "loading": "Loading collections",
           "selectLabel": "Collections",
           "advanced": "Advanced manual IDs"
+        },
+        "product": {
+          "titleLabel": "Product title"
         }
       },
       "toast": {
@@ -2843,6 +2847,27 @@
       "pagination": {
         "next": "Next",
         "prev": "Previous"
+      },
+      "redirects": {
+        "title": "SHOPLINE Redirects",
+        "empty": "No redirects",
+        "add": "Add",
+        "delete": "Delete",
+        "column": {
+          "entityType": "Type",
+          "handleFrom": "From",
+          "handleTo": "To",
+          "createdAt": "Created",
+          "hitCount": "Hits"
+        },
+        "entityType": {
+          "product": "Product",
+          "collection": "Collection",
+          "page": "Page"
+        },
+        "warning": {
+          "autoCreated": "Redirects are automatically created when a handle changes."
+        }
       }
     }
   },

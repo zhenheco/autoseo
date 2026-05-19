@@ -21,11 +21,12 @@ vi.mock("next-intl", () => ({
       "edit.tabs.seoMeta": "SEO meta",
       "edit.tabs.images": "Images",
       "edit.tabs.categories": "Categories",
+      "edit.product.titleLabel": "Product title",
       "edit.seoTitleLabel": "SEO title",
       "edit.seoDescriptionLabel": "SEO description",
       "edit.handleLabel": "Handle",
-      "edit.handleChangeWarning":
-        "⚠️ Changing URL slug may cause old links to 404. Slice 6 will add automatic 301 redirects.",
+      "redirects.warning.autoCreated":
+        "Redirects are automatically created when a handle changes.",
       "edit.charLimitExceeded": "Description must be 160 characters or less",
       "edit.charCount": `${values?.count ?? 0}/70`,
       "edit.save": "Save",
@@ -210,6 +211,9 @@ describe("ShoplineProductsPanel", () => {
     expect(screen.getByRole("tab", { name: "SEO meta" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Images" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Categories" })).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "Product title" })).toHaveValue(
+      "Product 1",
+    );
     expect(screen.getByRole("textbox", { name: "SEO title" })).toHaveValue(
       "Original SEO title",
     );
@@ -672,6 +676,7 @@ describe("ShoplineProductsPanel", () => {
         body: JSON.stringify({
           seo: { title: "Updated SEO title", description: "" },
           handle: "product-1",
+          title: "Product 1",
         }),
       },
     );
@@ -733,9 +738,62 @@ describe("ShoplineProductsPanel", () => {
             description: "Updated description",
           },
           handle: "product-1",
+          title: "Product 1",
         }),
       },
     );
+  });
+
+  it("submits PATCH with a renamed product title", async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          products: [
+            {
+              id: "product-1",
+              title: "Product 1",
+              handle: "product-1",
+              seo: { title: "Original SEO title" },
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          id: "product-1",
+          title: "Updated Product",
+          handle: "product-1",
+          seo: { title: "Original SEO title" },
+        }),
+      });
+
+    render(<ShoplineProductsPanel websiteId="website-1" />);
+
+    fireEvent.click(await screen.findByText("Product 1"));
+    fireEvent.change(screen.getByRole("textbox", { name: "Product title" }), {
+      target: { value: "Updated Product" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledTimes(2);
+    });
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/api/shopline/website-1/products/product-1/seo",
+      {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          seo: { title: "Original SEO title", description: "" },
+          handle: "product-1",
+          title: "Updated Product",
+        }),
+      },
+    );
+    expect(await screen.findByText("Updated Product")).toBeInTheDocument();
   });
 
   it("shows a reauthorization banner when SHOPLINE scope is missing", async () => {
@@ -838,7 +896,7 @@ describe("ShoplineProductsPanel", () => {
 
     expect(
       screen.getByText(
-        "⚠️ Changing URL slug may cause old links to 404. Slice 6 will add automatic 301 redirects.",
+        "Redirects are automatically created when a handle changes.",
       ),
     ).toBeInTheDocument();
   });

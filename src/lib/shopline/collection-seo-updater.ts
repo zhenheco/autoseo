@@ -3,12 +3,10 @@ import {
   resolveShoplineAccessToken,
   type ShoplineConnectionStore,
 } from "./connections";
-import {
-  createShoplineRedirect,
-  type RedirectStoreSupabase,
-} from "./redirect-store";
+import { createShoplineRedirect } from "./redirect-store";
 import type { Database } from "@/types/database.types";
 import type { ShoplineCollection } from "./types";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type ShoplineCollectionSeoUpdateSource = "ui" | "cli" | "ai";
 
@@ -37,17 +35,8 @@ export interface UpdateShoplineCollectionSeoDependencies {
 type ShoplineSeoAuditInsert =
   Database["public"]["Tables"]["shopline_seo_audit_log"]["Insert"];
 
-type ShoplineSeoAuditInsertResult = PromiseLike<{
-  error: { message?: string } | null;
-}>;
-
 export interface ShoplineCollectionSeoAuditOptions {
-  supabase: {
-    from: ((table: "shopline_seo_audit_log") => {
-      insert: (rows: ShoplineSeoAuditInsert[]) => ShoplineSeoAuditInsertResult;
-    }) &
-      RedirectStoreSupabase["from"];
-  };
+  supabase: SupabaseClient<Database>;
   userId?: string | null;
   source: ShoplineCollectionSeoUpdateSource;
   model?: string | null;

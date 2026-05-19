@@ -2945,7 +2945,8 @@
     "seo": {
       "tabs": {
         "products": "Produits",
-        "collections": "Collections"
+        "collections": "Collections",
+        "redirects": "Redirects"
       },
       "products": {
         "title": "SHOPLINE 商品",
@@ -3007,6 +3008,9 @@
           "loading": "Chargement des collections",
           "selectLabel": "Collections",
           "advanced": "IDs manuels avances"
+        },
+        "product": {
+          "titleLabel": "Nom du produit"
         }
       },
       "toast": {
@@ -3024,6 +3028,27 @@
       "pagination": {
         "next": "下一頁",
         "prev": "上一頁"
+      },
+      "redirects": {
+        "title": "SHOPLINE Redirects",
+        "empty": "Aucun redirect",
+        "add": "Ajouter",
+        "delete": "Supprimer",
+        "column": {
+          "entityType": "Type",
+          "handleFrom": "Depuis",
+          "handleTo": "Vers",
+          "createdAt": "Cree",
+          "hitCount": "Hits"
+        },
+        "entityType": {
+          "product": "Produit",
+          "collection": "Collection",
+          "page": "Page"
+        },
+        "warning": {
+          "autoCreated": "Les redirects sont crees automatiquement quand un handle change."
+        }
       }
     }
   },

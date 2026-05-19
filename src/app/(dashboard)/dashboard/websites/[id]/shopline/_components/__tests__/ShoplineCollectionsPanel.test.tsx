@@ -23,8 +23,8 @@ vi.mock("next-intl", () => ({
       "edit.collection.seoTitleLabel": "SEO title",
       "edit.collection.seoDescriptionLabel": "SEO description",
       "edit.collection.handleLabel": "Handle",
-      "edit.collection.handleChangeWarning":
-        "Changing URL slug may cause old links to 404. Slice 6 will add automatic 301 redirects.",
+      "redirects.warning.autoCreated":
+        "Redirects are automatically created when a handle changes.",
       "edit.charLimitExceeded": "Description must be 160 characters or less",
       "edit.charCount": `${values?.count ?? 0}/70`,
       "edit.save": "Save",
@@ -109,6 +109,19 @@ describe("ShoplineCollectionsPanel", () => {
           handle: "summer",
           seo: { title: "Updated SEO" },
         }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          collections: [
+            {
+              id: "collection-1",
+              title: "Updated Collection",
+              handle: "summer",
+              seo: { title: "Updated SEO" },
+            },
+          ],
+        }),
       });
 
     render(<ShoplineCollectionsPanel websiteId="website-1" />);
@@ -126,7 +139,7 @@ describe("ShoplineCollectionsPanel", () => {
     fireEvent.click(screen.getByRole("button", { name: "Save" }));
 
     await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledTimes(2);
+      expect(fetchMock).toHaveBeenCalledTimes(3);
     });
     expect(fetchMock).toHaveBeenNthCalledWith(
       2,
@@ -140,6 +153,10 @@ describe("ShoplineCollectionsPanel", () => {
           handle: "summer",
         }),
       },
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "/api/shopline/website-1/collections",
     );
     expect(await screen.findByText("Updated Collection")).toBeInTheDocument();
     expect(toastMock.success).toHaveBeenCalledWith("Saved");
@@ -169,7 +186,7 @@ describe("ShoplineCollectionsPanel", () => {
 
     expect(
       screen.getByText(
-        "Changing URL slug may cause old links to 404. Slice 6 will add automatic 301 redirects.",
+        "Redirects are automatically created when a handle changes.",
       ),
     ).toBeInTheDocument();
   });

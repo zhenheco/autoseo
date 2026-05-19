@@ -2764,7 +2764,8 @@
     "seo": {
       "tabs": {
         "products": "商品",
-        "collections": "コレクション"
+        "collections": "コレクション",
+        "redirects": "Redirects"
       },
       "products": {
         "title": "SHOPLINE 商品",
@@ -2826,6 +2827,9 @@
           "loading": "コレクションを読み込み中",
           "selectLabel": "コレクション",
           "advanced": "高度な manual IDs"
+        },
+        "product": {
+          "titleLabel": "商品名"
         }
       },
       "toast": {
@@ -2843,6 +2847,27 @@
       "pagination": {
         "next": "下一頁",
         "prev": "上一頁"
+      },
+      "redirects": {
+        "title": "SHOPLINE Redirects",
+        "empty": "リダイレクトはありません",
+        "add": "追加",
+        "delete": "削除",
+        "column": {
+          "entityType": "種類",
+          "handleFrom": "From",
+          "handleTo": "To",
+          "createdAt": "作成日時",
+          "hitCount": "ヒット数"
+        },
+        "entityType": {
+          "product": "商品",
+          "collection": "コレクション",
+          "page": "ページ"
+        },
+        "warning": {
+          "autoCreated": "Handle が変更されると 301 redirect が自動作成されます。"
+        }
       }
     }
   },

@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { NextRequest } from "next/server";
 
 type RateLimitResult =
   | { allowed: true }
@@ -112,7 +113,7 @@ describe("GET /api/shopline/[websiteId]/redirects", () => {
     const { GET } = await import("../route");
 
     const response = await GET(
-      new Request("https://1wayseo.com/api/shopline/website-1/redirects"),
+      new NextRequest("https://1wayseo.com/api/shopline/website-1/redirects"),
       params(),
     );
 
@@ -127,7 +128,7 @@ describe("GET /api/shopline/[websiteId]/redirects", () => {
     const { GET } = await import("../route");
 
     const response = await GET(
-      new Request("https://1wayseo.com/api/shopline/website-1/redirects"),
+      new NextRequest("https://1wayseo.com/api/shopline/website-1/redirects"),
       params(),
     );
 
@@ -142,7 +143,7 @@ describe("GET /api/shopline/[websiteId]/redirects", () => {
     const { GET } = await import("../route");
 
     const response = await GET(
-      new Request("https://1wayseo.com/api/shopline/website-1/redirects"),
+      new NextRequest("https://1wayseo.com/api/shopline/website-1/redirects"),
       params(),
     );
 

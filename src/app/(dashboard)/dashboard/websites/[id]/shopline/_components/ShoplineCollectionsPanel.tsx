@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState, type FormEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type FormEvent,
+} from "react";
 import { ChevronLeft, ChevronRight, RefreshCw, Save, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
@@ -72,6 +78,7 @@ export function ShoplineCollectionsPanel({
   const [handle, setHandle] = useState("");
   const currentCursor = cursorStack[cursorStack.length - 1] ?? null;
   const currentPageNumber = cursorStack.length;
+  const selectedCollectionTitleLength = useMemo(() => title.length, [title]);
   const selectedTitleLength = useMemo(() => seoTitle.length, [seoTitle]);
   const selectedDescriptionLength = useMemo(
     () => seoDescription.length,
@@ -81,40 +88,32 @@ export function ShoplineCollectionsPanel({
   const isHandleChanged =
     selectedCollection !== null && handle !== selectedCollection.handle;
 
-  useEffect(() => {
-    let cancelled = false;
+  const loadCollections = useCallback(async () => {
+    setLoading(true);
 
-    async function loadCollections() {
-      setLoading(true);
+    try {
+      const requestUrl =
+        currentCursor === null
+          ? `/api/shopline/${websiteId}/collections`
+          : `/api/shopline/${websiteId}/collections?cursor=${encodeURIComponent(
+              currentCursor,
+            )}`;
+      const response = await fetch(requestUrl);
+      if (!response.ok) throw new Error("shopline_collections_fetch_failed");
 
-      try {
-        const requestUrl =
-          currentCursor === null
-            ? `/api/shopline/${websiteId}/collections`
-            : `/api/shopline/${websiteId}/collections?cursor=${encodeURIComponent(
-                currentCursor,
-              )}`;
-        const response = await fetch(requestUrl);
-        if (!response.ok) throw new Error("shopline_collections_fetch_failed");
-
-        const data = (await response.json()) as CollectionsResponse;
-        if (!cancelled) {
-          setCollections(data.collections ?? []);
-          setNextCursor(data.nextCursor ?? null);
-        }
-      } catch {
-        if (!cancelled) toast.error(saveErrorMessage);
-      } finally {
-        if (!cancelled) setLoading(false);
-      }
+      const data = (await response.json()) as CollectionsResponse;
+      setCollections(data.collections ?? []);
+      setNextCursor(data.nextCursor ?? null);
+    } catch {
+      toast.error(saveErrorMessage);
+    } finally {
+      setLoading(false);
     }
-
-    void loadCollections();
-
-    return () => {
-      cancelled = true;
-    };
   }, [currentCursor, saveErrorMessage, websiteId]);
+
+  useEffect(() => {
+    void loadCollections();
+  }, [loadCollections]);
 
   function openEditor(collection: ShoplineCollection) {
     setSelectedCollection(collection);
@@ -180,14 +179,8 @@ export function ShoplineCollectionsPanel({
         throw new Error("shopline_collection_update_failed");
       }
 
-      const updatedCollection = (await response.json()) as ShoplineCollection;
-      setCollections((currentCollections) =>
-        currentCollections.map((collection) =>
-          collection.id === updatedCollection.id
-            ? updatedCollection
-            : collection,
-        ),
-      );
+      await response.json();
+      await loadCollections();
       setSelectedCollection(null);
       toast.success(t("toast.saveSuccess"));
     } catch {
@@ -314,12 +307,20 @@ export function ShoplineCollectionsPanel({
               </div>
             ) : null}
             <div className="space-y-2">
-              <Label htmlFor="shopline-collection-title">
-                {t("edit.collection.titleLabel")}
-              </Label>
+              <div className="flex items-center justify-between gap-4">
+                <Label htmlFor="shopline-collection-title">
+                  {t("edit.collection.titleLabel")}
+                </Label>
+                <span className="text-xs text-muted-foreground">
+                  {t("edit.charCount", {
+                    count: selectedCollectionTitleLength,
+                  })}
+                </span>
+              </div>
               <Input
                 id="shopline-collection-title"
                 value={title}
+                maxLength={70}
                 onChange={(event) => setTitle(event.target.value)}
               />
             </div>
@@ -379,7 +380,7 @@ export function ShoplineCollectionsPanel({
             </div>
             {isHandleChanged ? (
               <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                {t("edit.collection.handleChangeWarning")}
+                {t("redirects.warning.autoCreated")}
               </div>
             ) : null}
             <DialogFooter>

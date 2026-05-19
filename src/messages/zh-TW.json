@@ -2764,7 +2764,8 @@
     "seo": {
       "tabs": {
         "products": "商品",
-        "collections": "分類"
+        "collections": "分類",
+        "redirects": "Redirects"
       },
       "products": {
         "title": "SHOPLINE 商品",
@@ -2826,6 +2827,9 @@
           "loading": "載入分類中",
           "selectLabel": "分類",
           "advanced": "進階 manual IDs"
+        },
+        "product": {
+          "titleLabel": "商品名稱"
         }
       },
       "toast": {
@@ -2843,6 +2847,27 @@
       "pagination": {
         "next": "下一頁",
         "prev": "上一頁"
+      },
+      "redirects": {
+        "title": "SHOPLINE Redirects",
+        "empty": "尚無 redirect",
+        "add": "新增",
+        "delete": "刪除",
+        "column": {
+          "entityType": "類型",
+          "handleFrom": "來源 handle",
+          "handleTo": "目標 handle",
+          "createdAt": "建立時間",
+          "hitCount": "命中數"
+        },
+        "entityType": {
+          "product": "商品",
+          "collection": "分類",
+          "page": "頁面"
+        },
+        "warning": {
+          "autoCreated": "Handle 變更後會自動建立 301 redirect。"
+        }
       }
     }
   },

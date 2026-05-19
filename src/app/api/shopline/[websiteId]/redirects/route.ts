@@ -12,7 +12,6 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import {
   createShoplineRedirect,
   listShoplineRedirects,
-  type RedirectStoreSupabase,
 } from "@/lib/shopline/redirect-store";
 import {
   checkShoplineWriteRateLimit,
@@ -138,10 +137,7 @@ export const GET = withRouteAuth(
         return forbidden("Website not found");
       }
 
-      const redirects = await listShoplineRedirects(
-        supabase as RedirectStoreSupabase,
-        websiteId,
-      );
+      const redirects = await listShoplineRedirects(supabase, websiteId);
 
       return NextResponse.json({ redirects });
     } catch (error) {
@@ -212,7 +208,7 @@ export const POST = withRouteAuth(
         return forbidden("Website not found");
       }
 
-      await createShoplineRedirect(supabase as RedirectStoreSupabase, {
+      await createShoplineRedirect(supabase, {
         websiteId,
         entityType: parsedBody.data.entityType,
         entityId: parsedBody.data.entityId,

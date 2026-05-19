@@ -118,6 +118,7 @@ export function ShoplineProductsPanel({
   const [scopeMissing, setScopeMissing] = useState<{
     reauthorizeUrl: string;
   } | null>(null);
+  const [title, setTitle] = useState("");
   const [seoTitle, setSeoTitle] = useState("");
   const [seoDescription, setSeoDescription] = useState("");
   const [handle, setHandle] = useState("");
@@ -138,6 +139,7 @@ export function ShoplineProductsPanel({
     useState<CategoryMutationResponse | null>(null);
   const currentCursor = cursorStack[cursorStack.length - 1] ?? null;
   const currentPageNumber = cursorStack.length;
+  const selectedProductTitleLength = useMemo(() => title.length, [title]);
 
   useEffect(() => {
     let cancelled = false;
@@ -227,6 +229,7 @@ export function ShoplineProductsPanel({
   function openEditor(product: ShoplineProduct) {
     setSelectedProduct(product);
     setScopeMissing(null);
+    setTitle(product.title);
     setSeoTitle(product.seo?.title ?? "");
     setSeoDescription(product.seo?.description ?? "");
     setHandle(product.handle);
@@ -271,6 +274,7 @@ export function ShoplineProductsPanel({
           body: JSON.stringify({
             seo: { title: seoTitle, description: seoDescription },
             handle,
+            title,
           }),
         },
       );
@@ -583,6 +587,24 @@ export function ShoplineProductsPanel({
               <TabsContent value="seo-meta" className="space-y-4">
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-4">
+                    <Label htmlFor="shopline-product-title">
+                      {t("edit.product.titleLabel")}
+                    </Label>
+                    <span className="text-xs text-muted-foreground">
+                      {t("edit.charCount", {
+                        count: selectedProductTitleLength,
+                      })}
+                    </span>
+                  </div>
+                  <Input
+                    id="shopline-product-title"
+                    value={title}
+                    maxLength={70}
+                    onChange={(event) => setTitle(event.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between gap-4">
                     <Label htmlFor="shopline-seo-title">
                       {t("edit.seoTitleLabel")}
                     </Label>
@@ -637,7 +659,7 @@ export function ShoplineProductsPanel({
                 </div>
                 {isHandleChanged ? (
                   <div className="rounded-md border border-amber-300 bg-amber-50 px-3 py-2 text-sm text-amber-900">
-                    {t("edit.handleChangeWarning")}
+                    {t("redirects.warning.autoCreated")}
                   </div>
                 ) : null}
                 <DialogFooter>

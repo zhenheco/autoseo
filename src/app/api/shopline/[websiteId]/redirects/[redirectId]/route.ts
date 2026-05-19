@@ -3,10 +3,7 @@ import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { withRouteAuth } from "@/lib/api/route-auth";
 import { forbidden, handleApiError } from "@/lib/api/response-helpers";
 import { createAdminClient } from "@/lib/supabase/admin";
-import {
-  deleteShoplineRedirect,
-  type RedirectStoreSupabase,
-} from "@/lib/shopline/redirect-store";
+import { deleteShoplineRedirect } from "@/lib/shopline/redirect-store";
 import {
   checkShoplineWriteRateLimit,
   type ShoplineRateLimitStore,
@@ -135,10 +132,7 @@ export const DELETE = withRouteAuth(
         return forbidden("Website not found");
       }
 
-      await deleteShoplineRedirect(
-        supabase as RedirectStoreSupabase,
-        redirectId,
-      );
+      await deleteShoplineRedirect(supabase, redirectId);
 
       return new NextResponse(null, { status: 204 });
     } catch (error) {

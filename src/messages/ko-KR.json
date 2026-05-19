@@ -2945,7 +2945,8 @@
     "seo": {
       "tabs": {
         "products": "상품",
-        "collections": "컬렉션"
+        "collections": "컬렉션",
+        "redirects": "Redirects"
       },
       "products": {
         "title": "SHOPLINE 商品",
@@ -3007,6 +3008,9 @@
           "loading": "컬렉션 로딩 중",
           "selectLabel": "컬렉션",
           "advanced": "고급 manual IDs"
+        },
+        "product": {
+          "titleLabel": "상품명"
         }
       },
       "toast": {
@@ -3024,6 +3028,27 @@
       "pagination": {
         "next": "下一頁",
         "prev": "上一頁"
+      },
+      "redirects": {
+        "title": "SHOPLINE Redirects",
+        "empty": "Redirect가 없습니다",
+        "add": "추가",
+        "delete": "삭제",
+        "column": {
+          "entityType": "유형",
+          "handleFrom": "From",
+          "handleTo": "To",
+          "createdAt": "생성일",
+          "hitCount": "Hit 수"
+        },
+        "entityType": {
+          "product": "상품",
+          "collection": "컬렉션",
+          "page": "페이지"
+        },
+        "warning": {
+          "autoCreated": "Handle이 변경되면 301 redirect가 자동으로 생성됩니다."
+        }
       }
     }
   },

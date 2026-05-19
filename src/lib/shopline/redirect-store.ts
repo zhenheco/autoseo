@@ -1,19 +1,12 @@
 import type { Database } from "@/types/database.types";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export type ShoplineRedirect =
   Database["public"]["Tables"]["shopline_redirects"]["Row"];
 export type ShoplineRedirectInsert =
   Database["public"]["Tables"]["shopline_redirects"]["Insert"];
 
-type StoreError = { message?: string } | null;
-
-export interface RedirectStoreSupabase {
-  from: (table: "shopline_redirects") => {
-    insert: (row: ShoplineRedirectInsert) => Promise<{ error: StoreError }>;
-    select: (cols: string) => any;
-    delete: () => any;
-  };
-}
+export type RedirectStoreSupabase = SupabaseClient<Database>;
 
 const REDIRECT_SELECT =
   "id, website_id, entity_type, entity_id, handle_from, handle_to, created_at, last_hit_at, hit_count";

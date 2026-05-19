@@ -2,6 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { updateShoplineProductSeo } from "../seo-updater";
 import type { ShoplineConnectionStore } from "../connections";
 import type { ShoplineProduct } from "../types";
+import type { Database } from "@/types/database.types";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 const updateProduct = vi.fn();
 const getProduct = vi.fn();
@@ -72,7 +74,7 @@ function createSupabaseAuditClient() {
   const from = vi.fn(() => ({ insert }));
 
   return {
-    supabase: { from },
+    supabase: { from } as unknown as SupabaseClient<Database>,
     from,
     insert,
   };
@@ -250,7 +252,7 @@ describe("updateShoplineProductSeo", () => {
       error: { message: "relation does not exist" },
     }));
     const from = vi.fn(() => ({ insert }));
-    const supabase = { from };
+    const supabase = { from } as unknown as SupabaseClient<Database>;
     const warn = vi.spyOn(console, "warn").mockImplementation(() => {});
     updateProduct.mockResolvedValueOnce(updatedProduct);
 
