@@ -26,6 +26,7 @@ import {
   TriangleAlert,
 } from "lucide-react";
 import Link from "next/link";
+import { ShoplineProductsPanel } from "./_components/ShoplineProductsPanel";
 
 type SearchParams = {
   shopHandle?: string;
@@ -105,7 +106,7 @@ export default async function ShoplineConnectPage({
   const title = website.website_name ?? website.site_name ?? "Website";
 
   return (
-    <div className="container mx-auto max-w-2xl p-8">
+    <div className="container mx-auto max-w-4xl p-8">
       <div className="mb-6">
         <Link href={`/dashboard/websites/${website.id}/edit`}>
           <Button variant="ghost" size="sm">
@@ -198,6 +199,12 @@ export default async function ShoplineConnectPage({
           </form>
         </CardContent>
       </Card>
+
+      {status.connected === true && (
+        <div className="mt-6">
+          <ShoplineProductsPanel websiteId={website.id} />
+        </div>
+      )}
     </div>
   );
 }

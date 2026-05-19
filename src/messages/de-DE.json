@@ -2941,6 +2941,38 @@
       "a3": "Sie können innerhalb von 14 Tagen nach der Zahlung eine vollständige Rückerstattung beantragen."
     }
   },
+  "shopline": {
+    "seo": {
+      "tabs": {
+        "products": "商品"
+      },
+      "products": {
+        "title": "SHOPLINE 商品",
+        "empty": "尚無商品",
+        "column": {
+          "title": "商品名稱",
+          "handle": "Handle",
+          "seoTitle": "SEO 標題",
+          "notSet": "未設定"
+        }
+      },
+      "edit": {
+        "title": "編輯商品 SEO",
+        "seoTitleLabel": "SEO 標題",
+        "charCount": "{count}/70",
+        "save": "儲存",
+        "cancel": "取消"
+      },
+      "toast": {
+        "saveSuccess": "已儲存 SEO 標題",
+        "saveError": "儲存 SEO 標題失敗"
+      },
+      "pagination": {
+        "next": "下一頁",
+        "prev": "上一頁"
+      }
+    }
+  },
   "invoice": {
     "title": "Rechnungsinformationen",
     "invoiceType": "Rechnungstyp",
