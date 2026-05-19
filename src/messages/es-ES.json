@@ -2944,7 +2944,8 @@
   "shopline": {
     "seo": {
       "tabs": {
-        "products": "商品"
+        "products": "Productos",
+        "collections": "Colecciones"
       },
       "products": {
         "title": "SHOPLINE 商品",
@@ -2956,8 +2957,26 @@
           "notSet": "未設定"
         }
       },
+      "collections": {
+        "title": "Colecciones SHOPLINE",
+        "empty": "Sin colecciones",
+        "column": {
+          "title": "Nombre de coleccion",
+          "handle": "Handle",
+          "seoTitle": "Titulo SEO",
+          "productsCount": "Productos"
+        }
+      },
       "edit": {
         "title": "編輯商品 SEO",
+        "collection": {
+          "title": "Editar SEO de coleccion",
+          "titleLabel": "Nombre de coleccion",
+          "seoTitleLabel": "Titulo SEO",
+          "seoDescriptionLabel": "Descripcion SEO",
+          "handleLabel": "URL slug",
+          "handleChangeWarning": "Cambiar el URL slug puede hacer que enlaces antiguos den 404. Slice 6 agregara redirects 301 automaticos."
+        },
         "tabs": {
           "seoMeta": "SEO meta",
           "images": "Imagenes",
@@ -2984,7 +3003,10 @@
           "placeholder": "Separar con comas o saltos de linea",
           "submit": "Actualizar categorias",
           "successCount": "{count} correctas",
-          "failedCount": "{count} fallidas"
+          "failedCount": "{count} fallidas",
+          "loading": "Cargando colecciones",
+          "selectLabel": "Colecciones",
+          "advanced": "IDs manuales avanzados"
         }
       },
       "toast": {

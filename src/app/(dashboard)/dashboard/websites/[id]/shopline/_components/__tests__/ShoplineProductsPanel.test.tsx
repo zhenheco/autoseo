@@ -41,6 +41,9 @@ vi.mock("next-intl", () => ({
       "edit.categories.submit": "Update categories",
       "edit.categories.successCount": `${values?.count ?? 0} succeeded`,
       "edit.categories.failedCount": `${values?.count ?? 0} failed`,
+      "edit.categories.loading": "Loading collections",
+      "edit.categories.selectLabel": "Collections",
+      "edit.categories.advanced": "Advanced manual IDs",
       "toast.saveSuccess": "Saved",
       "toast.saveError": "Save failed",
       "error.scopeMissing.title": "Need reauthorization",
@@ -250,7 +253,7 @@ describe("ShoplineProductsPanel", () => {
     ).toHaveValue("Original image alt");
   });
 
-  it("shows category inputs in the Categories tab", async () => {
+  it("loads collections and shows checkbox options in the Categories tab", async () => {
     fetchMock
       .mockResolvedValueOnce({
         ok: true,
@@ -263,6 +266,34 @@ describe("ShoplineProductsPanel", () => {
               seo: { title: "Original SEO title" },
             },
           ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          collections: [
+            {
+              id: "collection-current",
+              title: "Current Collection",
+              handle: "current",
+              seo: {},
+            },
+          ],
+          nextCursor: "cursor-2",
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          collections: [
+            {
+              id: "collection-next",
+              title: "Next Collection",
+              handle: "next",
+              seo: {},
+            },
+          ],
+          nextCursor: null,
         }),
       })
       .mockResolvedValueOnce({
@@ -284,15 +315,22 @@ describe("ShoplineProductsPanel", () => {
     fireEvent.click(screen.getByRole("tab", { name: "Categories" }));
 
     expect(
-      await screen.findByRole("textbox", { name: "Add collection IDs" }),
-    ).toBeInTheDocument();
+      await screen.findByRole("checkbox", { name: "Current Collection" }),
+    ).toBeChecked();
     expect(
-      screen.getByRole("textbox", { name: "Remove collection IDs" }),
+      screen.getByRole("checkbox", { name: "Next Collection" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("collection-current")).toBeInTheDocument();
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "/api/shopline/website-1/collections",
+    );
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      3,
+      "/api/shopline/website-1/collections?cursor=cursor-2",
+    );
   });
 
-  it("submits category add and remove PATCH with parsed collection IDs", async () => {
+  it("submits category PATCH from collection checkbox changes", async () => {
     fetchMock
       .mockResolvedValueOnce({
         ok: true,
@@ -309,13 +347,41 @@ describe("ShoplineProductsPanel", () => {
       })
       .mockResolvedValueOnce({
         ok: true,
-        json: async () => ({ collects: [] }),
+        json: async () => ({
+          collections: [
+            {
+              id: "collection-current",
+              title: "Current Collection",
+              handle: "current",
+              seo: {},
+            },
+            {
+              id: "collection-add",
+              title: "Add Collection",
+              handle: "add",
+              seo: {},
+            },
+          ],
+          nextCursor: null,
+        }),
       })
       .mockResolvedValueOnce({
         ok: true,
         json: async () => ({
-          added: [{ collection_id: "collection-add-1", success: true }],
-          removed: [{ collection_id: "collection-remove-1", success: true }],
+          collects: [
+            {
+              id: "collect-1",
+              collection_id: "collection-current",
+              product_id: "product-1",
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          added: [{ collection_id: "collection-add", success: true }],
+          removed: [{ collection_id: "collection-current", success: true }],
         }),
       });
 
@@ -323,32 +389,24 @@ describe("ShoplineProductsPanel", () => {
 
     fireEvent.click(await screen.findByText("Product 1"));
     fireEvent.click(screen.getByRole("tab", { name: "Categories" }));
-    fireEvent.change(
-      await screen.findByRole("textbox", { name: "Add collection IDs" }),
-      {
-        target: { value: "collection-add-1, collection-add-2" },
-      },
+    fireEvent.click(
+      await screen.findByRole("checkbox", { name: "Current Collection" }),
     );
-    fireEvent.change(
-      screen.getByRole("textbox", { name: "Remove collection IDs" }),
-      {
-        target: { value: "collection-remove-1\ncollection-remove-2" },
-      },
-    );
+    fireEvent.click(screen.getByRole("checkbox", { name: "Add Collection" }));
     fireEvent.click(screen.getByRole("button", { name: "Update categories" }));
 
     await waitFor(() => {
-      expect(fetchMock).toHaveBeenCalledTimes(3);
+      expect(fetchMock).toHaveBeenCalledTimes(4);
     });
     expect(fetchMock).toHaveBeenNthCalledWith(
-      3,
+      4,
       "/api/shopline/website-1/products/product-1/categories",
       {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          add: ["collection-add-1", "collection-add-2"],
-          remove: ["collection-remove-1", "collection-remove-2"],
+          add: ["collection-add"],
+          remove: ["collection-current"],
         }),
       },
     );
@@ -367,6 +425,26 @@ describe("ShoplineProductsPanel", () => {
               seo: { title: "Original SEO title" },
             },
           ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          collections: [
+            {
+              id: "collection-add-ok",
+              title: "Collection Add OK",
+              handle: "collection-add-ok",
+              seo: {},
+            },
+            {
+              id: "collection-add-fail",
+              title: "Collection Add Fail",
+              handle: "collection-add-fail",
+              seo: {},
+            },
+          ],
+          nextCursor: null,
         }),
       })
       .mockResolvedValueOnce({
@@ -392,11 +470,11 @@ describe("ShoplineProductsPanel", () => {
 
     fireEvent.click(await screen.findByText("Product 1"));
     fireEvent.click(screen.getByRole("tab", { name: "Categories" }));
-    fireEvent.change(
-      await screen.findByRole("textbox", { name: "Add collection IDs" }),
-      {
-        target: { value: "collection-add-ok,collection-add-fail" },
-      },
+    fireEvent.click(
+      await screen.findByRole("checkbox", { name: "Collection Add OK" }),
+    );
+    fireEvent.click(
+      screen.getByRole("checkbox", { name: "Collection Add Fail" }),
     );
     fireEvent.click(screen.getByRole("button", { name: "Update categories" }));
 

@@ -2763,7 +2763,8 @@
   "shopline": {
     "seo": {
       "tabs": {
-        "products": "商品"
+        "products": "商品",
+        "collections": "分類"
       },
       "products": {
         "title": "SHOPLINE 商品",
@@ -2775,8 +2776,26 @@
           "notSet": "未設定"
         }
       },
+      "collections": {
+        "title": "SHOPLINE 分類",
+        "empty": "尚無分類",
+        "column": {
+          "title": "分類名稱",
+          "handle": "Handle",
+          "seoTitle": "SEO 標題",
+          "productsCount": "商品數"
+        }
+      },
       "edit": {
         "title": "編輯商品 SEO",
+        "collection": {
+          "title": "編輯分類 SEO",
+          "titleLabel": "分類名稱",
+          "seoTitleLabel": "SEO 標題",
+          "seoDescriptionLabel": "SEO 描述",
+          "handleLabel": "URL slug",
+          "handleChangeWarning": "變更 URL slug 可能導致舊連結 404，slice 6 將補 301 redirect 自動建立"
+        },
         "tabs": {
           "seoMeta": "SEO meta",
           "images": "圖片",
@@ -2803,7 +2822,10 @@
           "placeholder": "以逗號或換行分隔",
           "submit": "更新分類",
           "successCount": "{count} 個成功",
-          "failedCount": "{count} 個失敗"
+          "failedCount": "{count} 個失敗",
+          "loading": "載入分類中",
+          "selectLabel": "分類",
+          "advanced": "進階 manual IDs"
         }
       },
       "toast": {

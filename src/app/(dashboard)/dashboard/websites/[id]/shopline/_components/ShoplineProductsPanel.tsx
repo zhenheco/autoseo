@@ -13,6 +13,7 @@ import { useTranslations } from "next-intl";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog,
   DialogContent,
@@ -54,6 +55,21 @@ type ShoplineProductImage = {
 type ProductsResponse = {
   products?: ShoplineProduct[];
   nextCursor?: string;
+};
+
+type ShoplineCollection = {
+  id: string;
+  title: string;
+  handle: string;
+  seo?: {
+    title?: string;
+    description?: string;
+  };
+};
+
+type CollectionsResponse = {
+  collections?: ShoplineCollection[];
+  nextCursor?: string | null;
 };
 
 type ProductCollect = {
@@ -109,6 +125,12 @@ export function ShoplineProductsPanel({
   const [savingImageId, setSavingImageId] = useState<string | null>(null);
   const [editTab, setEditTab] = useState("seo-meta");
   const [currentCollects, setCurrentCollects] = useState<ProductCollect[]>([]);
+  const [availableCollections, setAvailableCollections] = useState<
+    ShoplineCollection[]
+  >([]);
+  const [selectedCollectionIds, setSelectedCollectionIds] = useState<
+    Set<string>
+  >(new Set());
   const [loadingCollects, setLoadingCollects] = useState(false);
   const [categoryAddInput, setCategoryAddInput] = useState("");
   const [categoryRemoveInput, setCategoryRemoveInput] = useState("");
@@ -158,17 +180,27 @@ export function ShoplineProductsPanel({
     let cancelled = false;
     const selectedProductId = selectedProduct.id;
 
-    async function loadProductCollects() {
+    async function loadCategoryData() {
       setLoadingCollects(true);
 
       try {
+        const collections = await fetchAllCollections(websiteId);
+        if (cancelled) return;
+        setAvailableCollections(collections);
+
         const response = await fetch(
           `/api/shopline/${websiteId}/products/${selectedProductId}/collects`,
         );
         if (!response.ok) throw new Error("shopline_product_collects_failed");
 
         const data = (await response.json()) as ProductCollectsResponse;
-        if (!cancelled) setCurrentCollects(data.collects ?? []);
+        if (!cancelled) {
+          const collects = data.collects ?? [];
+          setCurrentCollects(collects);
+          setSelectedCollectionIds(
+            new Set(collects.map((collect) => collect.collection_id)),
+          );
+        }
       } catch {
         if (!cancelled) toast.error(saveErrorMessage);
       } finally {
@@ -176,7 +208,7 @@ export function ShoplineProductsPanel({
       }
     }
 
-    void loadProductCollects();
+    void loadCategoryData();
 
     return () => {
       cancelled = true;
@@ -200,6 +232,8 @@ export function ShoplineProductsPanel({
     setHandle(product.handle);
     setEditTab("seo-meta");
     setCurrentCollects([]);
+    setAvailableCollections([]);
+    setSelectedCollectionIds(new Set());
     setCategoryAddInput("");
     setCategoryRemoveInput("");
     setCategoryResult(null);
@@ -346,8 +380,21 @@ export function ShoplineProductsPanel({
   async function handleCategorySubmit() {
     if (!selectedProduct) return;
 
-    const add = parseCollectionIds(categoryAddInput);
-    const remove = parseCollectionIds(categoryRemoveInput);
+    const currentCollectionIds = new Set(
+      currentCollects.map((collect) => collect.collection_id),
+    );
+    const add = uniqueValues([
+      ...Array.from(selectedCollectionIds).filter(
+        (collectionId) => !currentCollectionIds.has(collectionId),
+      ),
+      ...parseCollectionIds(categoryAddInput),
+    ]);
+    const remove = uniqueValues([
+      ...Array.from(currentCollectionIds).filter(
+        (collectionId) => !selectedCollectionIds.has(collectionId),
+      ),
+      ...parseCollectionIds(categoryRemoveInput),
+    ]);
 
     setSaving(true);
     setScopeMissing(null);
@@ -682,57 +729,95 @@ export function ShoplineProductsPanel({
               </TabsContent>
               <TabsContent value="categories" className="space-y-4">
                 <div className="space-y-2">
-                  <div className="flex flex-wrap gap-2">
+                  <Label>{t("edit.categories.selectLabel")}</Label>
+                  <div className="max-h-64 space-y-2 overflow-auto rounded-md border p-3">
                     {loadingCollects ? (
-                      <span className="text-sm text-muted-foreground">
-                        {t("products.empty")}
-                      </span>
-                    ) : currentCollects.length === 0 ? (
-                      <span className="text-sm text-muted-foreground">
+                      <p className="text-sm text-muted-foreground">
+                        {t("edit.categories.loading")}
+                      </p>
+                    ) : availableCollections.length === 0 ? (
+                      <p className="text-sm text-muted-foreground">
                         {t("products.column.notSet")}
-                      </span>
+                      </p>
                     ) : (
-                      currentCollects.map((collect) => (
-                        <span
-                          key={`${collect.id}-${collect.collection_id}`}
-                          className="rounded-md border bg-muted px-2 py-1 text-xs"
-                        >
-                          {collect.collection_id}
-                        </span>
-                      ))
+                      availableCollections.map((collection) => {
+                        const checkboxId = `shopline-category-${collection.id}`;
+                        return (
+                          <div
+                            key={collection.id}
+                            className="flex items-start gap-3 rounded-md px-2 py-2 hover:bg-muted"
+                          >
+                            <Checkbox
+                              id={checkboxId}
+                              checked={selectedCollectionIds.has(collection.id)}
+                              onCheckedChange={(checked) => {
+                                setSelectedCollectionIds((currentIds) => {
+                                  const nextIds = new Set(currentIds);
+                                  if (checked === true) {
+                                    nextIds.add(collection.id);
+                                  } else {
+                                    nextIds.delete(collection.id);
+                                  }
+                                  return nextIds;
+                                });
+                              }}
+                            />
+                            <Label
+                              htmlFor={checkboxId}
+                              className="flex flex-1 cursor-pointer flex-col gap-1"
+                            >
+                              <span>{collection.title}</span>
+                              {collection.handle &&
+                              collection.handle !== collection.id ? (
+                                <span
+                                  aria-hidden="true"
+                                  className="text-xs text-muted-foreground"
+                                >
+                                  {collection.handle}
+                                </span>
+                              ) : null}
+                            </Label>
+                          </div>
+                        );
+                      })
                     )}
                   </div>
                 </div>
-                <div className="grid gap-4 sm:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="shopline-category-add">
-                      {t("edit.categories.addLabel")}
-                    </Label>
-                    <Textarea
-                      id="shopline-category-add"
-                      value={categoryAddInput}
-                      rows={5}
-                      placeholder={t("edit.categories.placeholder")}
-                      onChange={(event) =>
-                        setCategoryAddInput(event.target.value)
-                      }
-                    />
+                <details className="rounded-md border p-3">
+                  <summary className="cursor-pointer text-sm font-medium">
+                    {t("edit.categories.advanced")}
+                  </summary>
+                  <div className="mt-3 grid gap-4 sm:grid-cols-2">
+                    <div className="space-y-2">
+                      <Label htmlFor="shopline-category-add">
+                        {t("edit.categories.addLabel")}
+                      </Label>
+                      <Textarea
+                        id="shopline-category-add"
+                        value={categoryAddInput}
+                        rows={5}
+                        placeholder={t("edit.categories.placeholder")}
+                        onChange={(event) =>
+                          setCategoryAddInput(event.target.value)
+                        }
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="shopline-category-remove">
+                        {t("edit.categories.removeLabel")}
+                      </Label>
+                      <Textarea
+                        id="shopline-category-remove"
+                        value={categoryRemoveInput}
+                        rows={5}
+                        placeholder={t("edit.categories.placeholder")}
+                        onChange={(event) =>
+                          setCategoryRemoveInput(event.target.value)
+                        }
+                      />
+                    </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="shopline-category-remove">
-                      {t("edit.categories.removeLabel")}
-                    </Label>
-                    <Textarea
-                      id="shopline-category-remove"
-                      value={categoryRemoveInput}
-                      rows={5}
-                      placeholder={t("edit.categories.placeholder")}
-                      onChange={(event) =>
-                        setCategoryRemoveInput(event.target.value)
-                      }
-                    />
-                  </div>
-                </div>
+                </details>
                 {categoryResult ? (
                   <div className="space-y-2 rounded-md border p-3 text-sm">
                     <div className="flex gap-3">
@@ -796,6 +881,35 @@ function parseCollectionIds(value: string): string[] {
     .split(/[,\n\r]+/)
     .map((item) => item.trim())
     .filter(Boolean);
+}
+
+function uniqueValues(values: string[]): string[] {
+  return Array.from(new Set(values.filter(Boolean)));
+}
+
+async function fetchAllCollections(
+  websiteId: string,
+): Promise<ShoplineCollection[]> {
+  const collections: ShoplineCollection[] = [];
+  let cursor: string | null = null;
+
+  for (let page = 0; page < 5; page++) {
+    const requestUrl =
+      cursor === null
+        ? `/api/shopline/${websiteId}/collections`
+        : `/api/shopline/${websiteId}/collections?cursor=${encodeURIComponent(
+            cursor,
+          )}`;
+    const response = await fetch(requestUrl);
+    if (!response.ok) throw new Error("shopline_collections_fetch_failed");
+
+    const data = (await response.json()) as CollectionsResponse;
+    collections.push(...(data.collections ?? []));
+    cursor = data.nextCursor ?? null;
+    if (!cursor) break;
+  }
+
+  return collections;
 }
 
 function countCategoryResults(
