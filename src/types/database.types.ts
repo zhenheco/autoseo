@@ -528,6 +528,94 @@ export type Database = {
           },
         ];
       };
+      shopline_seo_audit_log: {
+        Row: {
+          id: string;
+          company_id: string;
+          website_id: string;
+          entity_type:
+            | "product"
+            | "collection"
+            | "shop"
+            | "image"
+            | "category_assignment"
+            | "redirect"
+            | "collection_hierarchy";
+          entity_id: string;
+          field: string;
+          before_value: string | null;
+          after_value: string | null;
+          source: "ui" | "cli" | "ai";
+          model: string | null;
+          user_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id: string;
+          website_id: string;
+          entity_type:
+            | "product"
+            | "collection"
+            | "shop"
+            | "image"
+            | "category_assignment"
+            | "redirect"
+            | "collection_hierarchy";
+          entity_id: string;
+          field: string;
+          before_value?: string | null;
+          after_value?: string | null;
+          source: "ui" | "cli" | "ai";
+          model?: string | null;
+          user_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          company_id?: string;
+          website_id?: string;
+          entity_type?:
+            | "product"
+            | "collection"
+            | "shop"
+            | "image"
+            | "category_assignment"
+            | "redirect"
+            | "collection_hierarchy";
+          entity_id?: string;
+          field?: string;
+          before_value?: string | null;
+          after_value?: string | null;
+          source?: "ui" | "cli" | "ai";
+          model?: string | null;
+          user_id?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "shopline_seo_audit_log_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "shopline_seo_audit_log_website_id_fkey";
+            columns: ["website_id"];
+            isOneToOne: false;
+            referencedRelation: "website_configs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "shopline_seo_audit_log_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       subscription_plans: {
         Row: {
           id: string;
