@@ -5,6 +5,7 @@ import type { Database } from "../database.types";
 
 type AuditLogTable = Database["public"]["Tables"]["shopline_seo_audit_log"];
 type RedirectsTable = Database["public"]["Tables"]["shopline_redirects"];
+type ShopMetaTable = Database["public"]["Tables"]["shopline_shop_meta"];
 
 describe("shopline_seo_audit_log schema", () => {
   it("has generated Database types for rows and inserts", () => {
@@ -148,6 +149,82 @@ describe("shopline_redirects schema", () => {
     expect(sql).toContain("CREATE POLICY shopline_redirects_company_select");
     expect(sql).toContain("CREATE POLICY shopline_redirects_company_insert");
     expect(sql).toContain("CREATE POLICY shopline_redirects_company_delete");
+    expect(sql).toContain("JOIN public.website_configs wc");
+    expect(sql).toContain("cm.status = 'active'");
+  });
+});
+
+describe("shopline_shop_meta schema", () => {
+  it("has Database types for shop meta rows, inserts, and updates", () => {
+    expectTypeOf<ShopMetaTable["Row"]>().toMatchTypeOf<{
+      id: string;
+      website_id: string;
+      seo_title_template: string | null;
+      default_description: string | null;
+      robots_index_products: boolean;
+      robots_index_collections: boolean;
+      sitemap_enabled: boolean;
+      default_og_image: string | null;
+      hreflang_map: Database["public"]["Tables"]["shopline_shop_meta"]["Row"]["hreflang_map"];
+      updated_at: string;
+    }>();
+
+    expectTypeOf<ShopMetaTable["Insert"]>().toMatchTypeOf<{
+      website_id: string;
+      id?: string;
+      seo_title_template?: string | null;
+      default_description?: string | null;
+      robots_index_products?: boolean;
+      robots_index_collections?: boolean;
+      sitemap_enabled?: boolean;
+      default_og_image?: string | null;
+      hreflang_map?: Database["public"]["Tables"]["shopline_shop_meta"]["Insert"]["hreflang_map"];
+      updated_at?: string;
+    }>();
+
+    expectTypeOf<ShopMetaTable["Update"]>().toMatchTypeOf<{
+      id?: string;
+      website_id?: string;
+      seo_title_template?: string | null;
+      default_description?: string | null;
+      robots_index_products?: boolean;
+      robots_index_collections?: boolean;
+      sitemap_enabled?: boolean;
+      default_og_image?: string | null;
+      hreflang_map?: Database["public"]["Tables"]["shopline_shop_meta"]["Update"]["hreflang_map"];
+      updated_at?: string;
+    }>();
+  });
+
+  it("creates the shop meta table, indexes, and company RLS policies", () => {
+    const migrationsDir = join(process.cwd(), "supabase/migrations");
+    const migrationFile = readdirSync(migrationsDir).find((file) =>
+      file.endsWith("_shopline_shop_meta.sql"),
+    );
+
+    expect(migrationFile).toBeDefined();
+
+    const sql = readFileSync(join(migrationsDir, migrationFile!), "utf8");
+
+    expect(sql).toContain("CREATE TABLE public.shopline_shop_meta");
+    expect(sql).toContain(
+      "website_id UUID NOT NULL UNIQUE REFERENCES public.website_configs(id) ON DELETE CASCADE",
+    );
+    expect(sql).toContain(
+      "robots_index_products BOOLEAN NOT NULL DEFAULT TRUE",
+    );
+    expect(sql).toContain(
+      "robots_index_collections BOOLEAN NOT NULL DEFAULT TRUE",
+    );
+    expect(sql).toContain("sitemap_enabled BOOLEAN NOT NULL DEFAULT TRUE");
+    expect(sql).toContain("hreflang_map JSONB");
+    expect(sql).toContain("CREATE INDEX shopline_shop_meta_website_idx");
+    expect(sql).toContain(
+      "ALTER TABLE public.shopline_shop_meta ENABLE ROW LEVEL SECURITY",
+    );
+    expect(sql).toContain("CREATE POLICY shopline_shop_meta_company_select");
+    expect(sql).toContain("CREATE POLICY shopline_shop_meta_company_insert");
+    expect(sql).toContain("CREATE POLICY shopline_shop_meta_company_update");
     expect(sql).toContain("JOIN public.website_configs wc");
     expect(sql).toContain("cm.status = 'active'");
   });

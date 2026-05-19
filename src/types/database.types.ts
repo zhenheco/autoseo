@@ -651,6 +651,53 @@ export type Database = {
           },
         ];
       };
+      shopline_shop_meta: {
+        Row: {
+          id: string;
+          website_id: string;
+          seo_title_template: string | null;
+          default_description: string | null;
+          robots_index_products: boolean;
+          robots_index_collections: boolean;
+          sitemap_enabled: boolean;
+          default_og_image: string | null;
+          hreflang_map: Json | null;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          website_id: string;
+          seo_title_template?: string | null;
+          default_description?: string | null;
+          robots_index_products?: boolean;
+          robots_index_collections?: boolean;
+          sitemap_enabled?: boolean;
+          default_og_image?: string | null;
+          hreflang_map?: Json | null;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          website_id?: string;
+          seo_title_template?: string | null;
+          default_description?: string | null;
+          robots_index_products?: boolean;
+          robots_index_collections?: boolean;
+          sitemap_enabled?: boolean;
+          default_og_image?: string | null;
+          hreflang_map?: Json | null;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "shopline_shop_meta_website_id_fkey";
+            columns: ["website_id"];
+            isOneToOne: true;
+            referencedRelation: "website_configs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       shopline_redirects: {
         Row: {
           id: string;
