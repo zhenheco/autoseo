@@ -42,7 +42,7 @@ export async function getShoplineShopMeta(
     return null;
   }
 
-  return data;
+  return data as ShoplineShopMetaRow | null;
 }
 
 export async function upsertShoplineShopMeta(
@@ -81,7 +81,7 @@ export async function upsertShoplineShopMeta(
     await insertAuditRows(supabase, auditRows);
   }
 
-  return data;
+  return data as ShoplineShopMetaRow;
 }
 
 async function buildAuditRows(
