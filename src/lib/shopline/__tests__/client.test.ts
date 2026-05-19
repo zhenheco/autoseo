@@ -192,6 +192,78 @@ describe("ShoplineClient", () => {
     expect(result.next?.pageInfo).toBe("collection-next");
   });
 
+  it("gets a single product by id", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers(),
+      json: async () => ({
+        product: {
+          id: 123,
+          title: "Trail Jacket",
+          handle: "trail-jacket",
+          product_type: "Outerwear",
+          vendor: "Summit Co",
+          tags: "running",
+          images: [],
+          variants: [],
+          created_at: "2026-05-19T00:00:00.000Z",
+          updated_at: "2026-05-19T00:00:00.000Z",
+          seo: { title: "Trail Jacket" },
+        },
+      }),
+    });
+
+    await expect(client().getProduct("123")).resolves.toMatchObject({
+      id: "123",
+      title: "Trail Jacket",
+      handle: "trail-jacket",
+    });
+    expect(fetchMock.mock.calls[0][0]).toMatch(
+      /\/admin\/openapi\/v20260301\/products\/products\/123\.json$/,
+    );
+  });
+
+  it("gets a single collection by id", async () => {
+    fetchMock.mockResolvedValueOnce({
+      ok: true,
+      status: 200,
+      headers: new Headers(),
+      json: async () => ({
+        collection: {
+          id: "collection-1",
+          title: "Trail Gear",
+          handle: "trail-gear",
+          body_html: "Mountain running essentials",
+          products_count: 3,
+          updated_at: "2026-05-19T00:00:00.000Z",
+          seo: { description: "Shop trail gear." },
+        },
+      }),
+    });
+
+    await expect(client().getCollection("collection-1")).resolves.toMatchObject(
+      {
+        id: "collection-1",
+        title: "Trail Gear",
+        handle: "trail-gear",
+      },
+    );
+    expect(fetchMock.mock.calls[0][0]).toMatch(
+      /\/admin\/openapi\/v20260301\/products\/collections\/collection-1\.json$/,
+    );
+  });
+
+  it("rejects unsafe lookup ids before making a request", async () => {
+    await expect(client().getProduct("../123")).rejects.toThrow(
+      "invalid_shopline_product_id",
+    );
+    await expect(client().getCollection("collection/1")).rejects.toThrow(
+      "invalid_shopline_collection_id",
+    );
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("throws a dedicated auth error for 401 responses", async () => {
     fetchMock.mockResolvedValueOnce({
       ok: false,
