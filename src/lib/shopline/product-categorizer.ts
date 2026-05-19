@@ -5,12 +5,17 @@ import {
 } from "./connections";
 import type { Database } from "@/types/database.types";
 
+type CategorizerAuditInsert =
+  Database["public"]["Tables"]["shopline_seo_audit_log"]["Insert"];
+
+type CategorizerAuditInsertResult = PromiseLike<{
+  error: { message?: string } | null;
+}>;
+
 export interface CategorizerAuditOptions {
   supabase: {
     from: (table: "shopline_seo_audit_log") => {
-      insert: (
-        rows: Database["public"]["Tables"]["shopline_seo_audit_log"]["Insert"][],
-      ) => Promise<{ error: { message?: string } | null }>;
+      insert: (rows: CategorizerAuditInsert[]) => CategorizerAuditInsertResult;
     };
   };
   userId?: string | null;
@@ -22,8 +27,7 @@ export interface UpdateShoplineProductCategoriesResult {
   removed: Array<{ collection_id: string; success: boolean; error?: string }>;
 }
 
-type AuditRow =
-  Database["public"]["Tables"]["shopline_seo_audit_log"]["Insert"];
+type AuditRow = CategorizerAuditInsert;
 
 function errorMessage(error: unknown): string {
   if (error instanceof Error && error.message) return error.message;

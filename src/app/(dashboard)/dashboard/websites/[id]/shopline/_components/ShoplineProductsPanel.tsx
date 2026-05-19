@@ -156,13 +156,14 @@ export function ShoplineProductsPanel({
     if (!selectedProduct || editTab !== "categories") return;
 
     let cancelled = false;
+    const selectedProductId = selectedProduct.id;
 
     async function loadProductCollects() {
       setLoadingCollects(true);
 
       try {
         const response = await fetch(
-          `/api/shopline/${websiteId}/products/${selectedProduct.id}/collects`,
+          `/api/shopline/${websiteId}/products/${selectedProductId}/collects`,
         );
         if (!response.ok) throw new Error("shopline_product_collects_failed");
 
