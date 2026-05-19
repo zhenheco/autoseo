@@ -1,11 +1,15 @@
 #!/usr/bin/env tsx
 
+import path from "node:path";
+import { fileURLToPath } from "node:url";
 import { ShoplineClient } from "../src/lib/shopline/client";
 import { resolveShoplineCliAuth } from "../src/lib/shopline/cli-auth";
+import type { ShoplineConnectionStore } from "../src/lib/shopline/connections";
 import {
   buildAuthorizeUrl,
   exchangeCodeForToken,
 } from "../src/lib/shopline/oauth";
+import { updateShoplineProductSeo } from "../src/lib/shopline/seo-updater";
 
 type Args = Record<string, string | boolean>;
 
@@ -106,6 +110,43 @@ async function getClient(
   return { client, shopHandle: auth.shopHandle };
 }
 
+async function createSeoUpdateStore(args: Args): Promise<{
+  companyId: string;
+  websiteId: string;
+  store: ShoplineConnectionStore;
+}> {
+  const auth = await resolveShoplineCliAuth({
+    args,
+    env: process.env,
+  });
+  const companyId = arg(args, "company-id", "SHOPLINE_COMPANY_ID") ?? "cli";
+  const websiteId = arg(args, "website-id", "SHOPLINE_WEBSITE_ID") ?? "cli";
+
+  return {
+    companyId,
+    websiteId,
+    store: {
+      encryptToken: async (token) => token,
+      decryptToken: async () => auth.accessToken,
+      upsertConnection: async () => {
+        throw new Error("shopline_cli_store_readonly");
+      },
+      findConnection: async () => ({
+        id: "cli",
+        company_id: companyId,
+        website_id: websiteId,
+        shop_handle: auth.shopHandle,
+        shop_domain: `${auth.shopHandle}.myshopline.com`,
+        access_token_encrypted: "cli-token",
+        granted_scopes: [],
+        status: "active",
+        last_verified_at: null,
+        updated_at: null,
+      }),
+    },
+  };
+}
+
 async function check(args: Args): Promise<void> {
   const { client, shopHandle } = await getClient(args);
   const products = await client.listProducts({ limit: 5 });
@@ -131,7 +172,7 @@ async function products(args: Args): Promise<void> {
   if (result.next?.page) console.log(`next_page=${result.next.page}`);
 }
 
-async function seoUpdate(args: Args): Promise<void> {
+export async function seoUpdate(args: Args): Promise<void> {
   const productId = requireValue(arg(args, "product-id"), "product id");
   const seoTitle = arg(args, "seo-title");
   const seoDescription = arg(args, "seo-description");
@@ -143,14 +184,21 @@ async function seoUpdate(args: Args): Promise<void> {
     );
   }
 
-  const { client } = await getClient(args);
-  const updated = await client.updateProduct(productId, {
-    seo:
-      seoTitle || seoDescription
-        ? { title: seoTitle, description: seoDescription }
-        : undefined,
-    handle,
-  });
+  const { companyId, websiteId, store } = await createSeoUpdateStore(args);
+  const updated = await updateShoplineProductSeo(
+    companyId,
+    websiteId,
+    productId,
+    {
+      seo:
+        seoTitle || seoDescription
+          ? { title: seoTitle, description: seoDescription }
+          : undefined,
+      handle,
+      source: "cli",
+    },
+    { store },
+  );
 
   console.log("shopline_seo_update=pass");
   console.log(`product_id=${updated.id}`);
@@ -201,7 +249,13 @@ async function main(): Promise<void> {
   }
 }
 
-main().catch((error) => {
-  console.error(error instanceof Error ? error.message : String(error));
-  process.exitCode = 1;
-});
+const isDirectRun =
+  process.argv[1] &&
+  path.resolve(process.argv[1]) === fileURLToPath(import.meta.url);
+
+if (isDirectRun) {
+  main().catch((error) => {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exitCode = 1;
+  });
+}
