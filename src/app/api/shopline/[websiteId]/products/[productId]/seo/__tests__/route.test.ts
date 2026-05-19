@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ShoplineAuthError } from "@/lib/shopline/types";
 
+type RateLimitResult =
+  | { allowed: true }
+  | { allowed: false; retryAfter: number };
+
 const authState = vi.hoisted(() => ({
   authenticated: true,
   supabase: { from: vi.fn() },
@@ -60,6 +64,16 @@ const connections = vi.hoisted(() => ({
   createSupabaseShoplineConnectionStore: vi.fn(() => ({ store: true })),
 }));
 
+const scopeResolver = vi.hoisted(() => ({
+  getGrantedScopes: vi.fn(async () => ["read_products", "write_products"]),
+}));
+
+const rateLimiter = vi.hoisted(() => ({
+  checkShoplineWriteRateLimit: vi.fn<() => Promise<RateLimitResult>>(
+    async () => ({ allowed: true }),
+  ),
+}));
+
 const seoUpdater = vi.hoisted(() => ({
   updateShoplineProductSeo: vi.fn(),
 }));
@@ -67,6 +81,8 @@ const seoUpdater = vi.hoisted(() => ({
 vi.mock("@/lib/api/route-auth", () => routeAuth);
 vi.mock("@/lib/supabase/admin", () => supabaseAdmin);
 vi.mock("@/lib/shopline/connections", () => connections);
+vi.mock("@/lib/shopline/scope-resolver", () => scopeResolver);
+vi.mock("@/lib/shopline/rate-limiter", () => rateLimiter);
 vi.mock("@/lib/shopline/seo-updater", () => seoUpdater);
 
 function params(websiteId = "website-1", productId = "product-1") {
@@ -82,6 +98,13 @@ describe("PATCH /api/shopline/[websiteId]/products/[productId]/seo", () => {
     authState.authenticated = true;
     authState.supabase = { from: vi.fn() };
     adminState.website = { id: "website-1" };
+    scopeResolver.getGrantedScopes.mockResolvedValue([
+      "read_products",
+      "write_products",
+    ]);
+    rateLimiter.checkShoplineWriteRateLimit.mockResolvedValue({
+      allowed: true,
+    });
     seoUpdater.updateShoplineProductSeo.mockResolvedValue({
       id: "product-1",
       title: "Product 1",
@@ -151,6 +174,58 @@ describe("PATCH /api/shopline/[websiteId]/products/[productId]/seo", () => {
     expect(seoUpdater.updateShoplineProductSeo).not.toHaveBeenCalled();
   });
 
+  it("returns 429 with Retry-After when the company write rate limit is exceeded", async () => {
+    rateLimiter.checkShoplineWriteRateLimit.mockResolvedValueOnce({
+      allowed: false,
+      retryAfter: 17,
+    });
+    const { PATCH } = await import("../route");
+
+    const response = await PATCH(
+      new Request(
+        "https://1wayseo.com/api/shopline/website-1/products/product-1/seo",
+        {
+          method: "PATCH",
+          body: JSON.stringify({ seo: { title: "Updated SEO title" } }),
+        },
+      ) as never,
+      params(),
+    );
+
+    expect(response.status).toBe(429);
+    expect(response.headers.get("Retry-After")).toBe("17");
+    await expect(response.json()).resolves.toEqual({
+      error: "shopline_rate_limited",
+      retryAfter: 17,
+    });
+    expect(scopeResolver.getGrantedScopes).not.toHaveBeenCalled();
+    expect(seoUpdater.updateShoplineProductSeo).not.toHaveBeenCalled();
+  });
+
+  it("returns 403 with missing_scopes when the connection lacks write_products", async () => {
+    scopeResolver.getGrantedScopes.mockResolvedValueOnce(["read_products"]);
+    const { PATCH } = await import("../route");
+
+    const response = await PATCH(
+      new Request(
+        "https://1wayseo.com/api/shopline/website-1/products/product-1/seo",
+        {
+          method: "PATCH",
+          body: JSON.stringify({ seo: { title: "Updated SEO title" } }),
+        },
+      ) as never,
+      params(),
+    );
+
+    expect(response.status).toBe(403);
+    await expect(response.json()).resolves.toEqual({
+      error: "shopline_scope_missing",
+      missing_scopes: ["write_products"],
+      reauthorize_url: "/api/oauth/shopline/install?siteId=website-1",
+    });
+    expect(seoUpdater.updateShoplineProductSeo).not.toHaveBeenCalled();
+  });
+
   it("updates product SEO and returns the updated product", async () => {
     const updatedProduct = {
       id: "product-1",
@@ -175,6 +250,17 @@ describe("PATCH /api/shopline/[websiteId]/products/[productId]/seo", () => {
     expect(routeAuth.withRouteAuth).toHaveBeenCalledWith(
       "company",
       expect.any(Function),
+    );
+    expect(rateLimiter.checkShoplineWriteRateLimit).toHaveBeenCalledWith(
+      expect.anything(),
+      "company-1",
+    );
+    expect(scopeResolver.getGrantedScopes).toHaveBeenCalledWith(
+      { store: true },
+      {
+        companyId: "company-1",
+        websiteId: "website-1",
+      },
     );
     expect(seoUpdater.updateShoplineProductSeo).toHaveBeenCalledWith(
       "company-1",

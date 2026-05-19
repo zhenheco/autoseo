@@ -1,4 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
+import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { z } from "zod";
 import { withRouteAuth } from "@/lib/api/route-auth";
 import {
@@ -9,6 +10,12 @@ import {
 import { safeJson } from "@/lib/api/request-body";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseShoplineConnectionStore } from "@/lib/shopline/connections";
+import {
+  checkShoplineWriteRateLimit,
+  type ShoplineRateLimitStore,
+} from "@/lib/shopline/rate-limiter";
+import { checkShoplineScope } from "@/lib/shopline/scope-guard";
+import { getGrantedScopes } from "@/lib/shopline/scope-resolver";
 import { updateShoplineProductSeo } from "@/lib/shopline/seo-updater";
 import { ShoplineAuthError } from "@/lib/shopline/types";
 
@@ -33,6 +40,35 @@ const ProductSeoPatchSchema = z.object({
   title: z.string().optional(),
 });
 
+const REQUIRED_PRODUCT_WRITE_SCOPES = ["write_products"] as const;
+
+const memoryRateLimitValues = new Map<
+  string,
+  { value: string; expiresAt: number | null }
+>();
+
+const memoryRateLimitStore: ShoplineRateLimitStore = {
+  async get(key) {
+    const current = memoryRateLimitValues.get(key);
+    if (!current) return null;
+
+    if (current.expiresAt !== null && current.expiresAt <= Date.now()) {
+      memoryRateLimitValues.delete(key);
+      return null;
+    }
+
+    return current.value;
+  },
+  async put(key, value, options) {
+    memoryRateLimitValues.set(key, {
+      value,
+      expiresAt: options?.expirationTtl
+        ? Date.now() + options.expirationTtl * 1_000
+        : null,
+    });
+  },
+};
+
 async function assertWebsiteOwner(
   adminClient: ReturnType<typeof createAdminClient>,
   companyId: string,
@@ -49,6 +85,39 @@ async function assertWebsiteOwner(
   return Boolean(website);
 }
 
+function getShoplineRateLimitStore(): ShoplineRateLimitStore {
+  try {
+    const { env } = getCloudflareContext();
+    const bindings = env as Record<string, unknown>;
+    const configuredBindingName = process.env.SHOPLINE_RATE_LIMIT_KV;
+    const configuredBinding =
+      typeof configuredBindingName === "string"
+        ? bindings[configuredBindingName]
+        : null;
+    const kv =
+      bindings.SHOPLINE_RATE_LIMIT_KV ?? configuredBinding ?? bindings.CACHE_KV;
+
+    if (isRateLimitStore(kv)) {
+      return kv;
+    }
+  } catch {
+    return memoryRateLimitStore;
+  }
+
+  return memoryRateLimitStore;
+}
+
+function isRateLimitStore(value: unknown): value is ShoplineRateLimitStore {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "get" in value &&
+    "put" in value &&
+    typeof (value as ShoplineRateLimitStore).get === "function" &&
+    typeof (value as ShoplineRateLimitStore).put === "function"
+  );
+}
+
 export const PATCH = withRouteAuth(
   "company",
   async (
@@ -60,6 +129,26 @@ export const PATCH = withRouteAuth(
 
     try {
       const { websiteId, productId } = await context.params;
+      const rateLimit = await checkShoplineWriteRateLimit(
+        getShoplineRateLimitStore(),
+        companyId,
+      );
+
+      if (!rateLimit.allowed) {
+        return NextResponse.json(
+          {
+            error: "shopline_rate_limited",
+            retryAfter: rateLimit.retryAfter,
+          },
+          {
+            status: 429,
+            headers: {
+              "Retry-After": rateLimit.retryAfter.toString(),
+            },
+          },
+        );
+      }
+
       const bodyResult = await safeJson<unknown>(request);
 
       if (!bodyResult.success) {
@@ -91,13 +180,37 @@ export const PATCH = withRouteAuth(
         return forbidden("Website not found");
       }
 
+      const connectionStore =
+        createSupabaseShoplineConnectionStore(adminClient);
+      const grantedScopes = await getGrantedScopes(connectionStore, {
+        companyId,
+        websiteId,
+      });
+      const scopeCheck = checkShoplineScope(
+        REQUIRED_PRODUCT_WRITE_SCOPES,
+        grantedScopes,
+      );
+
+      if (!scopeCheck.ok) {
+        return NextResponse.json(
+          {
+            error: "shopline_scope_missing",
+            missing_scopes: scopeCheck.missing,
+            reauthorize_url: `/api/oauth/shopline/install?siteId=${encodeURIComponent(
+              websiteId,
+            )}`,
+          },
+          { status: 403 },
+        );
+      }
+
       const updatedProduct = await updateShoplineProductSeo(
         companyId,
         websiteId,
         productId,
         { ...parsedBody.data, source: "ui" },
         {
-          store: createSupabaseShoplineConnectionStore(adminClient),
+          store: connectionStore,
           auditOptions: {
             supabase,
             userId: user.id,
