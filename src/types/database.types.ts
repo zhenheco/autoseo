@@ -616,6 +616,41 @@ export type Database = {
           },
         ];
       };
+      shopline_collection_hierarchy: {
+        Row: {
+          id: string;
+          website_id: string;
+          collection_id: string;
+          parent_collection_id: string | null;
+          display_order: number;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          website_id: string;
+          collection_id: string;
+          parent_collection_id?: string | null;
+          display_order?: number;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          website_id?: string;
+          collection_id?: string;
+          parent_collection_id?: string | null;
+          display_order?: number;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "shopline_collection_hierarchy_website_id_fkey";
+            columns: ["website_id"];
+            isOneToOne: false;
+            referencedRelation: "website_configs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       shopline_redirects: {
         Row: {
           id: string;
