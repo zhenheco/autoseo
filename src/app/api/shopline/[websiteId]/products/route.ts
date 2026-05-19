@@ -4,6 +4,7 @@ import { forbidden, handleApiError } from "@/lib/api/response-helpers";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { createSupabaseShoplineConnectionStore } from "@/lib/shopline/connections";
 import { fetchShoplineProducts } from "@/lib/shopline/product-fetcher";
+import { ShoplineAuthError } from "@/lib/shopline/types";
 
 type RouteContext = {
   params: Promise<{
@@ -53,6 +54,25 @@ export const GET = withRouteAuth(
 
       return NextResponse.json(result);
     } catch (error) {
+      if (
+        error instanceof ShoplineAuthError ||
+        (error instanceof Error &&
+          (error.name === "ShoplineAuthError" ||
+            error.message === "shopline_auth_invalid"))
+      ) {
+        const { websiteId } = await context.params;
+
+        return NextResponse.json(
+          {
+            error: "shopline_auth_invalid",
+            reauthorize_url: `/api/oauth/shopline/install?siteId=${encodeURIComponent(
+              websiteId,
+            )}`,
+          },
+          { status: 502 },
+        );
+      }
+
       if (
         error instanceof Error &&
         error.message === "shopline_no_connection"

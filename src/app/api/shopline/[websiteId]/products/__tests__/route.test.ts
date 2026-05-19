@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { ShoplineAuthError } from "@/lib/shopline/types";
 
 const authState = vi.hoisted(() => ({
   authenticated: true,
@@ -144,6 +145,26 @@ describe("GET /api/shopline/[websiteId]/products", () => {
     expect(response.status).toBe(404);
     await expect(response.json()).resolves.toEqual({
       error: "shopline_no_connection",
+    });
+  });
+
+  it("maps SHOPLINE 401 errors to shopline_auth_invalid with reauthorize_url", async () => {
+    productFetcher.fetchShoplineProducts.mockRejectedValueOnce(
+      new ShoplineAuthError(),
+    );
+    const { GET } = await import("../route");
+
+    const response = await GET(
+      new Request(
+        "https://1wayseo.com/api/shopline/website-1/products",
+      ) as never,
+      params(),
+    );
+
+    expect(response.status).toBe(502);
+    await expect(response.json()).resolves.toEqual({
+      error: "shopline_auth_invalid",
+      reauthorize_url: "/api/oauth/shopline/install?siteId=website-1",
     });
   });
 
