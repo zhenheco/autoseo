@@ -31,6 +31,8 @@ vi.mock("next-intl", () => ({
       "edit.collection.titleLabel": "Collection title",
       "edit.collection.seoTitleLabel": "SEO title",
       "edit.collection.seoDescriptionLabel": "SEO description",
+      "edit.applyTemplate": "Apply template",
+      "edit.templatePreview": `Preview: ${values?.preview ?? ""}`,
       "edit.collection.handleLabel": "Handle",
       "redirects.warning.autoCreated":
         "Redirects are automatically created when a handle changes.",
@@ -198,6 +200,53 @@ describe("ShoplineCollectionsPanel", () => {
         "Redirects are automatically created when a handle changes.",
       ),
     ).toBeInTheDocument();
+  });
+
+  it("shows the shop title template preview and applies it to the collection SEO title", async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          collections: [
+            {
+              id: "collection-1",
+              title: "Summer Collection",
+              handle: "summer",
+              seo: {},
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          seo_title_template: "{{collection.title}} | Demo",
+          default_description: null,
+          robots_index_products: true,
+          robots_index_collections: true,
+          sitemap_enabled: true,
+          default_og_image: null,
+          hreflang_map: null,
+        }),
+      });
+
+    render(<ShoplineCollectionsPanel websiteId="website-1" />);
+
+    fireEvent.click(await screen.findByText("Summer Collection"));
+
+    expect(
+      await screen.findByText("Preview: Summer Collection | Demo"),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "SEO title" })).toHaveAttribute(
+      "placeholder",
+      "Summer Collection | Demo",
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Apply template" }));
+
+    expect(screen.getByRole("textbox", { name: "SEO title" })).toHaveValue(
+      "Summer Collection | Demo",
+    );
   });
 
   it("toggles to tree view and loads hierarchy", async () => {

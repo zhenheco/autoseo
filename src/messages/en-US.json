@@ -2765,7 +2765,8 @@
       "tabs": {
         "products": "Products",
         "collections": "Collections",
-        "redirects": "Redirects"
+        "redirects": "Redirects",
+        "shop": "Shop"
       },
       "products": {
         "title": "SHOPLINE Products",
@@ -2820,6 +2821,8 @@
         "seoDescriptionLabel": "SEO description",
         "handleLabel": "URL slug",
         "handleChangeWarning": "Changing URL slug may cause old links to 404. Slice 6 will add automatic 301 redirects.",
+        "applyTemplate": "Apply template",
+        "templatePreview": "Preview: {preview}",
         "charLimitExceeded": "SEO description must be 160 characters or less",
         "charCount": "{count}/70",
         "save": "Save",
@@ -2845,6 +2848,31 @@
         "product": {
           "titleLabel": "Product title"
         }
+      },
+      "shop": {
+        "title": "Shop meta",
+        "titleTemplate": {
+          "label": "Title template",
+          "placeholder": "{{product.title}} | {{shop.name}}",
+          "variables": "Variables"
+        },
+        "defaultDescription": {
+          "label": "Default description"
+        },
+        "robots": {
+          "products": "Index products",
+          "collections": "Index collections"
+        },
+        "sitemap": {
+          "enabled": "Sitemap enabled"
+        },
+        "ogImage": {
+          "label": "Default OG image"
+        },
+        "hreflang": {
+          "label": "Hreflang JSON"
+        },
+        "save": "Save"
       },
       "toast": {
         "saveSuccess": "Saved",

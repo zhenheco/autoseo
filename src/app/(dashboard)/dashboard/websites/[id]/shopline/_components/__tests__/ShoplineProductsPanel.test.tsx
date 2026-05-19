@@ -24,6 +24,8 @@ vi.mock("next-intl", () => ({
       "edit.product.titleLabel": "Product title",
       "edit.seoTitleLabel": "SEO title",
       "edit.seoDescriptionLabel": "SEO description",
+      "edit.applyTemplate": "Apply template",
+      "edit.templatePreview": `Preview: ${values?.preview ?? ""}`,
       "edit.handleLabel": "Handle",
       "redirects.warning.autoCreated":
         "Redirects are automatically created when a handle changes.",
@@ -218,6 +220,55 @@ describe("ShoplineProductsPanel", () => {
       "Original SEO title",
     );
     expect(screen.getByText("18/70")).toBeInTheDocument();
+  });
+
+  it("shows the shop title template preview and applies it to the SEO title", async () => {
+    fetchMock
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          products: [
+            {
+              id: "product-1",
+              title: "Product 1",
+              handle: "product-1",
+              vendor: "Acme",
+              product_type: "Apparel",
+              seo: {},
+            },
+          ],
+        }),
+      })
+      .mockResolvedValueOnce({
+        ok: true,
+        json: async () => ({
+          seo_title_template: "{{product.title}} by {{product.vendor}} | Demo",
+          default_description: null,
+          robots_index_products: true,
+          robots_index_collections: true,
+          sitemap_enabled: true,
+          default_og_image: null,
+          hreflang_map: null,
+        }),
+      });
+
+    render(<ShoplineProductsPanel websiteId="website-1" />);
+
+    fireEvent.click(await screen.findByText("Product 1"));
+
+    expect(
+      await screen.findByText("Preview: Product 1 by Acme | Demo"),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("textbox", { name: "SEO title" })).toHaveAttribute(
+      "placeholder",
+      "Product 1 by Acme | Demo",
+    );
+
+    fireEvent.click(screen.getByRole("button", { name: "Apply template" }));
+
+    expect(screen.getByRole("textbox", { name: "SEO title" })).toHaveValue(
+      "Product 1 by Acme | Demo",
+    );
   });
 
   it("lists product images in the Images tab", async () => {

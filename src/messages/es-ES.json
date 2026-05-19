@@ -2946,7 +2946,8 @@
       "tabs": {
         "products": "Productos",
         "collections": "Colecciones",
-        "redirects": "Redirects"
+        "redirects": "Redirects",
+        "shop": "Shop"
       },
       "products": {
         "title": "SHOPLINE 商品",
@@ -3001,6 +3002,8 @@
         "seoDescriptionLabel": "SEO 描述",
         "handleLabel": "URL slug",
         "handleChangeWarning": "⚠️ 變更 URL slug 可能導致舊連結 404，slice 6 將補 301 redirect 自動建立",
+        "applyTemplate": "Apply template",
+        "templatePreview": "Preview: {preview}",
         "charLimitExceeded": "SEO 描述不可超過 160 字",
         "charCount": "{count}/70",
         "save": "儲存",
@@ -3026,6 +3029,31 @@
         "product": {
           "titleLabel": "Nombre del producto"
         }
+      },
+      "shop": {
+        "title": "Shop meta",
+        "titleTemplate": {
+          "label": "Title template",
+          "placeholder": "{{product.title}} | {{shop.name}}",
+          "variables": "Variables"
+        },
+        "defaultDescription": {
+          "label": "Default description"
+        },
+        "robots": {
+          "products": "Index products",
+          "collections": "Index collections"
+        },
+        "sitemap": {
+          "enabled": "Sitemap enabled"
+        },
+        "ogImage": {
+          "label": "Default OG image"
+        },
+        "hreflang": {
+          "label": "Hreflang JSON"
+        },
+        "save": "Save"
       },
       "toast": {
         "saveSuccess": "已儲存 SEO 標題",

@@ -14,12 +14,17 @@ vi.mock("../ShoplineRedirectsPanel", () => ({
   ShoplineRedirectsPanel: () => <div>Redirects panel</div>,
 }));
 
+vi.mock("../ShoplineShopPanel", () => ({
+  ShoplineShopPanel: () => <div>Shop panel</div>,
+}));
+
 vi.mock("next-intl", () => ({
   useTranslations: () => (key: string) => {
     const messages: Record<string, string> = {
       "tabs.products": "Products",
       "tabs.collections": "Collections",
       "tabs.redirects": "Redirects",
+      "tabs.shop": "Shop",
     };
 
     return messages[key] ?? key;
@@ -35,6 +40,7 @@ describe("ShoplineSeoTabs", () => {
       screen.getByRole("tab", { name: "Collections" }),
     ).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "Redirects" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "Shop" })).toBeInTheDocument();
     expect(screen.getByText("Products panel")).toBeInTheDocument();
   });
 });

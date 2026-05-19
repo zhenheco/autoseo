@@ -30,6 +30,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { renderSeoTemplate } from "@/lib/shopline/seo-template";
 import {
   Table,
   TableBody,
@@ -63,6 +64,10 @@ type CollectionHierarchyItem = {
 
 type CollectionHierarchyResponse = {
   hierarchy?: CollectionHierarchyItem[];
+};
+
+type ShoplineShopMeta = {
+  seo_title_template?: string | null;
 };
 
 type CollectionProduct = {
@@ -115,6 +120,7 @@ export function ShoplineCollectionsPanel({
   const [scopeMissing, setScopeMissing] = useState<{
     reauthorizeUrl: string;
   } | null>(null);
+  const [shopMeta, setShopMeta] = useState<ShoplineShopMeta | null>(null);
   const [title, setTitle] = useState("");
   const [seoTitle, setSeoTitle] = useState("");
   const [seoDescription, setSeoDescription] = useState("");
@@ -127,6 +133,13 @@ export function ShoplineCollectionsPanel({
     () => seoDescription.length,
     [seoDescription],
   );
+  const titleTemplatePreview = useMemo(() => {
+    if (!selectedCollection || !shopMeta?.seo_title_template) return "";
+
+    return renderSeoTemplate(shopMeta.seo_title_template, {
+      collection: { title: selectedCollection.title },
+    });
+  }, [selectedCollection, shopMeta]);
   const isDescriptionTooLong = selectedDescriptionLength > 160;
   const isHandleChanged =
     selectedCollection !== null && handle !== selectedCollection.handle;
@@ -192,6 +205,23 @@ export function ShoplineCollectionsPanel({
     setSeoTitle(collection.seo?.title ?? "");
     setSeoDescription(collection.seo?.description ?? "");
     setHandle(collection.handle);
+
+    if (collection.seo && !collection.seo.title) {
+      void loadShopMeta();
+    }
+  }
+
+  async function loadShopMeta() {
+    if (shopMeta) return;
+
+    try {
+      const response = await fetch(`/api/shopline/${websiteId}/shop-meta`);
+      if (!response.ok) throw new Error("shopline_shop_meta_fetch_failed");
+
+      setShopMeta((await response.json()) as ShoplineShopMeta);
+    } catch {
+      toast.error(saveErrorMessage);
+    }
   }
 
   function goToNextPage() {
@@ -612,9 +642,27 @@ export function ShoplineCollectionsPanel({
                     <Input
                       id="shopline-collection-seo-title"
                       value={seoTitle}
+                      placeholder={titleTemplatePreview || undefined}
                       maxLength={70}
                       onChange={(event) => setSeoTitle(event.target.value)}
                     />
+                    {titleTemplatePreview ? (
+                      <div className="flex items-center justify-between gap-3 rounded-md bg-muted px-3 py-2 text-sm">
+                        <span className="truncate text-muted-foreground">
+                          {t("edit.templatePreview", {
+                            preview: titleTemplatePreview,
+                          })}
+                        </span>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="outline"
+                          onClick={() => setSeoTitle(titleTemplatePreview)}
+                        >
+                          {t("edit.applyTemplate")}
+                        </Button>
+                      </div>
+                    ) : null}
                   </div>
                   <div className="space-y-2">
                     <div className="flex items-center justify-between gap-4">

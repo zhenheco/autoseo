@@ -25,6 +25,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { renderSeoTemplate } from "@/lib/shopline/seo-template";
 import {
   Table,
   TableBody,
@@ -38,6 +39,8 @@ type ShoplineProduct = {
   id: string;
   title: string;
   handle: string;
+  product_type?: string;
+  vendor?: string;
   images?: ShoplineProductImage[];
   seo?: {
     title?: string;
@@ -82,6 +85,10 @@ type ProductCollectsResponse = {
   collects?: ProductCollect[];
 };
 
+type ShoplineShopMeta = {
+  seo_title_template?: string | null;
+};
+
 type CategoryMutationResultItem = {
   collection_id: string;
   success: boolean;
@@ -123,6 +130,7 @@ export function ShoplineProductsPanel({
   const [seoDescription, setSeoDescription] = useState("");
   const [handle, setHandle] = useState("");
   const [imageAlts, setImageAlts] = useState<Record<string, string>>({});
+  const [shopMeta, setShopMeta] = useState<ShoplineShopMeta | null>(null);
   const [savingImageId, setSavingImageId] = useState<string | null>(null);
   const [editTab, setEditTab] = useState("seo-meta");
   const [currentCollects, setCurrentCollects] = useState<ProductCollect[]>([]);
@@ -222,6 +230,17 @@ export function ShoplineProductsPanel({
     () => seoDescription.length,
     [seoDescription],
   );
+  const titleTemplatePreview = useMemo(() => {
+    if (!selectedProduct || !shopMeta?.seo_title_template) return "";
+
+    return renderSeoTemplate(shopMeta.seo_title_template, {
+      product: {
+        title: selectedProduct.title,
+        vendor: selectedProduct.vendor,
+        type: selectedProduct.product_type,
+      },
+    });
+  }, [selectedProduct, shopMeta]);
   const isDescriptionTooLong = selectedDescriptionLength > 160;
   const isHandleChanged =
     selectedProduct !== null && handle !== selectedProduct.handle;
@@ -245,6 +264,23 @@ export function ShoplineProductsPanel({
         (product.images ?? []).map((image) => [image.id, image.alt ?? ""]),
       ),
     );
+
+    if (product.seo && !product.seo.title) {
+      void loadShopMeta();
+    }
+  }
+
+  async function loadShopMeta() {
+    if (shopMeta) return;
+
+    try {
+      const response = await fetch(`/api/shopline/${websiteId}/shop-meta`);
+      if (!response.ok) throw new Error("shopline_shop_meta_fetch_failed");
+
+      setShopMeta((await response.json()) as ShoplineShopMeta);
+    } catch {
+      toast.error(saveErrorMessage);
+    }
   }
 
   function goToNextPage() {
@@ -615,9 +651,27 @@ export function ShoplineProductsPanel({
                   <Input
                     id="shopline-seo-title"
                     value={seoTitle}
+                    placeholder={titleTemplatePreview || undefined}
                     maxLength={70}
                     onChange={(event) => setSeoTitle(event.target.value)}
                   />
+                  {titleTemplatePreview ? (
+                    <div className="flex items-center justify-between gap-3 rounded-md bg-muted px-3 py-2 text-sm">
+                      <span className="truncate text-muted-foreground">
+                        {t("edit.templatePreview", {
+                          preview: titleTemplatePreview,
+                        })}
+                      </span>
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="outline"
+                        onClick={() => setSeoTitle(titleTemplatePreview)}
+                      >
+                        {t("edit.applyTemplate")}
+                      </Button>
+                    </div>
+                  ) : null}
                 </div>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-4">
