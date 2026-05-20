@@ -528,6 +528,63 @@ export type Database = {
           },
         ];
       };
+      shopline_install_invitations: {
+        Row: {
+          token: string;
+          company_id: string;
+          expected_shop_handle: string | null;
+          note: string | null;
+          expires_at: string;
+          last_redeemed_at: string | null;
+          redeem_count: number;
+          revoked_at: string | null;
+          created_by: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          token?: string;
+          company_id: string;
+          expected_shop_handle?: string | null;
+          note?: string | null;
+          expires_at: string;
+          last_redeemed_at?: string | null;
+          redeem_count?: number;
+          revoked_at?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          token?: string;
+          company_id?: string;
+          expected_shop_handle?: string | null;
+          note?: string | null;
+          expires_at?: string;
+          last_redeemed_at?: string | null;
+          redeem_count?: number;
+          revoked_at?: string | null;
+          created_by?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "shopline_install_invitations_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "shopline_install_invitations_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       shopline_seo_audit_log: {
         Row: {
           id: string;
