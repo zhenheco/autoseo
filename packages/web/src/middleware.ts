@@ -102,8 +102,8 @@ export async function middleware(request: NextRequest) {
     // script-src: 開發環境需要 unsafe-eval (Next.js HMR)，生產環境移除
     // 加入 Cloudflare Insights 和 Google Tag Manager 域名
     isDevelopment
-      ? "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://static.cloudflareinsights.com https://www.googletagmanager.com https://www.google-analytics.com https://ssl.google-analytics.com https://tagmanager.google.com"
-      : "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://www.googletagmanager.com https://www.google-analytics.com https://ssl.google-analytics.com https://tagmanager.google.com",
+      ? "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://static.cloudflareinsights.com https://challenges.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com https://ssl.google-analytics.com https://tagmanager.google.com"
+      : "script-src 'self' 'unsafe-inline' https://static.cloudflareinsights.com https://challenges.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com https://ssl.google-analytics.com https://tagmanager.google.com",
     // style-src: 需要 unsafe-inline 支援 Tailwind CSS
     "style-src 'self' 'unsafe-inline'",
     // img-src: 限制圖片來源為已知域名
@@ -118,6 +118,7 @@ export async function middleware(request: NextRequest) {
       "https://api.deepseek.com",
       "https://api.perplexity.ai",
       "https://generativelanguage.googleapis.com",
+      "https://challenges.cloudflare.com",
       // PAYUNi（統一金流）微服務
       "https://api.payuni.com.tw",
       "https://affiliate.1wayseo.com",
@@ -139,6 +140,7 @@ export async function middleware(request: NextRequest) {
       "https://analyticsdata.googleapis.com",
       "https://analyticsadmin.googleapis.com",
     ].join(" "),
+    "frame-src 'self' https://challenges.cloudflare.com",
     "frame-ancestors 'self'",
     "base-uri 'self'",
     // 金流表單提交（PAYUNi 正式環境）
