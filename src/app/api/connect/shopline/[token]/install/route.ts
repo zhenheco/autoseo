@@ -53,8 +53,11 @@ export async function GET(
     .eq("wordpress_url", websiteUrl)
     .maybeSingle();
 
-  let websiteId = existingWebsite?.id as string | undefined;
-  if (!websiteId) {
+  const existingWebsiteId = (existingWebsite as { id?: string } | null)?.id;
+  let websiteId: string;
+  if (existingWebsiteId) {
+    websiteId = existingWebsiteId;
+  } else {
     const { data: createdWebsite, error } = await admin
       .from("website_configs")
       .insert({
