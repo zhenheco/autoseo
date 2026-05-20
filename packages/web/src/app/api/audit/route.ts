@@ -14,6 +14,7 @@ import {
 import {
   createAuditArticleDispatchDeps,
   toDispatchableAuditIssue,
+  type AuditArticleDispatchSupabaseClient,
   type AuditIssueRowForDispatch,
 } from "@/lib/audit/article-dispatch";
 import type { Json } from "@/types/database.types";
@@ -170,10 +171,12 @@ async function persistAuditReport(
 }
 
 async function dispatchEligibleIssuesToArticleGenerator(
-  supabase: SupabaseClient,
+  supabase: unknown,
   input: { companyId: string; issues: AuditIssueRowForDispatch[] },
 ) {
-  const deps = createAuditArticleDispatchDeps(supabase);
+  const deps = createAuditArticleDispatchDeps(
+    supabase as AuditArticleDispatchSupabaseClient,
+  );
 
   for (const issue of input.issues) {
     if (issue.risk_level === "low") continue;
