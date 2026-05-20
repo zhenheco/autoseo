@@ -26,6 +26,16 @@ function firstMatchedHandle(html: string): string | null {
   const shopHandleMatch = /"shop_handle"\s*:\s*"([a-z0-9-]+)"/i.exec(html);
   if (shopHandleMatch?.[1]) return shopHandleMatch[1];
 
+  const myshoplineMatches = html.matchAll(
+    /https?:\/\/([a-z0-9-]+)\.myshopline\.com/gi,
+  );
+  for (const match of myshoplineMatches) {
+    const subdomain = match[1]?.toLowerCase();
+    if (subdomain && !RESERVED_MYSHOPLINE_SUBDOMAINS.has(subdomain)) {
+      return subdomain;
+    }
+  }
+
   return null;
 }
 

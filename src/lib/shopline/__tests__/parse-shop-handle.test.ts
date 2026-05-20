@@ -21,4 +21,14 @@ describe("parseShoplineShopHandleFromUrl", () => {
       }),
     ).resolves.toBe("brand-shop");
   });
+
+  it("matches the myshopline domain fallback and skips cdn", async () => {
+    await expect(
+      parseShoplineShopHandleFromUrl("https://brand.example.com/", {
+        fetch: mockFetch(
+          "https://cdn.myshopline.com/x.js https://brand.myshopline.com/foo",
+        ),
+      }),
+    ).resolves.toBe("brand");
+  });
 });
