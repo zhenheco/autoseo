@@ -76,6 +76,66 @@ function createSupabaseMock(
   };
 }
 
+function rowsForEligibleIssue(
+  overrides: {
+    issue?: Record<string, unknown>;
+    report?: Record<string, unknown>;
+    website?: Record<string, unknown>;
+    connection?: Record<string, unknown> | null;
+  } = {},
+) {
+  return {
+    audit_issues: [
+      {
+        id: "issue-1",
+        report_id: "report-1",
+        rule_id: "meta.description.tooShort",
+        severity: "warning",
+        risk_level: "low",
+        page: "https://demo-shop.myshopline.com/products/blue-shirt",
+        selector: 'meta[name="description"]',
+        current: "Short",
+        suggested: null,
+        source: "html-scan",
+        estimated_impact: "medium",
+        status: "open",
+        ...overrides.issue,
+      },
+    ],
+    audit_reports: [
+      {
+        id: "report-1",
+        company_id: "company-1",
+        website_id: "website-1",
+        url: "https://demo-shop.myshopline.com",
+        ...overrides.report,
+      },
+    ],
+    website_configs: [
+      {
+        id: "website-1",
+        company_id: "company-1",
+        wordpress_url: "https://demo-shop.myshopline.com",
+        ...overrides.website,
+      },
+    ],
+    shopline_connections:
+      overrides.connection === null
+        ? []
+        : [
+            {
+              id: "connection-1",
+              company_id: "company-1",
+              website_id: "website-1",
+              shop_handle: "demo-shop",
+              shop_domain: "demo-shop.myshopline.com",
+              status: "active",
+              ...overrides.connection,
+            },
+          ],
+  };
+}
+
 async function post(issueId = "issue-1") {
   const { POST } = await import("../route");
   return POST(
@@ -128,6 +188,20 @@ describe("POST /api/audit/issues/[issueId]/apply", () => {
     expect(response.status).toBe(403);
     await expect(response.json()).resolves.toMatchObject({
       error: "forbidden",
+    });
+  });
+
+  it("returns 400 not_eligible when the issue risk level is not low", async () => {
+    authState.supabase = createSupabaseMock(
+      rowsForEligibleIssue({ issue: { risk_level: "medium" } }),
+    );
+
+    const response = await post();
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      ok: false,
+      error: "not_eligible",
     });
   });
 });

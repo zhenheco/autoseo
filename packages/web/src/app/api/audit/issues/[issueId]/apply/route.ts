@@ -40,6 +40,13 @@ export const POST = withCompany(
         );
       }
 
+      if (issue.risk_level !== "low") {
+        return NextResponse.json(
+          { ok: false, error: "not_eligible" },
+          { status: 400 },
+        );
+      }
+
       return NextResponse.json(
         { ok: false, error: `not_implemented:${issueId}` },
         { status: 501 },
