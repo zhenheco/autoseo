@@ -39,24 +39,28 @@ class MockHTMLRewriter {
   }
 
   transform(response: Response): Response {
-    const transformed = response.text().then((html) => {
-      let next = html;
-      for (const { selector, handler } of this.handlers) {
-        const pattern = selectorPattern(selector);
-        next = next.replace(pattern, (source) => {
-          let replacement = source;
-          handler.element?.(
-            new MockElement(source, (value) => {
-              replacement = value;
-            }),
-          );
-          return replacement;
-        });
-      }
-      return next;
+    const stream = new ReadableStream({
+      start: async (controller) => {
+        const html = await response.text();
+        let next = html;
+        for (const { selector, handler } of this.handlers) {
+          const pattern = selectorPattern(selector);
+          next = next.replace(pattern, (source) => {
+            let replacement = source;
+            handler.element?.(
+              new MockElement(source, (value) => {
+                replacement = value;
+              }),
+            );
+            return replacement;
+          });
+        }
+        controller.enqueue(new TextEncoder().encode(next));
+        controller.close();
+      },
     });
 
-    return new Response(transformed, {
+    return new Response(stream, {
       headers: response.headers,
       status: response.status,
     });
@@ -113,6 +117,26 @@ describe("edge worker", () => {
 
     await expect(response.text()).resolves.toContain(
       '<meta name="description" content="Original">',
+    );
+  });
+
+  it("injects a meta description rule from KV", async () => {
+    const response = await worker.fetch(
+      new Request("https://example.com/products/demo"),
+      {
+        EDGE_RULES: kv({
+          "example.com:/products/demo": [
+            {
+              type: "meta-description",
+              value: "A sharper edge-rendered description.",
+            },
+          ],
+        }),
+      },
+    );
+
+    await expect(response.text()).resolves.toContain(
+      '<meta name="description" content="A sharper edge-rendered description.">',
     );
   });
 });
