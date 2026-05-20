@@ -104,4 +104,15 @@ describe("SHOPLINE install invitations", () => {
       findActiveInvitation(createMemoryStore(), "missing-token"),
     ).rejects.toThrow("shopline_invitation_not_found");
   });
+
+  it("rejects an expired invitation", async () => {
+    const expired = invitation({
+      token: "expired-token",
+      expiresAt: new Date(Date.now() - 1_000).toISOString(),
+    });
+
+    await expect(
+      findActiveInvitation(createMemoryStore([expired]), "expired-token"),
+    ).rejects.toThrow("shopline_invitation_expired");
+  });
 });
