@@ -159,4 +159,31 @@ describe("applyAuditFixToShopline", () => {
       after: "Blue cotton shirt front view",
     });
   });
+
+  it("rejects unsupported rules without calling AI or SHOPLINE", async () => {
+    const testDeps = deps();
+    const result = await applyAuditFixToShopline(
+      {
+        issue: issue({
+          ruleId: "canonical.missing",
+          selector: 'link[rel="canonical"]',
+          current: "",
+        }),
+        reportId: "report-1",
+        shopHandle: "demo-shop",
+      },
+      testDeps,
+    );
+
+    expect(testDeps.generateMetaDescription).not.toHaveBeenCalled();
+    expect(testDeps.generateImageAlt).not.toHaveBeenCalled();
+    expect(testDeps.shoplineUpdate).not.toHaveBeenCalled();
+    expect(result).toEqual({
+      ok: false,
+      route: "shopline-editor",
+      before: "",
+      after: "",
+      error: "rule_not_supported",
+    });
+  });
 });
