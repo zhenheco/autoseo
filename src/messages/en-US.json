@@ -2709,7 +2709,7 @@
         "notePlaceholder": "Internal note, optional",
         "submitButton": "Generate link",
         "ttlHint": "Link expires in 7 days",
-        "linkFormat": "Link format: {url}/connect/shopline/<token>"
+        "linkFormat": "Link format: {url}/connect/shopline/{tokenPlaceholder}"
       },
       "list": {
         "title": "Invitations",

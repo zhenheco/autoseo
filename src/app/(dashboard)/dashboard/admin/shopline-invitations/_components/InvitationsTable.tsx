@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Ban, Check, Copy, ExternalLink } from "lucide-react";
+import { useLocale, useTranslations } from "next-intl";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -32,8 +33,8 @@ const statusClasses: Record<ShoplineInvitationStatus, string> = {
   revoked: "border-red-200 bg-red-50 text-red-700",
 };
 
-function formatDate(value: string): string {
-  return new Intl.DateTimeFormat("zh-TW", {
+function formatDate(value: string, locale: string): string {
+  return new Intl.DateTimeFormat(locale, {
     dateStyle: "medium",
     timeStyle: "short",
   }).format(new Date(value));
@@ -43,6 +44,8 @@ export function InvitationsTable({
   invitations,
   siteUrl,
 }: InvitationsTableProps) {
+  const locale = useLocale();
+  const t = useTranslations("admin.shoplineInvitations");
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
   const normalizedSiteUrl = siteUrl.replace(/\/$/, "");
 
@@ -56,7 +59,7 @@ export function InvitationsTable({
   if (invitations.length === 0) {
     return (
       <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-        目前沒有 SHOPLINE 邀請連結
+        {t("list.empty")}
       </div>
     );
   }
@@ -66,13 +69,13 @@ export function InvitationsTable({
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>公司</TableHead>
-            <TableHead>expected_shop_handle</TableHead>
-            <TableHead>status</TableHead>
-            <TableHead>redeem_count</TableHead>
-            <TableHead>expires_at</TableHead>
-            <TableHead>created_at</TableHead>
-            <TableHead className="text-right">操作</TableHead>
+            <TableHead>{t("table.company")}</TableHead>
+            <TableHead>{t("table.expectedHandle")}</TableHead>
+            <TableHead>{t("table.status")}</TableHead>
+            <TableHead>{t("table.redeemCount")}</TableHead>
+            <TableHead>{t("table.expiresAt")}</TableHead>
+            <TableHead>{t("table.createdAt")}</TableHead>
+            <TableHead className="text-right">{t("table.actions")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -91,15 +94,15 @@ export function InvitationsTable({
                 </TableCell>
                 <TableCell>
                   <Badge variant="outline" className={statusClasses[status]}>
-                    {status}
+                    {t(`status.${status}`)}
                   </Badge>
                 </TableCell>
                 <TableCell>{invitation.redeemCount}</TableCell>
                 <TableCell className="whitespace-nowrap">
-                  {formatDate(invitation.expiresAt)}
+                  {formatDate(invitation.expiresAt, locale)}
                 </TableCell>
                 <TableCell className="whitespace-nowrap">
-                  {formatDate(invitation.createdAt)}
+                  {formatDate(invitation.createdAt, locale)}
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center justify-end gap-2">
@@ -108,27 +111,42 @@ export function InvitationsTable({
                       variant="outline"
                       size="sm"
                       onClick={() => copyLink(invitation.token)}
-                      title="複製連結"
+                      title={
+                        copiedToken === invitation.token
+                          ? t("actions.copied")
+                          : t("actions.copyLink")
+                      }
                     >
                       {copiedToken === invitation.token ? (
                         <Check className="h-4 w-4" />
                       ) : (
                         <Copy className="h-4 w-4" />
                       )}
-                      <span className="sr-only">複製連結</span>
+                      <span className="sr-only">
+                        {copiedToken === invitation.token
+                          ? t("actions.copied")
+                          : t("actions.copyLink")}
+                      </span>
                     </Button>
                     <Button asChild variant="outline" size="sm">
                       <a
                         href={link}
                         target="_blank"
                         rel="noreferrer"
-                        title="開啟連結"
+                        title={t("actions.openLink")}
                       >
                         <ExternalLink className="h-4 w-4" />
-                        <span className="sr-only">開啟連結</span>
+                        <span className="sr-only">{t("actions.openLink")}</span>
                       </a>
                     </Button>
-                    <form action={revokeInvitationFormAction}>
+                    <form
+                      action={revokeInvitationFormAction}
+                      onSubmit={(event) => {
+                        if (!window.confirm(t("actions.revokeConfirm"))) {
+                          event.preventDefault();
+                        }
+                      }}
+                    >
                       <input
                         type="hidden"
                         name="token"
@@ -139,10 +157,10 @@ export function InvitationsTable({
                         variant="destructive"
                         size="sm"
                         disabled={!isRevocable}
-                        title="撤銷邀請"
+                        title={t("actions.revoke")}
                       >
                         <Ban className="h-4 w-4" />
-                        <span className="sr-only">撤銷邀請</span>
+                        <span className="sr-only">{t("actions.revoke")}</span>
                       </Button>
                     </form>
                   </div>

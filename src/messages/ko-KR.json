@@ -2810,7 +2810,7 @@
         "notePlaceholder": "내부 메모, 선택 사항",
         "submitButton": "링크 생성",
         "ttlHint": "링크는 7일 후 만료됩니다",
-        "linkFormat": "링크 형식: {url}/connect/shopline/<token>"
+        "linkFormat": "링크 형식: {url}/connect/shopline/{tokenPlaceholder}"
       },
       "list": {
         "title": "초대 목록",

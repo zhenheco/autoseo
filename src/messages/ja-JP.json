@@ -2709,7 +2709,7 @@
         "notePlaceholder": "社内メモ（任意）",
         "submitButton": "リンクを生成",
         "ttlHint": "リンクは 7 日後に期限切れになります",
-        "linkFormat": "リンク形式: {url}/connect/shopline/<token>"
+        "linkFormat": "リンク形式: {url}/connect/shopline/{tokenPlaceholder}"
       },
       "list": {
         "title": "招待一覧",

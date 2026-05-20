@@ -2810,7 +2810,7 @@
         "notePlaceholder": "Nota interna, opcional",
         "submitButton": "Generar enlace",
         "ttlHint": "El enlace caduca en 7 días",
-        "linkFormat": "Formato del enlace: {url}/connect/shopline/<token>"
+        "linkFormat": "Formato del enlace: {url}/connect/shopline/{tokenPlaceholder}"
       },
       "list": {
         "title": "Invitaciones",

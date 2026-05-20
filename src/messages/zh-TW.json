@@ -2709,7 +2709,7 @@
         "notePlaceholder": "內部備註，可留空",
         "submitButton": "產生連結",
         "ttlHint": "連結 7 天後過期",
-        "linkFormat": "連結格式為 {url}/connect/shopline/<token>"
+        "linkFormat": "連結格式為 {url}/connect/shopline/{tokenPlaceholder}"
       },
       "list": {
         "title": "邀請列表",

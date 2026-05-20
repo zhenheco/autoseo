@@ -2810,7 +2810,7 @@
         "notePlaceholder": "Interne Notiz, optional",
         "submitButton": "Link generieren",
         "ttlHint": "Link läuft nach 7 Tagen ab",
-        "linkFormat": "Linkformat: {url}/connect/shopline/<token>"
+        "linkFormat": "Linkformat: {url}/connect/shopline/{tokenPlaceholder}"
       },
       "list": {
         "title": "Einladungen",
