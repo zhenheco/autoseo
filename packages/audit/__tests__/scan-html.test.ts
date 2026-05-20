@@ -69,4 +69,45 @@ describe("scanHtml", () => {
 
     expect(issues).toEqual([]);
   });
+
+  it("reports a warning issue when og:image is missing", () => {
+    const issues = scanHtml({
+      html: readFixture("og-image-missing.html"),
+      pageUrl: "https://example.com/og-image-missing",
+    });
+
+    expect(issues).toContainEqual({
+      ruleId: "og.image.missing",
+      severity: "warning",
+      riskLevel: "low",
+      page: "https://example.com/og-image-missing",
+      selector: 'meta[property="og:image"]',
+      current: "",
+      source: "html-scan",
+      estimatedImpact: "high",
+    });
+  });
+
+  it("does not report og:image when it is present with content", () => {
+    const issues = scanHtml({
+      html: readFixture("all-good.html"),
+      pageUrl: "https://example.com/all-good",
+    });
+
+    expect(issues.some((issue) => issue.ruleId === "og.image.missing")).toBe(false);
+  });
+
+  it("includes og:image in multi-issue scans", () => {
+    const issues = scanHtml({
+      html: readFixture("multi-issues.html"),
+      pageUrl: "https://example.com/multi-issues",
+    });
+
+    expect(issues.length).toBeGreaterThan(1);
+    expect(issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ ruleId: "og.image.missing" }),
+      ]),
+    );
+  });
 });

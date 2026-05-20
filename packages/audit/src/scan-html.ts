@@ -1,6 +1,8 @@
 import * as cheerio from "cheerio";
 import type { AuditIssue } from "./types";
 
+type CheerioRoot = ReturnType<typeof cheerio.load>;
+
 export interface ScanHtmlInput {
   html: string;
   pageUrl: string;
@@ -35,5 +37,27 @@ export function scanHtml(input: ScanHtmlInput): AuditIssue[] {
     });
   }
 
+  issues.push(...checkOgImage($, input.pageUrl));
+
   return issues;
+}
+
+function checkOgImage($: CheerioRoot, pageUrl: string): AuditIssue[] {
+  const ogImage = $('meta[property="og:image"]').attr("content")?.trim() ?? "";
+  if (ogImage) {
+    return [];
+  }
+
+  return [
+    {
+      ruleId: "og.image.missing",
+      severity: "warning",
+      riskLevel: "low",
+      page: pageUrl,
+      selector: 'meta[property="og:image"]',
+      current: "",
+      source: "html-scan",
+      estimatedImpact: "high",
+    },
+  ];
 }

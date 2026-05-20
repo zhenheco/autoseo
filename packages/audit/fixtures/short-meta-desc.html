@@ -2,9 +2,18 @@
 <html lang="en">
   <head>
     <title>Short Meta Description</title>
-    <meta name="description" content="too short">
+    <meta name="description" content="too short" />
+    <meta property="og:title" content="Short Meta Description" />
+    <meta property="og:image" content="https://example.com/images/short-meta.jpg" />
+    <link rel="canonical" href="https://example.com/short-meta" />
+    <script type="application/ld+json">
+      { "@context": "https://schema.org", "@type": "WebPage" }
+    </script>
   </head>
   <body>
-    <main>Short description fixture.</main>
+    <main>
+      <h1>Short Meta Description</h1>
+      <img src="/images/short-meta.jpg" alt="Short meta description page" />
+    </main>
   </body>
 </html>
