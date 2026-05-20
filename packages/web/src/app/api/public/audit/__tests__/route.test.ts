@@ -214,6 +214,12 @@ describe("public audit API route", () => {
 
     expect(response.status).toBe(200);
     expect(auditMocks.auditWebsite).not.toHaveBeenCalled();
+    expect(supabase.calls).toContainEqual(
+      expect.objectContaining({
+        table: "audit_lead_inquiries",
+        method: "insert",
+      }),
+    );
     await expect(response.json()).resolves.toEqual({
       reportId: "cached-report-1",
       healthScore: 72,

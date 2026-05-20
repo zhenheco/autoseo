@@ -46,6 +46,11 @@ export async function POST(request: Request) {
 
   const cached = await findCachedReport(supabase, url);
   if (cached) {
+    await persistLeadInquiry(supabase, {
+      url,
+      ipHash,
+      scannedAt: cached.report.scannedAt,
+    });
     return NextResponse.json(
       toPublicAuditResponse(cached.reportId, cached.report),
     );
