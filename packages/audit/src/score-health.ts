@@ -1,5 +1,15 @@
 import type { AuditIssue } from "./types";
 
-export function scoreHealth(_issues: AuditIssue[]): number {
-  return 100;
+const SEVERITY_WEIGHT: Record<AuditIssue["severity"], number> = {
+  critical: 10,
+  warning: 0,
+  info: 0,
+};
+
+export function scoreHealth(issues: AuditIssue[]): number {
+  const total = issues.reduce(
+    (acc, issue) => acc + SEVERITY_WEIGHT[issue.severity],
+    0,
+  );
+  return 100 - total;
 }
