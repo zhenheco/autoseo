@@ -314,4 +314,81 @@ describe("audit weekly digest cron route", () => {
       "audit-digest:company-1:2026-W21",
     );
   });
+
+  it("records cf-email failures without blocking other companies", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-05-21T00:00:00.000Z"));
+    process.env.CRON_SECRET = "cron-secret";
+    sendAuditDigestEmailMock
+      .mockResolvedValueOnce({ ok: false, error: "rate_limited" })
+      .mockResolvedValueOnce({ ok: true, messageId: "email-2" });
+    const supabase = createFakeSupabase(
+      {
+        audit_reports: {
+          data: [
+            {
+              id: "report-1",
+              company_id: "company-1",
+              health_score: 82,
+              scanned_at: "2026-05-20T10:00:00.000Z",
+              companies: {
+                id: "company-1",
+                name: "Acme SEO",
+                owner_id: "owner-1",
+              },
+            },
+            {
+              id: "report-2",
+              company_id: "company-2",
+              health_score: 91,
+              scanned_at: "2026-05-20T11:00:00.000Z",
+              companies: {
+                id: "company-2",
+                name: "Beta SEO",
+                owner_id: "owner-2",
+              },
+            },
+          ],
+          error: null,
+        },
+        audit_issues: { data: [], error: null },
+      },
+      {
+        "owner-1": {
+          email: "owner-1@example.com",
+          user_metadata: { locale: "en-US" },
+        },
+        "owner-2": {
+          email: "owner-2@example.com",
+          user_metadata: { locale: "en-US" },
+        },
+      },
+    );
+    vi.mocked(createAdminClient).mockReturnValue(supabase as never);
+    const { GET } = await import("../route");
+
+    const response = await GET(request("cron-secret") as never);
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      success: true,
+      processed: 2,
+      skipped: 0,
+      sent: 1,
+      failed: 1,
+      details: [
+        {
+          companyId: "company-1",
+          status: "failed",
+          error: "rate_limited",
+        },
+        {
+          companyId: "company-2",
+          status: "sent",
+          messageId: "email-2",
+        },
+      ],
+    });
+    expect(sendAuditDigestEmailMock).toHaveBeenCalledTimes(2);
+  });
 });
