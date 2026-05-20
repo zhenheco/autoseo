@@ -22,7 +22,8 @@ export function renderAuditDigestEmail(input: AuditDigestEmailInput): {
   html: string;
   text: string;
 } {
-  const subject = `${input.companyName} weekly audit digest`;
+  const copy = COPY[input.locale] ?? COPY["zh-TW"];
+  const subject = copy.subject(input.companyName);
   const recommendations = input.topRecommendations
     .map(
       (item, index) =>
@@ -30,15 +31,17 @@ export function renderAuditDigestEmail(input: AuditDigestEmailInput): {
     )
     .join("\n");
   const text = [
-    `${input.companyName} weekly audit digest`,
+    subject,
     `${input.weekStart} - ${input.weekEnd}`,
-    `Health score: ${input.delta.healthScoreCurrent} (${formatDelta(
+    `${copy.healthScore}${copy.colon}${input.delta.healthScoreCurrent}${copy.openParen}${formatDelta(
       input.delta.healthScoreDelta,
-    )})`,
-    `New issues: ${input.delta.newIssues}`,
-    `Resolved issues: ${input.delta.resolvedIssues}`,
-    recommendations ? `Top recommendations:\n${recommendations}` : "",
-    `Dashboard: ${input.dashboardUrl}`,
+    )}${copy.closeParen}`,
+    `${copy.newIssues}${copy.colon}${input.delta.newIssues}`,
+    `${copy.resolvedIssues}${copy.colon}${input.delta.resolvedIssues}`,
+    recommendations
+      ? `${copy.topRecommendations}${copy.colon}\n${recommendations}`
+      : "",
+    `${copy.cta}: ${input.dashboardUrl}`,
   ]
     .filter(Boolean)
     .join("\n\n");
@@ -55,22 +58,60 @@ export function renderAuditDigestEmail(input: AuditDigestEmailInput): {
     subject,
     text,
     html: `<!doctype html><html><body><main style="font-family:Arial,sans-serif;line-height:1.5;color:#172033;max-width:640px;margin:0 auto;padding:24px"><h1 style="font-size:24px;margin:0 0 8px">${escapeHtml(
-      input.companyName,
-    )} weekly audit digest</h1><p style="margin:0 0 20px;color:#526070">${escapeHtml(
+      subject,
+    )}</h1><p style="margin:0 0 20px;color:#526070">${escapeHtml(
       input.weekStart,
     )} - ${escapeHtml(
       input.weekEnd,
-    )}</p><section style="border:1px solid #d8dee8;border-radius:8px;padding:16px;margin-bottom:20px"><p style="margin:0 0 12px">Health score: <strong>${input.delta.healthScoreCurrent}</strong> (${formatDelta(
+    )}</p><section style="border:1px solid #d8dee8;border-radius:8px;padding:16px;margin-bottom:20px"><p style="margin:0 0 12px">${copy.healthScore}: <strong>${input.delta.healthScoreCurrent}</strong> (${formatDelta(
       input.delta.healthScoreDelta,
-    )})</p><p style="margin:0">New issues: <strong>${
+    )})</p><p style="margin:0">${copy.newIssues}: <strong>${
       input.delta.newIssues
-    }</strong> · Resolved issues: <strong>${
+    }</strong> · ${copy.resolvedIssues}: <strong>${
       input.delta.resolvedIssues
     }</strong></p></section><ol>${htmlRecommendations}</ol><p><a href="${escapeHtml(
       input.dashboardUrl,
-    )}" style="display:inline-block;background:#172033;color:#fff;text-decoration:none;padding:10px 16px;border-radius:6px">Open dashboard</a></p></main></body></html>`,
+    )}" style="display:inline-block;background:#172033;color:#fff;text-decoration:none;padding:10px 16px;border-radius:6px">${copy.cta}</a></p></main></body></html>`,
   };
 }
+
+const COPY = {
+  "zh-TW": {
+    subject: (companyName: string) => `${companyName} 每週 audit 摘要`,
+    healthScore: "健康分數",
+    newIssues: "本週新發現",
+    resolvedIssues: "本週已解決",
+    topRecommendations: "優先修補建議",
+    cta: "查看儀表板",
+    colon: "：",
+    openParen: "（",
+    closeParen: "）",
+  },
+  "en-US": {
+    subject: (companyName: string) => `${companyName} weekly audit digest`,
+    healthScore: "Health score",
+    newIssues: "New issues",
+    resolvedIssues: "Resolved issues",
+    topRecommendations: "Top recommendations",
+    cta: "Open dashboard",
+    colon: ": ",
+    openParen: " (",
+    closeParen: ")",
+  },
+} satisfies Record<
+  string,
+  {
+    subject: (companyName: string) => string;
+    healthScore: string;
+    newIssues: string;
+    resolvedIssues: string;
+    topRecommendations: string;
+    cta: string;
+    colon: string;
+    openParen: string;
+    closeParen: string;
+  }
+>;
 
 function formatDelta(delta: number) {
   if (delta > 0) return `+${delta}`;

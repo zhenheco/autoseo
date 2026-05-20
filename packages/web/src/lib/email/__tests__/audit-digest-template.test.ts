@@ -1,0 +1,50 @@
+import { describe, expect, it } from "vitest";
+import {
+  renderAuditDigestEmail,
+  type AuditDigestEmailInput,
+} from "../audit-digest-template";
+
+function input(
+  overrides: Partial<AuditDigestEmailInput> = {},
+): AuditDigestEmailInput {
+  return {
+    companyName: "Acme SEO",
+    weekStart: "2026-05-14",
+    weekEnd: "2026-05-21",
+    delta: {
+      newIssues: 3,
+      resolvedIssues: 2,
+      healthScoreCurrent: 88,
+      healthScoreDelta: 5,
+    },
+    topRecommendations: [
+      {
+        ruleId: "missing-title",
+        page: "/products/a",
+        suggested: "補上唯一商品標題",
+      },
+      {
+        ruleId: "thin-copy",
+        page: "/products/b",
+        suggested: "擴充商品描述",
+      },
+    ],
+    dashboardUrl: "https://app.1wayseo.com/dashboard/audit",
+    locale: "zh-TW",
+    ...overrides,
+  };
+}
+
+describe("renderAuditDigestEmail", () => {
+  it("renders the zh-TW template with company, score, delta, and CTA", () => {
+    const rendered = renderAuditDigestEmail(input());
+
+    expect(rendered.subject).toContain("Acme SEO");
+    expect(rendered.subject).toContain("每週");
+    expect(rendered.text).toContain("健康分數：88（+5）");
+    expect(rendered.text).toContain("本週新發現：3");
+    expect(rendered.text).toContain("本週已解決：2");
+    expect(rendered.text).toContain("查看儀表板");
+    expect(rendered.html).toContain("https://app.1wayseo.com/dashboard/audit");
+  });
+});
