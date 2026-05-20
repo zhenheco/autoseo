@@ -96,10 +96,13 @@ export async function createShoplineInvitation(
 ): Promise<ShoplineInvitation> {
   const ttlDays = input.ttlDays ?? 7;
   const expiresAt = new Date(Date.now() + ttlDays * 86_400_000).toISOString();
+  const expectedShopHandle = input.expectedShopHandle
+    ? normalizeShoplineShopHandle(input.expectedShopHandle)
+    : null;
 
   return store.insert({
     companyId: input.companyId,
-    expectedShopHandle: input.expectedShopHandle ?? null,
+    expectedShopHandle,
     note: input.note ?? null,
     expiresAt,
     createdBy: input.createdBy ?? null,

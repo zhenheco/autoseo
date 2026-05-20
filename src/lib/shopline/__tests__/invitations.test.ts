@@ -88,4 +88,13 @@ describe("SHOPLINE install invitations", () => {
     expect(result.redeemCount).toBe(0);
     expect(result.revokedAt).toBeNull();
   });
+
+  it("normalizes the expected shop handle when creating an invitation", async () => {
+    const result = await createShoplineInvitation(createMemoryStore(), {
+      companyId: "company-1",
+      expectedShopHandle: "Brand.MyShopLine.com",
+    });
+
+    expect(result.expectedShopHandle).toBe("Brand");
+  });
 });
