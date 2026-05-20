@@ -2796,6 +2796,53 @@
     "common": {
       "cancel": "Cancel",
       "processing": "Processing..."
+    },
+    "shoplineInvitations": {
+      "title": "SHOPLINE 판매자 초대 링크",
+      "description": "신규 계약 판매자를 위한 전용 연결 링크를 생성합니다. 링크는 7일 동안 유효하며 여러 번 사용할 수 있습니다.",
+      "createForm": {
+        "title": "새 초대 생성",
+        "companyLabel": "고객사",
+        "companyPlaceholder": "회사 선택",
+        "expectedShopHandleLabel": "예상 SHOPLINE 스토어(선택 사항)",
+        "expectedShopHandlePlaceholder": "brandname.myshopline.com",
+        "noteLabel": "메모(선택 사항)",
+        "notePlaceholder": "내부 메모, 선택 사항",
+        "submitButton": "링크 생성",
+        "ttlHint": "링크는 7일 후 만료됩니다",
+        "linkFormat": "링크 형식: {url}/connect/shopline/<token>"
+      },
+      "list": {
+        "title": "초대 목록",
+        "description": "owner/admin 권한이 있는 회사의 SHOPLINE 초대만 표시됩니다.",
+        "empty": "아직 SHOPLINE 초대 링크가 없습니다"
+      },
+      "table": {
+        "company": "회사",
+        "expectedHandle": "예상 스토어",
+        "status": "상태",
+        "redeemCount": "연결 횟수",
+        "expiresAt": "만료 시간",
+        "createdAt": "생성 시간",
+        "actions": "작업"
+      },
+      "status": {
+        "active": "활성",
+        "expired": "만료됨",
+        "revoked": "취소됨"
+      },
+      "actions": {
+        "copyLink": "링크 복사",
+        "copied": "복사됨",
+        "openLink": "링크 열기",
+        "revoke": "취소",
+        "revokeConfirm": "이 초대를 취소하시겠습니까? 이미 연결된 판매자에게는 영향이 없습니다."
+      },
+      "errors": {
+        "unauthorized": "권한이 없습니다.",
+        "createFailed": "초대를 생성하지 못했습니다.",
+        "revokeFailed": "취소하지 못했습니다."
+      }
     }
   },
   "theme": {
@@ -3145,5 +3192,24 @@
     "invalidMobileBarcode": "모바일 바코드 형식이 올바르지 않습니다",
     "invalidCertificate": "인증서 형식이 올바르지 않습니다",
     "selectDonateOrg": "기부 단체를 선택하세요"
+  },
+  "connect": {
+    "shopline": {
+      "title": "SHOPLINE 스토어 연결",
+      "subtitle": "인증 후 1waySEO가 상품 SEO 관리를 대행할 수 있습니다.",
+      "shopHandleLabel": "SHOPLINE 스토어 URL",
+      "shopHandlePlaceholder": "brandname.myshopline.com",
+      "authorizeButton": "연결 승인",
+      "errors": {
+        "invalid": "이 링크는 유효하지 않습니다. 새 링크는 1waySEO에 문의해 주세요.",
+        "expired": "이 링크는 만료되었습니다. 새 링크는 1waySEO에 문의해 주세요.",
+        "revoked": "이 링크는 취소되었습니다."
+      },
+      "done": {
+        "title": "✓ SHOPLINE 스토어 연결이 완료되었습니다",
+        "shopLabel": "스토어",
+        "instruction": "이 페이지를 닫아도 됩니다. 1waySEO 팀이 스토어 SEO 관리를 시작합니다."
+      }
+    }
   }
 }

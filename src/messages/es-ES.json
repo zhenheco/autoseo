@@ -2796,6 +2796,53 @@
     "common": {
       "cancel": "Cancel",
       "processing": "Processing..."
+    },
+    "shoplineInvitations": {
+      "title": "Enlaces de invitación para comercios SHOPLINE",
+      "description": "Genera enlaces de conexión dedicados para nuevos comercios contratados. Los enlaces son válidos durante 7 días y pueden usarse varias veces.",
+      "createForm": {
+        "title": "Crear nueva invitación",
+        "companyLabel": "Empresa cliente",
+        "companyPlaceholder": "Seleccionar empresa",
+        "expectedShopHandleLabel": "Tienda SHOPLINE prevista (opcional)",
+        "expectedShopHandlePlaceholder": "brandname.myshopline.com",
+        "noteLabel": "Nota (opcional)",
+        "notePlaceholder": "Nota interna, opcional",
+        "submitButton": "Generar enlace",
+        "ttlHint": "El enlace caduca en 7 días",
+        "linkFormat": "Formato del enlace: {url}/connect/shopline/<token>"
+      },
+      "list": {
+        "title": "Invitaciones",
+        "description": "Solo se muestran invitaciones SHOPLINE de empresas en las que tienes acceso owner/admin.",
+        "empty": "Aún no hay enlaces de invitación SHOPLINE"
+      },
+      "table": {
+        "company": "Empresa",
+        "expectedHandle": "Tienda prevista",
+        "status": "Estado",
+        "redeemCount": "Conexiones",
+        "expiresAt": "Caduca el",
+        "createdAt": "Creado el",
+        "actions": "Acciones"
+      },
+      "status": {
+        "active": "Activo",
+        "expired": "Caducado",
+        "revoked": "Revocado"
+      },
+      "actions": {
+        "copyLink": "Copiar enlace",
+        "copied": "Copiado",
+        "openLink": "Abrir enlace",
+        "revoke": "Revocar",
+        "revokeConfirm": "¿Revocar esta invitación? Los comercios ya conectados no se verán afectados."
+      },
+      "errors": {
+        "unauthorized": "No tienes permiso.",
+        "createFailed": "No se pudo crear la invitación.",
+        "revokeFailed": "No se pudo revocar la invitación."
+      }
     }
   },
   "theme": {
@@ -3145,5 +3192,24 @@
     "invalidMobileBarcode": "Formato de codigo de barras invalido",
     "invalidCertificate": "Formato de certificado invalido",
     "selectDonateOrg": "Seleccione una organizacion"
+  },
+  "connect": {
+    "shopline": {
+      "title": "Conecta tu tienda SHOPLINE",
+      "subtitle": "Tras la autorización, 1waySEO podrá gestionar el SEO de productos en tu nombre.",
+      "shopHandleLabel": "URL de la tienda SHOPLINE",
+      "shopHandlePlaceholder": "brandname.myshopline.com",
+      "authorizeButton": "Autorizar conexión",
+      "errors": {
+        "invalid": "Este enlace no es válido. Contacta con 1waySEO para solicitar un enlace nuevo.",
+        "expired": "Este enlace ha caducado. Contacta con 1waySEO para solicitar un enlace nuevo.",
+        "revoked": "Este enlace se ha revocado."
+      },
+      "done": {
+        "title": "✓ Tienda SHOPLINE conectada correctamente",
+        "shopLabel": "Tienda",
+        "instruction": "Puedes cerrar esta página. El equipo de 1waySEO empezará a gestionar el SEO de tu tienda."
+      }
+    }
   }
 }

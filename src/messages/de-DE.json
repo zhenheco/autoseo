@@ -2796,6 +2796,53 @@
     "common": {
       "cancel": "Cancel",
       "processing": "Processing..."
+    },
+    "shoplineInvitations": {
+      "title": "SHOPLINE-Händler-Einladungslinks",
+      "description": "Erstellen Sie dedizierte Verbindungslinks für neu unterzeichnete Händler. Links sind 7 Tage gültig und können mehrfach verwendet werden.",
+      "createForm": {
+        "title": "Neue Einladung erstellen",
+        "companyLabel": "Kundenunternehmen",
+        "companyPlaceholder": "Unternehmen auswählen",
+        "expectedShopHandleLabel": "Erwarteter SHOPLINE-Shop (optional)",
+        "expectedShopHandlePlaceholder": "brandname.myshopline.com",
+        "noteLabel": "Notiz (optional)",
+        "notePlaceholder": "Interne Notiz, optional",
+        "submitButton": "Link generieren",
+        "ttlHint": "Link läuft nach 7 Tagen ab",
+        "linkFormat": "Linkformat: {url}/connect/shopline/<token>"
+      },
+      "list": {
+        "title": "Einladungen",
+        "description": "Es werden nur SHOPLINE-Einladungen für Unternehmen angezeigt, für die Sie owner/admin-Rechte haben.",
+        "empty": "Noch keine SHOPLINE-Einladungslinks"
+      },
+      "table": {
+        "company": "Unternehmen",
+        "expectedHandle": "Erwarteter Shop",
+        "status": "Status",
+        "redeemCount": "Verbindungen",
+        "expiresAt": "Läuft ab am",
+        "createdAt": "Erstellt am",
+        "actions": "Aktionen"
+      },
+      "status": {
+        "active": "Aktiv",
+        "expired": "Abgelaufen",
+        "revoked": "Widerrufen"
+      },
+      "actions": {
+        "copyLink": "Link kopieren",
+        "copied": "Kopiert",
+        "openLink": "Link öffnen",
+        "revoke": "Widerrufen",
+        "revokeConfirm": "Diese Einladung widerrufen? Bereits verbundene Händler sind nicht betroffen."
+      },
+      "errors": {
+        "unauthorized": "Sie haben keine Berechtigung.",
+        "createFailed": "Einladung konnte nicht erstellt werden.",
+        "revokeFailed": "Einladung konnte nicht widerrufen werden."
+      }
     }
   },
   "theme": {
@@ -3145,5 +3192,24 @@
     "invalidMobileBarcode": "Ungültiges Barcode-Format",
     "invalidCertificate": "Ungültiges Zertifikat-Format",
     "selectDonateOrg": "Bitte wählen Sie eine Organisation"
+  },
+  "connect": {
+    "shopline": {
+      "title": "SHOPLINE-Shop verbinden",
+      "subtitle": "Nach der Autorisierung kann 1waySEO die Produkt-SEO in Ihrem Namen verwalten.",
+      "shopHandleLabel": "SHOPLINE-Shop-URL",
+      "shopHandlePlaceholder": "brandname.myshopline.com",
+      "authorizeButton": "Verbindung autorisieren",
+      "errors": {
+        "invalid": "Dieser Link ist ungültig. Wenden Sie sich an 1waySEO, um einen neuen Link zu erhalten.",
+        "expired": "Dieser Link ist abgelaufen. Wenden Sie sich an 1waySEO, um einen neuen Link zu erhalten.",
+        "revoked": "Dieser Link wurde widerrufen."
+      },
+      "done": {
+        "title": "✓ SHOPLINE-Shop erfolgreich verbunden",
+        "shopLabel": "Shop",
+        "instruction": "Sie können diese Seite schließen. Das 1waySEO-Team beginnt nun mit der Verwaltung Ihrer SEO."
+      }
+    }
   }
 }
