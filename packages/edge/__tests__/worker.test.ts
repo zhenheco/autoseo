@@ -102,7 +102,14 @@ describe("edge worker", () => {
       vi.fn(
         async () =>
           new Response(
-            '<html><head><title>Demo</title><meta name="description" content="Original"></head><body>Hello</body></html>',
+            [
+              "<html><head><title>Demo</title>",
+              '<meta name="description" content="Original">',
+              '<meta property="og:title" content="Original OG">',
+              '<meta property="og:image" content="https://example.com/old.png">',
+              '<link rel="canonical" href="https://example.com/old">',
+              "</head><body>Hello</body></html>",
+            ].join(""),
             { headers: { "content-type": "text/html" } },
           ),
       ),
@@ -137,6 +144,47 @@ describe("edge worker", () => {
 
     await expect(response.text()).resolves.toContain(
       '<meta name="description" content="A sharper edge-rendered description.">',
+    );
+  });
+
+  it("injects multiple rules into the same upstream response", async () => {
+    const jsonLd = JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Product",
+      name: "Demo",
+    });
+    const response = await worker.fetch(
+      new Request("https://example.com/products/demo"),
+      {
+        EDGE_RULES: kv({
+          "example.com:/products/demo": [
+            { type: "og-title", value: "Edge OG title" },
+            {
+              type: "og-image",
+              value: "https://cdn.example.com/edge-og.png",
+            },
+            {
+              type: "canonical",
+              value: "https://example.com/products/demo",
+            },
+            { type: "structured-data-jsonld", value: jsonLd },
+          ],
+        }),
+      },
+    );
+
+    const html = await response.text();
+    expect(html).toContain(
+      '<meta property="og:title" content="Edge OG title">',
+    );
+    expect(html).toContain(
+      '<meta property="og:image" content="https://cdn.example.com/edge-og.png">',
+    );
+    expect(html).toContain(
+      '<link rel="canonical" href="https://example.com/products/demo">',
+    );
+    expect(html).toContain(
+      `<script type="application/ld+json">${jsonLd}</script>`,
     );
   });
 });
