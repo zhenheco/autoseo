@@ -32,7 +32,9 @@ export default async function PublicAuditPage() {
               result: {
                 scoreTitle: t("result.scoreTitle"),
                 topIssuesTitle: t("result.topIssuesTitle"),
-                totalIssues: t("result.totalIssues", { count: 0 }),
+                totalIssuesTemplate: t("result.totalIssues", {
+                  count: "{count}",
+                }),
                 ctaTitle: t("result.ctaTitle"),
                 ctaSubtitle: t("result.ctaSubtitle"),
                 ctaButton: t("result.ctaButton"),

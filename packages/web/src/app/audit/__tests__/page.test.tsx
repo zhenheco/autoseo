@@ -1,8 +1,16 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@marsidev/react-turnstile", () => ({
-  Turnstile: () => <div data-testid="turnstile-widget" />,
+  Turnstile: ({ onSuccess }: { onSuccess: (token: string) => void }) => (
+    <button
+      data-testid="turnstile-widget"
+      type="button"
+      onClick={() => onSuccess("turnstile-token")}
+    >
+      Turnstile
+    </button>
+  ),
 }));
 
 vi.mock("next-intl/server", () => ({
@@ -58,5 +66,43 @@ describe("public audit page", () => {
       screen.getByRole("button", { name: "開始免費掃描" }),
     ).toBeInTheDocument();
     expect(screen.getByTestId("turnstile-widget")).toBeInTheDocument();
+  });
+
+  it("displays the public audit result after a successful submit", async () => {
+    const fetchMock = vi.fn(async () =>
+      Response.json({
+        reportId: "report-1",
+        healthScore: 91,
+        totalIssues: 1,
+        topIssues: [
+          {
+            rule: "meta.description.missing",
+            page: "https://example.com/",
+            impact: "Add a concise meta description",
+          },
+        ],
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+    render(await PublicAuditPage());
+
+    fireEvent.change(screen.getByRole("textbox", { name: "您的網站網址" }), {
+      target: { value: "https://example.com" },
+    });
+    fireEvent.click(screen.getByTestId("turnstile-widget"));
+    fireEvent.click(screen.getByRole("button", { name: "開始免費掃描" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("91")).toBeInTheDocument();
+    });
+    expect(
+      screen.getAllByText("meta.description.missing").length,
+    ).toBeGreaterThan(0);
+    expect(
+      screen.getByText("Add a concise meta description"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "了解 1waySEO →" }),
+    ).toHaveAttribute("href", "/signup");
   });
 });
