@@ -3070,7 +3070,9 @@
         "current": "目前",
         "suggested": "建議",
         "selector": "選擇器",
-        "applyButton": "自動套用"
+        "applyButton": "自動套用",
+        "applySuccess": "已自動套用",
+        "applyFailed": "自動套用失敗"
       }
     },
     "scan": {

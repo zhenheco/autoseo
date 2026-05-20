@@ -3070,7 +3070,9 @@
         "current": "Current",
         "suggested": "Suggested",
         "selector": "Selector",
-        "applyButton": "Auto apply"
+        "applyButton": "Auto apply",
+        "applySuccess": "Fix applied",
+        "applyFailed": "Auto apply failed"
       }
     },
     "scan": {

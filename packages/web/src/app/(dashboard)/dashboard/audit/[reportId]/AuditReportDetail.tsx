@@ -1,10 +1,12 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
+import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { Badge } from "@shared/ui/badge";
 import { Button } from "@shared/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@shared/ui/tabs";
+import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { scoreBadgeClass, type AuditSeverity } from "../AuditReportsList";
 
@@ -12,10 +14,13 @@ export interface AuditIssueItem {
   id: string;
   ruleId: string;
   severity: AuditSeverity;
+  riskLevel: "low" | "medium" | "high";
   page: string;
   current: string;
   suggested: string | null;
   selector: string | null;
+  status: "open" | "auto-applied" | "pending-review" | "manual" | "resolved";
+  autoApplyAvailable: boolean;
 }
 
 export interface AuditReportDetailModel {
@@ -115,6 +120,37 @@ export function AuditReportDetail({ report }: AuditReportDetailProps) {
 
 function IssueList({ issues }: { issues: AuditIssueItem[] }) {
   const t = useTranslations("audit");
+  const router = useRouter();
+  const [applyingIssueId, setApplyingIssueId] = useState<string | null>(null);
+
+  async function applyIssue(issue: AuditIssueItem) {
+    setApplyingIssueId(issue.id);
+    try {
+      const response = await fetch(`/api/audit/issues/${issue.id}/apply`, {
+        method: "POST",
+      });
+      const body = (await response.json()) as
+        | { ok: true; route: string; before: string; after: string }
+        | { ok: false; error?: string };
+
+      if (!response.ok || !body.ok) {
+        throw new Error(
+          body.ok ? "apply_failed" : (body.error ?? "apply_failed"),
+        );
+      }
+
+      toast.success(t("detail.issueCard.applySuccess"));
+      router.refresh();
+    } catch (error) {
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : t("detail.issueCard.applyFailed"),
+      );
+    } finally {
+      setApplyingIssueId(null);
+    }
+  }
 
   if (issues.length === 0) {
     return (
@@ -156,7 +192,13 @@ function IssueList({ issues }: { issues: AuditIssueItem[] }) {
                 />
               </dl>
             </div>
-            <Button disabled variant="outline">
+            <Button
+              disabled={
+                !issue.autoApplyAvailable || applyingIssueId === issue.id
+              }
+              variant="outline"
+              onClick={() => void applyIssue(issue)}
+            >
               {t("detail.issueCard.applyButton")}
             </Button>
           </div>

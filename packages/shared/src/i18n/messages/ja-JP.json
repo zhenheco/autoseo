@@ -3070,7 +3070,9 @@
         "current": "現在",
         "suggested": "推奨",
         "selector": "セレクター",
-        "applyButton": "自動適用"
+        "applyButton": "自動適用",
+        "applySuccess": "修正を適用しました",
+        "applyFailed": "自動適用に失敗しました"
       }
     },
     "scan": {

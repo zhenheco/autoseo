@@ -1,7 +1,11 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-type TableName = "audit_reports" | "audit_issues";
+type TableName =
+  | "audit_reports"
+  | "audit_issues"
+  | "website_configs"
+  | "shopline_connections";
 
 const authMocks = vi.hoisted(() => ({
   getUser: vi.fn(),
@@ -15,17 +19,31 @@ const navigationMocks = vi.hoisted(() => ({
   redirect: vi.fn((path: string) => {
     throw new Error(`REDIRECT:${path}`);
   }),
+  refresh: vi.fn(),
 }));
 
 const supabaseMocks = vi.hoisted(() => ({
   createClient: vi.fn(),
+  createAdminClient: vi.fn(),
+}));
+
+const toastMocks = vi.hoisted(() => ({
+  success: vi.fn(),
+  error: vi.fn(),
 }));
 
 vi.mock("@shared/auth", () => authMocks);
 vi.mock("@shared/supabase", () => supabaseMocks);
-vi.mock("next/navigation", () => navigationMocks);
+vi.mock("next/navigation", () => ({
+  notFound: navigationMocks.notFound,
+  redirect: navigationMocks.redirect,
+  useRouter: () => ({ refresh: navigationMocks.refresh }),
+}));
 vi.mock("next-intl", () => ({
   useTranslations: vi.fn(() => translate),
+}));
+vi.mock("sonner", () => ({
+  toast: toastMocks,
 }));
 
 function translate(key: string, values?: Record<string, unknown>) {
@@ -41,6 +59,8 @@ function translate(key: string, values?: Record<string, unknown>) {
     "detail.issueCard.suggested": "建議",
     "detail.issueCard.selector": "選擇器",
     "detail.issueCard.applyButton": "自動套用",
+    "detail.issueCard.applySuccess": "已自動套用",
+    "detail.issueCard.applyFailed": "自動套用失敗",
   };
   let message = messages[key] ?? key;
   for (const [name, value] of Object.entries(values ?? {})) {
@@ -49,7 +69,7 @@ function translate(key: string, values?: Record<string, unknown>) {
   return message;
 }
 
-function createSupabaseMock(rows: Record<TableName, unknown[]>) {
+function createSupabaseMock(rows: Partial<Record<TableName, unknown[]>>) {
   return {
     from(table: TableName) {
       const builder = {
@@ -116,8 +136,9 @@ const issue = {
   updated_at: "2026-05-20T10:00:00.000Z",
 };
 
-async function renderPage(rows: Record<TableName, unknown[]>) {
+async function renderPage(rows: Partial<Record<TableName, unknown[]>>) {
   supabaseMocks.createClient.mockResolvedValue(createSupabaseMock(rows));
+  supabaseMocks.createAdminClient.mockReturnValue(createSupabaseMock(rows));
   const { default: AuditDetailPage } = await import("../page");
   render(
     await AuditDetailPage({
@@ -134,6 +155,10 @@ describe("audit report detail page", () => {
     authMocks.getUserCompanies.mockResolvedValue([
       { companies: { id: "company-1" }, role: "owner", status: "active" },
     ]);
+    supabaseMocks.createAdminClient.mockReturnValue(
+      createSupabaseMock({ website_configs: [], shopline_connections: [] }),
+    );
+    vi.stubGlobal("fetch", vi.fn());
   });
 
   it("renders 404 when the report does not exist", async () => {
@@ -184,5 +209,52 @@ describe("audit report detail page", () => {
     expect(screen.getByRole("tab", { name: "全部 (3)" })).toBeInTheDocument();
     expect(screen.getAllByText("missing-title").length).toBeGreaterThan(0);
     expect(screen.getByRole("button", { name: "自動套用" })).toBeDisabled();
+  });
+
+  it("enables auto apply for low-risk SHOPLINE issues and refreshes after applying", async () => {
+    const fetchMock = vi.fn(async () =>
+      Response.json({
+        ok: true,
+        route: "shopline-editor",
+        before: "Short",
+        after: "Better description",
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await renderPage({
+      audit_reports: [report],
+      audit_issues: [
+        {
+          ...issue,
+          risk_level: "low",
+          rule_id: "meta.description.tooShort",
+          current: "Short",
+          severity: "critical",
+        },
+      ],
+      website_configs: [
+        {
+          id: "website-1",
+          company_id: "company-1",
+          wordpress_url: "https://demo-shop.myshopline.com",
+        },
+      ],
+      shopline_connections: [],
+    });
+
+    const button = screen.getByRole("button", { name: "自動套用" });
+    expect(button).toBeEnabled();
+
+    fireEvent.click(button);
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/audit/issues/issue-1/apply",
+        { method: "POST" },
+      );
+      expect(toastMocks.success).toHaveBeenCalledWith("已自動套用");
+      expect(navigationMocks.refresh).toHaveBeenCalled();
+    });
   });
 });

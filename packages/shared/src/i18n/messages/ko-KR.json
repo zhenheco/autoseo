@@ -3251,7 +3251,9 @@
         "current": "현재",
         "suggested": "제안",
         "selector": "선택자",
-        "applyButton": "자동 적용"
+        "applyButton": "자동 적용",
+        "applySuccess": "수정 사항이 적용되었습니다",
+        "applyFailed": "자동 적용 실패"
       }
     },
     "scan": {

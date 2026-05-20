@@ -3251,7 +3251,9 @@
         "current": "Actuel",
         "suggested": "Suggéré",
         "selector": "Sélecteur",
-        "applyButton": "Appliquer automatiquement"
+        "applyButton": "Appliquer automatiquement",
+        "applySuccess": "Correction appliquée",
+        "applyFailed": "Échec de l'application automatique"
       }
     },
     "scan": {
