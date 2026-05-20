@@ -39,4 +39,16 @@ describe("parseShoplineShopHandleFromUrl", () => {
       }),
     ).rejects.toThrow("shopline_shop_handle_parse_failed");
   });
+
+  it("throws when fetch fails", async () => {
+    const failingFetch = vi.fn(async () => {
+      throw new Error("network error");
+    }) as unknown as typeof fetch;
+
+    await expect(
+      parseShoplineShopHandleFromUrl("https://example.com/", {
+        fetch: failingFetch,
+      }),
+    ).rejects.toThrow("shopline_shop_handle_parse_failed");
+  });
 });
