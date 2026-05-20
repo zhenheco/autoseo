@@ -47,9 +47,20 @@ export function analyzeGscLowCtrHighImpression(
 }
 
 export function analyzeClarityScrollDepth(
-  _metrics: ClarityPageMetric[],
+  metrics: ClarityPageMetric[],
 ): AuditIssue[] {
-  return [];
+  return metrics
+    .filter((metric) => metric.avgScrollDepth < 0.25 && metric.bounceRate > 0.8)
+    .map((metric) => ({
+      ruleId: "clarity.scroll-depth-low",
+      severity: "warning",
+      riskLevel: "medium",
+      page: metric.page,
+      current: `avgScrollDepth=${formatPercent(metric.avgScrollDepth)}, bounceRate=${formatPercent(metric.bounceRate)}`,
+      suggested: "重整內容結構，將關鍵資訊上提至首屏",
+      source: "gsc-cross",
+      estimatedImpact: "medium",
+    }));
 }
 
 export function analyzeGa4ConversionPageNoCta(

@@ -1,5 +1,8 @@
 import { describe, expect, it } from "vitest";
-import { analyzeGscLowCtrHighImpression } from "../src/cross-analysis";
+import {
+  analyzeClarityScrollDepth,
+  analyzeGscLowCtrHighImpression,
+} from "../src/cross-analysis";
 
 describe("cross-analysis audit rules", () => {
   it("flags GSC pages with low CTR and high impressions outside top positions", () => {
@@ -56,5 +59,27 @@ describe("cross-analysis audit rules", () => {
     ]);
 
     expect(issues).toEqual([]);
+  });
+
+  it("flags Clarity pages with low scroll depth and high bounce rate", () => {
+    const issues = analyzeClarityScrollDepth([
+      {
+        page: "https://example.com/guide",
+        avgScrollDepth: 0.15,
+        bounceRate: 0.85,
+      },
+    ]);
+
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({
+      ruleId: "clarity.scroll-depth-low",
+      severity: "warning",
+      riskLevel: "medium",
+      page: "https://example.com/guide",
+      current: "avgScrollDepth=15%, bounceRate=85%",
+      suggested: "重整內容結構，將關鍵資訊上提至首屏",
+      source: "gsc-cross",
+      estimatedImpact: "medium",
+    });
   });
 });
