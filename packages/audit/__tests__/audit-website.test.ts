@@ -263,4 +263,42 @@ describe("auditWebsite", () => {
       }),
     ]);
   });
+
+  it("adds a degraded warning and keeps HTML scan results when GSC metrics fail", async () => {
+    const html = readFixture("short-meta-desc.html");
+    const fetchOk: typeof fetch = async () =>
+      new Response(html, { status: 200 });
+    const fetchGscMetrics = vi.fn(async () => {
+      throw new Error("gsc_unavailable");
+    });
+
+    const report = await auditWebsite(
+      {
+        url: "https://example.com/short-meta",
+        scope: "single-page",
+        gsc: { token: "gsc-token" },
+      },
+      {
+        fetch: fetchOk,
+        fetchGscMetrics,
+      },
+    );
+
+    expect(report.issues).toEqual([
+      expect.objectContaining({
+        ruleId: "meta.description.tooShort",
+        source: "html-scan",
+      }),
+      {
+        ruleId: "gsc.metrics.unavailable",
+        severity: "warning",
+        riskLevel: "low",
+        page: "https://example.com/short-meta",
+        current: "GSC 暫時無法取得資料: gsc_unavailable",
+        suggested: "稍後重試，或確認 OAuth scope、token 與站點權限設定。",
+        source: "gsc-cross",
+        estimatedImpact: "low",
+      },
+    ]);
+  });
 });
