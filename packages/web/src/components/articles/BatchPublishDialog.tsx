@@ -23,7 +23,7 @@ import { Info, Loader2 } from "lucide-react";
 import { WebsiteSelector } from "./WebsiteSelector";
 import { toast } from "sonner";
 import { ArticleListItem } from "@/types/article.types";
-import { createBrowserClient as createClient } from "@shared/supabase";
+import { createClient } from "@shared/supabase/client";
 import { useTranslations } from "next-intl";
 
 interface BatchPublishDialogProps {

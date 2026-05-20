@@ -65,7 +65,8 @@
     "pricing": "定價方案",
     "termsOfService": "服務條款",
     "privacyPolicy": "隱私政策",
-    "loggedInAccount": "登入帳號"
+    "loggedInAccount": "登入帳號",
+    "audit": "網站健檢"
   },
   "auth": {
     "welcomeTitle": "歡迎使用 1waySEO",
@@ -3039,6 +3040,53 @@
         "shopLabel": "商店",
         "instruction": "您可關閉此頁面，1waySEO 團隊將開始為您管理 SEO"
       }
+    }
+  },
+  "audit": {
+    "title": "網站健檢",
+    "list": {
+      "newScanButton": "新掃描",
+      "filterByWebsite": "篩選網站",
+      "columns": {
+        "url": "網址",
+        "scannedAt": "掃描時間",
+        "healthScore": "健康度",
+        "issueCount": "問題數",
+        "actions": "操作"
+      },
+      "empty": "尚無 audit 紀錄。點「新掃描」開始第一次"
+    },
+    "detail": {
+      "summaryTitle": "掃描摘要",
+      "tabs": {
+        "all": "全部 ({{count}})",
+        "critical": "嚴重 ({{count}})",
+        "warning": "警告 ({{count}})",
+        "info": "資訊 ({{count}})"
+      },
+      "issueCard": {
+        "rule": "規則",
+        "page": "頁面",
+        "current": "目前",
+        "suggested": "建議",
+        "selector": "選擇器",
+        "applyButton": "自動套用"
+      }
+    },
+    "scan": {
+      "dialogTitle": "新掃描",
+      "websiteLabel": "選擇網站",
+      "urlLabel": "或直接輸入網址",
+      "scopeLabel": "掃描範圍",
+      "scopeSinglePage": "單頁",
+      "submitButton": "開始掃描",
+      "scanning": "掃描中…",
+      "failed": "掃描失敗"
+    },
+    "score": {
+      "high": "良好",
+      "medium": "待改善",
+      "low": "需立即修補"
     }
   }
 }

@@ -18,6 +18,7 @@ import {
   History,
   RefreshCw,
   Store,
+  Activity,
 } from "lucide-react";
 import { Button } from "@shared/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@shared/ui/avatar";
@@ -44,6 +45,11 @@ const navItems = [
     titleKey: "articleManagement",
     href: "/dashboard/articles/manage",
     icon: FileText,
+  },
+  {
+    titleKey: "audit",
+    href: "/dashboard/audit",
+    icon: Activity,
   },
   {
     titleKey: "subscription",

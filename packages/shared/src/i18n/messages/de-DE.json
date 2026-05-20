@@ -65,7 +65,8 @@
     "pricing": "Preise",
     "termsOfService": "AGB",
     "privacyPolicy": "Datenschutz",
-    "loggedInAccount": "Angemeldet als"
+    "loggedInAccount": "Angemeldet als",
+    "audit": "Website-Audit"
   },
   "auth": {
     "welcomeTitle": "Willkommen bei 1waySEO",
@@ -3220,6 +3221,53 @@
         "shopLabel": "Shop",
         "instruction": "Sie können diese Seite schließen. Das 1waySEO-Team beginnt nun mit der Verwaltung Ihrer SEO."
       }
+    }
+  },
+  "audit": {
+    "title": "Website-Audit",
+    "list": {
+      "newScanButton": "Neuer Scan",
+      "filterByWebsite": "Nach Website filtern",
+      "columns": {
+        "url": "URL",
+        "scannedAt": "Scan-Zeit",
+        "healthScore": "Health Score",
+        "issueCount": "Probleme",
+        "actions": "Aktionen"
+      },
+      "empty": "Noch keine Audit-Einträge. Klicken Sie auf „Neuer Scan“, um zu starten."
+    },
+    "detail": {
+      "summaryTitle": "Scan-Zusammenfassung",
+      "tabs": {
+        "all": "Alle ({{count}})",
+        "critical": "Kritisch ({{count}})",
+        "warning": "Warnung ({{count}})",
+        "info": "Info ({{count}})"
+      },
+      "issueCard": {
+        "rule": "Regel",
+        "page": "Seite",
+        "current": "Aktuell",
+        "suggested": "Empfohlen",
+        "selector": "Selektor",
+        "applyButton": "Automatisch anwenden"
+      }
+    },
+    "scan": {
+      "dialogTitle": "Neuer Scan",
+      "websiteLabel": "Website auswählen",
+      "urlLabel": "Oder URL direkt eingeben",
+      "scopeLabel": "Scan-Umfang",
+      "scopeSinglePage": "Einzelseite",
+      "submitButton": "Scan starten",
+      "scanning": "Scan läuft…",
+      "failed": "Scan fehlgeschlagen"
+    },
+    "score": {
+      "high": "Gut",
+      "medium": "Verbesserungsbedarf",
+      "low": "Sofort beheben"
     }
   }
 }

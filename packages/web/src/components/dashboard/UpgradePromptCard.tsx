@@ -14,7 +14,7 @@ import {
 import { Button } from "@shared/ui/button";
 import { Sparkles, Check, ArrowRight, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { createBrowserClient as createClient } from "@shared/supabase";
+import { createClient } from "@shared/supabase/client";
 
 interface UpgradePromptCardProps {
   currentTier: "free" | "starter" | "professional" | "business" | "agency";

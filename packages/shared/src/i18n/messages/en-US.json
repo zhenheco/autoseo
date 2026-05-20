@@ -65,7 +65,8 @@
     "pricing": "Pricing",
     "termsOfService": "Terms",
     "privacyPolicy": "Privacy",
-    "loggedInAccount": "Logged in as"
+    "loggedInAccount": "Logged in as",
+    "audit": "Site Audit"
   },
   "auth": {
     "welcomeTitle": "Welcome to 1waySEO",
@@ -3039,6 +3040,53 @@
         "shopLabel": "Store",
         "instruction": "You can close this page. The 1waySEO team will start managing SEO for your store."
       }
+    }
+  },
+  "audit": {
+    "title": "Site Audit",
+    "list": {
+      "newScanButton": "New scan",
+      "filterByWebsite": "Filter by website",
+      "columns": {
+        "url": "URL",
+        "scannedAt": "Scanned at",
+        "healthScore": "Health score",
+        "issueCount": "Issues",
+        "actions": "Actions"
+      },
+      "empty": "No audit records yet. Click “New scan” to start your first one."
+    },
+    "detail": {
+      "summaryTitle": "Scan summary",
+      "tabs": {
+        "all": "All ({{count}})",
+        "critical": "Critical ({{count}})",
+        "warning": "Warning ({{count}})",
+        "info": "Info ({{count}})"
+      },
+      "issueCard": {
+        "rule": "Rule",
+        "page": "Page",
+        "current": "Current",
+        "suggested": "Suggested",
+        "selector": "Selector",
+        "applyButton": "Auto apply"
+      }
+    },
+    "scan": {
+      "dialogTitle": "New scan",
+      "websiteLabel": "Select website",
+      "urlLabel": "Or enter URL directly",
+      "scopeLabel": "Scan scope",
+      "scopeSinglePage": "Single page",
+      "submitButton": "Start scan",
+      "scanning": "Scanning…",
+      "failed": "Scan failed"
+    },
+    "score": {
+      "high": "Good",
+      "medium": "Needs improvement",
+      "low": "Needs immediate fixes"
     }
   }
 }

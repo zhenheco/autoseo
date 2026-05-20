@@ -65,7 +65,8 @@
     "pricing": "Tarifs",
     "termsOfService": "Conditions",
     "privacyPolicy": "Confidentialité",
-    "loggedInAccount": "Connecté en tant que"
+    "loggedInAccount": "Connecté en tant que",
+    "audit": "Audit du site"
   },
   "auth": {
     "welcomeTitle": "Bienvenue sur 1waySEO",
@@ -3220,6 +3221,53 @@
         "shopLabel": "Boutique",
         "instruction": "Vous pouvez fermer cette page. L’équipe 1waySEO va commencer à gérer le SEO de votre boutique."
       }
+    }
+  },
+  "audit": {
+    "title": "Audit du site",
+    "list": {
+      "newScanButton": "Nouveau scan",
+      "filterByWebsite": "Filtrer par site",
+      "columns": {
+        "url": "URL",
+        "scannedAt": "Heure du scan",
+        "healthScore": "Santé",
+        "issueCount": "Problèmes",
+        "actions": "Actions"
+      },
+      "empty": "Aucun historique audit pour le moment. Cliquez sur « Nouveau scan » pour commencer."
+    },
+    "detail": {
+      "summaryTitle": "Résumé du scan",
+      "tabs": {
+        "all": "Tout ({{count}})",
+        "critical": "Critique ({{count}})",
+        "warning": "Avertissement ({{count}})",
+        "info": "Info ({{count}})"
+      },
+      "issueCard": {
+        "rule": "Règle",
+        "page": "Page",
+        "current": "Actuel",
+        "suggested": "Suggéré",
+        "selector": "Sélecteur",
+        "applyButton": "Appliquer automatiquement"
+      }
+    },
+    "scan": {
+      "dialogTitle": "Nouveau scan",
+      "websiteLabel": "Choisir un site",
+      "urlLabel": "Ou saisir directement une URL",
+      "scopeLabel": "Portée du scan",
+      "scopeSinglePage": "Page unique",
+      "submitButton": "Lancer le scan",
+      "scanning": "Scan en cours…",
+      "failed": "Échec du scan"
+    },
+    "score": {
+      "high": "Bon",
+      "medium": "À améliorer",
+      "low": "Corrections immédiates requises"
     }
   }
 }

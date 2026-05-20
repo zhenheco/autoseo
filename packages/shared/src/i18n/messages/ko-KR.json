@@ -65,7 +65,8 @@
     "pricing": "요금제",
     "termsOfService": "이용약관",
     "privacyPolicy": "개인정보처리방침",
-    "loggedInAccount": "로그인된 계정"
+    "loggedInAccount": "로그인된 계정",
+    "audit": "사이트 진단"
   },
   "auth": {
     "welcomeTitle": "1waySEO에 오신 것을 환영합니다",
@@ -3220,6 +3221,53 @@
         "shopLabel": "스토어",
         "instruction": "이 페이지를 닫아도 됩니다. 1waySEO 팀이 스토어 SEO 관리를 시작합니다."
       }
+    }
+  },
+  "audit": {
+    "title": "사이트 진단",
+    "list": {
+      "newScanButton": "새 스캔",
+      "filterByWebsite": "웹사이트별 필터",
+      "columns": {
+        "url": "URL",
+        "scannedAt": "스캔 시간",
+        "healthScore": "건강도",
+        "issueCount": "문제 수",
+        "actions": "작업"
+      },
+      "empty": "아직 audit 기록이 없습니다. “새 스캔”을 눌러 첫 검사를 시작하세요."
+    },
+    "detail": {
+      "summaryTitle": "스캔 요약",
+      "tabs": {
+        "all": "전체 ({{count}})",
+        "critical": "심각 ({{count}})",
+        "warning": "경고 ({{count}})",
+        "info": "정보 ({{count}})"
+      },
+      "issueCard": {
+        "rule": "규칙",
+        "page": "페이지",
+        "current": "현재",
+        "suggested": "제안",
+        "selector": "선택자",
+        "applyButton": "자동 적용"
+      }
+    },
+    "scan": {
+      "dialogTitle": "새 스캔",
+      "websiteLabel": "웹사이트 선택",
+      "urlLabel": "또는 URL 직접 입력",
+      "scopeLabel": "스캔 범위",
+      "scopeSinglePage": "단일 페이지",
+      "submitButton": "스캔 시작",
+      "scanning": "스캔 중…",
+      "failed": "스캔 실패"
+    },
+    "score": {
+      "high": "좋음",
+      "medium": "개선 필요",
+      "low": "즉시 수정 필요"
     }
   }
 }

@@ -15,6 +15,7 @@
     "jsx": "preserve",
     "paths": {
       "@shared/*": ["./packages/shared/src/*"],
+      "@audit": ["./packages/audit/src/index.ts"],
       "@audit/*": ["./packages/audit/src/*"]
     }
   }

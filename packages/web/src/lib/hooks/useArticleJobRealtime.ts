@@ -1,8 +1,8 @@
-import { useEffect, useState } from 'react';
-import { createBrowserClient as createClient } from '@shared/supabase';
-import type { Database } from '@/types/database.types';
+import { useEffect, useState } from "react";
+import { createClient } from "@shared/supabase/client";
+import type { Database } from "@/types/database.types";
 
-type ArticleJob = Database['public']['Tables']['article_jobs']['Row'];
+type ArticleJob = Database["public"]["Tables"]["article_jobs"]["Row"];
 
 /**
  * 即時監聽文章生成任務狀態變更
@@ -33,15 +33,15 @@ export function useArticleJobRealtime(options: {
     const channel = supabase
       .channel(`article_jobs:company:${options.companyId}`)
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'article_jobs',
+          event: "UPDATE",
+          schema: "public",
+          table: "article_jobs",
           filter: `company_id=eq.${options.companyId}`,
         },
         (payload) => {
-          console.log('[Realtime] 文章任務狀態變更:', payload);
+          console.log("[Realtime] 文章任務狀態變更:", payload);
 
           const updatedJob = payload.new as ArticleJob;
 
@@ -57,39 +57,39 @@ export function useArticleJobRealtime(options: {
           });
 
           // 觸發回調
-          if (updatedJob.status === 'completed' && options.onCompleted) {
+          if (updatedJob.status === "completed" && options.onCompleted) {
             options.onCompleted(updatedJob);
-          } else if (updatedJob.status === 'failed' && options.onFailed) {
+          } else if (updatedJob.status === "failed" && options.onFailed) {
             options.onFailed(updatedJob);
           }
 
           if (options.onStatusChange) {
             options.onStatusChange(updatedJob);
           }
-        }
+        },
       )
       .on(
-        'postgres_changes',
+        "postgres_changes",
         {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'article_jobs',
+          event: "INSERT",
+          schema: "public",
+          table: "article_jobs",
           filter: `company_id=eq.${options.companyId}`,
         },
         (payload) => {
-          console.log('[Realtime] 新文章任務:', payload);
+          console.log("[Realtime] 新文章任務:", payload);
           const newJob = payload.new as ArticleJob;
           setJobs((prev) => [...prev, newJob]);
-        }
+        },
       )
       .subscribe((status) => {
-        console.log('[Realtime] 訂閱狀態:', status);
-        setIsConnected(status === 'SUBSCRIBED');
+        console.log("[Realtime] 訂閱狀態:", status);
+        setIsConnected(status === "SUBSCRIBED");
       });
 
     // 清理函數
     return () => {
-      console.log('[Realtime] 取消訂閱');
+      console.log("[Realtime] 取消訂閱");
       supabase.removeChannel(channel);
     };
   }, [options.companyId]);

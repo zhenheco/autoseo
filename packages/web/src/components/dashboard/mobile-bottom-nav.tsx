@@ -9,6 +9,7 @@ import {
   FileText,
   CreditCard,
   MoreHorizontal,
+  Activity,
 } from "lucide-react";
 import {
   Sheet,
@@ -68,14 +69,18 @@ export function MobileBottomNav({
       icon: FileText,
     },
     {
+      title: t("audit"),
+      href: "/dashboard/audit",
+      icon: Activity,
+    },
+  ];
+
+  const moreNavItems = [
+    {
       title: t("subscription"),
       href: "/dashboard/subscription",
       icon: CreditCard,
     },
-  ];
-
-  // 更多選單中的項目
-  const moreNavItems = [
     {
       title: t("affiliate"),
       href: "https://affiliate.1wayseo.com",

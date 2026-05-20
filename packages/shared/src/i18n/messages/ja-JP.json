@@ -65,7 +65,8 @@
     "pricing": "料金プラン",
     "termsOfService": "利用規約",
     "privacyPolicy": "プライバシー",
-    "loggedInAccount": "ログイン中"
+    "loggedInAccount": "ログイン中",
+    "audit": "サイト診断"
   },
   "auth": {
     "welcomeTitle": "1waySEOへようこそ",
@@ -3039,6 +3040,53 @@
         "shopLabel": "ストア",
         "instruction": "このページは閉じていただけます。1waySEO チームがストアの SEO 管理を開始します。"
       }
+    }
+  },
+  "audit": {
+    "title": "サイト診断",
+    "list": {
+      "newScanButton": "新規スキャン",
+      "filterByWebsite": "Webサイトで絞り込み",
+      "columns": {
+        "url": "URL",
+        "scannedAt": "スキャン日時",
+        "healthScore": "健全性スコア",
+        "issueCount": "問題数",
+        "actions": "操作"
+      },
+      "empty": "audit 記録はまだありません。「新規スキャン」で最初の診断を開始してください。"
+    },
+    "detail": {
+      "summaryTitle": "スキャン概要",
+      "tabs": {
+        "all": "すべて ({{count}})",
+        "critical": "重大 ({{count}})",
+        "warning": "警告 ({{count}})",
+        "info": "情報 ({{count}})"
+      },
+      "issueCard": {
+        "rule": "ルール",
+        "page": "ページ",
+        "current": "現在",
+        "suggested": "推奨",
+        "selector": "セレクター",
+        "applyButton": "自動適用"
+      }
+    },
+    "scan": {
+      "dialogTitle": "新規スキャン",
+      "websiteLabel": "Webサイトを選択",
+      "urlLabel": "またはURLを直接入力",
+      "scopeLabel": "スキャン範囲",
+      "scopeSinglePage": "単一ページ",
+      "submitButton": "スキャン開始",
+      "scanning": "スキャン中…",
+      "failed": "スキャンに失敗しました"
+    },
+    "score": {
+      "high": "良好",
+      "medium": "改善が必要",
+      "low": "すぐに修正が必要"
     }
   }
 }

@@ -9,7 +9,13 @@
     "noImplicitOverride": false,
     "baseUrl": ".",
     "jsx": "react-jsx",
-    "types": ["node", "react", "react-dom", "vitest/globals", "@testing-library/jest-dom"],
+    "types": [
+      "node",
+      "react",
+      "react-dom",
+      "vitest/globals",
+      "@testing-library/jest-dom"
+    ],
     "plugins": [
       {
         "name": "next"
@@ -18,6 +24,7 @@
     "paths": {
       "@/*": ["./src/*"],
       "@shared/*": ["../shared/src/*"],
+      "@audit": ["../audit/src/index.ts"],
       "@audit/*": ["../audit/src/*"]
     }
   },
