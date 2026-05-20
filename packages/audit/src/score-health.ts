@@ -2,7 +2,7 @@ import type { AuditIssue } from "./types";
 
 const SEVERITY_WEIGHT: Record<AuditIssue["severity"], number> = {
   critical: 10,
-  warning: 0,
+  warning: 5,
   info: 0,
 };
 

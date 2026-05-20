@@ -22,4 +22,10 @@ describe("scoreHealth", () => {
   it("subtracts 10 for one critical issue", () => {
     expect(scoreHealth([issue("critical")])).toBe(90);
   });
+
+  it("subtracts mixed severity weights", () => {
+    expect(
+      scoreHealth([issue("critical"), issue("warning"), issue("warning")]),
+    ).toBe(80);
+  });
 });
