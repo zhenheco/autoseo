@@ -49,4 +49,20 @@ describe("auditWebsite", () => {
       ],
     });
   });
+
+  it("throws audit_fetch_failed when fetch rejects", async () => {
+    const fetchRejects: typeof fetch = async () => {
+      throw new Error("network down");
+    };
+
+    await expect(
+      auditWebsite(
+        {
+          url: "https://example.com/down",
+          scope: "single-page",
+        },
+        { fetch: fetchRejects },
+      ),
+    ).rejects.toThrow("audit_fetch_failed");
+  });
 });

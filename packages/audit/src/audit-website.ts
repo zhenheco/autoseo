@@ -13,9 +13,14 @@ export async function auditWebsite(
   const now = deps.now ?? (() => new Date());
   const randomUuid = deps.randomUuid ?? (() => crypto.randomUUID());
 
-  const response = await fetchFn(input.url, {
-    headers: { "User-Agent": "Mozilla/5.0 (1waySEO audit)" },
-  });
+  let response: Response;
+  try {
+    response = await fetchFn(input.url, {
+      headers: { "User-Agent": "Mozilla/5.0 (1waySEO audit)" },
+    });
+  } catch (cause) {
+    throw new Error("audit_fetch_failed", { cause });
+  }
 
   const html = await response.text();
   const issues = scanHtml({ html, pageUrl: input.url });
