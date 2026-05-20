@@ -142,4 +142,20 @@ describe("SHOPLINE install invitations", () => {
     expect(result.redeemCount).toBe(1);
     expect(result.lastRedeemedAt).not.toBeNull();
   });
+
+  it("allows the same invitation to be redeemed repeatedly", async () => {
+    const token = "reusable-token";
+    const store = createMemoryStore([
+      invitation({
+        token,
+        expiresAt: new Date(Date.now() + 86_400_000).toISOString(),
+      }),
+    ]);
+
+    await redeemInvitation(store, token);
+    const second = await redeemInvitation(store, token);
+
+    expect(second.redeemCount).toBe(2);
+    expect(second.revokedAt).toBeNull();
+  });
 });
