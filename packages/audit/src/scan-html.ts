@@ -44,6 +44,7 @@ export function scanHtml(input: ScanHtmlInput): AuditIssue[] {
   issues.push(...checkImgAlt($, input.pageUrl));
   issues.push(...checkStructuredData($, input.pageUrl));
   issues.push(...checkSitemapConsistency($, input.pageUrl));
+  issues.push(...checkContentMissingTopics($, input.pageUrl));
 
   return issues;
 }
@@ -228,4 +229,50 @@ function checkOgTitle($: CheerioRoot, pageUrl: string): AuditIssue[] {
       estimatedImpact: "medium",
     },
   ];
+}
+
+function checkContentMissingTopics(
+  $: CheerioRoot,
+  pageUrl: string,
+): AuditIssue[] {
+  const keywordsContent = $('meta[name="keywords"]').attr("content") ?? "";
+  const keywords = keywordsContent
+    .split(/[,，]/)
+    .map((keyword) => keyword.trim())
+    .filter((keyword, index, all) => keyword && all.indexOf(keyword) === index);
+
+  if (keywords.length === 0) {
+    return [];
+  }
+
+  const blogLinkCount = $('a[href^="/blog/"], a[href*="://"][href*="/blog/"]')
+    .map((_index, element) => $(element).attr("href")?.trim() ?? "")
+    .get()
+    .filter(Boolean).length;
+
+  if (blogLinkCount >= 3) {
+    return [];
+  }
+
+  return keywords.map((keyword) => ({
+    ruleId: "content.missing-topic",
+    severity: "info",
+    riskLevel: "medium",
+    page: pageUrl,
+    selector: 'meta[name="keywords"]',
+    current: keyword,
+    suggested: `/blog/${slugifyKeyword(keyword)}`,
+    source: "html-scan",
+    estimatedImpact: "high",
+  }));
+}
+
+function slugifyKeyword(keyword: string): string {
+  const slug = keyword
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  return slug || encodeURIComponent(keyword.trim());
 }

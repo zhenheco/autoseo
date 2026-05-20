@@ -428,4 +428,56 @@ describe("scanHtml", () => {
       ]),
     );
   });
+
+  it("reports content.missing-topic for keywords when the page has fewer than three blog links", () => {
+    const issues = scanHtml({
+      html: `
+        <html>
+          <head>
+            <title>Collection page</title>
+            <meta name="description" content="A complete page description that is long enough for the scanner.">
+            <meta property="og:image" content="/og.jpg">
+            <meta property="og:title" content="Collection page">
+            <meta name="keywords" content="ergonomic desk, standing chair">
+            <link rel="canonical" href="https://example.com/products">
+            <script type="application/ld+json">{"@context":"https://schema.org"}</script>
+          </head>
+          <body>
+            <h1>Collection page</h1>
+            <a href="/blog/existing-guide">Guide</a>
+            <a href="/products/desk">Desk</a>
+            <img src="/desk.jpg" alt="Desk">
+          </body>
+        </html>
+      `,
+      pageUrl: "https://example.com/products",
+    });
+
+    expect(issues).toEqual(
+      expect.arrayContaining([
+        {
+          ruleId: "content.missing-topic",
+          severity: "info",
+          riskLevel: "medium",
+          page: "https://example.com/products",
+          selector: 'meta[name="keywords"]',
+          current: "ergonomic desk",
+          suggested: "/blog/ergonomic-desk",
+          source: "html-scan",
+          estimatedImpact: "high",
+        },
+        {
+          ruleId: "content.missing-topic",
+          severity: "info",
+          riskLevel: "medium",
+          page: "https://example.com/products",
+          selector: 'meta[name="keywords"]',
+          current: "standing chair",
+          suggested: "/blog/standing-chair",
+          source: "html-scan",
+          estimatedImpact: "high",
+        },
+      ]),
+    );
+  });
 });
