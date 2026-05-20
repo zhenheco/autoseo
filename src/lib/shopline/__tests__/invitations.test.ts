@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   createShoplineInvitation,
+  findActiveInvitation,
   type ShoplineInvitation,
   type ShoplineInvitationStore,
 } from "../invitations";
@@ -96,5 +97,11 @@ describe("SHOPLINE install invitations", () => {
     });
 
     expect(result.expectedShopHandle).toBe("Brand");
+  });
+
+  it("rejects a missing token as not found", async () => {
+    await expect(
+      findActiveInvitation(createMemoryStore(), "missing-token"),
+    ).rejects.toThrow("shopline_invitation_not_found");
   });
 });
