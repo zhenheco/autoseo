@@ -1,2 +1,12 @@
-// Placeholder - audit lib will land in #35 (S3).
-export const AUDIT_PACKAGE_VERSION = "0.0.1";
+export { scanHtml } from "./scan-html";
+export type {
+  AuditReport,
+  AuditIssue,
+  AuditSeverity,
+  AuditRiskLevel,
+  AuditScope,
+  AuditWebsiteInput,
+  AuditWebsiteDeps,
+  AuditImpact,
+  AuditIssueSource,
+} from "./types";
