@@ -39,6 +39,7 @@ export function scanHtml(input: ScanHtmlInput): AuditIssue[] {
 
   issues.push(...checkOgImage($, input.pageUrl));
   issues.push(...checkOgTitle($, input.pageUrl));
+  issues.push(...checkCanonical($, input.pageUrl));
 
   return issues;
 }
@@ -59,6 +60,26 @@ function checkOgImage($: CheerioRoot, pageUrl: string): AuditIssue[] {
       current: "",
       source: "html-scan",
       estimatedImpact: "high",
+    },
+  ];
+}
+
+function checkCanonical($: CheerioRoot, pageUrl: string): AuditIssue[] {
+  const canonicalHref = $('link[rel="canonical"]').attr("href")?.trim() ?? "";
+  if (canonicalHref) {
+    return [];
+  }
+
+  return [
+    {
+      ruleId: "canonical.missing",
+      severity: "warning",
+      riskLevel: "low",
+      page: pageUrl,
+      selector: 'link[rel="canonical"]',
+      current: "",
+      source: "html-scan",
+      estimatedImpact: "medium",
     },
   ];
 }

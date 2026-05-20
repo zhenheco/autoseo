@@ -151,4 +151,45 @@ describe("scanHtml", () => {
       ]),
     );
   });
+
+  it("reports a warning issue when canonical is missing", () => {
+    const issues = scanHtml({
+      html: readFixture("canonical-missing.html"),
+      pageUrl: "https://example.com/canonical-missing",
+    });
+
+    expect(issues).toContainEqual({
+      ruleId: "canonical.missing",
+      severity: "warning",
+      riskLevel: "low",
+      page: "https://example.com/canonical-missing",
+      selector: 'link[rel="canonical"]',
+      current: "",
+      source: "html-scan",
+      estimatedImpact: "medium",
+    });
+  });
+
+  it("does not report canonical when it is present", () => {
+    const issues = scanHtml({
+      html: readFixture("all-good.html"),
+      pageUrl: "https://example.com/all-good",
+    });
+
+    expect(issues.some((issue) => issue.ruleId === "canonical.missing")).toBe(false);
+  });
+
+  it("includes canonical in multi-issue scans", () => {
+    const issues = scanHtml({
+      html: readFixture("multi-issues.html"),
+      pageUrl: "https://example.com/multi-issues",
+    });
+
+    expect(issues.length).toBeGreaterThan(3);
+    expect(issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ ruleId: "canonical.missing" }),
+      ]),
+    );
+  });
 });
