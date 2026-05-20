@@ -42,6 +42,7 @@ export function scanHtml(input: ScanHtmlInput): AuditIssue[] {
   issues.push(...checkCanonical($, input.pageUrl));
   issues.push(...checkH1($, input.pageUrl));
   issues.push(...checkImgAlt($, input.pageUrl));
+  issues.push(...checkStructuredData($, input.pageUrl));
 
   return issues;
 }
@@ -94,6 +95,25 @@ function checkImgAlt($: CheerioRoot, pageUrl: string): AuditIssue[] {
   });
 
   return issues;
+}
+
+function checkStructuredData($: CheerioRoot, pageUrl: string): AuditIssue[] {
+  if ($('script[type="application/ld+json"]').length > 0) {
+    return [];
+  }
+
+  return [
+    {
+      ruleId: "structured-data.missing",
+      severity: "warning",
+      riskLevel: "medium",
+      page: pageUrl,
+      selector: 'script[type="application/ld+json"]',
+      current: "",
+      source: "html-scan",
+      estimatedImpact: "medium",
+    },
+  ];
 }
 
 function checkH1($: CheerioRoot, pageUrl: string): AuditIssue[] {

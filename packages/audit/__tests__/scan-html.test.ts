@@ -339,4 +339,47 @@ describe("scanHtml", () => {
       ]),
     );
   });
+
+  it("reports a warning issue when structured data is missing", () => {
+    const issues = scanHtml({
+      html: readFixture("structured-data-missing.html"),
+      pageUrl: "https://example.com/structured-data-missing",
+    });
+
+    expect(issues).toContainEqual({
+      ruleId: "structured-data.missing",
+      severity: "warning",
+      riskLevel: "medium",
+      page: "https://example.com/structured-data-missing",
+      selector: 'script[type="application/ld+json"]',
+      current: "",
+      source: "html-scan",
+      estimatedImpact: "medium",
+    });
+  });
+
+  it("does not report structured data missing when JSON-LD is present", () => {
+    const issues = scanHtml({
+      html: readFixture("all-good.html"),
+      pageUrl: "https://example.com/all-good",
+    });
+
+    expect(
+      issues.some((issue) => issue.ruleId === "structured-data.missing"),
+    ).toBe(false);
+  });
+
+  it("includes structured data missing in multi-issue scans", () => {
+    const issues = scanHtml({
+      html: readFixture("multi-issues.html"),
+      pageUrl: "https://example.com/multi-issues",
+    });
+
+    expect(issues.length).toBeGreaterThan(6);
+    expect(issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ ruleId: "structured-data.missing" }),
+      ]),
+    );
+  });
 });
