@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { scoreHealth } from "../src/index";
 import { auditWebsite } from "../src/audit-website";
 
@@ -194,5 +194,34 @@ describe("auditWebsite", () => {
         estimatedImpact: "low",
       },
     ]);
+  });
+
+  it("does not call chromium audit when includeChromium is false", async () => {
+    const html = readFixture("all-good.html");
+    const fetchOk: typeof fetch = async () =>
+      new Response(html, { status: 200 });
+    const chromiumAudit = vi.fn(async () => ({
+      cwv: {
+        lcp: 2100,
+        fid: 40,
+        cls: 0.04,
+        inp: 90,
+      },
+      a11yIssues: [],
+    }));
+
+    await auditWebsite(
+      {
+        url: "https://example.com",
+        scope: "single-page",
+        includeChromium: false,
+      },
+      {
+        fetch: fetchOk,
+        chromiumAudit,
+      },
+    );
+
+    expect(chromiumAudit).not.toHaveBeenCalled();
   });
 });
