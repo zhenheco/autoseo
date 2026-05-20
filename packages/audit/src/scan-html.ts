@@ -22,6 +22,17 @@ export function scanHtml(input: ScanHtmlInput): AuditIssue[] {
       source: "html-scan",
       estimatedImpact: "high",
     });
+  } else if (metaDesc.length < 50) {
+    issues.push({
+      ruleId: "meta.description.tooShort",
+      severity: "warning",
+      riskLevel: "low",
+      page: input.pageUrl,
+      selector: 'meta[name="description"]',
+      current: metaDesc,
+      source: "html-scan",
+      estimatedImpact: "medium",
+    });
   }
 
   return issues;

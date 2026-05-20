@@ -31,4 +31,24 @@ describe("scanHtml", () => {
       },
     ]);
   });
+
+  it("reports a warning issue when meta description is too short", () => {
+    const issues = scanHtml({
+      html: readFixture("short-meta-desc.html"),
+      pageUrl: "https://example.com/short-meta",
+    });
+
+    expect(issues).toEqual([
+      {
+        ruleId: "meta.description.tooShort",
+        severity: "warning",
+        riskLevel: "low",
+        page: "https://example.com/short-meta",
+        selector: 'meta[name="description"]',
+        current: "too short",
+        source: "html-scan",
+        estimatedImpact: "medium",
+      },
+    ]);
+  });
 });
