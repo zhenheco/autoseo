@@ -11,5 +11,5 @@ export function scoreHealth(issues: AuditIssue[]): number {
     (acc, issue) => acc + SEVERITY_WEIGHT[issue.severity],
     0,
   );
-  return 100 - total;
+  return Math.max(0, 100 - total);
 }

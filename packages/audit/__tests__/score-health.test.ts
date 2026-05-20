@@ -28,4 +28,10 @@ describe("scoreHealth", () => {
       scoreHealth([issue("critical"), issue("warning"), issue("warning")]),
     ).toBe(80);
   });
+
+  it("floors the score at zero", () => {
+    expect(scoreHealth(Array.from({ length: 11 }, () => issue("critical")))).toBe(
+      0,
+    );
+  });
 });
