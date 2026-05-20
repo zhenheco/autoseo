@@ -1,4 +1,9 @@
-import { auditWebsite, type AuditReport, type AuditScope } from "@audit";
+import {
+  auditWebsite,
+  dispatchAuditIssueToArticleGenerator,
+  type AuditReport,
+  type AuditScope,
+} from "@audit";
 import { NextResponse } from "next/server";
 import { withCompany } from "@/lib/api/auth-middleware";
 import {
@@ -6,6 +11,11 @@ import {
   handleApiError,
   validationError,
 } from "@/lib/api/response-helpers";
+import {
+  createAuditArticleDispatchDeps,
+  toDispatchableAuditIssue,
+  type AuditIssueRowForDispatch,
+} from "@/lib/audit/article-dispatch";
 import type { Json } from "@/types/database.types";
 
 interface AuditRequestBody {
@@ -54,16 +64,20 @@ export const POST = withCompany(
       }
 
       const report = await auditWebsite({ url: auditUrl, scope });
-      const reportId = await persistAuditReport(supabase, {
+      const persisted = await persistAuditReport(supabase, {
         report,
         companyId,
         websiteId: website?.id ?? null,
         userId: user.id,
         scope,
       });
-      const redirect = `/dashboard/audit/${reportId}`;
+      await dispatchEligibleIssuesToArticleGenerator(supabase, {
+        companyId,
+        issues: persisted.issues,
+      });
+      const redirect = `/dashboard/audit/${persisted.reportId}`;
 
-      return NextResponse.json({ reportId, redirect });
+      return NextResponse.json({ reportId: persisted.reportId, redirect });
     } catch (error) {
       return handleApiError(error);
     }
@@ -119,28 +133,66 @@ async function persistAuditReport(
     );
   }
 
+  let insertedIssues: AuditIssueRowForDispatch[] = [];
+
   if (input.report.issues.length > 0) {
-    const { error: issuesError } = await supabase.from("audit_issues").insert(
-      input.report.issues.map((issue) => ({
-        report_id: data.id,
-        rule_id: issue.ruleId,
-        severity: issue.severity,
-        risk_level: issue.riskLevel,
-        page: issue.page,
-        selector: issue.selector ?? null,
-        current: issue.current,
-        suggested: issue.suggested ?? null,
-        source: issue.source,
-        estimated_impact: issue.estimatedImpact,
-      })),
-    );
+    const { data: issuesData, error: issuesError } = await supabase
+      .from("audit_issues")
+      .insert(
+        input.report.issues.map((issue) => ({
+          report_id: data.id,
+          rule_id: issue.ruleId,
+          severity: issue.severity,
+          risk_level: issue.riskLevel,
+          page: issue.page,
+          selector: issue.selector ?? null,
+          current: issue.current,
+          suggested: issue.suggested ?? null,
+          source: issue.source,
+          estimated_impact: issue.estimatedImpact,
+        })),
+      )
+      .select(
+        "id, rule_id, severity, risk_level, page, selector, current, suggested, source, estimated_impact",
+      );
 
     if (issuesError) {
       throw new Error(`audit_issues_persist_failed: ${issuesError.message}`);
     }
+
+    insertedIssues = (issuesData ?? []) as AuditIssueRowForDispatch[];
   }
 
-  return data.id as string;
+  return {
+    reportId: data.id as string,
+    issues: insertedIssues,
+  };
+}
+
+async function dispatchEligibleIssuesToArticleGenerator(
+  supabase: SupabaseClient,
+  input: { companyId: string; issues: AuditIssueRowForDispatch[] },
+) {
+  const deps = createAuditArticleDispatchDeps(supabase);
+
+  for (const issue of input.issues) {
+    if (issue.risk_level === "low") continue;
+
+    try {
+      await dispatchAuditIssueToArticleGenerator(
+        {
+          issue: toDispatchableAuditIssue(issue),
+          companyId: input.companyId,
+        },
+        deps,
+      );
+    } catch (error) {
+      console.error("[Audit] Failed to dispatch article job:", {
+        issueId: issue.id,
+        error,
+      });
+    }
+  }
 }
 
 function normalizeOptionalString(value: unknown) {

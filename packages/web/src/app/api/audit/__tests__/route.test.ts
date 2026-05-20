@@ -9,6 +9,7 @@ const authState = vi.hoisted(() => ({
 
 const auditMocks = vi.hoisted(() => ({
   auditWebsite: vi.fn(),
+  dispatchAuditIssueToArticleGenerator: vi.fn(),
 }));
 
 vi.mock("@audit", () => auditMocks);
@@ -51,9 +52,6 @@ function createSupabaseMock(options: {
         insert(payload: unknown) {
           calls.push({ table, method: "insert", args: [payload] });
           builder.insertPayload = payload;
-          if (table === "audit_issues") {
-            return Promise.resolve({ data: null, error: null });
-          }
           return builder;
         },
         maybeSingle: vi.fn(async () => ({
@@ -115,6 +113,10 @@ describe("audit API route", () => {
           estimatedImpact: "high",
         },
       ],
+    });
+    auditMocks.dispatchAuditIssueToArticleGenerator.mockResolvedValue({
+      ok: false,
+      reason: "rule_not_supported",
     });
   });
 
