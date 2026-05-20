@@ -1,26 +1,26 @@
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient, createClient } from "@/lib/supabase/server";
 import { cookies } from "next/headers";
-import { Database } from "@/types/database.types";
 import { syncUserToBrevo } from "@/lib/brevo";
 import { trackRegistration } from "@/lib/affiliate-client";
 
-/**
- * 生成唯一的公司 slug
- */
+export {
+  getUser,
+  getUserCompanies,
+  getUserPrimaryCompany,
+  type UserCompany,
+  type UserCompanyMembership,
+} from "@shared/auth";
+
 function generateSlug(email: string): string {
   const username = email.split("@")[0];
   const random = Math.random().toString(36).substring(2, 8);
   return `${username}-${random}`;
 }
 
-/**
- * 註冊新使用者並自動建立公司和訂閱
- */
 export async function signUp(email: string, password: string) {
   const supabase = await createClient();
   const adminClient = createAdminClient();
 
-  // 1. 建立使用者帳號
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email,
     password,
@@ -32,15 +32,12 @@ export async function signUp(email: string, password: string) {
   if (authError) throw authError;
   if (!authData.user) throw new Error("註冊失敗");
 
-  // 檢查是否為「假成功」（用戶已存在但未驗證）
-  // Supabase 為防止用戶枚舉攻擊，不會返回錯誤，而是返回 identities 為空的響應
   if (authData.user.identities && authData.user.identities.length === 0) {
     throw new Error("User already registered");
   }
 
   console.log("[註冊] Step 1 完成: 使用者帳號建立成功", authData.user.id);
 
-  // 2. 建立公司（使用 admin client 避免 RLS 限制）
   const { data: company, error: companyError } = await adminClient
     .from("companies")
     .insert({
@@ -58,7 +55,6 @@ export async function signUp(email: string, password: string) {
   }
   console.log("[註冊] Step 2 完成: 公司建立成功", company.id);
 
-  // 3. 新增成員記錄（設定為 Owner）
   const { error: memberError } = await adminClient
     .from("company_members")
     .insert({
@@ -75,7 +71,6 @@ export async function signUp(email: string, password: string) {
   }
   console.log("[註冊] Step 3 完成: 成員記錄建立成功");
 
-  // 4. 取得免費方案
   console.log("[註冊] Step 4: 查詢免費方案...");
   const { data: freePlan, error: planError } = await adminClient
     .from("subscription_plans")
@@ -92,7 +87,6 @@ export async function signUp(email: string, password: string) {
   }
   console.log("[註冊] Step 4 完成: 免費方案查詢成功", freePlan);
 
-  // 5. 建立免費訂閱（篇數制 - 一次性 3 篇，不會每月重置）
   const freeArticles =
     (freePlan as unknown as { articles_per_month: number | null })
       .articles_per_month || 3;
@@ -102,16 +96,14 @@ export async function signUp(email: string, password: string) {
       company_id: company.id,
       plan_id: freePlan.id,
       status: "active",
-      // Token 制（向後相容，已棄用）
       monthly_token_quota: 0,
       monthly_quota_balance: 0,
       purchased_token_balance: 0,
-      // 篇數制（FREE 方案為一次性額度，不重置）
       subscription_articles_remaining: freeArticles,
       purchased_articles_remaining: 0,
-      articles_per_month: 0, // 0 表示一次性，不會每月重置
+      articles_per_month: 0,
       lifetime_free_articles_limit: freeArticles,
-      current_period_start: null, // 無週期（一次性）
+      current_period_start: null,
       current_period_end: null,
       is_lifetime: false,
       lifetime_discount: 1.0,
@@ -123,12 +115,10 @@ export async function signUp(email: string, password: string) {
   }
   console.log("[註冊] Step 5 完成: 訂閱建立成功");
 
-  // 6. 處理推薦追蹤（呼叫新的 Affiliate System）
   const cookieStore = await cookies();
   const affiliateRef = cookieStore.get("affiliate_ref")?.value;
 
   if (affiliateRef) {
-    // 非同步呼叫新的 Affiliate System，不阻塞註冊流程
     trackRegistration({
       referralCode: affiliateRef,
       referredUserId: authData.user.id,
@@ -138,7 +128,6 @@ export async function signUp(email: string, password: string) {
     console.log("[註冊] Step 6 完成: Affiliate 追蹤已觸發");
   }
 
-  // 7. 也保留舊的 subscriptions 表記錄（向後兼容）
   await adminClient.from("subscriptions").insert({
     company_id: company.id,
     plan_name: "free",
@@ -149,7 +138,6 @@ export async function signUp(email: string, password: string) {
     current_period_end: null,
   });
 
-  // 8. 同步用戶到 Brevo（非阻塞，不影響註冊流程）
   syncUserToBrevo(authData.user.id).catch((error) => {
     console.error("[註冊] Brevo 同步失敗（不影響註冊）:", error);
   });
@@ -158,9 +146,6 @@ export async function signUp(email: string, password: string) {
   return { user: authData.user, company };
 }
 
-/**
- * 登入
- */
 export async function signIn(email: string, password: string) {
   const supabase = await createClient();
 
@@ -171,13 +156,9 @@ export async function signIn(email: string, password: string) {
 
   if (error) throw error;
 
-  // === Affiliate 追蹤（登入也追蹤，支援跨產品推薦）===
-  // 設計原則：只要有推薦碼，任何認證成功（登入或註冊）都應該追蹤
-  // API 端會處理重複的情況（同一用戶同一產品返回 409）
   const cookieStore = await cookies();
   const affiliateRef = cookieStore.get("affiliate_ref")?.value;
 
-  // 診斷日誌
   console.log("[SignIn Affiliate] 診斷資訊:", {
     userId: data.user?.id,
     userEmail: email,
@@ -206,9 +187,6 @@ export async function signIn(email: string, password: string) {
   return data;
 }
 
-/**
- * 登出
- */
 export async function signOut() {
   const supabase = await createClient();
 
@@ -217,51 +195,6 @@ export async function signOut() {
   if (error) throw error;
 }
 
-/**
- * 取得當前使用者
- */
-export async function getUser() {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  return user;
-}
-
-/**
- * 取得使用者的公司列表
- */
-export async function getUserCompanies(userId: string) {
-  const supabase = await createClient();
-
-  const { data, error } = await supabase
-    .from("company_members")
-    .select("companies(*), role, status")
-    .eq("user_id", userId);
-
-  if (error) throw error;
-
-  if (!data || data.length === 0) return [];
-
-  const activeMembers = data.filter((m) => m.status === "active");
-  return activeMembers.length > 0 ? activeMembers : data;
-}
-
-/**
- * 取得使用者的主要公司（第一個公司）
- */
-export async function getUserPrimaryCompany(userId: string) {
-  const companyMembers = await getUserCompanies(userId);
-  if (!companyMembers || companyMembers.length === 0) return null;
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return (companyMembers[0] as any).companies;
-}
-
-/**
- * 取得公司的所有成員
- */
 export async function getCompanyMembers(companyId: string) {
   const supabase = await createClient();
   const adminClient = createAdminClient();
@@ -277,8 +210,6 @@ export async function getCompanyMembers(companyId: string) {
 
   if (!members) return [];
 
-  // 使用 Admin Client 存取 auth.users
-  const userIds = members.map((m) => m.user_id);
   const {
     data: { users },
     error: usersError,
@@ -292,7 +223,7 @@ export async function getCompanyMembers(companyId: string) {
     }));
   }
 
-  const membersWithUsers = members.map((member) => {
+  return members.map((member) => {
     const user = users?.find((u: { id: string }) => u.id === member.user_id);
     return {
       ...member,
@@ -304,6 +235,4 @@ export async function getCompanyMembers(companyId: string) {
         : null,
     };
   });
-
-  return membersWithUsers;
 }
