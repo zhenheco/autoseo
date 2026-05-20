@@ -4,7 +4,54 @@ const auditMocks = vi.hoisted(() => ({
   auditWebsite: vi.fn(),
 }));
 
+const supabaseMocks = vi.hoisted(() => ({
+  createAdminClient: vi.fn(),
+}));
+
 vi.mock("@audit", () => auditMocks);
+vi.mock("@shared/supabase", () => supabaseMocks);
+
+type TableName = "audit_lead_inquiries" | "audit_reports";
+
+function createSupabaseMock(options: { rateCount?: number } = {}) {
+  const calls: Array<{ table: string; method: string; args: unknown[] }> = [];
+
+  const client = {
+    calls,
+    from(table: TableName) {
+      const builder = {
+        select(...args: unknown[]) {
+          calls.push({ table, method: "select", args });
+          return builder;
+        },
+        eq(...args: unknown[]) {
+          calls.push({ table, method: "eq", args });
+          return builder;
+        },
+        gte(...args: unknown[]) {
+          calls.push({ table, method: "gte", args });
+          return builder;
+        },
+        then(
+          resolve: (value: {
+            data: unknown[] | null;
+            count: number | null;
+            error: null;
+          }) => void,
+        ) {
+          return Promise.resolve({
+            data: null,
+            count: options.rateCount ?? 0,
+            error: null,
+          }).then(resolve);
+        },
+      };
+      return builder;
+    },
+  };
+
+  return client;
+}
 
 async function post(body?: unknown) {
   const { POST } = await import("../route");
@@ -23,6 +70,7 @@ describe("public audit API route", () => {
     vi.clearAllMocks();
     vi.unstubAllGlobals();
     vi.stubEnv("TURNSTILE_SECRET_KEY", "test-secret");
+    supabaseMocks.createAdminClient.mockReturnValue(createSupabaseMock());
     vi.resetModules();
   });
 
@@ -56,6 +104,30 @@ describe("public audit API route", () => {
       expect.objectContaining({
         method: "POST",
         body: expect.stringContaining("bad-token"),
+      }),
+    );
+    expect(auditMocks.auditWebsite).not.toHaveBeenCalled();
+  });
+
+  it("returns 429 when the IP hash has reached the hourly rate limit", async () => {
+    const verifyFetch = vi.fn(async () => Response.json({ success: true }));
+    vi.stubGlobal("fetch", verifyFetch);
+    const supabase = createSupabaseMock({ rateCount: 5 });
+    supabaseMocks.createAdminClient.mockReturnValue(supabase);
+
+    const response = await post({
+      url: "https://example.com",
+      turnstileToken: "valid-token",
+    });
+
+    expect(response.status).toBe(429);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "rate_limited",
+    });
+    expect(supabase.calls).toContainEqual(
+      expect.objectContaining({
+        table: "audit_lead_inquiries",
+        method: "select",
       }),
     );
     expect(auditMocks.auditWebsite).not.toHaveBeenCalled();
