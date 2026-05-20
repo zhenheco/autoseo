@@ -54,7 +54,8 @@ describe("runChromiumAudit", () => {
                 {
                   target: ["img.hero"],
                   html: '<img class="hero" src="/hero.jpg">',
-                  failureSummary: "Fix any of the following: Element has no alt attribute",
+                  failureSummary:
+                    "Fix any of the following: Element has no alt attribute",
                 },
               ],
             },

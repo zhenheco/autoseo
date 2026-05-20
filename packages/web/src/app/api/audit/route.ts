@@ -1,6 +1,7 @@
 import {
   auditWebsite,
   dispatchAuditIssueToArticleGenerator,
+  runChromiumAudit,
   type AuditReport,
   type AuditScope,
 } from "@audit";
@@ -17,6 +18,7 @@ import {
   type AuditArticleDispatchSupabaseClient,
   type AuditIssueRowForDispatch,
 } from "@/lib/audit/article-dispatch";
+import { createCloudflareBrowserRenderingFetcher } from "@/lib/audit/chromium-fetcher";
 import { APIRouter } from "@/lib/ai/api-router";
 import { detectAIProvider } from "@/lib/ai/fallback-policy";
 import { generateShoplineSeoDraft } from "@/lib/shopline/ai-seo-generator";
@@ -32,6 +34,8 @@ interface AuditRequestBody {
 type SupabaseClient = Parameters<
   Parameters<typeof withCompany>[0]
 >[1]["supabase"];
+
+type PlanTier = "free" | "starter" | "pro" | "business" | "agency";
 
 export const POST = withCompany(
   async (request, { user, supabase, companyId }) => {
@@ -68,7 +72,20 @@ export const POST = withCompany(
         return validationError("url is required");
       }
 
-      const report = await auditWebsite({ url: auditUrl, scope });
+      const planTier = await loadCompanyPlanTier(supabase, companyId);
+      const includeChromium = isChromiumAuditEnabledForTier(planTier);
+      const report = includeChromium
+        ? await auditWebsite(
+            { url: auditUrl, scope, includeChromium },
+            {
+              chromiumAudit: (url) =>
+                runChromiumAudit(url, {
+                  browserRenderingFetch:
+                    createCloudflareBrowserRenderingFetcher(),
+                }),
+            },
+          )
+        : await auditWebsite({ url: auditUrl, scope, includeChromium });
       const persisted = await persistAuditReport(supabase, {
         report,
         companyId,
@@ -103,6 +120,37 @@ async function loadCompanyWebsite(
   if (error) throw error;
   if (!data || data.company_id !== companyId) return null;
   return data as { id: string; wordpress_url: string; company_id: string };
+}
+
+async function loadCompanyPlanTier(
+  supabase: SupabaseClient,
+  companyId: string,
+): Promise<PlanTier> {
+  const { data, error } = await supabase
+    .from("companies")
+    .select("subscription_tier")
+    .eq("id", companyId)
+    .maybeSingle();
+
+  if (error) throw error;
+
+  const tier = (data as { subscription_tier?: unknown } | null)
+    ?.subscription_tier;
+  return isPlanTier(tier) ? tier : "free";
+}
+
+function isChromiumAuditEnabledForTier(tier: PlanTier): boolean {
+  return tier === "pro" || tier === "business" || tier === "agency";
+}
+
+function isPlanTier(value: unknown): value is PlanTier {
+  return (
+    value === "free" ||
+    value === "starter" ||
+    value === "pro" ||
+    value === "business" ||
+    value === "agency"
+  );
 }
 
 async function persistAuditReport(

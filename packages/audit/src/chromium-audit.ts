@@ -1,4 +1,9 @@
-import type { AuditImpact, AuditIssue, AuditRiskLevel, AuditSeverity } from "./types";
+import type {
+  AuditImpact,
+  AuditIssue,
+  AuditRiskLevel,
+  AuditSeverity,
+} from "./types";
 
 export interface CoreWebVitals {
   lcp: number;
@@ -90,9 +95,10 @@ type AxeNode = {
 };
 
 function parseAxeIssues(axeJson: unknown, pageUrl: string): AuditIssue[] {
-  const violations = isRecord(axeJson) && Array.isArray(axeJson.violations)
-    ? axeJson.violations
-    : [];
+  const violations =
+    isRecord(axeJson) && Array.isArray(axeJson.violations)
+      ? axeJson.violations
+      : [];
 
   return violations.flatMap((violation) => {
     if (!isRecord(violation)) return [];

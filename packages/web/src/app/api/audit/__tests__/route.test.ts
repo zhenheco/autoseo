@@ -1,6 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-type TableName = "website_configs" | "audit_reports" | "audit_issues";
+type TableName =
+  | "website_configs"
+  | "companies"
+  | "audit_reports"
+  | "audit_issues";
 
 const authState = vi.hoisted(() => ({
   mode: "authorized" as "authorized" | "unauthorized",
@@ -32,6 +36,7 @@ vi.mock("@/lib/api/auth-middleware", () => ({
 
 function createSupabaseMock(options: {
   website?: Record<string, unknown> | null;
+  company?: Record<string, unknown> | null;
   reportId?: string;
 }) {
   const calls: Array<{ table: string; method: string; args: unknown[] }> = [];
@@ -55,7 +60,10 @@ function createSupabaseMock(options: {
           return builder;
         },
         maybeSingle: vi.fn(async () => ({
-          data: options.website ?? null,
+          data:
+            table === "website_configs"
+              ? (options.website ?? null)
+              : (options.company ?? null),
           error: null,
         })),
         single: vi.fn(async () => ({
@@ -92,6 +100,9 @@ describe("audit API route", () => {
         id: "website-1",
         company_id: "company-1",
         wordpress_url: "https://example.com",
+      },
+      company: {
+        subscription_tier: "starter",
       },
     });
     auditMocks.auditWebsite.mockResolvedValue({
@@ -164,6 +175,9 @@ describe("audit API route", () => {
         company_id: "company-1",
         wordpress_url: "https://example.com",
       },
+      company: {
+        subscription_tier: "starter",
+      },
       reportId: "report-99",
     });
     authState.supabase = supabase;
@@ -177,6 +191,7 @@ describe("audit API route", () => {
     expect(auditMocks.auditWebsite).toHaveBeenCalledWith({
       url: "https://example.com",
       scope: "single-page",
+      includeChromium: false,
     });
     expect(supabase.calls).toContainEqual(
       expect.objectContaining({ table: "audit_reports", method: "insert" }),
@@ -188,5 +203,37 @@ describe("audit API route", () => {
       reportId: "report-99",
       redirect: "/dashboard/audit/report-99",
     });
+  });
+
+  it("enables chromium audit deps for pro tier companies", async () => {
+    const supabase = createSupabaseMock({
+      website: {
+        id: "website-1",
+        company_id: "company-1",
+        wordpress_url: "https://example.com",
+      },
+      company: {
+        subscription_tier: "pro",
+      },
+      reportId: "report-100",
+    });
+    authState.supabase = supabase;
+
+    const response = await post({
+      websiteId: "website-1",
+      scope: "single-page",
+    });
+
+    expect(response.status).toBe(200);
+    expect(auditMocks.auditWebsite).toHaveBeenCalledWith(
+      {
+        url: "https://example.com",
+        scope: "single-page",
+        includeChromium: true,
+      },
+      {
+        chromiumAudit: expect.any(Function),
+      },
+    );
   });
 });
