@@ -92,4 +92,55 @@ describe("audit-cli", () => {
       },
     ]);
   });
+
+  it("looks up the website URL when --website-id is provided", async () => {
+    const auditWebsiteFn = vi.fn().mockResolvedValue({
+      ...report,
+      url: "https://website.test",
+      issues: [],
+    });
+    const websiteSingle = vi.fn().mockResolvedValue({
+      data: {
+        wordpress_url: "https://website.test",
+        company_id: "company_from_website",
+      },
+      error: null,
+    });
+    const websiteEq = vi.fn(() => ({ single: websiteSingle }));
+    const websiteSelect = vi.fn(() => ({ eq: websiteEq }));
+    const reportSingle = vi
+      .fn()
+      .mockResolvedValue({ data: { id: "report_2" }, error: null });
+    const reportSelect = vi.fn(() => ({ single: reportSingle }));
+    const reportInsert = vi.fn(() => ({ select: reportSelect }));
+    const adminClient = {
+      from: vi.fn((table: string) => {
+        if (table === "website_configs") return { select: websiteSelect };
+        if (table === "audit_reports") return { insert: reportInsert };
+        if (table === "audit_issues") {
+          throw new Error("issues should not be inserted when empty");
+        }
+        throw new Error(`unexpected table: ${table}`);
+      }),
+    };
+
+    await runAudit(["--website-id", "website_1"], {
+      adminClient,
+      auditWebsiteFn,
+    });
+
+    expect(websiteSelect).toHaveBeenCalledWith("wordpress_url, company_id");
+    expect(websiteEq).toHaveBeenCalledWith("id", "website_1");
+    expect(auditWebsiteFn).toHaveBeenCalledWith({
+      url: "https://website.test",
+      scope: "single-page",
+    });
+    expect(reportInsert).toHaveBeenCalledWith(
+      expect.objectContaining({
+        company_id: "company_from_website",
+        website_id: "website_1",
+        url: "https://website.test",
+      }),
+    );
+  });
 });

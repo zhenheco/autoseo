@@ -11,8 +11,18 @@ interface QueryResult<T> {
   error: { message?: string } | null;
 }
 
+interface WebsiteConfigRow {
+  wordpress_url: string | null;
+  company_id: string | null;
+}
+
 interface AdminClient {
   from(table: string): {
+    select(columns: string): {
+      eq(column: string, value: string): {
+        single(): Promise<QueryResult<WebsiteConfigRow>>;
+      };
+    };
     insert(payload: unknown): {
       select(columns: string): {
         single(): Promise<QueryResult<{ id: string }>>;
@@ -59,7 +69,7 @@ export async function runAudit(
   const args = parseArgs(argv);
   const websiteId = arg(args, "website-id");
   const url = arg(args, "url");
-  const companyId = arg(args, "company-id") ?? null;
+  let companyId = arg(args, "company-id") ?? null;
   const scope = (arg(args, "scope") ?? "single-page") as AuditScope;
 
   if (!websiteId && !url) {
@@ -68,7 +78,13 @@ export async function runAudit(
 
   const adminClient = deps.adminClient ?? createAdminClient();
   const auditWebsiteFn = deps.auditWebsiteFn ?? auditWebsite;
-  const auditUrl = url;
+  let auditUrl = url;
+
+  if (!auditUrl && websiteId) {
+    const website = await loadWebsiteConfig(adminClient, websiteId);
+    auditUrl = website.wordpress_url ?? undefined;
+    companyId = companyId ?? website.company_id;
+  }
 
   if (!auditUrl) {
     throw new Error("missing required argument: --url");
@@ -87,6 +103,23 @@ export async function runAudit(
   });
 
   return `# Audit Report — ${report.url}`;
+}
+
+async function loadWebsiteConfig(
+  adminClient: AdminClient,
+  websiteId: string,
+): Promise<WebsiteConfigRow> {
+  const { data, error } = await adminClient
+    .from("website_configs")
+    .select("wordpress_url, company_id")
+    .eq("id", websiteId)
+    .single();
+
+  if (error || !data) {
+    throw new Error(`website_lookup_failed: ${error?.message ?? "not found"}`);
+  }
+
+  return data;
 }
 
 async function persistAuditReport(
