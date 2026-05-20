@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 type TableName =
   | "audit_reports"
   | "audit_issues"
+  | "audit_fix_log"
   | "article_jobs"
   | "website_configs"
   | "shopline_connections";
@@ -210,6 +211,7 @@ describe("audit report detail page", () => {
         { ...issue, id: "issue-3", severity: "info", rule_id: "canonical" },
       ],
       article_jobs: [],
+      audit_fix_log: [],
     });
 
     expect(screen.getByText("掃描摘要")).toBeInTheDocument();
@@ -250,6 +252,7 @@ describe("audit report detail page", () => {
         },
       ],
       article_jobs: [],
+      audit_fix_log: [],
       website_configs: [
         {
           id: "website-1",
@@ -293,6 +296,7 @@ describe("audit report detail page", () => {
           audit_issue_id: "issue-1",
         },
       ],
+      audit_fix_log: [],
     });
 
     fireEvent.click(screen.getByRole("tab", { name: "資訊 (1)" }));
@@ -325,6 +329,7 @@ describe("audit report detail page", () => {
         },
       ],
       article_jobs: [],
+      audit_fix_log: [],
     });
 
     fireEvent.click(screen.getByRole("tab", { name: "資訊 (1)" }));
@@ -352,10 +357,36 @@ describe("audit report detail page", () => {
         },
       ],
       article_jobs: [],
+      audit_fix_log: [],
     });
 
     fireEvent.click(screen.getByRole("tab", { name: "警告 (1)" }));
 
     expect(screen.getByText("GSC 數據驅動")).toBeInTheDocument();
+  });
+
+  it("shows edge injection status for issues with successful edge-worker fix logs", async () => {
+    await renderPage({
+      audit_reports: [report],
+      audit_issues: [
+        {
+          ...issue,
+          status: "auto-applied",
+          risk_level: "low",
+          rule_id: "meta.description.tooShort",
+        },
+      ],
+      audit_fix_log: [
+        {
+          id: "log-1",
+          issue_id: "issue-1",
+          route: "edge-worker",
+          result: "success",
+        },
+      ],
+      article_jobs: [],
+    });
+
+    expect(screen.getByText("邊緣已注入")).toBeInTheDocument();
   });
 });

@@ -6,6 +6,13 @@ import { useTranslations } from "next-intl";
 import { Badge } from "@shared/ui/badge";
 import { Button } from "@shared/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@shared/ui/tabs";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@shared/ui/tooltip";
+import { CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { scoreBadgeClass, type AuditSeverity } from "../AuditReportsList";
@@ -26,6 +33,7 @@ export interface AuditIssueItem {
   status: "open" | "auto-applied" | "pending-review" | "manual" | "resolved";
   autoApplyAvailable: boolean;
   articleJobId: string | null;
+  edgeInjected: boolean;
 }
 
 export interface AuditReportDetailModel {
@@ -262,6 +270,7 @@ function IssueList({ issues }: { issues: AuditIssueItem[] }) {
                     {t("issueSource.gsc-cross")}
                   </Badge>
                 ) : null}
+                {issue.edgeInjected ? <EdgeInjectedBadge /> : null}
                 <span className="font-mono text-sm font-medium">
                   {issue.ruleId}
                 </span>
@@ -347,6 +356,27 @@ function IssueAction({
     >
       {applyLabel}
     </Button>
+  );
+}
+
+function EdgeInjectedBadge() {
+  return (
+    <TooltipProvider>
+      <Tooltip delayDuration={200}>
+        <TooltipTrigger asChild>
+          <Badge
+            variant="outline"
+            className="border-green-200 bg-green-50 text-green-700"
+          >
+            <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
+            邊緣已注入
+          </Badge>
+        </TooltipTrigger>
+        <TooltipContent role="tooltip">
+          Cloudflare Edge Worker 已從 KV 套用此 SEO 注入規則。
+        </TooltipContent>
+      </Tooltip>
+    </TooltipProvider>
   );
 }
 

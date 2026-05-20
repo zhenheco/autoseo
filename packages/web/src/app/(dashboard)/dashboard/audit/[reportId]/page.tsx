@@ -16,6 +16,10 @@ type ArticleJobRow = Pick<
   Database["public"]["Tables"]["article_jobs"]["Row"],
   "id" | "audit_issue_id"
 >;
+type AuditFixLogRow = Pick<
+  Database["public"]["Tables"]["audit_fix_log"]["Row"],
+  "issue_id" | "route" | "result"
+>;
 
 interface AuditDetailPageProps {
   params: Promise<{ reportId: string }>;
@@ -62,6 +66,10 @@ export default async function AuditDetailPage({
     supabase,
     ((issues ?? []) as AuditIssueRow[]).map((issue) => issue.id),
   );
+  const edgeInjectedIssueIds = await loadEdgeInjectedIssueIds(
+    supabase,
+    ((issues ?? []) as AuditIssueRow[]).map((issue) => issue.id),
+  );
   const isShoplineReport = await isShoplineAuditReport(
     report as AuditReportRow,
   );
@@ -73,6 +81,7 @@ export default async function AuditDetailPage({
         (issues ?? []) as AuditIssueRow[],
         isShoplineReport,
         articleJobsByIssueId,
+        edgeInjectedIssueIds,
       )}
     />
   );
@@ -83,6 +92,7 @@ function toDetailModel(
   issues: AuditIssueRow[],
   isShoplineReport: boolean,
   articleJobsByIssueId: Map<string, ArticleJobRow>,
+  edgeInjectedIssueIds: Set<string>,
 ): AuditReportDetailModel {
   return {
     id: report.id,
@@ -104,12 +114,35 @@ function toDetailModel(
       selector: issue.selector,
       status: issue.status,
       articleJobId: articleJobsByIssueId.get(issue.id)?.id ?? null,
+      edgeInjected: edgeInjectedIssueIds.has(issue.id),
       autoApplyAvailable:
         isShoplineReport &&
         issue.risk_level === "low" &&
         issue.status === "open",
     })),
   };
+}
+
+async function loadEdgeInjectedIssueIds(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  issueIds: string[],
+): Promise<Set<string>> {
+  if (issueIds.length === 0) return new Set();
+
+  const { data, error } = await supabase
+    .from("audit_fix_log")
+    .select("issue_id, route, result")
+    .in("issue_id", issueIds)
+    .eq("route", "edge-worker")
+    .eq("result", "success");
+
+  if (error) throw error;
+
+  return new Set(
+    ((data ?? []) as AuditFixLogRow[])
+      .map((log) => log.issue_id)
+      .filter((issueId): issueId is string => typeof issueId === "string"),
+  );
 }
 
 async function loadArticleJobsByIssueId(
