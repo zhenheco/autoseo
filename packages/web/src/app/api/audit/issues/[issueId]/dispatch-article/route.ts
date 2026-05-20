@@ -5,6 +5,7 @@ import { handleApiError } from "@/lib/api/response-helpers";
 import {
   createAuditArticleDispatchDeps,
   toDispatchableAuditIssue,
+  type AuditArticleDispatchSupabaseClient,
   type AuditIssueRowForDispatch,
 } from "@/lib/audit/article-dispatch";
 import type { Database } from "@/types/database.types";
@@ -55,12 +56,15 @@ export const POST = withCompany(
         );
       }
 
+      const dispatchSupabase =
+        supabase as unknown as AuditArticleDispatchSupabaseClient;
+
       const result = await dispatchAuditIssueToArticleGenerator(
         {
           issue: toDispatchableAuditIssue(issue),
           companyId,
         },
-        createAuditArticleDispatchDeps(supabase),
+        createAuditArticleDispatchDeps(dispatchSupabase),
       );
 
       if (!result.ok) {
