@@ -301,4 +301,34 @@ describe("auditWebsite", () => {
       },
     ]);
   });
+
+  it("does not call GSC metrics fetcher when GSC input is omitted", async () => {
+    const html = readFixture("all-good.html");
+    const fetchOk: typeof fetch = async () =>
+      new Response(html, { status: 200 });
+    const fetchGscMetrics = vi.fn(async () => [
+      {
+        page: "https://example.com/guide",
+        query: "seo guide",
+        position: 8,
+        impressions: 200,
+        clicks: 2,
+        ctr: 0.01,
+      },
+    ]);
+
+    const report = await auditWebsite(
+      {
+        url: "https://example.com",
+        scope: "single-page",
+      },
+      {
+        fetch: fetchOk,
+        fetchGscMetrics,
+      },
+    );
+
+    expect(fetchGscMetrics).not.toHaveBeenCalled();
+    expect(report.issues).toEqual([]);
+  });
 });
