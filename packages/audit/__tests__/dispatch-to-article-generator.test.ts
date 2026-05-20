@@ -102,4 +102,40 @@ describe("dispatchAuditIssueToArticleGenerator", () => {
     expect(deps.generateArticleBrief).not.toHaveBeenCalled();
     expect(deps.insertArticleJob).not.toHaveBeenCalled();
   });
+
+  it("dispatches h1.duplicate issues to the article generator queue", async () => {
+    const deps = createDeps();
+    vi.mocked(deps.findExistingJob).mockResolvedValue(null);
+    vi.mocked(deps.generateArticleBrief).mockResolvedValue({
+      title: "Resolve duplicate H1 intent",
+      outline: "Use the duplicate headings to draft a focused article brief.",
+      target_keywords: ["Primary Heading", "Secondary Heading"],
+    });
+    vi.mocked(deps.insertArticleJob).mockResolvedValue({ id: "job-h1" });
+
+    const result = await dispatchAuditIssueToArticleGenerator(
+      {
+        issue: createIssue({
+          ruleId: "h1.duplicate",
+          severity: "warning",
+          riskLevel: "medium",
+          selector: "h1",
+          current: "Primary Heading|Secondary Heading",
+        }),
+        companyId: "company-1",
+      },
+      deps,
+    );
+
+    expect(result).toEqual({ ok: true, jobId: "job-h1" });
+    expect(deps.insertArticleJob).toHaveBeenCalledWith(
+      expect.objectContaining({
+        audit_issue_id: "issue-1",
+        source_type: "audit-driven",
+        company_id: "company-1",
+        target_keywords: ["Primary Heading", "Secondary Heading"],
+        status: "pending",
+      }),
+    );
+  });
 });
