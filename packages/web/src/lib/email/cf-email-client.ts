@@ -1,9 +1,37 @@
 import type { renderAuditDigestEmail } from "./audit-digest-template";
+import type { renderAuditNurtureEmail } from "./audit-nurture-template";
 
 export async function sendAuditDigestEmail(input: {
   to: string;
   template: ReturnType<typeof renderAuditDigestEmail>;
   idempotencyKey: string;
+}): Promise<{ ok: boolean; messageId?: string; error?: string }> {
+  return sendCfEmail({
+    to: input.to,
+    template: input.template,
+    idempotencyKey: input.idempotencyKey,
+    tags: ["audit-weekly-digest"],
+  });
+}
+
+export async function sendAuditNurtureEmail(input: {
+  to: string;
+  template: ReturnType<typeof renderAuditNurtureEmail>;
+  idempotencyKey: string;
+}): Promise<{ ok: boolean; messageId?: string; error?: string }> {
+  return sendCfEmail({
+    to: input.to,
+    template: input.template,
+    idempotencyKey: input.idempotencyKey,
+    tags: ["audit-nurture"],
+  });
+}
+
+async function sendCfEmail(input: {
+  to: string;
+  template: { subject: string; html: string; text: string };
+  idempotencyKey: string;
+  tags: string[];
 }): Promise<{ ok: boolean; messageId?: string; error?: string }> {
   const apiUrl = process.env.CF_EMAIL_API_URL;
   const apiToken =
@@ -26,7 +54,7 @@ export async function sendAuditDigestEmail(input: {
       subject: input.template.subject,
       html: input.template.html,
       text: input.template.text,
-      tags: ["audit-weekly-digest"],
+      tags: input.tags,
     }),
   });
 
