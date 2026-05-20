@@ -1,4 +1,4 @@
-import type { AuditIssue } from "./types";
+import type { AuditImpact, AuditIssue, AuditRiskLevel, AuditSeverity } from "./types";
 
 export interface CoreWebVitals {
   lcp: number;
@@ -31,7 +31,7 @@ export async function runChromiumAudit(
 
   return {
     cwv: parseCoreWebVitals(payload.lighthouseJson),
-    a11yIssues: [],
+    a11yIssues: parseAxeIssues(payload.axeJson, url),
   };
 }
 
@@ -73,4 +73,98 @@ function readNumericAudit(
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
+}
+
+type AxeViolation = {
+  id?: unknown;
+  impact?: unknown;
+  help?: unknown;
+  description?: unknown;
+  nodes?: unknown;
+};
+
+type AxeNode = {
+  target?: unknown;
+  html?: unknown;
+  failureSummary?: unknown;
+};
+
+function parseAxeIssues(axeJson: unknown, pageUrl: string): AuditIssue[] {
+  const violations = isRecord(axeJson) && Array.isArray(axeJson.violations)
+    ? axeJson.violations
+    : [];
+
+  return violations.flatMap((violation) => {
+    if (!isRecord(violation)) return [];
+
+    const parsedViolation = violation as AxeViolation;
+    const nodes = Array.isArray(parsedViolation.nodes)
+      ? parsedViolation.nodes
+      : [];
+
+    return nodes.flatMap((node) => {
+      if (!isRecord(node)) return [];
+
+      const parsedNode = node as AxeNode;
+      const impact = normalizeAxeImpact(parsedViolation.impact);
+
+      return [
+        {
+          ruleId: `axe.${readString(parsedViolation.id, "unknown")}`,
+          severity: severityForAxeImpact(impact),
+          riskLevel: riskForAxeImpact(impact),
+          page: pageUrl,
+          selector: readAxeSelector(parsedNode.target),
+          current:
+            readOptionalString(parsedNode.failureSummary) ??
+            readOptionalString(parsedNode.html) ??
+            readString(parsedViolation.description, "Axe violation detected"),
+          suggested: readOptionalString(parsedViolation.help),
+          source: "a11y",
+          estimatedImpact: estimatedImpactForAxeImpact(impact),
+        },
+      ];
+    });
+  });
+}
+
+function readAxeSelector(target: unknown): string | undefined {
+  if (!Array.isArray(target)) return undefined;
+
+  const selectors = target.filter(
+    (selector): selector is string => typeof selector === "string",
+  );
+  return selectors.length > 0 ? selectors.join(", ") : undefined;
+}
+
+function normalizeAxeImpact(value: unknown): string {
+  return typeof value === "string" ? value : "moderate";
+}
+
+function severityForAxeImpact(impact: string): AuditSeverity {
+  if (impact === "critical" || impact === "serious") return "critical";
+  if (impact === "moderate") return "warning";
+  return "info";
+}
+
+function riskForAxeImpact(impact: string): AuditRiskLevel {
+  if (impact === "critical" || impact === "serious") return "high";
+  if (impact === "moderate") return "medium";
+  return "low";
+}
+
+function estimatedImpactForAxeImpact(impact: string): AuditImpact {
+  if (impact === "critical" || impact === "serious") return "high";
+  if (impact === "moderate") return "medium";
+  return "low";
+}
+
+function readString(value: unknown, fallback: string): string {
+  return readOptionalString(value) ?? fallback;
+}
+
+function readOptionalString(value: unknown): string | undefined {
+  return typeof value === "string" && value.trim().length > 0
+    ? value.trim()
+    : undefined;
 }
