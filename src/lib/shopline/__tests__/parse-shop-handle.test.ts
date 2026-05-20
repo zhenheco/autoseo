@@ -13,4 +13,12 @@ describe("parseShoplineShopHandleFromUrl", () => {
       }),
     ).resolves.toBe("renoir199063");
   });
+
+  it("matches the shop_handle fallback pattern", async () => {
+    await expect(
+      parseShoplineShopHandleFromUrl("https://brand.example.com/", {
+        fetch: mockFetch('{"shop_handle":"brand-shop"}'),
+      }),
+    ).resolves.toBe("brand-shop");
+  });
 });
