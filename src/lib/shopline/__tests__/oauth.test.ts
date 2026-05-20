@@ -147,6 +147,18 @@ describe("verifyState", () => {
     expect(verified.returnTo).toBeUndefined();
   });
 
+  it("leaves invitationToken undefined when it is not provided", async () => {
+    const { url, cookieNonce } = await buildAuthorizeUrl({
+      workspaceId: "w1",
+      siteId: "s1",
+      shopHandle: "demo-shop",
+    });
+    const state = shoplineAuthParams(url).get("customField")!;
+
+    const verified = await verifyState(state, cookieNonce);
+    expect(Reflect.get(verified, "invitationToken")).toBeUndefined();
+  });
+
   it("rejects tampered state and cookie nonce mismatch", async () => {
     const { url } = await buildAuthorizeUrl({
       workspaceId: "w1",
