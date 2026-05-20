@@ -42,34 +42,111 @@ export async function applyAuditFixToShopline(
     return failure(input.issue.current, "", "shopline_handle_not_found");
   }
 
-  if (input.issue.ruleId !== "meta.description.tooShort") {
-    return failure(input.issue.current, "", "rule_not_supported");
-  }
-
   try {
-    const suggestion = await deps.generateMetaDescription({
-      current: input.issue.current,
-      pageUrl: input.issue.page,
-    });
-    const normalizedSuggestion = suggestion.trim();
-    const updated = await deps.shoplineUpdate({
-      ...input,
-      shopHandle,
-      issue: {
-        ...input.issue,
-        suggested: normalizedSuggestion,
-      },
-    });
-
-    return {
-      ok: true,
-      route: "shopline-editor",
-      before: input.issue.current,
-      after: updated.seo?.description ?? normalizedSuggestion,
-    };
+    switch (input.issue.ruleId) {
+      case "meta.description.tooShort":
+        return applyMetaDescriptionFix(input, deps, shopHandle);
+      case "og.image.missing":
+        return applyOgImageFix(input, deps, shopHandle);
+      default:
+        return failure(input.issue.current, "", "rule_not_supported");
+    }
   } catch (error) {
     return failure(input.issue.current, "", errorMessage(error));
   }
+}
+
+async function applyMetaDescriptionFix(
+  input: ApplyShoplineFixInput,
+  deps: ApplyShoplineFixDeps,
+  shopHandle: string,
+): Promise<ApplyShoplineFixResult> {
+  const suggestion = await deps.generateMetaDescription({
+    current: input.issue.current,
+    pageUrl: input.issue.page,
+  });
+  const normalizedSuggestion = suggestion.trim();
+  const updated = await deps.shoplineUpdate({
+    ...input,
+    shopHandle,
+    issue: {
+      ...input.issue,
+      suggested: normalizedSuggestion,
+    },
+  });
+
+  return {
+    ok: true,
+    route: "shopline-editor",
+    before: input.issue.current,
+    after: updated.seo?.description ?? normalizedSuggestion,
+  };
+}
+
+async function applyOgImageFix(
+  input: ApplyShoplineFixInput,
+  deps: ApplyShoplineFixDeps,
+  shopHandle: string,
+): Promise<ApplyShoplineFixResult> {
+  const fallbackImage = resolveOgImageFallback(input.issue);
+  const updated = await deps.shoplineUpdate({
+    ...input,
+    shopHandle,
+    issue: {
+      ...input.issue,
+      suggested: fallbackImage,
+    },
+  });
+
+  return {
+    ok: true,
+    route: "shopline-editor",
+    before: input.issue.current,
+    after: updated.image?.alt ?? fallbackImage,
+  };
+}
+
+function resolveOgImageFallback(issue: AuditIssue): string {
+  const suggestedRecord = parseJsonRecord(issue.suggested);
+  const candidates = [
+    suggestedRecord?.siteLogo,
+    suggestedRecord?.logo,
+    suggestedRecord?.firstContentImage,
+    suggestedRecord?.imageUrl,
+    suggestedRecord?.url,
+    issue.suggested,
+    issue.current,
+    ...extractUrls(issue.selector ?? ""),
+  ];
+  const imageUrl = candidates.find(isUsableUrl);
+  if (imageUrl) return imageUrl;
+
+  try {
+    return new URL("/favicon.ico", issue.page).href;
+  } catch {
+    return "";
+  }
+}
+
+function parseJsonRecord(value: string | undefined): Record<string, unknown> | null {
+  if (!value) return null;
+
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    return typeof parsed === "object" && parsed !== null
+      ? (parsed as Record<string, unknown>)
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+function extractUrls(value: string): string[] {
+  return Array.from(value.matchAll(/https?:\/\/[^\s"'<>]+/g), ([match]) => match);
+}
+
+function isUsableUrl(value: unknown): value is string {
+  return typeof value === "string" && /^https?:\/\//i.test(value.trim());
 }
 
 function failure(

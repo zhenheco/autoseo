@@ -69,4 +69,51 @@ describe("applyAuditFixToShopline", () => {
       after: "A polished SHOPLINE meta description.",
     });
   });
+
+  it("uses the site logo before the first content image for missing og:image", async () => {
+    const testDeps = deps({
+      shoplineUpdate: vi.fn(async () => ({
+        productId: "product-1",
+        image: {
+          id: "logo-image",
+          alt: "https://cdn.myshopline.com/demo/logo.png",
+        },
+      })),
+    });
+    const testIssue = issue({
+      ruleId: "og.image.missing",
+      selector: 'meta[property="og:image"]',
+      current: "",
+      suggested: JSON.stringify({
+        siteLogo: "https://cdn.myshopline.com/demo/logo.png",
+        firstContentImage: "https://cdn.myshopline.com/demo/hero.png",
+      }),
+    });
+
+    const result = await applyAuditFixToShopline(
+      {
+        issue: testIssue,
+        reportId: "report-1",
+        shopHandle: "demo-shop",
+      },
+      testDeps,
+    );
+
+    expect(testDeps.generateMetaDescription).not.toHaveBeenCalled();
+    expect(testDeps.generateImageAlt).not.toHaveBeenCalled();
+    expect(testDeps.shoplineUpdate).toHaveBeenCalledWith({
+      issue: {
+        ...testIssue,
+        suggested: "https://cdn.myshopline.com/demo/logo.png",
+      },
+      reportId: "report-1",
+      shopHandle: "demo-shop",
+    });
+    expect(result).toEqual({
+      ok: true,
+      route: "shopline-editor",
+      before: "",
+      after: "https://cdn.myshopline.com/demo/logo.png",
+    });
+  });
 });
