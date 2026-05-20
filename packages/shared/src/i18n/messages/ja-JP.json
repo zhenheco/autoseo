@@ -3044,6 +3044,13 @@
   },
   "audit": {
     "title": "サイト診断",
+    "issueSource": {
+      "html-scan": "HTML スキャン",
+      "cwv": "Core Web Vitals",
+      "gsc-cross": "GSC データ連動",
+      "a11y": "アクセシビリティチェック",
+      "security": "セキュリティ"
+    },
     "list": {
       "newScanButton": "新規スキャン",
       "filterByWebsite": "Webサイトで絞り込み",

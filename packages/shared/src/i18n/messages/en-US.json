@@ -3044,6 +3044,13 @@
   },
   "audit": {
     "title": "Site Audit",
+    "issueSource": {
+      "html-scan": "HTML scan",
+      "cwv": "Core Web Vitals",
+      "gsc-cross": "GSC data-driven",
+      "a11y": "Accessibility check",
+      "security": "Security"
+    },
     "list": {
       "newScanButton": "New scan",
       "filterByWebsite": "Filter by website",

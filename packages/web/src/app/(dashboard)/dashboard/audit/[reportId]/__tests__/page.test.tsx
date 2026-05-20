@@ -62,6 +62,7 @@ function translate(key: string, values?: Record<string, unknown>) {
     "detail.issueCard.applyButton": "自動套用",
     "detail.issueCard.applySuccess": "已自動套用",
     "detail.issueCard.applyFailed": "自動套用失敗",
+    "issueSource.gsc-cross": "GSC 數據驅動",
     "review.tabLabel": "待審 ({{count}})",
   };
   let message = messages[key] ?? key;
@@ -337,5 +338,24 @@ describe("audit report detail page", () => {
       expect(toastMocks.success).toHaveBeenCalledWith("已派工到內容生成");
       expect(navigationMocks.refresh).toHaveBeenCalled();
     });
+  });
+
+  it("renders a GSC data-driven badge for gsc-cross issues", async () => {
+    await renderPage({
+      audit_reports: [report],
+      audit_issues: [
+        {
+          ...issue,
+          rule_id: "gsc.low-ctr-high-impression",
+          severity: "warning",
+          source: "gsc-cross",
+        },
+      ],
+      article_jobs: [],
+    });
+
+    fireEvent.click(screen.getByRole("tab", { name: "警告 (1)" }));
+
+    expect(screen.getByText("GSC 數據驅動")).toBeInTheDocument();
   });
 });

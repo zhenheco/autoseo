@@ -3044,6 +3044,13 @@
   },
   "audit": {
     "title": "網站健檢",
+    "issueSource": {
+      "html-scan": "HTML 掃描",
+      "cwv": "Core Web Vitals",
+      "gsc-cross": "GSC 數據驅動",
+      "a11y": "無障礙檢查",
+      "security": "安全"
+    },
     "list": {
       "newScanButton": "新掃描",
       "filterByWebsite": "篩選網站",

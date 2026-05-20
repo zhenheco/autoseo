@@ -97,6 +97,7 @@ function toDetailModel(
       severity: issue.severity,
       riskLevel: issue.risk_level,
       estimatedImpact: issue.estimated_impact,
+      source: issue.source,
       page: issue.page,
       current: issue.current,
       suggested: issue.suggested,

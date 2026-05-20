@@ -3225,6 +3225,13 @@
   },
   "audit": {
     "title": "Auditoría web",
+    "issueSource": {
+      "html-scan": "Escaneo HTML",
+      "cwv": "Core Web Vitals",
+      "gsc-cross": "Impulsado por datos GSC",
+      "a11y": "Comprobación de accesibilidad",
+      "security": "Seguridad"
+    },
     "list": {
       "newScanButton": "Nuevo escaneo",
       "filterByWebsite": "Filtrar por sitio web",

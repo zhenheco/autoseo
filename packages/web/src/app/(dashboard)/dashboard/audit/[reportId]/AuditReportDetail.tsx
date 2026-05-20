@@ -18,6 +18,7 @@ export interface AuditIssueItem {
   severity: AuditSeverity;
   riskLevel: "low" | "medium" | "high";
   estimatedImpact: "high" | "medium" | "low";
+  source: "html-scan" | "cwv" | "gsc-cross" | "a11y" | "security";
   page: string;
   current: string;
   suggested: string | null;
@@ -256,6 +257,11 @@ function IssueList({ issues }: { issues: AuditIssueItem[] }) {
             <div className="min-w-0 space-y-3">
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline">{issue.severity}</Badge>
+                {issue.source === "gsc-cross" ? (
+                  <Badge variant="secondary">
+                    {t("issueSource.gsc-cross")}
+                  </Badge>
+                ) : null}
                 <span className="font-mono text-sm font-medium">
                   {issue.ruleId}
                 </span>

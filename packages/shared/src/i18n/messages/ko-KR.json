@@ -3225,6 +3225,13 @@
   },
   "audit": {
     "title": "사이트 진단",
+    "issueSource": {
+      "html-scan": "HTML 스캔",
+      "cwv": "Core Web Vitals",
+      "gsc-cross": "GSC 데이터 기반",
+      "a11y": "접근성 검사",
+      "security": "보안"
+    },
     "list": {
       "newScanButton": "새 스캔",
       "filterByWebsite": "웹사이트별 필터",

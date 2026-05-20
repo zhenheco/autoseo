@@ -3225,6 +3225,13 @@
   },
   "audit": {
     "title": "Website-Audit",
+    "issueSource": {
+      "html-scan": "HTML-Scan",
+      "cwv": "Core Web Vitals",
+      "gsc-cross": "GSC datenbasiert",
+      "a11y": "Barrierefreiheitsprüfung",
+      "security": "Sicherheit"
+    },
     "list": {
       "newScanButton": "Neuer Scan",
       "filterByWebsite": "Nach Website filtern",
