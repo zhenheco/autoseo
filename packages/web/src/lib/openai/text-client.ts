@@ -10,7 +10,7 @@ import {
   getOpenAIBaseUrl,
   getGatewayHeaders,
   isGatewayEnabled,
-} from "@/lib/cloudflare/ai-gateway";
+} from "@shared/ai-gateway";
 
 export interface OpenAITextCompletionOptions {
   model: string;

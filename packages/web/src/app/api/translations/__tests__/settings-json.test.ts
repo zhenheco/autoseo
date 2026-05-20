@@ -12,7 +12,7 @@ const routeAuth = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/api/route-auth", () => routeAuth);
-vi.mock("@/lib/supabase/server", () => ({
+vi.mock("@shared/supabase", () => ({
   createAdminClient: vi.fn(),
 }));
 

@@ -1,10 +1,10 @@
-import { getUser, getUserCompanies } from "@/lib/auth";
+import { getUser, getUserCompanies } from "@shared/auth";
 import { redirect } from "next/navigation";
 import {
   checkPagePermission,
   getUserSubscriptionTier,
-} from "@/lib/permissions";
-import { createClient } from "@/lib/supabase/server";
+} from "@shared/auth/permissions";
+import { createClient } from "@shared/supabase";
 import { DashboardClient } from "./dashboard-client";
 
 export default async function DashboardPage() {

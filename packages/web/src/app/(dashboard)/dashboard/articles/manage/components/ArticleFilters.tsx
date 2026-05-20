@@ -3,14 +3,14 @@
 import { useOptimistic, useTransition, useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
+import { Button } from "@shared/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@shared/ui/select";
 import { Globe } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getUserWebsites } from "@/app/(dashboard)/dashboard/websites/actions";

@@ -3,8 +3,8 @@
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
 import { X, Globe } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Button } from "@shared/ui/button";
+import { Card } from "@shared/ui/card";
 import { UI_LOCALES } from "@/lib/i18n/locales";
 import { setUILocale } from "@/lib/i18n/config";
 import {

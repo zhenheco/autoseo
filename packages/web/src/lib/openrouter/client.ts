@@ -8,7 +8,7 @@
 import {
   getOpenRouterBaseUrl,
   buildOpenRouterHeaders,
-} from "@/lib/cloudflare/ai-gateway";
+} from "@shared/ai-gateway";
 
 export interface OpenRouterMessage {
   role: "system" | "user" | "assistant";

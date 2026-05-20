@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { createClient as createCookieClient } from "@/lib/supabase/server";
+import { createClient as createCookieClient } from "@shared/supabase";
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
 
 export interface RequestUser {

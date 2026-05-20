@@ -1,9 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@shared/ui/button";
+import { Label } from "@shared/ui/label";
+import { Textarea } from "@shared/ui/textarea";
 import { fetchWithRetry } from "@/lib/utils/fetch-with-retry";
 import {
   Dialog,
@@ -12,7 +12,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@shared/ui/dialog";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";

@@ -1,9 +1,9 @@
 "use client";
 
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@shared/ui/card";
+import { Button } from "@shared/ui/button";
+import { Input } from "@shared/ui/input";
+import { Badge } from "@shared/ui/badge";
 import { CheckCircle2, Gift, FileText, Loader2, X, Tag } from "lucide-react";
 import { useState } from "react";
 import { useRouter } from "next/navigation";

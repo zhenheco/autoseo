@@ -52,7 +52,7 @@ vi.mock("@/lib/shopline/connections", async (importOriginal) => {
   };
 });
 
-vi.mock("@/lib/supabase/admin", () => ({
+vi.mock("@shared/supabase", () => ({
   createAdminClient: vi.fn(() => ({ admin: true })),
 }));
 

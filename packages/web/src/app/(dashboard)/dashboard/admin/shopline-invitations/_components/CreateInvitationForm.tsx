@@ -3,10 +3,10 @@
 import { FormEvent, useState, useTransition } from "react";
 import { AlertCircle, CalendarClock, ExternalLink, Plus } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@shared/ui/button";
+import { Input } from "@shared/ui/input";
+import { Label } from "@shared/ui/label";
+import { Textarea } from "@shared/ui/textarea";
 import {
   createInvitationAction,
   createInvitationFromUrlAction,

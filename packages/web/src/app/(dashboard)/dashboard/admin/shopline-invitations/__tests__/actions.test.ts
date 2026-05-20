@@ -13,8 +13,8 @@ const nextCache = vi.hoisted(() => ({
   revalidatePath: vi.fn(),
 }));
 
-vi.mock("@/lib/auth", () => auth);
-vi.mock("@/lib/supabase/admin", () => supabaseAdmin);
+vi.mock("@shared/auth", () => auth);
+vi.mock("@shared/supabase", () => supabaseAdmin);
 vi.mock("next/cache", () => nextCache);
 
 type MembershipRow = {

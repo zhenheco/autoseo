@@ -1,4 +1,4 @@
-import { getUser } from "@/lib/auth";
+import { getUser } from "@shared/auth";
 import { redirect } from "next/navigation";
 import { isAdminEmail } from "@/lib/utils/admin-check";
 import { ExternalWebsiteList } from "./ExternalWebsiteList";

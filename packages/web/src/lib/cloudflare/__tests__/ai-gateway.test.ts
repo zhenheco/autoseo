@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { getDeepSeekBaseUrl, isGatewayEnabled } from "../ai-gateway";
+import { getDeepSeekBaseUrl, isGatewayEnabled } from "@shared/ai-gateway";
 
 afterEach(() => {
   vi.unstubAllEnvs();

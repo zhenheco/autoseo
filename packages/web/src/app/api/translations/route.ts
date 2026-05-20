@@ -25,7 +25,7 @@ import {
   isRedisAvailable,
   CACHE_CONFIG,
 } from "@/lib/cache/redis-cache";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient } from "@shared/supabase";
 import type {
   TranslationLocale,
   CreateTranslationJobRequest,

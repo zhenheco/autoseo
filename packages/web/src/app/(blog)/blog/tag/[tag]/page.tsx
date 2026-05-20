@@ -1,6 +1,6 @@
 import { Metadata } from "next";
 import Link from "next/link";
-import { createAnonClient } from "@/lib/supabase/server";
+import { createAnonClient } from "@shared/supabase";
 import { Tags } from "lucide-react";
 import { ArticleGrid, CategoryList, TagCloud } from "@/components/blog";
 import type {

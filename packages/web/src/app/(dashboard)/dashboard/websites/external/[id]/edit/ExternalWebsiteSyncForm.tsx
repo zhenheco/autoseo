@@ -7,10 +7,10 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
+} from "@shared/ui/card";
+import { Button } from "@shared/ui/button";
+import { Label } from "@shared/ui/label";
+import { Switch } from "@shared/ui/switch";
 import { RefreshCw } from "lucide-react";
 import { updateExternalWebsiteSyncSettings } from "../../actions";
 import type { SyncFormProps } from "@/types/external-website.types";

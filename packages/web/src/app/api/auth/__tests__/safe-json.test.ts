@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/lib/supabase/server", () => ({
+vi.mock("@shared/supabase", () => ({
   createClient: vi.fn(),
 }));
 
@@ -30,7 +30,7 @@ describe("auth JSON parsing", () => {
     ],
   ])("returns 400 for empty %s body", async (_name, routePath, url) => {
     const { POST } = await import(routePath);
-    const { createClient } = await import("@/lib/supabase/server");
+    const { createClient } = await import("@shared/supabase");
 
     const response = await POST(
       new Request(url, {
@@ -59,7 +59,7 @@ describe("auth JSON parsing", () => {
     ],
   ])("returns 400 for malformed %s body", async (_name, routePath, url) => {
     const { POST } = await import(routePath);
-    const { createClient } = await import("@/lib/supabase/server");
+    const { createClient } = await import("@shared/supabase");
 
     const response = await POST(
       new Request(url, {

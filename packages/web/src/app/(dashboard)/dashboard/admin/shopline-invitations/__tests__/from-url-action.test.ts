@@ -17,8 +17,8 @@ const shoplineParser = vi.hoisted(() => ({
   parseShoplineShopHandleFromUrl: vi.fn(),
 }));
 
-vi.mock("@/lib/auth", () => auth);
-vi.mock("@/lib/supabase/admin", () => supabaseAdmin);
+vi.mock("@shared/auth", () => auth);
+vi.mock("@shared/supabase", () => supabaseAdmin);
 vi.mock("next/cache", () => nextCache);
 vi.mock("@/lib/shopline/parse-shop-handle", () => shoplineParser);
 

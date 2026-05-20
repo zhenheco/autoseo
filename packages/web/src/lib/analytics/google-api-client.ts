@@ -4,7 +4,7 @@
  * 共用的 Google API 呼叫工具，包含自動 token 刷新機制
  */
 
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient } from "@shared/supabase";
 import {
   decryptToken,
   encryptToken,

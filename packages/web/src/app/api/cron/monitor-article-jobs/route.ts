@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@shared/supabase";
 import { ParallelOrchestrator } from "@/lib/agents/orchestrator";
 import { ArticleStorageService } from "@/lib/services/article-storage";
 import { SupabaseClient } from "@supabase/supabase-js";

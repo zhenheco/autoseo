@@ -1,12 +1,12 @@
-import { Button } from "@/components/ui/button";
+import { Button } from "@shared/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+} from "@shared/ui/card";
+import { Badge } from "@shared/ui/badge";
 import { Clock, ExternalLink, Settings } from "lucide-react";
 import Link from "next/link";
 import { WebsiteStatusToggle } from "../website-status-toggle";

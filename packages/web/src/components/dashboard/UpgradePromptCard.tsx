@@ -10,11 +10,11 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+} from "@shared/ui/card";
+import { Button } from "@shared/ui/button";
 import { Sparkles, Check, ArrowRight, Zap } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
+import { createBrowserClient as createClient } from "@shared/supabase";
 
 interface UpgradePromptCardProps {
   currentTier: "free" | "starter" | "professional" | "business" | "agency";

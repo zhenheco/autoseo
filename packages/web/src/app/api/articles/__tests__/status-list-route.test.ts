@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/lib/supabase/server", () => ({
+vi.mock("@shared/supabase", () => ({
   createClient: vi.fn(),
   createAdminClient: vi.fn(),
 }));
@@ -77,7 +77,7 @@ describe("Article status list route", () => {
 
   it("keeps the legacy unauthorized response when no cookie user exists", async () => {
     const { createClient: createCookieClient } = await import(
-      "@/lib/supabase/server"
+      "@shared/supabase"
     );
 
     vi.mocked(createCookieClient).mockResolvedValue({
@@ -103,7 +103,7 @@ describe("Article status list route", () => {
 
   it("returns pending status for the owner through cookie auth", async () => {
     const { createClient: createCookieClient, createAdminClient } =
-      await import("@/lib/supabase/server");
+      await import("@shared/supabase");
     const serviceSupabase = createFakeSupabase({
       "article_jobs.single": {
         data: {
@@ -157,7 +157,7 @@ describe("Article status list route", () => {
   });
 
   it("supports bearer token auth for status checks", async () => {
-    const { createAdminClient } = await import("@/lib/supabase/server");
+    const { createAdminClient } = await import("@shared/supabase");
     const { createClient: createSupabaseClient } = await import(
       "@supabase/supabase-js"
     );

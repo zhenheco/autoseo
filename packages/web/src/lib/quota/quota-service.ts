@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@shared/supabase";
 
 export interface QuotaStatus {
   plan: string;

@@ -22,7 +22,7 @@ import {
   buildGeminiApiUrl,
   buildGeminiHeaders,
   isGatewayEnabled,
-} from "@/lib/cloudflare/ai-gateway";
+} from "@shared/ai-gateway";
 import { getTitlesFromTemplates } from "@/lib/cache/title-templates";
 
 /**

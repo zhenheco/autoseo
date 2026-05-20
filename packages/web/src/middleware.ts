@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server";
-import { updateSession } from "@/lib/supabase/middleware";
+import { updateSession } from "@shared/supabase";
 import {
   COUNTRY_TO_LOCALE,
   DEFAULT_UI_LOCALE,

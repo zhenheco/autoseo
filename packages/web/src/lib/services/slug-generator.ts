@@ -1,6 +1,6 @@
 import { pinyin } from 'pinyin-pro'
 import slugify from 'slugify'
-import { createClient } from '@/lib/supabase/server'
+import { createClient } from '@shared/supabase'
 
 export type SlugStrategy = 'auto' | 'pinyin' | 'english' | 'custom'
 

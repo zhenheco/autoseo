@@ -23,7 +23,7 @@ const { invitationQuery, supabaseMock } = vi.hoisted(() => {
   return { invitationQuery, supabaseMock };
 });
 
-vi.mock("@/lib/supabase/admin", () => ({
+vi.mock("@shared/supabase", () => ({
   createAdminClient: vi.fn(() => supabaseMock),
 }));
 

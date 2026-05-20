@@ -19,8 +19,8 @@ import {
   RefreshCw,
   Store,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@shared/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@shared/ui/avatar";
 import { useSidebar } from "./dashboard-layout-client";
 import { useTranslations } from "next-intl";
 

@@ -8,7 +8,7 @@ import {
   getDeepSeekBaseUrl,
   buildDeepSeekHeaders,
   isGatewayEnabled,
-} from "@/lib/cloudflare/ai-gateway";
+} from "@shared/ai-gateway";
 
 // 分類和標籤輸出 Schema
 const CategoryOutputSchema = z.object({

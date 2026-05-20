@@ -17,7 +17,7 @@ const supabaseAdmin = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/api/route-auth", () => routeAuth);
-vi.mock("@/lib/supabase/admin", () => supabaseAdmin);
+vi.mock("@shared/supabase", () => supabaseAdmin);
 
 function createFakeAdminClient(response: { data?: unknown; error?: unknown }) {
   const calls: Array<{

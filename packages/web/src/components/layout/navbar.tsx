@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { ThemeToggle } from "@shared/ui/theme-toggle";
 import { MobileNav } from "./mobile-nav";
 import { EnhancedUILanguageSelector } from "@/components/common/EnhancedUILanguageSelector";
 import { useTranslations } from "next-intl";

@@ -1,7 +1,7 @@
 "use server";
 
-import { createClient } from "@/lib/supabase/server";
-import { getUser } from "@/lib/auth";
+import { createClient } from "@shared/supabase";
+import { getUser } from "@shared/auth";
 import { revalidatePath } from "next/cache";
 import { TokenBillingService } from "@/lib/billing/token-billing-service";
 import {

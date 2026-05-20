@@ -7,7 +7,7 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@shared/ui/select";
 import { Globe } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { getUserWebsites } from "@/app/(dashboard)/dashboard/websites/actions";

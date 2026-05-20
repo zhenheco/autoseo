@@ -1,8 +1,8 @@
-import { getUser, getUserPrimaryCompany } from "@/lib/auth";
+import { getUser, getUserPrimaryCompany } from "@shared/auth";
 import { redirect } from "next/navigation";
 import { SettingsClient } from "./settings-client";
-import { createClient } from "@/lib/supabase/server";
-import { checkPagePermission } from "@/lib/permissions";
+import { createClient } from "@shared/supabase";
+import { checkPagePermission } from "@shared/auth/permissions";
 import { getTranslations } from "next-intl/server";
 
 export default async function SettingsPage({

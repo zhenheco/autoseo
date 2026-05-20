@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient } from "@shared/supabase";
 import { withRouteAuth } from "@/lib/api/route-auth";
 import { resolveCompanyScopeForUser } from "@/lib/api/company-scope";
 import {

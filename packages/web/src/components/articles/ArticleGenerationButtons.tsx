@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@shared/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -9,18 +9,18 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@shared/ui/dialog";
+import { Input } from "@shared/ui/input";
+import { Label } from "@shared/ui/label";
 import { Sparkles, Plus, Trash2, FileText } from "lucide-react";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Checkbox } from "@shared/ui/checkbox";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@shared/ui/select";
 import { useTranslations } from "next-intl";
 
 interface ArticleGenerationButtonsProps {

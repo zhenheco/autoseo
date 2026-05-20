@@ -13,7 +13,7 @@
 import { NextResponse } from "next/server";
 import { requestErrorResponse } from "@/lib/api/request-error-response";
 import { safeJson } from "@/lib/api/request-body";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@shared/supabase";
 import { isSuperAdmin } from "@/lib/auth-guard";
 
 /** 請求 body 類型 */

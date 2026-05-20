@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@shared/supabase";
 
 interface TemplateParams {
   industry?: string;

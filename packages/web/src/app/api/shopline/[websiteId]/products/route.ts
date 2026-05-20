@@ -1,7 +1,7 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { withRouteAuth } from "@/lib/api/route-auth";
 import { forbidden, handleApiError } from "@/lib/api/response-helpers";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient } from "@shared/supabase";
 import { createSupabaseShoplineConnectionStore } from "@/lib/shopline/connections";
 import { fetchShoplineProducts } from "@/lib/shopline/product-fetcher";
 import {

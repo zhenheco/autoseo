@@ -8,11 +8,11 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
-import { Checkbox } from "@/components/ui/checkbox";
+} from "@shared/ui/dialog";
+import { Button } from "@shared/ui/button";
+import { Label } from "@shared/ui/label";
+import { RadioGroup, RadioGroupItem } from "@shared/ui/radio-group";
+import { Checkbox } from "@shared/ui/checkbox";
 import { WebsiteSelector } from "@/components/articles/WebsiteSelector";
 import {
   ArticleWithWebsite,
@@ -20,7 +20,7 @@ import {
   assignWebsiteToArticle,
 } from "../actions";
 import { Loader2, CheckCircle, ExternalLink, RefreshCw } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription } from "@shared/ui/alert";
 import { useTranslations } from "next-intl";
 
 // 同步目標類型（對應 website_configs 的外部網站）

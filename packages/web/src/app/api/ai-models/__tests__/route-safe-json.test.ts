@@ -11,7 +11,7 @@ vi.mock("@/lib/api/route-auth", () => ({
   ),
 }));
 
-vi.mock("@/lib/supabase/server", () => ({
+vi.mock("@shared/supabase", () => ({
   createClient: vi.fn(),
 }));
 

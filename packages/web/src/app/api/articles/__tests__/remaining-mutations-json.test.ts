@@ -15,7 +15,7 @@ vi.mock("@/lib/agents/orchestrator", () => ({
   ParallelOrchestrator: vi.fn(),
 }));
 
-vi.mock("@/lib/supabase/admin", () => ({
+vi.mock("@shared/supabase", () => ({
   createAdminClient: vi.fn(() => ({})),
 }));
 

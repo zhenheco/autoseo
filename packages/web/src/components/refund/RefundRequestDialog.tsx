@@ -8,18 +8,18 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
+} from "@shared/ui/dialog";
+import { Button } from "@shared/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+} from "@shared/ui/select";
+import { Textarea } from "@shared/ui/textarea";
+import { Label } from "@shared/ui/label";
+import { RadioGroup, RadioGroupItem } from "@shared/ui/radio-group";
 import { toast } from "sonner";
 import { Gift, AlertTriangle, CheckCircle2, Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";

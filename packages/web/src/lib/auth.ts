@@ -1,4 +1,4 @@
-import { createAdminClient, createClient } from "@/lib/supabase/server";
+import { createAdminClient, createClient } from "@shared/supabase";
 import { cookies } from "next/headers";
 import { syncUserToBrevo } from "@/lib/brevo";
 import { trackRegistration } from "@/lib/affiliate-client";

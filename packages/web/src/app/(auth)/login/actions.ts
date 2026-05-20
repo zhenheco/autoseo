@@ -1,7 +1,7 @@
 "use server";
 
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@shared/supabase";
 import { signUp as authSignUp, signIn as authSignIn } from "@/lib/auth";
 import { headers } from "next/headers";
 import { createLogger } from "@/lib/logger";

@@ -4,8 +4,8 @@
  */
 
 import { NextRequest, NextResponse } from "next/server";
-import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@shared/supabase";
+import { createAdminClient } from "@shared/supabase";
 import {
   unauthorized,
   noCompanyMembership,

@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@shared/supabase";
 import { ParallelOrchestrator } from "@/lib/agents/orchestrator";
 import type { SupabaseClient } from "@supabase/supabase-js";
 

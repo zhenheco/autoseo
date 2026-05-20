@@ -17,7 +17,7 @@ vi.mock("@/lib/payment/payment-service", () => ({
   },
 }));
 
-vi.mock("@/lib/supabase/server", () => ({
+vi.mock("@shared/supabase", () => ({
   createClient: vi.fn(),
   createAdminClient: vi.fn(),
 }));

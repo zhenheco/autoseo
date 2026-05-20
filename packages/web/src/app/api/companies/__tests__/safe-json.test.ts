@@ -7,7 +7,7 @@ const supabaseClient = vi.hoisted(() => ({
   from: vi.fn(),
 }));
 
-vi.mock("@/lib/supabase/server", () => ({
+vi.mock("@shared/supabase", () => ({
   createClient: vi.fn(() => supabaseClient),
 }));
 

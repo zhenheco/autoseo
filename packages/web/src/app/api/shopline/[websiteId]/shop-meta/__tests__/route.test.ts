@@ -71,7 +71,7 @@ const service = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/api/route-auth", () => routeAuth);
-vi.mock("@/lib/supabase/admin", () => supabaseAdmin);
+vi.mock("@shared/supabase", () => supabaseAdmin);
 vi.mock("@/lib/shopline/rate-limiter", () => rateLimiter);
 vi.mock("@/lib/shopline/shop-meta-service", () => service);
 

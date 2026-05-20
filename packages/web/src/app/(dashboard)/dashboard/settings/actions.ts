@@ -2,8 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { getUser } from "@/lib/auth";
+import { createClient } from "@shared/supabase";
+import { getUser } from "@shared/auth";
 
 /**
  * 更新帳戶資訊

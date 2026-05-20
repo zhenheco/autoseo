@@ -5,7 +5,7 @@ import {
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
-} from "@/components/ui/tooltip";
+} from "@shared/ui/tooltip";
 import {
   getStatusConfig,
   getScheduledLabel,

@@ -2,9 +2,9 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getUser } from "@/lib/auth";
+import { getUser } from "@shared/auth";
 import { isAdminEmail } from "@/lib/utils/admin-check";
-import { createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@shared/supabase";
 
 const EXTERNAL_WEBSITES_PATH = "/dashboard/websites/external";
 

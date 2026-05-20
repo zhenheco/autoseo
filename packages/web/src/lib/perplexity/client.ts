@@ -13,7 +13,7 @@ import {
   isGatewayEnabled,
   getPerplexityBaseUrl,
   buildPerplexityHeaders,
-} from "@/lib/cloudflare/ai-gateway";
+} from "@shared/ai-gateway";
 
 // Perplexity API 響應 Schema
 const PerplexityResponseSchema = z.object({

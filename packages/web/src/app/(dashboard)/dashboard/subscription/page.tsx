@@ -1,12 +1,12 @@
-import { getUser } from "@/lib/auth";
+import { getUser } from "@shared/auth";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@shared/supabase";
 import { SubscriptionPlans } from "./subscription-plans";
 import { ArticlePackages } from "./article-packages";
 import { PaymentHistory } from "./payment-history";
 import { SubscriptionStatusChecker } from "@/components/subscription/SubscriptionStatusChecker";
 import type { Database } from "@/types/database.types";
-import { checkPagePermission } from "@/lib/permissions";
+import { checkPagePermission } from "@shared/auth/permissions";
 import { getTranslations } from "next-intl/server";
 
 /**

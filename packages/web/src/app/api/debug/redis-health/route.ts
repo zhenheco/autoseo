@@ -9,7 +9,7 @@ import { NextResponse } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 
 import { getRedisStats } from "@/lib/cache/redis-cache";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@shared/supabase";
 
 /**
  * 測量操作延遲的輔助函數

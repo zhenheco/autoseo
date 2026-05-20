@@ -4,7 +4,7 @@ const syncArticleMock = vi.hoisted(() => vi.fn());
 const publishWordPressDraftArticleMock = vi.hoisted(() => vi.fn());
 const publishNewWordPressArticleMock = vi.hoisted(() => vi.fn());
 
-vi.mock("@/lib/supabase/server", () => ({
+vi.mock("@shared/supabase", () => ({
   createAdminClient: vi.fn(),
 }));
 
@@ -148,7 +148,7 @@ describe("process scheduled articles cron route", () => {
 
   it("returns the existing no scheduled articles payload when cron auth passes", async () => {
     process.env.CRON_SECRET = "cron-secret";
-    const { createAdminClient } = await import("@/lib/supabase/server");
+    const { createAdminClient } = await import("@shared/supabase");
     const supabase = createFakeSupabase({ data: [], error: null });
     vi.mocked(createAdminClient).mockReturnValue(supabase as never);
     const { GET } = await import("../process-scheduled-articles/route");
@@ -170,7 +170,7 @@ describe("process scheduled articles cron route", () => {
 
   it("records inactive websites as failed scheduled publishes", async () => {
     process.env.CRON_SECRET = "cron-secret";
-    const { createAdminClient } = await import("@/lib/supabase/server");
+    const { createAdminClient } = await import("@shared/supabase");
     const supabase = createFakeSupabase({
       article_jobs: {
         data: [
@@ -228,7 +228,7 @@ describe("process scheduled articles cron route", () => {
 
   it("publishes platform blog jobs through the scheduled publish flow", async () => {
     process.env.CRON_SECRET = "cron-secret";
-    const { createAdminClient } = await import("@/lib/supabase/server");
+    const { createAdminClient } = await import("@shared/supabase");
     const { revalidatePath } = await import("next/cache");
     const supabase = createFakeSupabase({
       article_jobs: {
@@ -306,7 +306,7 @@ describe("process scheduled articles cron route", () => {
 
   it("publishes existing WordPress draft jobs through the draft adapter", async () => {
     process.env.CRON_SECRET = "cron-secret";
-    const { createAdminClient } = await import("@/lib/supabase/server");
+    const { createAdminClient } = await import("@shared/supabase");
     const supabase = createFakeSupabase({
       article_jobs: {
         data: [
@@ -378,7 +378,7 @@ describe("process scheduled articles cron route", () => {
 
   it("publishes new WordPress jobs through the new post adapter", async () => {
     process.env.CRON_SECRET = "cron-secret";
-    const { createAdminClient } = await import("@/lib/supabase/server");
+    const { createAdminClient } = await import("@shared/supabase");
     const supabase = createFakeSupabase({
       article_jobs: {
         data: [
@@ -456,7 +456,7 @@ describe("process scheduled articles cron route", () => {
 
   it("publishes external website jobs through webhook sync", async () => {
     process.env.CRON_SECRET = "cron-secret";
-    const { createAdminClient } = await import("@/lib/supabase/server");
+    const { createAdminClient } = await import("@shared/supabase");
     const fullArticle = { id: "article-1", title: "Full Title" };
     const supabase = createFakeSupabase({
       article_jobs: {

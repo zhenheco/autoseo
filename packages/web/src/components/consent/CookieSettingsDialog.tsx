@@ -7,10 +7,10 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
+} from "@shared/ui/dialog";
+import { Button } from "@shared/ui/button";
+import { Switch } from "@shared/ui/switch";
+import { Label } from "@shared/ui/label";
 import { useCookieConsent } from "./CookieConsentProvider";
 import { useTranslations } from "next-intl";
 import {

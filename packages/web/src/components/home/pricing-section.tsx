@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Zap } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@shared/ui/button";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { PricingProps, ArticlePlan, ArticlePackage } from "@/types/pricing";

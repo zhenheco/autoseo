@@ -9,21 +9,21 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '@/components/ui/dialog'
-import { Button } from '@/components/ui/button'
-import { Label } from '@/components/ui/label'
+} from '@shared/ui/dialog'
+import { Button } from '@shared/ui/button'
+import { Label } from '@shared/ui/label'
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '@/components/ui/select'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+} from '@shared/ui/select'
+import { Alert, AlertDescription } from '@shared/ui/alert'
 import { Info } from 'lucide-react'
 import { WebsiteSelector } from './WebsiteSelector'
 import { toast } from 'sonner'
-import { createClient } from '@/lib/supabase/client'
+import { createBrowserClient as createClient } from '@shared/supabase'
 
 interface PublishControlDialogProps {
   open: boolean

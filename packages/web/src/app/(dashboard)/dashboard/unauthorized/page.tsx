@@ -1,14 +1,14 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button } from "@shared/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@shared/ui/card";
 import { ShieldAlert, Sparkles, Check, ArrowRight } from "lucide-react";
-import { getUserSubscriptionTier } from "@/lib/permissions";
+import { getUserSubscriptionTier } from "@shared/auth/permissions";
 import { getTranslations } from "next-intl/server";
 
 export default async function UnauthorizedPage({

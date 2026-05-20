@@ -1,7 +1,7 @@
-import { getUser, getUserPrimaryCompany } from "@/lib/auth";
+import { getUser, getUserPrimaryCompany } from "@shared/auth";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@shared/supabase";
+import { createAdminClient } from "@shared/supabase";
 import {
   createSupabaseShoplineConnectionStore,
   getShoplineConnectionStatus,
@@ -13,11 +13,11 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@shared/ui/card";
+import { Badge } from "@shared/ui/badge";
+import { Button } from "@shared/ui/button";
+import { Input } from "@shared/ui/input";
+import { Label } from "@shared/ui/label";
 import Link from "next/link";
 import { updateWebsite } from "../../actions";
 import { BrandVoiceForm } from "./BrandVoiceForm";

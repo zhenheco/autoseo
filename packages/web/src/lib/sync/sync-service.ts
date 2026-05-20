@@ -3,7 +3,7 @@
  * 負責將文章同步到已註冊的外部專案
  */
 
-import { createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@shared/supabase";
 import { sendWebhook } from "./webhook-sender";
 import type {
   SyncAction,

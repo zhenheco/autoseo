@@ -3,7 +3,7 @@
  * 處理管理員對訂閱的操作：延長期限、贈送篇數、記錄操作歷史
  */
 
-import { createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@shared/supabase";
 import type { Database, Json } from "@/types/database.types";
 
 type AdminActionLog =

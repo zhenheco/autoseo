@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { requestErrorResponse } from "@/lib/api/request-error-response";
 import { safeJson } from "@/lib/api/request-body";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@shared/supabase";
 
 export async function POST(request: NextRequest) {
   try {

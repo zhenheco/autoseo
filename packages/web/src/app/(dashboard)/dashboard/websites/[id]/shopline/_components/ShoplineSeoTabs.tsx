@@ -1,7 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@shared/ui/tabs";
 import { ShoplineCollectionsPanel } from "./ShoplineCollectionsPanel";
 import { ShoplineProductsPanel } from "./ShoplineProductsPanel";
 import { ShoplineRedirectsPanel } from "./ShoplineRedirectsPanel";

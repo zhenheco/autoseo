@@ -1,12 +1,12 @@
-import { getUser, getUserPrimaryCompany } from "@/lib/auth";
+import { getUser, getUserPrimaryCompany } from "@shared/auth";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { createClient } from "@shared/supabase";
+import { Card, CardContent } from "@shared/ui/card";
+import { Button } from "@shared/ui/button";
 import Link from "next/link";
-import { checkPagePermission } from "@/lib/permissions";
+import { checkPagePermission } from "@shared/auth/permissions";
 import { ArrowLeft, ExternalLink, FileText, Clock } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@shared/ui/badge";
 import { WebsiteArticleManager } from "./components/WebsiteArticleManager";
 import { getTranslations } from "next-intl/server";
 

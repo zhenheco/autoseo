@@ -21,7 +21,7 @@ import {
   buildGeminiApiUrl,
   buildGeminiHeaders,
   isGatewayEnabled,
-} from "@/lib/cloudflare/ai-gateway";
+} from "@shared/ai-gateway";
 
 /**
  * 呼叫 Gemini Direct API（繞過 OpenRouter）

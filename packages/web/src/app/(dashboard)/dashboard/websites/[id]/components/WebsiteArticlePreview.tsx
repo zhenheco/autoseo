@@ -1,8 +1,8 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@shared/ui/button";
+import { Input } from "@shared/ui/input";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import Link from "@tiptap/extension-link";
@@ -24,8 +24,8 @@ import {
   Undo,
   Redo,
 } from "lucide-react";
-import { Toggle } from "@/components/ui/toggle";
-import { Separator } from "@/components/ui/separator";
+import { Toggle } from "@shared/ui/toggle";
+import { Separator } from "@shared/ui/separator";
 import { useTranslations } from "next-intl";
 
 interface Article {

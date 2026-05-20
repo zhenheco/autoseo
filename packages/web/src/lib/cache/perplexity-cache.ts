@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@shared/supabase";
 import crypto from "crypto";
 
 export interface CacheOptions {

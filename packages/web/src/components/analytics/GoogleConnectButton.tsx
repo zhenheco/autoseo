@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@shared/ui/button";
 import { Loader2, Link2, Unlink } from "lucide-react";
 import { toast } from "sonner";
 import { useTranslations } from "next-intl";

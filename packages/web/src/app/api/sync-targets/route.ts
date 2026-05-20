@@ -6,7 +6,7 @@
 
 import { withRouteAuth } from "@/lib/api/route-auth";
 import { successResponse, handleApiError } from "@/lib/api/response-helpers";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient } from "@shared/supabase";
 
 export const dynamic = "force-dynamic";
 

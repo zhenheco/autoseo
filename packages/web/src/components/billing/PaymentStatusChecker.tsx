@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Alert, AlertDescription, AlertTitle } from "@shared/ui/alert";
 import { Loader2, CheckCircle2, XCircle } from "lucide-react";
 
 export function PaymentStatusChecker() {

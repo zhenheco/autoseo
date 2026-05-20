@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@shared/supabase";
 import { v4 as uuidv4 } from "uuid";
 import { ArticleQuotaService } from "@/lib/billing/article-quota-service";
 import {

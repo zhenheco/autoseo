@@ -4,7 +4,7 @@ const supabaseAdmin = vi.hoisted(() => ({
   createAdminClient: vi.fn(),
 }));
 
-vi.mock("@/lib/supabase/admin", () => supabaseAdmin);
+vi.mock("@shared/supabase", () => supabaseAdmin);
 
 vi.mock("@/lib/security/token-encryption", () => ({
   decryptToken: vi.fn(),

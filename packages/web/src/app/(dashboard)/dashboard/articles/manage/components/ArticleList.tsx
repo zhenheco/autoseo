@@ -7,17 +7,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Button } from "@/components/ui/button";
+} from "@shared/ui/table";
+import { Badge } from "@shared/ui/badge";
+import { Checkbox } from "@shared/ui/checkbox";
+import { Button } from "@shared/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@shared/ui/select";
 import { Globe, CalendarClock, ChevronLeft, ChevronRight } from "lucide-react";
 import { ArticleWithWebsite } from "../actions";
 import { useScheduleContext } from "./ScheduleContext";

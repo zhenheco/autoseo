@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { safeJson } from "@/lib/api/request-body";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@shared/supabase";
 
 export const dynamic = "force-dynamic";
 

@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useTranslations } from 'next-intl'
-import { Button } from '@/components/ui/button'
+import { Button } from '@shared/ui/button'
 import { Send } from 'lucide-react'
 import { PublishControlDialog } from './PublishControlDialog'
 

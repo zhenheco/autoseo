@@ -1,6 +1,6 @@
 'use client'
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@shared/ui/card'
 import { CreditCard, CheckCircle2, XCircle, Clock } from 'lucide-react'
 import type { Database } from '@/types/database.types'
 import { useTranslations } from 'next-intl'

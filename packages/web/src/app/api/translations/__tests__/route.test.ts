@@ -38,7 +38,7 @@ const cache = vi.hoisted(() => ({
 
 vi.mock("@/lib/api/route-auth", () => routeAuth);
 vi.mock("@/lib/api/auth-middleware", () => authMiddleware);
-vi.mock("@/lib/supabase/admin", () => supabaseAdmin);
+vi.mock("@shared/supabase", () => supabaseAdmin);
 vi.mock("@/lib/cache/redis-cache", () => cache);
 vi.mock("uuid", () => ({
   v4: vi.fn(() => "translation-job-id"),

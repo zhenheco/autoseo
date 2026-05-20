@@ -8,14 +8,14 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@shared/ui/card";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@shared/ui/select";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { ArticleQuotaCard } from "@/components/dashboard/ArticleQuotaCard";
 import { UpgradePromptCard } from "@/components/dashboard/UpgradePromptCard";

@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/lib/supabase/server", () => ({
+vi.mock("@shared/supabase", () => ({
   createClient: vi.fn(),
   createAdminClient: vi.fn(),
 }));
@@ -272,7 +272,7 @@ describe("Article generation JSON parsing", () => {
 
   it("returns 401 when batch generation has no authenticated user", async () => {
     const { createClient: createCookieClient } = await import(
-      "@/lib/supabase/server"
+      "@shared/supabase"
     );
 
     vi.mocked(createCookieClient).mockResolvedValue({
@@ -299,7 +299,7 @@ describe("Article generation JSON parsing", () => {
 
   it("returns the legacy 402 response when single generation has no active subscription", async () => {
     const { createClient: createCookieClient } = await import(
-      "@/lib/supabase/server"
+      "@shared/supabase"
     );
     const { createClient: createSupabaseClient } = await import(
       "@supabase/supabase-js"
@@ -377,7 +377,7 @@ describe("Article generation JSON parsing", () => {
 
   it("returns 402 for batch generation before website and job work when no active subscription exists", async () => {
     const { createClient: createCookieClient, createAdminClient } =
-      await import("@/lib/supabase/server");
+      await import("@shared/supabase");
     const { checkRateLimit } = await import("@/lib/security/rate-limiter");
     const cookieClient = {
       auth: {
@@ -442,7 +442,7 @@ describe("Article generation JSON parsing", () => {
 
   it("returns the legacy batch success response through the article job intake service", async () => {
     const { createClient: createCookieClient, createAdminClient } =
-      await import("@/lib/supabase/server");
+      await import("@shared/supabase");
     const { checkRateLimit } = await import("@/lib/security/rate-limiter");
     const { ArticleQuotaService } = await import(
       "@/lib/billing/article-quota-service"
@@ -532,7 +532,7 @@ describe("Article generation JSON parsing", () => {
 
   it("accepts bearer token auth for batch generation", async () => {
     const { createClient: createCookieClient, createAdminClient } =
-      await import("@/lib/supabase/server");
+      await import("@shared/supabase");
     const { createClient: createSupabaseClient } = await import(
       "@supabase/supabase-js"
     );
@@ -628,7 +628,7 @@ describe("Article generation JSON parsing", () => {
 
   it("returns an existing single-generation job without inserting a duplicate", async () => {
     const { createClient: createCookieClient } = await import(
-      "@/lib/supabase/server"
+      "@shared/supabase"
     );
     const { createClient: createSupabaseClient } = await import(
       "@supabase/supabase-js"
@@ -719,7 +719,7 @@ describe("Article generation JSON parsing", () => {
 
   it("returns the legacy single-generation success response through the article job intake service", async () => {
     const { createClient: createCookieClient } = await import(
-      "@/lib/supabase/server"
+      "@shared/supabase"
     );
     const { createClient: createSupabaseClient } = await import(
       "@supabase/supabase-js"
@@ -806,7 +806,7 @@ describe("Article generation JSON parsing", () => {
 
   it("releases the article reservation and deletes the job when competitor quota is denied", async () => {
     const { createClient: createCookieClient } = await import(
-      "@/lib/supabase/server"
+      "@shared/supabase"
     );
     const { createClient: createSupabaseClient } = await import(
       "@supabase/supabase-js"
@@ -911,7 +911,7 @@ describe("Article generation JSON parsing", () => {
 
   it("updates job metadata when competitor analysis is allowed", async () => {
     const { createClient: createCookieClient } = await import(
-      "@/lib/supabase/server"
+      "@shared/supabase"
     );
     const { createClient: createSupabaseClient } = await import(
       "@supabase/supabase-js"

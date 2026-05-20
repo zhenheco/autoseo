@@ -19,15 +19,15 @@ import {
   ChevronDown,
 } from "lucide-react";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Toggle } from "@/components/ui/toggle";
-import { Separator } from "@/components/ui/separator";
+import { Button } from "@shared/ui/button";
+import { Toggle } from "@shared/ui/toggle";
+import { Separator } from "@shared/ui/separator";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@shared/ui/dropdown-menu";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
 

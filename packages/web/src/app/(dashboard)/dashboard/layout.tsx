@@ -1,9 +1,10 @@
-import { getUser } from "@/lib/auth";
+import { getUser } from "@shared/auth";
+import { signOut } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Button } from "@/components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Button } from "@shared/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@shared/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,8 +12,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { signOut } from "@/lib/auth";
+} from "@shared/ui/dropdown-menu";
 import { User, Settings } from "lucide-react";
 import { Sidebar } from "@/components/dashboard/sidebar";
 import {
@@ -22,7 +22,7 @@ import {
 import { LogoutButton } from "@/components/dashboard/logout-button";
 import { ArticleQuotaDisplay } from "@/components/billing/ArticleQuotaDisplay";
 import { NewArticleButton } from "@/components/articles/NewArticleButton";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { ThemeToggle } from "@shared/ui/theme-toggle";
 import { MobileBottomNav } from "@/components/dashboard/mobile-bottom-nav";
 import { UILanguageSelector } from "@/components/common/UILanguageSelector";
 import { getTranslations } from "next-intl/server";

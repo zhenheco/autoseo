@@ -28,7 +28,7 @@ export const GET = withRouteAuth(
       diagnostics.cookieCount = cookieStore.getAll().length;
 
       diagnostics.step = "supabase_import";
-      const { createClient } = await import("@/lib/supabase/server");
+      const { createClient } = await import("@shared/supabase");
 
       diagnostics.step = "supabase_create";
       const supabase = await createClient();
@@ -47,7 +47,7 @@ export const GET = withRouteAuth(
       };
 
       diagnostics.step = "admin_import";
-      const { createAdminClient } = await import("@/lib/supabase/server");
+      const { createAdminClient } = await import("@shared/supabase");
 
       diagnostics.step = "admin_create";
       const adminClient = createAdminClient();

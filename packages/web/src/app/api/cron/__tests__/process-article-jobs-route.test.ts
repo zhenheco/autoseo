@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/lib/supabase/server", () => ({
+vi.mock("@shared/supabase", () => ({
   createAdminClient: vi.fn(),
 }));
 
@@ -118,7 +118,7 @@ describe("process article jobs cron route", () => {
 
   it("returns the existing no-jobs payload when cron auth passes", async () => {
     process.env.CRON_SECRET = "cron-secret";
-    const { createAdminClient } = await import("@/lib/supabase/server");
+    const { createAdminClient } = await import("@shared/supabase");
     const supabase = createFakeSupabase({
       data: [],
       error: null,
@@ -165,7 +165,7 @@ describe("process article jobs cron route", () => {
         },
       },
     );
-    const { createAdminClient } = await import("@/lib/supabase/server");
+    const { createAdminClient } = await import("@shared/supabase");
     const { ParallelOrchestrator } = await import("@/lib/agents/orchestrator");
     vi.mocked(createAdminClient).mockReturnValue(supabase as never);
     const execute = vi.fn();

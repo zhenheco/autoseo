@@ -71,7 +71,7 @@ const productFetcher = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/api/route-auth", () => routeAuth);
-vi.mock("@/lib/supabase/admin", () => supabaseAdmin);
+vi.mock("@shared/supabase", () => supabaseAdmin);
 vi.mock("@/lib/shopline/connections", () => connections);
 vi.mock("@/lib/shopline/product-fetcher", () => productFetcher);
 

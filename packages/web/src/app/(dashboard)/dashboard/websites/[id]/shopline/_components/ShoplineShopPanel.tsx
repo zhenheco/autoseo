@@ -4,12 +4,12 @@ import { useEffect, useState, type FormEvent } from "react";
 import { Save } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@shared/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@shared/ui/card";
+import { Input } from "@shared/ui/input";
+import { Label } from "@shared/ui/label";
+import { Switch } from "@shared/ui/switch";
+import { Textarea } from "@shared/ui/textarea";
 
 type ShoplineShopMeta = {
   seo_title_template?: string | null;

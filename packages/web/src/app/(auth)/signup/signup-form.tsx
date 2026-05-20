@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { signInWithGoogle } from "./actions";
-import { Button } from "@/components/ui/button";
+import { Button } from "@shared/ui/button";
 import { Loader2 } from "lucide-react";
 
 function GoogleIcon({ className }: { className?: string }) {

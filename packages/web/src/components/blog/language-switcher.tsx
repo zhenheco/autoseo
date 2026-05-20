@@ -2,13 +2,13 @@
 
 import Link from "next/link";
 import { Globe } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@shared/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+} from "@shared/ui/dropdown-menu";
 import type { SupportedLocale, HreflangEntry } from "@/types/translations";
 import { TRANSLATION_LANGUAGES } from "@/types/translations";
 import { cn } from "@/lib/utils";

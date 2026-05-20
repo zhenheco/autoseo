@@ -94,7 +94,7 @@ const generator = vi.hoisted(() => ({
 }));
 
 vi.mock("@/lib/api/route-auth", () => routeAuth);
-vi.mock("@/lib/supabase/admin", () => supabaseAdmin);
+vi.mock("@shared/supabase", () => supabaseAdmin);
 vi.mock("@/lib/shopline/connections", () => connections);
 vi.mock("@/lib/shopline/scope-resolver", () => scopeResolver);
 vi.mock("@/lib/shopline/rate-limiter", () => rateLimiter);

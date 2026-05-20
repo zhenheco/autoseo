@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidatePath } from "next/cache";
 import { v4 as uuidv4 } from "uuid";
-import { createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@shared/supabase";
 import { pingAllSearchEngines } from "@/lib/sitemap/ping-service";
 import {
   cacheSet,

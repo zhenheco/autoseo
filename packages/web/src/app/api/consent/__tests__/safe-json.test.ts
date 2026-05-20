@@ -4,7 +4,7 @@ vi.mock("@/lib/api/route-auth", () => ({
   withRouteAuth: vi.fn((_mode, handler) => handler),
 }));
 
-vi.mock("@/lib/supabase/admin", () => ({
+vi.mock("@shared/supabase", () => ({
   createAdminClient: vi.fn(),
 }));
 
@@ -19,7 +19,7 @@ describe("consent JSON parsing", () => {
     ["malformed", "{"],
   ])("returns 400 for %s body", async (_name, body) => {
     const { POST } = await import("../route");
-    const { createAdminClient } = await import("@/lib/supabase/admin");
+    const { createAdminClient } = await import("@shared/supabase");
 
     const response = await POST(
       new Request("https://example.com/api/consent", {

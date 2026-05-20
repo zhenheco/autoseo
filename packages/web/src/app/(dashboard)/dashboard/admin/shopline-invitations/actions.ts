@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getUser, getUserPrimaryCompany } from "@/lib/auth";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { getUser, getUserPrimaryCompany } from "@shared/auth";
+import { createAdminClient } from "@shared/supabase";
 import {
   createShoplineInvitation,
   createSupabaseShoplineInvitationStore,

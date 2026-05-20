@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-vi.mock("@/lib/supabase/server", () => ({
+vi.mock("@shared/supabase", () => ({
   createClient: vi.fn(),
   createAdminClient: vi.fn(),
 }));
@@ -86,7 +86,7 @@ describe("Article status route", () => {
 
   it("returns job status for the authenticated user's active company", async () => {
     const { createClient: createCookieClient, createAdminClient } =
-      await import("@/lib/supabase/server");
+      await import("@shared/supabase");
     const serviceSupabase = createFakeSupabase({
       "company_members.single": {
         data: {

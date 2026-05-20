@@ -7,7 +7,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@shared/ui/card";
 import { listAdminCompaniesAction, listAllInvitationsAction } from "./actions";
 import { CreateInvitationForm } from "./_components/CreateInvitationForm";
 import { InvitationsTable } from "./_components/InvitationsTable";

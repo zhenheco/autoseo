@@ -1,6 +1,6 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@shared/ui/badge";
 import { getStatusConfig, getScheduledLabel } from "@/constants/status-config";
 
 interface ArticleStatusBadgeProps {

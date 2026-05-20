@@ -4,15 +4,15 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Menu, X } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@shared/ui/button";
 import {
   Sheet,
   SheetContent,
   SheetHeader,
   SheetTitle,
   SheetTrigger,
-} from "@/components/ui/sheet";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+} from "@shared/ui/sheet";
+import { ThemeToggle } from "@shared/ui/theme-toggle";
 import { useTranslations } from "next-intl";
 
 export function MobileNav() {

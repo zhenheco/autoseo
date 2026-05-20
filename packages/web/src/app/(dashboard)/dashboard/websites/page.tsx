@@ -1,22 +1,22 @@
-import { getUser, getUserPrimaryCompany } from "@/lib/auth";
+import { getUser, getUserPrimaryCompany } from "@shared/auth";
 import { Database } from "@/types/database.types";
 import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@shared/supabase";
+import { createAdminClient } from "@shared/supabase";
 import {
   createSupabaseShoplineConnectionStore,
   getShoplineConnectionStatus,
 } from "@/lib/shopline/connections";
 
 type WebsiteConfig = Database["public"]["Tables"]["website_configs"]["Row"];
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@shared/ui/card";
+import { Button } from "@shared/ui/button";
 import Link from "next/link";
 import { deleteWebsite, createPlatformBlog } from "./actions";
-import { checkPagePermission } from "@/lib/permissions";
+import { checkPagePermission } from "@shared/auth/permissions";
 import { WebsiteAddedTracker } from "./WebsiteAddedTracker";
 import { Globe } from "lucide-react";
 import { WebsiteCard } from "./_components/WebsiteCard";

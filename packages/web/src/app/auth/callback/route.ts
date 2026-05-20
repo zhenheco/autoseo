@@ -1,4 +1,4 @@
-import { createClient, createAdminClient } from "@/lib/supabase/server";
+import { createClient, createAdminClient } from "@shared/supabase";
 import { NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { trackRegistration } from "@/lib/affiliate-client";

@@ -1,16 +1,16 @@
 "use client";
 
 import { useCallback, useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
+import { Button } from "@shared/ui/button";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
+} from "@shared/ui/select";
+import { Label } from "@shared/ui/label";
+import { Checkbox } from "@shared/ui/checkbox";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,7 +20,7 @@ import {
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
+} from "@shared/ui/alert-dialog";
 import { CalendarClock, Loader2, XCircle, Trash2 } from "lucide-react";
 import { useScheduleContext } from "./ScheduleContext";
 import {

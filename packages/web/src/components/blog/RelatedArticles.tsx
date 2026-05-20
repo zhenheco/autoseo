@@ -3,7 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { useTranslations } from "next-intl";
-import { Card, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@shared/ui/card";
 import type { BlogArticleListItem } from "@/types/blog";
 
 interface RelatedArticlesProps {

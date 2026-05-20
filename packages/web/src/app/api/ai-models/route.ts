@@ -5,7 +5,7 @@
  */
 
 import { NextRequest } from "next/server";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@shared/supabase";
 import { requestErrorResponse } from "@/lib/api/request-error-response";
 import { safeJson } from "@/lib/api/request-body";
 import { withRouteAuth } from "@/lib/api/route-auth";

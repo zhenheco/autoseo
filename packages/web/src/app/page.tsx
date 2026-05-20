@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@shared/supabase";
 import { HomeClient } from "./home-client";
 
 // 快取 1 年（訂閱方案和加購包很少變動，有修改時手動清除快取）

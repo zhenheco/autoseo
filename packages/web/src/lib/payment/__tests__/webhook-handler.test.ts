@@ -14,7 +14,7 @@ import {
 } from "../webhook-handler";
 
 // Mock Supabase
-vi.mock("@/lib/supabase/server", () => ({
+vi.mock("@shared/supabase", () => ({
   createAdminClient: vi.fn(() => ({
     from: vi.fn(() => ({
       select: vi.fn(() => ({

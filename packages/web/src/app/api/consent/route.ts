@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { requestErrorResponse } from "@/lib/api/request-error-response";
 import { safeJson } from "@/lib/api/request-body";
 import { withRouteAuth } from "@/lib/api/route-auth";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient } from "@shared/supabase";
 
 /**
  * POST /api/consent

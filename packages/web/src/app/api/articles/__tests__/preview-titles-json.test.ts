@@ -8,7 +8,7 @@ vi.mock("@/lib/openrouter/client", () => ({
   getOpenRouterClient: vi.fn(),
 }));
 
-vi.mock("@/lib/cloudflare/ai-gateway", () => ({
+vi.mock("@shared/ai-gateway", () => ({
   buildGeminiApiUrl: vi.fn(),
   buildGeminiHeaders: vi.fn(),
   isGatewayEnabled: vi.fn(),

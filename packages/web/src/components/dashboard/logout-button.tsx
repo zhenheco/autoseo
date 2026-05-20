@@ -1,6 +1,6 @@
 'use client'
 
-import { DropdownMenuItem } from '@/components/ui/dropdown-menu'
+import { DropdownMenuItem } from '@shared/ui/dropdown-menu'
 import { LogOut } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 

@@ -8,7 +8,7 @@
  * 3. 執行業務邏輯（更新訂單、增加代幣等）
  */
 
-import { createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@shared/supabase";
 import {
   parseWebhookEvent,
   type WebhookEvent,

@@ -1,5 +1,5 @@
-import { createAdminClient } from "@/lib/supabase/server";
-import { getUser } from "@/lib/auth";
+import { createAdminClient } from "@shared/supabase";
+import { getUser } from "@shared/auth";
 import { redirect } from "next/navigation";
 import {
   Card,
@@ -7,7 +7,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@shared/ui/card";
 import { getTranslations } from "next-intl/server";
 
 export const dynamic = "force-dynamic";

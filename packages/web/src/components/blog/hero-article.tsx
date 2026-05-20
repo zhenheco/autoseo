@@ -6,7 +6,7 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
+import { Badge } from "@shared/ui/badge";
 import { ArrowRight } from "lucide-react";
 import type { BlogArticleListItem } from "@/types/blog";
 import type { SupportedLocale } from "@/types/translations";

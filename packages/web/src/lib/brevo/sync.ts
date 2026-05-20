@@ -3,7 +3,7 @@
  * 從資料庫獲取用戶數據並同步到 Brevo
  */
 
-import { createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@shared/supabase";
 import { upsertContact } from "./contacts";
 import { isBrevoConfigured } from "./client";
 import {

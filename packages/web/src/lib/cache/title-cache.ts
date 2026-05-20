@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@shared/supabase";
 import crypto from "crypto";
 
 const CACHE_TTL_DAYS = 7;

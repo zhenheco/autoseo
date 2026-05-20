@@ -1,14 +1,14 @@
-import { getUser } from "@/lib/auth";
+import { getUser } from "@shared/auth";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@shared/supabase";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+} from "@shared/ui/card";
+import { Button } from "@shared/ui/button";
 import Link from "next/link";
 import { ArticleDetailPublish } from "./components/ArticleDetailPublish";
 import { getTranslations } from "next-intl/server";

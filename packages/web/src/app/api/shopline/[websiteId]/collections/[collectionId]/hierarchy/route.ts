@@ -8,7 +8,7 @@ import {
   handleApiError,
   validationError,
 } from "@/lib/api/response-helpers";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient } from "@shared/supabase";
 import { reparentCollection } from "@/lib/shopline/collection-hierarchy-service";
 import { createSupabaseShoplineConnectionStore } from "@/lib/shopline/connections";
 import {

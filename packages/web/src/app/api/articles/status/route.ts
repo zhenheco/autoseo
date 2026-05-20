@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { resolveRequestUser } from "@/lib/api/request-user";
-import { createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@shared/supabase";
 import { asSupabaseRepositoryClient } from "@/lib/article-jobs/supabase-repositories";
 import {
   createSupabaseArticleJobStatusAccessRepository,

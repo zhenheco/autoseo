@@ -4,17 +4,17 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Plus, Save, Trash2, X } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@shared/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@shared/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@shared/ui/dialog";
+import { Input } from "@shared/ui/input";
+import { Label } from "@shared/ui/label";
 import {
   Table,
   TableBody,
@@ -22,7 +22,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
+} from "@shared/ui/table";
 
 type ShoplineRedirectEntityType = "product" | "collection" | "page";
 

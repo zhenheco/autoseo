@@ -11,7 +11,7 @@ import {
   forbidden,
   handleApiError,
 } from "@/lib/api/response-helpers";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient } from "@shared/supabase";
 import { canAccessTranslation } from "@/lib/translations/access-control";
 import { resolveCompanyScopeForUser } from "@/lib/api/company-scope";
 import type {

@@ -9,7 +9,7 @@ import {
   getDeepSeekBaseUrl,
   buildDeepSeekHeaders,
   isGatewayEnabled,
-} from "@/lib/cloudflare/ai-gateway";
+} from "@shared/ai-gateway";
 
 export interface DeepSeekMessage {
   role: "system" | "user" | "assistant";

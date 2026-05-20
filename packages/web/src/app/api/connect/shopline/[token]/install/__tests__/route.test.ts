@@ -50,7 +50,7 @@ const { buildAuthorizeUrlMock, invitationQuery, supabaseMock, websiteQuery } =
     };
   });
 
-vi.mock("@/lib/supabase/admin", () => ({
+vi.mock("@shared/supabase", () => ({
   createAdminClient: vi.fn(() => supabaseMock),
 }));
 

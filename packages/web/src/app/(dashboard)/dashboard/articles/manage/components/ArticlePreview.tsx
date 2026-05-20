@@ -7,8 +7,8 @@ import {
   updateArticleContent,
   getArticleHtml,
 } from "../actions";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "@shared/ui/button";
+import { Input } from "@shared/ui/input";
 import { FileText, Save, Check, Loader2, Send } from "lucide-react";
 import { TiptapEditor } from "@/components/articles/TiptapEditor";
 import { QuickPublishDialog } from "./QuickPublishDialog";

@@ -16,7 +16,7 @@ import {
   notFound,
   internalError,
 } from "@/lib/api/response-helpers";
-import { createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@shared/supabase";
 import { canAccessTranslation } from "@/lib/translations/access-control";
 import { resolveCompanyScopeForUser } from "@/lib/api/company-scope";
 import type { TranslationLocale } from "@/types/translations";

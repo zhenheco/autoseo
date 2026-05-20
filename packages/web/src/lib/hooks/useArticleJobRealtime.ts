@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { createClient } from '@/lib/supabase/client';
+import { createBrowserClient as createClient } from '@shared/supabase';
 import type { Database } from '@/types/database.types';
 
 type ArticleJob = Database['public']['Tables']['article_jobs']['Row'];

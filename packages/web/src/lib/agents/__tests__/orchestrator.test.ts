@@ -2,7 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { ParallelOrchestrator } from '../orchestrator';
 import type { ArticleGenerationInput } from '@/types/agents';
 
-vi.mock('@/lib/supabase/server', () => ({
+vi.mock('@shared/supabase', () => ({
   createClient: vi.fn(() =>
     Promise.resolve({
       from: vi.fn(() => ({

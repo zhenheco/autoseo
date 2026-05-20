@@ -1,4 +1,4 @@
-import { createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@shared/supabase";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { ArticleStorageService } from "@/lib/services/article-storage";
 import { ResearchAgent } from "./research-agent";

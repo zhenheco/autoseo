@@ -5,7 +5,7 @@
  */
 
 import { Metadata } from "next";
-import { createAnonClient } from "@/lib/supabase/server";
+import { createAnonClient } from "@shared/supabase";
 import { BlogHeader, ArticleGrid, BlogHero } from "@/components/blog";
 import {
   getBlogMeta,

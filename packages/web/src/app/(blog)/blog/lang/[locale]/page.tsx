@@ -7,7 +7,7 @@
 
 import { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { createAnonClient } from "@/lib/supabase/server";
+import { createAnonClient } from "@shared/supabase";
 import { BlogHeader, ArticleGrid } from "@/components/blog";
 import {
   getBlogMeta,

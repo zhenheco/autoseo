@@ -3,7 +3,7 @@
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button } from "@shared/ui/button";
 
 export function ClosingCTANew() {
   const t = useTranslations("home.v6.cta");

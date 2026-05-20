@@ -1,4 +1,4 @@
-import { getUser, getUserPrimaryCompany } from "@/lib/auth";
+import { getUser, getUserPrimaryCompany } from "@shared/auth";
 import { redirect } from "next/navigation";
 import { NewWebsiteForm } from "./NewWebsiteForm";
 import { getTranslations } from "next-intl/server";

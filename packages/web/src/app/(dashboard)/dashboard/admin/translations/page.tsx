@@ -8,8 +8,8 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+} from "@shared/ui/card";
+import { Button } from "@shared/ui/button";
 import {
   Table,
   TableBody,
@@ -17,11 +17,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
+} from "@shared/ui/table";
+import { Checkbox } from "@shared/ui/checkbox";
+import { Input } from "@shared/ui/input";
+import { Switch } from "@shared/ui/switch";
+import { Badge } from "@shared/ui/badge";
 import { toast } from "sonner";
 import {
   ChevronLeft,
@@ -34,7 +34,7 @@ import {
   Settings,
   Zap,
 } from "lucide-react";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Tabs, TabsList, TabsTrigger } from "@shared/ui/tabs";
 import type {
   TranslationLocale,
   ArticleTranslationSummary,

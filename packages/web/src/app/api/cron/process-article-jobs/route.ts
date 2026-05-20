@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createAdminClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@shared/supabase";
 import { ParallelOrchestrator } from "@/lib/agents/orchestrator";
 import { withRouteAuth } from "@/lib/api/route-auth";
 import { decideArticlePipelineAction } from "@/lib/article-jobs/pipeline-state";

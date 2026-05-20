@@ -8,11 +8,11 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@shared/ui/card";
 import { ExcelUploadZone } from "@/components/articles/ExcelUploadZone";
 import { PublishPlanTable } from "@/components/articles/PublishPlanTable";
 import { ScheduleSettings } from "@/components/articles/ScheduleSettings";
-import { Button } from "@/components/ui/button";
+import { Button } from "@shared/ui/button";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
 

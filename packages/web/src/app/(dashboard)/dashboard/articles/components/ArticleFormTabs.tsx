@@ -2,16 +2,16 @@
 
 import { useState, useEffect } from "react";
 import { useTranslations } from "next-intl";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@shared/ui/tabs";
+import { Label } from "@shared/ui/label";
+import { Input } from "@shared/ui/input";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@shared/ui/select";
 import { QuickArticleForm } from "./QuickArticleForm";
 import { ArticleForm } from "./ArticleForm";
 import { WebsiteSelector } from "@/components/articles/WebsiteSelector";

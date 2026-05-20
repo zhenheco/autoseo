@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { getCloudflareContext } from "@opennextjs/cloudflare";
 import { withRouteAuth } from "@/lib/api/route-auth";
 import { forbidden, handleApiError } from "@/lib/api/response-helpers";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createAdminClient } from "@shared/supabase";
 import { deleteShoplineRedirect } from "@/lib/shopline/redirect-store";
 import {
   checkShoplineWriteRateLimit,

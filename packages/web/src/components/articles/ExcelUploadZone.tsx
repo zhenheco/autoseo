@@ -3,8 +3,8 @@
 import { useCallback, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { Upload, FileSpreadsheet, AlertCircle } from 'lucide-react'
-import { Button } from '@/components/ui/button'
-import { Alert, AlertDescription } from '@/components/ui/alert'
+import { Button } from '@shared/ui/button'
+import { Alert, AlertDescription } from '@shared/ui/alert'
 import { parseMultiColumnExcel } from '@/lib/utils/excel-parser'
 import type { PublishPlan } from '@/app/(dashboard)/dashboard/articles/import/page'
 

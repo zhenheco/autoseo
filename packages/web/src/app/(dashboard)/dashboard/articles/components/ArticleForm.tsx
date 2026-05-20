@@ -1,11 +1,11 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Button } from "@shared/ui/button";
+import { Input } from "@shared/ui/input";
+import { Label } from "@shared/ui/label";
+import { Checkbox } from "@shared/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@shared/ui/radio-group";
 import { fetchWithRetry } from "@/lib/utils/fetch-with-retry";
 import {
   Dialog,
@@ -14,7 +14,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
+} from "@shared/ui/dialog";
 import { Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { trackArticleGeneration } from "@/lib/analytics/events";

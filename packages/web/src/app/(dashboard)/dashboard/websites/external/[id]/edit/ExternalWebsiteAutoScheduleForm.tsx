@@ -7,18 +7,18 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
+} from "@shared/ui/card";
+import { Button } from "@shared/ui/button";
+import { Label } from "@shared/ui/label";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+} from "@shared/ui/select";
+import { Switch } from "@shared/ui/switch";
+import { RadioGroup, RadioGroupItem } from "@shared/ui/radio-group";
 import { updateExternalWebsiteAutoSchedule } from "../../actions";
 import { Calendar, Clock, CalendarDays } from "lucide-react";
 import type { AutoScheduleFormProps } from "@/types/external-website.types";

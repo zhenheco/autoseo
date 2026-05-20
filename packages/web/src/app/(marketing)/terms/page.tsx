@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Button } from "@/components/ui/button";
+import { Button } from "@shared/ui/button";
 import { ArrowLeft } from "lucide-react";
 import { getTranslations } from "next-intl/server";
 

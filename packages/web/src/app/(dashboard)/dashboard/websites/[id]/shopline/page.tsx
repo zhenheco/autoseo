@@ -1,24 +1,24 @@
-import { getUser, getUserPrimaryCompany } from "@/lib/auth";
+import { getUser, getUserPrimaryCompany } from "@shared/auth";
 import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin";
+import { createClient } from "@shared/supabase";
+import { createAdminClient } from "@shared/supabase";
 import {
   createSupabaseShoplineConnectionStore,
   getShoplineConnectionStatus,
 } from "@/lib/shopline/connections";
 import { normalizeShoplineShopHandle } from "@/lib/shopline/oauth";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@shared/ui/alert";
+import { Badge } from "@shared/ui/badge";
+import { Button } from "@shared/ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+} from "@shared/ui/card";
+import { Input } from "@shared/ui/input";
+import { Label } from "@shared/ui/label";
 import {
   ArrowLeft,
   ShieldCheck,

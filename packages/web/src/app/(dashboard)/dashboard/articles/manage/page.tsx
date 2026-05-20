@@ -1,5 +1,5 @@
 import { Suspense } from "react";
-import { getUser } from "@/lib/auth";
+import { getUser } from "@shared/auth";
 import { redirect } from "next/navigation";
 import { getArticles } from "./actions";
 import { ArticleListWrapper } from "./components/ArticleListWrapper";

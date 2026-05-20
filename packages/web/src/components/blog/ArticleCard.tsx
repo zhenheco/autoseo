@@ -3,8 +3,8 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Calendar, Clock, Eye } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@shared/ui/card";
+import { Badge } from "@shared/ui/badge";
 import type { BlogArticleListItem } from "@/types/blog";
 
 interface ArticleCardProps {

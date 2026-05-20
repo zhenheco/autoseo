@@ -2,7 +2,7 @@
  * 文字模型列表 API（公開端點）
  */
 
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@shared/supabase";
 import { withRouteAuth } from "@/lib/api/route-auth";
 import { successResponse, internalError } from "@/lib/api/response-helpers";
 

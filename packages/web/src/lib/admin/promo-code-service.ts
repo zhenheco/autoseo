@@ -3,7 +3,7 @@
  * 處理優惠碼的 CRUD、驗證和套用邏輯
  */
 
-import { createAdminClient, createClient } from "@/lib/supabase/server";
+import { createAdminClient, createClient } from "@shared/supabase";
 import type { Database } from "@/types/database.types";
 
 type PromoCode = Database["public"]["Tables"]["promo_codes"]["Row"];

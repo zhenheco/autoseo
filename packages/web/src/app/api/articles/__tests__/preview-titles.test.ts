@@ -11,7 +11,7 @@ const mockFetch = vi.fn();
 global.fetch = mockFetch;
 
 // Mock Supabase（用於模板回退）
-vi.mock("@/lib/supabase/server", () => ({
+vi.mock("@shared/supabase", () => ({
   createAdminClient: vi.fn(() => ({
     from: vi.fn(() => ({
       select: vi.fn(() => ({
@@ -52,7 +52,7 @@ vi.mock("@/lib/openrouter/client", () => ({
 }));
 
 // Mock AI Gateway
-vi.mock("@/lib/cloudflare/ai-gateway", () => ({
+vi.mock("@shared/ai-gateway", () => ({
   isGatewayEnabled: vi.fn(() => true),
   buildGeminiApiUrl: vi.fn(
     (model, action) =>

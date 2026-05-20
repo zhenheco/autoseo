@@ -8,7 +8,7 @@ vi.mock("@/lib/brevo", () => ({
   syncAllUsersToBrevo: brevo.syncAllUsersToBrevo,
 }));
 
-vi.mock("@/lib/supabase/server", () => ({
+vi.mock("@shared/supabase", () => ({
   createAdminClient: vi.fn(),
 }));
 
@@ -141,7 +141,7 @@ describe("Brevo and monitor cron routes", () => {
 
   it("monitor article jobs returns the existing summary when cron auth passes", async () => {
     process.env.CRON_SECRET = "cron-secret";
-    const { createAdminClient } = await import("@/lib/supabase/server");
+    const { createAdminClient } = await import("@shared/supabase");
     const supabase = createMonitorSupabase();
     vi.mocked(createAdminClient).mockReturnValue(supabase as never);
     const { POST } = await import("../monitor-article-jobs/route");

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useTranslations } from "next-intl";
-import { Button } from "@/components/ui/button";
+import { Button } from "@shared/ui/button";
 import {
   Dialog,
   DialogContent,
@@ -12,10 +12,10 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
+} from "@shared/ui/dialog";
+import { Label } from "@shared/ui/label";
 import { WebsiteSelector } from "@/components/articles/WebsiteSelector";
-import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Alert, AlertDescription } from "@shared/ui/alert";
 import { Loader2, Send, CheckCircle, ExternalLink } from "lucide-react";
 import { publishArticle, assignWebsiteToArticle } from "../../manage/actions";
 

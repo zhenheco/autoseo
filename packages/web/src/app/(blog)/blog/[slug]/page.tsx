@@ -2,8 +2,8 @@ import { Metadata } from "next";
 import { notFound } from "next/navigation";
 import Link from "next/link";
 import Image from "next/image";
-import { Badge } from "@/components/ui/badge";
-import { createAnonClient } from "@/lib/supabase/server";
+import { Badge } from "@shared/ui/badge";
+import { createAnonClient } from "@shared/supabase";
 import {
   ArticleMeta,
   RelatedArticles,

@@ -1,4 +1,4 @@
-import { createClient } from "@/lib/supabase/server";
+import { createClient } from "@shared/supabase";
 import { redirect } from "next/navigation";
 
 const SUPER_ADMIN_EMAILS =

@@ -8,7 +8,7 @@ import {
   CardDescription,
   CardHeader,
   CardTitle,
-} from "@/components/ui/card";
+} from "@shared/ui/card";
 import {
   Table,
   TableBody,
@@ -16,17 +16,17 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+} from "@shared/ui/table";
+import { Button } from "@shared/ui/button";
+import { Input } from "@shared/ui/input";
+import { Badge } from "@shared/ui/badge";
 import {
   Select,
   SelectContent,
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from "@/components/ui/select";
+} from "@shared/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -34,9 +34,9 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+} from "@shared/ui/dialog";
+import { Label } from "@shared/ui/label";
+import { Textarea } from "@shared/ui/textarea";
 import { Loader2, Plus, Pencil, Trash2, Search } from "lucide-react";
 import { toast } from "sonner";
 

@@ -8,7 +8,7 @@ import {
   buildDeepSeekHeaders,
   buildFalApiUrl,
   buildFalHeaders,
-} from "@/lib/cloudflare/ai-gateway";
+} from "@shared/ai-gateway";
 import { OpenRouterClient } from "@/lib/openrouter/client";
 import type {
   AIClientConfig,
