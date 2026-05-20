@@ -51,4 +51,13 @@ describe("scanHtml", () => {
       },
     ]);
   });
+
+  it("does not report an issue when meta description length is acceptable", () => {
+    const issues = scanHtml({
+      html: readFixture("good-meta-desc.html"),
+      pageUrl: "https://example.com/good-meta",
+    });
+
+    expect(issues).toEqual([]);
+  });
 });
