@@ -1,4 +1,5 @@
 export { auditWebsite } from "./audit-website";
+export { applyAuditFixToEdgeWorker, toEdgeRule } from "./apply-edge-fix";
 export { applyAuditFixToShopline } from "./apply-shopline-fix";
 export { dispatchAuditIssueToArticleGenerator } from "./dispatch-to-article-generator";
 export {
@@ -19,6 +20,10 @@ export type {
   ChromiumAuditResult,
   CoreWebVitals,
 } from "./chromium-audit";
+export type {
+  ApplyEdgeFixInput,
+  ApplyEdgeFixResult,
+} from "./apply-edge-fix";
 export type {
   ApplyShoplineFixDeps,
   ApplyShoplineFixInput,
