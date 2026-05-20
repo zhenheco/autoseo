@@ -233,4 +233,48 @@ describe("scanHtml", () => {
       ]),
     );
   });
+
+  it("reports a warning issue when h1 appears more than once", () => {
+    const issues = scanHtml({
+      html: readFixture("h1-duplicate.html"),
+      pageUrl: "https://example.com/h1-duplicate",
+    });
+
+    expect(issues).toContainEqual({
+      ruleId: "h1.duplicate",
+      severity: "warning",
+      riskLevel: "medium",
+      page: "https://example.com/h1-duplicate",
+      selector: "h1",
+      current: "Primary Heading|Secondary Heading",
+      source: "html-scan",
+      estimatedImpact: "medium",
+    });
+  });
+
+  it("does not report h1 duplicate when exactly one h1 is present", () => {
+    const issues = scanHtml({
+      html: readFixture("all-good.html"),
+      pageUrl: "https://example.com/all-good",
+    });
+
+    expect(issues.some((issue) => issue.ruleId === "h1.duplicate")).toBe(false);
+  });
+
+  it("includes h1 duplicate in multi-issue scans", () => {
+    const issues = scanHtml({
+      html: readFixture("multi-issues.html"),
+      pageUrl: "https://example.com/multi-issues",
+    });
+
+    expect(issues.length).toBeGreaterThan(4);
+    expect(issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          ruleId: "h1.duplicate",
+          current: "First Heading|Second Heading",
+        }),
+      ]),
+    );
+  });
 });

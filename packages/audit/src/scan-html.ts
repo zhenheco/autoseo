@@ -67,8 +67,28 @@ function checkOgImage($: CheerioRoot, pageUrl: string): AuditIssue[] {
 
 function checkH1($: CheerioRoot, pageUrl: string): AuditIssue[] {
   const h1Elements = $("h1");
-  if (h1Elements.length > 0) {
+  if (h1Elements.length === 1) {
     return [];
+  }
+
+  if (h1Elements.length > 1) {
+    const current = h1Elements
+      .map((_index, element) => $(element).text().trim().replace(/\s+/g, " "))
+      .get()
+      .join("|");
+
+    return [
+      {
+        ruleId: "h1.duplicate",
+        severity: "warning",
+        riskLevel: "medium",
+        page: pageUrl,
+        selector: "h1",
+        current,
+        source: "html-scan",
+        estimatedImpact: "medium",
+      },
+    ];
   }
 
   return [
