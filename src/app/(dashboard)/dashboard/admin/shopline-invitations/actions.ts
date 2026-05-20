@@ -136,15 +136,34 @@ export async function listAdminCompaniesAction(): Promise<{
   return { companies };
 }
 
-export async function createInvitationAction(formData: FormData): Promise<
+export type CreateInvitationResult =
   | {
       ok: true;
       token: string;
       link: string;
       expiresAt: string;
     }
-  | { ok: false; error: string }
-> {
+  | { ok: false; error: string };
+
+export type CreateInvitationFromUrlResult =
+  | {
+      ok: true;
+      token: string;
+      link: string;
+      expiresAt: string;
+      parsedHandle: string;
+    }
+  | {
+      ok: false;
+      error: "parse_failed";
+      detail: string;
+      suggestUrl: string;
+    }
+  | { ok: false; error: string };
+
+export async function createInvitationAction(
+  formData: FormData,
+): Promise<CreateInvitationResult> {
   const user = await getUser();
   if (!user) return { ok: false, error: "unauthorized" };
 
@@ -185,22 +204,7 @@ export async function createInvitationAction(formData: FormData): Promise<
 
 export async function createInvitationFromUrlAction(
   formData: FormData,
-): Promise<
-  | {
-      ok: true;
-      token: string;
-      link: string;
-      expiresAt: string;
-      parsedHandle: string;
-    }
-  | {
-      ok: false;
-      error: "parse_failed";
-      detail: string;
-      suggestUrl: string;
-    }
-  | { ok: false; error: string }
-> {
+): Promise<CreateInvitationFromUrlResult> {
   const user = await getUser();
   if (!user) return { ok: false, error: "unauthorized" };
 

@@ -2711,6 +2711,16 @@
         "ttlHint": "リンクは 7 日後に期限切れになります",
         "linkFormat": "リンク形式: {url}/connect/shopline/{tokenPlaceholder}"
       },
+      "fromUrl": {
+        "title": "クライアント URL からリンクを自動生成",
+        "urlLabel": "店舗 URL",
+        "urlPlaceholder": "https://brand.myshopline.com または https://shop.brand.com",
+        "submitButton": "連携リンクを生成",
+        "parseFailedTitle": "SHOPLINE ストアを解析できません",
+        "parseFailedHint": "SHOPLINE 以外のサイト、またはページ構造が異なる可能性があります。詳細モードで handle を手動入力してください。",
+        "advancedToggle": "詳細モード（handle を手動入力）",
+        "parsedHandlePreview": "解析した handle："
+      },
       "list": {
         "title": "招待一覧",
         "description": "owner/admin 権限を持つ企業の SHOPLINE 招待のみ表示されます。",

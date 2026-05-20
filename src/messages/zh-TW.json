@@ -2711,6 +2711,16 @@
         "ttlHint": "連結 7 天後過期",
         "linkFormat": "連結格式為 {url}/connect/shopline/{tokenPlaceholder}"
       },
+      "fromUrl": {
+        "title": "貼客戶網址自動產生連結",
+        "urlLabel": "店家網址",
+        "urlPlaceholder": "https://brand.myshopline.com 或 https://shop.brand.com.tw",
+        "submitButton": "產生綁定連結",
+        "parseFailedTitle": "無法解析 SHOPLINE 商店",
+        "parseFailedHint": "可能是非 SHOPLINE 網站，或頁面結構不同。請改用進階模式手動填 handle。",
+        "advancedToggle": "進階模式 (手動填 handle)",
+        "parsedHandlePreview": "解析到 handle："
+      },
       "list": {
         "title": "邀請列表",
         "description": "僅顯示你擁有 owner/admin 權限公司的 SHOPLINE 邀請。",

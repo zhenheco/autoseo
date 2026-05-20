@@ -2711,6 +2711,16 @@
         "ttlHint": "Link expires in 7 days",
         "linkFormat": "Link format: {url}/connect/shopline/{tokenPlaceholder}"
       },
+      "fromUrl": {
+        "title": "Paste a client URL to generate a link",
+        "urlLabel": "Store URL",
+        "urlPlaceholder": "https://brand.myshopline.com or https://shop.brand.com",
+        "submitButton": "Generate connection link",
+        "parseFailedTitle": "Could not parse the SHOPLINE store",
+        "parseFailedHint": "This may not be a SHOPLINE site, or the page structure may differ. Use advanced mode to enter the handle manually.",
+        "advancedToggle": "Advanced mode (manual handle)",
+        "parsedHandlePreview": "Parsed handle: "
+      },
       "list": {
         "title": "Invitations",
         "description": "Only SHOPLINE invitations for companies where you have owner/admin access are shown.",

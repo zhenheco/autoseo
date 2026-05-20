@@ -2812,6 +2812,16 @@
         "ttlHint": "Link läuft nach 7 Tagen ab",
         "linkFormat": "Linkformat: {url}/connect/shopline/{tokenPlaceholder}"
       },
+      "fromUrl": {
+        "title": "Kunden-URL einfügen und Link automatisch erstellen",
+        "urlLabel": "Shop-URL",
+        "urlPlaceholder": "https://brand.myshopline.com oder https://shop.brand.com",
+        "submitButton": "Verbindungslink erstellen",
+        "parseFailedTitle": "SHOPLINE-Shop konnte nicht erkannt werden",
+        "parseFailedHint": "Dies ist möglicherweise keine SHOPLINE-Website oder die Seitenstruktur ist anders. Verwenden Sie den erweiterten Modus, um den handle manuell einzugeben.",
+        "advancedToggle": "Erweiterter Modus (handle manuell)",
+        "parsedHandlePreview": "Erkannter handle: "
+      },
       "list": {
         "title": "Einladungen",
         "description": "Es werden nur SHOPLINE-Einladungen für Unternehmen angezeigt, für die Sie owner/admin-Rechte haben.",

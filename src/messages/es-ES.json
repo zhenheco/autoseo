@@ -2812,6 +2812,16 @@
         "ttlHint": "El enlace caduca en 7 días",
         "linkFormat": "Formato del enlace: {url}/connect/shopline/{tokenPlaceholder}"
       },
+      "fromUrl": {
+        "title": "Pega una URL de cliente para generar el enlace",
+        "urlLabel": "URL de la tienda",
+        "urlPlaceholder": "https://brand.myshopline.com o https://shop.brand.com",
+        "submitButton": "Generar enlace de conexión",
+        "parseFailedTitle": "No se pudo detectar la tienda SHOPLINE",
+        "parseFailedHint": "Puede que no sea un sitio SHOPLINE o que la estructura de la página sea distinta. Usa el modo avanzado para introducir el handle manualmente.",
+        "advancedToggle": "Modo avanzado (handle manual)",
+        "parsedHandlePreview": "Handle detectado: "
+      },
       "list": {
         "title": "Invitaciones",
         "description": "Solo se muestran invitaciones SHOPLINE de empresas en las que tienes acceso owner/admin.",
