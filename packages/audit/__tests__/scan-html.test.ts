@@ -382,4 +382,50 @@ describe("scanHtml", () => {
       ]),
     );
   });
+
+  it("reports a warning issue when canonical host differs from page host", () => {
+    const issues = scanHtml({
+      html: readFixture("canonical-mismatched-host.html"),
+      pageUrl: "https://example.com/canonical-mismatched-host",
+    });
+
+    expect(issues).toContainEqual({
+      ruleId: "sitemap.inconsistent",
+      severity: "warning",
+      riskLevel: "medium",
+      page: "https://example.com/canonical-mismatched-host",
+      selector: 'link[rel="canonical"]',
+      current: "https://other.example/canonical-mismatched-host",
+      source: "html-scan",
+      estimatedImpact: "low",
+    });
+  });
+
+  it("does not report sitemap inconsistent when canonical host matches page host", () => {
+    const issues = scanHtml({
+      html: readFixture("all-good.html"),
+      pageUrl: "https://example.com/all-good",
+    });
+
+    expect(
+      issues.some((issue) => issue.ruleId === "sitemap.inconsistent"),
+    ).toBe(false);
+  });
+
+  it("includes sitemap inconsistent in multi-issue scans", () => {
+    const issues = scanHtml({
+      html: readFixture("multi-canonical-mismatched-host.html"),
+      pageUrl: "https://example.com/multi-canonical-mismatched-host",
+    });
+
+    expect(issues.length).toBeGreaterThan(1);
+    expect(issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          ruleId: "sitemap.inconsistent",
+          current: "https://other.example/multi-canonical-mismatched-host",
+        }),
+      ]),
+    );
+  });
 });

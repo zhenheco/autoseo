@@ -43,6 +43,7 @@ export function scanHtml(input: ScanHtmlInput): AuditIssue[] {
   issues.push(...checkH1($, input.pageUrl));
   issues.push(...checkImgAlt($, input.pageUrl));
   issues.push(...checkStructuredData($, input.pageUrl));
+  issues.push(...checkSitemapConsistency($, input.pageUrl));
 
   return issues;
 }
@@ -63,6 +64,39 @@ function checkOgImage($: CheerioRoot, pageUrl: string): AuditIssue[] {
       current: "",
       source: "html-scan",
       estimatedImpact: "high",
+    },
+  ];
+}
+
+function checkSitemapConsistency($: CheerioRoot, pageUrl: string): AuditIssue[] {
+  const canonicalHref = $('link[rel="canonical"]').attr("href")?.trim() ?? "";
+  if (!canonicalHref) {
+    return [];
+  }
+
+  let canonicalUrl: URL;
+  let currentPageUrl: URL;
+  try {
+    currentPageUrl = new URL(pageUrl);
+    canonicalUrl = new URL(canonicalHref, currentPageUrl);
+  } catch {
+    return [];
+  }
+
+  if (canonicalUrl.host === currentPageUrl.host) {
+    return [];
+  }
+
+  return [
+    {
+      ruleId: "sitemap.inconsistent",
+      severity: "warning",
+      riskLevel: "medium",
+      page: pageUrl,
+      selector: 'link[rel="canonical"]',
+      current: canonicalUrl.href,
+      source: "html-scan",
+      estimatedImpact: "low",
     },
   ];
 }
