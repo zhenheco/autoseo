@@ -156,4 +156,43 @@ describe("auditWebsite", () => {
       },
     ]);
   });
+
+  it("degrades to HTML scan results when chromium audit fails", async () => {
+    const html = readFixture("short-meta-desc.html");
+    const fetchOk: typeof fetch = async () =>
+      new Response(html, { status: 200 });
+
+    const report = await auditWebsite(
+      {
+        url: "https://example.com/short-meta",
+        scope: "single-page",
+        includeChromium: true,
+      },
+      {
+        fetch: fetchOk,
+        chromiumAudit: async () => {
+          throw new Error("chromium_binding_not_available");
+        },
+      },
+    );
+
+    expect(report.cwv).toBeUndefined();
+    expect(report.issues).toEqual([
+      expect.objectContaining({
+        ruleId: "meta.description.tooShort",
+        source: "html-scan",
+      }),
+      {
+        ruleId: "chromium.audit.unavailable",
+        severity: "warning",
+        riskLevel: "low",
+        page: "https://example.com/short-meta",
+        current: "Chromium audit unavailable: chromium_binding_not_available",
+        suggested:
+          "Enable Cloudflare Browser Rendering binding before relying on CWV and axe-core results.",
+        source: "security",
+        estimatedImpact: "low",
+      },
+    ]);
+  });
 });

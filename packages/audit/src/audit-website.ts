@@ -2,6 +2,7 @@ import { scanHtml } from "./scan-html";
 import { scoreHealth } from "./score-health";
 import { runChromiumAudit } from "./chromium-audit";
 import type {
+  AuditIssue,
   AuditReport,
   AuditWebsiteDeps,
   AuditWebsiteInput,
@@ -20,7 +21,10 @@ export async function auditWebsite(
   const randomUuid = deps.randomUuid ?? (() => crypto.randomUUID());
   const chromiumAudit = deps.chromiumAudit ?? runChromiumAudit;
   const chromiumResultPromise = input.includeChromium
-    ? chromiumAudit(input.url).then((result) => ({ result }))
+    ? chromiumAudit(input.url).then(
+        (result) => ({ status: "fulfilled" as const, result }),
+        (error: unknown) => ({ status: "rejected" as const, error }),
+      )
     : undefined;
 
   let response: Response;
@@ -40,7 +44,12 @@ export async function auditWebsite(
   const chromiumResult = await chromiumResultPromise;
   const issues = [
     ...htmlIssues,
-    ...(chromiumResult?.result.a11yIssues ?? []),
+    ...(chromiumResult?.status === "fulfilled"
+      ? chromiumResult.result.a11yIssues
+      : []),
+    ...(chromiumResult?.status === "rejected"
+      ? [createChromiumUnavailableIssue(input.url, chromiumResult.error)]
+      : []),
   ];
 
   const report: AuditReport = {
@@ -52,9 +61,30 @@ export async function auditWebsite(
     issues,
   };
 
-  if (chromiumResult) {
+  if (chromiumResult?.status === "fulfilled") {
     report.cwv = chromiumResult.result.cwv;
   }
 
   return report;
+}
+
+function createChromiumUnavailableIssue(
+  pageUrl: string,
+  error: unknown,
+): AuditIssue {
+  return {
+    ruleId: "chromium.audit.unavailable",
+    severity: "warning",
+    riskLevel: "low",
+    page: pageUrl,
+    current: `Chromium audit unavailable: ${errorMessage(error)}`,
+    suggested:
+      "Enable Cloudflare Browser Rendering binding before relying on CWV and axe-core results.",
+    source: "security",
+    estimatedImpact: "low",
+  };
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : "unknown";
 }
