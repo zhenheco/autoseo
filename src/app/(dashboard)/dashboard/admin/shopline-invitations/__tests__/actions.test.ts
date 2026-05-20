@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const auth = vi.hoisted(() => ({
   getUser: vi.fn(),
+  getUserPrimaryCompany: vi.fn(),
 }));
 
 const supabaseAdmin = vi.hoisted(() => ({

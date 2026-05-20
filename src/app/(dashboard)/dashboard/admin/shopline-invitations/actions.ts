@@ -1,13 +1,14 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { getUser } from "@/lib/auth";
+import { getUser, getUserPrimaryCompany } from "@/lib/auth";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
   createShoplineInvitation,
   createSupabaseShoplineInvitationStore,
   type ShoplineInvitation,
 } from "@/lib/shopline/invitations";
+import { parseShoplineShopHandleFromUrl } from "@/lib/shopline/parse-shop-handle";
 
 const ADMIN_ROLES = ["owner", "admin"] as const;
 const INVITATIONS_PATH = "/dashboard/admin/shopline-invitations";
@@ -33,6 +34,10 @@ type CompanyRow = {
   name: string | null;
 };
 
+type PrimaryCompanyLike = {
+  id?: unknown;
+};
+
 function formString(formData: FormData, key: string): string {
   const value = formData.get(key);
   return typeof value === "string" ? value.trim() : "";
@@ -51,6 +56,16 @@ function invitationLink(token: string): string {
 
 function isAdminRole(role: string | null | undefined): boolean {
   return role === "owner" || role === "admin";
+}
+
+function primaryCompanyId(company: unknown): string {
+  if (!company || typeof company !== "object") return "";
+  const id = (company as PrimaryCompanyLike).id;
+  return typeof id === "string" ? id : "";
+}
+
+function errorDetail(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
 }
 
 async function requireAdminForCompany(
@@ -164,6 +179,74 @@ export async function createInvitationAction(formData: FormData): Promise<
     };
   } catch (error) {
     console.error("Failed to create SHOPLINE invitation:", error);
+    return { ok: false, error: "create_failed" };
+  }
+}
+
+export async function createInvitationFromUrlAction(
+  formData: FormData,
+): Promise<
+  | {
+      ok: true;
+      token: string;
+      link: string;
+      expiresAt: string;
+      parsedHandle: string;
+    }
+  | {
+      ok: false;
+      error: "parse_failed";
+      detail: string;
+      suggestUrl: string;
+    }
+  | { ok: false; error: string }
+> {
+  const user = await getUser();
+  if (!user) return { ok: false, error: "unauthorized" };
+
+  const companyId = primaryCompanyId(await getUserPrimaryCompany(user.id));
+  if (!companyId) return { ok: false, error: "unauthorized" };
+
+  const admin = createAdminClient();
+  const authorized = await requireAdminForCompany(admin, user.id, companyId);
+  if (!authorized) return { ok: false, error: "unauthorized" };
+
+  const storeUrl = formString(formData, "storeUrl");
+
+  let parsedHandle: string;
+  try {
+    parsedHandle = await parseShoplineShopHandleFromUrl(storeUrl);
+  } catch (error) {
+    return {
+      ok: false,
+      error: "parse_failed",
+      detail: errorDetail(error),
+      suggestUrl: storeUrl,
+    };
+  }
+
+  const store = createSupabaseShoplineInvitationStore(admin);
+
+  try {
+    const invitation = await createShoplineInvitation(store, {
+      companyId,
+      expectedShopHandle: parsedHandle,
+      note: formString(formData, "note") || undefined,
+      ttlDays: 7,
+      createdBy: user.id,
+    });
+
+    revalidatePath(INVITATIONS_PATH);
+
+    return {
+      ok: true,
+      token: invitation.token,
+      link: invitationLink(invitation.token),
+      expiresAt: invitation.expiresAt,
+      parsedHandle,
+    };
+  } catch (error) {
+    console.error("Failed to create SHOPLINE invitation from URL:", error);
     return { ok: false, error: "create_failed" };
   }
 }
