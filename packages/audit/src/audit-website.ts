@@ -21,6 +21,9 @@ export async function auditWebsite(
   } catch (cause) {
     throw new Error("audit_fetch_failed", { cause });
   }
+  if (!response.ok) {
+    throw new Error(`audit_fetch_failed: HTTP ${response.status}`);
+  }
 
   const html = await response.text();
   const issues = scanHtml({ html, pageUrl: input.url });

@@ -65,4 +65,19 @@ describe("auditWebsite", () => {
       ),
     ).rejects.toThrow("audit_fetch_failed");
   });
+
+  it("throws audit_fetch_failed with status when response is not ok", async () => {
+    const fetchServerError: typeof fetch = async () =>
+      new Response("server error", { status: 500 });
+
+    await expect(
+      auditWebsite(
+        {
+          url: "https://example.com/server-error",
+          scope: "single-page",
+        },
+        { fetch: fetchServerError },
+      ),
+    ).rejects.toThrow("audit_fetch_failed: HTTP 500");
+  });
 });
