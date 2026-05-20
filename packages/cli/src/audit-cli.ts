@@ -23,18 +23,10 @@ interface WebsiteConfigRow {
 }
 
 interface AdminClient {
-  from(table: string): {
-    select(columns: string): {
-      eq(column: string, value: string): {
-        single(): Promise<QueryResult<WebsiteConfigRow>>;
-      };
-    };
-    insert(payload: unknown): {
-      select(columns: string): {
-        single(): Promise<QueryResult<{ id: string }>>;
-      };
-    } | Promise<QueryResult<unknown>>;
-  };
+  // Supabase's PostgREST builders are thenable fluent objects. Keep this
+  // boundary intentionally narrow so CLI tests can inject lightweight mocks.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  from(table: string): any;
 }
 
 interface RunAuditDeps {
@@ -82,7 +74,8 @@ export async function runAudit(
     throw new Error("missing required argument: --website-id or --url");
   }
 
-  const adminClient = deps.adminClient ?? createAdminClient();
+  const adminClient =
+    deps.adminClient ?? (createAdminClient() as unknown as AdminClient);
   const auditWebsiteFn = deps.auditWebsiteFn ?? auditWebsite;
   let auditUrl = url;
 
@@ -115,11 +108,11 @@ async function loadWebsiteConfig(
   adminClient: AdminClient,
   websiteId: string,
 ): Promise<WebsiteConfigRow> {
-  const { data, error } = await adminClient
+  const { data, error } = (await adminClient
     .from("website_configs")
     .select("wordpress_url, company_id")
     .eq("id", websiteId)
-    .single();
+    .single()) as QueryResult<WebsiteConfigRow>;
 
   if (error || !data) {
     throw new Error(`website_lookup_failed: ${error?.message ?? "not found"}`);
@@ -150,13 +143,13 @@ async function persistAuditReport(
     scanned_at: input.report.scannedAt,
     created_by: null,
   });
-  if (reportInsert instanceof Promise) {
-    throw new Error("audit_report_insert_builder_missing_select");
-  }
-
-  const { data, error } = await reportInsert.select("id").single();
+  const { data, error } = (await reportInsert
+    .select("id")
+    .single()) as QueryResult<{ id: string }>;
   if (error || !data) {
-    throw new Error(`audit_report_persist_failed: ${error?.message ?? "no id"}`);
+    throw new Error(
+      `audit_report_persist_failed: ${error?.message ?? "no id"}`,
+    );
   }
 
   if (input.report.issues.length === 0) return;
@@ -173,9 +166,9 @@ async function persistAuditReport(
     source: issue.source,
     estimated_impact: issue.estimatedImpact,
   }));
-  const issuesResult = adminClient.from("audit_issues").insert(issuesPayload);
-  const { error: issuesError } =
-    issuesResult instanceof Promise ? await issuesResult : await issuesResult;
+  const { error: issuesError } = (await adminClient
+    .from("audit_issues")
+    .insert(issuesPayload)) as QueryResult<unknown>;
   if (issuesError) {
     throw new Error(`audit_issues_persist_failed: ${issuesError.message}`);
   }
@@ -203,9 +196,7 @@ function formatAuditMarkdown(report: AuditReport): string {
   return lines.join("\n");
 }
 
-function countIssues(
-  issues: AuditIssue[],
-): Record<AuditSeverity, number> {
+function countIssues(issues: AuditIssue[]): Record<AuditSeverity, number> {
   return issues.reduce<Record<AuditSeverity, number>>(
     (counts, issue) => {
       counts[issue.severity]++;

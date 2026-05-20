@@ -49,12 +49,7 @@ describe("audit-cli", () => {
     };
 
     await runAudit(
-      [
-        "--company-id",
-        "company_1",
-        "--url",
-        "https://example.com",
-      ],
+      ["--company-id", "company_1", "--url", "https://example.com"],
       {
         adminClient,
         auditWebsiteFn,

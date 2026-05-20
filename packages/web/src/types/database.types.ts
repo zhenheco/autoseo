@@ -9,6 +9,244 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      audit_reports: {
+        Row: {
+          id: string;
+          company_id: string | null;
+          website_id: string | null;
+          url: string;
+          scope: "single-page" | "sitemap" | "crawl";
+          health_score: number;
+          pages_scanned: number;
+          raw_payload: Json;
+          source: "cli" | "dashboard" | "cron" | "lead-gen";
+          scanned_at: string;
+          created_by: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          company_id?: string | null;
+          website_id?: string | null;
+          url: string;
+          scope: "single-page" | "sitemap" | "crawl";
+          health_score: number;
+          pages_scanned?: number;
+          raw_payload: Json;
+          source: "cli" | "dashboard" | "cron" | "lead-gen";
+          scanned_at: string;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          company_id?: string | null;
+          website_id?: string | null;
+          url?: string;
+          scope?: "single-page" | "sitemap" | "crawl";
+          health_score?: number;
+          pages_scanned?: number;
+          raw_payload?: Json;
+          source?: "cli" | "dashboard" | "cron" | "lead-gen";
+          scanned_at?: string;
+          created_by?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "audit_reports_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "audit_reports_website_id_fkey";
+            columns: ["website_id"];
+            isOneToOne: false;
+            referencedRelation: "website_configs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "audit_reports_created_by_fkey";
+            columns: ["created_by"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      audit_issues: {
+        Row: {
+          id: string;
+          report_id: string;
+          rule_id: string;
+          severity: "critical" | "warning" | "info";
+          risk_level: "low" | "medium" | "high";
+          page: string;
+          selector: string | null;
+          current: string;
+          suggested: string | null;
+          source: "html-scan" | "cwv" | "gsc-cross" | "a11y" | "security";
+          estimated_impact: "high" | "medium" | "low";
+          status:
+            | "open"
+            | "auto-applied"
+            | "pending-review"
+            | "manual"
+            | "resolved";
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          report_id: string;
+          rule_id: string;
+          severity: "critical" | "warning" | "info";
+          risk_level: "low" | "medium" | "high";
+          page: string;
+          selector?: string | null;
+          current: string;
+          suggested?: string | null;
+          source: "html-scan" | "cwv" | "gsc-cross" | "a11y" | "security";
+          estimated_impact: "high" | "medium" | "low";
+          status?:
+            | "open"
+            | "auto-applied"
+            | "pending-review"
+            | "manual"
+            | "resolved";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          report_id?: string;
+          rule_id?: string;
+          severity?: "critical" | "warning" | "info";
+          risk_level?: "low" | "medium" | "high";
+          page?: string;
+          selector?: string | null;
+          current?: string;
+          suggested?: string | null;
+          source?: "html-scan" | "cwv" | "gsc-cross" | "a11y" | "security";
+          estimated_impact?: "high" | "medium" | "low";
+          status?:
+            | "open"
+            | "auto-applied"
+            | "pending-review"
+            | "manual"
+            | "resolved";
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "audit_issues_report_id_fkey";
+            columns: ["report_id"];
+            isOneToOne: false;
+            referencedRelation: "audit_reports";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      audit_fix_log: {
+        Row: {
+          id: string;
+          issue_id: string;
+          applied_by: string;
+          applied_at: string;
+          route:
+            | "article-generator"
+            | "shopline-editor"
+            | "edge-worker"
+            | "manual";
+          before: string | null;
+          after: string | null;
+          result: "success" | "failed";
+          error_message: string | null;
+        };
+        Insert: {
+          id?: string;
+          issue_id: string;
+          applied_by: string;
+          applied_at?: string;
+          route:
+            | "article-generator"
+            | "shopline-editor"
+            | "edge-worker"
+            | "manual";
+          before?: string | null;
+          after?: string | null;
+          result: "success" | "failed";
+          error_message?: string | null;
+        };
+        Update: {
+          id?: string;
+          issue_id?: string;
+          applied_by?: string;
+          applied_at?: string;
+          route?:
+            | "article-generator"
+            | "shopline-editor"
+            | "edge-worker"
+            | "manual";
+          before?: string | null;
+          after?: string | null;
+          result?: "success" | "failed";
+          error_message?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "audit_fix_log_issue_id_fkey";
+            columns: ["issue_id"];
+            isOneToOne: false;
+            referencedRelation: "audit_issues";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      audit_lead_inquiries: {
+        Row: {
+          id: string;
+          url: string;
+          email: string | null;
+          ip_hash: string;
+          scanned_at: string;
+          converted_to_company_id: string | null;
+          nurture_stage: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          url: string;
+          email?: string | null;
+          ip_hash: string;
+          scanned_at?: string;
+          converted_to_company_id?: string | null;
+          nurture_stage?: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          url?: string;
+          email?: string | null;
+          ip_hash?: string;
+          scanned_at?: string;
+          converted_to_company_id?: string | null;
+          nurture_stage?: number;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "audit_lead_inquiries_converted_to_company_id_fkey";
+            columns: ["converted_to_company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       payment_orders: {
         Row: {
           id: string;

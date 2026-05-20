@@ -17,6 +17,8 @@
     "lint": "echo 'no lint yet'"
   },
   "dependencies": {
+    "@seo/audit": "workspace:*",
+    "@seo/shared": "workspace:*",
     "@seo/web": "workspace:*"
   },
   "devDependencies": {
