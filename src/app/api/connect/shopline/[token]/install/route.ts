@@ -4,7 +4,10 @@ import {
   createSupabaseShoplineInvitationStore,
   findActiveInvitation,
 } from "@/lib/shopline/invitations";
-import { normalizeShoplineShopHandle } from "@/lib/shopline/oauth";
+import {
+  buildAuthorizeUrl,
+  normalizeShoplineShopHandle,
+} from "@/lib/shopline/oauth";
 
 type RouteContext = {
   params: Promise<{ token: string }> | { token: string };
@@ -22,16 +25,18 @@ export async function GET(
     return NextResponse.json({ error: "missing_shop_handle" }, { status: 400 });
   }
 
+  let shopHandle: string;
   try {
-    normalizeShoplineShopHandle(shopHandleParam);
+    shopHandle = normalizeShoplineShopHandle(shopHandleParam);
   } catch {
     return NextResponse.json({ error: "invalid_shop_handle" }, { status: 400 });
   }
 
-  const invitationStore =
-    createSupabaseShoplineInvitationStore(createAdminClient());
+  const admin = createAdminClient();
+  const invitationStore = createSupabaseShoplineInvitationStore(admin);
+  let invitation;
   try {
-    await findActiveInvitation(invitationStore, token);
+    invitation = await findActiveInvitation(invitationStore, token);
   } catch (error) {
     const reason = getInvitationErrorReason(error);
     return NextResponse.redirect(
@@ -40,7 +45,56 @@ export async function GET(
     );
   }
 
-  return NextResponse.json({ error: "not_implemented" }, { status: 501 });
+  const websiteUrl = `https://${shopHandle}.myshopline.com`;
+  const { data: existingWebsite } = await admin
+    .from("website_configs")
+    .select("id")
+    .eq("company_id", invitation.companyId)
+    .eq("wordpress_url", websiteUrl)
+    .maybeSingle();
+
+  let websiteId = existingWebsite?.id as string | undefined;
+  if (!websiteId) {
+    const { data: createdWebsite, error } = await admin
+      .from("website_configs")
+      .insert({
+        company_id: invitation.companyId,
+        website_name: shopHandle,
+        wordpress_url: websiteUrl,
+        website_type: "external",
+        wp_enabled: false,
+        is_active: true,
+        language: "zh-TW",
+        brand_voice: {},
+        created_by: null,
+      })
+      .select("id")
+      .single();
+
+    if (error || !createdWebsite?.id) {
+      return NextResponse.json(
+        { error: "website_config_create_failed" },
+        { status: 500 },
+      );
+    }
+
+    websiteId = createdWebsite.id;
+  }
+
+  const { url: authorizeUrl, cookieNonce } = await buildAuthorizeUrl({
+    workspaceId: invitation.companyId,
+    siteId: websiteId,
+    shopHandle,
+    returnTo: `/connect/shopline/${token}/done?shop=${encodeURIComponent(shopHandle)}`,
+    invitationToken: token,
+  });
+
+  const resp = NextResponse.redirect(authorizeUrl, { status: 302 });
+  resp.headers.set(
+    "Set-Cookie",
+    `shopline_oauth_nonce=${cookieNonce}; HttpOnly; Secure; SameSite=Lax; Path=/api/oauth/shopline/callback; Max-Age=600`,
+  );
+  return resp;
 }
 
 function getInvitationErrorReason(
