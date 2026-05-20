@@ -94,4 +94,27 @@ describe("pushEdgeRule", () => {
       ],
     });
   });
+
+  it("surfaces KV write failures", async () => {
+    await expect(
+      pushEdgeRule(
+        {
+          shopDomain: "brand.com.tw",
+          path: "/products/foo",
+          rules: [
+            {
+              type: "meta-description",
+              value: "Edge-rendered product description.",
+            },
+          ],
+        },
+        {
+          kvGet: vi.fn(async () => null),
+          kvPut: vi.fn(async () => {
+            throw new Error("cloudflare_kv_put_failed:500");
+          }),
+        },
+      ),
+    ).rejects.toThrow("cloudflare_kv_put_failed:500");
+  });
 });
