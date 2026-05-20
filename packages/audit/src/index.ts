@@ -1,3 +1,4 @@
+export { auditWebsite } from "./audit-website";
 export { scanHtml } from "./scan-html";
 export type {
   AuditReport,
