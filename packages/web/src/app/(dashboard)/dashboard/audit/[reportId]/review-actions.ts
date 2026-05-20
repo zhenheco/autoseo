@@ -28,16 +28,8 @@ export async function approveAuditIssue(
   const context = await loadReviewContext(issueId);
   if (!context.ok) return context;
 
-  if (context.issue.risk_level !== "medium") {
-    return { ok: false, error: "not_eligible" };
-  }
-
-  if (
-    context.issue.status !== "open" &&
-    context.issue.status !== "pending-review"
-  ) {
-    return { ok: false, error: "not_reviewable" };
-  }
+  const reviewable = validateReviewableMediumIssue(context.issue);
+  if (!reviewable.ok) return reviewable;
 
   return applyAuditIssueToShopline({
     issue: context.issue,
@@ -68,9 +60,35 @@ export async function rejectAuditIssue(
 }
 
 export async function editAndApplyAuditIssue(
-  _formData: FormData,
+  formData: FormData,
 ): Promise<ActionResult> {
-  return { ok: false, error: "not_implemented" };
+  const issueId = readRequiredString(formData, "issueId");
+  if (!issueId) return { ok: false, error: "issue_id_required" };
+
+  const newSuggested = readRequiredString(formData, "newSuggested");
+  if (!newSuggested) return { ok: false, error: "suggested_required" };
+
+  const context = await loadReviewContext(issueId);
+  if (!context.ok) return context;
+
+  const reviewable = validateReviewableMediumIssue(context.issue);
+  if (!reviewable.ok) return reviewable;
+
+  const { error } = await context.supabase
+    .from("audit_issues")
+    .update({ suggested: newSuggested })
+    .eq("id", context.issue.id);
+
+  if (error) throw error;
+
+  return applyAuditIssueToShopline({
+    issue: { ...context.issue, suggested: newSuggested },
+    report: context.report,
+    companyId: context.report.company_id,
+    userId: context.user.id,
+    supabase: context.supabase,
+    preferSuggested: true,
+  });
 }
 
 export async function bulkApproveAuditIssues(_formData: FormData): Promise<{
@@ -85,6 +103,18 @@ function readRequiredString(formData: FormData, key: string) {
   return typeof value === "string" && value.trim().length > 0
     ? value.trim()
     : null;
+}
+
+function validateReviewableMediumIssue(issue: AuditIssueRow): ActionResult {
+  if (issue.risk_level !== "medium") {
+    return { ok: false, error: "not_eligible" };
+  }
+
+  if (issue.status !== "open" && issue.status !== "pending-review") {
+    return { ok: false, error: "not_reviewable" };
+  }
+
+  return { ok: true };
 }
 
 async function loadReviewContext(issueId: string): Promise<ReviewContext> {

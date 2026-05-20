@@ -247,4 +247,37 @@ describe("audit review actions", () => {
       args: [{ status: "manual" }],
     });
   });
+
+  it("editAndApplyAuditIssue persists the edited suggested value before applying", async () => {
+    const supabase = createSupabaseMock(createRows());
+    supabaseMocks.createClient.mockResolvedValueOnce(supabase);
+    const { editAndApplyAuditIssue } = await import("../review-actions");
+
+    const result = await editAndApplyAuditIssue(
+      formData({
+        issueId: "issue-1",
+        newSuggested: "Edited SHOPLINE meta description.",
+      }),
+    );
+
+    expect(result).toEqual({
+      ok: true,
+      route: "shopline-editor",
+      before: "Short",
+      after: "A polished SHOPLINE meta description.",
+    });
+    expect(supabase.calls).toContainEqual({
+      table: "audit_issues",
+      method: "update",
+      args: [{ suggested: "Edited SHOPLINE meta description." }],
+    });
+    expect(auditMocks.applyAuditFixToShopline).toHaveBeenCalledWith(
+      expect.objectContaining({
+        issue: expect.objectContaining({
+          suggested: "Edited SHOPLINE meta description.",
+        }),
+      }),
+      expect.any(Object),
+    );
+  });
 });
