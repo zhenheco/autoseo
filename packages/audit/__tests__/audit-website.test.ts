@@ -224,4 +224,43 @@ describe("auditWebsite", () => {
 
     expect(chromiumAudit).not.toHaveBeenCalled();
   });
+
+  it("adds GSC cross-analysis issues when GSC input and fetcher are provided", async () => {
+    const html = readFixture("all-good.html");
+    const fetchOk: typeof fetch = async () =>
+      new Response(html, { status: 200 });
+    const fetchGscMetrics = vi.fn(async () => [
+      {
+        page: "https://example.com/guide",
+        query: "seo guide",
+        position: 8,
+        impressions: 200,
+        clicks: 2,
+        ctr: 0.01,
+      },
+    ]);
+
+    const report = await auditWebsite(
+      {
+        url: "https://example.com",
+        scope: "single-page",
+        gsc: { token: "gsc-token" },
+      },
+      {
+        fetch: fetchOk,
+        fetchGscMetrics,
+      },
+    );
+
+    expect(fetchGscMetrics).toHaveBeenCalledWith({
+      token: "gsc-token",
+      url: "https://example.com",
+    });
+    expect(report.issues).toEqual([
+      expect.objectContaining({
+        ruleId: "gsc.low-ctr-high-impression",
+        source: "gsc-cross",
+      }),
+    ]);
+  });
 });

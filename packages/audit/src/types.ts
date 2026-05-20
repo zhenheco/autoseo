@@ -1,4 +1,9 @@
 import type { CoreWebVitals, runChromiumAudit } from "./chromium-audit";
+import type {
+  ClarityPageMetric,
+  GA4PageMetric,
+  GSCPageMetric,
+} from "./cross-analysis";
 
 export type AuditSeverity = "critical" | "warning" | "info";
 export type AuditRiskLevel = "low" | "medium" | "high";
@@ -39,6 +44,9 @@ export interface AuditWebsiteInput {
   scope: AuditScope;
   maxPages?: number;
   includeChromium?: boolean;
+  gsc?: { token: string };
+  ga4?: { propertyId: string; token: string };
+  clarity?: { siteId: string; token: string };
 }
 
 export interface AuditWebsiteDeps {
@@ -46,4 +54,16 @@ export interface AuditWebsiteDeps {
   now?: () => Date;
   randomUuid?: () => string;
   chromiumAudit?: typeof runChromiumAudit;
+  fetchGscMetrics?: (input: {
+    token: string;
+    url: string;
+  }) => Promise<GSCPageMetric[]>;
+  fetchGa4Metrics?: (input: {
+    propertyId: string;
+    token: string;
+  }) => Promise<GA4PageMetric[]>;
+  fetchClarityMetrics?: (input: {
+    siteId: string;
+    token: string;
+  }) => Promise<ClarityPageMetric[]>;
 }
