@@ -3291,5 +3291,32 @@
       "medium": "Debe mejorar",
       "low": "Requiere correcciones inmediatas"
     }
+  },
+  "publicAudit": {
+    "title": "免費 SEO 健檢",
+    "subtitle": "輸入網址，30 秒看您網站的 SEO 健康度",
+    "urlLabel": "您的網站網址",
+    "urlPlaceholder": "https://your-shop.com",
+    "submitButton": "開始免費掃描",
+    "scanning": "掃描中…",
+    "scanningSteps": {
+      "fetching": "正在抓取網頁",
+      "analyzing": "分析中",
+      "scoring": "計算健康度"
+    },
+    "result": {
+      "scoreTitle": "您的 SEO 健康度",
+      "topIssuesTitle": "前 5 大改善建議",
+      "totalIssues": "共偵測到 {count} 個問題",
+      "ctaTitle": "想看完整報告 + 自動修補？",
+      "ctaSubtitle": "綁定 1waySEO 後，我們會自動修補商品 SEO、定期重新掃描、每週 email 進度報告",
+      "ctaButton": "了解 1waySEO →"
+    },
+    "errors": {
+      "turnstileInvalid": "驗證失敗，請重試",
+      "rateLimited": "今日掃描已達上限，請明日再試",
+      "fetchFailed": "無法存取此網站，請確認網址正確且可公開存取",
+      "invalidUrl": "請輸入有效網址"
+    }
   }
 }
