@@ -143,4 +143,27 @@ describe("audit-cli", () => {
       }),
     );
   });
+
+  it("surfaces persist failures instead of silently continuing", async () => {
+    const auditWebsiteFn = vi.fn().mockResolvedValue(report);
+    const reportSingle = vi.fn().mockResolvedValue({
+      data: null,
+      error: { message: "permission denied" },
+    });
+    const reportSelect = vi.fn(() => ({ single: reportSingle }));
+    const reportInsert = vi.fn(() => ({ select: reportSelect }));
+    const adminClient = {
+      from: vi.fn((table: string) => {
+        if (table === "audit_reports") return { insert: reportInsert };
+        throw new Error(`unexpected table: ${table}`);
+      }),
+    };
+
+    await expect(
+      runAudit(["--url", "https://example.com"], {
+        adminClient,
+        auditWebsiteFn,
+      }),
+    ).rejects.toThrow("audit_report_persist_failed: permission denied");
+  });
 });
