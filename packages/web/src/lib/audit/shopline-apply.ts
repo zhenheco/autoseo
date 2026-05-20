@@ -29,6 +29,14 @@ type AuditIssueRow = Database["public"]["Tables"]["audit_issues"]["Row"];
 type AuditReportRow = Database["public"]["Tables"]["audit_reports"]["Row"];
 type WebsiteConfigRow = Database["public"]["Tables"]["website_configs"]["Row"];
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
+type ApplyAuditIssueResult =
+  | {
+      ok: true;
+      route: "shopline-editor" | "edge-worker";
+      before: string;
+      after: string;
+    }
+  | { ok: false; error: string };
 
 export async function applyAuditIssueToShopline(input: {
   issue: AuditIssueRow;
@@ -37,15 +45,7 @@ export async function applyAuditIssueToShopline(input: {
   userId: string;
   supabase: SupabaseClient;
   preferSuggested?: boolean;
-}): Promise<
-  | {
-      ok: true;
-      route: "shopline-editor" | "edge-worker";
-      before: string;
-      after: string;
-    }
-  | { ok: false; error: string }
-> {
+}): Promise<ApplyAuditIssueResult> {
   const shoplineTarget = await resolveShoplineTarget(input.supabase, {
     companyId: input.companyId,
     websiteId: input.report.website_id,
@@ -97,7 +97,7 @@ async function persistAndReturn(
     supabase: SupabaseClient;
   },
   result: ApplyShoplineFixResult | ApplyEdgeFixResult,
-) {
+): Promise<ApplyAuditIssueResult> {
   await persistFixLog(input.supabase, {
     issueId: input.issue.id,
     userId: input.userId,
