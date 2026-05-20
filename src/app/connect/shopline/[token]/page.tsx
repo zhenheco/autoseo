@@ -29,6 +29,18 @@ export default async function ShoplineInvitationPage({ params }: PageProps) {
       );
     }
 
+    if (
+      error instanceof Error &&
+      error.message === "shopline_invitation_revoked"
+    ) {
+      return (
+        <InvitationShell
+          title="連結已撤銷"
+          description="此 SHOPLINE 綁定連結已撤銷。"
+        />
+      );
+    }
+
     return (
       <InvitationShell
         title="連結無效"

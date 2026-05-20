@@ -89,4 +89,20 @@ describe("public SHOPLINE invitation page", () => {
     ).toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
+
+  it("shows a revoked-link message without a form when invitation is revoked", async () => {
+    invitationQuery.maybeSingle.mockResolvedValueOnce({
+      data: invitationRow({
+        revoked_at: "2026-05-20T01:00:00.000Z",
+      }),
+      error: null,
+    });
+
+    render(await ShoplineInvitationPage(props("revoked-token")));
+
+    expect(
+      screen.getByRole("heading", { name: "連結已撤銷" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
 });
