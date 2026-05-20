@@ -1,6 +1,8 @@
 import { createHash } from "crypto";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@shared/supabase";
+import type { AuditIssue, AuditReport } from "@audit";
+import type { Json } from "@/types/database.types";
 
 type PublicAuditRequestBody = {
   url?: unknown;
@@ -40,6 +42,13 @@ export async function POST(request: Request) {
   const rateLimited = await isRateLimited(supabase, ipHash);
   if (rateLimited) {
     return jsonError("rate_limited", "Too many audit requests", 429);
+  }
+
+  const cached = await findCachedReport(supabase, url);
+  if (cached) {
+    return NextResponse.json(
+      toPublicAuditResponse(cached.reportId, cached.report),
+    );
   }
 
   return jsonError("not_implemented", "Public audit is not implemented", 501);
@@ -107,6 +116,65 @@ async function isRateLimited(
 
   if (error) throw error;
   return (count ?? 0) >= 5;
+}
+
+async function findCachedReport(
+  supabase: ReturnType<typeof createAdminClient>,
+  url: string,
+) {
+  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { data, error } = await supabase
+    .from("audit_reports")
+    .select("id, health_score, raw_payload, scanned_at")
+    .eq("source", "lead-gen")
+    .eq("url", url)
+    .gt("scanned_at", cutoff)
+    .order("scanned_at", { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  if (!data) return null;
+
+  const rawPayload = data.raw_payload as Json;
+  const report = rawPayload as unknown as AuditReport;
+  return {
+    reportId: data.id as string,
+    report: {
+      ...report,
+      healthScore:
+        typeof report.healthScore === "number"
+          ? report.healthScore
+          : (data.health_score as number),
+    },
+  };
+}
+
+function toPublicAuditResponse(reportId: string, report: AuditReport) {
+  return {
+    reportId,
+    healthScore: report.healthScore,
+    topIssues: selectTopIssues(report.issues),
+    totalIssues: report.issues.length,
+  };
+}
+
+function selectTopIssues(issues: AuditIssue[]) {
+  return [...issues]
+    .sort((a, b) => issuePriority(b) - issuePriority(a))
+    .slice(0, 5)
+    .map((issue) => ({
+      rule: issue.ruleId,
+      page: issue.page,
+      impact: issue.suggested?.trim() || issue.current,
+    }));
+}
+
+function issuePriority(issue: AuditIssue) {
+  const severity = { critical: 3, warning: 2, info: 1 }[issue.severity];
+  const impact = { high: 3, medium: 2, low: 1 }[issue.estimatedImpact];
+  const risk = { high: 3, medium: 2, low: 1 }[issue.riskLevel];
+  return severity * 100 + impact * 10 + risk;
 }
 
 function normalizeUrl(input: unknown) {
