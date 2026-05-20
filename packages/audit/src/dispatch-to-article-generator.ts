@@ -30,5 +30,25 @@ export async function dispatchAuditIssueToArticleGenerator(
     return { ok: false, reason: "rule_not_supported" };
   }
 
-  return { ok: false, reason: "not_implemented" };
+  if (!input.issue.id) {
+    return { ok: false, reason: "missing_audit_issue_id" };
+  }
+
+  const existingJobId = await deps.findExistingJob(input.issue.id);
+  if (existingJobId) {
+    return { ok: false, reason: "idempotent_existing" };
+  }
+
+  const brief = await deps.generateArticleBrief(input.issue);
+  const job = await deps.insertArticleJob({
+    audit_issue_id: input.issue.id,
+    source_type: "audit-driven",
+    company_id: input.companyId,
+    title: brief.title,
+    outline: brief.outline,
+    target_keywords: brief.target_keywords,
+    status: "pending",
+  });
+
+  return { ok: true, jobId: job.id };
 }

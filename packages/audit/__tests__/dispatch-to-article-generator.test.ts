@@ -44,4 +44,40 @@ describe("dispatchAuditIssueToArticleGenerator", () => {
     expect(deps.generateArticleBrief).not.toHaveBeenCalled();
     expect(deps.insertArticleJob).not.toHaveBeenCalled();
   });
+
+  it("dispatches content.missing-topic by generating a brief and inserting an article job", async () => {
+    const deps = createDeps();
+    vi.mocked(deps.findExistingJob).mockResolvedValue(null);
+    vi.mocked(deps.generateArticleBrief).mockResolvedValue({
+      title: "Ergonomic desk buying guide",
+      outline: "Cover buyer intent, comparison points, and CTA.",
+      target_keywords: ["ergonomic desk"],
+    });
+    vi.mocked(deps.insertArticleJob).mockResolvedValue({ id: "job-1" });
+    const issue = createIssue({
+      ruleId: "content.missing-topic",
+      severity: "info",
+      riskLevel: "medium",
+      current: "ergonomic desk",
+      estimatedImpact: "high",
+    });
+
+    const result = await dispatchAuditIssueToArticleGenerator(
+      { issue, companyId: "company-1" },
+      deps,
+    );
+
+    expect(result).toEqual({ ok: true, jobId: "job-1" });
+    expect(deps.findExistingJob).toHaveBeenCalledWith("issue-1");
+    expect(deps.generateArticleBrief).toHaveBeenCalledWith(issue);
+    expect(deps.insertArticleJob).toHaveBeenCalledWith({
+      audit_issue_id: "issue-1",
+      source_type: "audit-driven",
+      company_id: "company-1",
+      title: "Ergonomic desk buying guide",
+      outline: "Cover buyer intent, comparison points, and CTA.",
+      target_keywords: ["ergonomic desk"],
+      status: "pending",
+    });
+  });
 });
