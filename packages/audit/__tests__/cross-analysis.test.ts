@@ -27,4 +27,19 @@ describe("cross-analysis audit rules", () => {
       estimatedImpact: "high",
     });
   });
+
+  it("skips GSC pages already in top positions", () => {
+    const issues = analyzeGscLowCtrHighImpression([
+      {
+        page: "https://example.com/guide",
+        query: "seo guide",
+        position: 3,
+        impressions: 200,
+        clicks: 2,
+        ctr: 0.01,
+      },
+    ]);
+
+    expect(issues).toEqual([]);
+  });
 });
