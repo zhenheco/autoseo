@@ -13,6 +13,10 @@ const authState = vi.hoisted(() => ({
   supabase: null as unknown,
 }));
 
+const auditMocks = vi.hoisted(() => ({
+  applyAuditFixToShopline: vi.fn(),
+}));
+
 vi.mock("@/lib/api/auth-middleware", () => ({
   withCompany: vi.fn(
     (handler) =>
@@ -36,6 +40,7 @@ vi.mock("@/lib/api/auth-middleware", () => ({
       },
   ),
 }));
+vi.mock("@audit", () => auditMocks);
 
 function params(issueId = "issue-1") {
   return {
@@ -54,6 +59,7 @@ function createSupabaseMock(
     from(table: TableName) {
       const builder = {
         filters: [] as Array<[string, unknown]>,
+        updatePayload: undefined as unknown,
         select: vi.fn((...args: unknown[]) => {
           calls.push({ table, method: "select", args });
           return builder;
@@ -70,6 +76,24 @@ function createSupabaseMock(
           );
           return { data: data ?? null, error: null };
         }),
+        insert: vi.fn(async (payload: unknown) => {
+          calls.push({ table, method: "insert", args: [payload] });
+          return { data: null, error: null };
+        }),
+        update: vi.fn((payload: unknown) => {
+          calls.push({ table, method: "update", args: [payload] });
+          builder.updatePayload = payload;
+          return builder;
+        }),
+        then(
+          resolve: (value: { data: null; error: null }) => unknown,
+          reject?: (reason: unknown) => unknown,
+        ) {
+          return Promise.resolve({ data: null, error: null }).then(
+            resolve,
+            reject,
+          );
+        },
       };
       return builder;
     },
@@ -152,6 +176,12 @@ describe("POST /api/audit/issues/[issueId]/apply", () => {
     vi.resetModules();
     authState.mode = "authorized";
     authState.supabase = createSupabaseMock({});
+    auditMocks.applyAuditFixToShopline.mockResolvedValue({
+      ok: true,
+      route: "shopline-editor",
+      before: "Short",
+      after: "A polished SHOPLINE meta description.",
+    });
   });
 
   it("returns 401 when the user is not authenticated", async () => {
@@ -219,6 +249,53 @@ describe("POST /api/audit/issues/[issueId]/apply", () => {
     await expect(response.json()).resolves.toEqual({
       ok: false,
       error: "route_not_available",
+    });
+  });
+
+  it("returns 200, writes audit_fix_log, and marks the issue auto-applied when the fix succeeds", async () => {
+    const supabase = createSupabaseMock(rowsForEligibleIssue());
+    authState.supabase = supabase;
+
+    const response = await post();
+
+    expect(response.status).toBe(200);
+    expect(auditMocks.applyAuditFixToShopline).toHaveBeenCalledWith(
+      expect.objectContaining({
+        reportId: "report-1",
+        shopHandle: "demo-shop",
+      }),
+      expect.objectContaining({
+        shoplineUpdate: expect.any(Function),
+        generateMetaDescription: expect.any(Function),
+        generateImageAlt: expect.any(Function),
+        getShopHandleForReport: expect.any(Function),
+      }),
+    );
+    expect(supabase.calls).toContainEqual({
+      table: "audit_fix_log",
+      method: "insert",
+      args: [
+        {
+          issue_id: "issue-1",
+          applied_by: "user-1",
+          route: "shopline-editor",
+          before: "Short",
+          after: "A polished SHOPLINE meta description.",
+          result: "success",
+          error_message: null,
+        },
+      ],
+    });
+    expect(supabase.calls).toContainEqual({
+      table: "audit_issues",
+      method: "update",
+      args: [{ status: "auto-applied" }],
+    });
+    await expect(response.json()).resolves.toEqual({
+      ok: true,
+      route: "shopline-editor",
+      before: "Short",
+      after: "A polished SHOPLINE meta description.",
     });
   });
 });
