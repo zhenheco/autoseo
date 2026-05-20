@@ -20,10 +20,10 @@ function normalizeCandidate(candidate: string): string {
 }
 
 function firstMatchedHandle(html: string): string | null {
-  const handleMatch = /handle:\s*['"]([a-z0-9-]+)['"]/i.exec(html);
+  const handleMatch = /handle:\s*['"]([^'"]+)['"]/i.exec(html);
   if (handleMatch?.[1]) return handleMatch[1];
 
-  const shopHandleMatch = /"shop_handle"\s*:\s*"([a-z0-9-]+)"/i.exec(html);
+  const shopHandleMatch = /"shop_handle"\s*:\s*"([^"]+)"/i.exec(html);
   if (shopHandleMatch?.[1]) return shopHandleMatch[1];
 
   const myshoplineMatches = html.matchAll(

@@ -51,4 +51,12 @@ describe("parseShoplineShopHandleFromUrl", () => {
       }),
     ).rejects.toThrow("shopline_shop_handle_parse_failed");
   });
+
+  it("throws when the matched handle has an invalid format", async () => {
+    await expect(
+      parseShoplineShopHandleFromUrl("https://brand.example.com/", {
+        fetch: mockFetch(`handle: 'ab cd@!' "shop_handle":"brand-shop"`),
+      }),
+    ).rejects.toThrow("shopline_shop_handle_parse_failed");
+  });
 });
