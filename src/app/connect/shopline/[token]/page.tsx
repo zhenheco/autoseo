@@ -4,6 +4,7 @@ import {
   findActiveInvitation,
   type ShoplineInvitation,
 } from "@/lib/shopline/invitations";
+import { getTranslations } from "next-intl/server";
 
 type PageProps = {
   params: Promise<{ token: string }> | { token: string };
@@ -13,6 +14,7 @@ export const dynamic = "force-dynamic";
 
 export default async function ShoplineInvitationPage({ params }: PageProps) {
   const { token } = await params;
+  const t = await getTranslations("connect.shopline");
   const store = createSupabaseShoplineInvitationStore(createAdminClient());
 
   let invitation: ShoplineInvitation;
@@ -25,8 +27,8 @@ export default async function ShoplineInvitationPage({ params }: PageProps) {
     ) {
       return (
         <InvitationShell
-          title="連結已過期"
-          description="連結已過期，請聯絡 1waySEO 取得新連結"
+          title={t("errors.expired")}
+          description={t("errors.expired")}
         />
       );
     }
@@ -37,37 +39,34 @@ export default async function ShoplineInvitationPage({ params }: PageProps) {
     ) {
       return (
         <InvitationShell
-          title="連結已撤銷"
-          description="此 SHOPLINE 綁定連結已撤銷。"
+          title={t("errors.revoked")}
+          description={t("errors.revoked")}
         />
       );
     }
 
     return (
       <InvitationShell
-        title="連結無效"
-        description="此 SHOPLINE 綁定連結不存在或已無法使用。"
+        title={t("errors.invalid")}
+        description={t("errors.invalid")}
       />
     );
   }
 
   return (
-    <InvitationShell
-      title="綁定您的 SHOPLINE 商店"
-      description="授權後 1waySEO 將可代您管理商品 SEO"
-    >
+    <InvitationShell title={t("title")} description={t("subtitle")}>
       <form
         action={`/api/connect/shopline/${encodeURIComponent(token)}/install`}
         method="GET"
         className="mt-6 space-y-4"
       >
         <label className="block text-sm font-medium text-slate-800">
-          SHOPLINE 商店代號
+          {t("shopHandleLabel")}
           <input
             name="shopHandle"
             defaultValue={invitation.expectedShopHandle ?? ""}
             className="mt-2 block w-full rounded-md border border-slate-300 px-3 py-2 text-base outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
-            placeholder="your-store"
+            placeholder={t("shopHandlePlaceholder")}
             required
           />
         </label>
@@ -75,7 +74,7 @@ export default async function ShoplineInvitationPage({ params }: PageProps) {
           type="submit"
           className="w-full rounded-md bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
         >
-          前往 SHOPLINE 授權
+          {t("authorizeButton")}
         </button>
       </form>
     </InvitationShell>
