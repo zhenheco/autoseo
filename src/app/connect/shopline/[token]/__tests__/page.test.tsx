@@ -105,4 +105,32 @@ describe("public SHOPLINE invitation page", () => {
     ).toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
+
+  it("shows the install form with expected shop handle when invitation is active", async () => {
+    invitationQuery.maybeSingle.mockResolvedValueOnce({
+      data: invitationRow({
+        expected_shop_handle: "demo-shop",
+      }),
+      error: null,
+    });
+
+    const { container } = render(
+      await ShoplineInvitationPage(props("active-token")),
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "綁定您的 SHOPLINE 商店" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("textbox", { name: "SHOPLINE 商店代號" }),
+    ).toHaveValue("demo-shop");
+    expect(
+      screen.getByRole("button", { name: "前往 SHOPLINE 授權" }),
+    ).toBeInTheDocument();
+    expect(container.querySelector("form")).toHaveAttribute(
+      "action",
+      "/api/connect/shopline/active-token/install",
+    );
+    expect(container.querySelector("form")).toHaveAttribute("method", "GET");
+  });
 });

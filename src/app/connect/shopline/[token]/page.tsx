@@ -2,6 +2,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import {
   createSupabaseShoplineInvitationStore,
   findActiveInvitation,
+  type ShoplineInvitation,
 } from "@/lib/shopline/invitations";
 
 type PageProps = {
@@ -14,8 +15,9 @@ export default async function ShoplineInvitationPage({ params }: PageProps) {
   const { token } = await params;
   const store = createSupabaseShoplineInvitationStore(createAdminClient());
 
+  let invitation: ShoplineInvitation;
   try {
-    await findActiveInvitation(store, token);
+    invitation = await findActiveInvitation(store, token);
   } catch (error) {
     if (
       error instanceof Error &&
@@ -53,7 +55,30 @@ export default async function ShoplineInvitationPage({ params }: PageProps) {
     <InvitationShell
       title="綁定您的 SHOPLINE 商店"
       description="授權後 1waySEO 將可代您管理商品 SEO"
-    />
+    >
+      <form
+        action={`/api/connect/shopline/${encodeURIComponent(token)}/install`}
+        method="GET"
+        className="mt-6 space-y-4"
+      >
+        <label className="block text-sm font-medium text-slate-800">
+          SHOPLINE 商店代號
+          <input
+            name="shopHandle"
+            defaultValue={invitation.expectedShopHandle ?? ""}
+            className="mt-2 block w-full rounded-md border border-slate-300 px-3 py-2 text-base outline-none transition focus:border-slate-900 focus:ring-2 focus:ring-slate-200"
+            placeholder="your-store"
+            required
+          />
+        </label>
+        <button
+          type="submit"
+          className="w-full rounded-md bg-slate-950 px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-slate-800"
+        >
+          前往 SHOPLINE 授權
+        </button>
+      </form>
+    </InvitationShell>
   );
 }
 
