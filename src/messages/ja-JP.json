@@ -2695,6 +2695,53 @@
     "common": {
       "cancel": "キャンセル",
       "processing": "処理中..."
+    },
+    "shoplineInvitations": {
+      "title": "SHOPLINE 事業者招待リンク",
+      "description": "新規契約事業者向けに専用の連携リンクを発行します。リンクは 7 日間有効で、複数回利用できます。",
+      "createForm": {
+        "title": "新しい招待を作成",
+        "companyLabel": "クライアント企業",
+        "companyPlaceholder": "企業を選択",
+        "expectedShopHandleLabel": "想定 SHOPLINE ストア（任意）",
+        "expectedShopHandlePlaceholder": "brandname.myshopline.com",
+        "noteLabel": "メモ（任意）",
+        "notePlaceholder": "社内メモ（任意）",
+        "submitButton": "リンクを生成",
+        "ttlHint": "リンクは 7 日後に期限切れになります",
+        "linkFormat": "リンク形式: {url}/connect/shopline/<token>"
+      },
+      "list": {
+        "title": "招待一覧",
+        "description": "owner/admin 権限を持つ企業の SHOPLINE 招待のみ表示されます。",
+        "empty": "SHOPLINE 招待リンクはまだありません"
+      },
+      "table": {
+        "company": "企業",
+        "expectedHandle": "想定ストア",
+        "status": "ステータス",
+        "redeemCount": "連携回数",
+        "expiresAt": "有効期限",
+        "createdAt": "作成日時",
+        "actions": "操作"
+      },
+      "status": {
+        "active": "有効",
+        "expired": "期限切れ",
+        "revoked": "取り消し済み"
+      },
+      "actions": {
+        "copyLink": "リンクをコピー",
+        "copied": "コピー済み",
+        "openLink": "リンクを開く",
+        "revoke": "取り消す",
+        "revokeConfirm": "この招待を取り消しますか？連携済みの事業者には影響しません。"
+      },
+      "errors": {
+        "unauthorized": "権限がありません。",
+        "createFailed": "招待の作成に失敗しました。",
+        "revokeFailed": "取り消しに失敗しました。"
+      }
     }
   },
   "theme": {
@@ -2964,5 +3011,24 @@
     "invalidMobileBarcode": "モバイルバーコードの形式が正しくありません",
     "invalidCertificate": "憑証の形式が正しくありません",
     "selectDonateOrg": "寄付先を選択してください"
+  },
+  "connect": {
+    "shopline": {
+      "title": "SHOPLINE ストアを連携する",
+      "subtitle": "認可後、1waySEO が商品の SEO 管理を代行できるようになります。",
+      "shopHandleLabel": "SHOPLINE ストア URL",
+      "shopHandlePlaceholder": "brandname.myshopline.com",
+      "authorizeButton": "連携を認可する",
+      "errors": {
+        "invalid": "このリンクは無効です。新しいリンクについては 1waySEO までお問い合わせください。",
+        "expired": "このリンクは期限切れです。新しいリンクについては 1waySEO までお問い合わせください。",
+        "revoked": "このリンクは取り消されています。"
+      },
+      "done": {
+        "title": "✓ SHOPLINE ストアの連携が完了しました",
+        "shopLabel": "ストア",
+        "instruction": "このページは閉じていただけます。1waySEO チームがストアの SEO 管理を開始します。"
+      }
+    }
   }
 }
