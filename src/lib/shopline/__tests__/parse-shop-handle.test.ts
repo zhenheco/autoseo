@@ -31,4 +31,12 @@ describe("parseShoplineShopHandleFromUrl", () => {
       }),
     ).resolves.toBe("brand");
   });
+
+  it("throws when no pattern matches", async () => {
+    await expect(
+      parseShoplineShopHandleFromUrl("https://example.com/", {
+        fetch: mockFetch("<html><body>No SHOPLINE markers</body></html>"),
+      }),
+    ).rejects.toThrow("shopline_shop_handle_parse_failed");
+  });
 });
