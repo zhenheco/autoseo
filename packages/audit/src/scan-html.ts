@@ -41,6 +41,7 @@ export function scanHtml(input: ScanHtmlInput): AuditIssue[] {
   issues.push(...checkOgTitle($, input.pageUrl));
   issues.push(...checkCanonical($, input.pageUrl));
   issues.push(...checkH1($, input.pageUrl));
+  issues.push(...checkImgAlt($, input.pageUrl));
 
   return issues;
 }
@@ -63,6 +64,36 @@ function checkOgImage($: CheerioRoot, pageUrl: string): AuditIssue[] {
       estimatedImpact: "high",
     },
   ];
+}
+
+function checkImgAlt($: CheerioRoot, pageUrl: string): AuditIssue[] {
+  const issues: AuditIssue[] = [];
+
+  $("img").each((index, element) => {
+    const alt = $(element).attr("alt");
+    if (typeof alt === "string" && alt.trim()) {
+      return;
+    }
+
+    const src = $(element).attr("src")?.trim() ?? "";
+    const position = index + 1;
+    const selector = src
+      ? `img[src="${src}"]:nth-of-type(${position})`
+      : `img:nth-of-type(${position})`;
+
+    issues.push({
+      ruleId: "alt.missing",
+      severity: "warning",
+      riskLevel: "low",
+      page: pageUrl,
+      selector,
+      current: "",
+      source: "html-scan",
+      estimatedImpact: "medium",
+    });
+  });
+
+  return issues;
 }
 
 function checkH1($: CheerioRoot, pageUrl: string): AuditIssue[] {

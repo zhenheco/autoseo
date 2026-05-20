@@ -277,4 +277,66 @@ describe("scanHtml", () => {
       ]),
     );
   });
+
+  it("reports a warning issue for each image missing alt text", () => {
+    const issues = scanHtml({
+      html: readFixture("alt-missing.html"),
+      pageUrl: "https://example.com/alt-missing",
+    });
+
+    expect(issues).toEqual(
+      expect.arrayContaining([
+        {
+          ruleId: "alt.missing",
+          severity: "warning",
+          riskLevel: "low",
+          page: "https://example.com/alt-missing",
+          selector: 'img[src="/images/missing-alt.jpg"]:nth-of-type(1)',
+          current: "",
+          source: "html-scan",
+          estimatedImpact: "medium",
+        },
+        {
+          ruleId: "alt.missing",
+          severity: "warning",
+          riskLevel: "low",
+          page: "https://example.com/alt-missing",
+          selector: 'img[src="/images/empty-alt.jpg"]:nth-of-type(2)',
+          current: "",
+          source: "html-scan",
+          estimatedImpact: "medium",
+        },
+      ]),
+    );
+  });
+
+  it("does not report alt missing when every image has alt text", () => {
+    const issues = scanHtml({
+      html: readFixture("all-good.html"),
+      pageUrl: "https://example.com/all-good",
+    });
+
+    expect(issues.some((issue) => issue.ruleId === "alt.missing")).toBe(false);
+  });
+
+  it("includes alt missing in multi-issue scans", () => {
+    const issues = scanHtml({
+      html: readFixture("multi-issues.html"),
+      pageUrl: "https://example.com/multi-issues",
+    });
+
+    expect(issues.filter((issue) => issue.ruleId === "alt.missing")).toHaveLength(2);
+    expect(issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          ruleId: "alt.missing",
+          selector: 'img[src="/images/missing-alt.jpg"]:nth-of-type(1)',
+        }),
+        expect.objectContaining({
+          ruleId: "alt.missing",
+          selector: 'img[src="/images/empty-alt.jpg"]:nth-of-type(2)',
+        }),
+      ]),
+    );
+  });
 });
