@@ -9,6 +9,10 @@ export async function auditWebsite(
   input: AuditWebsiteInput,
   deps: AuditWebsiteDeps = {},
 ): Promise<AuditReport> {
+  if (input.scope !== "single-page") {
+    throw new Error(`scope_not_implemented: ${input.scope}`);
+  }
+
   const fetchFn = deps.fetch ?? fetch;
   const now = deps.now ?? (() => new Date());
   const randomUuid = deps.randomUuid ?? (() => crypto.randomUUID());

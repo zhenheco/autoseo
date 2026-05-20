@@ -80,4 +80,18 @@ describe("auditWebsite", () => {
       ),
     ).rejects.toThrow("audit_fetch_failed: HTTP 500");
   });
+
+  it("throws scope_not_implemented for sitemap scope", async () => {
+    const fetchOk: typeof fetch = async () => new Response("<html></html>");
+
+    await expect(
+      auditWebsite(
+        {
+          url: "https://example.com/sitemap.xml",
+          scope: "sitemap",
+        },
+        { fetch: fetchOk },
+      ),
+    ).rejects.toThrow("scope_not_implemented: sitemap");
+  });
 });
