@@ -27,6 +27,23 @@ vi.mock("@/lib/supabase/admin", () => ({
   createAdminClient: vi.fn(() => supabaseMock),
 }));
 
+vi.mock("next-intl/server", () => ({
+  getTranslations: vi.fn(async () => {
+    const messages: Record<string, string> = {
+      title: "綁定您的 SHOPLINE 商店",
+      subtitle: "授權後 1waySEO 將可代您管理商品 SEO",
+      shopHandleLabel: "SHOPLINE 商店網址",
+      shopHandlePlaceholder: "brandname.myshopline.com",
+      authorizeButton: "授權綁定",
+      "errors.invalid": "此連結無效，請聯絡 1waySEO 取得新連結",
+      "errors.expired": "此連結已過期，請聯絡 1waySEO 取得新連結",
+      "errors.revoked": "此連結已撤銷",
+    };
+
+    return (key: string) => messages[key] ?? key;
+  }),
+}));
+
 import ShoplineInvitationPage from "../page";
 
 function props(token = "invite-token") {
@@ -65,7 +82,9 @@ describe("public SHOPLINE invitation page", () => {
     render(await ShoplineInvitationPage(props("missing-token")));
 
     expect(
-      screen.getByRole("heading", { name: "連結無效" }),
+      screen.getByRole("heading", {
+        name: "此連結無效，請聯絡 1waySEO 取得新連結",
+      }),
     ).toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
     expect(invitationQuery.eq).toHaveBeenCalledWith("token", "missing-token");
@@ -82,11 +101,13 @@ describe("public SHOPLINE invitation page", () => {
     render(await ShoplineInvitationPage(props("expired-token")));
 
     expect(
-      screen.getByRole("heading", { name: "連結已過期" }),
+      screen.getByRole("heading", {
+        name: "此連結已過期，請聯絡 1waySEO 取得新連結",
+      }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText("連結已過期，請聯絡 1waySEO 取得新連結"),
-    ).toBeInTheDocument();
+      screen.getAllByText("此連結已過期，請聯絡 1waySEO 取得新連結"),
+    ).toHaveLength(2);
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 
@@ -101,7 +122,7 @@ describe("public SHOPLINE invitation page", () => {
     render(await ShoplineInvitationPage(props("revoked-token")));
 
     expect(
-      screen.getByRole("heading", { name: "連結已撤銷" }),
+      screen.getByRole("heading", { name: "此連結已撤銷" }),
     ).toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
@@ -122,10 +143,10 @@ describe("public SHOPLINE invitation page", () => {
       screen.getByRole("heading", { name: "綁定您的 SHOPLINE 商店" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("textbox", { name: "SHOPLINE 商店代號" }),
+      screen.getByRole("textbox", { name: "SHOPLINE 商店網址" }),
     ).toHaveValue("demo-shop");
     expect(
-      screen.getByRole("button", { name: "前往 SHOPLINE 授權" }),
+      screen.getByRole("button", { name: "授權綁定" }),
     ).toBeInTheDocument();
     expect(container.querySelector("form")).toHaveAttribute(
       "action",
