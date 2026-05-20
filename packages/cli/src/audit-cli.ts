@@ -1,6 +1,12 @@
 #!/usr/bin/env tsx
 
-import { auditWebsite, type AuditReport, type AuditScope } from "@audit";
+import {
+  auditWebsite,
+  type AuditIssue,
+  type AuditReport,
+  type AuditScope,
+  type AuditSeverity,
+} from "@audit";
 import { createAdminClient } from "@shared/supabase";
 
 type Args = Record<string, string | boolean>;
@@ -102,7 +108,7 @@ export async function runAudit(
     source: "cli",
   });
 
-  return `# Audit Report — ${report.url}`;
+  return formatAuditMarkdown(report);
 }
 
 async function loadWebsiteConfig(
@@ -173,6 +179,48 @@ async function persistAuditReport(
   if (issuesError) {
     throw new Error(`audit_issues_persist_failed: ${issuesError.message}`);
   }
+}
+
+function formatAuditMarkdown(report: AuditReport): string {
+  const counts = countIssues(report.issues);
+  const lines = [
+    `# Audit Report — ${report.url}`,
+    "",
+    `- **Health Score**: ${report.healthScore} / 100`,
+    `- **Issues**: ${counts.critical} critical / ${counts.warning} warning / ${counts.info} info`,
+  ];
+
+  for (const severity of ["critical", "warning", "info"] as const) {
+    const issues = report.issues.filter((issue) => issue.severity === severity);
+    if (issues.length === 0) continue;
+
+    lines.push("", `## ${titleCase(severity)}`);
+    for (const issue of issues) {
+      lines.push(formatIssueLine(issue));
+    }
+  }
+
+  return lines.join("\n");
+}
+
+function countIssues(
+  issues: AuditIssue[],
+): Record<AuditSeverity, number> {
+  return issues.reduce<Record<AuditSeverity, number>>(
+    (counts, issue) => {
+      counts[issue.severity]++;
+      return counts;
+    },
+    { critical: 0, warning: 0, info: 0 },
+  );
+}
+
+function formatIssueLine(issue: AuditIssue): string {
+  return `- \`${issue.ruleId}\` — ${issue.current} on ${issue.page}`;
+}
+
+function titleCase(value: string): string {
+  return value.slice(0, 1).toUpperCase() + value.slice(1);
 }
 
 async function main(): Promise<void> {

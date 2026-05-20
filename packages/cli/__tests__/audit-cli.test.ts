@@ -166,4 +166,67 @@ describe("audit-cli", () => {
       }),
     ).rejects.toThrow("audit_report_persist_failed: permission denied");
   });
+
+  it("formats markdown output with score, issue counts, and grouped issues", async () => {
+    const markdownReport = {
+      ...report,
+      healthScore: 84,
+      issues: [
+        report.issues[0]!,
+        {
+          ruleId: "og.image.missing",
+          severity: "warning" as const,
+          riskLevel: "medium" as const,
+          page: "https://example.com",
+          current: "Missing OG image",
+          source: "html-scan" as const,
+          estimatedImpact: "medium" as const,
+        },
+        {
+          ruleId: "image.alt.missing",
+          severity: "info" as const,
+          riskLevel: "low" as const,
+          page: "https://example.com/about",
+          current: "Image alt text is missing",
+          source: "html-scan" as const,
+          estimatedImpact: "low" as const,
+        },
+      ],
+    };
+    const auditWebsiteFn = vi.fn().mockResolvedValue(markdownReport);
+    const reportSingle = vi
+      .fn()
+      .mockResolvedValue({ data: { id: "report_3" }, error: null });
+    const reportSelect = vi.fn(() => ({ single: reportSingle }));
+    const reportInsert = vi.fn(() => ({ select: reportSelect }));
+    const issuesInsert = vi.fn().mockResolvedValue({ data: null, error: null });
+    const adminClient = {
+      from: vi.fn((table: string) => {
+        if (table === "audit_reports") return { insert: reportInsert };
+        if (table === "audit_issues") return { insert: issuesInsert };
+        throw new Error(`unexpected table: ${table}`);
+      }),
+    };
+
+    const output = await runAudit(["--url", "https://example.com"], {
+      adminClient,
+      auditWebsiteFn,
+    });
+
+    expect(output).toContain("# Audit Report — https://example.com");
+    expect(output).toContain("- **Health Score**: 84 / 100");
+    expect(output).toContain("- **Issues**: 1 critical / 1 warning / 1 info");
+    expect(output).toContain("## Critical");
+    expect(output).toContain(
+      "- `meta.description.missing` — Missing meta description on https://example.com",
+    );
+    expect(output).toContain("## Warning");
+    expect(output).toContain(
+      "- `og.image.missing` — Missing OG image on https://example.com",
+    );
+    expect(output).toContain("## Info");
+    expect(output).toContain(
+      "- `image.alt.missing` — Image alt text is missing on https://example.com/about",
+    );
+  });
 });
