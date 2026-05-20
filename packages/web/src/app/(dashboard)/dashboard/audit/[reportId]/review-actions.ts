@@ -95,7 +95,24 @@ export async function bulkApproveAuditIssues(_formData: FormData): Promise<{
   ok: boolean;
   results: Array<{ issueId: string; ok: boolean; error?: string }>;
 }> {
-  return { ok: false, results: [] };
+  const issueIds = readStringArray(_formData, "issueIds");
+  const results = [];
+
+  for (const issueId of issueIds) {
+    const itemFormData = new FormData();
+    itemFormData.set("issueId", issueId);
+    const result = await approveAuditIssue(itemFormData);
+    results.push({
+      issueId,
+      ok: result.ok,
+      error: result.ok ? undefined : result.error,
+    });
+  }
+
+  return {
+    ok: results.length > 0 && results.every((result) => result.ok),
+    results,
+  };
 }
 
 function readRequiredString(formData: FormData, key: string) {
@@ -103,6 +120,14 @@ function readRequiredString(formData: FormData, key: string) {
   return typeof value === "string" && value.trim().length > 0
     ? value.trim()
     : null;
+}
+
+function readStringArray(formData: FormData, key: string) {
+  return formData
+    .getAll(key)
+    .filter((value): value is string => typeof value === "string")
+    .map((value) => value.trim())
+    .filter(Boolean);
 }
 
 function validateReviewableMediumIssue(issue: AuditIssueRow): ActionResult {

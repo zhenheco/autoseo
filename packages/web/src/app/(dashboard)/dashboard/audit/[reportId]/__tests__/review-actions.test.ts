@@ -280,4 +280,32 @@ describe("audit review actions", () => {
       expect.any(Object),
     );
   });
+
+  it("bulkApproveAuditIssues approves every selected issue when all apply calls succeed", async () => {
+    const rows = createRows();
+    rows.audit_issues = [
+      ...(rows.audit_issues ?? []),
+      {
+        ...(rows.audit_issues?.[0] as Record<string, unknown>),
+        id: "issue-2",
+        page: "https://demo-shop.myshopline.com/products/red-shirt",
+      },
+    ];
+    const supabase = createSupabaseMock(rows);
+    supabaseMocks.createClient.mockResolvedValue(supabase);
+    const { bulkApproveAuditIssues } = await import("../review-actions");
+
+    const result = await bulkApproveAuditIssues(
+      formData({ issueIds: ["issue-1", "issue-2"] }),
+    );
+
+    expect(result).toEqual({
+      ok: true,
+      results: [
+        { issueId: "issue-1", ok: true, error: undefined },
+        { issueId: "issue-2", ok: true, error: undefined },
+      ],
+    });
+    expect(auditMocks.applyAuditFixToShopline).toHaveBeenCalledTimes(2);
+  });
 });
