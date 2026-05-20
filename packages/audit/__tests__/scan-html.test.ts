@@ -60,4 +60,13 @@ describe("scanHtml", () => {
 
     expect(issues).toEqual([]);
   });
+
+  it("does not report issues for a complete HTML page", () => {
+    const issues = scanHtml({
+      html: readFixture("all-good.html"),
+      pageUrl: "https://example.com/all-good",
+    });
+
+    expect(issues).toEqual([]);
+  });
 });
