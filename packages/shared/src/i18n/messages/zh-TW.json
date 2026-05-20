@@ -3131,11 +3131,39 @@
       "ctaSubtitle": "綁定 1waySEO 後，我們會自動修補商品 SEO、定期重新掃描、每週 email 進度報告",
       "ctaButton": "了解 1waySEO →"
     },
+    "emailForm": {
+      "title": "想看完整報告？",
+      "label": "您的 email",
+      "placeholder": "you@example.com",
+      "submitButton": "寄送完整報告",
+      "successToast": "完整報告已寄到您的信箱",
+      "errorToast": "寄送失敗，請稍後再試",
+      "privacyHint": "我們只會寄 SEO 健檢相關內容，可隨時退訂"
+    },
     "errors": {
       "turnstileInvalid": "驗證失敗，請重試",
       "rateLimited": "今日掃描已達上限，請明日再試",
       "fetchFailed": "無法存取此網站，請確認網址正確且可公開存取",
       "invalidUrl": "請輸入有效網址"
     }
+  },
+  "publicAuditEmail": {
+    "stage0": {
+      "subject": "您的 SEO 健檢完整報告 - {{score}}/100",
+      "greeting": "您好",
+      "body": "感謝您試用 1waySEO 健檢。以下是這次掃描的完整摘要與最需要先處理的 SEO 問題。",
+      "ctaButton": "綁定 1waySEO 自動修補"
+    },
+    "stage1": {
+      "subject": "客戶案例：綁定後 30 天 SEO 進步報告",
+      "body": "看看 SHOPLINE 商店綁定後如何逐步修補標題、描述、圖片 alt 與索引問題。",
+      "ctaButton": "查看綁定後 30 天進步報告"
+    },
+    "stage2": {
+      "subject": "需要一起看 SEO 健檢結果嗎？",
+      "body": "預約一次免費諮詢，我們協助您排出最值得先修的 SEO 問題。",
+      "ctaButton": "預約免費諮詢"
+    },
+    "unsubscribe": "取消訂閱"
   }
 }

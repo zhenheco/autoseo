@@ -39,6 +39,15 @@ export default async function PublicAuditPage() {
                 ctaSubtitle: t("result.ctaSubtitle"),
                 ctaButton: t("result.ctaButton"),
               },
+              emailForm: {
+                title: t("emailForm.title"),
+                label: t("emailForm.label"),
+                placeholder: t("emailForm.placeholder"),
+                submitButton: t("emailForm.submitButton"),
+                successToast: t("emailForm.successToast"),
+                errorToast: t("emailForm.errorToast"),
+                privacyHint: t("emailForm.privacyHint"),
+              },
               errors: {
                 turnstileInvalid: t("errors.turnstileInvalid"),
                 rateLimited: t("errors.rateLimited"),

@@ -1,4 +1,8 @@
+"use client";
+
 import Link from "next/link";
+import { useState } from "react";
+import { toast } from "sonner";
 import type { PublicAuditLabels } from "./PublicAuditForm";
 
 export type PublicAuditResultData = {
@@ -15,9 +19,41 @@ export type PublicAuditResultData = {
 type PublicAuditResultProps = {
   result: PublicAuditResultData;
   labels: PublicAuditLabels["result"];
+  emailFormLabels: PublicAuditLabels["emailForm"];
 };
 
-export function PublicAuditResult({ result, labels }: PublicAuditResultProps) {
+export function PublicAuditResult({
+  result,
+  labels,
+  emailFormLabels,
+}: PublicAuditResultProps) {
+  const [email, setEmail] = useState("");
+  const [isSubmittingEmail, setIsSubmittingEmail] = useState(false);
+
+  async function onEmailSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    try {
+      setIsSubmittingEmail(true);
+      const response = await fetch("/api/public/audit/lead-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ reportId: result.reportId, email }),
+      });
+
+      if (!response.ok) {
+        toast.error(emailFormLabels.errorToast);
+        return;
+      }
+
+      toast.success(emailFormLabels.successToast);
+      setEmail("");
+    } catch {
+      toast.error(emailFormLabels.errorToast);
+    } finally {
+      setIsSubmittingEmail(false);
+    }
+  }
+
   return (
     <section
       aria-label={labels.scoreTitle}
@@ -78,6 +114,42 @@ export function PublicAuditResult({ result, labels }: PublicAuditResultProps) {
           {labels.ctaButton}
         </Link>
       </div>
+
+      <form
+        className="rounded-md border border-slate-200 bg-slate-50 p-4"
+        onSubmit={onEmailSubmit}
+      >
+        <h2 className="text-base font-semibold text-slate-950">
+          {emailFormLabels.title}
+        </h2>
+        <label
+          htmlFor="audit-lead-email"
+          className="mt-3 block text-sm font-medium text-slate-700"
+        >
+          {emailFormLabels.label}
+        </label>
+        <div className="mt-2 flex flex-col gap-2 sm:flex-row">
+          <input
+            id="audit-lead-email"
+            type="email"
+            required
+            value={email}
+            placeholder={emailFormLabels.placeholder}
+            onChange={(event) => setEmail(event.target.value)}
+            className="min-h-11 flex-1 rounded-md border border-slate-300 px-3 text-sm text-slate-950 outline-none transition focus:border-emerald-600 focus:ring-2 focus:ring-emerald-100"
+          />
+          <button
+            type="submit"
+            disabled={isSubmittingEmail}
+            className="min-h-11 rounded-md bg-slate-950 px-4 text-sm font-semibold text-white transition hover:bg-slate-800 disabled:cursor-not-allowed disabled:bg-slate-400"
+          >
+            {emailFormLabels.submitButton}
+          </button>
+        </div>
+        <p className="mt-2 text-xs leading-5 text-slate-500">
+          {emailFormLabels.privacyHint}
+        </p>
+      </form>
     </section>
   );
 }

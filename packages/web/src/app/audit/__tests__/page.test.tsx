@@ -13,6 +13,15 @@ vi.mock("@marsidev/react-turnstile", () => ({
   ),
 }));
 
+const toastMock = vi.hoisted(() => ({
+  success: vi.fn(),
+  error: vi.fn(),
+}));
+
+vi.mock("sonner", () => ({
+  toast: toastMock,
+}));
+
 vi.mock("next-intl/server", () => ({
   getTranslations: vi.fn(async () => {
     const messages: Record<string, string> = {
@@ -31,6 +40,13 @@ vi.mock("next-intl/server", () => ({
       "result.ctaTitle": "想看完整報告 + 自動修補？",
       "result.ctaSubtitle": "綁定 1waySEO 後，我們會自動修補商品 SEO",
       "result.ctaButton": "了解 1waySEO →",
+      "emailForm.title": "想看完整報告？",
+      "emailForm.label": "您的 email",
+      "emailForm.placeholder": "you@example.com",
+      "emailForm.submitButton": "寄送完整報告",
+      "emailForm.successToast": "完整報告已寄到您的信箱",
+      "emailForm.errorToast": "寄送失敗，請稍後再試",
+      "emailForm.privacyHint": "我們只會寄 SEO 健檢相關內容，可隨時退訂",
       "errors.turnstileInvalid": "驗證失敗，請重試",
       "errors.rateLimited": "今日掃描已達上限，請明日再試",
       "errors.fetchFailed": "無法存取此網站",
@@ -50,6 +66,7 @@ import PublicAuditPage from "../page";
 
 describe("public audit page", () => {
   beforeEach(() => {
+    vi.clearAllMocks();
     vi.stubEnv("NEXT_PUBLIC_TURNSTILE_SITE_KEY", "test-site-key");
   });
 
@@ -104,5 +121,53 @@ describe("public audit page", () => {
     expect(
       screen.getByRole("link", { name: "了解 1waySEO →" }),
     ).toHaveAttribute("href", "/signup");
+    expect(
+      screen.getByRole("textbox", { name: "您的 email" }),
+    ).toBeInTheDocument();
+  });
+
+  it("submits the optional email form after a successful audit", async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        Response.json({
+          reportId: "report-1",
+          healthScore: 91,
+          totalIssues: 0,
+          topIssues: [],
+        }),
+      )
+      .mockResolvedValueOnce(Response.json({ ok: true }));
+    vi.stubGlobal("fetch", fetchMock);
+    render(await PublicAuditPage());
+
+    fireEvent.change(screen.getByRole("textbox", { name: "您的網站網址" }), {
+      target: { value: "https://example.com" },
+    });
+    fireEvent.click(screen.getByTestId("turnstile-widget"));
+    fireEvent.click(screen.getByRole("button", { name: "開始免費掃描" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("91")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByRole("textbox", { name: "您的 email" }), {
+      target: { value: "lead@example.com" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "寄送完整報告" }));
+
+    await waitFor(() => {
+      expect(toastMock.success).toHaveBeenCalledWith("完整報告已寄到您的信箱");
+    });
+    expect(fetchMock).toHaveBeenLastCalledWith(
+      "/api/public/audit/lead-email",
+      expect.objectContaining({
+        method: "POST",
+        body: JSON.stringify({
+          reportId: "report-1",
+          email: "lead@example.com",
+        }),
+      }),
+    );
   });
 });

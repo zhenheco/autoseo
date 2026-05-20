@@ -3312,11 +3312,39 @@
       "ctaSubtitle": "綁定 1waySEO 後，我們會自動修補商品 SEO、定期重新掃描、每週 email 進度報告",
       "ctaButton": "了解 1waySEO →"
     },
+    "emailForm": {
+      "title": "전체 보고서를 받아보시겠어요?",
+      "label": "이메일",
+      "placeholder": "you@example.com",
+      "submitButton": "전체 보고서 보내기",
+      "successToast": "전체 보고서를 이메일로 보냈습니다",
+      "errorToast": "전송에 실패했습니다. 잠시 후 다시 시도해 주세요",
+      "privacyHint": "SEO 진단 관련 내용만 보내며 언제든 구독 취소할 수 있습니다"
+    },
     "errors": {
       "turnstileInvalid": "驗證失敗，請重試",
       "rateLimited": "今日掃描已達上限，請明日再試",
       "fetchFailed": "無法存取此網站，請確認網址正確且可公開存取",
       "invalidUrl": "請輸入有效網址"
     }
+  },
+  "publicAuditEmail": {
+    "stage0": {
+      "subject": "SEO 진단 전체 보고서 - {{score}}/100",
+      "greeting": "안녕하세요",
+      "body": "1waySEO 진단을 이용해 주셔서 감사합니다. 이번 스캔 요약과 먼저 수정할 SEO 이슈를 보내드립니다.",
+      "ctaButton": "SHOPLINE 연결 후 자동 수정"
+    },
+    "stage1": {
+      "subject": "고객 사례: 연결 후 30일 SEO 개선 보고서",
+      "body": "SHOPLINE 연결 후 제목, 설명, 이미지 alt, 색인 문제를 어떻게 개선하는지 확인해 보세요.",
+      "ctaButton": "30일 개선 보고서 보기"
+    },
+    "stage2": {
+      "subject": "SEO 진단 결과를 함께 검토해 드릴까요?",
+      "body": "무료 상담으로 우선순위가 높은 SEO 수정 항목을 함께 정리해 드립니다.",
+      "ctaButton": "무료 상담 예약"
+    },
+    "unsubscribe": "구독 취소"
   }
 }

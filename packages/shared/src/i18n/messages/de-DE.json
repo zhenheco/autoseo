@@ -3312,11 +3312,39 @@
       "ctaSubtitle": "綁定 1waySEO 後，我們會自動修補商品 SEO、定期重新掃描、每週 email 進度報告",
       "ctaButton": "了解 1waySEO →"
     },
+    "emailForm": {
+      "title": "Möchten Sie den vollständigen Bericht?",
+      "label": "Ihre E-Mail",
+      "placeholder": "you@example.com",
+      "submitButton": "Vollständigen Bericht senden",
+      "successToast": "Der vollständige Bericht wurde an Ihr Postfach gesendet",
+      "errorToast": "Senden fehlgeschlagen. Bitte versuchen Sie es später erneut",
+      "privacyHint": "Wir senden nur SEO-Audit-Inhalte. Sie können sich jederzeit abmelden"
+    },
     "errors": {
       "turnstileInvalid": "驗證失敗，請重試",
       "rateLimited": "今日掃描已達上限，請明日再試",
       "fetchFailed": "無法存取此網站，請確認網址正確且可公開存取",
       "invalidUrl": "請輸入有效網址"
     }
+  },
+  "publicAuditEmail": {
+    "stage0": {
+      "subject": "Ihr vollständiger SEO-Audit-Bericht - {{score}}/100",
+      "greeting": "Hallo",
+      "body": "Danke, dass Sie den 1waySEO Audit getestet haben. Hier ist die vollständige Zusammenfassung mit den wichtigsten SEO-Problemen.",
+      "ctaButton": "SHOPLINE verbinden und automatisch beheben"
+    },
+    "stage1": {
+      "subject": "Kundenbeispiel: SEO-Fortschritt nach 30 Tagen",
+      "body": "Sehen Sie, wie verbundene SHOPLINE-Shops Titel, Beschreibungen, Bild-alt-Texte und Indexierbarkeit verbessern.",
+      "ctaButton": "30-Tage-Fortschrittsbericht ansehen"
+    },
+    "stage2": {
+      "subject": "Möchten Sie Ihren SEO-Audit besprechen?",
+      "body": "Buchen Sie eine kostenlose Beratung, damit wir die wichtigsten SEO-Fixes priorisieren können.",
+      "ctaButton": "Kostenlose Beratung buchen"
+    },
+    "unsubscribe": "Abmelden"
   }
 }

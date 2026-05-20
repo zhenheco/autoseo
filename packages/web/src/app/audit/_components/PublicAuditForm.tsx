@@ -25,6 +25,15 @@ export type PublicAuditLabels = {
     ctaSubtitle: string;
     ctaButton: string;
   };
+  emailForm: {
+    title: string;
+    label: string;
+    placeholder: string;
+    submitButton: string;
+    successToast: string;
+    errorToast: string;
+    privacyHint: string;
+  };
   errors: {
     turnstileInvalid: string;
     rateLimited: string;
@@ -149,7 +158,13 @@ export function PublicAuditForm({ siteKey, labels }: PublicAuditFormProps) {
           </p>
         )}
       </form>
-      {result && <PublicAuditResult result={result} labels={labels.result} />}
+      {result && (
+        <PublicAuditResult
+          result={result}
+          labels={labels.result}
+          emailFormLabels={labels.emailForm}
+        />
+      )}
     </>
   );
 }

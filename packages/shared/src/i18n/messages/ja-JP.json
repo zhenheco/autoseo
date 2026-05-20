@@ -3131,11 +3131,39 @@
       "ctaSubtitle": "綁定 1waySEO 後，我們會自動修補商品 SEO、定期重新掃描、每週 email 進度報告",
       "ctaButton": "了解 1waySEO →"
     },
+    "emailForm": {
+      "title": "完全レポートを受け取りますか？",
+      "label": "メールアドレス",
+      "placeholder": "you@example.com",
+      "submitButton": "完全レポートを送信",
+      "successToast": "完全レポートをメールで送信しました",
+      "errorToast": "送信に失敗しました。後でもう一度お試しください",
+      "privacyHint": "SEO健診に関する内容のみ送信します。いつでも配信停止できます"
+    },
     "errors": {
       "turnstileInvalid": "驗證失敗，請重試",
       "rateLimited": "今日掃描已達上限，請明日再試",
       "fetchFailed": "無法存取此網站，請確認網址正確且可公開存取",
       "invalidUrl": "請輸入有效網址"
     }
+  },
+  "publicAuditEmail": {
+    "stage0": {
+      "subject": "SEO健診の完全レポート - {{score}}/100",
+      "greeting": "こんにちは",
+      "body": "1waySEO健診をご利用いただきありがとうございます。今回のスキャン概要と先に対応すべきSEO課題をお届けします。",
+      "ctaButton": "SHOPLINEを連携して自動修正"
+    },
+    "stage1": {
+      "subject": "導入事例：30日後のSEO改善レポート",
+      "body": "SHOPLINE連携後にタイトル、説明文、画像alt、インデックス課題を改善する流れをご紹介します。",
+      "ctaButton": "30日改善レポートを見る"
+    },
+    "stage2": {
+      "subject": "SEO健診結果を一緒に確認しませんか？",
+      "body": "無料相談で、優先して直すべきSEO課題を一緒に整理できます。",
+      "ctaButton": "無料相談を予約"
+    },
+    "unsubscribe": "配信停止"
   }
 }
