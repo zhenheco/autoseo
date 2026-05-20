@@ -2,6 +2,7 @@ import { readFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
+import { scoreHealth } from "../src/index";
 import { auditWebsite } from "../src/audit-website";
 
 const testDir = dirname(fileURLToPath(import.meta.url));
@@ -29,12 +30,13 @@ describe("auditWebsite", () => {
       },
     );
 
+    expect(report.healthScore).toBe(scoreHealth(report.issues));
     expect(report).toEqual({
       id: "audit-id-1",
       url: "https://example.com/short-meta",
       scannedAt: "2026-05-21T01:00:00.000Z",
       pagesScanned: 1,
-      healthScore: 100,
+      healthScore: scoreHealth(report.issues),
       issues: [
         {
           ruleId: "meta.description.tooShort",

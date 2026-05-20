@@ -1,4 +1,5 @@
 import { scanHtml } from "./scan-html";
+import { scoreHealth } from "./score-health";
 import type {
   AuditReport,
   AuditWebsiteDeps,
@@ -37,7 +38,7 @@ export async function auditWebsite(
     url: input.url,
     scannedAt: now().toISOString(),
     pagesScanned: 1,
-    healthScore: 100,
+    healthScore: scoreHealth(issues),
     issues,
   };
 }
