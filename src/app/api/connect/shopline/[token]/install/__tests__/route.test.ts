@@ -37,6 +37,21 @@ function context(token = "invite-token") {
   return { params: Promise.resolve({ token }) };
 }
 
+function invitationRow(overrides: Record<string, unknown> = {}) {
+  return {
+    token: "invite-token",
+    company_id: "company-1",
+    expected_shop_handle: null,
+    note: null,
+    expires_at: new Date(Date.now() + 86_400_000).toISOString(),
+    last_redeemed_at: null,
+    redeem_count: 0,
+    revoked_at: null,
+    created_at: "2026-05-20T00:00:00.000Z",
+    ...overrides,
+  };
+}
+
 beforeEach(() => {
   vi.restoreAllMocks();
   invitationQuery.select.mockClear();
@@ -92,5 +107,27 @@ describe("public SHOPLINE invitation install route", () => {
       "shopline_install_invitations",
     );
     expect(invitationQuery.eq).toHaveBeenCalledWith("token", "missing-token");
+  });
+
+  it("redirects to the public page with expired when the token is expired", async () => {
+    invitationQuery.maybeSingle.mockResolvedValueOnce({
+      data: invitationRow({
+        token: "expired-token",
+        expires_at: new Date(Date.now() - 1_000).toISOString(),
+      }),
+      error: null,
+    });
+
+    const resp = await GET(
+      request(
+        "https://1wayseo.com/api/connect/shopline/expired-token/install?shopHandle=demo-shop",
+      ),
+      context("expired-token"),
+    );
+
+    expect(resp.status).toBe(302);
+    expect(resp.headers.get("location")).toBe(
+      "https://1wayseo.com/connect/shopline/expired-token?error=expired",
+    );
   });
 });

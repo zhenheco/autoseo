@@ -33,11 +33,7 @@ export async function GET(
   try {
     await findActiveInvitation(invitationStore, token);
   } catch (error) {
-    const reason =
-      error instanceof Error &&
-      error.message === "shopline_invitation_not_found"
-        ? "invalid"
-        : "invalid";
+    const reason = getInvitationErrorReason(error);
     return NextResponse.redirect(
       new URL(`/connect/shopline/${token}?error=${reason}`, req.url),
       { status: 302 },
@@ -45,4 +41,10 @@ export async function GET(
   }
 
   return NextResponse.json({ error: "not_implemented" }, { status: 501 });
+}
+
+function getInvitationErrorReason(error: unknown): "invalid" | "expired" {
+  if (!(error instanceof Error)) return "invalid";
+  if (error.message === "shopline_invitation_expired") return "expired";
+  return "invalid";
 }
