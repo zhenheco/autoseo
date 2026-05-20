@@ -42,4 +42,19 @@ describe("cross-analysis audit rules", () => {
 
     expect(issues).toEqual([]);
   });
+
+  it("skips GSC pages with low impressions", () => {
+    const issues = analyzeGscLowCtrHighImpression([
+      {
+        page: "https://example.com/guide",
+        query: "seo guide",
+        position: 8,
+        impressions: 100,
+        clicks: 1,
+        ctr: 0.01,
+      },
+    ]);
+
+    expect(issues).toEqual([]);
+  });
 });
