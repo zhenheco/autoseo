@@ -9,50 +9,62 @@ type ActionResult = { ok: boolean; error?: string };
 type AuditIssueRow = Database["public"]["Tables"]["audit_issues"]["Row"];
 type AuditReportRow = Database["public"]["Tables"]["audit_reports"]["Row"];
 type SupabaseClient = Awaited<ReturnType<typeof createClient>>;
+type ReviewContext =
+  | {
+      ok: true;
+      user: NonNullable<Awaited<ReturnType<typeof getUser>>>;
+      supabase: SupabaseClient;
+      issue: AuditIssueRow;
+      report: AuditReportRow & { company_id: string };
+    }
+  | { ok: false; error: string };
 
 export async function approveAuditIssue(
   formData: FormData,
 ): Promise<ActionResult> {
-  const user = await getUser();
-  if (!user) return { ok: false, error: "unauthorized" };
-
   const issueId = readRequiredString(formData, "issueId");
   if (!issueId) return { ok: false, error: "issue_id_required" };
 
-  const supabase = await createClient();
-  const issue = await loadIssue(supabase, issueId);
-  if (!issue) return { ok: false, error: "issue_not_found" };
+  const context = await loadReviewContext(issueId);
+  if (!context.ok) return context;
 
-  const report = await loadReport(supabase, issue.report_id);
-  if (!report) return { ok: false, error: "report_not_found" };
-
-  const allowedCompanyIds = await loadAllowedCompanyIds(user.id);
-  if (!report.company_id || !allowedCompanyIds.has(report.company_id)) {
-    return { ok: false, error: "forbidden" };
-  }
-
-  if (issue.risk_level !== "medium") {
+  if (context.issue.risk_level !== "medium") {
     return { ok: false, error: "not_eligible" };
   }
 
-  if (issue.status !== "open" && issue.status !== "pending-review") {
+  if (
+    context.issue.status !== "open" &&
+    context.issue.status !== "pending-review"
+  ) {
     return { ok: false, error: "not_reviewable" };
   }
 
   return applyAuditIssueToShopline({
-    issue,
-    report,
-    companyId: report.company_id,
-    userId: user.id,
-    supabase,
+    issue: context.issue,
+    report: context.report,
+    companyId: context.report.company_id,
+    userId: context.user.id,
+    supabase: context.supabase,
     preferSuggested: true,
   });
 }
 
 export async function rejectAuditIssue(
-  _formData: FormData,
+  formData: FormData,
 ): Promise<ActionResult> {
-  return { ok: false, error: "not_implemented" };
+  const issueId = readRequiredString(formData, "issueId");
+  if (!issueId) return { ok: false, error: "issue_id_required" };
+
+  const context = await loadReviewContext(issueId);
+  if (!context.ok) return context;
+
+  const { error } = await context.supabase
+    .from("audit_issues")
+    .update({ status: "manual" })
+    .eq("id", context.issue.id);
+
+  if (error) throw error;
+  return { ok: true };
 }
 
 export async function editAndApplyAuditIssue(
@@ -73,6 +85,31 @@ function readRequiredString(formData: FormData, key: string) {
   return typeof value === "string" && value.trim().length > 0
     ? value.trim()
     : null;
+}
+
+async function loadReviewContext(issueId: string): Promise<ReviewContext> {
+  const user = await getUser();
+  if (!user) return { ok: false, error: "unauthorized" };
+
+  const supabase = await createClient();
+  const issue = await loadIssue(supabase, issueId);
+  if (!issue) return { ok: false, error: "issue_not_found" };
+
+  const report = await loadReport(supabase, issue.report_id);
+  if (!report) return { ok: false, error: "report_not_found" };
+
+  const allowedCompanyIds = await loadAllowedCompanyIds(user.id);
+  if (!report.company_id || !allowedCompanyIds.has(report.company_id)) {
+    return { ok: false, error: "forbidden" };
+  }
+
+  return {
+    ok: true,
+    user,
+    supabase,
+    issue,
+    report: report as AuditReportRow & { company_id: string },
+  };
 }
 
 async function loadAllowedCompanyIds(userId: string): Promise<Set<string>> {

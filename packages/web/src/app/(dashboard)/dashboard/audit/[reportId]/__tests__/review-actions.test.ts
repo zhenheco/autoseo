@@ -232,4 +232,19 @@ describe("audit review actions", () => {
       args: [{ status: "auto-applied" }],
     });
   });
+
+  it("rejectAuditIssue sets the issue status to manual", async () => {
+    const supabase = createSupabaseMock(createRows());
+    supabaseMocks.createClient.mockResolvedValueOnce(supabase);
+    const { rejectAuditIssue } = await import("../review-actions");
+
+    const result = await rejectAuditIssue(formData({ issueId: "issue-1" }));
+
+    expect(result).toEqual({ ok: true });
+    expect(supabase.calls).toContainEqual({
+      table: "audit_issues",
+      method: "update",
+      args: [{ status: "manual" }],
+    });
+  });
 });
