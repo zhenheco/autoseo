@@ -1,5 +1,6 @@
 import { scanHtml } from "./scan-html";
 import { scoreHealth } from "./score-health";
+import { runChromiumAudit } from "./chromium-audit";
 import type {
   AuditReport,
   AuditWebsiteDeps,
@@ -17,6 +18,10 @@ export async function auditWebsite(
   const fetchFn = deps.fetch ?? fetch;
   const now = deps.now ?? (() => new Date());
   const randomUuid = deps.randomUuid ?? (() => crypto.randomUUID());
+  const chromiumAudit = deps.chromiumAudit ?? runChromiumAudit;
+  const chromiumResultPromise = input.includeChromium
+    ? chromiumAudit(input.url).then((result) => ({ result }))
+    : undefined;
 
   let response: Response;
   try {
@@ -31,9 +36,14 @@ export async function auditWebsite(
   }
 
   const html = await response.text();
-  const issues = scanHtml({ html, pageUrl: input.url });
+  const htmlIssues = scanHtml({ html, pageUrl: input.url });
+  const chromiumResult = await chromiumResultPromise;
+  const issues = [
+    ...htmlIssues,
+    ...(chromiumResult?.result.a11yIssues ?? []),
+  ];
 
-  return {
+  const report: AuditReport = {
     id: randomUuid(),
     url: input.url,
     scannedAt: now().toISOString(),
@@ -41,4 +51,10 @@ export async function auditWebsite(
     healthScore: scoreHealth(issues),
     issues,
   };
+
+  if (chromiumResult) {
+    report.cwv = chromiumResult.result.cwv;
+  }
+
+  return report;
 }

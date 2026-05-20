@@ -1,3 +1,5 @@
+import type { CoreWebVitals, runChromiumAudit } from "./chromium-audit";
+
 export type AuditSeverity = "critical" | "warning" | "info";
 export type AuditRiskLevel = "low" | "medium" | "high";
 export type AuditIssueSource =
@@ -27,6 +29,7 @@ export interface AuditReport {
   pagesScanned: number;
   healthScore: number;
   issues: AuditIssue[];
+  cwv?: CoreWebVitals;
 }
 
 export type AuditScope = "single-page" | "sitemap" | "crawl";
@@ -42,4 +45,5 @@ export interface AuditWebsiteDeps {
   fetch?: typeof fetch;
   now?: () => Date;
   randomUuid?: () => string;
+  chromiumAudit?: typeof runChromiumAudit;
 }

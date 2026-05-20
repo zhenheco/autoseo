@@ -96,4 +96,64 @@ describe("auditWebsite", () => {
       ),
     ).rejects.toThrow("scope_not_implemented: sitemap");
   });
+
+  it("includes chromium audit results when includeChromium is enabled", async () => {
+    const html = readFixture("all-good.html");
+    const fetchOk: typeof fetch = async () =>
+      new Response(html, { status: 200 });
+
+    const report = await auditWebsite(
+      {
+        url: "https://example.com",
+        scope: "single-page",
+        includeChromium: true,
+      },
+      {
+        fetch: fetchOk,
+        now: () => new Date("2026-05-21T02:00:00.000Z"),
+        randomUuid: () => "audit-id-chromium",
+        chromiumAudit: async () => ({
+          cwv: {
+            lcp: 2100,
+            fid: 40,
+            cls: 0.04,
+            inp: 90,
+          },
+          a11yIssues: [
+            {
+              ruleId: "axe.color-contrast",
+              severity: "warning",
+              riskLevel: "medium",
+              page: "https://example.com",
+              selector: ".cta",
+              current: "Element has insufficient color contrast",
+              suggested: "Increase foreground/background contrast",
+              source: "a11y",
+              estimatedImpact: "medium",
+            },
+          ],
+        }),
+      },
+    );
+
+    expect(report.cwv).toEqual({
+      lcp: 2100,
+      fid: 40,
+      cls: 0.04,
+      inp: 90,
+    });
+    expect(report.issues).toEqual([
+      {
+        ruleId: "axe.color-contrast",
+        severity: "warning",
+        riskLevel: "medium",
+        page: "https://example.com",
+        selector: ".cta",
+        current: "Element has insufficient color contrast",
+        suggested: "Increase foreground/background contrast",
+        source: "a11y",
+        estimatedImpact: "medium",
+      },
+    ]);
+  });
 });
