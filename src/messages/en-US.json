@@ -2695,6 +2695,53 @@
     "common": {
       "cancel": "Cancel",
       "processing": "Processing..."
+    },
+    "shoplineInvitations": {
+      "title": "SHOPLINE merchant invitation links",
+      "description": "Generate dedicated connection links for newly signed merchants. Links are valid for 7 days and can be used multiple times.",
+      "createForm": {
+        "title": "Create new invitation",
+        "companyLabel": "Client company",
+        "companyPlaceholder": "Select company",
+        "expectedShopHandleLabel": "Expected SHOPLINE store (optional)",
+        "expectedShopHandlePlaceholder": "brandname.myshopline.com",
+        "noteLabel": "Note (optional)",
+        "notePlaceholder": "Internal note, optional",
+        "submitButton": "Generate link",
+        "ttlHint": "Link expires in 7 days",
+        "linkFormat": "Link format: {url}/connect/shopline/<token>"
+      },
+      "list": {
+        "title": "Invitations",
+        "description": "Only SHOPLINE invitations for companies where you have owner/admin access are shown.",
+        "empty": "No SHOPLINE invitation links yet"
+      },
+      "table": {
+        "company": "Company",
+        "expectedHandle": "Expected store",
+        "status": "Status",
+        "redeemCount": "Connections",
+        "expiresAt": "Expires at",
+        "createdAt": "Created at",
+        "actions": "Actions"
+      },
+      "status": {
+        "active": "Active",
+        "expired": "Expired",
+        "revoked": "Revoked"
+      },
+      "actions": {
+        "copyLink": "Copy link",
+        "copied": "Copied",
+        "openLink": "Open link",
+        "revoke": "Revoke",
+        "revokeConfirm": "Revoke this invitation? Connected merchants will not be affected."
+      },
+      "errors": {
+        "unauthorized": "You do not have permission.",
+        "createFailed": "Failed to create invitation.",
+        "revokeFailed": "Failed to revoke invitation."
+      }
     }
   },
   "theme": {
@@ -2964,5 +3011,24 @@
     "invalidMobileBarcode": "Invalid mobile barcode format",
     "invalidCertificate": "Invalid certificate format",
     "selectDonateOrg": "Please select a charity"
+  },
+  "connect": {
+    "shopline": {
+      "title": "Connect your SHOPLINE store",
+      "subtitle": "After authorization, 1waySEO can manage product SEO on your behalf.",
+      "shopHandleLabel": "SHOPLINE store URL",
+      "shopHandlePlaceholder": "brandname.myshopline.com",
+      "authorizeButton": "Authorize connection",
+      "errors": {
+        "invalid": "This link is invalid. Contact 1waySEO to request a new link.",
+        "expired": "This link has expired. Contact 1waySEO to request a new link.",
+        "revoked": "This link has been revoked."
+      },
+      "done": {
+        "title": "✓ SHOPLINE store connected successfully",
+        "shopLabel": "Store",
+        "instruction": "You can close this page. The 1waySEO team will start managing SEO for your store."
+      }
+    }
   }
 }
