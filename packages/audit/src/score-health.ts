@@ -3,7 +3,7 @@ import type { AuditIssue } from "./types";
 const SEVERITY_WEIGHT: Record<AuditIssue["severity"], number> = {
   critical: 10,
   warning: 5,
-  info: 0,
+  info: 1,
 };
 
 export function scoreHealth(issues: AuditIssue[]): number {
@@ -11,5 +11,5 @@ export function scoreHealth(issues: AuditIssue[]): number {
     (acc, issue) => acc + SEVERITY_WEIGHT[issue.severity],
     0,
   );
-  return Math.max(0, 100 - total);
+  return Math.max(0, Math.min(100, 100 - total));
 }

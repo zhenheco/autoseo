@@ -34,4 +34,10 @@ describe("scoreHealth", () => {
       0,
     );
   });
+
+  it("accumulates info issues", () => {
+    expect(scoreHealth(Array.from({ length: 50 }, () => issue("info")))).toBe(
+      50,
+    );
+  });
 });
