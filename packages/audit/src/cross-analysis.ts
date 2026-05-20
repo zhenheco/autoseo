@@ -64,9 +64,20 @@ export function analyzeClarityScrollDepth(
 }
 
 export function analyzeGa4ConversionPageNoCta(
-  _metrics: GA4PageMetric[],
+  metrics: GA4PageMetric[],
 ): AuditIssue[] {
-  return [];
+  return metrics
+    .filter((metric) => metric.conversions > 10 && metric.hasCTA === false)
+    .map((metric) => ({
+      ruleId: "ga4.conversion-page-no-cta",
+      severity: "critical",
+      riskLevel: "high",
+      page: metric.page,
+      current: `conversions=${metric.conversions}, hasCTA=false`,
+      suggested: "加入主要 CTA 按鈕到頁面顯眼位置",
+      source: "gsc-cross",
+      estimatedImpact: "high",
+    }));
 }
 
 function formatPercent(value: number): string {

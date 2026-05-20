@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   analyzeClarityScrollDepth,
+  analyzeGa4ConversionPageNoCta,
   analyzeGscLowCtrHighImpression,
 } from "../src/cross-analysis";
 
@@ -80,6 +81,29 @@ describe("cross-analysis audit rules", () => {
       suggested: "重整內容結構，將關鍵資訊上提至首屏",
       source: "gsc-cross",
       estimatedImpact: "medium",
+    });
+  });
+
+  it("flags GA4 conversion pages without a CTA", () => {
+    const issues = analyzeGa4ConversionPageNoCta([
+      {
+        page: "https://example.com/pricing",
+        conversions: 20,
+        sessions: 120,
+        hasCTA: false,
+      },
+    ]);
+
+    expect(issues).toHaveLength(1);
+    expect(issues[0]).toMatchObject({
+      ruleId: "ga4.conversion-page-no-cta",
+      severity: "critical",
+      riskLevel: "high",
+      page: "https://example.com/pricing",
+      current: "conversions=20, hasCTA=false",
+      suggested: "加入主要 CTA 按鈕到頁面顯眼位置",
+      source: "gsc-cross",
+      estimatedImpact: "high",
     });
   });
 });
