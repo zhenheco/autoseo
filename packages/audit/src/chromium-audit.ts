@@ -27,6 +27,50 @@ export async function runChromiumAudit(
     throw new Error("chromium_binding_not_available");
   }
 
-  await deps.browserRenderingFetch({ url });
-  throw new Error("chromium_audit_parse_not_implemented");
+  const payload = await deps.browserRenderingFetch({ url });
+
+  return {
+    cwv: parseCoreWebVitals(payload.lighthouseJson),
+    a11yIssues: [],
+  };
+}
+
+type LighthouseAudit = {
+  numericValue?: unknown;
+};
+
+type LighthouseJson = {
+  audits?: Record<string, LighthouseAudit | undefined>;
+};
+
+function parseCoreWebVitals(lighthouseJson: unknown): CoreWebVitals {
+  const audits = asLighthouseJson(lighthouseJson).audits ?? {};
+
+  return {
+    lcp: readNumericAudit(audits, "largest-contentful-paint", "lcp"),
+    fid: readNumericAudit(audits, "max-potential-fid", "fid"),
+    cls: readNumericAudit(audits, "cumulative-layout-shift", "cls"),
+    inp: readNumericAudit(audits, "interaction-to-next-paint", "inp"),
+  };
+}
+
+function asLighthouseJson(value: unknown): LighthouseJson {
+  return isRecord(value) ? (value as LighthouseJson) : {};
+}
+
+function readNumericAudit(
+  audits: Record<string, LighthouseAudit | undefined>,
+  auditId: string,
+  metricName: keyof CoreWebVitals,
+): number {
+  const value = audits[auditId]?.numericValue;
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return value;
+  }
+
+  throw new Error(`chromium_audit_lighthouse_metric_missing:${metricName}`);
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null;
 }
