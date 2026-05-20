@@ -21,6 +21,8 @@ async function post(body?: unknown) {
 describe("public audit API route", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.unstubAllGlobals();
+    vi.stubEnv("TURNSTILE_SECRET_KEY", "test-secret");
     vi.resetModules();
   });
 
@@ -31,6 +33,31 @@ describe("public audit API route", () => {
     await expect(response.json()).resolves.toMatchObject({
       error: "turnstile_invalid",
     });
+    expect(auditMocks.auditWebsite).not.toHaveBeenCalled();
+  });
+
+  it("returns 400 turnstile_invalid when turnstile verification fails", async () => {
+    const verifyFetch = vi.fn(async () =>
+      Response.json({ success: false, "error-codes": ["invalid-input"] }),
+    );
+    vi.stubGlobal("fetch", verifyFetch);
+
+    const response = await post({
+      url: "https://example.com",
+      turnstileToken: "bad-token",
+    });
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "turnstile_invalid",
+    });
+    expect(verifyFetch).toHaveBeenCalledWith(
+      "https://challenges.cloudflare.com/turnstile/v0/siteverify",
+      expect.objectContaining({
+        method: "POST",
+        body: expect.stringContaining("bad-token"),
+      }),
+    );
     expect(auditMocks.auditWebsite).not.toHaveBeenCalled();
   });
 });
