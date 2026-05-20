@@ -298,4 +298,44 @@ describe("POST /api/audit/issues/[issueId]/apply", () => {
       after: "A polished SHOPLINE meta description.",
     });
   });
+
+  it("returns 200, writes a failed audit_fix_log, and keeps the issue open when the fix fails", async () => {
+    auditMocks.applyAuditFixToShopline.mockResolvedValueOnce({
+      ok: false,
+      route: "shopline-editor",
+      before: "Short",
+      after: "",
+      error: "shopline_rate_limited",
+    });
+    const supabase = createSupabaseMock(rowsForEligibleIssue());
+    authState.supabase = supabase;
+
+    const response = await post();
+
+    expect(response.status).toBe(200);
+    expect(supabase.calls).toContainEqual({
+      table: "audit_fix_log",
+      method: "insert",
+      args: [
+        {
+          issue_id: "issue-1",
+          applied_by: "user-1",
+          route: "shopline-editor",
+          before: "Short",
+          after: "",
+          result: "failed",
+          error_message: "shopline_rate_limited",
+        },
+      ],
+    });
+    expect(supabase.calls).not.toContainEqual({
+      table: "audit_issues",
+      method: "update",
+      args: [{ status: "auto-applied" }],
+    });
+    await expect(response.json()).resolves.toEqual({
+      ok: false,
+      error: "shopline_rate_limited",
+    });
+  });
 });
