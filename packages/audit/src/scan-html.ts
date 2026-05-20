@@ -38,6 +38,7 @@ export function scanHtml(input: ScanHtmlInput): AuditIssue[] {
   }
 
   issues.push(...checkOgImage($, input.pageUrl));
+  issues.push(...checkOgTitle($, input.pageUrl));
 
   return issues;
 }
@@ -58,6 +59,26 @@ function checkOgImage($: CheerioRoot, pageUrl: string): AuditIssue[] {
       current: "",
       source: "html-scan",
       estimatedImpact: "high",
+    },
+  ];
+}
+
+function checkOgTitle($: CheerioRoot, pageUrl: string): AuditIssue[] {
+  const ogTitle = $('meta[property="og:title"]').attr("content")?.trim() ?? "";
+  if (ogTitle) {
+    return [];
+  }
+
+  return [
+    {
+      ruleId: "og.title.missing",
+      severity: "warning",
+      riskLevel: "low",
+      page: pageUrl,
+      selector: 'meta[property="og:title"]',
+      current: "",
+      source: "html-scan",
+      estimatedImpact: "medium",
     },
   ];
 }

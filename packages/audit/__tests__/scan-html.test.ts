@@ -110,4 +110,45 @@ describe("scanHtml", () => {
       ]),
     );
   });
+
+  it("reports a warning issue when og:title is missing", () => {
+    const issues = scanHtml({
+      html: readFixture("og-title-missing.html"),
+      pageUrl: "https://example.com/og-title-missing",
+    });
+
+    expect(issues).toContainEqual({
+      ruleId: "og.title.missing",
+      severity: "warning",
+      riskLevel: "low",
+      page: "https://example.com/og-title-missing",
+      selector: 'meta[property="og:title"]',
+      current: "",
+      source: "html-scan",
+      estimatedImpact: "medium",
+    });
+  });
+
+  it("does not report og:title when it is present", () => {
+    const issues = scanHtml({
+      html: readFixture("all-good.html"),
+      pageUrl: "https://example.com/all-good",
+    });
+
+    expect(issues.some((issue) => issue.ruleId === "og.title.missing")).toBe(false);
+  });
+
+  it("includes og:title in multi-issue scans", () => {
+    const issues = scanHtml({
+      html: readFixture("multi-issues.html"),
+      pageUrl: "https://example.com/multi-issues",
+    });
+
+    expect(issues.length).toBeGreaterThan(2);
+    expect(issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ ruleId: "og.title.missing" }),
+      ]),
+    );
+  });
 });
