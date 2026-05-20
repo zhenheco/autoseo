@@ -134,6 +134,19 @@ describe("verifyState", () => {
     });
   });
 
+  it("round-trips invitationToken through signed state", async () => {
+    const { url, cookieNonce } = await buildAuthorizeUrl({
+      workspaceId: "w1",
+      siteId: "s1",
+      shopHandle: "demo-shop",
+      invitationToken: "tok-123",
+    });
+    const state = shoplineAuthParams(url).get("customField")!;
+
+    const verified = await verifyState(state, cookieNonce);
+    expect(verified.invitationToken).toBe("tok-123");
+  });
+
   it("drops absolute returnTo values", async () => {
     const { url, cookieNonce } = await buildAuthorizeUrl({
       workspaceId: "w1",

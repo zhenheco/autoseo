@@ -16,6 +16,7 @@ export type VerifiedShoplineOAuthState = {
   siteId: string;
   shopHandle: string;
   returnTo?: string;
+  invitationToken?: string;
 };
 
 type ShoplineAppType = "public" | "customized";
@@ -250,6 +251,7 @@ export async function buildAuthorizeUrl(params: {
   siteId: string;
   shopHandle: string;
   returnTo?: string;
+  invitationToken?: string;
 }): Promise<{ url: string; cookieNonce: string }> {
   const shopHandle = normalizeShoplineShopHandle(params.shopHandle);
 
@@ -259,6 +261,7 @@ export async function buildAuthorizeUrl(params: {
     siteId: params.siteId,
     shopHandle,
     returnTo: params.returnTo,
+    invitationToken: params.invitationToken,
     nonce: cookieNonce,
     ts: Date.now(),
   };
@@ -315,6 +318,7 @@ export async function verifyState(
     returnTo: isSafeRelativePath(payload.returnTo)
       ? payload.returnTo
       : undefined,
+    invitationToken: payload.invitationToken,
   };
 }
 
