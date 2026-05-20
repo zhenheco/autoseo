@@ -43,8 +43,11 @@ export async function GET(
   return NextResponse.json({ error: "not_implemented" }, { status: 501 });
 }
 
-function getInvitationErrorReason(error: unknown): "invalid" | "expired" {
+function getInvitationErrorReason(
+  error: unknown,
+): "invalid" | "expired" | "revoked" {
   if (!(error instanceof Error)) return "invalid";
   if (error.message === "shopline_invitation_expired") return "expired";
+  if (error.message === "shopline_invitation_revoked") return "revoked";
   return "invalid";
 }

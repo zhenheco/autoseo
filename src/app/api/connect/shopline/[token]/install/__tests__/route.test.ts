@@ -130,4 +130,26 @@ describe("public SHOPLINE invitation install route", () => {
       "https://1wayseo.com/connect/shopline/expired-token?error=expired",
     );
   });
+
+  it("redirects to the public page with revoked when the token is revoked", async () => {
+    invitationQuery.maybeSingle.mockResolvedValueOnce({
+      data: invitationRow({
+        token: "revoked-token",
+        revoked_at: "2026-05-20T01:00:00.000Z",
+      }),
+      error: null,
+    });
+
+    const resp = await GET(
+      request(
+        "https://1wayseo.com/api/connect/shopline/revoked-token/install?shopHandle=demo-shop",
+      ),
+      context("revoked-token"),
+    );
+
+    expect(resp.status).toBe(302);
+    expect(resp.headers.get("location")).toBe(
+      "https://1wayseo.com/connect/shopline/revoked-token?error=revoked",
+    );
+  });
 });
