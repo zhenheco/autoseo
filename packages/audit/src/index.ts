@@ -1,6 +1,11 @@
 export { auditWebsite } from "./audit-website";
 export { applyAuditFixToShopline } from "./apply-shopline-fix";
 export { dispatchAuditIssueToArticleGenerator } from "./dispatch-to-article-generator";
+export {
+  createCloudflareKvDeps,
+  mergeEdgeRule,
+  pushEdgeRule,
+} from "./push-edge-rule";
 export { runChromiumAudit } from "./chromium-audit";
 export {
   analyzeClarityScrollDepth,
@@ -19,6 +24,12 @@ export type {
   ApplyShoplineFixInput,
   ApplyShoplineFixResult,
 } from "./apply-shopline-fix";
+export type {
+  EdgeRule,
+  PushEdgeRuleDeps,
+  PushEdgeRuleInput,
+  PushEdgeRuleResult,
+} from "./push-edge-rule";
 export type { DispatchToArticleGeneratorDeps } from "./dispatch-to-article-generator";
 export type {
   ClarityPageMetric,
