@@ -2,6 +2,7 @@
 
 import { getUser, getUserCompanies } from "@shared/auth";
 import { createClient } from "@shared/supabase";
+import { applyAuditIssueToShopline } from "@/lib/audit/shopline-apply";
 import type { Database } from "@/types/database.types";
 
 type ActionResult = { ok: boolean; error?: string };
@@ -30,7 +31,22 @@ export async function approveAuditIssue(
     return { ok: false, error: "forbidden" };
   }
 
-  return { ok: false, error: "not_implemented" };
+  if (issue.risk_level !== "medium") {
+    return { ok: false, error: "not_eligible" };
+  }
+
+  if (issue.status !== "open" && issue.status !== "pending-review") {
+    return { ok: false, error: "not_reviewable" };
+  }
+
+  return applyAuditIssueToShopline({
+    issue,
+    report,
+    companyId: report.company_id,
+    userId: user.id,
+    supabase,
+    preferSuggested: true,
+  });
 }
 
 export async function rejectAuditIssue(
