@@ -11,7 +11,7 @@ import {
 import { LocalePrompt } from "@/components/i18n/LocalePrompt";
 
 // 同步載入預設語系的翻譯檔案（用於 SSR）
-import defaultMessages from "@/messages/zh-TW.json";
+import defaultMessages from "@shared/i18n/messages/zh-TW.json";
 
 /**
  * 動態載入翻譯檔案
@@ -20,7 +20,7 @@ import defaultMessages from "@/messages/zh-TW.json";
  */
 async function loadMessages(locale: string): Promise<Record<string, unknown>> {
   try {
-    const messages = await import(`@/messages/${locale}.json`);
+    const messages = await import(`@shared/i18n/messages/${locale}.json`);
     return messages.default;
   } catch (error) {
     console.warn(

@@ -18,21 +18,21 @@ function isValidLocale(locale: string): boolean {
 async function loadMessages(locale: string) {
   switch (locale) {
     case "zh-TW":
-      return (await import("./messages/zh-TW.json")).default;
+      return (await import("@shared/i18n/messages/zh-TW.json")).default;
     case "en-US":
-      return (await import("./messages/en-US.json")).default;
+      return (await import("@shared/i18n/messages/en-US.json")).default;
     case "ja-JP":
-      return (await import("./messages/ja-JP.json")).default;
+      return (await import("@shared/i18n/messages/ja-JP.json")).default;
     case "ko-KR":
-      return (await import("./messages/ko-KR.json")).default;
+      return (await import("@shared/i18n/messages/ko-KR.json")).default;
     case "de-DE":
-      return (await import("./messages/de-DE.json")).default;
+      return (await import("@shared/i18n/messages/de-DE.json")).default;
     case "es-ES":
-      return (await import("./messages/es-ES.json")).default;
+      return (await import("@shared/i18n/messages/es-ES.json")).default;
     case "fr-FR":
-      return (await import("./messages/fr-FR.json")).default;
+      return (await import("@shared/i18n/messages/fr-FR.json")).default;
     default:
-      return (await import("./messages/zh-TW.json")).default;
+      return (await import("@shared/i18n/messages/zh-TW.json")).default;
   }
 }
 
