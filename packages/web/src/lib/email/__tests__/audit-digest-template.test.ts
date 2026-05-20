@@ -58,4 +58,36 @@ describe("renderAuditDigestEmail", () => {
     expect(rendered.text).toContain("Top recommendations");
     expect(rendered.html).toContain("Open dashboard");
   });
+
+  it("renders the ja-JP template", () => {
+    const rendered = renderAuditDigestEmail(
+      input({
+        locale: "ja-JP",
+        topRecommendations: [
+          {
+            ruleId: "missing-title",
+            page: "/products/a",
+            suggested: "固有の商品タイトルを追加",
+          },
+        ],
+      }),
+    );
+
+    expect(rendered.subject).toBe("Acme SEO 週次SEO監査ダイジェスト");
+    expect(rendered.text).toContain("ヘルススコア：88（+5）");
+    expect(rendered.text).toContain("今週の新規課題：3");
+    expect(rendered.text).toContain("ダッシュボードを開く");
+  });
+
+  it.each(["ko-KR", "de-DE", "es-ES", "fr-FR"] as const)(
+    "renders a stable %s text snapshot",
+    (locale) => {
+      const rendered = renderAuditDigestEmail(input({ locale }));
+
+      expect({
+        subject: rendered.subject,
+        text: rendered.text,
+      }).toMatchSnapshot();
+    },
+  );
 });

@@ -17,6 +17,19 @@ export interface AuditDigestEmailInput {
   locale: "zh-TW" | "en-US" | "ja-JP" | "ko-KR" | "de-DE" | "es-ES" | "fr-FR";
 }
 
+type AuditDigestLocale = AuditDigestEmailInput["locale"];
+type Copy = {
+  subject: (companyName: string) => string;
+  healthScore: string;
+  newIssues: string;
+  resolvedIssues: string;
+  topRecommendations: string;
+  cta: string;
+  colon: string;
+  openParen: string;
+  closeParen: string;
+};
+
 export function renderAuditDigestEmail(input: AuditDigestEmailInput): {
   subject: string;
   html: string;
@@ -75,7 +88,7 @@ export function renderAuditDigestEmail(input: AuditDigestEmailInput): {
   };
 }
 
-const COPY = {
+const COPY: Record<AuditDigestLocale, Copy> = {
   "zh-TW": {
     subject: (companyName: string) => `${companyName} 每週 audit 摘要`,
     healthScore: "健康分數",
@@ -98,20 +111,65 @@ const COPY = {
     openParen: " (",
     closeParen: ")",
   },
-} satisfies Record<
-  string,
-  {
-    subject: (companyName: string) => string;
-    healthScore: string;
-    newIssues: string;
-    resolvedIssues: string;
-    topRecommendations: string;
-    cta: string;
-    colon: string;
-    openParen: string;
-    closeParen: string;
-  }
->;
+  "ja-JP": {
+    subject: (companyName: string) => `${companyName} 週次SEO監査ダイジェスト`,
+    healthScore: "ヘルススコア",
+    newIssues: "今週の新規課題",
+    resolvedIssues: "今週解決済み",
+    topRecommendations: "優先対応の推奨事項",
+    cta: "ダッシュボードを開く",
+    colon: "：",
+    openParen: "（",
+    closeParen: "）",
+  },
+  "ko-KR": {
+    subject: (companyName: string) => `${companyName} 주간 SEO 감사 요약`,
+    healthScore: "건강 점수",
+    newIssues: "이번 주 신규 이슈",
+    resolvedIssues: "이번 주 해결됨",
+    topRecommendations: "우선 권장 조치",
+    cta: "대시보드 열기",
+    colon: ": ",
+    openParen: " (",
+    closeParen: ")",
+  },
+  "de-DE": {
+    subject: (companyName: string) =>
+      `${companyName} wöchentlicher SEO-Audit-Bericht`,
+    healthScore: "Health Score",
+    newIssues: "Neue Probleme diese Woche",
+    resolvedIssues: "Diese Woche gelöst",
+    topRecommendations: "Wichtigste Empfehlungen",
+    cta: "Dashboard öffnen",
+    colon: ": ",
+    openParen: " (",
+    closeParen: ")",
+  },
+  "es-ES": {
+    subject: (companyName: string) =>
+      `Resumen semanal de auditoría SEO de ${companyName}`,
+    healthScore: "Puntuación de salud",
+    newIssues: "Nuevos problemas esta semana",
+    resolvedIssues: "Problemas resueltos esta semana",
+    topRecommendations: "Recomendaciones prioritarias",
+    cta: "Abrir panel",
+    colon: ": ",
+    openParen: " (",
+    closeParen: ")",
+  },
+  "fr-FR": {
+    subject: (companyName: string) =>
+      `Résumé hebdomadaire d'audit SEO de ${companyName}`,
+    healthScore: "Score de santé",
+    newIssues: "Nouveaux problèmes cette semaine",
+    resolvedIssues: "Problèmes résolus cette semaine",
+    topRecommendations: "Recommandations prioritaires",
+    cta: "Ouvrir le tableau de bord",
+    colon: ": ",
+    openParen: " (",
+    closeParen: ")",
+  },
+};
 
 function formatDelta(delta: number) {
   if (delta > 0) return `+${delta}`;
