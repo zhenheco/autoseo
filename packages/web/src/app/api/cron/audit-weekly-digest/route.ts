@@ -249,7 +249,10 @@ function groupReportsByCompany(reports: AuditReportDigestRow[]) {
   return grouped;
 }
 
-function normalizeCompany(reportCompany: AuditReportDigestRow["companies"]) {
+function normalizeCompany(
+  reportCompany: AuditReportDigestRow["companies"] | undefined,
+) {
+  if (!reportCompany) return null;
   if (Array.isArray(reportCompany)) return reportCompany[0] ?? null;
   return reportCompany;
 }
@@ -368,10 +371,10 @@ async function writeEmailLog(
 ) {
   try {
     const result = await (
-      supabase.from("email_logs" as never) as {
+      supabase.from("email_logs" as never) as unknown as {
         insert: (
           payload: Record<string, unknown>,
-        ) => Promise<{ error?: unknown }>;
+        ) => PromiseLike<{ error?: unknown }>;
       }
     ).insert({
       company_id: input.companyId,
