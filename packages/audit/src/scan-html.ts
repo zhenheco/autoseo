@@ -40,6 +40,7 @@ export function scanHtml(input: ScanHtmlInput): AuditIssue[] {
   issues.push(...checkOgImage($, input.pageUrl));
   issues.push(...checkOgTitle($, input.pageUrl));
   issues.push(...checkCanonical($, input.pageUrl));
+  issues.push(...checkH1($, input.pageUrl));
 
   return issues;
 }
@@ -57,6 +58,26 @@ function checkOgImage($: CheerioRoot, pageUrl: string): AuditIssue[] {
       riskLevel: "low",
       page: pageUrl,
       selector: 'meta[property="og:image"]',
+      current: "",
+      source: "html-scan",
+      estimatedImpact: "high",
+    },
+  ];
+}
+
+function checkH1($: CheerioRoot, pageUrl: string): AuditIssue[] {
+  const h1Elements = $("h1");
+  if (h1Elements.length > 0) {
+    return [];
+  }
+
+  return [
+    {
+      ruleId: "h1.missing",
+      severity: "critical",
+      riskLevel: "medium",
+      page: pageUrl,
+      selector: "h1",
       current: "",
       source: "html-scan",
       estimatedImpact: "high",

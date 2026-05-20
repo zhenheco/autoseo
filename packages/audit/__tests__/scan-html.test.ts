@@ -192,4 +192,45 @@ describe("scanHtml", () => {
       ]),
     );
   });
+
+  it("reports a critical issue when h1 is missing", () => {
+    const issues = scanHtml({
+      html: readFixture("h1-missing.html"),
+      pageUrl: "https://example.com/h1-missing",
+    });
+
+    expect(issues).toContainEqual({
+      ruleId: "h1.missing",
+      severity: "critical",
+      riskLevel: "medium",
+      page: "https://example.com/h1-missing",
+      selector: "h1",
+      current: "",
+      source: "html-scan",
+      estimatedImpact: "high",
+    });
+  });
+
+  it("does not report h1 missing when one h1 is present", () => {
+    const issues = scanHtml({
+      html: readFixture("all-good.html"),
+      pageUrl: "https://example.com/all-good",
+    });
+
+    expect(issues.some((issue) => issue.ruleId === "h1.missing")).toBe(false);
+  });
+
+  it("includes h1 missing in multi-issue scans", () => {
+    const issues = scanHtml({
+      html: readFixture("multi-h1-missing.html"),
+      pageUrl: "https://example.com/multi-h1-missing",
+    });
+
+    expect(issues.length).toBeGreaterThan(1);
+    expect(issues).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ ruleId: "h1.missing" }),
+      ]),
+    );
+  });
 });
