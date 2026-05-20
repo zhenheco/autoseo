@@ -40,17 +40,19 @@ export type SupabaseClientLike = {
   from: (table: string) => unknown;
 };
 
-type QueryLike = {
+type QueryResult = {
+  data: unknown;
+  error: { message: string } | null;
+};
+
+type QueryLike = PromiseLike<QueryResult> & {
   insert: (row: unknown) => QueryLike;
   update: (row: unknown) => QueryLike;
   select: (columns?: string) => QueryLike;
   eq: (column: string, value: unknown) => QueryLike;
   order: (column: string, options?: unknown) => QueryLike;
-  single: () => Promise<{ data: unknown; error: { message: string } | null }>;
-  maybeSingle: () => Promise<{
-    data: unknown;
-    error: { message: string } | null;
-  }>;
+  single: () => Promise<QueryResult>;
+  maybeSingle: () => Promise<QueryResult>;
 };
 
 type ShoplineInvitationRow = {
