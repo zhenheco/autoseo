@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   createShoplineInvitation,
   findActiveInvitation,
+  redeemInvitation,
   type ShoplineInvitation,
   type ShoplineInvitationStore,
 } from "../invitations";
@@ -125,5 +126,20 @@ describe("SHOPLINE install invitations", () => {
     await expect(
       findActiveInvitation(createMemoryStore([revoked]), "revoked-token"),
     ).rejects.toThrow("shopline_invitation_revoked");
+  });
+
+  it("increments redeem count and records the last redeemed timestamp", async () => {
+    const token = "redeem-token";
+    const store = createMemoryStore([
+      invitation({
+        token,
+        expiresAt: new Date(Date.now() + 86_400_000).toISOString(),
+      }),
+    ]);
+
+    const result = await redeemInvitation(store, token);
+
+    expect(result.redeemCount).toBe(1);
+    expect(result.lastRedeemedAt).not.toBeNull();
   });
 });
