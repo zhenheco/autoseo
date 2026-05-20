@@ -17,6 +17,13 @@ export interface PushEdgeRuleDeps {
   now?: () => Date;
 }
 
+interface CloudflareKvEnv {
+  [key: string]: string | undefined;
+  CF_API_TOKEN?: string;
+  CF_ACCOUNT_ID?: string;
+  EDGE_RULES_NAMESPACE_ID?: string;
+}
+
 export interface PushEdgeRuleResult {
   key: string;
   ruleCount: number;
@@ -60,11 +67,7 @@ export async function mergeEdgeRule(
 }
 
 export function createCloudflareKvDeps(
-  env: {
-    CF_API_TOKEN?: string;
-    CF_ACCOUNT_ID?: string;
-    EDGE_RULES_NAMESPACE_ID?: string;
-  } = process.env,
+  env: CloudflareKvEnv = process.env,
   fetchImpl: typeof fetch = fetch,
 ): PushEdgeRuleDeps {
   const apiToken = requiredEnv(env.CF_API_TOKEN, "CF_API_TOKEN");
