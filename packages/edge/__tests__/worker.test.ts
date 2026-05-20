@@ -187,4 +187,30 @@ describe("edge worker", () => {
       `<script type="application/ld+json">${jsonLd}</script>`,
     );
   });
+
+  it("uses the wildcard host fallback when the path key is missing", async () => {
+    const namespace = kv({
+      "example.com:*": [
+        {
+          type: "meta-description",
+          value: "Wildcard description for this host.",
+        },
+      ],
+    });
+
+    const response = await worker.fetch(
+      new Request("https://example.com/products/demo"),
+      { EDGE_RULES: namespace },
+    );
+
+    await expect(response.text()).resolves.toContain(
+      '<meta name="description" content="Wildcard description for this host.">',
+    );
+    expect(namespace.get).toHaveBeenNthCalledWith(
+      1,
+      "example.com:/products/demo",
+      "json",
+    );
+    expect(namespace.get).toHaveBeenNthCalledWith(2, "example.com:*", "json");
+  });
 });
