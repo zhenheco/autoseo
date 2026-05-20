@@ -12,6 +12,11 @@ const supabaseMocks = vi.hoisted(() => ({
 
 const auditMocks = vi.hoisted(() => ({
   applyAuditFixToShopline: vi.fn(),
+  applyAuditFixToEdgeWorker: vi.fn(),
+  createCloudflareKvDeps: vi.fn(() => ({
+    kvGet: vi.fn(),
+    kvPut: vi.fn(),
+  })),
 }));
 
 vi.mock("@shared/auth", () => authMocks);
@@ -164,6 +169,17 @@ describe("audit review actions", () => {
       before: "Short",
       after: "A polished SHOPLINE meta description.",
     });
+    auditMocks.applyAuditFixToEdgeWorker.mockResolvedValue({
+      ok: true,
+      route: "edge-worker",
+      before: "Short",
+      after: JSON.stringify([
+        {
+          type: "meta-description",
+          value: "Edge-rendered product description.",
+        },
+      ]),
+    });
   });
 
   it("approveAuditIssue returns unauthorized when the user is not authenticated", async () => {
@@ -221,6 +237,77 @@ describe("audit review actions", () => {
           route: "shopline-editor",
           before: "Short",
           after: "A polished SHOPLINE meta description.",
+          result: "success",
+          error_message: null,
+        },
+      ],
+    });
+    expect(supabase.calls).toContainEqual({
+      table: "audit_issues",
+      method: "update",
+      args: [{ status: "auto-applied" }],
+    });
+  });
+
+  it("approveAuditIssue applies a medium-risk non-SHOPLINE company website issue through edge-worker", async () => {
+    const supabase = createSupabaseMock(
+      createRows({
+        issue: {
+          page: "https://example.com/products/blue-shirt",
+          suggested: "Edge-rendered product description.",
+        },
+        report: { url: "https://example.com" },
+        website: { wordpress_url: "https://example.com" },
+        connection: null,
+      }),
+    );
+    supabaseMocks.createClient.mockResolvedValueOnce(supabase);
+    const { approveAuditIssue } = await import("../review-actions");
+
+    const result = await approveAuditIssue(formData({ issueId: "issue-1" }));
+
+    expect(result).toEqual({
+      ok: true,
+      route: "edge-worker",
+      before: "Short",
+      after: JSON.stringify([
+        {
+          type: "meta-description",
+          value: "Edge-rendered product description.",
+        },
+      ]),
+    });
+    expect(auditMocks.applyAuditFixToShopline).not.toHaveBeenCalled();
+    expect(auditMocks.applyAuditFixToEdgeWorker).toHaveBeenCalledWith(
+      {
+        issue: expect.objectContaining({
+          ruleId: "meta.description.tooShort",
+          page: "https://example.com/products/blue-shirt",
+          suggested: "Edge-rendered product description.",
+        }),
+        shopDomain: "example.com",
+        path: "/products/blue-shirt",
+      },
+      expect.objectContaining({
+        kvGet: expect.any(Function),
+        kvPut: expect.any(Function),
+      }),
+    );
+    expect(supabase.calls).toContainEqual({
+      table: "audit_fix_log",
+      method: "insert",
+      args: [
+        {
+          issue_id: "issue-1",
+          applied_by: "user-1",
+          route: "edge-worker",
+          before: "Short",
+          after: JSON.stringify([
+            {
+              type: "meta-description",
+              value: "Edge-rendered product description.",
+            },
+          ]),
           result: "success",
           error_message: null,
         },

@@ -1,5 +1,8 @@
 import {
+  applyAuditFixToEdgeWorker,
   applyAuditFixToShopline,
+  createCloudflareKvDeps,
+  type ApplyEdgeFixResult,
   type ApplyShoplineFixDeps,
   type ApplyShoplineFixInput,
   type ApplyShoplineFixResult,
@@ -35,18 +38,42 @@ export async function applyAuditIssueToShopline(input: {
   supabase: SupabaseClient;
   preferSuggested?: boolean;
 }): Promise<
-  | { ok: true; route: "shopline-editor"; before: string; after: string }
+  | {
+      ok: true;
+      route: "shopline-editor" | "edge-worker";
+      before: string;
+      after: string;
+    }
   | { ok: false; error: string }
 > {
   const shoplineTarget = await resolveShoplineTarget(input.supabase, {
     companyId: input.companyId,
     websiteId: input.report.website_id,
   });
-  if (!shoplineTarget) return { ok: false, error: "route_not_available" };
+  const auditIssue = toAuditIssue(input.issue);
+  if (!shoplineTarget) {
+    const edgeTarget = await resolveEdgeTarget(input.supabase, {
+      companyId: input.companyId,
+      report: input.report,
+      issue: input.issue,
+    });
+    if (!edgeTarget) return { ok: false, error: "route_not_available" };
+
+    const result = await applyAuditFixToEdgeWorker(
+      {
+        issue: auditIssue,
+        shopDomain: edgeTarget.shopDomain,
+        path: edgeTarget.path,
+      },
+      createCloudflareKvDeps(),
+    );
+
+    return persistAndReturn(input, result);
+  }
 
   const result = await applyAuditFixToShopline(
     {
-      issue: toAuditIssue(input.issue),
+      issue: auditIssue,
       reportId: input.report.id,
       shopHandle: shoplineTarget.shopHandle,
     },
@@ -60,6 +87,17 @@ export async function applyAuditIssueToShopline(input: {
     }),
   );
 
+  return persistAndReturn(input, result);
+}
+
+async function persistAndReturn(
+  input: {
+    issue: AuditIssueRow;
+    userId: string;
+    supabase: SupabaseClient;
+  },
+  result: ApplyShoplineFixResult | ApplyEdgeFixResult,
+) {
   await persistFixLog(input.supabase, {
     issueId: input.issue.id,
     userId: input.userId,
@@ -100,6 +138,62 @@ async function resolveShoplineTarget(
   return { website, shopHandle };
 }
 
+async function resolveEdgeTarget(
+  supabase: SupabaseClient,
+  input: {
+    companyId: string;
+    report: AuditReportRow;
+    issue: AuditIssueRow;
+  },
+): Promise<{ shopDomain: string; path: string } | null> {
+  if (!input.report.website_id) return null;
+  if (!isEdgeInjectableIssue(input.issue)) return null;
+
+  const website = await loadWebsite(supabase, input.report.website_id);
+  if (!website || website.company_id !== input.companyId) return null;
+
+  const connection = await loadActiveShoplineConnection(supabase, {
+    companyId: input.companyId,
+    websiteId: input.report.website_id,
+  });
+  if (connection || shopHandleFromUrl(website.wordpress_url)) return null;
+
+  const pageUrl = parseUrl(input.issue.page);
+  if (!pageUrl) return null;
+
+  const allowedHosts = new Set(
+    [website.wordpress_url, input.report.url]
+      .map((value) => parseUrl(value)?.hostname.toLowerCase())
+      .filter((value): value is string => Boolean(value)),
+  );
+  if (!allowedHosts.has(pageUrl.hostname.toLowerCase())) return null;
+
+  return {
+    shopDomain: pageUrl.hostname,
+    path: pageUrl.pathname || "/",
+  };
+}
+
+function isEdgeInjectableIssue(issue: AuditIssueRow) {
+  const suggested = issue.suggested?.trim();
+
+  switch (issue.rule_id) {
+    case "meta.description.tooShort":
+    case "meta.description.tooLong":
+    case "meta.description.missing":
+    case "og.image.missing":
+    case "og.title.missing":
+    case "og.title.tooShort":
+    case "structured-data.product.missing":
+    case "structured-data-jsonld.missing":
+      return Boolean(suggested);
+    case "canonical.missing":
+      return true;
+    default:
+      return false;
+  }
+}
+
 async function loadWebsite(
   supabase: SupabaseClient,
   websiteId: string,
@@ -135,6 +229,14 @@ function shopHandleFromUrl(value: string): string | null {
     const hostname = new URL(value).hostname.toLowerCase();
     if (!hostname.endsWith(".myshopline.com")) return null;
     return hostname.slice(0, -".myshopline.com".length);
+  } catch {
+    return null;
+  }
+}
+
+function parseUrl(value: string): URL | null {
+  try {
+    return new URL(value);
   } catch {
     return null;
   }
@@ -528,7 +630,7 @@ async function persistFixLog(
   input: {
     issueId: string;
     userId: string;
-    result: ApplyShoplineFixResult;
+    result: ApplyShoplineFixResult | ApplyEdgeFixResult;
   },
 ) {
   const { error } = await supabase.from("audit_fix_log").insert({
