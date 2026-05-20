@@ -2695,6 +2695,53 @@
     "common": {
       "cancel": "取消",
       "processing": "處理中..."
+    },
+    "shoplineInvitations": {
+      "title": "SHOPLINE 商家邀請連結",
+      "description": "為新簽約商家產生獨立綁定連結（7 天有效，可重複綁定）",
+      "createForm": {
+        "title": "產生新邀請",
+        "companyLabel": "客戶公司",
+        "companyPlaceholder": "選擇公司",
+        "expectedShopHandleLabel": "預期 SHOPLINE 商店（選填）",
+        "expectedShopHandlePlaceholder": "brandname.myshopline.com",
+        "noteLabel": "備註（選填）",
+        "notePlaceholder": "內部備註，可留空",
+        "submitButton": "產生連結",
+        "ttlHint": "連結 7 天後過期",
+        "linkFormat": "連結格式為 {url}/connect/shopline/<token>"
+      },
+      "list": {
+        "title": "邀請列表",
+        "description": "僅顯示你擁有 owner/admin 權限公司的 SHOPLINE 邀請。",
+        "empty": "目前沒有 SHOPLINE 邀請連結"
+      },
+      "table": {
+        "company": "公司",
+        "expectedHandle": "預期商店",
+        "status": "狀態",
+        "redeemCount": "綁定次數",
+        "expiresAt": "過期時間",
+        "createdAt": "建立時間",
+        "actions": "操作"
+      },
+      "status": {
+        "active": "有效",
+        "expired": "已過期",
+        "revoked": "已撤銷"
+      },
+      "actions": {
+        "copyLink": "複製連結",
+        "copied": "已複製",
+        "openLink": "開啟連結",
+        "revoke": "撤銷",
+        "revokeConfirm": "確定撤銷此邀請？已綁定的商家不受影響。"
+      },
+      "errors": {
+        "unauthorized": "您沒有權限",
+        "createFailed": "產生邀請失敗",
+        "revokeFailed": "撤銷失敗"
+      }
     }
   },
   "theme": {
@@ -2964,5 +3011,24 @@
     "invalidMobileBarcode": "手機條碼格式不正確",
     "invalidCertificate": "自然人憑證格式不正確",
     "selectDonateOrg": "請選擇捐贈機構"
+  },
+  "connect": {
+    "shopline": {
+      "title": "綁定您的 SHOPLINE 商店",
+      "subtitle": "授權後 1waySEO 將可代您管理商品 SEO",
+      "shopHandleLabel": "SHOPLINE 商店網址",
+      "shopHandlePlaceholder": "brandname.myshopline.com",
+      "authorizeButton": "授權綁定",
+      "errors": {
+        "invalid": "此連結無效，請聯絡 1waySEO 取得新連結",
+        "expired": "此連結已過期，請聯絡 1waySEO 取得新連結",
+        "revoked": "此連結已撤銷"
+      },
+      "done": {
+        "title": "✓ SHOPLINE 商店已成功綁定",
+        "shopLabel": "商店",
+        "instruction": "您可關閉此頁面，1waySEO 團隊將開始為您管理 SEO"
+      }
+    }
   }
 }
