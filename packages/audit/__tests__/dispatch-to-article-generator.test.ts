@@ -80,4 +80,26 @@ describe("dispatchAuditIssueToArticleGenerator", () => {
       status: "pending",
     });
   });
+
+  it("returns idempotent_existing and does not create another job for the same audit issue", async () => {
+    const deps = createDeps();
+    vi.mocked(deps.findExistingJob).mockResolvedValue("job-existing");
+
+    const result = await dispatchAuditIssueToArticleGenerator(
+      {
+        issue: createIssue({
+          ruleId: "content.missing-topic",
+          severity: "info",
+          riskLevel: "medium",
+        }),
+        companyId: "company-1",
+      },
+      deps,
+    );
+
+    expect(result).toEqual({ ok: false, reason: "idempotent_existing" });
+    expect(deps.findExistingJob).toHaveBeenCalledWith("issue-1");
+    expect(deps.generateArticleBrief).not.toHaveBeenCalled();
+    expect(deps.insertArticleJob).not.toHaveBeenCalled();
+  });
 });
