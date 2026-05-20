@@ -45,11 +45,11 @@ export async function applyAuditFixToShopline(
   try {
     switch (input.issue.ruleId) {
       case "meta.description.tooShort":
-        return applyMetaDescriptionFix(input, deps, shopHandle);
+        return await applyMetaDescriptionFix(input, deps, shopHandle);
       case "og.image.missing":
-        return applyOgImageFix(input, deps, shopHandle);
+        return await applyOgImageFix(input, deps, shopHandle);
       case "alt.missing":
-        return applyImageAltFix(input, deps, shopHandle);
+        return await applyImageAltFix(input, deps, shopHandle);
       default:
         return failure(input.issue.current, "", "rule_not_supported");
     }

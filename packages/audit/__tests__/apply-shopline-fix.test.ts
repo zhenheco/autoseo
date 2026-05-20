@@ -186,4 +186,31 @@ describe("applyAuditFixToShopline", () => {
       error: "rule_not_supported",
     });
   });
+
+  it("returns a failed result when SHOPLINE write is rate limited", async () => {
+    const testDeps = deps({
+      shoplineUpdate: vi.fn(async () => {
+        throw new Error("shopline_rate_limited");
+      }),
+    });
+
+    const result = await applyAuditFixToShopline(
+      {
+        issue: issue(),
+        reportId: "report-1",
+        shopHandle: "demo-shop",
+      },
+      testDeps,
+    );
+
+    expect(testDeps.generateMetaDescription).toHaveBeenCalled();
+    expect(testDeps.shoplineUpdate).toHaveBeenCalled();
+    expect(result).toEqual({
+      ok: false,
+      route: "shopline-editor",
+      before: "Short",
+      after: "",
+      error: "shopline_rate_limited",
+    });
+  });
 });
