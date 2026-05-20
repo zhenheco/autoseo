@@ -1,7 +1,7 @@
 import { createHash } from "crypto";
 import { NextResponse } from "next/server";
 import { createAdminClient } from "@shared/supabase";
-import type { AuditIssue, AuditReport } from "@audit";
+import { auditWebsite, type AuditIssue, type AuditReport } from "@audit";
 import type { Json } from "@/types/database.types";
 
 type PublicAuditRequestBody = {
@@ -51,7 +51,15 @@ export async function POST(request: Request) {
     );
   }
 
-  return jsonError("not_implemented", "Public audit is not implemented", 501);
+  const report = await auditWebsite({ url, scope: "single-page" });
+  const reportId = await persistLeadGenReport(supabase, report);
+  await persistLeadInquiry(supabase, {
+    url,
+    ipHash,
+    scannedAt: report.scannedAt,
+  });
+
+  return NextResponse.json(toPublicAuditResponse(reportId, report));
 }
 
 async function verifyTurnstileToken(input: {
@@ -175,6 +183,49 @@ function issuePriority(issue: AuditIssue) {
   const impact = { high: 3, medium: 2, low: 1 }[issue.estimatedImpact];
   const risk = { high: 3, medium: 2, low: 1 }[issue.riskLevel];
   return severity * 100 + impact * 10 + risk;
+}
+
+async function persistLeadGenReport(
+  supabase: ReturnType<typeof createAdminClient>,
+  report: AuditReport,
+) {
+  const { data, error } = await supabase
+    .from("audit_reports")
+    .insert({
+      company_id: null,
+      website_id: null,
+      url: report.url,
+      scope: "single-page",
+      health_score: report.healthScore,
+      pages_scanned: report.pagesScanned,
+      raw_payload: report as unknown as Json,
+      source: "lead-gen",
+      scanned_at: report.scannedAt,
+      created_by: null,
+    })
+    .select("id")
+    .single();
+
+  if (error || !data) {
+    throw new Error(
+      `public_audit_report_persist_failed: ${error?.message ?? "no id"}`,
+    );
+  }
+
+  return data.id as string;
+}
+
+async function persistLeadInquiry(
+  supabase: ReturnType<typeof createAdminClient>,
+  input: { url: string; ipHash: string; scannedAt: string },
+) {
+  const { error } = await supabase.from("audit_lead_inquiries").insert({
+    url: input.url,
+    ip_hash: input.ipHash,
+    scanned_at: input.scannedAt,
+  });
+
+  if (error) throw error;
 }
 
 function normalizeUrl(input: unknown) {

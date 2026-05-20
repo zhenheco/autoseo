@@ -17,6 +17,7 @@ function createSupabaseMock(
   options: {
     rateCount?: number;
     cachedReport?: Record<string, unknown> | null;
+    reportId?: string;
   } = {},
 ) {
   const calls: Array<{ table: string; method: string; args: unknown[] }> = [];
@@ -25,6 +26,7 @@ function createSupabaseMock(
     calls,
     from(table: TableName) {
       const builder = {
+        insertPayload: undefined as unknown,
         select(...args: unknown[]) {
           calls.push({ table, method: "select", args });
           return builder;
@@ -53,6 +55,15 @@ function createSupabaseMock(
           data: options.cachedReport ?? null,
           error: null,
         })),
+        insert(payload: unknown) {
+          calls.push({ table, method: "insert", args: [payload] });
+          builder.insertPayload = payload;
+          return builder;
+        },
+        single: vi.fn(async () => ({
+          data: { id: options.reportId ?? "report-1" },
+          error: null,
+        })),
         then(
           resolve: (value: {
             data: unknown[] | null;
@@ -60,6 +71,14 @@ function createSupabaseMock(
             error: null;
           }) => void,
         ) {
+          if (builder.insertPayload !== undefined) {
+            return Promise.resolve({
+              data: null,
+              count: null,
+              error: null,
+            }).then(resolve);
+          }
+
           return Promise.resolve({
             data: null,
             count: options.rateCount ?? 0,
@@ -206,6 +225,63 @@ describe("public audit API route", () => {
           impact: "Add a concise meta description",
         },
       ],
+    });
+  });
+
+  it("runs a fresh audit and inserts report and lead inquiry on the happy path", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json({ success: true })),
+    );
+    const supabase = createSupabaseMock({ reportId: "lead-report-1" });
+    supabaseMocks.createAdminClient.mockReturnValue(supabase);
+    auditMocks.auditWebsite.mockResolvedValue({
+      id: "audit-run-1",
+      url: "https://example.com/",
+      scannedAt: "2026-05-21T02:00:00.000Z",
+      pagesScanned: 1,
+      healthScore: 64,
+      issues: [
+        {
+          ruleId: "meta.description.missing",
+          severity: "critical",
+          riskLevel: "high",
+          page: "https://example.com/",
+          selector: "meta[name=description]",
+          current: "Missing meta description",
+          suggested: "Add a concise meta description",
+          source: "html-scan",
+          estimatedImpact: "high",
+        },
+      ],
+    });
+
+    const response = await post({
+      url: "https://example.com",
+      turnstileToken: "valid-token",
+    });
+
+    expect(response.status).toBe(200);
+    expect(auditMocks.auditWebsite).toHaveBeenCalledWith({
+      url: "https://example.com/",
+      scope: "single-page",
+    });
+    expect(supabase.calls).toContainEqual(
+      expect.objectContaining({
+        table: "audit_reports",
+        method: "insert",
+      }),
+    );
+    expect(supabase.calls).toContainEqual(
+      expect.objectContaining({
+        table: "audit_lead_inquiries",
+        method: "insert",
+      }),
+    );
+    await expect(response.json()).resolves.toMatchObject({
+      reportId: "lead-report-1",
+      healthScore: 64,
+      totalIssues: 1,
     });
   });
 });
