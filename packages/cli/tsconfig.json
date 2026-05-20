@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "outDir": "./dist",
+    "noUncheckedIndexedAccess": false,
+    "noImplicitOverride": false,
+    "types": ["node", "vitest/globals"],
+    "paths": {
+      "@/*": ["../web/src/*"],
+      "@shared/*": ["../shared/src/*"],
+      "@audit/*": ["../audit/src/*"]
+    }
+  },
+  "include": ["src/**/*"]
+}
