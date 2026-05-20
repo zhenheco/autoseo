@@ -204,4 +204,21 @@ describe("POST /api/audit/issues/[issueId]/apply", () => {
       error: "not_eligible",
     });
   });
+
+  it("returns 400 route_not_available when the issue target is not SHOPLINE", async () => {
+    authState.supabase = createSupabaseMock(
+      rowsForEligibleIssue({
+        website: { wordpress_url: "https://example.com" },
+        connection: null,
+      }),
+    );
+
+    const response = await post();
+
+    expect(response.status).toBe(400);
+    await expect(response.json()).resolves.toEqual({
+      ok: false,
+      error: "route_not_available",
+    });
+  });
 });
