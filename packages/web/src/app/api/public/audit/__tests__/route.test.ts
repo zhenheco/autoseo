@@ -284,4 +284,30 @@ describe("public audit API route", () => {
       totalIssues: 1,
     });
   });
+
+  it("returns 502 when auditWebsite cannot fetch the target website", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json({ success: true })),
+    );
+    const supabase = createSupabaseMock();
+    supabaseMocks.createAdminClient.mockReturnValue(supabase);
+    auditMocks.auditWebsite.mockRejectedValue(new Error("audit_fetch_failed"));
+
+    const response = await post({
+      url: "https://example.com",
+      turnstileToken: "valid-token",
+    });
+
+    expect(response.status).toBe(502);
+    await expect(response.json()).resolves.toMatchObject({
+      error: "audit_fetch_failed",
+    });
+    expect(supabase.calls).not.toContainEqual(
+      expect.objectContaining({
+        table: "audit_reports",
+        method: "insert",
+      }),
+    );
+  });
 });

@@ -51,7 +51,16 @@ export async function POST(request: Request) {
     );
   }
 
-  const report = await auditWebsite({ url, scope: "single-page" });
+  let report: AuditReport;
+  try {
+    report = await auditWebsite({ url, scope: "single-page" });
+  } catch {
+    return jsonError(
+      "audit_fetch_failed",
+      "Unable to fetch the website for auditing",
+      502,
+    );
+  }
   const reportId = await persistLeadGenReport(supabase, report);
   await persistLeadInquiry(supabase, {
     url,
