@@ -22,4 +22,18 @@ describe("public SHOPLINE invitation install route", () => {
       error: "missing_shop_handle",
     });
   });
+
+  it("returns invalid_shop_handle when shopHandle cannot be normalized", async () => {
+    const resp = await GET(
+      request(
+        "https://1wayseo.com/api/connect/shopline/invite-token/install?shopHandle=bad%20shop",
+      ),
+      context(),
+    );
+
+    expect(resp.status).toBe(400);
+    await expect(resp.json()).resolves.toEqual({
+      error: "invalid_shop_handle",
+    });
+  });
 });
