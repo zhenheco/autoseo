@@ -101,12 +101,20 @@ export async function bulkApproveAuditIssues(_formData: FormData): Promise<{
   for (const issueId of issueIds) {
     const itemFormData = new FormData();
     itemFormData.set("issueId", issueId);
-    const result = await approveAuditIssue(itemFormData);
-    results.push({
-      issueId,
-      ok: result.ok,
-      error: result.ok ? undefined : result.error,
-    });
+    try {
+      const result = await approveAuditIssue(itemFormData);
+      results.push({
+        issueId,
+        ok: result.ok,
+        error: result.ok ? undefined : result.error,
+      });
+    } catch (error) {
+      results.push({
+        issueId,
+        ok: false,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
   }
 
   return {

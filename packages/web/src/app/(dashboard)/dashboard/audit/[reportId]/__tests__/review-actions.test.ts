@@ -308,4 +308,46 @@ describe("audit review actions", () => {
     });
     expect(auditMocks.applyAuditFixToShopline).toHaveBeenCalledTimes(2);
   });
+
+  it("bulkApproveAuditIssues returns per-issue results when some approvals fail", async () => {
+    const rows = createRows();
+    rows.audit_issues = [
+      ...(rows.audit_issues ?? []),
+      {
+        ...(rows.audit_issues?.[0] as Record<string, unknown>),
+        id: "issue-2",
+        page: "https://demo-shop.myshopline.com/products/red-shirt",
+      },
+    ];
+    auditMocks.applyAuditFixToShopline
+      .mockResolvedValueOnce({
+        ok: true,
+        route: "shopline-editor",
+        before: "Short",
+        after: "A polished SHOPLINE meta description.",
+      })
+      .mockResolvedValueOnce({
+        ok: false,
+        route: "shopline-editor",
+        before: "Short",
+        after: "",
+        error: "shopline_rate_limited",
+      });
+    const supabase = createSupabaseMock(rows);
+    supabaseMocks.createClient.mockResolvedValue(supabase);
+    const { bulkApproveAuditIssues } = await import("../review-actions");
+
+    const result = await bulkApproveAuditIssues(
+      formData({ issueIds: ["issue-1", "issue-2"] }),
+    );
+
+    expect(result).toEqual({
+      ok: false,
+      results: [
+        { issueId: "issue-1", ok: true, error: undefined },
+        { issueId: "issue-2", ok: false, error: "shopline_rate_limited" },
+      ],
+    });
+    expect(auditMocks.applyAuditFixToShopline).toHaveBeenCalledTimes(2);
+  });
 });
