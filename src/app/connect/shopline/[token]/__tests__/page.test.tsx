@@ -33,6 +33,21 @@ function props(token = "invite-token") {
   return { params: Promise.resolve({ token }) };
 }
 
+function invitationRow(overrides: Record<string, unknown> = {}) {
+  return {
+    token: "invite-token",
+    company_id: "company-1",
+    expected_shop_handle: null,
+    note: null,
+    expires_at: new Date(Date.now() + 86_400_000).toISOString(),
+    last_redeemed_at: null,
+    redeem_count: 0,
+    revoked_at: null,
+    created_at: "2026-05-20T00:00:00.000Z",
+    ...overrides,
+  };
+}
+
 beforeEach(() => {
   vi.restoreAllMocks();
   invitationQuery.select.mockClear();
@@ -54,5 +69,24 @@ describe("public SHOPLINE invitation page", () => {
     ).toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
     expect(invitationQuery.eq).toHaveBeenCalledWith("token", "missing-token");
+  });
+
+  it("shows an expired-link message without a form when invitation is expired", async () => {
+    invitationQuery.maybeSingle.mockResolvedValueOnce({
+      data: invitationRow({
+        expires_at: new Date(Date.now() - 1_000).toISOString(),
+      }),
+      error: null,
+    });
+
+    render(await ShoplineInvitationPage(props("expired-token")));
+
+    expect(
+      screen.getByRole("heading", { name: "連結已過期" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText("連結已過期，請聯絡 1waySEO 取得新連結"),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("button")).not.toBeInTheDocument();
   });
 });

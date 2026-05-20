@@ -16,7 +16,19 @@ export default async function ShoplineInvitationPage({ params }: PageProps) {
 
   try {
     await findActiveInvitation(store, token);
-  } catch {
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message === "shopline_invitation_expired"
+    ) {
+      return (
+        <InvitationShell
+          title="連結已過期"
+          description="連結已過期，請聯絡 1waySEO 取得新連結"
+        />
+      );
+    }
+
     return (
       <InvitationShell
         title="連結無效"
