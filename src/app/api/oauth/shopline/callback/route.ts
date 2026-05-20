@@ -5,6 +5,10 @@ import {
   persistShoplineConnection,
 } from "@/lib/shopline/connections";
 import {
+  createSupabaseShoplineInvitationStore,
+  redeemInvitation,
+} from "@/lib/shopline/invitations";
+import {
   exchangeCodeForToken,
   normalizeShoplineShopHandle,
   verifyShoplineHmac,
@@ -122,7 +126,8 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     });
   }
 
-  const store = createSupabaseShoplineConnectionStore(createAdminClient());
+  const admin = createAdminClient();
+  const store = createSupabaseShoplineConnectionStore(admin);
   const connection = await persistShoplineConnection(store, {
     companyId: verified.workspaceId,
     websiteId: verified.siteId,
@@ -130,6 +135,20 @@ export async function GET(req: NextRequest): Promise<NextResponse> {
     accessToken: token.access_token,
     scope: token.scope,
   });
+
+  if (verified.invitationToken) {
+    try {
+      await redeemInvitation(
+        createSupabaseShoplineInvitationStore(admin),
+        verified.invitationToken,
+      );
+    } catch (error) {
+      console.warn("shopline_invitation_redeem_failed", {
+        invitationToken: verified.invitationToken,
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  }
 
   return redirectWithShoplineResult(req, verified, {
     shopline: "connected",
