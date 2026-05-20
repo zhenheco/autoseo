@@ -48,12 +48,39 @@ export async function applyAuditFixToShopline(
         return applyMetaDescriptionFix(input, deps, shopHandle);
       case "og.image.missing":
         return applyOgImageFix(input, deps, shopHandle);
+      case "alt.missing":
+        return applyImageAltFix(input, deps, shopHandle);
       default:
         return failure(input.issue.current, "", "rule_not_supported");
     }
   } catch (error) {
     return failure(input.issue.current, "", errorMessage(error));
   }
+}
+
+async function applyImageAltFix(
+  input: ApplyShoplineFixInput,
+  deps: ApplyShoplineFixDeps,
+  shopHandle: string,
+): Promise<ApplyShoplineFixResult> {
+  const imageUrl = resolveImageUrl(input.issue);
+  const generatedAlt = await deps.generateImageAlt({ imageUrl });
+  const normalizedAlt = generatedAlt.trim();
+  const updated = await deps.shoplineUpdate({
+    ...input,
+    shopHandle,
+    issue: {
+      ...input.issue,
+      suggested: normalizedAlt,
+    },
+  });
+
+  return {
+    ok: true,
+    route: "shopline-editor",
+    before: input.issue.current,
+    after: updated.image?.alt ?? normalizedAlt,
+  };
 }
 
 async function applyMetaDescriptionFix(
@@ -147,6 +174,20 @@ function extractUrls(value: string): string[] {
 
 function isUsableUrl(value: unknown): value is string {
   return typeof value === "string" && /^https?:\/\//i.test(value.trim());
+}
+
+function resolveImageUrl(issue: AuditIssue): string {
+  const selectorSrc = issue.selector?.match(/img\[src="([^"]+)"\]/)?.[1];
+  const candidate =
+    selectorSrc ?? extractUrls(issue.current)[0] ?? extractUrls(issue.page)[0];
+
+  if (!candidate) return "";
+
+  try {
+    return new URL(candidate, issue.page).href;
+  } catch {
+    return candidate;
+  }
 }
 
 function failure(

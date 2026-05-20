@@ -116,4 +116,47 @@ describe("applyAuditFixToShopline", () => {
       after: "https://cdn.myshopline.com/demo/logo.png",
     });
   });
+
+  it("generates image alt text and applies it through the SHOPLINE editor", async () => {
+    const testDeps = deps({
+      shoplineUpdate: vi.fn(async () => ({
+        productId: "product-1",
+        image: { id: "image-1", alt: "Blue cotton shirt front view" },
+      })),
+      generateImageAlt: vi.fn(async () => "Blue cotton shirt front view"),
+    });
+    const testIssue = issue({
+      ruleId: "alt.missing",
+      selector: 'img[src="/cdn/products/blue-shirt.jpg"]:nth-of-type(1)',
+      current: "",
+    });
+
+    const result = await applyAuditFixToShopline(
+      {
+        issue: testIssue,
+        reportId: "report-1",
+        shopHandle: "demo-shop",
+      },
+      testDeps,
+    );
+
+    expect(testDeps.generateImageAlt).toHaveBeenCalledWith({
+      imageUrl:
+        "https://demo-shop.myshopline.com/cdn/products/blue-shirt.jpg",
+    });
+    expect(testDeps.shoplineUpdate).toHaveBeenCalledWith({
+      issue: {
+        ...testIssue,
+        suggested: "Blue cotton shirt front view",
+      },
+      reportId: "report-1",
+      shopHandle: "demo-shop",
+    });
+    expect(result).toEqual({
+      ok: true,
+      route: "shopline-editor",
+      before: "",
+      after: "Blue cotton shirt front view",
+    });
+  });
 });
