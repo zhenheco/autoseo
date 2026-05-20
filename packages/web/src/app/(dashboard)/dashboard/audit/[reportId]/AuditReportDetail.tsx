@@ -21,6 +21,7 @@ export interface AuditIssueItem {
   selector: string | null;
   status: "open" | "auto-applied" | "pending-review" | "manual" | "resolved";
   autoApplyAvailable: boolean;
+  articleJobId: string | null;
 }
 
 export interface AuditReportDetailModel {
@@ -85,7 +86,7 @@ export function AuditReportDetail({ report }: AuditReportDetailProps) {
         </div>
       </section>
 
-      <Tabs defaultValue="critical" className="space-y-4">
+      <Tabs defaultValue="all" className="space-y-4">
         <TabsList>
           <TabsTrigger value="critical">
             {t("detail.tabs.critical", { count: counts.critical })}
@@ -122,6 +123,9 @@ function IssueList({ issues }: { issues: AuditIssueItem[] }) {
   const t = useTranslations("audit");
   const router = useRouter();
   const [applyingIssueId, setApplyingIssueId] = useState<string | null>(null);
+  const [dispatchingIssueId, setDispatchingIssueId] = useState<string | null>(
+    null,
+  );
 
   async function applyIssue(issue: AuditIssueItem) {
     setApplyingIssueId(issue.id);
@@ -149,6 +153,36 @@ function IssueList({ issues }: { issues: AuditIssueItem[] }) {
       );
     } finally {
       setApplyingIssueId(null);
+    }
+  }
+
+  async function dispatchArticle(issue: AuditIssueItem) {
+    setDispatchingIssueId(issue.id);
+    try {
+      const response = await fetch(
+        `/api/audit/issues/${issue.id}/dispatch-article`,
+        {
+          method: "POST",
+        },
+      );
+      const body = (await response.json()) as
+        | { ok: true; jobId: string }
+        | { ok: false; reason?: string; error?: string };
+
+      if (!response.ok || !body.ok) {
+        throw new Error(
+          body.ok
+            ? "dispatch_failed"
+            : (body.reason ?? body.error ?? "dispatch_failed"),
+        );
+      }
+
+      toast.success("已派工到內容生成");
+      router.refresh();
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "派工失敗");
+    } finally {
+      setDispatchingIssueId(null);
     }
   }
 
@@ -192,19 +226,67 @@ function IssueList({ issues }: { issues: AuditIssueItem[] }) {
                 />
               </dl>
             </div>
-            <Button
-              disabled={
-                !issue.autoApplyAvailable || applyingIssueId === issue.id
-              }
-              variant="outline"
-              onClick={() => void applyIssue(issue)}
-            >
-              {t("detail.issueCard.applyButton")}
-            </Button>
+            <IssueAction
+              issue={issue}
+              applyingIssueId={applyingIssueId}
+              dispatchingIssueId={dispatchingIssueId}
+              onApply={applyIssue}
+              onDispatch={dispatchArticle}
+              applyLabel={t("detail.issueCard.applyButton")}
+            />
           </div>
         </article>
       ))}
     </div>
+  );
+}
+
+function IssueAction({
+  issue,
+  applyingIssueId,
+  dispatchingIssueId,
+  onApply,
+  onDispatch,
+  applyLabel,
+}: {
+  issue: AuditIssueItem;
+  applyingIssueId: string | null;
+  dispatchingIssueId: string | null;
+  onApply: (issue: AuditIssueItem) => void | Promise<void>;
+  onDispatch: (issue: AuditIssueItem) => void | Promise<void>;
+  applyLabel: string;
+}) {
+  if (issue.ruleId === "content.missing-topic") {
+    if (issue.articleJobId) {
+      return (
+        <a
+          href={`/dashboard/articles/${issue.articleJobId}`}
+          className="max-w-64 truncate rounded-md border px-3 py-2 text-sm font-medium text-primary hover:bg-muted"
+        >
+          已派工到內容生成 #{issue.articleJobId}
+        </a>
+      );
+    }
+
+    return (
+      <Button
+        disabled={dispatchingIssueId === issue.id}
+        variant="outline"
+        onClick={() => void onDispatch(issue)}
+      >
+        派工
+      </Button>
+    );
+  }
+
+  return (
+    <Button
+      disabled={!issue.autoApplyAvailable || applyingIssueId === issue.id}
+      variant="outline"
+      onClick={() => void onApply(issue)}
+    >
+      {applyLabel}
+    </Button>
   );
 }
 

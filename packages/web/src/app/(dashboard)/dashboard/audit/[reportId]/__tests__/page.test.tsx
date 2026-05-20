@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 type TableName =
   | "audit_reports"
   | "audit_issues"
+  | "article_jobs"
   | "website_configs"
   | "shopline_connections";
 
@@ -74,9 +75,14 @@ function createSupabaseMock(rows: Partial<Record<TableName, unknown[]>>) {
     from(table: TableName) {
       const builder = {
         filters: [] as Array<[string, unknown]>,
+        inFilters: [] as Array<[string, unknown[]]>,
         select: vi.fn(() => builder),
         eq: vi.fn((column: string, value: unknown) => {
           builder.filters.push([column, value]);
+          return builder;
+        }),
+        in: vi.fn((column: string, values: unknown[]) => {
+          builder.inFilters.push([column, values]);
           return builder;
         }),
         order: vi.fn(() => builder),
@@ -90,11 +96,15 @@ function createSupabaseMock(rows: Partial<Record<TableName, unknown[]>>) {
           return { data: data ?? null, error: null };
         }),
         then(resolve: (value: { data: unknown[]; error: null }) => void) {
-          const data = (rows[table] ?? []).filter((row) =>
-            builder.filters.every(
-              ([column, value]) =>
-                (row as Record<string, unknown>)[column] === value,
-            ),
+          const data = (rows[table] ?? []).filter(
+            (row) =>
+              builder.filters.every(
+                ([column, value]) =>
+                  (row as Record<string, unknown>)[column] === value,
+              ) &&
+              builder.inFilters.every(([column, values]) =>
+                values.includes((row as Record<string, unknown>)[column]),
+              ),
           );
           return Promise.resolve({ data, error: null }).then(resolve);
         },
@@ -197,6 +207,7 @@ describe("audit report detail page", () => {
         { ...issue, id: "issue-2", severity: "warning", rule_id: "meta" },
         { ...issue, id: "issue-3", severity: "info", rule_id: "canonical" },
       ],
+      article_jobs: [],
     });
 
     expect(screen.getByText("掃描摘要")).toBeInTheDocument();
@@ -208,7 +219,9 @@ describe("audit report detail page", () => {
     expect(screen.getByRole("tab", { name: "資訊 (1)" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "全部 (3)" })).toBeInTheDocument();
     expect(screen.getAllByText("missing-title").length).toBeGreaterThan(0);
-    expect(screen.getByRole("button", { name: "自動套用" })).toBeDisabled();
+    expect(
+      screen.getAllByRole("button", { name: "自動套用" })[0],
+    ).toBeDisabled();
   });
 
   it("enables auto apply for low-risk SHOPLINE issues and refreshes after applying", async () => {
@@ -233,6 +246,7 @@ describe("audit report detail page", () => {
           severity: "critical",
         },
       ],
+      article_jobs: [],
       website_configs: [
         {
           id: "website-1",
@@ -254,6 +268,71 @@ describe("audit report detail page", () => {
         { method: "POST" },
       );
       expect(toastMocks.success).toHaveBeenCalledWith("已自動套用");
+      expect(navigationMocks.refresh).toHaveBeenCalled();
+    });
+  });
+
+  it("shows article dispatch status for content missing-topic issues", async () => {
+    await renderPage({
+      audit_reports: [report],
+      audit_issues: [
+        {
+          ...issue,
+          rule_id: "content.missing-topic",
+          severity: "info",
+          risk_level: "medium",
+          current: "ergonomic desk",
+        },
+      ],
+      article_jobs: [
+        {
+          id: "job-1",
+          audit_issue_id: "issue-1",
+        },
+      ],
+    });
+
+    fireEvent.click(screen.getByRole("tab", { name: "資訊 (1)" }));
+
+    expect(
+      screen.getByRole("link", {
+        name: "已派工到內容生成 #job-1",
+      }),
+    ).toHaveAttribute("href", "/dashboard/articles/job-1");
+  });
+
+  it("dispatches content missing-topic issues from the dashboard", async () => {
+    const fetchMock = vi.fn(async () =>
+      Response.json({
+        ok: true,
+        jobId: "job-2",
+      }),
+    );
+    vi.stubGlobal("fetch", fetchMock);
+
+    await renderPage({
+      audit_reports: [report],
+      audit_issues: [
+        {
+          ...issue,
+          rule_id: "content.missing-topic",
+          severity: "info",
+          risk_level: "medium",
+          current: "ergonomic desk",
+        },
+      ],
+      article_jobs: [],
+    });
+
+    fireEvent.click(screen.getByRole("tab", { name: "資訊 (1)" }));
+    fireEvent.click(screen.getByRole("button", { name: "派工" }));
+
+    await waitFor(() => {
+      expect(fetchMock).toHaveBeenCalledWith(
+        "/api/audit/issues/issue-1/dispatch-article",
+        { method: "POST" },
+      );
+      expect(toastMocks.success).toHaveBeenCalledWith("已派工到內容生成");
       expect(navigationMocks.refresh).toHaveBeenCalled();
     });
   });

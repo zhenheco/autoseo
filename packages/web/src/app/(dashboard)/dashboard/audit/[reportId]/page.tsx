@@ -12,6 +12,10 @@ export const dynamic = "force-dynamic";
 
 type AuditReportRow = Database["public"]["Tables"]["audit_reports"]["Row"];
 type AuditIssueRow = Database["public"]["Tables"]["audit_issues"]["Row"];
+type ArticleJobRow = Pick<
+  Database["public"]["Tables"]["article_jobs"]["Row"],
+  "id" | "audit_issue_id"
+>;
 
 interface AuditDetailPageProps {
   params: Promise<{ reportId: string }>;
@@ -54,6 +58,10 @@ export default async function AuditDetailPage({
     .order("created_at", { ascending: true });
 
   if (issuesError) throw issuesError;
+  const articleJobsByIssueId = await loadArticleJobsByIssueId(
+    supabase,
+    ((issues ?? []) as AuditIssueRow[]).map((issue) => issue.id),
+  );
   const isShoplineReport = await isShoplineAuditReport(
     report as AuditReportRow,
   );
@@ -64,6 +72,7 @@ export default async function AuditDetailPage({
         report as AuditReportRow,
         (issues ?? []) as AuditIssueRow[],
         isShoplineReport,
+        articleJobsByIssueId,
       )}
     />
   );
@@ -73,6 +82,7 @@ function toDetailModel(
   report: AuditReportRow,
   issues: AuditIssueRow[],
   isShoplineReport: boolean,
+  articleJobsByIssueId: Map<string, ArticleJobRow>,
 ): AuditReportDetailModel {
   return {
     id: report.id,
@@ -91,12 +101,33 @@ function toDetailModel(
       suggested: issue.suggested,
       selector: issue.selector,
       status: issue.status,
+      articleJobId: articleJobsByIssueId.get(issue.id)?.id ?? null,
       autoApplyAvailable:
         isShoplineReport &&
         issue.risk_level === "low" &&
         issue.status === "open",
     })),
   };
+}
+
+async function loadArticleJobsByIssueId(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  issueIds: string[],
+): Promise<Map<string, ArticleJobRow>> {
+  if (issueIds.length === 0) return new Map();
+
+  const { data, error } = await supabase
+    .from("article_jobs")
+    .select("id, audit_issue_id")
+    .in("audit_issue_id", issueIds);
+
+  if (error) throw error;
+
+  return new Map(
+    ((data ?? []) as ArticleJobRow[])
+      .filter((job) => job.audit_issue_id)
+      .map((job) => [job.audit_issue_id as string, job]),
+  );
 }
 
 async function isShoplineAuditReport(report: AuditReportRow): Promise<boolean> {
