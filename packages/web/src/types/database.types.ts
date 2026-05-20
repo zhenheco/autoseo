@@ -1921,6 +1921,8 @@ export type Database = {
           started_at: string | null;
           completed_at: string | null;
           sync_target_ids: Json | null;
+          audit_issue_id: string | null;
+          source_type: string | null;
         };
         Insert: {
           id?: string;
@@ -1957,6 +1959,8 @@ export type Database = {
           started_at?: string | null;
           completed_at?: string | null;
           sync_target_ids?: Json | null;
+          audit_issue_id?: string | null;
+          source_type?: string | null;
         };
         Update: {
           id?: string;
@@ -1993,8 +1997,17 @@ export type Database = {
           started_at?: string | null;
           completed_at?: string | null;
           sync_target_ids?: Json | null;
+          audit_issue_id?: string | null;
+          source_type?: string | null;
         };
         Relationships: [
+          {
+            foreignKeyName: "article_jobs_audit_issue_id_fkey";
+            columns: ["audit_issue_id"];
+            isOneToOne: false;
+            referencedRelation: "audit_issues";
+            referencedColumns: ["id"];
+          },
           {
             foreignKeyName: "article_jobs_company_id_fkey";
             columns: ["company_id"];

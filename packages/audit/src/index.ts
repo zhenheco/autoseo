@@ -1,5 +1,6 @@
 export { auditWebsite } from "./audit-website";
 export { applyAuditFixToShopline } from "./apply-shopline-fix";
+export { dispatchAuditIssueToArticleGenerator } from "./dispatch-to-article-generator";
 export { scanHtml } from "./scan-html";
 export { scoreHealth } from "./score-health";
 export type {
@@ -7,6 +8,7 @@ export type {
   ApplyShoplineFixInput,
   ApplyShoplineFixResult,
 } from "./apply-shopline-fix";
+export type { DispatchToArticleGeneratorDeps } from "./dispatch-to-article-generator";
 export type {
   AuditReport,
   AuditIssue,
