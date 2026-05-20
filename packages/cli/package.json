@@ -4,10 +4,12 @@
   "private": true,
   "type": "module",
   "bin": {
+    "audit-cli": "./src/audit-cli.ts",
     "seo-cli": "./src/shopline-cli.ts",
     "shopline-cli": "./src/shopline-cli.ts"
   },
   "scripts": {
+    "audit": "tsx src/audit-cli.ts",
     "build": "tsc",
     "shopline:cli": "tsx src/shopline-cli.ts",
     "test": "vitest run",

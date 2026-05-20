@@ -8,9 +8,10 @@
     "types": ["node", "vitest/globals"],
     "paths": {
       "@/*": ["../web/src/*"],
+      "@audit": ["../audit/src/index.ts"],
       "@shared/*": ["../shared/src/*"],
       "@audit/*": ["../audit/src/*"]
     }
   },
-  "include": ["src/**/*"]
+  "include": ["src/**/*", "__tests__/**/*"]
 }

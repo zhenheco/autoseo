@@ -9,6 +9,12 @@ export default defineConfig({
   resolve: {
     alias: {
       "@": path.resolve(__dirname, "../web/src"),
+      "@audit": path.resolve(__dirname, "../audit/src/index.ts"),
+      "@shared/supabase": path.resolve(
+        __dirname,
+        "../shared/src/supabase/index.ts",
+      ),
+      "@shared": path.resolve(__dirname, "../shared/src"),
     },
   },
 });

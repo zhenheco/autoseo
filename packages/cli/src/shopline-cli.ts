@@ -10,7 +10,7 @@ import {
   exchangeCodeForToken,
 } from "../../web/src/lib/shopline/oauth";
 import { updateShoplineProductSeo } from "../../web/src/lib/shopline/seo-updater";
-import { createAdminClient } from "../../web/src/lib/supabase/admin";
+import { createAdminClient } from "@shared/supabase";
 
 type Args = Record<string, string | boolean>;
 
