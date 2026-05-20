@@ -47,4 +47,15 @@ describe("renderAuditDigestEmail", () => {
     expect(rendered.text).toContain("查看儀表板");
     expect(rendered.html).toContain("https://app.1wayseo.com/dashboard/audit");
   });
+
+  it("renders the en-US template", () => {
+    const rendered = renderAuditDigestEmail(input({ locale: "en-US" }));
+
+    expect(rendered.subject).toBe("Acme SEO weekly SEO audit digest");
+    expect(rendered.text).toContain("Health score: 88 (+5)");
+    expect(rendered.text).toContain("New issues: 3");
+    expect(rendered.text).toContain("Resolved issues: 2");
+    expect(rendered.text).toContain("Top recommendations");
+    expect(rendered.html).toContain("Open dashboard");
+  });
 });

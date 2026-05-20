@@ -88,7 +88,7 @@ const COPY = {
     closeParen: "）",
   },
   "en-US": {
-    subject: (companyName: string) => `${companyName} weekly audit digest`,
+    subject: (companyName: string) => `${companyName} weekly SEO audit digest`,
     healthScore: "Health score",
     newIssues: "New issues",
     resolvedIssues: "Resolved issues",
