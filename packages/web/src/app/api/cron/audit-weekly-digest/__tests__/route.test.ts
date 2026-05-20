@@ -262,4 +262,56 @@ describe("audit weekly digest cron route", () => {
     expect(sendInput.template.text).toContain("New issues: 1");
     expect(sendInput.template.text).toContain("Resolved issues: 1");
   });
+
+  it("uses the same weekly idempotency key when the cron reruns in the same week", async () => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date("2026-05-21T00:00:00.000Z"));
+    process.env.CRON_SECRET = "cron-secret";
+    sendAuditDigestEmailMock.mockResolvedValue({
+      ok: true,
+      messageId: "email-replay",
+    });
+    const supabase = createFakeSupabase(
+      {
+        audit_reports: {
+          data: [
+            {
+              id: "report-current",
+              company_id: "company-1",
+              health_score: 82,
+              scanned_at: "2026-05-20T10:00:00.000Z",
+              companies: {
+                id: "company-1",
+                name: "Acme SEO",
+                owner_id: "owner-1",
+              },
+            },
+          ],
+          error: null,
+        },
+        audit_issues: { data: [], error: null },
+      },
+      {
+        "owner-1": {
+          email: "owner@example.com",
+          user_metadata: { locale: "en-US" },
+        },
+      },
+    );
+    vi.mocked(createAdminClient).mockReturnValue(supabase as never);
+    const { GET } = await import("../route");
+
+    const first = await GET(request("cron-secret") as never);
+    const second = await GET(request("cron-secret") as never);
+
+    expect(first.status).toBe(200);
+    expect(second.status).toBe(200);
+    expect(sendAuditDigestEmailMock).toHaveBeenCalledTimes(2);
+    expect(sendAuditDigestEmailMock.mock.calls[0][0].idempotencyKey).toBe(
+      "audit-digest:company-1:2026-W21",
+    );
+    expect(sendAuditDigestEmailMock.mock.calls[1][0].idempotencyKey).toBe(
+      "audit-digest:company-1:2026-W21",
+    );
+  });
 });
