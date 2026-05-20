@@ -3075,6 +3075,26 @@
         "applyFailed": "Auto apply failed"
       }
     },
+    "review": {
+      "tabLabel": "Review ({{count}})",
+      "current": "Current",
+      "suggested": "Suggested",
+      "approveButton": "Approve and apply",
+      "rejectButton": "Reject",
+      "editApplyButton": "Edit and apply",
+      "bulkApproveButton": "Bulk approve ({{count}})",
+      "selectedCount": "{{count}} selected",
+      "impact": "Impact: {{impact}}",
+      "bulkApproveSuccess": "Applied {{count}} fixes",
+      "approveSuccess": "Applied: {{rule}}",
+      "approveFailed": "Apply failed: {{error}}",
+      "rejectSuccess": "Rejected: {{rule}}",
+      "editDialog": {
+        "title": "Edit suggested content",
+        "saveAndApply": "Save and apply",
+        "cancel": "Cancel"
+      }
+    },
     "scan": {
       "dialogTitle": "New scan",
       "websiteLabel": "Select website",

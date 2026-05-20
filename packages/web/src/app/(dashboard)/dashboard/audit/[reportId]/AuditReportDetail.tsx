@@ -9,12 +9,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@shared/ui/tabs";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { scoreBadgeClass, type AuditSeverity } from "../AuditReportsList";
+import { AuditReviewCard } from "./_components/AuditReviewCard";
+import { BulkActionsBar } from "./_components/BulkActionsBar";
 
 export interface AuditIssueItem {
   id: string;
   ruleId: string;
   severity: AuditSeverity;
   riskLevel: "low" | "medium" | "high";
+  estimatedImpact: "high" | "medium" | "low";
   page: string;
   current: string;
   suggested: string | null;
@@ -50,6 +53,7 @@ export function AuditReportDetail({ report }: AuditReportDetailProps) {
       warning: report.issues.filter((issue) => issue.severity === "warning")
         .length,
       info: report.issues.filter((issue) => issue.severity === "info").length,
+      review: report.issues.filter(isReviewIssue).length,
     }),
     [report.issues],
   );
@@ -100,6 +104,9 @@ export function AuditReportDetail({ report }: AuditReportDetailProps) {
           <TabsTrigger value="all">
             {t("detail.tabs.all", { count: counts.all })}
           </TabsTrigger>
+          <TabsTrigger value="review">
+            {t("review.tabLabel", { count: counts.review })}
+          </TabsTrigger>
         </TabsList>
 
         {severities.map((severity) => (
@@ -114,7 +121,54 @@ export function AuditReportDetail({ report }: AuditReportDetailProps) {
         <TabsContent value="all">
           <IssueList issues={report.issues} />
         </TabsContent>
+        <TabsContent value="review">
+          <ReviewIssueList issues={report.issues.filter(isReviewIssue)} />
+        </TabsContent>
       </Tabs>
+    </div>
+  );
+}
+
+function isReviewIssue(issue: AuditIssueItem) {
+  return (
+    issue.riskLevel === "medium" &&
+    (issue.status === "open" || issue.status === "pending-review")
+  );
+}
+
+function ReviewIssueList({ issues }: { issues: AuditIssueItem[] }) {
+  const [selectedIssueIds, setSelectedIssueIds] = useState<string[]>([]);
+
+  function setIssueSelected(issueId: string, selected: boolean) {
+    setSelectedIssueIds((current) =>
+      selected
+        ? Array.from(new Set([...current, issueId]))
+        : current.filter((id) => id !== issueId),
+    );
+  }
+
+  if (issues.length === 0) {
+    return (
+      <div className="rounded-lg border border-dashed p-8 text-sm text-muted-foreground">
+        No issues
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <BulkActionsBar
+        selectedIssueIds={selectedIssueIds}
+        onClearSelection={() => setSelectedIssueIds([])}
+      />
+      {issues.map((issue) => (
+        <AuditReviewCard
+          key={issue.id}
+          issue={issue}
+          selected={selectedIssueIds.includes(issue.id)}
+          onSelectedChange={setIssueSelected}
+        />
+      ))}
     </div>
   );
 }

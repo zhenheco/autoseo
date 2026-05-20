@@ -3256,6 +3256,26 @@
         "applyFailed": "Error al aplicar automáticamente"
       }
     },
+    "review": {
+      "tabLabel": "Pendiente ({{count}})",
+      "current": "Actual",
+      "suggested": "Sugerido",
+      "approveButton": "Aprobar y aplicar",
+      "rejectButton": "Rechazar",
+      "editApplyButton": "Editar y aplicar",
+      "bulkApproveButton": "Aprobar en lote ({{count}})",
+      "selectedCount": "{{count}} seleccionados",
+      "impact": "Impacto: {{impact}}",
+      "bulkApproveSuccess": "{{count}} correcciones aplicadas",
+      "approveSuccess": "Aplicado: {{rule}}",
+      "approveFailed": "Error al aplicar: {{error}}",
+      "rejectSuccess": "Rechazado: {{rule}}",
+      "editDialog": {
+        "title": "Editar contenido sugerido",
+        "saveAndApply": "Guardar y aplicar",
+        "cancel": "Cancelar"
+      }
+    },
     "scan": {
       "dialogTitle": "Nuevo escaneo",
       "websiteLabel": "Seleccionar sitio web",

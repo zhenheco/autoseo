@@ -48,6 +48,7 @@ function translate(key: string, values?: Record<string, unknown>) {
     "scan.submitButton": "開始掃描",
     "scan.scanning": "掃描中...",
     "scan.failed": "掃描失敗",
+    "review.tabLabel": "待審 ({{count}})",
   };
   let message = messages[key] ?? key;
   for (const [name, value] of Object.entries(values ?? {})) {

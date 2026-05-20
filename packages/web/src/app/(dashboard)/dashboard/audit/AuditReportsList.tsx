@@ -42,6 +42,7 @@ export interface AuditReportListItem {
   scannedAt: string;
   healthScore: number;
   issueCounts: Record<AuditSeverity, number>;
+  pendingReviewCount: number;
 }
 
 export interface AuditWebsiteOption {
@@ -272,6 +273,13 @@ export function AuditReportsList({
                       <span className="text-muted-foreground">
                         {report.issueCounts.info} info
                       </span>
+                      {report.pendingReviewCount > 0 && (
+                        <Badge variant="outline">
+                          {t("review.tabLabel", {
+                            count: report.pendingReviewCount,
+                          })}
+                        </Badge>
+                      )}
                     </div>
                   </TableCell>
                   <TableCell>

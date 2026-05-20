@@ -17,7 +17,11 @@ import {
   type AuditArticleDispatchSupabaseClient,
   type AuditIssueRowForDispatch,
 } from "@/lib/audit/article-dispatch";
+import { APIRouter } from "@/lib/ai/api-router";
+import { detectAIProvider } from "@/lib/ai/fallback-policy";
+import { generateShoplineSeoDraft } from "@/lib/shopline/ai-seo-generator";
 import type { Json } from "@/types/database.types";
+import { DEFAULT_FALLBACK_CHAINS } from "@/types/ai-models";
 
 interface AuditRequestBody {
   websiteId?: string;
@@ -137,10 +141,11 @@ async function persistAuditReport(
   let insertedIssues: AuditIssueRowForDispatch[] = [];
 
   if (input.report.issues.length > 0) {
+    const issues = await prepareIssuesForPersist(input.report.issues);
     const { data: issuesData, error: issuesError } = await supabase
       .from("audit_issues")
       .insert(
-        input.report.issues.map((issue) => ({
+        issues.map((issue) => ({
           report_id: data.id,
           rule_id: issue.ruleId,
           severity: issue.severity,
@@ -151,6 +156,7 @@ async function persistAuditReport(
           suggested: issue.suggested ?? null,
           source: issue.source,
           estimated_impact: issue.estimatedImpact,
+          status: issue.riskLevel === "medium" ? "pending-review" : "open",
         })),
       )
       .select(
@@ -168,6 +174,78 @@ async function persistAuditReport(
     reportId: data.id as string,
     issues: insertedIssues,
   };
+}
+
+async function prepareIssuesForPersist(issues: AuditReport["issues"]) {
+  return Promise.all(
+    issues.map(async (issue) => {
+      if (issue.riskLevel !== "medium" || issue.suggested?.trim()) {
+        return issue;
+      }
+
+      try {
+        return {
+          ...issue,
+          suggested: await generateSuggested(issue),
+        };
+      } catch (error) {
+        console.error("[Audit] Failed to pre-generate review suggestion:", {
+          ruleId: issue.ruleId,
+          page: issue.page,
+          error,
+        });
+        return issue;
+      }
+    }),
+  );
+}
+
+async function generateSuggested(issue: AuditReport["issues"][number]) {
+  const field = inferSuggestedField(issue.ruleId);
+  const output = await generateShoplineSeoDraft(
+    {
+      entityType: field === "alt" ? "image" : "product",
+      entity: {
+        title: issue.page,
+        description: issue.current,
+      },
+      fields: [field],
+    },
+    { callModel: callAuditReviewModel },
+  );
+
+  const suggested = output.drafts[field]?.trim();
+  if (!suggested) throw new Error("audit_review_suggestion_empty");
+  return suggested;
+}
+
+function inferSuggestedField(
+  ruleId: string,
+): "seoTitle" | "seoDescription" | "alt" {
+  if (ruleId.includes("alt")) return "alt";
+  if (ruleId.includes("title") || ruleId.includes("h1")) return "seoTitle";
+  return "seoDescription";
+}
+
+async function callAuditReviewModel(
+  prompt: string,
+  opts?: { taskType?: "simple" | "complex" },
+): Promise<{ text: string; model: string }> {
+  const taskType = opts?.taskType ?? "simple";
+  const model = DEFAULT_FALLBACK_CHAINS[taskType][0];
+  if (!model) throw new Error("audit_review_model_not_configured");
+
+  const router = new APIRouter();
+  const response = await router.complete({
+    model,
+    apiProvider: detectAIProvider(model),
+    prompt: ["Source: audit-review-suggested", prompt].join("\n\n"),
+    temperature: 0.3,
+    maxTokens: 400,
+    responseFormat: "json",
+  });
+
+  return { text: response.content, model: response.model };
 }
 
 async function dispatchEligibleIssuesToArticleGenerator(

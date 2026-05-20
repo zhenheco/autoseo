@@ -3256,6 +3256,26 @@
         "applyFailed": "Automatische Anwendung fehlgeschlagen"
       }
     },
+    "review": {
+      "tabLabel": "Zur Prüfung ({{count}})",
+      "current": "Aktuell",
+      "suggested": "Vorschlag",
+      "approveButton": "Genehmigen und anwenden",
+      "rejectButton": "Ablehnen",
+      "editApplyButton": "Bearbeiten und anwenden",
+      "bulkApproveButton": "Massenfreigabe ({{count}})",
+      "selectedCount": "{{count}} ausgewählt",
+      "impact": "Auswirkung: {{impact}}",
+      "bulkApproveSuccess": "{{count}} Korrekturen angewendet",
+      "approveSuccess": "Angewendet: {{rule}}",
+      "approveFailed": "Anwendung fehlgeschlagen: {{error}}",
+      "rejectSuccess": "Abgelehnt: {{rule}}",
+      "editDialog": {
+        "title": "Vorschlag bearbeiten",
+        "saveAndApply": "Speichern und anwenden",
+        "cancel": "Abbrechen"
+      }
+    },
     "scan": {
       "dialogTitle": "Neuer Scan",
       "websiteLabel": "Website auswählen",

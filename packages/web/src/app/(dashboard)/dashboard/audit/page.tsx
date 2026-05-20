@@ -14,7 +14,7 @@ export const dynamic = "force-dynamic";
 type AuditReportRow = Database["public"]["Tables"]["audit_reports"]["Row"];
 type AuditIssueRow = Pick<
   Database["public"]["Tables"]["audit_issues"]["Row"],
-  "report_id" | "severity"
+  "report_id" | "severity" | "risk_level" | "status"
 >;
 type WebsiteRow = Pick<
   Database["public"]["Tables"]["website_configs"]["Row"],
@@ -73,6 +73,7 @@ export default async function AuditPage({ searchParams }: AuditPageProps) {
       scannedAt: report.scanned_at,
       healthScore: report.health_score,
       issueCounts: issueCounts.get(report.id) ?? emptyCounts(),
+      pendingReviewCount: issueCounts.get(report.id)?.review ?? 0,
     }));
 
   const websiteOptions = websites.map<AuditWebsiteOption>((website) => ({
@@ -148,25 +149,34 @@ async function loadIssueCounts(
   supabase: Awaited<ReturnType<typeof createClient>>,
   reportIds: string[],
 ) {
-  const counts = new Map<string, Record<AuditSeverity, number>>();
+  const counts = new Map<
+    string,
+    Record<AuditSeverity, number> & { review: number }
+  >();
   if (reportIds.length === 0) return counts;
 
   const { data, error } = await supabase
     .from("audit_issues")
-    .select("report_id, severity")
+    .select("report_id, severity, risk_level, status")
     .in("report_id", reportIds);
 
   if (error) throw error;
   for (const row of (data ?? []) as AuditIssueRow[]) {
     const current = counts.get(row.report_id) ?? emptyCounts();
     current[row.severity] += 1;
+    if (
+      row.risk_level === "medium" &&
+      (row.status === "open" || row.status === "pending-review")
+    ) {
+      current.review += 1;
+    }
     counts.set(row.report_id, current);
   }
   return counts;
 }
 
-function emptyCounts(): Record<AuditSeverity, number> {
-  return { critical: 0, warning: 0, info: 0 };
+function emptyCounts(): Record<AuditSeverity, number> & { review: number } {
+  return { critical: 0, warning: 0, info: 0, review: 0 };
 }
 
 function buildAuditHref(input: { page: number; website?: string }) {

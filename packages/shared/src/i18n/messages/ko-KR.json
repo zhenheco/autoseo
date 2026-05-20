@@ -3256,6 +3256,26 @@
         "applyFailed": "자동 적용 실패"
       }
     },
+    "review": {
+      "tabLabel": "검토 대기 ({{count}})",
+      "current": "현재",
+      "suggested": "제안",
+      "approveButton": "승인 및 적용",
+      "rejectButton": "거절",
+      "editApplyButton": "수정 후 적용",
+      "bulkApproveButton": "일괄 승인 ({{count}})",
+      "selectedCount": "{{count}}개 선택됨",
+      "impact": "영향: {{impact}}",
+      "bulkApproveSuccess": "{{count}}개 수정 사항을 적용했습니다",
+      "approveSuccess": "적용됨: {{rule}}",
+      "approveFailed": "적용 실패: {{error}}",
+      "rejectSuccess": "거절됨: {{rule}}",
+      "editDialog": {
+        "title": "제안 내용 수정",
+        "saveAndApply": "저장 후 적용",
+        "cancel": "취소"
+      }
+    },
     "scan": {
       "dialogTitle": "새 스캔",
       "websiteLabel": "웹사이트 선택",

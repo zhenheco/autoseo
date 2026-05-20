@@ -3075,6 +3075,26 @@
         "applyFailed": "自動適用に失敗しました"
       }
     },
+    "review": {
+      "tabLabel": "レビュー待ち ({{count}})",
+      "current": "現在",
+      "suggested": "提案",
+      "approveButton": "承認して適用",
+      "rejectButton": "却下",
+      "editApplyButton": "編集して適用",
+      "bulkApproveButton": "一括承認 ({{count}})",
+      "selectedCount": "{{count}} 件選択中",
+      "impact": "影響：{{impact}}",
+      "bulkApproveSuccess": "{{count}} 件を適用しました",
+      "approveSuccess": "適用済み：{{rule}}",
+      "approveFailed": "適用に失敗：{{error}}",
+      "rejectSuccess": "却下済み：{{rule}}",
+      "editDialog": {
+        "title": "提案内容を編集",
+        "saveAndApply": "保存して適用",
+        "cancel": "キャンセル"
+      }
+    },
     "scan": {
       "dialogTitle": "新規スキャン",
       "websiteLabel": "Webサイトを選択",

@@ -62,6 +62,7 @@ function translate(key: string, values?: Record<string, unknown>) {
     "detail.issueCard.applyButton": "自動套用",
     "detail.issueCard.applySuccess": "已自動套用",
     "detail.issueCard.applyFailed": "自動套用失敗",
+    "review.tabLabel": "待審 ({{count}})",
   };
   let message = messages[key] ?? key;
   for (const [name, value] of Object.entries(values ?? {})) {
@@ -218,6 +219,7 @@ describe("audit report detail page", () => {
     expect(screen.getByRole("tab", { name: "警告 (1)" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "資訊 (1)" })).toBeInTheDocument();
     expect(screen.getByRole("tab", { name: "全部 (3)" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "待審 (0)" })).toBeInTheDocument();
     expect(screen.getAllByText("missing-title").length).toBeGreaterThan(0);
     expect(
       screen.getAllByRole("button", { name: "自動套用" })[0],

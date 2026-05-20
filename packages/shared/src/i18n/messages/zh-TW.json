@@ -3075,6 +3075,26 @@
         "applyFailed": "自動套用失敗"
       }
     },
+    "review": {
+      "tabLabel": "待審 ({{count}})",
+      "current": "目前",
+      "suggested": "建議",
+      "approveButton": "核准套用",
+      "rejectButton": "拒絕",
+      "editApplyButton": "編輯後套用",
+      "bulkApproveButton": "批量核准 ({{count}})",
+      "selectedCount": "已選取 {{count}} 筆",
+      "impact": "影響：{{impact}}",
+      "bulkApproveSuccess": "已批量套用 {{count}} 筆",
+      "approveSuccess": "已套用：{{rule}}",
+      "approveFailed": "套用失敗：{{error}}",
+      "rejectSuccess": "已拒絕：{{rule}}",
+      "editDialog": {
+        "title": "編輯建議內容",
+        "saveAndApply": "儲存並套用",
+        "cancel": "取消"
+      }
+    },
     "scan": {
       "dialogTitle": "新掃描",
       "websiteLabel": "選擇網站",
