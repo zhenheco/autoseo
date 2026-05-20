@@ -17,6 +17,7 @@ import {
   Ticket,
   History,
   RefreshCw,
+  Store,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -66,6 +67,11 @@ const adminItems = [
     titleKey: "promoCodeManagement",
     href: "/dashboard/admin/promo-codes",
     icon: Ticket,
+  },
+  {
+    title: "SHOPLINE 邀請",
+    href: "/dashboard/admin/shopline-invitations",
+    icon: Store,
   },
   {
     titleKey: "operationLogs",
@@ -188,7 +194,11 @@ export function Sidebar({ userEmail = "user@example.com" }: SidebarProps) {
                       <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary rounded-r" />
                     )}
                     <Icon className="h-5 w-5 shrink-0" />
-                    {!collapsed && <span>{t(item.titleKey)}</span>}
+                    {!collapsed && (
+                      <span>
+                        {"title" in item ? item.title : t(item.titleKey)}
+                      </span>
+                    )}
                   </Link>
                 );
               })}

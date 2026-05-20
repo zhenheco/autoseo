@@ -26,6 +26,7 @@ import {
   Users,
   Ticket,
   History,
+  Store,
 } from "lucide-react";
 import { useState } from "react";
 import { useTranslations } from "next-intl";
@@ -93,6 +94,11 @@ export function MobileBottomNav({
       title: t("promoCodeManagement"),
       href: "/dashboard/admin/promo-codes",
       icon: Ticket,
+    },
+    {
+      title: "SHOPLINE 邀請",
+      href: "/dashboard/admin/shopline-invitations",
+      icon: Store,
     },
     {
       title: t("operationLogs"),
@@ -245,7 +251,9 @@ export function MobileBottomNav({
 
               {/* 用戶資訊 */}
               <div className="mt-4 px-4 py-3 bg-muted/50 rounded-lg">
-                <p className="text-xs text-muted-foreground">{t("loggedInAccount")}</p>
+                <p className="text-xs text-muted-foreground">
+                  {t("loggedInAccount")}
+                </p>
                 <p className="text-sm font-medium truncate">{userEmail}</p>
               </div>
             </div>
