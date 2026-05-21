@@ -14,8 +14,9 @@ import {
   getBrandQuota,
   normalizeBrandPlanId,
 } from "@/lib/brands/brand-quota";
+import { brandMemoryFieldsSchema } from "@/lib/brands/memory-schema";
 import type { CompanyRouteAuthContext } from "@/lib/api/route-auth";
-import type { Database, Json } from "@/types/database.types";
+import type { Database } from "@/types/database.types";
 
 type BrandRow = Database["public"]["Tables"]["brands"]["Row"];
 type BrandInsert = Database["public"]["Tables"]["brands"]["Insert"];
@@ -26,48 +27,9 @@ const BRAND_SELECT =
 
 const UPGRADE_URL = "/dashboard/billing";
 
-const jsonValueSchema = z.custom<Json>((value): value is Json =>
-  isJsonValue(value),
-);
-
-const nullableTextSchema = z.string().trim().min(1).nullable().optional();
-
-const createBrandSchema = z
-  .object({
-    name: z.string().trim().min(1),
-    voiceTone: nullableTextSchema,
-    targetAudience: jsonValueSchema.nullable().optional(),
-    valueProps: z.array(z.string().trim().min(1)).nullable().optional(),
-    brandGuidelines: nullableTextSchema,
-    primaryColor: nullableTextSchema,
-    secondaryColor: nullableTextSchema,
-  })
-  .strict();
-
-function isJsonValue(value: unknown): value is Json {
-  if (value === null) return true;
-
-  const valueType = typeof value;
-  if (
-    valueType === "string" ||
-    valueType === "number" ||
-    valueType === "boolean"
-  ) {
-    return true;
-  }
-
-  if (Array.isArray(value)) {
-    return value.every(isJsonValue);
-  }
-
-  if (valueType === "object") {
-    return Object.values(value as Record<string, unknown>).every(
-      (entry) => entry === undefined || isJsonValue(entry),
-    );
-  }
-
-  return false;
-}
+const createBrandSchema = brandMemoryFieldsSchema.extend({
+  name: z.string().trim().min(1),
+});
 
 function brandInputToInsert(
   companyId: string,
@@ -80,6 +42,7 @@ function brandInputToInsert(
     target_audience: input.targetAudience ?? null,
     value_props: input.valueProps ?? null,
     brand_guidelines: input.brandGuidelines ?? null,
+    logo_url: input.logoUrl ?? null,
     primary_color: input.primaryColor ?? null,
     secondary_color: input.secondaryColor ?? null,
     is_default: false,

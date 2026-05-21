@@ -9,7 +9,8 @@ import {
   validationError,
 } from "@/lib/api/response-helpers";
 import { withRouteAuth } from "@/lib/api/route-auth";
-import type { Database, Json } from "@/types/database.types";
+import { brandMemoryPatchSchema } from "@/lib/brands/memory-schema";
+import type { Database } from "@/types/database.types";
 
 type BrandRow = Database["public"]["Tables"]["brands"]["Row"];
 type BrandUpdate = Database["public"]["Tables"]["brands"]["Update"];
@@ -20,52 +21,6 @@ const BRAND_SELECT =
 
 const brandIdSchema = z.string().uuid();
 
-const jsonValueSchema = z.custom<Json>((value): value is Json =>
-  isJsonValue(value),
-);
-
-const nullableTextSchema = z.string().trim().min(1).nullable().optional();
-
-const updateBrandSchema = z
-  .object({
-    name: z.string().trim().min(1).optional(),
-    voiceTone: nullableTextSchema,
-    targetAudience: jsonValueSchema.nullable().optional(),
-    valueProps: z.array(z.string().trim().min(1)).nullable().optional(),
-    brandGuidelines: nullableTextSchema,
-    primaryColor: nullableTextSchema,
-    secondaryColor: nullableTextSchema,
-  })
-  .strict()
-  .refine((value) => Object.keys(value).length > 0, {
-    message: "At least one field is required",
-  });
-
-function isJsonValue(value: unknown): value is Json {
-  if (value === null) return true;
-
-  const valueType = typeof value;
-  if (
-    valueType === "string" ||
-    valueType === "number" ||
-    valueType === "boolean"
-  ) {
-    return true;
-  }
-
-  if (Array.isArray(value)) {
-    return value.every(isJsonValue);
-  }
-
-  if (valueType === "object") {
-    return Object.values(value as Record<string, unknown>).every(
-      (entry) => entry === undefined || isJsonValue(entry),
-    );
-  }
-
-  return false;
-}
-
 async function readBrandId(route: RouteParams): Promise<string | null> {
   const { id } = await route.params;
   const parsed = brandIdSchema.safeParse(id);
@@ -73,7 +28,7 @@ async function readBrandId(route: RouteParams): Promise<string | null> {
 }
 
 function brandInputToUpdate(
-  input: z.output<typeof updateBrandSchema>,
+  input: z.output<typeof brandMemoryPatchSchema>,
 ): BrandUpdate {
   const update: BrandUpdate = {
     updated_at: new Date().toISOString(),
@@ -88,6 +43,7 @@ function brandInputToUpdate(
   if (input.brandGuidelines !== undefined) {
     update.brand_guidelines = input.brandGuidelines;
   }
+  if (input.logoUrl !== undefined) update.logo_url = input.logoUrl;
   if (input.primaryColor !== undefined) {
     update.primary_color = input.primaryColor;
   }
@@ -144,7 +100,7 @@ export const PATCH = withRouteAuth(
       return requestErrorResponse(bodyResult.error);
     }
 
-    const parsed = updateBrandSchema.safeParse(bodyResult.data);
+    const parsed = brandMemoryPatchSchema.safeParse(bodyResult.data);
     if (!parsed.success) {
       return validationError("Invalid brand payload", parsed.error.flatten());
     }

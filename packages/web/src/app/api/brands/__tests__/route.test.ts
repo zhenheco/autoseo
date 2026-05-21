@@ -154,7 +154,7 @@ class FakeQueryBuilder {
     return this;
   }
 
-  order(_column: string, _options?: { ascending?: boolean }) {
+  order() {
     return this;
   }
 
@@ -221,6 +221,7 @@ class FakeQueryBuilder {
           ? this.insertPayload.value_props.map(String)
           : null,
         brand_guidelines: valueOrNull(this.insertPayload.brand_guidelines),
+        logo_url: valueOrNull(this.insertPayload.logo_url),
         primary_color: valueOrNull(this.insertPayload.primary_color),
         secondary_color: valueOrNull(this.insertPayload.secondary_color),
         created_at: now,
@@ -327,6 +328,7 @@ describe("Brand CRUD API", () => {
         targetAudience: { description: "Founders" },
         valueProps: ["Fast SEO"],
         brandGuidelines: "Use concise language.",
+        logoUrl: "https://example.com/logo.png",
         primaryColor: "#0057ff",
         secondaryColor: "#ffcc00",
       }) as never,
@@ -342,6 +344,7 @@ describe("Brand CRUD API", () => {
         target_audience: { description: "Founders" },
         value_props: ["Fast SEO"],
         brand_guidelines: "Use concise language.",
+        logo_url: "https://example.com/logo.png",
         primary_color: "#0057ff",
         secondary_color: "#ffcc00",
         deleted_at: null,
@@ -426,6 +429,9 @@ describe("Brand CRUD API", () => {
         name: "Acme Updated",
         voiceTone: "direct",
         valueProps: ["Reliable content"],
+        logoUrl: "https://example.com/logo.png",
+        primaryColor: "#123abc",
+        secondaryColor: "#fedcba",
       }) as never,
       routeParams(ids.brand1),
     );
@@ -438,8 +444,29 @@ describe("Brand CRUD API", () => {
         name: "Acme Updated",
         voice_tone: "direct",
         value_props: ["Reliable content"],
+        logo_url: "https://example.com/logo.png",
+        primary_color: "#123abc",
+        secondary_color: "#fedcba",
       },
     });
+  });
+
+  it("rejects invalid color and logo URL values", async () => {
+    state.supabase = new FakeSupabaseClient(
+      [brand({ id: ids.brand1 })],
+      [plan(ids.company, "solo")],
+    );
+    const { PATCH } = await import("../[id]/route");
+
+    const response = await PATCH(
+      jsonRequest({
+        primaryColor: "blue",
+        logoUrl: "not-a-url",
+      }) as never,
+      routeParams(ids.brand1),
+    );
+
+    expect(response.status).toBe(400);
   });
 
   it("soft-deletes a brand and removes it from the list", async () => {
