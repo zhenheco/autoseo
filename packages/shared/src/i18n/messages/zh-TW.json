@@ -1190,6 +1190,15 @@
     "accountNamePlaceholder": "請輸入帳戶名稱",
     "saveChanges": "儲存變更",
     "noCompanyJoined": "您尚未加入任何公司",
+    "billing": {
+      "title": "管理訂閱",
+      "description": "開啟 Stripe 帳單中心以更新付款資料、發票與方案設定。",
+      "ownerHelp": "在 Stripe 中管理帳單、發票與方案詳細資訊。",
+      "manageButton": "管理訂閱",
+      "openingPortal": "開啟中...",
+      "contactOwner": "請聯絡您的公司擁有者管理帳單。",
+      "portalError": "無法開啟帳單管理，請稍後再試。"
+    },
     "refund": {
       "title": "退款申請",
       "description": "如果您對服務不滿意，可以在此申請退款",

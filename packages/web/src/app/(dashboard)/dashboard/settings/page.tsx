@@ -4,6 +4,7 @@ import { SettingsClient } from "./settings-client";
 import { createClient } from "@shared/supabase";
 import { checkPagePermission } from "@shared/auth/permissions";
 import { getTranslations } from "next-intl/server";
+import { canUserManageCompanyBilling } from "@/lib/billing/customer-portal-access";
 
 export default async function SettingsPage({
   searchParams,
@@ -42,5 +43,16 @@ export default async function SettingsPage({
     redirect("/dashboard");
   }
 
-  return <SettingsClient company={company} searchParams={params} />;
+  const canManageSubscription = await canUserManageCompanyBilling(supabase, {
+    companyId: company.id,
+    userId: user.id,
+  });
+
+  return (
+    <SettingsClient
+      company={company}
+      searchParams={params}
+      canManageSubscription={canManageSubscription}
+    />
+  );
 }

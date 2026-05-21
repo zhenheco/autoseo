@@ -1190,6 +1190,15 @@
     "accountNamePlaceholder": "アカウント名を入力",
     "saveChanges": "変更を保存",
     "noCompanyJoined": "まだどの会社にも参加していません",
+    "billing": {
+      "title": "サブスクリプション管理",
+      "description": "Stripeの請求画面で支払い情報、請求書、プラン設定を更新します。",
+      "ownerHelp": "Stripeで請求、請求書、プラン詳細を管理します。",
+      "manageButton": "サブスクリプションを管理",
+      "openingPortal": "開いています...",
+      "contactOwner": "請求管理は会社のオーナーに連絡してください。",
+      "portalError": "請求管理を開けませんでした。もう一度お試しください。"
+    },
     "refund": {
       "title": "返金申請",
       "description": "サービスにご満足いただけない場合は、こちらから返金を申請できます",

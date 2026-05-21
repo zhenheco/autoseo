@@ -1190,6 +1190,15 @@
     "accountNamePlaceholder": "Enter account name",
     "saveChanges": "Save Changes",
     "noCompanyJoined": "You have not joined any company yet",
+    "billing": {
+      "title": "Manage subscription",
+      "description": "Open Stripe billing to update payment details, invoices, and plan settings.",
+      "ownerHelp": "Manage billing, invoices, and plan details in Stripe.",
+      "manageButton": "Manage subscription",
+      "openingPortal": "Opening...",
+      "contactOwner": "Contact your company owner to manage billing.",
+      "portalError": "Unable to open billing. Please try again."
+    },
     "refund": {
       "title": "Refund Request",
       "description": "If you are not satisfied with our service, you can request a refund here",

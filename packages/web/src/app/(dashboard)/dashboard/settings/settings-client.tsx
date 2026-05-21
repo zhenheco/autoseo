@@ -14,6 +14,7 @@ import { Label } from "@shared/ui/label";
 import { updateCompany } from "./actions";
 import { useTranslations } from "next-intl";
 import { RefundRequestDialog } from "@/components/refund";
+import { CreditCard } from "lucide-react";
 
 interface Company {
   id: string;
@@ -23,11 +24,45 @@ interface Company {
 interface SettingsClientProps {
   company: Company;
   searchParams: { error?: string; success?: string; info?: string };
+  canManageSubscription: boolean;
 }
 
-export function SettingsClient({ company, searchParams }: SettingsClientProps) {
+export function SettingsClient({
+  company,
+  searchParams,
+  canManageSubscription,
+}: SettingsClientProps) {
   const t = useTranslations("settings");
   const [refundDialogOpen, setRefundDialogOpen] = useState(false);
+  const [portalLoading, setPortalLoading] = useState(false);
+  const [portalError, setPortalError] = useState<string | null>(null);
+
+  async function handleManageSubscription() {
+    setPortalLoading(true);
+    setPortalError(null);
+
+    try {
+      const response = await fetch("/api/stripe/portal", {
+        method: "POST",
+      });
+
+      const data = (await response.json().catch(() => null)) as {
+        url?: string;
+        error?: string;
+      } | null;
+
+      if (!response.ok || !data?.url) {
+        throw new Error(data?.error ?? t("billing.portalError"));
+      }
+
+      window.location.assign(data.url);
+    } catch (error) {
+      setPortalError(
+        error instanceof Error ? error.message : t("billing.portalError"),
+      );
+      setPortalLoading(false);
+    }
+  }
 
   return (
     <div className="container mx-auto p-8">
@@ -76,13 +111,44 @@ export function SettingsClient({ company, searchParams }: SettingsClientProps) {
           </CardContent>
         </Card>
 
+        <Card>
+          <CardHeader>
+            <CardTitle>{t("billing.title")}</CardTitle>
+            <CardDescription>{t("billing.description")}</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {canManageSubscription ? (
+              <div className="space-y-4">
+                <p className="text-sm text-muted-foreground">
+                  {t("billing.ownerHelp")}
+                </p>
+                {portalError && (
+                  <p className="text-sm text-destructive">{portalError}</p>
+                )}
+                <Button
+                  type="button"
+                  onClick={handleManageSubscription}
+                  disabled={portalLoading}
+                >
+                  <CreditCard className="h-4 w-4" aria-hidden="true" />
+                  {portalLoading
+                    ? t("billing.openingPortal")
+                    : t("billing.manageButton")}
+                </Button>
+              </div>
+            ) : (
+              <p className="text-sm text-muted-foreground">
+                {t("billing.contactOwner")}
+              </p>
+            )}
+          </CardContent>
+        </Card>
+
         {/* Refund Request Card */}
         <Card>
           <CardHeader>
             <CardTitle>{t("refund.title")}</CardTitle>
-            <CardDescription>
-              {t("refund.description")}
-            </CardDescription>
+            <CardDescription>{t("refund.description")}</CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
