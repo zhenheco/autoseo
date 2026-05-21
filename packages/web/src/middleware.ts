@@ -66,8 +66,16 @@ export async function middleware(request: NextRequest) {
     response = NextResponse.next({ request });
   }
 
+  const isShoplineAdminEmbed =
+    request.nextUrl.pathname === "/shopline/admin" ||
+    request.nextUrl.pathname.startsWith("/shopline/admin/");
+
   // 基礎安全 Headers
-  response.headers.set("X-Frame-Options", "SAMEORIGIN");
+  if (isShoplineAdminEmbed) {
+    response.headers.delete("X-Frame-Options");
+  } else {
+    response.headers.set("X-Frame-Options", "SAMEORIGIN");
+  }
   response.headers.set("X-Content-Type-Options", "nosniff");
   response.headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   response.headers.set("X-XSS-Protection", "1; mode=block");
@@ -141,7 +149,9 @@ export async function middleware(request: NextRequest) {
       "https://analyticsadmin.googleapis.com",
     ].join(" "),
     "frame-src 'self' https://challenges.cloudflare.com",
-    "frame-ancestors 'self'",
+    isShoplineAdminEmbed
+      ? "frame-ancestors https://*.myshopline.com https://admin.shopline.com"
+      : "frame-ancestors 'self'",
     "base-uri 'self'",
     // 金流表單提交（PAYUNi 正式環境）
     "form-action 'self' https://api.payuni.com.tw",
