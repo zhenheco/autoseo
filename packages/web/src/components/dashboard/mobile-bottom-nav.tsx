@@ -1,9 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
+  Tags,
   Globe,
   PenSquare,
   FileText,
@@ -47,12 +48,26 @@ export function MobileBottomNav({
   onLogout,
 }: MobileBottomNavProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [sheetOpen, setSheetOpen] = useState(false);
   const isSuperAdmin = SUPER_ADMIN_EMAILS.includes(userEmail.toLowerCase());
   const t = useTranslations("nav");
+  const activeBrandId = searchParams.get("brand");
+
+  function preserveBrand(href: string) {
+    if (!activeBrandId || !href.startsWith("/dashboard")) return href;
+    const params = new URLSearchParams();
+    params.set("brand", activeBrandId);
+    return `${href}?${params.toString()}`;
+  }
 
   // 主要導航項目（顯示在底部）
   const mainNavItems = [
+    {
+      title: t("brands"),
+      href: "/dashboard/brands",
+      icon: Tags,
+    },
     {
       title: t("websites"),
       href: "/dashboard/websites",
@@ -127,7 +142,7 @@ export function MobileBottomNav({
           return (
             <Link
               key={item.href}
-              href={item.href}
+              href={preserveBrand(item.href)}
               className={cn(
                 "flex flex-col items-center justify-center gap-1 px-3 py-2 rounded-lg transition-colors min-w-[60px]",
                 isActive
@@ -184,7 +199,7 @@ export function MobileBottomNav({
                 return (
                   <Link
                     key={item.href}
-                    href={item.href}
+                    href={preserveBrand(item.href)}
                     onClick={() => setSheetOpen(false)}
                     className={cn(
                       "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors",
@@ -212,7 +227,7 @@ export function MobileBottomNav({
                     return (
                       <Link
                         key={item.href}
-                        href={item.href}
+                        href={preserveBrand(item.href)}
                         onClick={() => setSheetOpen(false)}
                         className={cn(
                           "flex items-center gap-3 rounded-lg px-4 py-3 text-sm font-medium transition-colors",

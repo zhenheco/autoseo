@@ -5,6 +5,7 @@ import {
   DEFAULT_UI_LOCALE,
   UI_LOCALE_COOKIE_KEY,
 } from "@/lib/i18n/locales";
+import { ACTIVE_BRAND_COOKIE } from "@/lib/brands/constants";
 
 // Request Body 大小限制（10MB）
 const MAX_BODY_SIZE = 10 * 1024 * 1024;
@@ -175,6 +176,20 @@ export async function middleware(request: NextRequest) {
     response.cookies.set(UI_LOCALE_COOKIE_KEY, detectedLocale, {
       path: "/",
       maxAge: 60 * 60 * 24 * 365, // 1 年
+      sameSite: "lax",
+      secure: process.env.NODE_ENV === "production",
+    });
+  }
+
+  const activeBrandId = request.nextUrl.searchParams.get("brand");
+  if (
+    activeBrandId &&
+    (request.nextUrl.pathname === "/dashboard" ||
+      request.nextUrl.pathname.startsWith("/dashboard/"))
+  ) {
+    response.cookies.set(ACTIVE_BRAND_COOKIE, activeBrandId, {
+      path: "/",
+      maxAge: 60 * 60 * 24 * 365,
       sameSite: "lax",
       secure: process.env.NODE_ENV === "production",
     });

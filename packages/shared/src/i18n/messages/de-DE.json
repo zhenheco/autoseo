@@ -66,7 +66,8 @@
     "termsOfService": "AGB",
     "privacyPolicy": "Datenschutz",
     "loggedInAccount": "Angemeldet als",
-    "audit": "Website-Audit"
+    "audit": "Website-Audit",
+    "brands": "Brands"
   },
   "auth": {
     "welcomeTitle": "Willkommen bei 1waySEO",
@@ -218,6 +219,37 @@
       "settings": "Einstellungen",
       "subscription": "Abonnement",
       "admin": "Admin"
+    },
+    "brands": {
+      "title": "Brands",
+      "description": "Manage company brands and their publishing context.",
+      "addBrand": "Add brand",
+      "dialogDescription": "Create a brand profile for websites, articles, and future memory settings.",
+      "noBrandsYet": "No brands yet",
+      "emptyDescription": "Create a brand profile to connect websites and publishing memory.",
+      "createFirstBrand": "Create your first brand",
+      "defaultBadge": "Default",
+      "websitesLinked": "Websites linked",
+      "socialAccountsLinked": "Social accounts linked",
+      "socialAccountsUnavailable": "N/A",
+      "created": "Created",
+      "actions": "Actions",
+      "edit": "Edit",
+      "delete": "Delete",
+      "quotaUsage": "Using {used} of {cap} brands ({plan} plan)",
+      "upgrade": "Upgrade",
+      "name": "Name",
+      "voiceTone": "Voice tone",
+      "valueProps": "Value props",
+      "valuePropsPlaceholder": "Fast setup, Expert SEO",
+      "create": "Create",
+      "creating": "Creating...",
+      "cancel": "Cancel",
+      "deleteTitle": "Delete brand?",
+      "deleteDescription": "This removes the brand from active lists.",
+      "confirmDelete": "Delete brand",
+      "failedToCreate": "Failed to create brand",
+      "failedToDelete": "Failed to delete brand"
     }
   },
   "articles": {

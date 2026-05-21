@@ -66,7 +66,8 @@
     "termsOfService": "服務條款",
     "privacyPolicy": "隱私政策",
     "loggedInAccount": "登入帳號",
-    "audit": "網站健檢"
+    "audit": "網站健檢",
+    "brands": "品牌"
   },
   "auth": {
     "welcomeTitle": "歡迎使用 1waySEO",
@@ -199,6 +200,37 @@
       "purchase": "加購",
       "lowQuota": "額度不足",
       "upgradeNow": "立即升級"
+    },
+    "brands": {
+      "title": "品牌",
+      "description": "管理公司品牌與發布脈絡。",
+      "addBrand": "新增品牌",
+      "dialogDescription": "建立品牌檔案，供網站、文章與未來記憶設定使用。",
+      "noBrandsYet": "尚無品牌",
+      "emptyDescription": "建立品牌檔案以連結網站與發布記憶。",
+      "createFirstBrand": "建立第一個品牌",
+      "defaultBadge": "預設",
+      "websitesLinked": "已連結網站",
+      "socialAccountsLinked": "已連結社群帳號",
+      "socialAccountsUnavailable": "N/A",
+      "created": "建立時間",
+      "actions": "操作",
+      "edit": "編輯",
+      "delete": "刪除",
+      "quotaUsage": "已使用 {used} / {cap} 個品牌（{plan} 方案）",
+      "upgrade": "升級",
+      "name": "名稱",
+      "voiceTone": "語氣",
+      "valueProps": "價值主張",
+      "valuePropsPlaceholder": "快速設定, 專家級 SEO",
+      "create": "建立",
+      "creating": "建立中...",
+      "cancel": "取消",
+      "deleteTitle": "刪除品牌？",
+      "deleteDescription": "這會將品牌從啟用清單中移除。",
+      "confirmDelete": "刪除品牌",
+      "failedToCreate": "建立品牌失敗",
+      "failedToDelete": "刪除品牌失敗"
     }
   },
   "articles": {

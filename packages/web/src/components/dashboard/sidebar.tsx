@@ -2,9 +2,10 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { cn } from "@/lib/utils";
 import {
+  Tags,
   Globe,
   ChevronLeft,
   ChevronRight,
@@ -31,6 +32,11 @@ const SUPER_ADMIN_EMAILS = (process.env.NEXT_PUBLIC_SUPER_ADMIN_EMAILS || "")
   .filter(Boolean);
 
 const navItems = [
+  {
+    titleKey: "brands",
+    href: "/dashboard/brands",
+    icon: Tags,
+  },
   {
     titleKey: "websites",
     href: "/dashboard/websites",
@@ -97,10 +103,19 @@ interface SidebarProps {
 
 export function Sidebar({ userEmail = "user@example.com" }: SidebarProps) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const { collapsed, setCollapsed } = useSidebar();
   const t = useTranslations("nav");
 
   const isSuperAdmin = SUPER_ADMIN_EMAILS.includes(userEmail.toLowerCase());
+  const activeBrandId = searchParams.get("brand");
+
+  function preserveBrand(href: string) {
+    if (!activeBrandId || !href.startsWith("/dashboard")) return href;
+    const params = new URLSearchParams();
+    params.set("brand", activeBrandId);
+    return `${href}?${params.toString()}`;
+  }
 
   return (
     <aside
@@ -149,7 +164,7 @@ export function Sidebar({ userEmail = "user@example.com" }: SidebarProps) {
             return (
               <Link
                 key={item.href}
-                href={item.href}
+                href={preserveBrand(item.href)}
                 className={cn(
                   "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all relative",
                   "hover:bg-sidebar-foreground/10",
@@ -182,7 +197,7 @@ export function Sidebar({ userEmail = "user@example.com" }: SidebarProps) {
                 return (
                   <Link
                     key={item.href}
-                    href={item.href}
+                    href={preserveBrand(item.href)}
                     className={cn(
                       "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all relative",
                       "hover:bg-sidebar-foreground/10",

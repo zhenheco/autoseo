@@ -30,4 +30,12 @@ describe("middleware security headers", () => {
     expect(response.headers.get("X-Frame-Options")).toBe("SAMEORIGIN");
     expect(csp).toContain("frame-ancestors 'self'");
   });
+
+  it("persists active dashboard brand query in a fallback cookie", async () => {
+    const response = await middleware(
+      request("/dashboard/articles?brand=brand-1"),
+    );
+
+    expect(response.cookies.get("active_brand_id")?.value).toBe("brand-1");
+  });
 });

@@ -26,6 +26,12 @@ import { ThemeToggle } from "@shared/ui/theme-toggle";
 import { MobileBottomNav } from "@/components/dashboard/mobile-bottom-nav";
 import { UILanguageSelector } from "@/components/common/UILanguageSelector";
 import { getTranslations } from "next-intl/server";
+import { DashboardBrandSwitcher } from "@/components/layout/DashboardBrandSwitcher";
+import { resolveActiveBrandFromCandidates } from "@/lib/brands/active-brand";
+import {
+  buildCurrentDashboardRequest,
+  fetchBrandsFromApi,
+} from "@/lib/brands/server-api";
 
 async function performLogout() {
   "use server";
@@ -44,6 +50,12 @@ export default async function DashboardLayout({
   if (!user) {
     redirect("/login");
   }
+
+  const brands = await fetchBrandsFromApi();
+  const activeBrand = resolveActiveBrandFromCandidates(
+    await buildCurrentDashboardRequest(),
+    brands,
+  );
 
   return (
     <DashboardLayoutClient>
@@ -69,7 +81,15 @@ export default async function DashboardLayout({
                   />
                   <span className="text-lg font-bold">1waySEO</span>
                 </div>
-                <div className="hidden md:flex items-center gap-4 flex-1"></div>
+                <div className="hidden md:flex items-center gap-4 flex-1">
+                  <DashboardBrandSwitcher
+                    brands={brands.map((brand) => ({
+                      id: brand.id,
+                      name: brand.name,
+                    }))}
+                    activeBrandId={activeBrand?.id ?? null}
+                  />
+                </div>
 
                 <div className="flex items-center gap-2 md:gap-3">
                   {/* 新文章按鈕 - 手機版隱藏（已在底部導航） */}

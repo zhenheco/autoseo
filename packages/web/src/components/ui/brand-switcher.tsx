@@ -6,18 +6,21 @@ export interface BrandSwitcherProps {
   brands: { id: string; name: string }[];
   activeBrandId: string;
   onSwitch(id: string): void;
+  className?: string;
 }
 
 export function BrandSwitcher({
   brands,
   activeBrandId,
   onSwitch,
+  className,
 }: BrandSwitcherProps) {
   return (
     <div
       className={cn(
         "sticky top-0 z-header flex items-center gap-2 border-b",
         "border-border-subtle bg-bg-surface px-4 py-3",
+        className,
       )}
     >
       <label htmlFor="brand-switcher" className="sr-only">
