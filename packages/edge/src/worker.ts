@@ -4,6 +4,8 @@ import type { EdgeRule } from "./html-rewriter";
 
 interface Env {
   EDGE_RULES?: KVNamespace;
+  CARD_ASSETS?: R2Bucket;
+  BROWSER?: unknown;
 }
 
 export default {
@@ -26,3 +28,9 @@ export default {
 
 export { applyHtmlRewrites };
 export type { EdgeRule };
+export { generateCards, CardCapExceededError } from "./cards/generate";
+export type {
+  BrowserRenderingClient,
+  CardURL,
+  GenerateCardsInput,
+} from "./cards/generate";

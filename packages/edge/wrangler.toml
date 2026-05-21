@@ -9,8 +9,13 @@ compatibility_flags = ["nodejs_compat"]
 binding = "EDGE_RULES"
 id = "502e67be20454a4ba409647f9cf8e98c"
 
+[[r2_buckets]]
+binding = "CARD_ASSETS"
+# Issue #66 requested logical bucket name "card_assets"; Wrangler/R2 bucket
+# names reject underscores, so the deployable bucket name uses a hyphen.
+bucket_name = "card-assets"
+
 # Browser Rendering binding for audit CWV + a11y (S14)
 # Requires Workers Paid plan (✓ enabled).
 [browser]
 binding = "BROWSER"
-
