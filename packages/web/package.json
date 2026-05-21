@@ -10,7 +10,7 @@
     "lint": "NODE_OPTIONS='--max-old-space-size=4096' eslint .",
     "typecheck": "tsc --noEmit",
     "type-check": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "node scripts/run-vitest.mjs",
     "vitest": "vitest",
     "test:watch": "vitest",
     "test:ui": "vitest --ui",

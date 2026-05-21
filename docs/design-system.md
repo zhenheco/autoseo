@@ -146,16 +146,210 @@ Use scales for state and emphasis:
 </button>
 ```
 
-## Component Inventory Placeholder
+## Component Inventory
 
-P0-2 will fill this section with project-specific components:
+The web app exports shadcn baseline primitives and project-specific components
+from `packages/web/src/components/ui`.
 
-- StatBadge
-- EmptyState
-- PageHeader
-- MetricCard
-- GoldenSlotPicker
-- TrialCountdown
-- BrandSwitcher
+Baseline primitives:
 
-Storybook is out of scope for P0-1.
+- `Button`
+- `Input`
+- `Select`
+- `Dialog`
+- `Toast`
+- `Card`
+- `Badge`
+- `Tabs`
+- `DropdownMenu`
+- `Tooltip`
+- `Skeleton`
+
+## StatBadge
+
+Pricing savings badge for messages such as "Save $94/year".
+
+| Prop       | Type                   | Required | Notes                   |
+| ---------- | ---------------------- | -------- | ----------------------- |
+| `amount`   | `string`               | Yes      | Rendered after "Save".  |
+| `emphasis` | `"normal" \| "strong"` | No       | Defaults to `"normal"`. |
+
+```tsx
+import { StatBadge } from "@/components/ui";
+
+export function PricingSaveLabel() {
+  return <StatBadge amount="$94/year" emphasis="strong" />;
+}
+```
+
+Token usage: normal uses `secondary-50`, `secondary-200`, and
+`secondary-800`; strong uses `primary` and `primary-foreground`.
+
+## EmptyState
+
+Generic empty-list state for dashboards and management tables.
+
+| Prop          | Type                                 | Required | Notes              |
+| ------------- | ------------------------------------ | -------- | ------------------ |
+| `icon`        | `ReactNode`                          | No       | Decorative icon.   |
+| `title`       | `string`                             | Yes      | Main heading.      |
+| `description` | `string`                             | No       | Short helper copy. |
+| `action`      | `{ label: string; onClick(): void }` | No       | Primary action.    |
+
+```tsx
+import { FileText } from "lucide-react";
+import { EmptyState } from "@/components/ui";
+
+export function EmptyArticles() {
+  return (
+    <EmptyState
+      icon={<FileText className="h-5 w-5" />}
+      title="No articles yet"
+      description="Generate your first SEO article."
+      action={{ label: "Create article", onClick: () => undefined }}
+    />
+  );
+}
+```
+
+Token usage: uses `bg-surface`, `bg-elevated`, `border-subtle`,
+`text-primary`, and `text-muted`.
+
+## PageHeader
+
+Responsive dashboard page header with title, description, and action column.
+
+| Prop          | Type        | Required | Notes                  |
+| ------------- | ----------- | -------- | ---------------------- |
+| `title`       | `string`    | Yes      | Page title.            |
+| `description` | `string`    | No       | Secondary header copy. |
+| `actions`     | `ReactNode` | No       | Buttons or filters.    |
+
+```tsx
+import { Button, PageHeader } from "@/components/ui";
+
+export function ArticlesHeader() {
+  return (
+    <PageHeader
+      title="Articles"
+      description="Review generated drafts and scheduled publishing."
+      actions={<Button type="button">New article</Button>}
+    />
+  );
+}
+```
+
+Token usage: uses `border-subtle`, `text-primary`, and `text-muted`.
+
+## MetricCard
+
+Dashboard KPI tile for values, trends, and optional icons.
+
+| Prop    | Type                                                 | Required | Notes            |
+| ------- | ---------------------------------------------------- | -------- | ---------------- |
+| `label` | `string`                                             | Yes      | KPI label.       |
+| `value` | `ReactNode`                                          | Yes      | KPI value.       |
+| `delta` | `{ value: string; trend: "up" \| "down" \| "flat" }` | No       | Trend chip.      |
+| `icon`  | `ReactNode`                                          | No       | Supporting icon. |
+
+```tsx
+import { FileText } from "lucide-react";
+import { MetricCard } from "@/components/ui";
+
+export function ArticleMetric() {
+  return (
+    <MetricCard
+      label="Articles"
+      value="128"
+      delta={{ value: "+12%", trend: "up" }}
+      icon={<FileText className="h-5 w-5" />}
+    />
+  );
+}
+```
+
+Token usage: card surface uses `bg-surface` and `border-subtle`;
+trend chips use `success-50`, `destructive-50`, or `muted`.
+
+## GoldenSlotPicker
+
+Picker for the three fixed Taiwan publishing slots: 09:00, 14:00, and 20:00.
+
+| Prop       | Type                         | Required | Notes                  |
+| ---------- | ---------------------------- | -------- | ---------------------- |
+| `value`    | `GoldenSlot`                 | No       | Selected slot.         |
+| `onChange` | `(slot: GoldenSlot) => void` | Yes      | Called with slot data. |
+| `locale`   | `string`                     | No       | Defaults to `zh-TW`.   |
+
+```tsx
+import { GoldenSlotPicker } from "@/components/ui";
+
+export function ScheduleSlots() {
+  return (
+    <GoldenSlotPicker
+      locale="en-US"
+      onChange={(slot) => {
+        console.log(slot.utcHour);
+      }}
+    />
+  );
+}
+```
+
+Token usage: unselected slots use `bg-surface`, `border-subtle`, and
+`text-primary`; selected slots use `primary-50`, `primary-800`, and `primary`.
+
+## TrialCountdown
+
+Trial banner that appears only during the final seven days before expiry.
+
+| Prop          | Type         | Required | Notes                    |
+| ------------- | ------------ | -------- | ------------------------ |
+| `trialEndsAt` | `Date`       | Yes      | End timestamp.           |
+| `onUpgrade`   | `() => void` | Yes      | Upgrade button callback. |
+
+```tsx
+import { TrialCountdown } from "@/components/ui";
+
+export function TrialBanner() {
+  return (
+    <TrialCountdown
+      trialEndsAt={new Date(Date.now() + 3 * 24 * 60 * 60 * 1000)}
+      onUpgrade={() => undefined}
+    />
+  );
+}
+```
+
+Token usage: days 1-7 use warning tokens; day 0 uses
+`destructive-50`, `destructive-300`, and `destructive-900`.
+
+## BrandSwitcher
+
+Pinned dashboard-header dropdown for switching the active brand.
+
+| Prop            | Type                             | Required | Notes             |
+| --------------- | -------------------------------- | -------- | ----------------- |
+| `brands`        | `{ id: string; name: string }[]` | Yes      | Dropdown options. |
+| `activeBrandId` | `string`                         | Yes      | Current brand id. |
+| `onSwitch`      | `(id: string) => void`           | Yes      | Called on change. |
+
+```tsx
+import { BrandSwitcher } from "@/components/ui";
+
+export function DashboardBrandSwitcher() {
+  return (
+    <BrandSwitcher
+      brands={[
+        { id: "brand-1", name: "Northwind" },
+        { id: "brand-2", name: "Contoso" },
+      ]}
+      activeBrandId="brand-1"
+      onSwitch={() => undefined}
+    />
+  );
+}
+```
+
+Token usage: wrapper uses `bg-surface`, `border-subtle`, and `z-header`;
+the dropdown uses `background`, `input`, `text-primary`, and `ring`.

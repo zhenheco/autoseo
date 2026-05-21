@@ -16,6 +16,36 @@ export const GOLDEN_SLOTS_UTC = [1, 6, 12];
  */
 export const GOLDEN_SLOTS_TW = [9, 14, 20];
 
+export interface GoldenSlot {
+  utcHour: number;
+  twHour: number;
+  label: string;
+}
+
+export function getGoldenSlotOptions(locale = "zh-TW"): GoldenSlot[] {
+  const zoneLabel = locale.toLowerCase().startsWith("zh")
+    ? "台灣時間"
+    : "Taiwan time";
+  const formatter = new Intl.DateTimeFormat(locale, {
+    hour: "2-digit",
+    minute: "2-digit",
+    hour12: false,
+    timeZone: "Asia/Taipei",
+  });
+
+  return GOLDEN_SLOTS_UTC.map((utcHour, index) => {
+    const twHour = GOLDEN_SLOTS_TW[index];
+    const date = new Date(Date.UTC(2024, 0, 1, utcHour, 0, 0));
+    const label = formatter.format(date);
+
+    return {
+      utcHour,
+      twHour,
+      label: `${label} ${zoneLabel}`,
+    };
+  });
+}
+
 /**
  * 擴充時段定義（UTC 時間）- 支援每日最多 5 篇
  * 包含 3 個黃金時段 + 2 個補位時段
