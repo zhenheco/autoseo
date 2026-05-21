@@ -19,6 +19,7 @@ import {
 import { StatCard } from "@/components/dashboard/stat-card";
 import { ArticleQuotaCard } from "@/components/dashboard/ArticleQuotaCard";
 import { UpgradePromptCard } from "@/components/dashboard/UpgradePromptCard";
+import { TrendsWidget } from "@/components/dashboard/TrendsWidget";
 import { AnalyticsDashboard } from "@/components/analytics/AnalyticsDashboard";
 import { FileText, Globe, Search } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
@@ -92,6 +93,8 @@ export function DashboardClient({
           />
         </div>
       )}
+
+      <TrendsWidget />
 
       {/* Search Console 數據面板 */}
       <Card className="border-border/30 bg-card/50 backdrop-blur-sm rounded-xl">
