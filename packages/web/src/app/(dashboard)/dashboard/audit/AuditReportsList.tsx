@@ -32,6 +32,7 @@ import {
   TableRow,
 } from "@shared/ui/table";
 import { cn } from "@/lib/utils";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export type AuditSeverity = "critical" | "warning" | "info";
 
@@ -229,10 +230,15 @@ export function AuditReportsList({
       </div>
 
       {reports.length === 0 ? (
-        <div className="flex min-h-64 flex-col items-center justify-center rounded-lg border border-dashed bg-muted/20 p-8 text-center">
-          <Activity className="mb-3 h-8 w-8 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">{t("list.empty")}</p>
-        </div>
+        <EmptyState
+          className="min-h-64"
+          icon={<Activity className="h-6 w-6" />}
+          title={t("list.empty")}
+          action={{
+            label: t("list.newScanButton"),
+            onClick: () => setDialogOpen(true),
+          }}
+        />
       ) : (
         <div className="rounded-lg border">
           <Table>

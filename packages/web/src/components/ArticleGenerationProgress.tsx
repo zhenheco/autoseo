@@ -1,6 +1,10 @@
 "use client";
 
 import { useArticleJobStatus } from "@/hooks/useArticleJobStatus";
+import { cn } from "@/lib/utils";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { Skeleton } from "@/components/ui/skeleton";
+import { ExternalLink, Loader2 } from "lucide-react";
 import { useTranslations, useLocale } from "next-intl";
 
 interface ArticleGenerationProgressProps {
@@ -32,22 +36,21 @@ export function ArticleGenerationProgress({
 
   if (loading && !job) {
     return (
-      <div className="border rounded-lg p-4 bg-gray-50">
-        <div className="flex items-center space-x-2">
-          <div className="animate-spin h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full"></div>
-          <span className="text-sm text-gray-600">{t("loadingStatus")}</span>
+      <div className="rounded-lg border border-border bg-card p-4">
+        <div className="flex items-center gap-3">
+          <Loader2 className="h-4 w-4 animate-spin text-primary" />
+          <span className="text-sm text-muted-foreground">
+            {t("loadingStatus")}
+          </span>
         </div>
+        <Skeleton className="mt-4 h-3 w-full" />
+        <Skeleton className="mt-2 h-3 w-2/3" />
       </div>
     );
   }
 
   if (error) {
-    return (
-      <div className="border border-red-300 rounded-lg p-4 bg-red-50">
-        <h3 className="font-semibold text-red-800 mb-2">{t("error")}</h3>
-        <p className="text-sm text-red-600">{error}</p>
-      </div>
-    );
+    return <ErrorState title={t("error")} message={error} />;
   }
 
   if (!job) {
@@ -57,15 +60,14 @@ export function ArticleGenerationProgress({
   const getStatusColor = () => {
     switch (job.status) {
       case "pending":
-        return "text-blue-600";
       case "processing":
-        return "text-blue-600";
+        return "text-primary";
       case "completed":
-        return "text-green-600";
+        return "text-success";
       case "failed":
-        return "text-red-600";
+        return "text-destructive";
       default:
-        return "text-gray-600";
+        return "text-muted-foreground";
     }
   };
 
@@ -87,33 +89,32 @@ export function ArticleGenerationProgress({
   const getBorderColor = () => {
     switch (job.status) {
       case "pending":
-        return "border-blue-300 bg-blue-50";
       case "processing":
-        return "border-blue-300 bg-blue-50";
+        return "border-primary/30 bg-primary/10";
       case "completed":
-        return "border-green-300 bg-green-50";
+        return "border-success/30 bg-success/10";
       case "failed":
-        return "border-red-300 bg-red-50";
+        return "border-destructive/30 bg-destructive/10";
       default:
-        return "border-gray-300 bg-gray-50";
+        return "border-border bg-card";
     }
   };
 
   return (
-    <div className={`border rounded-lg p-4 ${getBorderColor()}`}>
+    <div className={cn("rounded-lg border p-4", getBorderColor())}>
       <h3 className="font-semibold mb-3">{t("title")}</h3>
 
       {/* 任務資訊 */}
       <div className="mb-3">
         <div className="flex items-center justify-between mb-2">
-          <span className="text-sm text-gray-600">{t("jobId")}</span>
-          <span className="text-sm font-mono text-gray-800">
+          <span className="text-sm text-muted-foreground">{t("jobId")}</span>
+          <span className="text-sm font-mono text-foreground">
             {job.job_id.slice(0, 8)}...
           </span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-sm text-gray-600">{t("status")}</span>
-          <span className={`text-sm font-semibold ${getStatusColor()}`}>
+          <span className="text-sm text-muted-foreground">{t("status")}</span>
+          <span className={cn("text-sm font-semibold", getStatusColor())}>
             {getStatusText()}
           </span>
         </div>
@@ -122,13 +123,13 @@ export function ArticleGenerationProgress({
       {/* 處理中的進度條 */}
       {job.status === "processing" && (
         <div className="mb-3">
-          <div className="w-full bg-gray-200 rounded-full h-2.5 mb-2">
+          <div className="mb-2 h-2.5 w-full rounded-full bg-muted">
             <div
-              className="bg-blue-600 h-2.5 rounded-full transition-all duration-300"
+              className="h-2.5 rounded-full bg-primary transition-all duration-300"
               style={{ width: `${job.progress || 0}%` }}
             />
           </div>
-          <p className="text-sm text-gray-600">
+          <p className="text-sm text-muted-foreground">
             {job.current_step || t("processingProgress")} ({job.progress || 0}%)
           </p>
         </div>
@@ -137,8 +138,8 @@ export function ArticleGenerationProgress({
       {/* 等待處理的提示 */}
       {job.status === "pending" && (
         <div className="mb-3">
-          <p className="text-sm text-gray-600">{t("taskQueued")}</p>
-          <p className="text-xs text-gray-500 mt-1">
+          <p className="text-sm text-muted-foreground">{t("taskQueued")}</p>
+          <p className="mt-1 text-xs text-muted-foreground">
             {t("taskQueueHint")}
           </p>
         </div>
@@ -152,40 +153,30 @@ export function ArticleGenerationProgress({
               href={job.result_url}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800 hover:underline"
+              className="inline-flex items-center text-sm text-primary hover:underline"
             >
-              <svg
-                className="w-4 h-4 mr-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
-                />
-              </svg>
+              <ExternalLink className="mr-1 h-4 w-4" />
               {t("viewArticle")}
             </a>
           ) : (
-            <p className="text-sm text-green-600">{t("articleGenerated")}</p>
+            <p className="text-sm text-success">{t("articleGenerated")}</p>
           )}
         </div>
       )}
 
       {/* 錯誤訊息 */}
       {job.status === "failed" && job.error_message && (
-        <div className="mt-3 p-3 bg-red-100 rounded border border-red-200">
-          <p className="text-sm text-red-800 font-semibold mb-1">{t("errorMessage")}</p>
-          <p className="text-sm text-red-700">{job.error_message}</p>
+        <div className="mt-3 rounded border border-destructive/30 bg-destructive/10 p-3">
+          <p className="mb-1 text-sm font-semibold text-destructive">
+            {t("errorMessage")}
+          </p>
+          <p className="text-sm text-destructive">{job.error_message}</p>
         </div>
       )}
 
       {/* 時間資訊 */}
-      <div className="mt-3 pt-3 border-t border-gray-300">
-        <div className="grid grid-cols-2 gap-2 text-xs text-gray-500">
+      <div className="mt-3 border-t border-border pt-3">
+        <div className="grid grid-cols-2 gap-2 text-xs text-muted-foreground">
           <div>
             <span className="font-medium">{t("createdAt")}</span>
             <br />
@@ -210,28 +201,9 @@ export function ArticleGenerationProgress({
 
       {/* 輪詢提示 */}
       {(job.status === "pending" || job.status === "processing") && (
-        <div className="mt-3 pt-3 border-t border-gray-300">
-          <p className="text-xs text-gray-500 flex items-center">
-            <svg
-              className="w-3 h-3 mr-1 animate-spin"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <circle
-                className="opacity-25"
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-              />
-              <path
-                className="opacity-75"
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              />
-            </svg>
+        <div className="mt-3 border-t border-border pt-3">
+          <p className="flex items-center text-xs text-muted-foreground">
+            <Loader2 className="mr-1 h-3 w-3 animate-spin" />
             {t("autoRefreshHint")}
           </p>
         </div>

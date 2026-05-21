@@ -47,6 +47,9 @@ import type {
   CreateExternalWebsiteFormData,
 } from "@/types/external-website.types";
 import { useTranslations } from "next-intl";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { Skeleton } from "@/components/ui/skeleton";
 
 const INITIAL_FORM_DATA: CreateExternalWebsiteFormData = {
   name: "",
@@ -65,6 +68,7 @@ export function ExternalWebsiteList(): React.ReactElement {
 
   const [websites, setWebsites] = useState<ExternalWebsiteListItem[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [secretDialogOpen, setSecretDialogOpen] = useState(false);
   const [newSecret, setNewSecret] = useState<string | null>(null);
@@ -74,6 +78,8 @@ export function ExternalWebsiteList(): React.ReactElement {
     useState<CreateExternalWebsiteFormData>(INITIAL_FORM_DATA);
 
   const fetchWebsites = useCallback(async () => {
+    setLoading(true);
+    setLoadError(null);
     try {
       const response = await fetch("/api/websites/external");
       const data = await response.json();
@@ -81,9 +87,11 @@ export function ExternalWebsiteList(): React.ReactElement {
       if (data.success) {
         setWebsites(data.data);
       } else {
+        setLoadError(data.error || t("loadFailed"));
         toast.error(data.error || t("loadFailed"));
       }
     } catch {
+      setLoadError(t("loadFailed"));
       toast.error(t("loadFailed"));
     } finally {
       setLoading(false);
@@ -241,6 +249,8 @@ export function ExternalWebsiteList(): React.ReactElement {
           <WebsiteTable
             websites={websites}
             loading={loading}
+            loadError={loadError}
+            onRetry={fetchWebsites}
             onToggleActive={handleToggleActive}
             onRegenerateSecret={handleRegenerateSecret}
             onDelete={handleDelete}
@@ -279,6 +289,8 @@ export function ExternalWebsiteList(): React.ReactElement {
 interface WebsiteTableProps {
   websites: ExternalWebsiteListItem[];
   loading: boolean;
+  loadError: string | null;
+  onRetry: () => void;
   onToggleActive: (website: ExternalWebsiteListItem) => void;
   onRegenerateSecret: (website: ExternalWebsiteListItem) => void;
   onDelete: (website: ExternalWebsiteListItem) => void;
@@ -289,6 +301,8 @@ interface WebsiteTableProps {
 function WebsiteTable({
   websites,
   loading,
+  loadError,
+  onRetry,
   onToggleActive,
   onRegenerateSecret,
   onDelete,
@@ -297,18 +311,26 @@ function WebsiteTable({
 }: WebsiteTableProps): React.ReactElement {
   if (loading) {
     return (
-      <div className="flex justify-center py-8">
-        <Loader2 className="h-6 w-6 animate-spin" />
+      <div className="space-y-3">
+        {Array.from({ length: 5 }).map((_, index) => (
+          <Skeleton key={index} className="h-12 w-full" />
+        ))}
       </div>
     );
   }
 
-  if (websites.length === 0) {
+  if (loadError) {
     return (
-      <div className="text-center py-8 text-muted-foreground">
-        {t("noWebsites")}
-      </div>
+      <ErrorState
+        title={t("loadFailed")}
+        message={loadError}
+        onRetry={onRetry}
+      />
     );
+  }
+
+  if (websites.length === 0) {
+    return <EmptyState title={t("noWebsites")} />;
   }
 
   return (
@@ -360,7 +382,9 @@ function WebsiteTable({
               </div>
             </TableCell>
             <TableCell>
-              <div className="text-sm">{formatDate(website.last_synced_at)}</div>
+              <div className="text-sm">
+                {formatDate(website.last_synced_at)}
+              </div>
               {website.last_sync_error && (
                 <div className="text-xs text-destructive truncate max-w-[150px]">
                   {website.last_sync_error}
@@ -488,7 +512,9 @@ function CreateWebsiteDialog({
             </p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="webhook_url">{t("createDialog.webhookUrl")} *</Label>
+            <Label htmlFor="webhook_url">
+              {t("createDialog.webhookUrl")} *
+            </Label>
             <Input
               id="webhook_url"
               value={formData.webhook_url}

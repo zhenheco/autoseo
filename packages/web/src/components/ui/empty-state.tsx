@@ -8,9 +8,11 @@ export interface EmptyStateProps {
   icon?: ReactNode;
   title: string;
   description?: string;
+  className?: string;
   action?: {
     label: string;
-    onClick(): void;
+    onClick?: () => void;
+    href?: string;
   };
 }
 
@@ -18,6 +20,7 @@ export function EmptyState({
   icon,
   title,
   description,
+  className,
   action,
 }: EmptyStateProps) {
   return (
@@ -25,6 +28,7 @@ export function EmptyState({
       className={cn(
         "flex flex-col items-center justify-center rounded-lg border border-dashed",
         "border-border-subtle bg-bg-surface px-6 py-12 text-center shadow-sm",
+        className,
       )}
     >
       {icon && (
@@ -38,11 +42,15 @@ export function EmptyState({
           {description}
         </p>
       )}
-      {action && (
+      {action?.href ? (
+        <Button asChild className="mt-6">
+          <a href={action.href}>{action.label}</a>
+        </Button>
+      ) : action?.onClick ? (
         <Button className="mt-6" type="button" onClick={action.onClick}>
           {action.label}
         </Button>
-      )}
+      ) : null}
     </section>
   );
 }

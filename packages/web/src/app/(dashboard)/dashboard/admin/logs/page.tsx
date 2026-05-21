@@ -28,6 +28,9 @@ import {
 } from "@shared/ui/select";
 import { Loader2, ChevronLeft, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface AdminLog {
   id: string;
@@ -46,6 +49,7 @@ export default function AdminLogsPage() {
   const t = useTranslations("admin.logs");
   const [logs, setLogs] = useState<AdminLog[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [total, setTotal] = useState(0);
   const [offset, setOffset] = useState(0);
   const [actionTypeFilter, setActionTypeFilter] = useState<string>("all");
@@ -59,6 +63,7 @@ export default function AdminLogsPage() {
 
   const fetchLogs = async () => {
     setLoading(true);
+    setLoadError(null);
     try {
       const params = new URLSearchParams({
         limit: limit.toString(),
@@ -76,9 +81,11 @@ export default function AdminLogsPage() {
         setLogs(data.data);
         setTotal(data.pagination.total);
       } else {
+        setLoadError(data.error || t("loadFailed"));
         toast.error(data.error || t("loadFailed"));
       }
     } catch {
+      setLoadError(t("loadFailed"));
       toast.error(t("loadFailed"));
     } finally {
       setLoading(false);
@@ -151,7 +158,9 @@ export default function AdminLogsPage() {
           <div className="flex items-center justify-between">
             <div>
               <CardTitle>{t("listTitle")}</CardTitle>
-              <CardDescription>{t("listDescription", { count: total })}</CardDescription>
+              <CardDescription>
+                {t("listDescription", { count: total })}
+              </CardDescription>
             </div>
             <Select
               value={actionTypeFilter}
@@ -165,10 +174,18 @@ export default function AdminLogsPage() {
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">{t("actionTypeAll")}</SelectItem>
-                <SelectItem value="extend_subscription">{t("actionTypeExtendSubscription")}</SelectItem>
-                <SelectItem value="grant_articles">{t("actionTypeGrantArticles")}</SelectItem>
-                <SelectItem value="create_promo_code">{t("actionTypeCreatePromoCode")}</SelectItem>
-                <SelectItem value="update_promo_code">{t("actionTypeUpdatePromoCode")}</SelectItem>
+                <SelectItem value="extend_subscription">
+                  {t("actionTypeExtendSubscription")}
+                </SelectItem>
+                <SelectItem value="grant_articles">
+                  {t("actionTypeGrantArticles")}
+                </SelectItem>
+                <SelectItem value="create_promo_code">
+                  {t("actionTypeCreatePromoCode")}
+                </SelectItem>
+                <SelectItem value="update_promo_code">
+                  {t("actionTypeUpdatePromoCode")}
+                </SelectItem>
                 <SelectItem value="deactivate_promo_code">
                   {t("actionTypeDeactivatePromoCode")}
                 </SelectItem>
@@ -178,9 +195,19 @@ export default function AdminLogsPage() {
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="flex items-center justify-center h-32">
-              <Loader2 className="h-8 w-8 animate-spin" />
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <Skeleton key={index} className="h-12 w-full" />
+              ))}
             </div>
+          ) : loadError ? (
+            <ErrorState
+              title={t("loadFailed")}
+              message={loadError}
+              onRetry={() => void fetchLogs()}
+            />
+          ) : logs.length === 0 ? (
+            <EmptyState title={t("listDescription", { count: 0 })} />
           ) : (
             <>
               <div className="rounded-md border">
@@ -227,7 +254,10 @@ export default function AdminLogsPage() {
               {totalPages > 1 && (
                 <div className="flex items-center justify-between mt-4">
                   <p className="text-sm text-muted-foreground">
-                    {t("paginationInfo", { current: currentPage, total: totalPages })}
+                    {t("paginationInfo", {
+                      current: currentPage,
+                      total: totalPages,
+                    })}
                   </p>
                   <div className="flex gap-2">
                     <Button

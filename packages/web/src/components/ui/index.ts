@@ -5,6 +5,7 @@ export * from "./card";
 export * from "./dialog";
 export * from "./dropdown-menu";
 export * from "./empty-state";
+export * from "./ErrorState";
 export * from "./golden-slot-picker";
 export * from "./input";
 export * from "./metric-card";

@@ -9,6 +9,7 @@ import {
   CardTitle,
 } from "@shared/ui/card";
 import { getTranslations } from "next-intl/server";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export const dynamic = "force-dynamic";
 
@@ -64,9 +65,7 @@ export default async function AIModelsPage() {
     <div className="container mx-auto p-8">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">{t("title")}</h1>
-        <p className="text-muted-foreground mt-2">
-          {t("description")}
-        </p>
+        <p className="text-muted-foreground mt-2">{t("description")}</p>
       </div>
 
       <div className="grid gap-6">
@@ -200,19 +199,25 @@ export default async function AIModelsPage() {
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">{t("imageAgent.quality")}</span>
+                <span className="text-sm font-medium">
+                  {t("imageAgent.quality")}
+                </span>
                 <span className="text-sm text-muted-foreground">
                   {config?.image_quality || "standard"}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">{t("imageAgent.size")}</span>
+                <span className="text-sm font-medium">
+                  {t("imageAgent.size")}
+                </span>
                 <span className="text-sm text-muted-foreground">
                   {config?.image_size || "1024x1024"}
                 </span>
               </div>
               <div className="flex justify-between items-center">
-                <span className="text-sm font-medium">{t("imageAgent.count")}</span>
+                <span className="text-sm font-medium">
+                  {t("imageAgent.count")}
+                </span>
                 <span className="text-sm text-muted-foreground">
                   {config?.image_count || 3}
                 </span>
@@ -224,41 +229,21 @@ export default async function AIModelsPage() {
         <Card>
           <CardHeader>
             <CardTitle>{t("availableModels.title")}</CardTitle>
-            <CardDescription>{t("availableModels.description")}</CardDescription>
+            <CardDescription>
+              {t("availableModels.description")}
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-sm font-medium mb-2">{t("availableModels.textModels")}</h3>
-                <div className="space-y-2">
-                  {textModels.map((model) => (
-                    <div
-                      key={model.id}
-                      className="flex justify-between items-center p-2 border rounded"
-                    >
-                      <div>
-                        <div className="text-sm font-medium">
-                          {model.model_name}
-                        </div>
-                        <div className="text-xs text-muted-foreground">
-                          {model.model_id}
-                        </div>
-                      </div>
-                      {model.is_featured && (
-                        <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
-                          {t("availableModels.featured")}
-                        </span>
-                      )}
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {imageModels.length > 0 && (
+            {models.length === 0 ? (
+              <EmptyState title={t("availableModels.title")} />
+            ) : (
+              <div className="space-y-4">
                 <div>
-                  <h3 className="text-sm font-medium mb-2">{t("availableModels.imageModels")}</h3>
+                  <h3 className="text-sm font-medium mb-2">
+                    {t("availableModels.textModels")}
+                  </h3>
                   <div className="space-y-2">
-                    {imageModels.map((model) => (
+                    {textModels.map((model) => (
                       <div
                         key={model.id}
                         className="flex justify-between items-center p-2 border rounded"
@@ -280,16 +265,44 @@ export default async function AIModelsPage() {
                     ))}
                   </div>
                 </div>
-              )}
-            </div>
+
+                {imageModels.length > 0 && (
+                  <div>
+                    <h3 className="text-sm font-medium mb-2">
+                      {t("availableModels.imageModels")}
+                    </h3>
+                    <div className="space-y-2">
+                      {imageModels.map((model) => (
+                        <div
+                          key={model.id}
+                          className="flex justify-between items-center p-2 border rounded"
+                        >
+                          <div>
+                            <div className="text-sm font-medium">
+                              {model.model_name}
+                            </div>
+                            <div className="text-xs text-muted-foreground">
+                              {model.model_id}
+                            </div>
+                          </div>
+                          {model.is_featured && (
+                            <span className="text-xs px-2 py-1 bg-blue-100 text-blue-700 rounded">
+                              {t("availableModels.featured")}
+                            </span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
           </CardContent>
         </Card>
 
         <Card className="border-yellow-200 bg-yellow-50">
           <CardContent className="pt-6">
-            <p className="text-sm text-yellow-800">
-              {t("notice")}
-            </p>
+            <p className="text-sm text-yellow-800">{t("notice")}</p>
           </CardContent>
         </Card>
       </div>

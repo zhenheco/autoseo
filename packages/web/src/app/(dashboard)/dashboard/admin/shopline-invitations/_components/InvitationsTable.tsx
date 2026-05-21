@@ -21,6 +21,7 @@ import {
   revokeInvitationFormAction,
   type ShoplineInvitationWithCompany,
 } from "../actions";
+import { EmptyState } from "@/components/ui/empty-state";
 
 type InvitationsTableProps = {
   invitations: ShoplineInvitationWithCompany[];
@@ -57,11 +58,7 @@ export function InvitationsTable({
   }
 
   if (invitations.length === 0) {
-    return (
-      <div className="rounded-lg border border-dashed p-8 text-center text-sm text-muted-foreground">
-        {t("list.empty")}
-      </div>
-    );
+    return <EmptyState title={t("list.empty")} />;
   }
 
   return (

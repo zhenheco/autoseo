@@ -21,6 +21,7 @@ import { ArticleQuotaCard } from "@/components/dashboard/ArticleQuotaCard";
 import { UpgradePromptCard } from "@/components/dashboard/UpgradePromptCard";
 import { AnalyticsDashboard } from "@/components/analytics/AnalyticsDashboard";
 import { FileText, Globe, Search } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface Website {
   id: string;
@@ -124,13 +125,12 @@ export function DashboardClient({
         </CardHeader>
         <CardContent>
           {websites.length === 0 ? (
-            <div className="h-[200px] flex items-center justify-center text-muted-foreground">
-              <div className="text-center space-y-2">
-                <Globe className="h-12 w-12 mx-auto text-muted-foreground/50" />
-                <p className="text-lg font-semibold">{t("noWebsites")}</p>
-                <p className="text-sm">{t("addWebsiteFirst")}</p>
-              </div>
-            </div>
+            <EmptyState
+              className="min-h-[200px]"
+              icon={<Globe className="h-6 w-6" />}
+              title={t("noWebsites")}
+              description={t("addWebsiteFirst")}
+            />
           ) : (
             <AnalyticsDashboard websiteId={selectedWebsiteId} embedded={true} />
           )}

@@ -22,6 +22,7 @@ import { Globe, CalendarClock, ChevronLeft, ChevronRight } from "lucide-react";
 import { ArticleWithWebsite } from "../actions";
 import { useScheduleContext } from "./ScheduleContext";
 import { useTranslations, useLocale } from "next-intl";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface ArticleListProps {
   articles: ArticleWithWebsite[];
@@ -96,6 +97,16 @@ export function ArticleList({
   const allSelected =
     selectableArticleIds.length > 0 &&
     selectableArticleIds.every((id) => selectedArticleIds.has(id));
+
+  if (articles.length === 0) {
+    return (
+      <EmptyState
+        className="h-full min-h-64"
+        title={t("table.noArticles")}
+        icon={<Globe className="h-6 w-6" />}
+      />
+    );
+  }
 
   // 可以排程的狀態
   const canSchedule = (status: string) => {
@@ -207,15 +218,9 @@ export function ArticleList({
             </span>
           </div>
         )}
-        {articles.length === 0 ? (
-          <div className="text-center py-8 text-muted-foreground">
-            {t("table.noArticles")}
-          </div>
-        ) : (
-          paginatedArticles.map((article) => (
-            <MobileCard key={article.id} article={article} />
-          ))
-        )}
+        {paginatedArticles.map((article) => (
+          <MobileCard key={article.id} article={article} />
+        ))}
         {/* 手機版分頁控制 */}
         {articles.length > 0 && (
           <div className="flex flex-col gap-2 pt-2 border-t">
@@ -298,68 +303,58 @@ export function ArticleList({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {articles.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="h-24 text-center">
-                    {t("table.noArticles")}
+              {paginatedArticles.map((article) => (
+                <TableRow
+                  key={article.id}
+                  className={`cursor-pointer transition-colors ${previewArticleId === article.id ? "bg-muted" : "hover:bg-muted/50"}`}
+                  onClick={() => setPreviewArticleId(article.id)}
+                >
+                  <TableCell className="py-2 px-2">
+                    {canSelect(article.status) && (
+                      <Checkbox
+                        checked={isSelected(article.id)}
+                        onCheckedChange={() => toggleSelection(article.id)}
+                        disabled={isScheduling}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    )}
+                  </TableCell>
+                  <TableCell className="py-2 px-2 text-sm font-medium">
+                    {article.generated_articles?.title ||
+                      article.keywords?.join(", ") ||
+                      t("table.untitled")}
+                  </TableCell>
+                  <TableCell className="py-2 px-2">
+                    {article.website_configs ? (
+                      <div className="flex items-center gap-1">
+                        <Globe className="h-3 w-3" />
+                        <span className="text-xs">
+                          {article.website_configs.website_name}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-muted-foreground text-xs">
+                        {t("table.unspecified")}
+                      </span>
+                    )}
+                  </TableCell>
+                  <TableCell className="py-2 px-2">
+                    <div className="flex flex-col gap-0.5">
+                      {getStatusBadge(article.status)}
+                      {article.status === "scheduled" &&
+                        article.scheduled_publish_at && (
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <CalendarClock className="h-3 w-3" />
+                            {formatScheduledDate(article.scheduled_publish_at)}
+                          </span>
+                        )}
+                    </div>
+                  </TableCell>
+                  <TableCell className="py-2 px-2 text-xs text-muted-foreground">
+                    {formatDate(article.created_at)}
                   </TableCell>
                 </TableRow>
-              ) : (
-                paginatedArticles.map((article) => (
-                  <TableRow
-                    key={article.id}
-                    className={`cursor-pointer transition-colors ${previewArticleId === article.id ? "bg-muted" : "hover:bg-muted/50"}`}
-                    onClick={() => setPreviewArticleId(article.id)}
-                  >
-                    <TableCell className="py-2 px-2">
-                      {canSelect(article.status) && (
-                        <Checkbox
-                          checked={isSelected(article.id)}
-                          onCheckedChange={() => toggleSelection(article.id)}
-                          disabled={isScheduling}
-                          onClick={(e) => e.stopPropagation()}
-                        />
-                      )}
-                    </TableCell>
-                    <TableCell className="py-2 px-2 text-sm font-medium">
-                      {article.generated_articles?.title ||
-                        article.keywords?.join(", ") ||
-                        t("table.untitled")}
-                    </TableCell>
-                    <TableCell className="py-2 px-2">
-                      {article.website_configs ? (
-                        <div className="flex items-center gap-1">
-                          <Globe className="h-3 w-3" />
-                          <span className="text-xs">
-                            {article.website_configs.website_name}
-                          </span>
-                        </div>
-                      ) : (
-                        <span className="text-muted-foreground text-xs">
-                          {t("table.unspecified")}
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell className="py-2 px-2">
-                      <div className="flex flex-col gap-0.5">
-                        {getStatusBadge(article.status)}
-                        {article.status === "scheduled" &&
-                          article.scheduled_publish_at && (
-                            <span className="text-xs text-muted-foreground flex items-center gap-1">
-                              <CalendarClock className="h-3 w-3" />
-                              {formatScheduledDate(
-                                article.scheduled_publish_at,
-                              )}
-                            </span>
-                          )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="py-2 px-2 text-xs text-muted-foreground">
-                      {formatDate(article.created_at)}
-                    </TableCell>
-                  </TableRow>
-                ))
-              )}
+              ))}
             </TableBody>
           </Table>
         </div>

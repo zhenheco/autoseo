@@ -14,6 +14,7 @@ import { TiptapEditor } from "@/components/articles/TiptapEditor";
 import { QuickPublishDialog } from "./QuickPublishDialog";
 import { marked } from "marked";
 import { useTranslations } from "next-intl";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface ArticlePreviewProps {
   articles: ArticleWithWebsite[];
@@ -59,7 +60,9 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
 
   // 標題從列表資料取得（不需要額外請求）
   const originalTitle =
-    generatedArticle?.title || article?.keywords?.join(", ") || t("untitledArticle");
+    generatedArticle?.title ||
+    article?.keywords?.join(", ") ||
+    t("untitledArticle");
 
   // 當選擇的文章改變時，從快取或 API 獲取 HTML 內容
   useEffect(() => {
@@ -187,9 +190,11 @@ export function ArticlePreview({ articles }: ArticlePreviewProps) {
       </header>
       <div className="flex-1 min-h-0 wordpress-preview">
         {isLoading ? (
-          <div className="flex h-full items-center justify-center">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            <span className="ml-2 text-muted-foreground">{t("loading")}</span>
+          <div className="h-full space-y-4 p-4">
+            <Skeleton className="h-8 w-2/3" />
+            <Skeleton className="h-4 w-1/2" />
+            <Skeleton className="h-[calc(100%-4rem)] w-full" />
+            <span className="sr-only">{t("loading")}</span>
           </div>
         ) : (
           <TiptapEditor

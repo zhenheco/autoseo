@@ -39,6 +39,9 @@ import { Label } from "@shared/ui/label";
 import { Textarea } from "@shared/ui/textarea";
 import { Loader2, Plus, Pencil, Trash2, Search } from "lucide-react";
 import { toast } from "sonner";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface PromoCode {
   id: string;
@@ -60,6 +63,7 @@ export default function AdminPromoCodesPage() {
   const [promoCodes, setPromoCodes] = useState<PromoCode[]>([]);
   const [filteredPromoCodes, setFilteredPromoCodes] = useState<PromoCode[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
 
@@ -105,6 +109,8 @@ export default function AdminPromoCodesPage() {
   }, [searchTerm, statusFilter, promoCodes]);
 
   const fetchPromoCodes = async () => {
+    setLoading(true);
+    setLoadError(null);
     try {
       const res = await fetch("/api/admin/promo-codes");
       const data = await res.json();
@@ -112,9 +118,11 @@ export default function AdminPromoCodesPage() {
       if (data.success) {
         setPromoCodes(data.data);
       } else {
+        setLoadError(data.error || t("loadFailed"));
         toast.error(data.error || t("loadFailed"));
       }
     } catch {
+      setLoadError(t("loadFailed"));
       toast.error(t("loadFailed"));
     } finally {
       setLoading(false);
@@ -249,8 +257,9 @@ export default function AdminPromoCodesPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="mx-auto max-w-5xl space-y-6">
+        <Skeleton className="h-12 w-64" />
+        <Skeleton className="h-96 w-full" />
       </div>
     );
   }
@@ -276,113 +285,145 @@ export default function AdminPromoCodesPage() {
       <Card>
         <CardHeader>
           <CardTitle>{t("listTitle")}</CardTitle>
-          <CardDescription>{t("listDescription", { count: promoCodes.length })}</CardDescription>
+          <CardDescription>
+            {t("listDescription", { count: promoCodes.length })}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* 篩選區塊 */}
-          <div className="flex flex-wrap items-center gap-3 mb-4">
-            <div className="relative flex-1 min-w-[200px] max-w-xs">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder={t("searchPlaceholder")}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 h-9"
-              />
-            </div>
+          {loadError ? (
+            <ErrorState
+              title={t("loadFailed")}
+              message={loadError}
+              onRetry={() => void fetchPromoCodes()}
+            />
+          ) : (
+            <>
+              {/* 篩選區塊 */}
+              <div className="flex flex-wrap items-center gap-3 mb-4">
+                <div className="relative flex-1 min-w-[200px] max-w-xs">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder={t("searchPlaceholder")}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 h-9"
+                  />
+                </div>
 
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[120px] h-9">
-                <SelectValue placeholder={t("filterStatusAll")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("filterStatusAll")}</SelectItem>
-                <SelectItem value="active">{t("filterStatusActive")}</SelectItem>
-                <SelectItem value="inactive">{t("filterStatusInactive")}</SelectItem>
-              </SelectContent>
-            </Select>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[120px] h-9">
+                    <SelectValue placeholder={t("filterStatusAll")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t("filterStatusAll")}</SelectItem>
+                    <SelectItem value="active">
+                      {t("filterStatusActive")}
+                    </SelectItem>
+                    <SelectItem value="inactive">
+                      {t("filterStatusInactive")}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
 
-            {(statusFilter !== "all" || searchTerm) && (
-              <span className="text-sm text-muted-foreground">
-                {filteredPromoCodes.length} / {promoCodes.length}
-              </span>
-            )}
-          </div>
+                {(statusFilter !== "all" || searchTerm) && (
+                  <span className="text-sm text-muted-foreground">
+                    {filteredPromoCodes.length} / {promoCodes.length}
+                  </span>
+                )}
+              </div>
 
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[120px]">{t("columns.code")}</TableHead>
-                  <TableHead>{t("columns.name")}</TableHead>
-                  <TableHead className="w-[80px] text-right">{t("columns.bonus")}</TableHead>
-                  <TableHead className="w-[90px] text-right">
-                    {t("columns.usageCount")}
-                  </TableHead>
-                  <TableHead className="w-[100px]">{t("columns.expiresAt")}</TableHead>
-                  <TableHead className="w-[70px]">{t("columns.status")}</TableHead>
-                  <TableHead className="w-[80px] text-right">{t("columns.actions")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredPromoCodes.map((code) => (
-                  <TableRow key={code.id}>
-                    <TableCell className="font-mono font-medium text-sm">
-                      {code.code}
-                    </TableCell>
-                    <TableCell
-                      className="truncate max-w-[150px]"
-                      title={code.name}
-                    >
-                      {code.name}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      +{code.bonusArticles}
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {code.currentUses}
-                      {code.maxUses && `/${code.maxUses}`}
-                    </TableCell>
-                    <TableCell className="text-sm">
-                      {formatDate(code.expiresAt)}
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={code.isActive ? "default" : "secondary"}
-                        className="text-xs"
-                      >
-                        {code.isActive ? t("statusActive") : t("statusInactive")}
-                      </Badge>
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-7 w-7 p-0"
-                          title={t("editButton")}
-                          onClick={() => openEditDialog(code)}
-                        >
-                          <Pencil className="h-3.5 w-3.5" />
-                        </Button>
-                        {code.isActive && (
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="h-7 w-7 p-0"
-                            title={t("deactivateButton")}
-                            onClick={() => handleDeactivate(code)}
+              <div className="rounded-md border">
+                {filteredPromoCodes.length === 0 ? (
+                  <EmptyState title={t("listDescription", { count: 0 })} />
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[120px]">
+                          {t("columns.code")}
+                        </TableHead>
+                        <TableHead>{t("columns.name")}</TableHead>
+                        <TableHead className="w-[80px] text-right">
+                          {t("columns.bonus")}
+                        </TableHead>
+                        <TableHead className="w-[90px] text-right">
+                          {t("columns.usageCount")}
+                        </TableHead>
+                        <TableHead className="w-[100px]">
+                          {t("columns.expiresAt")}
+                        </TableHead>
+                        <TableHead className="w-[70px]">
+                          {t("columns.status")}
+                        </TableHead>
+                        <TableHead className="w-[80px] text-right">
+                          {t("columns.actions")}
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredPromoCodes.map((code) => (
+                        <TableRow key={code.id}>
+                          <TableCell className="font-mono font-medium text-sm">
+                            {code.code}
+                          </TableCell>
+                          <TableCell
+                            className="truncate max-w-[150px]"
+                            title={code.name}
                           >
-                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
-                          </Button>
-                        )}
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+                            {code.name}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            +{code.bonusArticles}
+                          </TableCell>
+                          <TableCell className="text-right tabular-nums">
+                            {code.currentUses}
+                            {code.maxUses && `/${code.maxUses}`}
+                          </TableCell>
+                          <TableCell className="text-sm">
+                            {formatDate(code.expiresAt)}
+                          </TableCell>
+                          <TableCell>
+                            <Badge
+                              variant={code.isActive ? "default" : "secondary"}
+                              className="text-xs"
+                            >
+                              {code.isActive
+                                ? t("statusActive")
+                                : t("statusInactive")}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-7 w-7 p-0"
+                                title={t("editButton")}
+                                onClick={() => openEditDialog(code)}
+                              >
+                                <Pencil className="h-3.5 w-3.5" />
+                              </Button>
+                              {code.isActive && (
+                                <Button
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-7 w-7 p-0"
+                                  title={t("deactivateButton")}
+                                  onClick={() => handleDeactivate(code)}
+                                >
+                                  <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                                </Button>
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 
@@ -424,7 +465,9 @@ export default function AdminPromoCodesPage() {
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="description">{t("form.descriptionOptional")}</Label>
+              <Label htmlFor="description">
+                {t("form.descriptionOptional")}
+              </Label>
               <Textarea
                 id="description"
                 placeholder={t("form.descriptionPlaceholder")}
@@ -436,7 +479,9 @@ export default function AdminPromoCodesPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="bonusArticles">{t("form.bonusArticlesRequired")}</Label>
+                <Label htmlFor="bonusArticles">
+                  {t("form.bonusArticlesRequired")}
+                </Label>
                 <Input
                   id="bonusArticles"
                   type="number"
@@ -527,7 +572,9 @@ export default function AdminPromoCodesPage() {
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="edit-bonusArticles">{t("form.bonusArticles")}</Label>
+                <Label htmlFor="edit-bonusArticles">
+                  {t("form.bonusArticles")}
+                </Label>
                 <Input
                   id="edit-bonusArticles"
                   type="number"

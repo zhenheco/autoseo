@@ -44,7 +44,9 @@ import {
   TRANSLATION_LOCALES,
 } from "@/types/translations";
 import { WebsiteSelector } from "@/components/articles/WebsiteSelector";
-
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { Skeleton } from "@/components/ui/skeleton";
 
 /** 語言按鈕元件 Props */
 interface LanguageButtonProps {
@@ -55,7 +57,12 @@ interface LanguageButtonProps {
 }
 
 /** 語言按鈕元件 */
-function LanguageButton({ locale, isSelected, onClick, disabled }: LanguageButtonProps): React.ReactNode {
+function LanguageButton({
+  locale,
+  isSelected,
+  onClick,
+  disabled,
+}: LanguageButtonProps): React.ReactNode {
   const lang = TRANSLATION_LANGUAGES[locale];
   return (
     <Button
@@ -104,16 +111,19 @@ function extractData<T>(result: { data?: T } | T): T {
 export default function AdminTranslationsPage() {
   const t = useTranslations("admin.translations");
   const [loading, setLoading] = useState(true);
+  const [articlesError, setArticlesError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [articles, setArticles] = useState<ArticleTranslationSummary[]>([]);
   const [total, setTotal] = useState(0);
   const [search, setSearch] = useState("");
   const [websiteId, setWebsiteId] = useState<string | null>(null);
-  const [filter, setFilter] = useState<"all" | "translated" | "not_translated">("all");
+  const [filter, setFilter] = useState<"all" | "translated" | "not_translated">(
+    "all",
+  );
   const [currentPage, setCurrentPage] = useState(1);
   const pageSize = 50;
   const [selectedArticles, setSelectedArticles] = useState<Set<string>>(
-    new Set()
+    new Set(),
   );
   const [selectedLanguages, setSelectedLanguages] = useState<
     Set<TranslationLocale>
@@ -122,6 +132,7 @@ export default function AdminTranslationsPage() {
 
   // 自動翻譯設定 state
   const [settingsLoading, setSettingsLoading] = useState(true);
+  const [settingsError, setSettingsError] = useState<string | null>(null);
   const [websiteSettings, setWebsiteSettings] = useState<
     WebsiteAutoTranslateSettings[]
   >([]);
@@ -129,6 +140,8 @@ export default function AdminTranslationsPage() {
 
   // 載入自動翻譯設定
   const fetchSettings = useCallback(async () => {
+    setSettingsLoading(true);
+    setSettingsError(null);
     try {
       const response = await fetch("/api/translations/settings");
       if (response.status === 403) {
@@ -142,6 +155,9 @@ export default function AdminTranslationsPage() {
       setWebsiteSettings(data.websites || []);
     } catch (error) {
       console.error(t("loadAutoTranslateSettingsFailed"), error);
+      setSettingsError(
+        error instanceof Error ? error.message : t("loadSettingsFailed"),
+      );
     } finally {
       setSettingsLoading(false);
     }
@@ -151,7 +167,7 @@ export default function AdminTranslationsPage() {
   const updateSettings = async (
     websiteId: string,
     enabled: boolean,
-    languages: string[]
+    languages: string[],
   ) => {
     setSavingSettings(websiteId);
     try {
@@ -174,15 +190,21 @@ export default function AdminTranslationsPage() {
       setWebsiteSettings((prev) =>
         prev.map((w) =>
           w.id === websiteId
-            ? { ...w, auto_translate_enabled: enabled, auto_translate_languages: languages }
-            : w
-        )
+            ? {
+                ...w,
+                auto_translate_enabled: enabled,
+                auto_translate_languages: languages,
+              }
+            : w,
+        ),
       );
 
       toast.success(t("settingsSaved"));
     } catch (error) {
       console.error(t("updateAutoTranslateSettingsFailed"), error);
-      toast.error(error instanceof Error ? error.message : t("updateSettingsFailed"));
+      toast.error(
+        error instanceof Error ? error.message : t("updateSettingsFailed"),
+      );
     } finally {
       setSavingSettings(null);
     }
@@ -202,18 +224,20 @@ export default function AdminTranslationsPage() {
   // 切換網站的目標語言
   const handleToggleAutoLanguage = (
     website: WebsiteAutoTranslateSettings,
-    locale: TranslationLocale
+    locale: TranslationLocale,
   ) => {
     const newLanguages = Array.from(
-      toggleSetItem(new Set(website.auto_translate_languages), locale)
+      toggleSetItem(new Set(website.auto_translate_languages), locale),
     );
     // 如果取消所有語言，也要關閉自動翻譯
-    const newEnabled = newLanguages.length > 0 && website.auto_translate_enabled;
+    const newEnabled =
+      newLanguages.length > 0 && website.auto_translate_enabled;
     updateSettings(website.id, newEnabled, newLanguages);
   };
 
   const fetchArticles = useCallback(async () => {
     setLoading(true);
+    setArticlesError(null);
     try {
       const offset = (currentPage - 1) * pageSize;
       const params = new URLSearchParams({
@@ -241,6 +265,9 @@ export default function AdminTranslationsPage() {
       setTotal(data.total || 0);
     } catch (error) {
       console.error(t("loadArticlesFailed"), error);
+      setArticlesError(
+        error instanceof Error ? error.message : t("loadFailed"),
+      );
       toast.error(t("loadFailed"));
     } finally {
       setLoading(false);
@@ -257,7 +284,7 @@ export default function AdminTranslationsPage() {
 
   const handleSelectAll = (checked: boolean) => {
     setSelectedArticles(
-      checked ? new Set(articles.map((a) => a.article_id)) : new Set()
+      checked ? new Set(articles.map((a) => a.article_id)) : new Set(),
     );
   };
 
@@ -302,24 +329,27 @@ export default function AdminTranslationsPage() {
 
       // 根據結果顯示不同訊息
       if (data.job_count === 0 && data.skipped?.count > 0) {
-        toast.info(
-          t("allArticlesSkipped", { count: data.skipped.count })
-        );
+        toast.info(t("allArticlesSkipped", { count: data.skipped.count }));
       } else if (data.skipped?.count > 0) {
         toast.success(
-          t("jobsCreatedWithSkipped", { created: data.job_count, skipped: data.skipped.count })
+          t("jobsCreatedWithSkipped", {
+            created: data.job_count,
+            skipped: data.skipped.count,
+          }),
         );
       } else {
-        toast.success(
-          t("jobsCreatedSuccess", { count: data.job_count })
-        );
+        toast.success(t("jobsCreatedSuccess", { count: data.job_count }));
       }
 
       // 清空選擇
       setSelectedArticles(new Set());
     } catch (error) {
       console.error(t("createTranslationJobFailed"), error);
-      toast.error(error instanceof Error ? error.message : t("createTranslationJobFailed"));
+      toast.error(
+        error instanceof Error
+          ? error.message
+          : t("createTranslationJobFailed"),
+      );
     } finally {
       setSubmitting(false);
     }
@@ -331,7 +361,9 @@ export default function AdminTranslationsPage() {
   };
 
   // 切換篩選時重置頁碼
-  const handleFilterChange = (newFilter: "all" | "translated" | "not_translated") => {
+  const handleFilterChange = (
+    newFilter: "all" | "translated" | "not_translated",
+  ) => {
     setFilter(newFilter);
     setCurrentPage(1);
     setSelectedArticles(new Set());
@@ -350,7 +382,11 @@ export default function AdminTranslationsPage() {
     } else {
       pages.push(1);
       if (currentPage > 3) pages.push("...");
-      for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+      for (
+        let i = Math.max(2, currentPage - 1);
+        i <= Math.min(totalPages - 1, currentPage + 1);
+        i++
+      ) {
         pages.push(i);
       }
       if (currentPage < totalPages - 2) pages.push("...");
@@ -385,9 +421,7 @@ export default function AdminTranslationsPage() {
             <Languages className="h-8 w-8" />
             {t("title")}
           </h1>
-          <p className="text-muted-foreground mt-1">
-            {t("description")}
-          </p>
+          <p className="text-muted-foreground mt-1">{t("description")}</p>
         </div>
         <Button variant="outline" onClick={handleRefresh} disabled={loading}>
           <RefreshCw
@@ -402,21 +436,27 @@ export default function AdminTranslationsPage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <Settings className="h-5 w-5" />
-            <CardTitle className="text-lg">{t("autoTranslateSettings")}</CardTitle>
+            <CardTitle className="text-lg">
+              {t("autoTranslateSettings")}
+            </CardTitle>
           </div>
-          <CardDescription>
-            {t("autoTranslateDescription")}
-          </CardDescription>
+          <CardDescription>{t("autoTranslateDescription")}</CardDescription>
         </CardHeader>
         <CardContent>
           {settingsLoading ? (
-            <div className="flex items-center justify-center py-4">
-              <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+            <div className="space-y-3">
+              {Array.from({ length: 2 }).map((_, index) => (
+                <Skeleton key={index} className="h-20 w-full" />
+              ))}
             </div>
+          ) : settingsError ? (
+            <ErrorState
+              title={t("loadSettingsFailed")}
+              message={settingsError}
+              onRetry={() => void fetchSettings()}
+            />
           ) : websiteSettings.length === 0 ? (
-            <p className="text-muted-foreground text-center py-4">
-              {t("noWebsitesToConfigure")}
-            </p>
+            <EmptyState title={t("noWebsitesToConfigure")} />
           ) : (
             <div className="space-y-4">
               {websiteSettings.map((website) => (
@@ -448,7 +488,9 @@ export default function AdminTranslationsPage() {
                         </div>
                         <p className="text-sm text-muted-foreground">
                           {website.auto_translate_enabled
-                            ? t("autoTranslateEnabledInfo", { count: website.auto_translate_languages.length })
+                            ? t("autoTranslateEnabledInfo", {
+                                count: website.auto_translate_languages.length,
+                              })
                             : t("autoTranslateDisabled")}
                         </p>
                       </div>
@@ -465,8 +507,12 @@ export default function AdminTranslationsPage() {
                         <LanguageButton
                           key={locale}
                           locale={locale}
-                          isSelected={website.auto_translate_languages.includes(locale)}
-                          onClick={() => handleToggleAutoLanguage(website, locale)}
+                          isSelected={website.auto_translate_languages.includes(
+                            locale,
+                          )}
+                          onClick={() =>
+                            handleToggleAutoLanguage(website, locale)
+                          }
                           disabled={savingSettings === website.id}
                         />
                       ))}
@@ -504,7 +550,9 @@ export default function AdminTranslationsPage() {
           <CardHeader>
             <CardTitle className="text-lg">{t("targetLanguages")}</CardTitle>
             <CardDescription>
-              {t("targetLanguagesDescription", { count: selectedLanguages.size })}
+              {t("targetLanguagesDescription", {
+                count: selectedLanguages.size,
+              })}
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -564,23 +612,37 @@ export default function AdminTranslationsPage() {
             </div>
           </div>
           {/* 篩選 Tabs */}
-          <Tabs value={filter} onValueChange={(v) => handleFilterChange(v as typeof filter)} className="mt-4">
+          <Tabs
+            value={filter}
+            onValueChange={(v) => handleFilterChange(v as typeof filter)}
+            className="mt-4"
+          >
             <TabsList>
               <TabsTrigger value="all">{t("filterAll")}</TabsTrigger>
-              <TabsTrigger value="translated">{t("filterTranslated")}</TabsTrigger>
-              <TabsTrigger value="not_translated">{t("filterNotTranslated")}</TabsTrigger>
+              <TabsTrigger value="translated">
+                {t("filterTranslated")}
+              </TabsTrigger>
+              <TabsTrigger value="not_translated">
+                {t("filterNotTranslated")}
+              </TabsTrigger>
             </TabsList>
           </Tabs>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="flex items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            <div className="space-y-3">
+              {Array.from({ length: 6 }).map((_, index) => (
+                <Skeleton key={index} className="h-12 w-full" />
+              ))}
             </div>
+          ) : articlesError ? (
+            <ErrorState
+              title={t("loadFailed")}
+              message={articlesError}
+              onRetry={() => void fetchArticles()}
+            />
           ) : articles.length === 0 ? (
-            <div className="text-center py-8 text-muted-foreground">
-              {t(`emptyState.${filter}`)}
-            </div>
+            <EmptyState title={t(`emptyState.${filter}`)} />
           ) : (
             <>
               <Table>
@@ -616,14 +678,19 @@ export default function AdminTranslationsPage() {
                           <span>{article.article_title}</span>
                           <span className="flex gap-0.5">
                             {article.translations
-                              .filter((trans) => trans.status !== "not_translated")
+                              .filter(
+                                (trans) => trans.status !== "not_translated",
+                              )
                               .map((trans) => (
                                 <span
                                   key={trans.locale}
                                   title={`${TRANSLATION_LANGUAGES[trans.locale].nativeName} (${trans.status})`}
                                   className="text-sm opacity-80"
                                 >
-                                  {TRANSLATION_LANGUAGES[trans.locale].flagEmoji}
+                                  {
+                                    TRANSLATION_LANGUAGES[trans.locale]
+                                      .flagEmoji
+                                  }
                                 </span>
                               ))}
                           </span>
@@ -638,7 +705,11 @@ export default function AdminTranslationsPage() {
               {totalPages > 1 && (
                 <div className="flex items-center justify-between mt-6 pt-4 border-t">
                   <div className="text-sm text-muted-foreground">
-                    {t("paginationInfo", { start: startItem, end: endItem, total })}
+                    {t("paginationInfo", {
+                      start: startItem,
+                      end: endItem,
+                      total,
+                    })}
                   </div>
                   <div className="flex items-center gap-1">
                     <Button
@@ -651,7 +722,10 @@ export default function AdminTranslationsPage() {
                     </Button>
                     {getPageNumbers().map((page, idx) =>
                       page === "..." ? (
-                        <span key={`ellipsis-${idx}`} className="px-2 text-muted-foreground">
+                        <span
+                          key={`ellipsis-${idx}`}
+                          className="px-2 text-muted-foreground"
+                        >
                           ...
                         </span>
                       ) : (
@@ -665,12 +739,14 @@ export default function AdminTranslationsPage() {
                         >
                           {page}
                         </Button>
-                      )
+                      ),
                     )}
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                      onClick={() =>
+                        setCurrentPage((p) => Math.min(totalPages, p + 1))
+                      }
                       disabled={currentPage === totalPages || loading}
                     >
                       <ChevronRight className="h-4 w-4" />

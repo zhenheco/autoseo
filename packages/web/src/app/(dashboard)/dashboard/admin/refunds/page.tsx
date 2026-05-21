@@ -35,6 +35,9 @@ import {
 } from "@shared/ui/dialog";
 import { Textarea } from "@shared/ui/textarea";
 import { toast } from "sonner";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type RefundStatus =
   | "pending"
@@ -87,6 +90,7 @@ export default function AdminRefundsPage() {
     subscription: t("paymentTypes.subscription"),
   };
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [refunds, setRefunds] = useState<Refund[]>([]);
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [updating, setUpdating] = useState<string | null>(null);
@@ -104,6 +108,8 @@ export default function AdminRefundsPage() {
   }, [statusFilter]);
 
   const fetchRefunds = async () => {
+    setLoading(true);
+    setLoadError(null);
     try {
       const params = new URLSearchParams();
       if (statusFilter !== "all") {
@@ -125,6 +131,7 @@ export default function AdminRefundsPage() {
       setRefunds(data.data || []);
     } catch (error) {
       console.error(t("loadRefundsFailed"), error);
+      setLoadError(error instanceof Error ? error.message : t("loadFailed"));
       toast.error(t("loadFailed"));
     } finally {
       setLoading(false);
@@ -268,9 +275,15 @@ export default function AdminRefundsPage() {
           <SelectContent>
             <SelectItem value="all">{t("statusAll")}</SelectItem>
             <SelectItem value="pending">{t("statusPending")}</SelectItem>
-            <SelectItem value="pending_review">{t("statusPendingReview")}</SelectItem>
-            <SelectItem value="retention_accepted">{t("statusRetentionAccepted")}</SelectItem>
-            <SelectItem value="auto_processing">{t("statusAutoProcessing")}</SelectItem>
+            <SelectItem value="pending_review">
+              {t("statusPendingReview")}
+            </SelectItem>
+            <SelectItem value="retention_accepted">
+              {t("statusRetentionAccepted")}
+            </SelectItem>
+            <SelectItem value="auto_processing">
+              {t("statusAutoProcessing")}
+            </SelectItem>
             <SelectItem value="approved">{t("statusApproved")}</SelectItem>
             <SelectItem value="processing">{t("statusProcessing")}</SelectItem>
             <SelectItem value="completed">{t("statusCompleted")}</SelectItem>
@@ -283,17 +296,25 @@ export default function AdminRefundsPage() {
       <Card>
         <CardHeader>
           <CardTitle>{t("listTitle")}</CardTitle>
-          <CardDescription>{t("listDescription", { count: refunds.length })}</CardDescription>
+          <CardDescription>
+            {t("listDescription", { count: refunds.length })}
+          </CardDescription>
         </CardHeader>
         <CardContent>
           {loading ? (
-            <div className="py-8 text-center text-muted-foreground">
-              {t("loading")}
+            <div className="space-y-3">
+              {Array.from({ length: 5 }).map((_, index) => (
+                <Skeleton key={index} className="h-12 w-full" />
+              ))}
             </div>
+          ) : loadError ? (
+            <ErrorState
+              title={t("loadFailed")}
+              message={loadError}
+              onRetry={() => void fetchRefunds()}
+            />
           ) : refunds.length === 0 ? (
-            <div className="py-8 text-center text-muted-foreground">
-              {t("noRefunds")}
-            </div>
+            <EmptyState title={t("noRefunds")} />
           ) : (
             <div className="overflow-x-auto">
               <Table>
@@ -303,7 +324,9 @@ export default function AdminRefundsPage() {
                     <TableHead>{t("columns.refundNo")}</TableHead>
                     <TableHead>{t("columns.companyName")}</TableHead>
                     <TableHead>{t("columns.orderType")}</TableHead>
-                    <TableHead className="text-right">{t("columns.refundAmount")}</TableHead>
+                    <TableHead className="text-right">
+                      {t("columns.refundAmount")}
+                    </TableHead>
                     <TableHead>{t("columns.refundReason")}</TableHead>
                     <TableHead>{t("columns.daysSincePurchase")}</TableHead>
                     <TableHead>{t("columns.status")}</TableHead>
@@ -358,12 +381,16 @@ export default function AdminRefundsPage() {
                         {getStatusBadge(refund.status, refund.statusText)}
                         {refund.retentionAccepted && (
                           <div className="mt-1 text-xs text-green-600">
-                            {t("retentionAccepted", { credits: refund.retentionCredits })}
+                            {t("retentionAccepted", {
+                              credits: refund.retentionCredits,
+                            })}
                           </div>
                         )}
                         {refund.rejectReason && (
                           <div className="mt-1 text-xs text-red-600">
-                            {t("rejectReasonLabel", { reason: refund.rejectReason })}
+                            {t("rejectReasonLabel", {
+                              reason: refund.rejectReason,
+                            })}
                           </div>
                         )}
                       </TableCell>
@@ -410,15 +437,21 @@ export default function AdminRefundsPage() {
           {selectedRefund && (
             <div className="space-y-2 text-sm">
               <div>
-                <span className="text-muted-foreground">{t("refundNoLabel")}</span>
+                <span className="text-muted-foreground">
+                  {t("refundNoLabel")}
+                </span>
                 {selectedRefund.refundNo}
               </div>
               <div>
-                <span className="text-muted-foreground">{t("companyLabel")}</span>
+                <span className="text-muted-foreground">
+                  {t("companyLabel")}
+                </span>
                 {selectedRefund.companyName}
               </div>
               <div>
-                <span className="text-muted-foreground">{t("refundAmountLabel")}</span>
+                <span className="text-muted-foreground">
+                  {t("refundAmountLabel")}
+                </span>
                 <span className="font-semibold text-red-600">
                   NT$ {selectedRefund.refundAmount.toLocaleString()}
                 </span>
@@ -444,21 +477,29 @@ export default function AdminRefundsPage() {
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{t("rejectDialogTitle")}</DialogTitle>
-            <DialogDescription>{t("rejectDialogDescription")}</DialogDescription>
+            <DialogDescription>
+              {t("rejectDialogDescription")}
+            </DialogDescription>
           </DialogHeader>
           {selectedRefund && (
             <div className="space-y-4">
               <div className="space-y-2 text-sm">
                 <div>
-                  <span className="text-muted-foreground">{t("refundNoLabel")}</span>
+                  <span className="text-muted-foreground">
+                    {t("refundNoLabel")}
+                  </span>
                   {selectedRefund.refundNo}
                 </div>
                 <div>
-                  <span className="text-muted-foreground">{t("companyLabel")}</span>
+                  <span className="text-muted-foreground">
+                    {t("companyLabel")}
+                  </span>
                   {selectedRefund.companyName}
                 </div>
                 <div>
-                  <span className="text-muted-foreground">{t("refundAmountLabel")}</span>
+                  <span className="text-muted-foreground">
+                    {t("refundAmountLabel")}
+                  </span>
                   <span className="font-semibold">
                     NT$ {selectedRefund.refundAmount.toLocaleString()}
                   </span>

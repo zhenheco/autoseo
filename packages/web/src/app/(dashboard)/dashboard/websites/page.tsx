@@ -20,6 +20,7 @@ import { checkPagePermission } from "@shared/auth/permissions";
 import { WebsiteAddedTracker } from "./WebsiteAddedTracker";
 import { Globe } from "lucide-react";
 import { WebsiteCard } from "./_components/WebsiteCard";
+import { EmptyState } from "@/components/ui/empty-state";
 
 async function getCompanyWebsites(companyId: string) {
   try {
@@ -222,14 +223,14 @@ export default async function WebsitesPage({
           ))
         ) : (
           <div className="col-span-full">
-            <Card>
-              <CardContent className="flex flex-col items-center justify-center py-12">
-                <p className="text-muted-foreground mb-4">{t("noWebsites")}</p>
-                <Link href="/dashboard/websites/new">
-                  <Button>{t("addFirstWebsite")}</Button>
-                </Link>
-              </CardContent>
-            </Card>
+            <EmptyState
+              icon={<Globe className="h-6 w-6" />}
+              title={t("noWebsites")}
+              action={{
+                label: t("addFirstWebsite"),
+                href: "/dashboard/websites/new",
+              }}
+            />
           </div>
         )}
       </div>

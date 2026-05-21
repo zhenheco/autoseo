@@ -39,6 +39,9 @@ import { Label } from "@shared/ui/label";
 import { Textarea } from "@shared/ui/textarea";
 import { Loader2, Calendar, Gift, Search } from "lucide-react";
 import { toast } from "sonner";
+import { EmptyState } from "@/components/ui/empty-state";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { Skeleton } from "@/components/ui/skeleton";
 
 interface Subscription {
   id: string;
@@ -65,6 +68,7 @@ export default function AdminSubscriptionsPage() {
     Subscription[]
   >([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [planFilter, setPlanFilter] = useState<string>("all");
@@ -116,6 +120,8 @@ export default function AdminSubscriptionsPage() {
   }, [searchTerm, statusFilter, planFilter, subscriptions]);
 
   const fetchSubscriptions = async () => {
+    setLoading(true);
+    setLoadError(null);
     try {
       const res = await fetch("/api/admin/subscriptions");
       const data = await res.json();
@@ -124,9 +130,11 @@ export default function AdminSubscriptionsPage() {
         setSubscriptions(data.data);
         setFilteredSubscriptions(data.data);
       } else {
+        setLoadError(data.error || t("loadFailed"));
         toast.error(data.error || t("loadFailed"));
       }
     } catch {
+      setLoadError(t("loadFailed"));
       toast.error(t("loadFailed"));
     } finally {
       setLoading(false);
@@ -151,7 +159,10 @@ export default function AdminSubscriptionsPage() {
 
       if (data.success) {
         toast.success(
-          t("extendSuccess", { companyName: selectedCompany.companyName, days }),
+          t("extendSuccess", {
+            companyName: selectedCompany.companyName,
+            days,
+          }),
         );
         setExtendDialogOpen(false);
         setDays("");
@@ -185,7 +196,10 @@ export default function AdminSubscriptionsPage() {
 
       if (data.success) {
         toast.success(
-          t("grantSuccess", { companyName: selectedCompany.companyName, articles }),
+          t("grantSuccess", {
+            companyName: selectedCompany.companyName,
+            articles,
+          }),
         );
         setGrantDialogOpen(false);
         setArticles("");
@@ -224,8 +238,9 @@ export default function AdminSubscriptionsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="mx-auto max-w-5xl space-y-6">
+        <Skeleton className="h-12 w-64" />
+        <Skeleton className="h-96 w-full" />
       </div>
     );
   }
@@ -240,130 +255,172 @@ export default function AdminSubscriptionsPage() {
       <Card>
         <CardHeader>
           <CardTitle>{t("listTitle")}</CardTitle>
-          <CardDescription>{t("listDescription", { count: subscriptions.length })}</CardDescription>
+          <CardDescription>
+            {t("listDescription", { count: subscriptions.length })}
+          </CardDescription>
         </CardHeader>
         <CardContent>
-          {/* 篩選區塊 */}
-          <div className="flex flex-wrap items-center gap-3 mb-4">
-            <div className="relative flex-1 min-w-[200px] max-w-xs">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder={t("searchPlaceholder")}
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 h-9"
-              />
-            </div>
+          {loadError ? (
+            <ErrorState
+              title={t("loadFailed")}
+              message={loadError}
+              onRetry={() => void fetchSubscriptions()}
+            />
+          ) : (
+            <>
+              {/* 篩選區塊 */}
+              <div className="flex flex-wrap items-center gap-3 mb-4">
+                <div className="relative flex-1 min-w-[200px] max-w-xs">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder={t("searchPlaceholder")}
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 h-9"
+                  />
+                </div>
 
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[120px] h-9">
-                <SelectValue placeholder={t("filterStatusAll")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("filterStatusAll")}</SelectItem>
-                <SelectItem value="active">{t("filterStatusActive")}</SelectItem>
-                <SelectItem value="past_due">{t("filterStatusPastDue")}</SelectItem>
-                <SelectItem value="cancelled">{t("filterStatusCancelled")}</SelectItem>
-                <SelectItem value="lifetime">{t("filterStatusLifetime")}</SelectItem>
-              </SelectContent>
-            </Select>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[120px] h-9">
+                    <SelectValue placeholder={t("filterStatusAll")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t("filterStatusAll")}</SelectItem>
+                    <SelectItem value="active">
+                      {t("filterStatusActive")}
+                    </SelectItem>
+                    <SelectItem value="past_due">
+                      {t("filterStatusPastDue")}
+                    </SelectItem>
+                    <SelectItem value="cancelled">
+                      {t("filterStatusCancelled")}
+                    </SelectItem>
+                    <SelectItem value="lifetime">
+                      {t("filterStatusLifetime")}
+                    </SelectItem>
+                  </SelectContent>
+                </Select>
 
-            <Select value={planFilter} onValueChange={setPlanFilter}>
-              <SelectTrigger className="w-[130px] h-9">
-                <SelectValue placeholder={t("filterPlanAll")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("filterPlanAll")}</SelectItem>
-                <SelectItem value="free">Free</SelectItem>
-                <SelectItem value="starter">Starter</SelectItem>
-                <SelectItem value="professional">Professional</SelectItem>
-                <SelectItem value="business">Business</SelectItem>
-                <SelectItem value="agency">Agency</SelectItem>
-              </SelectContent>
-            </Select>
+                <Select value={planFilter} onValueChange={setPlanFilter}>
+                  <SelectTrigger className="w-[130px] h-9">
+                    <SelectValue placeholder={t("filterPlanAll")} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">{t("filterPlanAll")}</SelectItem>
+                    <SelectItem value="free">Free</SelectItem>
+                    <SelectItem value="starter">Starter</SelectItem>
+                    <SelectItem value="professional">Professional</SelectItem>
+                    <SelectItem value="business">Business</SelectItem>
+                    <SelectItem value="agency">Agency</SelectItem>
+                  </SelectContent>
+                </Select>
 
-            {(statusFilter !== "all" || planFilter !== "all" || searchTerm) && (
-              <span className="text-sm text-muted-foreground">
-                {filteredSubscriptions.length} / {subscriptions.length}
-              </span>
-            )}
-          </div>
+                {(statusFilter !== "all" ||
+                  planFilter !== "all" ||
+                  searchTerm) && (
+                  <span className="text-sm text-muted-foreground">
+                    {filteredSubscriptions.length} / {subscriptions.length}
+                  </span>
+                )}
+              </div>
 
-          {/* 表格 */}
-          <div className="rounded-md border">
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[180px]">{t("columns.companyName")}</TableHead>
-                  <TableHead className="w-[140px]">{t("columns.plan")}</TableHead>
-                  <TableHead className="w-[80px]">{t("columns.status")}</TableHead>
-                  <TableHead className="w-[100px] text-right">
-                    {t("columns.remainingArticles")}
-                  </TableHead>
-                  <TableHead className="w-[100px]">{t("columns.expiresAt")}</TableHead>
-                  <TableHead className="w-[100px] text-right">{t("columns.actions")}</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {filteredSubscriptions.map((sub) => (
-                  <TableRow key={sub.id}>
-                    <TableCell className="font-medium">
-                      {sub.companyName}
-                    </TableCell>
-                    <TableCell>
-                      {sub.planName}
-                      {sub.billingCycle && (
-                        <span className="text-muted-foreground ml-1">
-                          ({sub.billingCycle === "yearly" ? t("billingCycleYearly") : t("billingCycleMonthly")})
-                        </span>
-                      )}
-                    </TableCell>
-                    <TableCell>
-                      {getStatusBadge(sub.status, sub.isLifetime)}
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <span className="font-medium">
-                        {sub.totalArticlesRemaining}
-                      </span>
-                      <span className="text-muted-foreground text-sm ml-1">
-                        ({sub.subscriptionArticlesRemaining} +{" "}
-                        {sub.purchasedArticlesRemaining})
-                      </span>
-                    </TableCell>
-                    <TableCell>{formatDate(sub.currentPeriodEnd)}</TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                          title={t("extendButton")}
-                          onClick={() => {
-                            setSelectedCompany(sub);
-                            setExtendDialogOpen(true);
-                          }}
-                        >
-                          <Calendar className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="h-8 w-8 p-0"
-                          title={t("grantButton")}
-                          onClick={() => {
-                            setSelectedCompany(sub);
-                            setGrantDialogOpen(true);
-                          }}
-                        >
-                          <Gift className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
+              {/* 表格 */}
+              <div className="rounded-md border">
+                {filteredSubscriptions.length === 0 ? (
+                  <EmptyState title={t("listDescription", { count: 0 })} />
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="w-[180px]">
+                          {t("columns.companyName")}
+                        </TableHead>
+                        <TableHead className="w-[140px]">
+                          {t("columns.plan")}
+                        </TableHead>
+                        <TableHead className="w-[80px]">
+                          {t("columns.status")}
+                        </TableHead>
+                        <TableHead className="w-[100px] text-right">
+                          {t("columns.remainingArticles")}
+                        </TableHead>
+                        <TableHead className="w-[100px]">
+                          {t("columns.expiresAt")}
+                        </TableHead>
+                        <TableHead className="w-[100px] text-right">
+                          {t("columns.actions")}
+                        </TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredSubscriptions.map((sub) => (
+                        <TableRow key={sub.id}>
+                          <TableCell className="font-medium">
+                            {sub.companyName}
+                          </TableCell>
+                          <TableCell>
+                            {sub.planName}
+                            {sub.billingCycle && (
+                              <span className="text-muted-foreground ml-1">
+                                (
+                                {sub.billingCycle === "yearly"
+                                  ? t("billingCycleYearly")
+                                  : t("billingCycleMonthly")}
+                                )
+                              </span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {getStatusBadge(sub.status, sub.isLifetime)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <span className="font-medium">
+                              {sub.totalArticlesRemaining}
+                            </span>
+                            <span className="text-muted-foreground text-sm ml-1">
+                              ({sub.subscriptionArticlesRemaining} +{" "}
+                              {sub.purchasedArticlesRemaining})
+                            </span>
+                          </TableCell>
+                          <TableCell>
+                            {formatDate(sub.currentPeriodEnd)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            <div className="flex justify-end gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                title={t("extendButton")}
+                                onClick={() => {
+                                  setSelectedCompany(sub);
+                                  setExtendDialogOpen(true);
+                                }}
+                              >
+                                <Calendar className="h-4 w-4" />
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                className="h-8 w-8 p-0"
+                                title={t("grantButton")}
+                                onClick={() => {
+                                  setSelectedCompany(sub);
+                                  setGrantDialogOpen(true);
+                                }}
+                              >
+                                <Gift className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                )}
+              </div>
+            </>
+          )}
         </CardContent>
       </Card>
 
@@ -373,7 +430,9 @@ export default function AdminSubscriptionsPage() {
           <DialogHeader>
             <DialogTitle>{t("extendDialogTitle")}</DialogTitle>
             <DialogDescription>
-              {t("extendDialogDescription", { companyName: selectedCompany?.companyName ?? "" })}
+              {t("extendDialogDescription", {
+                companyName: selectedCompany?.companyName ?? "",
+              })}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -418,7 +477,9 @@ export default function AdminSubscriptionsPage() {
           <DialogHeader>
             <DialogTitle>{t("grantDialogTitle")}</DialogTitle>
             <DialogDescription>
-              {t("grantDialogDescription", { companyName: selectedCompany?.companyName ?? "" })}
+              {t("grantDialogDescription", {
+                companyName: selectedCompany?.companyName ?? "",
+              })}
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">

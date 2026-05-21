@@ -2,8 +2,11 @@
 
 import { useEffect, useRef, useState, Suspense } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
-import { Loader2 } from "lucide-react";
+import { Lock } from "lucide-react";
 import { useTranslations } from "next-intl";
+import { Card, CardContent } from "@shared/ui/card";
+import { ErrorState } from "@/components/ui/ErrorState";
+import { Skeleton } from "@/components/ui/skeleton";
 
 function AuthorizingContent() {
   const searchParams = useSearchParams();
@@ -145,53 +148,22 @@ function AuthorizingContent() {
   }, [searchParams, router, status]);
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-xl">
-        <div className="flex flex-col items-center space-y-6">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-md">
+        <CardContent className="p-8">
           {status === "error" ? (
-            <>
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-red-100">
-                <svg
-                  className="h-8 w-8 text-red-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </div>
-              <div className="text-center">
-                <h2 className="text-2xl font-bold text-foreground">
-                  {t("processFailed")}
-                </h2>
-                <p className="mt-2 text-muted-foreground">{errorMessage}</p>
-                <div className="mt-6 flex gap-4 justify-center">
-                  <button
-                    onClick={() => window.location.reload()}
-                    className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-                  >
-                    {t("retry")}
-                  </button>
-                  <button
-                    onClick={() => router.push("/dashboard/subscription")}
-                    className="px-4 py-2 bg-muted text-foreground rounded-md hover:bg-muted transition-colors"
-                  >
-                    {t("backToBilling")}
-                  </button>
-                </div>
-              </div>
-            </>
+            <ErrorState
+              title={t("processFailed")}
+              message={errorMessage}
+              onRetry={() => window.location.reload()}
+              supportUrl="/faq"
+            />
           ) : (
-            <>
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            <div className="flex flex-col items-center space-y-6">
+              <div className="w-full space-y-3">
+                <Skeleton className="mx-auto h-16 w-16 rounded-full" />
+                <Skeleton className="h-2 w-full" />
               </div>
-
               <div className="text-center">
                 <h2 className="text-2xl font-bold text-foreground">
                   {t("title")}
@@ -205,34 +177,14 @@ function AuthorizingContent() {
                   {t("pleaseWait")}
                 </p>
               </div>
-
-              <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
-                <div
-                  className="h-full animate-pulse bg-gradient-to-r from-blue-500 to-indigo-500"
-                  style={{ width: "75%" }}
-                />
-              </div>
-
               <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                <svg
-                  className="h-5 w-5 text-muted-foreground"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                  />
-                </svg>
+                <Lock className="h-5 w-5 text-muted-foreground" />
                 <span>{t("secureConnection")}</span>
               </div>
-            </>
+            </div>
           )}
-        </div>
-      </div>
+        </CardContent>
+      </Card>
 
       <form ref={formRef} method="post" action="" style={{ display: "none" }} />
     </div>
@@ -243,38 +195,22 @@ function LoadingFallback() {
   const t = useTranslations("billing.authorizing");
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-      <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-xl">
-        <div className="flex flex-col items-center space-y-6">
-          <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
-            <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-          </div>
-          <div className="text-center">
-            <h2 className="text-2xl font-bold text-foreground">
-              {t("loading")}
-            </h2>
-          </div>
-        </div>
-      </div>
+    <div className="flex min-h-screen items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-md">
+        <CardContent className="space-y-6 p-8">
+          <Skeleton className="mx-auto h-16 w-16 rounded-full" />
+          <Skeleton className="h-8 w-full" />
+          <Skeleton className="h-2 w-full" />
+          <span className="sr-only">{t("loading")}</span>
+        </CardContent>
+      </Card>
     </div>
   );
 }
 
 export default function AuthorizingPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
-          <div className="w-full max-w-md rounded-lg bg-white p-8 shadow-xl">
-            <div className="flex flex-col items-center space-y-6">
-              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-blue-100">
-                <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
-              </div>
-            </div>
-          </div>
-        </div>
-      }
-    >
+    <Suspense fallback={<LoadingFallback />}>
       <AuthorizingContent />
     </Suspense>
   );

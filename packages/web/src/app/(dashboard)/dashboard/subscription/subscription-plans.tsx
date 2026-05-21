@@ -14,6 +14,7 @@ import {
   validateInvoiceData,
   type InvoiceFormData,
 } from "@/components/billing/InvoiceForm";
+import { EmptyState } from "@/components/ui/empty-state";
 
 /**
  * 篇數制方案資料類型
@@ -367,136 +368,144 @@ export function SubscriptionPlans({
       </div>
 
       {/* 方案卡片 */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
-        {plans.map((plan) => {
-          const isCurrentPlan = plan.slug === currentTier;
-          const isPopular = plan.slug === "pro";
-          const price =
-            billingCycle === "yearly" ? plan.yearly_price : plan.monthly_price;
-          const yearlyBonus = getYearlyBonus(plan);
+      {plans.length === 0 ? (
+        <EmptyState title={t("subscriptionPlans") || "訂閱方案"} />
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 max-w-5xl mx-auto">
+          {plans.map((plan) => {
+            const isCurrentPlan = plan.slug === currentTier;
+            const isPopular = plan.slug === "pro";
+            const price =
+              billingCycle === "yearly"
+                ? plan.yearly_price
+                : plan.monthly_price;
+            const yearlyBonus = getYearlyBonus(plan);
 
-          return (
-            <Card
-              key={plan.id}
-              className={`relative flex flex-col h-full transition-all duration-300 ${
-                isPopular
-                  ? "bg-white dark:bg-slate-900/90 dark:backdrop-blur-xl text-slate-900 dark:text-white border-cyber-violet-500 shadow-lg dark:shadow-cyber-violet-500/30 scale-105"
-                  : "bg-white dark:bg-transparent dark:glass shadow-md dark:shadow-none border-slate-200 dark:border-white/10 hover:border-cyber-violet-500/50"
-              } ${isCurrentPlan ? "ring-2 ring-primary" : ""}`}
-            >
-              {/* 標籤 */}
-              {isCurrentPlan && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-                  {t("currentPlan") || "目前方案"}
-                </div>
-              )}
-              {isPopular && !isCurrentPlan && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-400 text-slate-900 px-3 py-1 rounded-full text-xs font-bold shadow-lg">
-                  {t("mostPopular") || "最熱門"}
-                </div>
-              )}
-
-              <CardContent className="p-6 flex flex-col h-full">
-                {/* 方案名稱 */}
-                <div className="mb-3">
-                  <h3 className="text-xl font-bold text-slate-900 dark:text-white">
-                    {getPlanName(plan)}
-                  </h3>
-                </div>
-
-                {/* 價格 */}
-                <div className="mb-5">
-                  <div className="flex items-baseline gap-1">
-                    <span className="text-3xl font-bold text-slate-900 dark:text-white">
-                      NT${price?.toLocaleString()}
-                    </span>
-                    <span className="text-sm text-slate-600 dark:text-slate-400">
-                      /
-                      {billingCycle === "yearly"
-                        ? t("year") || "年"
-                        : t("month") || "月"}
-                    </span>
+            return (
+              <Card
+                key={plan.id}
+                className={`relative flex flex-col h-full transition-all duration-300 ${
+                  isPopular
+                    ? "bg-white dark:bg-slate-900/90 dark:backdrop-blur-xl text-slate-900 dark:text-white border-cyber-violet-500 shadow-lg dark:shadow-cyber-violet-500/30 scale-105"
+                    : "bg-white dark:bg-transparent dark:glass shadow-md dark:shadow-none border-slate-200 dark:border-white/10 hover:border-cyber-violet-500/50"
+                } ${isCurrentPlan ? "ring-2 ring-primary" : ""}`}
+              >
+                {/* 標籤 */}
+                {isCurrentPlan && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-primary text-primary-foreground px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                    {t("currentPlan") || "目前方案"}
                   </div>
-                  {billingCycle === "yearly" && (
-                    <div className="text-sm mt-1 text-slate-500 dark:text-slate-400">
-                      {t("equivalentMonthly") || "約"} NT$
-                      {Math.round((price || 0) / 12).toLocaleString()}/
-                      {t("month") || "月"}
+                )}
+                {isPopular && !isCurrentPlan && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-yellow-400 text-slate-900 px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                    {t("mostPopular") || "最熱門"}
+                  </div>
+                )}
+
+                <CardContent className="p-6 flex flex-col h-full">
+                  {/* 方案名稱 */}
+                  <div className="mb-3">
+                    <h3 className="text-xl font-bold text-slate-900 dark:text-white">
+                      {getPlanName(plan)}
+                    </h3>
+                  </div>
+
+                  {/* 價格 */}
+                  <div className="mb-5">
+                    <div className="flex items-baseline gap-1">
+                      <span className="text-3xl font-bold text-slate-900 dark:text-white">
+                        NT${price?.toLocaleString()}
+                      </span>
+                      <span className="text-sm text-slate-600 dark:text-slate-400">
+                        /
+                        {billingCycle === "yearly"
+                          ? t("year") || "年"
+                          : t("month") || "月"}
+                      </span>
                     </div>
-                  )}
-                </div>
-
-                {/* 每月篇數 */}
-                <div className="rounded-lg p-3 mb-4 bg-slate-100 dark:bg-white/5">
-                  <div className="flex items-center justify-center gap-2">
-                    <FileText className="h-5 w-5 text-cyber-violet-500" />
-                    <span className="text-lg font-bold text-slate-900 dark:text-white">
-                      {t("monthly") || "每月"}{" "}
-                      {plan.articles_per_month?.toLocaleString()}{" "}
-                      {t("articles") || "篇"}
-                    </span>
+                    {billingCycle === "yearly" && (
+                      <div className="text-sm mt-1 text-slate-500 dark:text-slate-400">
+                        {t("equivalentMonthly") || "約"} NT$
+                        {Math.round((price || 0) / 12).toLocaleString()}/
+                        {t("month") || "月"}
+                      </div>
+                    )}
                   </div>
-                  {billingCycle === "yearly" && yearlyBonus > 0 && (
-                    <div className="flex items-center justify-center gap-1 mt-2 text-sm text-cyber-magenta-500 dark:text-cyber-magenta-400">
-                      <Gift className="h-4 w-4" />
-                      <span className="font-medium">
-                        {t("bonusArticles") || "每月加贈"} {yearlyBonus}{" "}
+
+                  {/* 每月篇數 */}
+                  <div className="rounded-lg p-3 mb-4 bg-slate-100 dark:bg-white/5">
+                    <div className="flex items-center justify-center gap-2">
+                      <FileText className="h-5 w-5 text-cyber-violet-500" />
+                      <span className="text-lg font-bold text-slate-900 dark:text-white">
+                        {t("monthly") || "每月"}{" "}
+                        {plan.articles_per_month?.toLocaleString()}{" "}
                         {t("articles") || "篇"}
                       </span>
                     </div>
-                  )}
-                </div>
+                    {billingCycle === "yearly" && yearlyBonus > 0 && (
+                      <div className="flex items-center justify-center gap-1 mt-2 text-sm text-cyber-magenta-500 dark:text-cyber-magenta-400">
+                        <Gift className="h-4 w-4" />
+                        <span className="font-medium">
+                          {t("bonusArticles") || "每月加贈"} {yearlyBonus}{" "}
+                          {t("articles") || "篇"}
+                        </span>
+                      </div>
+                    )}
+                  </div>
 
-                {/* 功能列表 */}
-                <div className="flex-1">
-                  <ul className="space-y-2 text-sm mb-4 text-slate-700 dark:text-slate-300">
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-cyber-cyan-400" />
-                      {t("allAIModels") || "所有 AI 模型"}
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-cyber-cyan-400" />
-                      {t("wordpressIntegration") || "WordPress 整合"}
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-cyber-cyan-400" />
-                      {t("autoImageGen") || "自動圖片生成"}
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-cyber-cyan-400" />
-                      {t("scheduledPublish") || "排程發布"}
-                    </li>
-                  </ul>
-                </div>
+                  {/* 功能列表 */}
+                  <div className="flex-1">
+                    <ul className="space-y-2 text-sm mb-4 text-slate-700 dark:text-slate-300">
+                      <li className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-cyber-cyan-400" />
+                        {t("allAIModels") || "所有 AI 模型"}
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-cyber-cyan-400" />
+                        {t("wordpressIntegration") || "WordPress 整合"}
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-cyber-cyan-400" />
+                        {t("autoImageGen") || "自動圖片生成"}
+                      </li>
+                      <li className="flex items-center gap-2">
+                        <CheckCircle2 className="h-4 w-4 flex-shrink-0 text-cyber-cyan-400" />
+                        {t("scheduledPublish") || "排程發布"}
+                      </li>
+                    </ul>
+                  </div>
 
-                {/* 訂閱按鈕 */}
-                <Button
-                  size="sm"
-                  className={`w-full mt-auto font-bold ${
-                    isCurrentPlan
-                      ? "bg-slate-200 text-slate-500 hover:bg-slate-200 cursor-not-allowed"
-                      : !canSubscribe(plan)
-                        ? "bg-slate-300 text-slate-500 hover:bg-slate-300 cursor-not-allowed"
-                        : "bg-gradient-to-r from-cyber-violet-600 to-cyber-magenta-600 text-white hover:from-cyber-violet-500 hover:to-cyber-magenta-500"
-                  } shadow-lg`}
-                  onClick={() => handleSubscribe(plan)}
-                  disabled={
-                    loading === plan.id || isCurrentPlan || !canSubscribe(plan)
-                  }
-                >
-                  {loading === plan.id
-                    ? t("processing") || "處理中..."
-                    : isCurrentPlan
-                      ? t("currentPlan") || "目前方案"
-                      : !canSubscribe(plan)
-                        ? t("cannotDowngrade") || "無法降級"
-                        : t("subscribe") || "立即訂閱"}
-                </Button>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
+                  {/* 訂閱按鈕 */}
+                  <Button
+                    size="sm"
+                    className={`w-full mt-auto font-bold ${
+                      isCurrentPlan
+                        ? "bg-slate-200 text-slate-500 hover:bg-slate-200 cursor-not-allowed"
+                        : !canSubscribe(plan)
+                          ? "bg-slate-300 text-slate-500 hover:bg-slate-300 cursor-not-allowed"
+                          : "bg-gradient-to-r from-cyber-violet-600 to-cyber-magenta-600 text-white hover:from-cyber-violet-500 hover:to-cyber-magenta-500"
+                    } shadow-lg`}
+                    onClick={() => handleSubscribe(plan)}
+                    disabled={
+                      loading === plan.id ||
+                      isCurrentPlan ||
+                      !canSubscribe(plan)
+                    }
+                  >
+                    {loading === plan.id
+                      ? t("processing") || "處理中..."
+                      : isCurrentPlan
+                        ? t("currentPlan") || "目前方案"
+                        : !canSubscribe(plan)
+                          ? t("cannotDowngrade") || "無法降級"
+                          : t("subscribe") || "立即訂閱"}
+                  </Button>
+                </CardContent>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

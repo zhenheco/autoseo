@@ -18,6 +18,7 @@ import {
   validateInvoiceData,
   type InvoiceFormData,
 } from "@/components/billing/InvoiceForm";
+import { EmptyState } from "@/components/ui/empty-state";
 
 /**
  * 文章加購包資料類型
@@ -118,59 +119,63 @@ export function ArticlePackages({
         </div>
       </div>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {packages.map((pkg) => {
-          const isPopular = pkg.slug === "pack_5";
-          return (
-            <Card
-              key={pkg.id}
-              className={`relative ${isPopular ? "border-purple-500 shadow-lg" : "border-blue-500"}`}
-            >
-              {isPopular && (
-                <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-1 rounded-full text-sm font-medium">
-                  {t("greatValue")}
-                </div>
-              )}
-              <CardHeader>
-                <CardTitle className="text-2xl flex items-center gap-2">
-                  <FileText className="h-5 w-5 text-purple-600" />
-                  {pkg.name}
-                </CardTitle>
-                <CardDescription>
-                  {pkg.articles?.toLocaleString()} {t("articles")}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-4xl font-bold">
-                      NT${pkg.price?.toLocaleString()}
-                    </span>
+      {packages.length === 0 ? (
+        <EmptyState title={t("articlePackagePurchase") || "文章加購包"} />
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          {packages.map((pkg) => {
+            const isPopular = pkg.slug === "pack_5";
+            return (
+              <Card
+                key={pkg.id}
+                className={`relative ${isPopular ? "border-purple-500 shadow-lg" : "border-blue-500"}`}
+              >
+                {isPopular && (
+                  <div className="absolute -top-3 left-1/2 -translate-x-1/2 bg-gradient-to-r from-purple-600 to-pink-600 text-white px-4 py-1 rounded-full text-sm font-medium">
+                    {t("greatValue")}
                   </div>
-                  {pkg.description && (
-                    <p className="text-sm text-muted-foreground">
-                      {pkg.description}
+                )}
+                <CardHeader>
+                  <CardTitle className="text-2xl flex items-center gap-2">
+                    <FileText className="h-5 w-5 text-purple-600" />
+                    {pkg.name}
+                  </CardTitle>
+                  <CardDescription>
+                    {pkg.articles?.toLocaleString()} {t("articles")}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-4xl font-bold">
+                        NT${pkg.price?.toLocaleString()}
+                      </span>
+                    </div>
+                    {pkg.description && (
+                      <p className="text-sm text-muted-foreground">
+                        {pkg.description}
+                      </p>
+                    )}
+                    <p className="text-sm text-green-600">
+                      {t("oneTimePurchaseNeverExpires")}
                     </p>
-                  )}
-                  <p className="text-sm text-green-600">
-                    {t("oneTimePurchaseNeverExpires")}
-                  </p>
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button
-                  className="w-full"
-                  onClick={() => handlePurchase(pkg)}
-                  disabled={loading === pkg.id}
-                  variant={isPopular ? "default" : "outline"}
-                >
-                  {loading === pkg.id ? t("processing") : t("buyNow")}
-                </Button>
-              </CardFooter>
-            </Card>
-          );
-        })}
-      </div>
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Button
+                    className="w-full"
+                    onClick={() => handlePurchase(pkg)}
+                    disabled={loading === pkg.id}
+                    variant={isPopular ? "default" : "outline"}
+                  >
+                    {loading === pkg.id ? t("processing") : t("buyNow")}
+                  </Button>
+                </CardFooter>
+              </Card>
+            );
+          })}
+        </div>
+      )}
     </div>
   );
 }

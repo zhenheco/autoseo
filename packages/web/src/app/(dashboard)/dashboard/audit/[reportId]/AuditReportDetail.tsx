@@ -18,6 +18,7 @@ import { cn } from "@/lib/utils";
 import { scoreBadgeClass, type AuditSeverity } from "../AuditReportsList";
 import { AuditReviewCard } from "./_components/AuditReviewCard";
 import { BulkActionsBar } from "./_components/BulkActionsBar";
+import { EmptyState } from "@/components/ui/empty-state";
 
 export interface AuditIssueItem {
   id: string;
@@ -158,9 +159,10 @@ function ReviewIssueList({ issues }: { issues: AuditIssueItem[] }) {
 
   if (issues.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed p-8 text-sm text-muted-foreground">
-        No issues
-      </div>
+      <EmptyState
+        icon={<CheckCircle2 className="h-6 w-6" />}
+        title="No issues"
+      />
     );
   }
 
@@ -251,9 +253,10 @@ function IssueList({ issues }: { issues: AuditIssueItem[] }) {
 
   if (issues.length === 0) {
     return (
-      <div className="rounded-lg border border-dashed p-8 text-sm text-muted-foreground">
-        No issues
-      </div>
+      <EmptyState
+        icon={<CheckCircle2 className="h-6 w-6" />}
+        title="No issues"
+      />
     );
   }
 

@@ -253,6 +253,17 @@ describe("brands dashboard page", () => {
     ).toBeInTheDocument();
   });
 
+  it("renders the EmptyState when no brands are returned", async () => {
+    await renderPage({ brands: [], planSlug: "pro", websiteBrandIds: [] });
+
+    expect(
+      screen.getByRole("heading", { name: "No brands yet" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Create your first brand" }),
+    ).toBeInTheDocument();
+  });
+
   it("disables Add brand when the company is at its cap", async () => {
     await renderPage({ brands: [baseBrands[0]], planSlug: "solo" });
 

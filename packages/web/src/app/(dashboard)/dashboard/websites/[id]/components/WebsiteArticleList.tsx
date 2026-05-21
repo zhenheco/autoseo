@@ -22,6 +22,7 @@ import { formatDistanceToNow } from "date-fns";
 import { zhTW, enUS, ja } from "date-fns/locale";
 import { useMemo } from "react";
 import { useTranslations, useLocale } from "next-intl";
+import { EmptyState } from "@/components/ui/empty-state";
 
 interface Article {
   id: string;
@@ -235,10 +236,11 @@ export function WebsiteArticleList({
       <div className="flex-1 overflow-hidden">
         <div className="p-2 h-full overflow-y-auto">
           {combinedList.length === 0 ? (
-            <div className="text-center text-muted-foreground py-8">
-              <FileText className="h-12 w-12 mx-auto mb-2 opacity-50" />
-              <p>{t("noArticles")}</p>
-            </div>
+            <EmptyState
+              className="min-h-64"
+              icon={<FileText className="h-6 w-6" />}
+              title={t("noArticles")}
+            />
           ) : (
             combinedList.map((item) => {
               if (item.type === "job") {
