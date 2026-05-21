@@ -5,6 +5,8 @@ import { useLocale } from "next-intl";
 import { Navbar } from "@/components/layout/navbar";
 import { Hero as LegacyHero } from "@/components/home/hero";
 import { Hero as MarketingHero } from "@/components/marketing/Hero";
+import { HowItWorks } from "@/components/marketing/HowItWorks";
+import { Pain } from "@/components/marketing/Pain";
 import { ContrastAnchor } from "@/components/home/contrast-anchor";
 import { RevealDemo } from "@/components/home/reveal-demo";
 import { LogoWall } from "@/components/home/logo-wall";
@@ -38,7 +40,15 @@ export function HomeClient({ plans, articlePackages }: PricingProps) {
     <div className="bg-background min-h-screen text-foreground">
       <Navbar />
       <main>
-        {isLpV2Enabled ? <MarketingHero locale={locale} /> : <LegacyHero />}
+        {isLpV2Enabled ? (
+          <>
+            <MarketingHero locale={locale} />
+            <Pain />
+            <HowItWorks />
+          </>
+        ) : (
+          <LegacyHero />
+        )}
         <ContrastAnchor />
         <RevealDemo />
         <LogoWall />

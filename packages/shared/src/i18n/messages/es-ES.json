@@ -1991,6 +1991,51 @@
       "subheadline": "Desde el descubrimiento semanal de temas hasta la publicación multiplataforma y el ajuste de prompts guiado por resultados — 1wayseo convierte tu pipeline de contenido en un flywheel que mejora por sí mismo.",
       "primaryCta": "Probar gratis 7 días",
       "secondaryCta": "Ver precios"
+    },
+    "pain": {
+      "eyebrow": "Why content stalls",
+      "headline": "Most teams lose momentum before content has a chance to work.",
+      "subheadline": "1wayseo turns the three slowest parts of content marketing into a repeatable flywheel.",
+      "items": {
+        "speed": {
+          "title": "Writing is slow",
+          "body": "Drafting, outlining, and polishing one article can take days before it is ready to publish.",
+          "value": "Speed from article generation"
+        },
+        "reach": {
+          "title": "Published but no one reads",
+          "body": "A finished article has limited reach when it never becomes social posts, visual cards, or platform-ready assets.",
+          "value": "Reach from cards and social distribution"
+        },
+        "discovery": {
+          "title": "Can't decide what to write next",
+          "body": "Without trend signals, every content meeting starts from a blank page instead of market demand.",
+          "value": "Discovery from trend monitoring"
+        }
+      }
+    },
+    "how": {
+      "eyebrow": "How it works",
+      "headline": "A four-step content flywheel from signal to publishing.",
+      "subheadline": "Each cycle creates the next set of inputs, so your content plan improves instead of restarting.",
+      "steps": {
+        "discover": {
+          "title": "Topic discovery",
+          "description": "Trend signals surface timely angles your audience is already searching for."
+        },
+        "generate": {
+          "title": "Article generation",
+          "description": "Structured prompts turn the chosen angle into a publish-ready SEO article."
+        },
+        "cards": {
+          "title": "Card production",
+          "description": "The article becomes reusable visual cards for social channels."
+        },
+        "publish": {
+          "title": "Multi-platform publishing",
+          "description": "Publish across owned and social channels without rebuilding the campaign."
+        }
+      }
     }
   },
   "faq": {
