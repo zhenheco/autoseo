@@ -1,0 +1,49 @@
+name: Social Publish
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+concurrency:
+  group: social-publish
+  cancel-in-progress: false
+
+jobs:
+  social-publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run scheduled social publish
+        run: pnpm --dir packages/web exec tsx scripts/jobs/social-publish.ts
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          SOCIAL_TOKEN_MASTER_KEY: ${{ secrets.SOCIAL_TOKEN_MASTER_KEY }}
+          META_PUBLISH_ENABLED: ${{ vars.META_PUBLISH_ENABLED }}
+          X_PUBLISH_ENABLED: ${{ vars.X_PUBLISH_ENABLED }}
+          X_CLIENT_ID: ${{ secrets.X_CLIENT_ID }}
+          X_CLIENT_SECRET: ${{ secrets.X_CLIENT_SECRET }}
+          CF_EMAIL_API_URL: https://cf-email.acejou27.workers.dev
+          CF_EMAIL_API_KEY: ${{ secrets.CF_EMAIL_API_KEY }}
+          CF_EMAIL_FROM: ${{ secrets.CF_EMAIL_FROM }}
+          AMEGO_OPS_ALERT_EMAIL: ${{ secrets.OPS_ALERT_EMAIL }}

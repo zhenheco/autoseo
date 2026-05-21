@@ -54,6 +54,7 @@ type PublishDeps = {
   tokenCrypto: TokenCrypto;
   rateLimiter: RateLimiter;
   supabase: SupabaseServerClient;
+  rescheduleOnRateLimit?: boolean;
 };
 
 type SocialPublisherDeps = Partial<PublishDeps> & {
@@ -195,8 +196,12 @@ export function createSocialPublisher(
         }
       } catch (error) {
         if (error instanceof UpstreamRateLimitError) {
-          await rescheduleAfterBackoff(deps.supabase, input, error);
-          throw new PublishBackoffScheduledError(error.retryAt);
+          if (deps.rescheduleOnRateLimit !== false) {
+            await rescheduleAfterBackoff(deps.supabase, input, error);
+            throw new PublishBackoffScheduledError(error.retryAt);
+          }
+
+          throw error;
         }
 
         throw error;
