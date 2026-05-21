@@ -1884,6 +1884,14 @@
       }
     }
   },
+  "lp": {
+    "hero": {
+      "headline": "Your content marketing on autopilot.",
+      "subheadline": "From weekly topic discovery to multi-platform publishing and performance-driven prompt tuning — 1wayseo turns your content pipeline into a flywheel that improves itself.",
+      "primaryCta": "Start 7-day free trial",
+      "secondaryCta": "View pricing"
+    }
+  },
   "faq": {
     "title": "FAQ",
     "subtitle": "Have Questions?",

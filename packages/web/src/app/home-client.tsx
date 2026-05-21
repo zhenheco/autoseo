@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef } from "react";
+import { useLocale } from "next-intl";
 import { Navbar } from "@/components/layout/navbar";
-import { Hero } from "@/components/home/hero";
+import { Hero as LegacyHero } from "@/components/home/hero";
+import { Hero as MarketingHero } from "@/components/marketing/Hero";
 import { ContrastAnchor } from "@/components/home/contrast-anchor";
 import { RevealDemo } from "@/components/home/reveal-demo";
 import { LogoWall } from "@/components/home/logo-wall";
@@ -13,8 +15,11 @@ import { FooterSection } from "@/components/home/footer-section";
 import { getAnalyticsLocale, track } from "@/lib/analytics/events";
 import { PricingProps } from "@/types/pricing";
 
+const isLpV2Enabled = process.env.NEXT_PUBLIC_LP_V2_ENABLED === "true";
+
 export function HomeClient({ plans, articlePackages }: PricingProps) {
   const trackedPageView = useRef(false);
+  const locale = useLocale();
 
   useEffect(() => {
     if (trackedPageView.current) return;
@@ -33,7 +38,7 @@ export function HomeClient({ plans, articlePackages }: PricingProps) {
     <div className="bg-background min-h-screen text-foreground">
       <Navbar />
       <main>
-        <Hero />
+        {isLpV2Enabled ? <MarketingHero locale={locale} /> : <LegacyHero />}
         <ContrastAnchor />
         <RevealDemo />
         <LogoWall />

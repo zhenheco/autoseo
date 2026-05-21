@@ -1985,6 +1985,14 @@
       }
     }
   },
+  "lp": {
+    "hero": {
+      "headline": "Votre marketing de contenu en pilotage automatique.",
+      "subheadline": "De la découverte hebdomadaire de sujets à la publication multicanale et à l’optimisation des prompts par la performance — 1wayseo transforme votre pipeline de contenu en flywheel qui s’améliore tout seul.",
+      "primaryCta": "Essai gratuit de 7 jours",
+      "secondaryCta": "Voir les tarifs"
+    }
+  },
   "faq": {
     "title": "FAQ",
     "subtitle": "Des questions ?",

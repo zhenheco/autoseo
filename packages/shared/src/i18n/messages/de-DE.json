@@ -1985,6 +1985,14 @@
       }
     }
   },
+  "lp": {
+    "hero": {
+      "headline": "Content-Marketing auf Autopilot.",
+      "subheadline": "Von wöchentlicher Themenfindung über Multi-Platform-Publishing bis zu performancebasierter Prompt-Optimierung — 1wayseo verwandelt Ihre Content-Pipeline in ein Flywheel, das sich selbst verbessert.",
+      "primaryCta": "7 Tage kostenlos testen",
+      "secondaryCta": "Preise ansehen"
+    }
+  },
   "faq": {
     "title": "FAQ",
     "subtitle": "Haben Sie Fragen?",
