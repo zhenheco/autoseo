@@ -77,6 +77,9 @@ describe("brand layer schema migration", () => {
       target_audience: Database["public"]["Tables"]["brands"]["Row"]["target_audience"];
       value_props: string[] | null;
       is_default: boolean;
+      automation_level: number;
+      auto_articles_per_week: number;
+      auto_publish_to_social: boolean;
     }>();
 
     expectTypeOf<Tables<"brand_keywords">>().toMatchTypeOf<{

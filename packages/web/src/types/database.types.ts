@@ -263,6 +263,9 @@ export type Database = {
           created_at: string;
           updated_at: string;
           deleted_at: string | null;
+          automation_level: number;
+          auto_articles_per_week: number;
+          auto_publish_to_social: boolean;
         };
         Insert: {
           id?: string;
@@ -279,6 +282,9 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
           deleted_at?: string | null;
+          automation_level?: number;
+          auto_articles_per_week?: number;
+          auto_publish_to_social?: boolean;
         };
         Update: {
           id?: string;
@@ -295,6 +301,9 @@ export type Database = {
           created_at?: string;
           updated_at?: string;
           deleted_at?: string | null;
+          automation_level?: number;
+          auto_articles_per_week?: number;
+          auto_publish_to_social?: boolean;
         };
         Relationships: [
           {
