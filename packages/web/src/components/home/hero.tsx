@@ -4,6 +4,7 @@ import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { Button } from "@shared/ui/button";
+import { getAnalyticsLocale, track } from "@/lib/analytics/events";
 
 export function Hero() {
   const t = useTranslations("home.v6.hero");
@@ -37,6 +38,15 @@ export function Hero() {
           <Link href="/signup">
             <Button
               size="lg"
+              onClick={() =>
+                track({
+                  name: "cta_click",
+                  properties: {
+                    ctaId: "home-hero-start-trial",
+                    locale: getAnalyticsLocale(),
+                  },
+                })
+              }
               className="px-10 py-6 text-base font-semibold rounded-full bg-foreground text-background hover:bg-foreground/90 transition-all"
             >
               {t("cta")}

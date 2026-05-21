@@ -8,9 +8,22 @@
  * trackArticleGeneration("article-123", ["SEO", "行銷"]);
  */
 
+import { getPostHogClient } from "./posthog-client";
+
 // ================================================
 // 類型定義
 // ================================================
+
+declare global {
+  interface Window {
+    doNotTrack?: string;
+    gtag?: (...args: unknown[]) => void;
+  }
+
+  interface Navigator {
+    globalPrivacyControl?: boolean;
+  }
+}
 
 /** GA4 事件參數類型 */
 export interface GA4EventParams {
@@ -34,6 +47,29 @@ export interface PurchaseEventParams {
   }>;
 }
 
+export type FunnelEvent =
+  | { name: "lp_view"; properties: { locale: string; referer?: string } }
+  | { name: "cta_click"; properties: { ctaId: string; locale: string } }
+  | { name: "pricing_view"; properties: { locale: string } }
+  | { name: "signup_start"; properties: { method: "email" | "oauth" } }
+  | {
+      name: "signup_complete";
+      properties: { userId: string; companyId: string };
+    }
+  | {
+      name: "trial_card_added";
+      properties: { userId: string; trialId: string; cardBrand: string };
+    }
+  | {
+      name: "trial_converted";
+      properties: {
+        userId: string;
+        trialId: string;
+        planId: string;
+        amountUsd: number;
+      };
+    };
+
 // ================================================
 // 基礎追蹤函數
 // ================================================
@@ -45,6 +81,46 @@ function isGtagAvailable(): boolean {
   return typeof window !== "undefined" && typeof window.gtag === "function";
 }
 
+function getGtag(): ((...args: unknown[]) => void) | null {
+  return isGtagAvailable() ? (window.gtag ?? null) : null;
+}
+
+function isDoNotTrackEnabled(): boolean {
+  if (typeof navigator === "undefined") return false;
+
+  return (
+    navigator.doNotTrack === "1" ||
+    window.doNotTrack === "1" ||
+    navigator.globalPrivacyControl === true
+  );
+}
+
+export function getAnalyticsLocale(): string {
+  if (typeof document !== "undefined" && document.documentElement.lang) {
+    return document.documentElement.lang;
+  }
+
+  if (typeof navigator !== "undefined" && navigator.language) {
+    return navigator.language;
+  }
+
+  return "unknown";
+}
+
+export function track(event: FunnelEvent): void {
+  if (isDoNotTrackEnabled()) return;
+
+  const posthog = getPostHogClient();
+  if (!posthog) return;
+
+  posthog.capture(event.name, event.properties);
+
+  const gtag = getGtag();
+  if (gtag) {
+    gtag("event", event.name, event.properties);
+  }
+}
+
 /**
  * 通用事件追蹤
  * @param eventName 事件名稱
@@ -54,7 +130,10 @@ export function trackEvent(
   eventName: string,
   parameters?: GA4EventParams,
 ): void {
-  if (!isGtagAvailable()) {
+  if (isDoNotTrackEnabled()) return;
+
+  const gtag = getGtag();
+  if (!gtag) {
     // 開發環境記錄未追蹤的事件
     if (process.env.NODE_ENV === "development") {
       console.log("[GA4 Event - Not Tracked]", eventName, parameters);
@@ -62,7 +141,7 @@ export function trackEvent(
     return;
   }
 
-  window.gtag("event", eventName, parameters);
+  gtag("event", eventName, parameters);
 
   // 開發環境記錄
   if (process.env.NODE_ENV === "development") {
@@ -75,8 +154,9 @@ export function trackEvent(
  * @param properties 用戶屬性
  */
 export function setUserProperties(properties: Record<string, unknown>): void {
-  if (!isGtagAvailable()) return;
-  window.gtag("set", "user_properties", properties);
+  const gtag = getGtag();
+  if (!gtag) return;
+  gtag("set", "user_properties", properties);
 }
 
 /**
@@ -84,8 +164,9 @@ export function setUserProperties(properties: Record<string, unknown>): void {
  * @param userId 用戶 ID
  */
 export function setUserId(userId: string): void {
-  if (!isGtagAvailable()) return;
-  window.gtag("config", process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID, {
+  const gtag = getGtag();
+  if (!gtag) return;
+  gtag("config", process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID, {
     user_id: userId,
   });
 }

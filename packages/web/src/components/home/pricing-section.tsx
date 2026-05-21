@@ -1,11 +1,12 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Check, Zap } from "lucide-react";
 import { Button } from "@shared/ui/button";
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+import { getAnalyticsLocale, track } from "@/lib/analytics/events";
 import { PricingProps, ArticlePlan, ArticlePackage } from "@/types/pricing";
 
 /** Fallback mock plans when Supabase data is empty */
@@ -315,12 +316,51 @@ export function PricingSection({ plans, articlePackages }: PricingProps) {
   const [billingCycle, setBillingCycle] = useState<"monthly" | "yearly">(
     "yearly",
   );
+  const sectionRef = useRef<HTMLElement | null>(null);
+  const trackedPricingView = useRef(false);
 
   const hasRealPlans = plans && plans.length > 0;
   const hasPackages = articlePackages && articlePackages.length > 0;
 
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section || trackedPricingView.current) return;
+
+    const emitPricingView = () => {
+      if (trackedPricingView.current) return;
+      trackedPricingView.current = true;
+      track({
+        name: "pricing_view",
+        properties: { locale: getAnalyticsLocale() },
+      });
+    };
+
+    if (!("IntersectionObserver" in window)) {
+      emitPricingView();
+      return;
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          emitPricingView();
+          observer.disconnect();
+        }
+      },
+      { threshold: 0.25 },
+    );
+
+    observer.observe(section);
+
+    return () => observer.disconnect();
+  }, []);
+
   return (
-    <section className="section-padding relative overflow-hidden" id="pricing">
+    <section
+      ref={sectionRef}
+      className="section-padding relative overflow-hidden"
+      id="pricing"
+    >
       {/* Background Decor */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[1000px] h-[600px] bg-primary/5 blur-[160px] rounded-full -z-10" />
 

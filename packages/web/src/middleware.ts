@@ -140,6 +140,9 @@ export async function middleware(request: NextRequest) {
       "https://analytics.google.com",
       "https://region1.google-analytics.com",
       "https://stats.g.doubleclick.net",
+      // PostHog product analytics ingestion
+      "https://app.posthog.com",
+      "https://*.posthog.com",
       "https://searchconsole.googleapis.com",
       "https://analyticsdata.googleapis.com",
       "https://analyticsadmin.googleapis.com",

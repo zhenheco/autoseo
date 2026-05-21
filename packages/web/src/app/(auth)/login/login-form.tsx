@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
 import { isRedirectError } from "next/dist/client/components/redirect-error";
 import { useTranslations } from "next-intl";
@@ -15,7 +15,7 @@ import { Button } from "@shared/ui/button";
 import { Input } from "@shared/ui/input";
 import { Label } from "@shared/ui/label";
 import { Loader2 } from "lucide-react";
-import { trackLogin, trackSignUp } from "@/lib/analytics/events";
+import { track, trackLogin, trackSignUp } from "@/lib/analytics/events";
 
 /**
  * Google 圖示元件
@@ -77,6 +77,7 @@ export function LoginForm({
   const [success, setSuccess] = useState(initialSuccess || "");
   const [needsVerification, setNeedsVerification] = useState(false);
   const [alreadyRegistered, setAlreadyRegistered] = useState(false);
+  const hasTrackedSignupStart = useRef(false);
 
   // 當 URL 參數變化時更新模式
   useEffect(() => {
@@ -84,6 +85,13 @@ export function LoginForm({
       setMode(modeFromUrl);
     }
   }, [modeFromUrl, mode]);
+
+  useEffect(() => {
+    if (mode !== "signup" || hasTrackedSignupStart.current) return;
+
+    hasTrackedSignupStart.current = true;
+    track({ name: "signup_start", properties: { method: "email" } });
+  }, [mode]);
 
   /**
    * 處理 Google 登入
@@ -96,6 +104,7 @@ export function LoginForm({
     try {
       // 追蹤 Google 登入/註冊嘗試（因為會重定向，需要在這裡追蹤）
       if (mode === "signup") {
+        track({ name: "signup_start", properties: { method: "oauth" } });
         trackSignUp("google");
       } else {
         trackLogin("google");
@@ -159,9 +168,27 @@ export function LoginForm({
         } else if (result.needsVerification) {
           setSuccess(t("registerSuccess"));
           setNeedsVerification(true);
+          if (result.userId && result.companyId) {
+            track({
+              name: "signup_complete",
+              properties: {
+                userId: result.userId,
+                companyId: result.companyId,
+              },
+            });
+          }
           // 追蹤註冊成功（等待驗證）
           trackSignUp("email");
         } else {
+          if (result.userId && result.companyId) {
+            track({
+              name: "signup_complete",
+              properties: {
+                userId: result.userId,
+                companyId: result.companyId,
+              },
+            });
+          }
           // 追蹤註冊成功（直接登入）
           trackSignUp("email");
           router.push("/dashboard");

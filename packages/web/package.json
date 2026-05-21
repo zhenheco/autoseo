@@ -85,6 +85,8 @@
     "nodemailer": "^7.0.13",
     "openai": "^6.7.0",
     "pinyin-pro": "^3.27.0",
+    "posthog-js": "^1.374.4",
+    "posthog-node": "^5.34.9",
     "prismjs": "^1.30.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",

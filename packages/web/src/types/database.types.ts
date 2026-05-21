@@ -970,6 +970,13 @@ export type Database = {
           articles_per_month: number | null;
           billing_cycle: "monthly" | "yearly" | null;
           last_quota_reset_at: string | null;
+          provider: "stripe" | null;
+          stripe_customer_id: string | null;
+          stripe_subscription_id: string | null;
+          trial_ends_at: string | null;
+          trial_card_added_at: string | null;
+          currency: string | null;
+          billing_country: string | null;
           current_period_start: string | null;
           current_period_end: string | null;
           trial_end: string | null;
@@ -996,6 +1003,13 @@ export type Database = {
           articles_per_month?: number | null;
           billing_cycle?: "monthly" | "yearly" | null;
           last_quota_reset_at?: string | null;
+          provider?: "stripe" | null;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+          trial_ends_at?: string | null;
+          trial_card_added_at?: string | null;
+          currency?: string | null;
+          billing_country?: string | null;
           current_period_start?: string | null;
           current_period_end?: string | null;
           trial_end?: string | null;
@@ -1022,6 +1036,13 @@ export type Database = {
           articles_per_month?: number | null;
           billing_cycle?: "monthly" | "yearly" | null;
           last_quota_reset_at?: string | null;
+          provider?: "stripe" | null;
+          stripe_customer_id?: string | null;
+          stripe_subscription_id?: string | null;
+          trial_ends_at?: string | null;
+          trial_card_added_at?: string | null;
+          currency?: string | null;
+          billing_country?: string | null;
           current_period_start?: string | null;
           current_period_end?: string | null;
           trial_end?: string | null;
@@ -2269,6 +2290,222 @@ export type Database = {
             columns: ["translation_id"];
             isOneToOne: false;
             referencedRelation: "article_translations";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      invoices: {
+        Row: {
+          id: string;
+          stripe_invoice_id: string;
+          user_id: string | null;
+          company_id: string | null;
+          amount_usd: number;
+          amount_twd: number | null;
+          billing_country: string;
+          amego_invoice_number: string | null;
+          amego_issued_at: string | null;
+          amego_status:
+            | "pending"
+            | "issued"
+            | "failed"
+            | "not_applicable"
+            | null;
+          paid_at: string;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          stripe_invoice_id: string;
+          user_id?: string | null;
+          company_id?: string | null;
+          amount_usd: number;
+          amount_twd?: number | null;
+          billing_country: string;
+          amego_invoice_number?: string | null;
+          amego_issued_at?: string | null;
+          amego_status?:
+            | "pending"
+            | "issued"
+            | "failed"
+            | "not_applicable"
+            | null;
+          paid_at?: string;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          stripe_invoice_id?: string;
+          user_id?: string | null;
+          company_id?: string | null;
+          amount_usd?: number;
+          amount_twd?: number | null;
+          billing_country?: string;
+          amego_invoice_number?: string | null;
+          amego_issued_at?: string | null;
+          amego_status?:
+            | "pending"
+            | "issued"
+            | "failed"
+            | "not_applicable"
+            | null;
+          paid_at?: string;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "invoices_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "invoices_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      refunds: {
+        Row: {
+          id: string;
+          stripe_refund_id: string;
+          stripe_invoice_id: string;
+          user_id: string | null;
+          company_id: string | null;
+          amount_usd: number;
+          reason: string | null;
+          status: "pending" | "succeeded" | "failed" | "cancelled";
+          initiated_by: string | null;
+          initiated_at: string;
+          resolved_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          stripe_refund_id: string;
+          stripe_invoice_id: string;
+          user_id?: string | null;
+          company_id?: string | null;
+          amount_usd: number;
+          reason?: string | null;
+          status: "pending" | "succeeded" | "failed" | "cancelled";
+          initiated_by?: string | null;
+          initiated_at?: string;
+          resolved_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          stripe_refund_id?: string;
+          stripe_invoice_id?: string;
+          user_id?: string | null;
+          company_id?: string | null;
+          amount_usd?: number;
+          reason?: string | null;
+          status?: "pending" | "succeeded" | "failed" | "cancelled";
+          initiated_by?: string | null;
+          initiated_at?: string;
+          resolved_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "refunds_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "refunds_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      stripe_events: {
+        Row: {
+          stripe_event_id: string;
+          event_type: string;
+          received_at: string;
+          processed_at: string | null;
+          payload: Json;
+        };
+        Insert: {
+          stripe_event_id: string;
+          event_type: string;
+          received_at?: string;
+          processed_at?: string | null;
+          payload: Json;
+        };
+        Update: {
+          stripe_event_id?: string;
+          event_type?: string;
+          received_at?: string;
+          processed_at?: string | null;
+          payload?: Json;
+        };
+        Relationships: [];
+      };
+      trials: {
+        Row: {
+          id: string;
+          user_id: string;
+          company_id: string;
+          plan_id: string;
+          started_at: string;
+          ends_at: string;
+          converted_at: string | null;
+          cancelled_at: string | null;
+          stripe_subscription_id: string | null;
+          card_brand: string | null;
+          card_last4: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          company_id: string;
+          plan_id: string;
+          started_at?: string;
+          ends_at: string;
+          converted_at?: string | null;
+          cancelled_at?: string | null;
+          stripe_subscription_id?: string | null;
+          card_brand?: string | null;
+          card_last4?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          company_id?: string;
+          plan_id?: string;
+          started_at?: string;
+          ends_at?: string;
+          converted_at?: string | null;
+          cancelled_at?: string | null;
+          stripe_subscription_id?: string | null;
+          card_brand?: string | null;
+          card_last4?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "trials_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "trials_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
             referencedColumns: ["id"];
           },
         ];

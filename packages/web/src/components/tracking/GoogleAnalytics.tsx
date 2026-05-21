@@ -11,7 +11,7 @@ const GA_MEASUREMENT_ID = "G-XB62S72WFN";
 declare global {
   interface Window {
     dataLayer: unknown[];
-    gtag: (...args: unknown[]) => void;
+    gtag?: (...args: unknown[]) => void;
   }
 }
 

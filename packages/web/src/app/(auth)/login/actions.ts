@@ -68,6 +68,8 @@ export async function signUpWithEmail(
   error?: string;
   needsVerification?: boolean;
   alreadyRegistered?: boolean;
+  userId?: string;
+  companyId?: string;
 }> {
   try {
     const result = await authSignUp(email, password);
@@ -75,10 +77,14 @@ export async function signUpWithEmail(
     // 檢查是否需要驗證郵件
     // Supabase 會發送驗證郵件，用戶需要點擊連結確認
     if (result.user && !result.user.email_confirmed_at) {
-      return { needsVerification: true };
+      return {
+        needsVerification: true,
+        userId: result.user.id,
+        companyId: result.company.id,
+      };
     }
 
-    return {};
+    return { userId: result.user.id, companyId: result.company.id };
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "註冊失敗，請稍後再試";

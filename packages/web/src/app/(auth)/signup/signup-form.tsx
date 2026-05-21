@@ -1,9 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { signInWithGoogle } from "./actions";
 import { Button } from "@shared/ui/button";
 import { Loader2 } from "lucide-react";
+import { track } from "@/lib/analytics/events";
 
 function GoogleIcon({ className }: { className?: string }) {
   return (
@@ -35,6 +36,14 @@ interface SignupFormProps {
 
 export function SignupForm({ error, success }: SignupFormProps) {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const hasTrackedSignupStart = useRef(false);
+
+  useEffect(() => {
+    if (hasTrackedSignupStart.current) return;
+
+    hasTrackedSignupStart.current = true;
+    track({ name: "signup_start", properties: { method: "oauth" } });
+  }, []);
 
   return (
     <>
@@ -53,6 +62,7 @@ export function SignupForm({ error, success }: SignupFormProps) {
       <form
         action={async () => {
           setIsGoogleLoading(true);
+          track({ name: "signup_start", properties: { method: "oauth" } });
           await signInWithGoogle();
         }}
       >
