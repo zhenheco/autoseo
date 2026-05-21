@@ -1078,6 +1078,56 @@ export type Database = {
           },
         ];
       };
+      article_performance: {
+        Row: {
+          article_id: string;
+          date: string;
+          source: "ga4" | "gsc" | "wordpress" | "social";
+          pageviews: number;
+          unique_visitors: number;
+          avg_session_seconds: number | null;
+          conversions: number;
+          ctr: number | null;
+          position: number | null;
+          raw_metadata: Json | null;
+          created_at: string;
+        };
+        Insert: {
+          article_id: string;
+          date: string;
+          source: "ga4" | "gsc" | "wordpress" | "social";
+          pageviews?: number;
+          unique_visitors?: number;
+          avg_session_seconds?: number | null;
+          conversions?: number;
+          ctr?: number | null;
+          position?: number | null;
+          raw_metadata?: Json | null;
+          created_at?: string;
+        };
+        Update: {
+          article_id?: string;
+          date?: string;
+          source?: "ga4" | "gsc" | "wordpress" | "social";
+          pageviews?: number;
+          unique_visitors?: number;
+          avg_session_seconds?: number | null;
+          conversions?: number;
+          ctr?: number | null;
+          position?: number | null;
+          raw_metadata?: Json | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "article_performance_article_id_fkey";
+            columns: ["article_id"];
+            isOneToOne: false;
+            referencedRelation: "generated_articles";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       company_subscriptions: {
         Row: {
           id: string;
