@@ -1,0 +1,63 @@
+name: Analytics Ingest
+
+on:
+  schedule:
+    - cron: "0 23 * * *"
+  workflow_dispatch:
+    inputs:
+      date:
+        description: "UTC date to ingest (YYYY-MM-DD). Defaults to yesterday."
+        required: false
+      brand_id:
+        description: "Optional brand id to ingest."
+        required: false
+
+concurrency:
+  group: analytics-ingest
+  cancel-in-progress: false
+
+jobs:
+  analytics-ingest:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 9
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run analytics ingest
+        run: |
+          args=()
+          if [ -n "${{ github.event.inputs.date }}" ]; then
+            args+=("--date=${{ github.event.inputs.date }}")
+          fi
+          if [ -n "${{ github.event.inputs.brand_id }}" ]; then
+            args+=("--brand-id=${{ github.event.inputs.brand_id }}")
+          fi
+          pnpm --dir packages/web exec tsx scripts/jobs/analytics-ingest.ts "${args[@]}"
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GA4_ACCESS_TOKEN: ${{ secrets.GA4_ACCESS_TOKEN }}
+          GOOGLE_ANALYTICS_ACCESS_TOKEN: ${{ secrets.GOOGLE_ANALYTICS_ACCESS_TOKEN }}
+          GA4_PROPERTY_ID: ${{ secrets.GA4_PROPERTY_ID }}
+          GA4_API_BASE_URL: ${{ secrets.GA4_API_BASE_URL }}
+          GSC_ACCESS_TOKEN: ${{ secrets.GSC_ACCESS_TOKEN }}
+          GOOGLE_SEARCH_CONSOLE_ACCESS_TOKEN: ${{ secrets.GOOGLE_SEARCH_CONSOLE_ACCESS_TOKEN }}
+          GSC_SITE_URL: ${{ secrets.GSC_SITE_URL }}
+          GSC_API_BASE_URL: ${{ secrets.GSC_API_BASE_URL }}
