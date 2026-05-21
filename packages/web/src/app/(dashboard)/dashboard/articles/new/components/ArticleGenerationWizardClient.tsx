@@ -52,6 +52,8 @@ type GenerateResponse = {
 type ArticleGenerationWizardClientProps = {
   brands: BrandOption[];
   activeBrandId: string | null;
+  initialTopic?: string | null;
+  initialTrendSignalId?: string | null;
 };
 
 const DEFAULT_DRAFT: WizardDraft = {
@@ -136,6 +138,8 @@ function confidencePercent(confidence: number) {
 export function ArticleGenerationWizardClient({
   brands,
   activeBrandId,
+  initialTopic,
+  initialTrendSignalId,
 }: ArticleGenerationWizardClientProps) {
   const router = useRouter();
   const fallbackBrandId = activeBrandId ?? brands[0]?.id ?? null;
@@ -158,11 +162,21 @@ export function ArticleGenerationWizardClient({
 
   useEffect(() => {
     if (!selectedBrandId) return;
-    setDraft(readDraft(selectedBrandId));
+    const savedDraft = readDraft(selectedBrandId);
+    setDraft({
+      ...savedDraft,
+      ...(initialTopic
+        ? {
+            topic: initialTopic,
+            selectedSignalId: initialTrendSignalId ?? null,
+            topicTemplate: null,
+          }
+        : {}),
+    });
     setStepError(null);
     setSubmitError(null);
     setIsDraftLoaded(true);
-  }, [selectedBrandId]);
+  }, [initialTopic, initialTrendSignalId, selectedBrandId]);
 
   useEffect(() => {
     if (!selectedBrandId || !isDraftLoaded) return;

@@ -9,6 +9,8 @@ type NewArticlePageProps = {
 
 type NewArticleSearchParams = {
   brand?: string;
+  topic?: string;
+  trend?: string;
 };
 
 export const dynamic = "force-dynamic";
@@ -40,6 +42,8 @@ export default async function NewArticlePage({
     <ArticleGenerationWizardClient
       brands={brands.map((brand) => ({ id: brand.id, name: brand.name }))}
       activeBrandId={activeBrand?.id ?? null}
+      initialTopic={params.topic ?? null}
+      initialTrendSignalId={params.trend ?? null}
     />
   );
 }
