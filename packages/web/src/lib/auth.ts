@@ -15,15 +15,42 @@ function generateSlug(email: string): string {
   return `${username}-${random}`;
 }
 
-export async function signUp(email: string, password: string) {
+async function createDefaultBrand(
+  adminClient: ReturnType<typeof createAdminClient>,
+  input: { companyId: string; companyName: string },
+) {
+  const { error } = await adminClient.from("brands").insert({
+    company_id: input.companyId,
+    name: input.companyName,
+    is_default: true,
+  });
+
+  if (error) {
+    console.error("[註冊失敗] 建立預設品牌失敗", error);
+    throw error;
+  }
+}
+
+export async function signUp(
+  email: string,
+  password: string,
+  options: { nextPath?: string } = {},
+) {
   const supabase = await createClient();
   const adminClient = createAdminClient();
+  const emailRedirectUrl = new URL(
+    "/auth/confirm",
+    process.env.NEXT_PUBLIC_APP_URL || "https://1wayseo.com",
+  );
+  if (options.nextPath) {
+    emailRedirectUrl.searchParams.set("next", options.nextPath);
+  }
 
   const { data: authData, error: authError } = await supabase.auth.signUp({
     email,
     password,
     options: {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_APP_URL || "https://1wayseo.com"}/auth/confirm`,
+      emailRedirectTo: emailRedirectUrl.toString(),
     },
   });
 
@@ -68,6 +95,12 @@ export async function signUp(email: string, password: string) {
     throw memberError;
   }
   console.log("[註冊] Step 3 完成: 成員記錄建立成功");
+
+  await createDefaultBrand(adminClient, {
+    companyId: company.id,
+    companyName: company.name,
+  });
+  console.log("[註冊] Step 3.5 完成: 預設品牌建立成功");
 
   console.log("[註冊] Step 4: 查詢免費方案...");
   const { data: freePlan, error: planError } = await adminClient

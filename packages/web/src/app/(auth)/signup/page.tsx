@@ -7,7 +7,12 @@ import { redirect } from "next/navigation";
 export default async function SignupPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; success?: string; ref?: string }>;
+  searchParams: Promise<{
+    error?: string;
+    success?: string;
+    ref?: string;
+    plan?: string;
+  }>;
 }) {
   const params = await searchParams;
 
@@ -24,6 +29,9 @@ export default async function SignupPage({
   }
   if (params.ref) {
     url.searchParams.set("ref", params.ref);
+  }
+  if (params.plan) {
+    url.searchParams.set("plan", params.plan);
   }
 
   // 重定向到登入頁面的註冊模式

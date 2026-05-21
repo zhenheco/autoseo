@@ -15,6 +15,9 @@ class MockStripeSdk implements StripeSdk {
       ) => Promise<Stripe.Response<Stripe.Checkout.Session>>
     >();
 
+  readonly checkoutSessionsRetrieve =
+    vi.fn<(id: string) => Promise<Stripe.Response<Stripe.Checkout.Session>>>();
+
   readonly billingPortalSessionsCreate =
     vi.fn<
       (
@@ -36,6 +39,7 @@ class MockStripeSdk implements StripeSdk {
   readonly checkout = {
     sessions: {
       create: this.checkoutSessionsCreate,
+      retrieve: this.checkoutSessionsRetrieve,
     },
   };
 
@@ -143,6 +147,21 @@ describe("StripeSdkClient", () => {
       customer: "cus_test_123",
       return_url: "https://app.example.com/dashboard/billing",
     });
+  });
+
+  it("retrieves a checkout session by id", async () => {
+    const session = stripeResponse({
+      id: "cs_test_123",
+      object: "checkout.session",
+      mode: "subscription",
+      payment_status: "no_payment_required",
+    } as Stripe.Checkout.Session);
+    stripe.checkoutSessionsRetrieve.mockResolvedValue(session);
+
+    await expect(client.retrieveCheckoutSession("cs_test_123")).resolves.toBe(
+      session,
+    );
+    expect(stripe.checkoutSessionsRetrieve).toHaveBeenCalledWith("cs_test_123");
   });
 
   it("propagates Stripe SDK failures while creating a customer portal session", async () => {

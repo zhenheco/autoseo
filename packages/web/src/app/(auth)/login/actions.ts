@@ -5,21 +5,32 @@ import { createClient } from "@shared/supabase";
 import { signUp as authSignUp, signIn as authSignIn } from "@/lib/auth";
 import { headers } from "next/headers";
 import { createLogger } from "@/lib/logger";
+import { isStripePlanId } from "@/lib/payments/stripe/price-ids";
 
 const logger = createLogger("auth");
+const DEFAULT_PLAN_ID = "solo_monthly";
+
+function normalizePlanId(plan?: string): string {
+  return plan && isStripePlanId(plan) ? plan : DEFAULT_PLAN_ID;
+}
 
 /**
  * 使用 Google OAuth 登入
  */
-export async function signInWithGoogle() {
+export async function signInWithGoogle(plan?: string) {
   const supabase = await createClient();
   // 優先使用環境變數，避免 origin header 被偽造
   const origin = process.env.NEXT_PUBLIC_APP_URL || "https://1wayseo.com";
+  const nextPath = plan
+    ? `/onboarding/billing?plan=${encodeURIComponent(normalizePlanId(plan))}`
+    : "/dashboard";
+  const redirectUrl = new URL("/auth/callback", origin);
+  redirectUrl.searchParams.set("next", nextPath);
 
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: "google",
     options: {
-      redirectTo: `${origin}/auth/callback`,
+      redirectTo: redirectUrl.toString(),
       queryParams: {
         access_type: "offline",
         prompt: "consent",
@@ -64,15 +75,18 @@ export async function signInWithEmail(
 export async function signUpWithEmail(
   email: string,
   password: string,
+  plan?: string,
 ): Promise<{
   error?: string;
   needsVerification?: boolean;
   alreadyRegistered?: boolean;
   userId?: string;
   companyId?: string;
+  redirectTo?: string;
 }> {
   try {
-    const result = await authSignUp(email, password);
+    const redirectTo = `/onboarding/billing?plan=${encodeURIComponent(normalizePlanId(plan))}`;
+    const result = await authSignUp(email, password, { nextPath: redirectTo });
 
     // 檢查是否需要驗證郵件
     // Supabase 會發送驗證郵件，用戶需要點擊連結確認
@@ -81,10 +95,11 @@ export async function signUpWithEmail(
         needsVerification: true,
         userId: result.user.id,
         companyId: result.company.id,
+        redirectTo,
       };
     }
 
-    return { userId: result.user.id, companyId: result.company.id };
+    return { userId: result.user.id, companyId: result.company.id, redirectTo };
   } catch (error) {
     const errorMessage =
       error instanceof Error ? error.message : "註冊失敗，請稍後再試";

@@ -7,12 +7,18 @@ function generateSlug(email: string): string {
   return `${username}-${random}`;
 }
 
+function safeNextPath(rawNext: string): string {
+  return rawNext.startsWith("/") && !rawNext.startsWith("//")
+    ? rawNext
+    : "/dashboard";
+}
+
 export async function GET(request: Request) {
   const { searchParams, origin } = new URL(request.url);
   const code = searchParams.get("code");
   const rawNext = searchParams.get("next") ?? "/dashboard";
-  // 防止 Open Redirect：只允許相對路徑
-  const next = rawNext.startsWith("/") ? rawNext : "/dashboard";
+  // 防止 Open Redirect：只允許相對路徑，並拒絕 protocol-relative URL。
+  const next = safeNextPath(rawNext);
 
   if (code) {
     const supabase = await createClient();
@@ -46,12 +52,40 @@ export async function GET(request: Request) {
           .single();
 
         if (!companyError && company) {
-          await adminClient.from("company_members").insert({
-            company_id: company.id,
-            user_id: user.id,
-            role: "owner",
-            status: "active",
-          });
+          const { error: memberError } = await adminClient
+            .from("company_members")
+            .insert({
+              company_id: company.id,
+              user_id: user.id,
+              role: "owner",
+              status: "active",
+            });
+
+          if (memberError) {
+            await adminClient.from("companies").delete().eq("id", company.id);
+            return NextResponse.redirect(
+              `${origin}/login?error=${encodeURIComponent("公司成員建立失敗，請稍後再試")}`,
+            );
+          }
+
+          const { error: brandError } = await adminClient
+            .from("brands")
+            .insert({
+              company_id: company.id,
+              name: company.name,
+              is_default: true,
+            });
+
+          if (brandError) {
+            await adminClient
+              .from("company_members")
+              .delete()
+              .eq("company_id", company.id);
+            await adminClient.from("companies").delete().eq("id", company.id);
+            return NextResponse.redirect(
+              `${origin}/login?error=${encodeURIComponent("預設品牌建立失敗，請稍後再試")}`,
+            );
+          }
 
           // 使用 slug 查詢（與 Email 註冊統一）
           const { data: freePlan } = await adminClient

@@ -9,7 +9,12 @@ type AuthMode = "signin" | "signup" | "forgot";
 export default async function LoginPage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string; success?: string; mode?: string }>;
+  searchParams: Promise<{
+    error?: string;
+    success?: string;
+    mode?: string;
+    plan?: string;
+  }>;
 }) {
   const params = await searchParams;
   const t = await getTranslations("auth");
@@ -58,13 +63,16 @@ export default async function LoginPage({
         <div className="bg-card border border-border rounded-2xl p-8 shadow-lg">
           <Suspense
             fallback={
-              <div className="text-center text-muted-foreground">{t("loading")}</div>
+              <div className="text-center text-muted-foreground">
+                {t("loading")}
+              </div>
             }
           >
             <LoginForm
               error={params.error}
               success={params.success}
               initialMode={mode}
+              initialPlan={params.plan}
             />
           </Suspense>
         </div>

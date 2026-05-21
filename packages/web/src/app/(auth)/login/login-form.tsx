@@ -49,6 +49,7 @@ interface LoginFormProps {
   error?: string;
   success?: string;
   initialMode?: AuthMode;
+  initialPlan?: string;
 }
 
 /**
@@ -59,6 +60,7 @@ export function LoginForm({
   error: initialError,
   success: initialSuccess,
   initialMode = "signin",
+  initialPlan,
 }: LoginFormProps) {
   const t = useTranslations("auth");
   const router = useRouter();
@@ -66,6 +68,7 @@ export function LoginForm({
 
   // 從 URL 參數讀取初始模式
   const modeFromUrl = searchParams.get("mode") as AuthMode | null;
+  const planId = searchParams.get("plan") || initialPlan || "solo_monthly";
 
   const [mode, setMode] = useState<AuthMode>(modeFromUrl || initialMode);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
@@ -109,7 +112,7 @@ export function LoginForm({
       } else {
         trackLogin("google");
       }
-      await signInWithGoogle();
+      await signInWithGoogle(mode === "signup" ? planId : undefined);
     } catch (err) {
       // Next.js redirect() 會拋出 NEXT_REDIRECT 錯誤，需要重新拋出讓框架處理
       if (isRedirectError(err)) {
@@ -158,7 +161,7 @@ export function LoginForm({
           return;
         }
 
-        const result = await signUpWithEmail(email, password);
+        const result = await signUpWithEmail(email, password, planId);
         if (result.error) {
           setError(result.error);
           // 如果是「已註冊」的情況，設置標記以顯示特殊 UI
@@ -191,7 +194,9 @@ export function LoginForm({
           }
           // 追蹤註冊成功（直接登入）
           trackSignUp("email");
-          router.push("/dashboard");
+          router.push(
+            result.redirectTo || `/onboarding/billing?plan=${planId}`,
+          );
         }
       } else {
         // 登入模式

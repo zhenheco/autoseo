@@ -8,6 +8,7 @@ export interface StripeClient {
   createCheckoutSession(
     input: CheckoutInput,
   ): Promise<{ url: string; sessionId: string }>;
+  retrieveCheckoutSession(sessionId: string): Promise<Stripe.Checkout.Session>;
   createCustomerPortalSession(input: PortalInput): Promise<{ url: string }>;
   verifyWebhookSignature(
     payload: string | Buffer,
@@ -40,6 +41,7 @@ export interface StripeSdk {
       create(
         params: Stripe.Checkout.SessionCreateParams,
       ): Promise<Stripe.Response<Stripe.Checkout.Session>>;
+      retrieve(id: string): Promise<Stripe.Response<Stripe.Checkout.Session>>;
     };
   };
   billingPortal: {
@@ -93,6 +95,12 @@ export class StripeSdkClient implements StripeClient {
       url: session.url,
       sessionId: session.id,
     };
+  }
+
+  async retrieveCheckoutSession(
+    sessionId: string,
+  ): Promise<Stripe.Checkout.Session> {
+    return this.stripe.checkout.sessions.retrieve(sessionId);
   }
 
   async createCustomerPortalSession(
