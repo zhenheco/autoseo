@@ -1986,6 +1986,45 @@
         "body": "TODO: Ace will add the first founder story here once the founding cohort is ready.",
         "attribution": "TODO: Placeholder for Ace"
       }
+    },
+    "pricing": {
+      "eyebrow": "TODO: Pricing",
+      "headline": "TODO: Start lean, then scale the content flywheel.",
+      "subheadline": "TODO: Choose the plan that matches your publishing rhythm. Every plan includes a 7-day free trial.",
+      "billingToggleLabel": "TODO: Billing period",
+      "billing": {
+        "monthly": "Monthly",
+        "yearly": "Yearly"
+      },
+      "period": {
+        "monthly": "/mo",
+        "yearly": "/yr"
+      },
+      "cta": "TODO: Start 7-day free trial",
+      "popular": "TODO: Most popular",
+      "approxTwd": "TODO: approx. NT$ {amount}",
+      "plans": {
+        "solo": {
+          "name": "Solo",
+          "description": "TODO: For founders and solo marketers running one focused content engine.",
+          "features": [
+            "TODO: Weekly topic discovery",
+            "TODO: SEO article generation",
+            "TODO: Social card production",
+            "TODO: Brand memory for one workspace"
+          ]
+        },
+        "pro": {
+          "name": "Pro",
+          "description": "TODO: For teams that publish across more channels and need a faster loop.",
+          "features": [
+            "TODO: Everything in Solo",
+            "TODO: Higher article and card volume",
+            "TODO: Multi-platform publishing workflows",
+            "TODO: Weekly optimization insights"
+          ]
+        }
+      }
     }
   },
   "faq": {

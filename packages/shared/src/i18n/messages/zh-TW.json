@@ -1986,6 +1986,45 @@
         "body": "Ace 之後會在這裡補上第一則創辦人故事。在此之前，這個區塊會保持誠實，不使用假的客戶 logo 或虛構見證。",
         "attribution": "Ace 待補"
       }
+    },
+    "pricing": {
+      "eyebrow": "定價",
+      "headline": "先用精簡方案啟動，再把內容飛輪放大。",
+      "subheadline": "依照你的發布節奏選擇方案。每個方案都包含 7 天免費試用。",
+      "billingToggleLabel": "計費週期",
+      "billing": {
+        "monthly": "月繳",
+        "yearly": "年繳"
+      },
+      "period": {
+        "monthly": "/月",
+        "yearly": "/年"
+      },
+      "cta": "免費試用 7 天",
+      "popular": "最受歡迎",
+      "approxTwd": "約 NT$ {amount}",
+      "plans": {
+        "solo": {
+          "name": "Solo",
+          "description": "適合創辦人與個人行銷者，經營一條聚焦的內容產線。",
+          "features": [
+            "每週選題建議",
+            "SEO 文章生成",
+            "社群圖卡製作",
+            "單一工作區品牌記憶"
+          ]
+        },
+        "pro": {
+          "name": "Pro",
+          "description": "適合需要跨平台發布、加快內容循環的團隊。",
+          "features": [
+            "包含 Solo 全部功能",
+            "更高文章與圖卡產量",
+            "多平台發布流程",
+            "每週成效優化洞察"
+          ]
+        }
+      }
     }
   },
   "faq": {

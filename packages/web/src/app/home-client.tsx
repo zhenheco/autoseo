@@ -8,6 +8,7 @@ import { Hero as MarketingHero } from "@/components/marketing/Hero";
 import { Features } from "@/components/marketing/Features";
 import { HowItWorks } from "@/components/marketing/HowItWorks";
 import { Pain } from "@/components/marketing/Pain";
+import { Pricing } from "@/components/marketing/Pricing";
 import { SocialProof } from "@/components/marketing/SocialProof";
 import { ContrastAnchor } from "@/components/home/contrast-anchor";
 import { RevealDemo } from "@/components/home/reveal-demo";
@@ -49,6 +50,7 @@ export function HomeClient({ plans, articlePackages }: PricingProps) {
             <HowItWorks />
             <Features />
             <SocialProof />
+            <Pricing locale={locale} />
           </>
         ) : (
           <LegacyHero />
@@ -57,7 +59,9 @@ export function HomeClient({ plans, articlePackages }: PricingProps) {
         <RevealDemo />
         <LogoWall />
         <ScenarioCards />
-        <PricingSection plans={plans} articlePackages={articlePackages} />
+        {!isLpV2Enabled ? (
+          <PricingSection plans={plans} articlePackages={articlePackages} />
+        ) : null}
         <ClosingCTANew />
       </main>
       <FooterSection />

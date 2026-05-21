@@ -72,6 +72,25 @@ const socialKeys = [
   "story.body",
   "story.attribution",
 ];
+const pricingKeys = [
+  "eyebrow",
+  "headline",
+  "subheadline",
+  "billingToggleLabel",
+  "billing.monthly",
+  "billing.yearly",
+  "period.monthly",
+  "period.yearly",
+  "cta",
+  "popular",
+  "approxTwd",
+  "plans.solo.name",
+  "plans.solo.description",
+  "plans.solo.features",
+  "plans.pro.name",
+  "plans.pro.description",
+  "plans.pro.features",
+];
 
 function getNestedMessage(
   messages: Record<string, unknown>,
@@ -155,6 +174,24 @@ describe("lp social locale coverage", () => {
 
         expect(value).toEqual(expect.any(String));
         expect(value).not.toBe("");
+      }
+    },
+  );
+});
+
+describe("lp pricing locale coverage", () => {
+  it.each(Object.entries(localeMessages))(
+    "has lp.pricing copy in %s",
+    (_locale, messages) => {
+      for (const key of pricingKeys) {
+        const value = getNestedMessage(messages.lp.pricing, key);
+
+        if (key.endsWith(".features")) {
+          expect(value).toEqual(expect.arrayContaining([expect.any(String)]));
+        } else {
+          expect(value).toEqual(expect.any(String));
+          expect(value).not.toBe("");
+        }
       }
     },
   );
