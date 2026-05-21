@@ -6,20 +6,36 @@ const supabaseMocks = vi.hoisted(() => ({
 
 vi.mock("@shared/supabase", () => supabaseMocks);
 
-type TableName = "shopline_gdpr_redact_log";
+type TableName = "audit_lead_inquiries" | "shopline_gdpr_redact_log";
 
-function createSupabaseMock() {
+function createSupabaseMock(options: { scrubbedRows?: unknown[] } = {}) {
   const calls: Array<{ table: string; method: string; args: unknown[] }> = [];
 
   return {
     calls,
     from(table: TableName) {
-      return {
+      const builder = {
         insert(payload: unknown) {
           calls.push({ table, method: "insert", args: [payload] });
           return Promise.resolve({ data: null, error: null });
         },
+        update(...args: unknown[]) {
+          calls.push({ table, method: "update", args });
+          return builder;
+        },
+        eq(...args: unknown[]) {
+          calls.push({ table, method: "eq", args });
+          return builder;
+        },
+        select(...args: unknown[]) {
+          calls.push({ table, method: "select", args });
+          return Promise.resolve({
+            data: options.scrubbedRows ?? [],
+            error: null,
+          });
+        },
       };
+      return builder;
     },
   };
 }
@@ -120,5 +136,49 @@ describe("POST /api/shopline/webhooks/gdpr-customer-redact", () => {
         }),
       ],
     });
+  });
+
+  it("scrubs audit lead inquiries when the payload includes a customer email", async () => {
+    const body = {
+      shop_id: "shop-1",
+      shop_domain: "demo.myshopline.com",
+      customer: {
+        id: "customer-1",
+        email: "Customer@Example.com",
+        phone: "+15555550100",
+      },
+    };
+    const supabase = createSupabaseMock({
+      scrubbedRows: [{ id: "lead-1" }],
+    });
+    supabaseMocks.createAdminClient.mockReturnValue(supabase);
+
+    const response = await post(body, {
+      "X-SHOPLINE-Hmac-Sha256": await signBody(body),
+    });
+
+    expect(response.status).toBe(200);
+    expect(supabase.calls).toContainEqual({
+      table: "audit_lead_inquiries",
+      method: "update",
+      args: [{ email: null }],
+    });
+    expect(supabase.calls).toContainEqual({
+      table: "audit_lead_inquiries",
+      method: "eq",
+      args: ["email", "customer@example.com"],
+    });
+    const logCall = supabase.calls.find(
+      (call) =>
+        call.table === "shopline_gdpr_redact_log" && call.method === "insert",
+    );
+    expect(logCall?.args[0]).toEqual(
+      expect.objectContaining({
+        payload_summary: "customer email scrubbed: 1 row",
+      }),
+    );
+    expect(JSON.stringify(logCall?.args[0])).not.toContain(
+      "customer@example.com",
+    );
   });
 });

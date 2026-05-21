@@ -29,13 +29,35 @@ export async function POST(request: Request) {
   }
 
   const supabase = createAdminClient();
+  const email = normalizeEmail(payload.customer?.email);
+  let scrubbedRows = 0;
+
+  if (email) {
+    const { data: scrubbed, error: scrubError } = await supabase
+      .from("audit_lead_inquiries")
+      .update({ email: null })
+      .eq("email", email)
+      .select("id");
+
+    if (scrubError) {
+      return NextResponse.json(
+        { error: "customer_scrub_failed" },
+        { status: 500 },
+      );
+    }
+
+    scrubbedRows = Array.isArray(scrubbed) ? scrubbed.length : 0;
+  }
+
   const { error: logError } = await supabase
     .from("shopline_gdpr_redact_log")
     .insert({
       webhook_type: "customer-redact",
       shop_id: stringOrNull(payload.shop_id),
       shop_domain: stringOrNull(payload.shop_domain),
-      payload_summary: "customer email absent; scrubbed: 0 rows",
+      payload_summary: email
+        ? `customer email scrubbed: ${scrubbedRows} ${scrubbedRows === 1 ? "row" : "rows"}`
+        : "customer email absent; scrubbed: 0 rows",
       processed_at: new Date().toISOString(),
       result: "processed",
     });
@@ -50,6 +72,9 @@ export async function POST(request: Request) {
 type CustomerRedactPayload = {
   shop_id?: unknown;
   shop_domain?: unknown;
+  customer?: {
+    email?: unknown;
+  };
 };
 
 function getHmacHeader(headers: Headers): string | null {
@@ -70,4 +95,13 @@ function logHeaderNames(webhookType: string, headers: Headers) {
 
 function stringOrNull(value: unknown): string | null {
   return typeof value === "string" && value.trim() ? value.trim() : null;
+}
+
+function normalizeEmail(value: unknown): string | null {
+  if (typeof value !== "string") return null;
+
+  const email = value.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null;
+
+  return email;
 }
