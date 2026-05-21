@@ -747,6 +747,11 @@
         "undo": "Rückgängig",
         "redo": "Wiederholen"
       }
+    },
+    "socialPack": {
+      "title": "Manueller Modus",
+      "download": "Social Pack herunterladen",
+      "description": "Lade eine ZIP-Datei mit Karten und vorgeschlagenen Captions herunter, um manuell zu posten, bis Meta die automatische Veröffentlichung genehmigt."
     }
   },
   "websites": {

@@ -747,6 +747,11 @@
         "undo": "실행 취소",
         "redo": "다시 실행"
       }
+    },
+    "socialPack": {
+      "title": "수동 모드",
+      "download": "소셜 팩 다운로드",
+      "description": "Meta의 자동 게시 승인이 완료될 때까지 수동으로 게시할 수 있도록 카드와 추천 캡션이 포함된 ZIP을 다운로드합니다."
     }
   },
   "websites": {

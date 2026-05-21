@@ -51,6 +51,10 @@ vi.mock("next-intl/server", () => ({
       cardAssets: "Card assets",
       cardAssetsDescription: "Download generated social cards",
       downloadCard: "Download card",
+      "socialPack.title": "Manual mode",
+      "socialPack.download": "Download social pack",
+      "socialPack.description":
+        "Download a ZIP of cards + suggested captions to post manually until automatic publishing is approved by Meta.",
       errorMessage: "Error",
     };
     return messages[key] ?? key;
@@ -182,5 +186,25 @@ describe("article detail page", () => {
         "Card quota for this month exhausted (used 100 / 100). Upgrade to Pro for 500/month.",
       ),
     ).toBeInTheDocument();
+  });
+
+  it("shows transition-mode social pack download when Meta OAuth is not public", async () => {
+    vi.stubEnv("NEXT_PUBLIC_META_OAUTH_PUBLIC_ENABLED", "false");
+    const { default: ArticleDetailPage } = await import("../page");
+
+    render(
+      await ArticleDetailPage({
+        params: Promise.resolve({ id: "job-1" }),
+      }),
+    );
+
+    expect(
+      screen.getByText(
+        "Download a ZIP of cards + suggested captions to post manually until automatic publishing is approved by Meta.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: "Download social pack" }),
+    ).toHaveAttribute("href", "/api/articles/article-1/social-pack");
   });
 });

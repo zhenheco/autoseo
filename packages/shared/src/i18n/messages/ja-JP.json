@@ -646,6 +646,11 @@
       "generatedContentDescription": "AI生成された記事コンテンツのプレビュー",
       "errorMessage": "エラーメッセージ",
       "redirectingToManage": "記事管理ページにリダイレクト中..."
+    },
+    "socialPack": {
+      "title": "手動モード",
+      "download": "ソーシャルパックをダウンロード",
+      "description": "Meta による自動公開の承認前に手動投稿できるよう、カードと推奨キャプションを含む ZIP をダウンロードします。"
     }
   },
   "websites": {

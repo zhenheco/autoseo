@@ -747,6 +747,11 @@
         "undo": "Annuler",
         "redo": "Rétablir"
       }
+    },
+    "socialPack": {
+      "title": "Mode manuel",
+      "download": "Télécharger le pack social",
+      "description": "Téléchargez un ZIP avec les cartes et les légendes suggérées pour publier manuellement en attendant l’approbation de la publication automatique par Meta."
     }
   },
   "websites": {

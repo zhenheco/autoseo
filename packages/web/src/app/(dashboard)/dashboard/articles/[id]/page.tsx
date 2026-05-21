@@ -68,6 +68,7 @@ export default async function ArticleDetailPage({
 }) {
   const user = await getUser();
   const t = await getTranslations("articles.detail");
+  const articlesT = await getTranslations("articles");
 
   if (!user) {
     redirect("/login");
@@ -79,6 +80,9 @@ export default async function ArticleDetailPage({
     ? article.generated_articles[0]
     : article?.generated_articles;
   const cardAssets = await getArticleCardAssets(generatedArticle?.id);
+  const showManualSocialPack =
+    !!generatedArticle?.id &&
+    process.env.NEXT_PUBLIC_META_OAUTH_PUBLIC_ENABLED !== "true";
   const cardQuotaExceeded = getCardQuotaExceeded(article?.metadata);
 
   if (!article) {
@@ -231,6 +235,24 @@ export default async function ArticleDetailPage({
                   />
                 )}
               </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {showManualSocialPack && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{articlesT("socialPack.title")}</CardTitle>
+              <CardDescription>
+                {articlesT("socialPack.description")}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Link href={`/api/articles/${generatedArticle.id}/social-pack`}>
+                <Button variant="outline">
+                  {articlesT("socialPack.download")}
+                </Button>
+              </Link>
             </CardContent>
           </Card>
         )}

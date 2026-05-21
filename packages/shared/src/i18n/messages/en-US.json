@@ -646,6 +646,11 @@
       "generatedContentDescription": "AI-generated article content preview",
       "errorMessage": "Error Message",
       "redirectingToManage": "Redirecting to article management page..."
+    },
+    "socialPack": {
+      "title": "Manual mode",
+      "download": "Download social pack",
+      "description": "Download a ZIP of cards + suggested captions to post manually until automatic publishing is approved by Meta."
     }
   },
   "websites": {

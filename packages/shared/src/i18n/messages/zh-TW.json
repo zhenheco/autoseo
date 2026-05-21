@@ -646,6 +646,11 @@
       "generatedContentDescription": "AI 生成的文章內容預覽",
       "errorMessage": "錯誤訊息",
       "redirectingToManage": "重新導向到文章管理頁面..."
+    },
+    "socialPack": {
+      "title": "手動模式",
+      "download": "下載社群素材包",
+      "description": "下載包含卡片與建議貼文文案的 ZIP，在 Meta 核准自動發布前手動發文。"
     }
   },
   "websites": {

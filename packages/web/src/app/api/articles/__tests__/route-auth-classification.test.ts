@@ -82,6 +82,7 @@ describe("article route auth classification", () => {
     ["article edit/delete", "../[id]/route", "company"],
     ["article publish", "../[id]/publish/route", "company"],
     ["article details", "../[id]/details/route", "company"],
+    ["article social pack", "../[id]/social-pack/route", "company"],
     ["article schedule", "../[id]/schedule/route", "company"],
     ["article cancel", "../[id]/cancel/route", "company"],
     ["article jobs list", "../jobs/route", "company"],

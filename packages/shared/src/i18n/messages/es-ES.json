@@ -747,6 +747,11 @@
         "undo": "Deshacer",
         "redo": "Rehacer"
       }
+    },
+    "socialPack": {
+      "title": "Modo manual",
+      "download": "Descargar paquete social",
+      "description": "Descarga un ZIP con tarjetas y textos sugeridos para publicar manualmente hasta que Meta apruebe la publicación automática."
     }
   },
   "websites": {

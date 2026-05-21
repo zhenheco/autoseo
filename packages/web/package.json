@@ -77,6 +77,7 @@
     "framer-motion": "^12.23.24",
     "jsdom": "^28.1.0",
     "jsonrepair": "^3.13.1",
+    "jszip": "^3.10.1",
     "linkedom": "^0.18.12",
     "lucide-react": "^0.546.0",
     "marked": "^16.4.1",
