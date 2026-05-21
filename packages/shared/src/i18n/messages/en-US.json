@@ -67,6 +67,7 @@
     "privacyPolicy": "Privacy",
     "loggedInAccount": "Logged in as",
     "audit": "Site Audit",
+    "analytics": "Analytics",
     "brands": "Brands"
   },
   "auth": {

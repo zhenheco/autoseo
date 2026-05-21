@@ -67,6 +67,7 @@
     "privacyPolicy": "개인정보처리방침",
     "loggedInAccount": "로그인된 계정",
     "audit": "사이트 진단",
+    "analytics": "분석",
     "brands": "Brands"
   },
   "auth": {

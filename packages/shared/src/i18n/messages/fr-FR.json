@@ -67,6 +67,7 @@
     "privacyPolicy": "Confidentialité",
     "loggedInAccount": "Connecté en tant que",
     "audit": "Audit du site",
+    "analytics": "Analyses",
     "brands": "Brands"
   },
   "auth": {

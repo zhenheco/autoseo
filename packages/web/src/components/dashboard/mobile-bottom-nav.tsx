@@ -11,6 +11,7 @@ import {
   CreditCard,
   MoreHorizontal,
   Activity,
+  BarChart3,
 } from "lucide-react";
 import {
   Sheet,
@@ -91,6 +92,11 @@ export function MobileBottomNav({
   ];
 
   const moreNavItems = [
+    {
+      title: t("analytics"),
+      href: "/dashboard/analytics",
+      icon: BarChart3,
+    },
     {
       title: t("subscription"),
       href: "/dashboard/subscription",

@@ -20,6 +20,7 @@ import {
   RefreshCw,
   Store,
   Activity,
+  BarChart3,
 } from "lucide-react";
 import { Button } from "@shared/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@shared/ui/avatar";
@@ -56,6 +57,11 @@ const navItems = [
     titleKey: "audit",
     href: "/dashboard/audit",
     icon: Activity,
+  },
+  {
+    titleKey: "analytics",
+    href: "/dashboard/analytics",
+    icon: BarChart3,
   },
   {
     titleKey: "subscription",
