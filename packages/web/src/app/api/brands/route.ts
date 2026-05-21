@@ -23,13 +23,19 @@ type BrandInsert = Database["public"]["Tables"]["brands"]["Insert"];
 type BrandSupabaseClient = Pick<CompanyRouteAuthContext["supabase"], "from">;
 
 const BRAND_SELECT =
-  "id, company_id, name, voice_tone, target_audience, value_props, brand_guidelines, logo_url, primary_color, secondary_color, is_default, created_at, updated_at, deleted_at";
+  "id, company_id, name, voice_tone, target_audience, value_props, brand_guidelines, logo_url, primary_color, secondary_color, is_default, created_at, updated_at, deleted_at, automation_level, auto_articles_per_week, auto_publish_to_social";
 
 const UPGRADE_URL = "/dashboard/billing";
 
-const createBrandSchema = brandMemoryFieldsSchema.extend({
-  name: z.string().trim().min(1),
-});
+const createBrandSchema = brandMemoryFieldsSchema
+  .omit({
+    automationLevel: true,
+    autoArticlesPerWeek: true,
+    autoPublishToSocial: true,
+  })
+  .extend({
+    name: z.string().trim().min(1),
+  });
 
 function brandInputToInsert(
   companyId: string,

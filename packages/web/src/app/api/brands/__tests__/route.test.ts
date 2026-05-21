@@ -15,6 +15,9 @@ type BrandRow = {
   created_at: string;
   updated_at: string;
   deleted_at: string | null;
+  automation_level: number;
+  auto_articles_per_week: number;
+  auto_publish_to_social: boolean;
 };
 
 type PlanRow = {
@@ -96,6 +99,9 @@ function brand(overrides: Partial<BrandRow>): BrandRow {
     created_at: "2026-05-21T00:00:00.000Z",
     updated_at: "2026-05-21T00:00:00.000Z",
     deleted_at: null,
+    automation_level: 1,
+    auto_articles_per_week: 0,
+    auto_publish_to_social: false,
     ...overrides,
   };
 }
@@ -449,6 +455,52 @@ describe("Brand CRUD API", () => {
         secondary_color: "#fedcba",
       },
     });
+  });
+
+  it("patches brand automation settings", async () => {
+    state.supabase = new FakeSupabaseClient(
+      [brand({ id: ids.brand1 })],
+      [plan(ids.company, "solo")],
+    );
+    const { PATCH } = await import("../[id]/route");
+
+    const response = await PATCH(
+      jsonRequest({
+        automationLevel: 3,
+        autoArticlesPerWeek: 7,
+        autoPublishToSocial: true,
+      }) as never,
+      routeParams(ids.brand1),
+    );
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toMatchObject({
+      success: true,
+      data: {
+        id: ids.brand1,
+        automation_level: 3,
+        auto_articles_per_week: 7,
+        auto_publish_to_social: true,
+      },
+    });
+  });
+
+  it("rejects automation settings outside supported bounds", async () => {
+    state.supabase = new FakeSupabaseClient(
+      [brand({ id: ids.brand1 })],
+      [plan(ids.company, "solo")],
+    );
+    const { PATCH } = await import("../[id]/route");
+
+    const response = await PATCH(
+      jsonRequest({
+        automationLevel: 5,
+        autoArticlesPerWeek: 15,
+      }) as never,
+      routeParams(ids.brand1),
+    );
+
+    expect(response.status).toBe(400);
   });
 
   it("rejects invalid color and logo URL values", async () => {

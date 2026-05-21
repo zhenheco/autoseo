@@ -29,6 +29,9 @@ export const brandMemoryFieldsSchema = z
     logoUrl: z.union([brandMemoryLogoUrlSchema, z.null()]).optional(),
     primaryColor: z.union([brandMemoryHexColorSchema, z.null()]).optional(),
     secondaryColor: z.union([brandMemoryHexColorSchema, z.null()]).optional(),
+    automationLevel: z.number().int().min(1).max(4).optional(),
+    autoArticlesPerWeek: z.number().int().min(0).max(14).optional(),
+    autoPublishToSocial: z.boolean().optional(),
   })
   .strict();
 

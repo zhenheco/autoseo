@@ -17,7 +17,7 @@ type BrandUpdate = Database["public"]["Tables"]["brands"]["Update"];
 type RouteParams = { params: Promise<{ id: string }> };
 
 const BRAND_SELECT =
-  "id, company_id, name, voice_tone, target_audience, value_props, brand_guidelines, logo_url, primary_color, secondary_color, is_default, created_at, updated_at, deleted_at";
+  "id, company_id, name, voice_tone, target_audience, value_props, brand_guidelines, logo_url, primary_color, secondary_color, is_default, created_at, updated_at, deleted_at, automation_level, auto_articles_per_week, auto_publish_to_social";
 
 const brandIdSchema = z.string().uuid();
 
@@ -49,6 +49,15 @@ function brandInputToUpdate(
   }
   if (input.secondaryColor !== undefined) {
     update.secondary_color = input.secondaryColor;
+  }
+  if (input.automationLevel !== undefined) {
+    update.automation_level = input.automationLevel;
+  }
+  if (input.autoArticlesPerWeek !== undefined) {
+    update.auto_articles_per_week = input.autoArticlesPerWeek;
+  }
+  if (input.autoPublishToSocial !== undefined) {
+    update.auto_publish_to_social = input.autoPublishToSocial;
   }
 
   return update;
