@@ -5,8 +5,10 @@ import { useLocale } from "next-intl";
 import { Navbar } from "@/components/layout/navbar";
 import { Hero as LegacyHero } from "@/components/home/hero";
 import { Hero as MarketingHero } from "@/components/marketing/Hero";
+import { Features } from "@/components/marketing/Features";
 import { HowItWorks } from "@/components/marketing/HowItWorks";
 import { Pain } from "@/components/marketing/Pain";
+import { SocialProof } from "@/components/marketing/SocialProof";
 import { ContrastAnchor } from "@/components/home/contrast-anchor";
 import { RevealDemo } from "@/components/home/reveal-demo";
 import { LogoWall } from "@/components/home/logo-wall";
@@ -45,6 +47,8 @@ export function HomeClient({ plans, articlePackages }: PricingProps) {
             <MarketingHero locale={locale} />
             <Pain />
             <HowItWorks />
+            <Features />
+            <SocialProof />
           </>
         ) : (
           <LegacyHero />

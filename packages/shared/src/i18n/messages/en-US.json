@@ -1944,6 +1944,48 @@
           "description": "Publish across owned and social channels without rebuilding the campaign."
         }
       }
+    },
+    "features": {
+      "eyebrow": "Content flywheel features",
+      "headline": "Everything needed to turn one article into a repeatable growth loop.",
+      "subheadline": "1wayseo connects article production, social distribution, localization, brand context, and performance feedback in one workflow.",
+      "items": {
+        "article": {
+          "title": "SEO article generation",
+          "body": "Generate structured, search-ready articles from trend signals, brand context, and reusable prompts."
+        },
+        "socialCards": {
+          "title": "Auto social cards",
+          "body": "Turn each article into HTML social cards rendered in the browser and stored in R2 for reuse."
+        },
+        "publishing": {
+          "title": "Multi-platform publishing",
+          "body": "Prepare and publish content for Instagram, Facebook, Threads, and X without rebuilding every post by hand."
+        },
+        "locales": {
+          "title": "7-locale support",
+          "body": "Use zh-TW as the canonical source and manage six translated versions for multilingual campaigns."
+        },
+        "brandMemory": {
+          "title": "Brand memory",
+          "body": "Keep voice, audience, and value propositions attached to each brand so every output stays consistent."
+        },
+        "selfOptimization": {
+          "title": "Self-optimization",
+          "body": "Review top performers weekly with LLM analysis and feed those lessons back into the next content cycle."
+        }
+      }
+    },
+    "social": {
+      "eyebrow": "Social proof",
+      "headline": "Proof will come from real founding members, not borrowed logos.",
+      "subheadline": "This section is intentionally reserved for verified early customer stories as the founding cohort forms.",
+      "banner": "Founding members coming soon",
+      "story": {
+        "title": "Founder story",
+        "body": "Ace will add the first founder story here once the founding cohort is ready. Until then, this section keeps the page honest without fake customer logos.",
+        "attribution": "Placeholder for Ace"
+      }
     }
   },
   "faq": {

@@ -46,6 +46,32 @@ const howKeys = [
   "steps.publish.title",
   "steps.publish.description",
 ];
+const featureKeys = [
+  "eyebrow",
+  "headline",
+  "subheadline",
+  "items.article.title",
+  "items.article.body",
+  "items.socialCards.title",
+  "items.socialCards.body",
+  "items.publishing.title",
+  "items.publishing.body",
+  "items.locales.title",
+  "items.locales.body",
+  "items.brandMemory.title",
+  "items.brandMemory.body",
+  "items.selfOptimization.title",
+  "items.selfOptimization.body",
+];
+const socialKeys = [
+  "eyebrow",
+  "headline",
+  "subheadline",
+  "banner",
+  "story.title",
+  "story.body",
+  "story.attribution",
+];
 
 function getNestedMessage(
   messages: Record<string, unknown>,
@@ -98,6 +124,34 @@ describe("lp how locale coverage", () => {
     (_locale, messages) => {
       for (const key of howKeys) {
         const value = getNestedMessage(messages.lp.how, key);
+
+        expect(value).toEqual(expect.any(String));
+        expect(value).not.toBe("");
+      }
+    },
+  );
+});
+
+describe("lp features locale coverage", () => {
+  it.each(Object.entries(localeMessages))(
+    "has lp.features copy in %s",
+    (_locale, messages) => {
+      for (const key of featureKeys) {
+        const value = getNestedMessage(messages.lp.features, key);
+
+        expect(value).toEqual(expect.any(String));
+        expect(value).not.toBe("");
+      }
+    },
+  );
+});
+
+describe("lp social locale coverage", () => {
+  it.each(Object.entries(localeMessages))(
+    "has lp.social copy in %s",
+    (_locale, messages) => {
+      for (const key of socialKeys) {
+        const value = getNestedMessage(messages.lp.social, key);
 
         expect(value).toEqual(expect.any(String));
         expect(value).not.toBe("");

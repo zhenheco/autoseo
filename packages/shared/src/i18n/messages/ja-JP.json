@@ -1944,6 +1944,48 @@
           "description": "Publish across owned and social channels without rebuilding the campaign."
         }
       }
+    },
+    "features": {
+      "eyebrow": "TODO: Content flywheel features",
+      "headline": "TODO: Everything needed to turn one article into a repeatable growth loop.",
+      "subheadline": "TODO: 1wayseo connects article production, social distribution, localization, brand context, and performance feedback in one workflow.",
+      "items": {
+        "article": {
+          "title": "TODO: SEO article generation",
+          "body": "TODO: Generate structured, search-ready articles from trend signals, brand context, and reusable prompts."
+        },
+        "socialCards": {
+          "title": "TODO: Auto social cards",
+          "body": "TODO: Turn each article into HTML social cards rendered in the browser and stored in R2 for reuse."
+        },
+        "publishing": {
+          "title": "TODO: Multi-platform publishing",
+          "body": "TODO: Prepare and publish content for Instagram, Facebook, Threads, and X without rebuilding every post by hand."
+        },
+        "locales": {
+          "title": "TODO: 7-locale support",
+          "body": "TODO: Use zh-TW as the canonical source and manage six translated versions for multilingual campaigns."
+        },
+        "brandMemory": {
+          "title": "TODO: Brand memory",
+          "body": "TODO: Keep voice, audience, and value propositions attached to each brand so every output stays consistent."
+        },
+        "selfOptimization": {
+          "title": "TODO: Self-optimization",
+          "body": "TODO: Review top performers weekly with LLM analysis and feed those lessons back into the next content cycle."
+        }
+      }
+    },
+    "social": {
+      "eyebrow": "TODO: Social proof",
+      "headline": "TODO: Proof will come from real founding members, not borrowed logos.",
+      "subheadline": "TODO: This section is intentionally reserved for verified early customer stories as the founding cohort forms.",
+      "banner": "TODO: Founding members coming soon",
+      "story": {
+        "title": "TODO: Founder story",
+        "body": "TODO: Ace will add the first founder story here once the founding cohort is ready.",
+        "attribution": "TODO: Placeholder for Ace"
+      }
     }
   },
   "faq": {

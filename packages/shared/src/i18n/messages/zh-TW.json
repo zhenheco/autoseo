@@ -1944,6 +1944,48 @@
           "description": "同步發布到自有與社群平台，不必每次重建活動。"
         }
       }
+    },
+    "features": {
+      "eyebrow": "內容飛輪功能",
+      "headline": "把一篇文章變成可重複運轉的成長流程。",
+      "subheadline": "1wayseo 串起文章生成、社群圖卡、多語發布、品牌記憶與效果回饋，讓每一輪內容都能累積下一輪的優化依據。",
+      "items": {
+        "article": {
+          "title": "SEO 文章生成",
+          "body": "根據趨勢訊號、品牌脈絡與可重複使用的提示詞，生成結構完整、可發布的搜尋文章。"
+        },
+        "socialCards": {
+          "title": "自動社群圖卡",
+          "body": "將文章重點轉成 HTML 圖卡，透過瀏覽器渲染後存入 R2，方便後續重複使用。"
+        },
+        "publishing": {
+          "title": "多平台發布",
+          "body": "為 Instagram、Facebook、Threads 與 X 準備並發布內容，不必每篇貼文都從零重做。"
+        },
+        "locales": {
+          "title": "7 語系支援",
+          "body": "以 zh-TW 作為 canonical 來源，管理另外六個翻譯版本，支援多語內容活動。"
+        },
+        "brandMemory": {
+          "title": "品牌記憶",
+          "body": "替每個品牌保留語氣、受眾與價值主張，讓不同輸出都維持一致脈絡。"
+        },
+        "selfOptimization": {
+          "title": "自我優化",
+          "body": "每週用 LLM 分析表現最好的內容，將洞察回饋到下一輪選題與生成流程。"
+        }
+      }
+    },
+    "social": {
+      "eyebrow": "真實案例",
+      "headline": "案例會來自真實創始會員，不放借來的 logo。",
+      "subheadline": "這個區塊保留給早期用戶的驗證故事，在創始會員陸續加入後補上。",
+      "banner": "創始會員即將公布",
+      "story": {
+        "title": "創辦人故事",
+        "body": "Ace 之後會在這裡補上第一則創辦人故事。在此之前，這個區塊會保持誠實，不使用假的客戶 logo 或虛構見證。",
+        "attribution": "Ace 待補"
+      }
     }
   },
   "faq": {
