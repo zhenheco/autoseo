@@ -50,6 +50,23 @@ export async function enqueueTransactionalTemplateEmail(input: {
   });
 }
 
+export async function enqueueOpsAlertEmail(input: {
+  subject: string;
+  text: string;
+  idempotencyKey: string;
+}): Promise<{ ok: boolean; messageId?: string; error?: string }> {
+  return sendCfEmail({
+    to: process.env.AMEGO_OPS_ALERT_EMAIL ?? "ops@1wayseo.com",
+    template: {
+      subject: input.subject,
+      text: input.text,
+      html: `<pre>${escapeHtml(input.text)}</pre>`,
+    },
+    idempotencyKey: input.idempotencyKey,
+    tags: ["ops-alert", "amego"],
+  });
+}
+
 async function sendCfEmail(input: {
   to: string;
   template: { subject: string; html: string; text: string };

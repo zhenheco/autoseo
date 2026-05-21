@@ -2439,6 +2439,9 @@ export type Database = {
             | "failed"
             | "not_applicable"
             | null;
+          amego_retry_count: number;
+          amego_last_error: string | null;
+          amego_payload: Json | null;
           paid_at: string;
           created_at: string;
         };
@@ -2458,6 +2461,9 @@ export type Database = {
             | "failed"
             | "not_applicable"
             | null;
+          amego_retry_count?: number;
+          amego_last_error?: string | null;
+          amego_payload?: Json | null;
           paid_at?: string;
           created_at?: string;
         };
@@ -2477,6 +2483,9 @@ export type Database = {
             | "failed"
             | "not_applicable"
             | null;
+          amego_retry_count?: number;
+          amego_last_error?: string | null;
+          amego_payload?: Json | null;
           paid_at?: string;
           created_at?: string;
         };

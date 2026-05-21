@@ -9,6 +9,8 @@ import {
   enqueueTransactionalTemplateEmail,
   type TransactionalTemplateName,
 } from "@/lib/email/cf-email-client";
+import type { AmegoIssueInput } from "@/lib/payments/amego/adapter";
+import { enqueueAmegoInvoiceIssue } from "@/lib/payments/amego/job";
 import { getStripeClient } from "@/lib/payments/stripe/server";
 import {
   transition,
@@ -299,9 +301,21 @@ async function handleInvoicePaid(
       readNumber(invoice, "amount_due") ??
       0,
   );
+  const metadata = readMetadata(invoice);
+  const amountTwd = resolveInvoiceAmountTwd(invoice, metadata);
   const billingCountry =
     readInvoiceBillingCountry(invoice) ?? context.billingCountry ?? "unknown";
   const amegoStatus = billingCountry === "TW" ? "pending" : "not_applicable";
+  const amegoPayload =
+    amegoStatus === "pending"
+      ? buildAmegoIssueInput({
+          invoice,
+          context,
+          amountUsd,
+          amountTwd,
+          billingCountry,
+        })
+      : null;
   const paidAt =
     timestampToIso(readNumber(invoice, "status_transitions.paid_at")) ??
     new Date().toISOString();
@@ -323,8 +337,11 @@ async function handleInvoicePaid(
       user_id: context.userId,
       company_id: context.companyId,
       amount_usd: amountUsd,
+      amount_twd: amountTwd,
       billing_country: billingCountry,
       amego_status: amegoStatus,
+      amego_retry_count: 0,
+      amego_payload: amegoPayload as unknown as Json | null,
       paid_at: paidAt,
     }),
   );
@@ -335,8 +352,11 @@ async function handleInvoicePaid(
     sideEffects: result.sideEffects,
   });
 
-  if (amegoStatus === "pending") {
-    enqueueAmegoIssuePlaceholder(stripeInvoiceId);
+  if (amegoPayload) {
+    enqueueAmegoInvoiceIssue({
+      supabase,
+      payload: amegoPayload,
+    });
   }
 
   captureTrialConverted({
@@ -620,6 +640,13 @@ function readMetadataValue(metadata: Metadata, ...keys: string[]) {
   return undefined;
 }
 
+function readMetadataNumber(metadata: Metadata, ...keys: string[]) {
+  const value = readMetadataValue(metadata, ...keys);
+  if (!value) return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
 function requireMetadata(metadata: Metadata, ...keys: string[]) {
   const value = readMetadataValue(metadata, ...keys);
   if (!value) {
@@ -656,12 +683,129 @@ function readInvoiceCustomerEmail(invoice: Stripe.Invoice) {
     : undefined;
 }
 
+function readInvoiceCustomerName(invoice: Stripe.Invoice) {
+  const object = readObject(invoice);
+  return typeof object?.customer_name === "string"
+    ? object.customer_name
+    : undefined;
+}
+
 function readInvoiceBillingCountry(invoice: Stripe.Invoice) {
   const object = readObject(invoice);
   const customerAddress = readObject(object?.customer_address);
   return typeof customerAddress?.country === "string"
     ? customerAddress.country
     : undefined;
+}
+
+function readInvoiceCurrency(invoice: Stripe.Invoice) {
+  return readString(invoice, "currency")?.toLowerCase();
+}
+
+function buildAmegoIssueInput(input: {
+  invoice: Stripe.Invoice;
+  context: WebhookContext;
+  amountUsd: number;
+  amountTwd: number;
+  billingCountry: string;
+}): AmegoIssueInput {
+  const metadata = readMetadata(input.invoice);
+  const email =
+    readInvoiceCustomerEmail(input.invoice) ??
+    input.context.email ??
+    readMetadataValue(metadata, "userEmail", "user_email", "email") ??
+    "";
+  const name =
+    readInvoiceCustomerName(input.invoice) ??
+    readMetadataValue(metadata, "buyerName", "buyer_name", "name") ??
+    email.split("@")[0] ??
+    "1WaySEO customer";
+
+  return {
+    stripeInvoiceId: input.invoice.id,
+    amountUsd: input.amountUsd,
+    amountTwd: input.amountTwd,
+    buyer: {
+      name,
+      email,
+      taxId: readBuyerTaxId(input.invoice, metadata),
+      country: input.billingCountry,
+    },
+    items: readAmegoLineItems(input.invoice, input.amountTwd),
+  };
+}
+
+function readAmegoLineItems(invoice: Stripe.Invoice, amountTwd: number) {
+  const lineData = readObject(readObject(invoice)?.lines)?.data;
+  if (!Array.isArray(lineData) || lineData.length === 0) {
+    return [
+      {
+        description: "1WaySEO subscription",
+        quantity: 1,
+        unitPriceTwd: amountTwd,
+      },
+    ];
+  }
+
+  const totalLineAmount = lineData.reduce((sum, line) => {
+    return sum + Math.max(0, readNumber(line, "amount") ?? 0);
+  }, 0);
+
+  return lineData.map((line, index) => {
+    const quantity = Math.max(1, readNumber(line, "quantity") ?? 1);
+    const lineAmount = Math.max(0, readNumber(line, "amount") ?? 0);
+    const currency = readString(line, "currency")?.toLowerCase();
+    const lineTotalTwd =
+      currency === "twd"
+        ? centsToUsd(lineAmount)
+        : totalLineAmount > 0
+          ? roundMoney((amountTwd * lineAmount) / totalLineAmount)
+          : index === 0
+            ? amountTwd
+            : 0;
+
+    return {
+      description: readString(line, "description") ?? "1WaySEO subscription",
+      quantity,
+      unitPriceTwd: roundMoney(lineTotalTwd / quantity),
+    };
+  });
+}
+
+function resolveInvoiceAmountTwd(invoice: Stripe.Invoice, metadata: Metadata) {
+  const explicit = readMetadataNumber(
+    metadata,
+    "amountTwd",
+    "amount_twd",
+    "amegoAmountTwd",
+    "amego_amount_twd",
+  );
+  if (explicit !== undefined) return explicit;
+
+  const amount =
+    readNumber(invoice, "amount_paid") ??
+    readNumber(invoice, "amount_due") ??
+    0;
+  return readInvoiceCurrency(invoice) === "twd" ? centsToUsd(amount) : 0;
+}
+
+function readBuyerTaxId(invoice: Stripe.Invoice, metadata: Metadata) {
+  const metadataTaxId = readMetadataValue(
+    metadata,
+    "buyerTaxId",
+    "buyer_tax_id",
+    "taxId",
+    "tax_id",
+  );
+  if (metadataTaxId) return metadataTaxId;
+
+  const taxIds = readObject(invoice)?.customer_tax_ids;
+  if (!Array.isArray(taxIds)) return undefined;
+  const firstTaxId = taxIds.find((taxId) => {
+    return typeof readObject(taxId)?.value === "string";
+  });
+  const value = readObject(firstTaxId)?.value;
+  return typeof value === "string" ? value : undefined;
 }
 
 function readCardBrand(session: Stripe.Checkout.Session) {
@@ -703,6 +847,10 @@ function centsToUsd(amount: number) {
   return Number((amount / 100).toFixed(2));
 }
 
+function roundMoney(amount: number) {
+  return Number(amount.toFixed(2));
+}
+
 async function assertOk<T extends { error?: unknown }>(
   result: PromiseLike<T> | T,
 ) {
@@ -716,9 +864,4 @@ function isDuplicateError(error: unknown) {
     candidate.code === DUPLICATE_ERROR_CODE ||
     candidate.message?.includes("duplicate key") === true
   );
-}
-
-function enqueueAmegoIssuePlaceholder(stripeInvoiceId: string) {
-  // Issue #73 will enqueue the real Amego invoice job from here.
-  console.info("[stripe-webhook] Amego invoice pending", { stripeInvoiceId });
 }

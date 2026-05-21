@@ -12,6 +12,10 @@ const emailClient = vi.hoisted(() => ({
   enqueueTransactionalTemplateEmail: vi.fn(),
 }));
 
+const amegoJob = vi.hoisted(() => ({
+  enqueueAmegoInvoiceIssue: vi.fn(),
+}));
+
 const analytics = vi.hoisted(() => ({
   captureTrialCardAdded: vi.fn(),
   captureTrialConverted: vi.fn(),
@@ -20,6 +24,7 @@ const analytics = vi.hoisted(() => ({
 vi.mock("@/lib/payments/stripe/server", () => stripeServer);
 vi.mock("@shared/supabase", () => supabaseAdmin);
 vi.mock("@/lib/email/cf-email-client", () => emailClient);
+vi.mock("@/lib/payments/amego/job", () => amegoJob);
 vi.mock("@/lib/analytics/posthog-server", () => analytics);
 
 type Row = Record<string, unknown>;
@@ -132,13 +137,26 @@ function invoiceEvent(country: string, id = `evt_invoice_${country}`) {
       object: "invoice",
       subscription: "sub_123",
       amount_paid: 2900,
+      currency: "usd",
       customer_email: "buyer@example.com",
+      customer_name: "Buyer Chen",
       customer_address: { country },
       status_transitions: { paid_at: 1_777_777_777 },
       metadata: {
         userId: "user-1",
         companyId: "company-1",
         planId: "plan_123",
+        amountTwd: "899",
+      },
+      lines: {
+        data: [
+          {
+            description: "1WaySEO Solo monthly subscription",
+            quantity: 1,
+            amount: 2900,
+            currency: "usd",
+          },
+        ],
       },
     },
     id,
@@ -476,8 +494,22 @@ describe("Stripe webhook route", () => {
     expect(supabase.state.invoices[0]).toMatchObject({
       stripe_invoice_id: "in_TW",
       amount_usd: 29,
+      amount_twd: 899,
       billing_country: "TW",
       amego_status: "pending",
+    });
+    expect(amegoJob.enqueueAmegoInvoiceIssue).toHaveBeenCalledWith({
+      supabase,
+      payload: expect.objectContaining({
+        stripeInvoiceId: "in_TW",
+        amountUsd: 29,
+        amountTwd: 899,
+        buyer: expect.objectContaining({
+          name: "Buyer Chen",
+          email: "buyer@example.com",
+          country: "TW",
+        }),
+      }),
     });
     expect(supabase.state.trials[0].converted_at).toBeTruthy();
     expect(supabase.state.company_subscriptions[0].status).toBe("active");
@@ -502,6 +534,7 @@ describe("Stripe webhook route", () => {
       billing_country: "US",
       amego_status: "not_applicable",
     });
+    expect(amegoJob.enqueueAmegoInvoiceIssue).not.toHaveBeenCalled();
   });
 
   it("handles invoice.payment_failed by marking past_due and sending D-1 email", async () => {
