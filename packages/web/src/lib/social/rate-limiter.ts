@@ -31,6 +31,7 @@ export const SOCIAL_RATE_LIMIT_BUCKETS: Record<Platform, BucketConfig> = {
   facebook: { capacity: 200, intervalMs: 60 * 60 * 1000 },
   threads: { capacity: 250, intervalMs: 24 * 60 * 60 * 1000 },
   x: { capacity: 1500, intervalMs: 30 * 24 * 60 * 60 * 1000 },
+  linkedin: { capacity: 100, intervalMs: 24 * 60 * 60 * 1000 },
 };
 
 function sleep(ms: number): Promise<void> {

@@ -1,6 +1,6 @@
 import type { TokenCrypto } from "@/lib/security/token-crypto";
 
-export type Platform = "instagram" | "facebook" | "threads" | "x";
+export type Platform = "instagram" | "facebook" | "threads" | "x" | "linkedin";
 
 export type SocialAccount = {
   id: string;
