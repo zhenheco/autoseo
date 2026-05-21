@@ -1,0 +1,22 @@
+{
+  "framework": "nextjs",
+  "installCommand": "pnpm install",
+  "crons": [
+    {
+      "path": "/api/cron/hourly-tasks",
+      "schedule": "0 * * * *"
+    },
+    {
+      "path": "/api/cron/sync-brevo",
+      "schedule": "0 2 * * *"
+    },
+    {
+      "path": "/api/cron/audit-weekly-digest",
+      "schedule": "0 1 * * 1"
+    },
+    {
+      "path": "/api/cron/audit-lead-nurture",
+      "schedule": "0 1 * * *"
+    }
+  ]
+}

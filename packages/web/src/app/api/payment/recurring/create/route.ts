@@ -1,0 +1,97 @@
+import { NextRequest, NextResponse } from "next/server";
+import { createAdminClient } from "@shared/supabase";
+import { withRouteAuth } from "@/lib/api/route-auth";
+import { requestErrorResponse } from "@/lib/api/request-error-response";
+import { safeJson } from "@/lib/api/request-body";
+import { PaymentService } from "@/lib/payment/payment-service";
+
+/**
+ * POST /api/payment/recurring/create
+ *
+ * 建立定期定額訂閱付款。
+ * 使用金流微服務 SDK 處理 PAYUNi 定期定額。
+ * 金額從 DB 取得，不信任前端傳入的 amount。
+ */
+export const POST = withRouteAuth(
+  "authenticated",
+  async (request: NextRequest, { user, supabase }) => {
+    try {
+      const bodyResult = await safeJson<{
+        companyId?: string;
+        planId?: string;
+        description?: string;
+        email?: string;
+        invoice?: unknown;
+      }>(request);
+      if (!bodyResult.success) {
+        return requestErrorResponse(bodyResult.error);
+      }
+
+      const body = bodyResult.data;
+      const { companyId, planId, description, email, invoice } = body;
+
+      if (!companyId || !planId || !description || !email) {
+        return NextResponse.json({ error: "缺少必要參數" }, { status: 400 });
+      }
+
+      // 驗證公司成員權限
+      const { data: membership } = await supabase
+        .from("company_members")
+        .select("role")
+        .eq("company_id", companyId)
+        .eq("user_id", user.id)
+        .single();
+
+      if (!membership) {
+        return NextResponse.json(
+          { error: "無權限存取此公司" },
+          { status: 403 },
+        );
+      }
+
+      // 從 DB 查詢真實金額，不信任前端傳入的 amount
+      const adminSupabase = createAdminClient();
+      const { data: plan } = await adminSupabase
+        .from("subscription_plans")
+        .select("price")
+        .eq("id", planId)
+        .single();
+
+      if (!plan?.price) {
+        return NextResponse.json(
+          { error: "找不到對應的訂閱方案" },
+          { status: 400 },
+        );
+      }
+
+      const paymentService = PaymentService.createInstance(supabase);
+
+      const result = await paymentService.createRecurringPayment({
+        companyId,
+        planId,
+        amount: plan.price,
+        description,
+        email,
+        periodType: "M",
+        periodStartType: 2,
+        periodTimes: 12,
+        ...(invoice ? { invoice } : {}),
+      });
+
+      if (!result.success) {
+        return NextResponse.json({ error: result.error }, { status: 500 });
+      }
+
+      return NextResponse.json({
+        success: true,
+        mandateId: result.mandateId,
+        mandateNo: result.mandateNo,
+        paymentId: result.paymentId,
+        paymentForm: result.paymentForm,
+      });
+    } catch (error) {
+      console.error("[API] 建立定期定額失敗:", error);
+      return NextResponse.json({ error: "建立定期定額失敗" }, { status: 500 });
+    }
+  },
+);

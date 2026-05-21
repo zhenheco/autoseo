@@ -1,0 +1,164 @@
+"use server";
+
+import { redirect } from "next/navigation";
+import { createClient } from "@shared/supabase";
+import { signUp as authSignUp, signIn as authSignIn } from "@/lib/auth";
+import { headers } from "next/headers";
+import { createLogger } from "@/lib/logger";
+
+const logger = createLogger("auth");
+
+/**
+ * 使用 Google OAuth 登入
+ */
+export async function signInWithGoogle() {
+  const supabase = await createClient();
+  // 優先使用環境變數，避免 origin header 被偽造
+  const origin = process.env.NEXT_PUBLIC_APP_URL || "https://1wayseo.com";
+
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: "google",
+    options: {
+      redirectTo: `${origin}/auth/callback`,
+      queryParams: {
+        access_type: "offline",
+        prompt: "consent",
+      },
+    },
+  });
+
+  if (error) {
+    redirect(
+      `/login?error=${encodeURIComponent("Google 登入失敗，請稍後再試")}`,
+    );
+  }
+
+  if (data.url) {
+    redirect(data.url);
+  }
+}
+
+/**
+ * 使用 Email + 密碼登入
+ * @returns 成功時返回空物件，失敗時返回 error
+ */
+export async function signInWithEmail(
+  email: string,
+  password: string,
+): Promise<{ error?: string }> {
+  try {
+    await authSignIn(email, password);
+    return {};
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "登入失敗，請稍後再試";
+    return { error: errorMessage };
+  }
+}
+
+/**
+ * 使用 Email + 密碼註冊
+ * @returns 成功時返回 needsVerification，失敗時返回 error
+ *          如果用戶已註冊，返回 alreadyRegistered: true
+ */
+export async function signUpWithEmail(
+  email: string,
+  password: string,
+): Promise<{
+  error?: string;
+  needsVerification?: boolean;
+  alreadyRegistered?: boolean;
+}> {
+  try {
+    const result = await authSignUp(email, password);
+
+    // 檢查是否需要驗證郵件
+    // Supabase 會發送驗證郵件，用戶需要點擊連結確認
+    if (result.user && !result.user.email_confirmed_at) {
+      return { needsVerification: true };
+    }
+
+    return {};
+  } catch (error) {
+    const errorMessage =
+      error instanceof Error ? error.message : "註冊失敗，請稍後再試";
+
+    // 處理常見錯誤：用戶已註冊
+    if (errorMessage.includes("User already registered")) {
+      return {
+        error: "此 Email 已被註冊",
+        alreadyRegistered: true,
+      };
+    }
+
+    return { error: errorMessage };
+  }
+}
+
+/**
+ * 發送重設密碼郵件
+ */
+export async function resetPasswordRequest(
+  email: string,
+): Promise<{ error?: string }> {
+  try {
+    const supabase = await createClient();
+    const headersList = await headers();
+    const origin =
+      headersList.get("origin") ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      "https://1wayseo.com";
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${origin}/reset-password`,
+    });
+
+    if (error) {
+      logger.error("重設密碼失敗", { error: error.message });
+      return { error: "發送重設密碼郵件失敗，請稍後再試" };
+    }
+
+    return {};
+  } catch (error) {
+    logger.error("重設密碼請求異常", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return { error: "發送重設密碼郵件失敗，請稍後再試" };
+  }
+}
+
+/**
+ * 重新發送驗證郵件
+ */
+export async function resendVerificationEmail(
+  email: string,
+): Promise<{ error?: string }> {
+  try {
+    const supabase = await createClient();
+    const headersList = await headers();
+    const origin =
+      headersList.get("origin") ||
+      process.env.NEXT_PUBLIC_APP_URL ||
+      "https://1wayseo.com";
+
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: {
+        emailRedirectTo: `${origin}/auth/confirm`,
+      },
+    });
+
+    if (error) {
+      logger.error("重寄驗證郵件失敗", { error: error.message });
+      return { error: "發送驗證郵件失敗，請稍後再試" };
+    }
+
+    return {};
+  } catch (error) {
+    logger.error("重寄驗證郵件請求異常", {
+      error: error instanceof Error ? error.message : String(error),
+    });
+    return { error: "發送驗證郵件失敗，請稍後再試" };
+  }
+}

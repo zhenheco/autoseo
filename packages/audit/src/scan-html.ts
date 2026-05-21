@@ -1,0 +1,278 @@
+import * as cheerio from "cheerio";
+import type { AuditIssue } from "./types";
+
+type CheerioRoot = ReturnType<typeof cheerio.load>;
+
+export interface ScanHtmlInput {
+  html: string;
+  pageUrl: string;
+}
+
+export function scanHtml(input: ScanHtmlInput): AuditIssue[] {
+  const $ = cheerio.load(input.html);
+  const issues: AuditIssue[] = [];
+
+  const metaDesc = $('meta[name="description"]').attr("content")?.trim() ?? "";
+  if (!metaDesc) {
+    issues.push({
+      ruleId: "meta.description.tooShort",
+      severity: "critical",
+      riskLevel: "low",
+      page: input.pageUrl,
+      selector: 'meta[name="description"]',
+      current: "",
+      source: "html-scan",
+      estimatedImpact: "high",
+    });
+  } else if (metaDesc.length < 50) {
+    issues.push({
+      ruleId: "meta.description.tooShort",
+      severity: "warning",
+      riskLevel: "low",
+      page: input.pageUrl,
+      selector: 'meta[name="description"]',
+      current: metaDesc,
+      source: "html-scan",
+      estimatedImpact: "medium",
+    });
+  }
+
+  issues.push(...checkOgImage($, input.pageUrl));
+  issues.push(...checkOgTitle($, input.pageUrl));
+  issues.push(...checkCanonical($, input.pageUrl));
+  issues.push(...checkH1($, input.pageUrl));
+  issues.push(...checkImgAlt($, input.pageUrl));
+  issues.push(...checkStructuredData($, input.pageUrl));
+  issues.push(...checkSitemapConsistency($, input.pageUrl));
+  issues.push(...checkContentMissingTopics($, input.pageUrl));
+
+  return issues;
+}
+
+function checkOgImage($: CheerioRoot, pageUrl: string): AuditIssue[] {
+  const ogImage = $('meta[property="og:image"]').attr("content")?.trim() ?? "";
+  if (ogImage) {
+    return [];
+  }
+
+  return [
+    {
+      ruleId: "og.image.missing",
+      severity: "warning",
+      riskLevel: "low",
+      page: pageUrl,
+      selector: 'meta[property="og:image"]',
+      current: "",
+      source: "html-scan",
+      estimatedImpact: "high",
+    },
+  ];
+}
+
+function checkSitemapConsistency($: CheerioRoot, pageUrl: string): AuditIssue[] {
+  const canonicalHref = $('link[rel="canonical"]').attr("href")?.trim() ?? "";
+  if (!canonicalHref) {
+    return [];
+  }
+
+  let canonicalUrl: URL;
+  let currentPageUrl: URL;
+  try {
+    currentPageUrl = new URL(pageUrl);
+    canonicalUrl = new URL(canonicalHref, currentPageUrl);
+  } catch {
+    return [];
+  }
+
+  if (canonicalUrl.host === currentPageUrl.host) {
+    return [];
+  }
+
+  return [
+    {
+      ruleId: "sitemap.inconsistent",
+      severity: "warning",
+      riskLevel: "medium",
+      page: pageUrl,
+      selector: 'link[rel="canonical"]',
+      current: canonicalUrl.href,
+      source: "html-scan",
+      estimatedImpact: "low",
+    },
+  ];
+}
+
+function checkImgAlt($: CheerioRoot, pageUrl: string): AuditIssue[] {
+  const issues: AuditIssue[] = [];
+
+  $("img").each((index, element) => {
+    const alt = $(element).attr("alt");
+    if (typeof alt === "string" && alt.trim()) {
+      return;
+    }
+
+    const src = $(element).attr("src")?.trim() ?? "";
+    const position = index + 1;
+    const selector = src
+      ? `img[src="${src}"]:nth-of-type(${position})`
+      : `img:nth-of-type(${position})`;
+
+    issues.push({
+      ruleId: "alt.missing",
+      severity: "warning",
+      riskLevel: "low",
+      page: pageUrl,
+      selector,
+      current: "",
+      source: "html-scan",
+      estimatedImpact: "medium",
+    });
+  });
+
+  return issues;
+}
+
+function checkStructuredData($: CheerioRoot, pageUrl: string): AuditIssue[] {
+  if ($('script[type="application/ld+json"]').length > 0) {
+    return [];
+  }
+
+  return [
+    {
+      ruleId: "structured-data.missing",
+      severity: "warning",
+      riskLevel: "medium",
+      page: pageUrl,
+      selector: 'script[type="application/ld+json"]',
+      current: "",
+      source: "html-scan",
+      estimatedImpact: "medium",
+    },
+  ];
+}
+
+function checkH1($: CheerioRoot, pageUrl: string): AuditIssue[] {
+  const h1Elements = $("h1");
+  if (h1Elements.length === 1) {
+    return [];
+  }
+
+  if (h1Elements.length > 1) {
+    const current = h1Elements
+      .map((_index, element) => $(element).text().trim().replace(/\s+/g, " "))
+      .get()
+      .join("|");
+
+    return [
+      {
+        ruleId: "h1.duplicate",
+        severity: "warning",
+        riskLevel: "medium",
+        page: pageUrl,
+        selector: "h1",
+        current,
+        source: "html-scan",
+        estimatedImpact: "medium",
+      },
+    ];
+  }
+
+  return [
+    {
+      ruleId: "h1.missing",
+      severity: "critical",
+      riskLevel: "medium",
+      page: pageUrl,
+      selector: "h1",
+      current: "",
+      source: "html-scan",
+      estimatedImpact: "high",
+    },
+  ];
+}
+
+function checkCanonical($: CheerioRoot, pageUrl: string): AuditIssue[] {
+  const canonicalHref = $('link[rel="canonical"]').attr("href")?.trim() ?? "";
+  if (canonicalHref) {
+    return [];
+  }
+
+  return [
+    {
+      ruleId: "canonical.missing",
+      severity: "warning",
+      riskLevel: "low",
+      page: pageUrl,
+      selector: 'link[rel="canonical"]',
+      current: "",
+      source: "html-scan",
+      estimatedImpact: "medium",
+    },
+  ];
+}
+
+function checkOgTitle($: CheerioRoot, pageUrl: string): AuditIssue[] {
+  const ogTitle = $('meta[property="og:title"]').attr("content")?.trim() ?? "";
+  if (ogTitle) {
+    return [];
+  }
+
+  return [
+    {
+      ruleId: "og.title.missing",
+      severity: "warning",
+      riskLevel: "low",
+      page: pageUrl,
+      selector: 'meta[property="og:title"]',
+      current: "",
+      source: "html-scan",
+      estimatedImpact: "medium",
+    },
+  ];
+}
+
+function checkContentMissingTopics(
+  $: CheerioRoot,
+  pageUrl: string,
+): AuditIssue[] {
+  const keywordsContent = $('meta[name="keywords"]').attr("content") ?? "";
+  const keywords = keywordsContent
+    .split(/[,，]/)
+    .map((keyword) => keyword.trim())
+    .filter((keyword, index, all) => keyword && all.indexOf(keyword) === index);
+
+  if (keywords.length === 0) {
+    return [];
+  }
+
+  const blogLinkCount = $('a[href^="/blog/"], a[href*="://"][href*="/blog/"]')
+    .map((_index, element) => $(element).attr("href")?.trim() ?? "")
+    .get()
+    .filter(Boolean).length;
+
+  if (blogLinkCount >= 3) {
+    return [];
+  }
+
+  return keywords.map((keyword) => ({
+    ruleId: "content.missing-topic",
+    severity: "info",
+    riskLevel: "medium",
+    page: pageUrl,
+    selector: 'meta[name="keywords"]',
+    current: keyword,
+    suggested: `/blog/${slugifyKeyword(keyword)}`,
+    source: "html-scan",
+    estimatedImpact: "high",
+  }));
+}
+
+function slugifyKeyword(keyword: string): string {
+  const slug = keyword
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+  return slug || encodeURIComponent(keyword.trim());
+}

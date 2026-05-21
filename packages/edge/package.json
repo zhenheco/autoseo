@@ -1,0 +1,21 @@
+{
+  "name": "@seo/edge",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "build": "wrangler deploy --dry-run",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit",
+    "lint": "echo 'no lint'"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@cloudflare/workers-types": "^4.20240419.0",
+    "@cloudflare/vitest-pool-workers": "^0.5.0",
+    "typescript": "^5.5.0",
+    "vitest": "^4.0.0",
+    "wrangler": "^3.0.0"
+  }
+}

@@ -1,0 +1,85 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`renderAuditDigestEmail > renders a stable de-DE text snapshot 1`] = `
+{
+  "subject": "Acme SEO wöchentlicher SEO-Audit-Bericht",
+  "text": "Acme SEO wöchentlicher SEO-Audit-Bericht
+
+2026-05-14 - 2026-05-21
+
+Health Score: 88 (+5)
+
+Neue Probleme diese Woche: 3
+
+Diese Woche gelöst: 2
+
+Wichtigste Empfehlungen: 
+1. [missing-title] /products/a: 補上唯一商品標題
+2. [thin-copy] /products/b: 擴充商品描述
+
+Dashboard öffnen: https://app.1wayseo.com/dashboard/audit",
+}
+`;
+
+exports[`renderAuditDigestEmail > renders a stable es-ES text snapshot 1`] = `
+{
+  "subject": "Resumen semanal de auditoría SEO de Acme SEO",
+  "text": "Resumen semanal de auditoría SEO de Acme SEO
+
+2026-05-14 - 2026-05-21
+
+Puntuación de salud: 88 (+5)
+
+Nuevos problemas esta semana: 3
+
+Problemas resueltos esta semana: 2
+
+Recomendaciones prioritarias: 
+1. [missing-title] /products/a: 補上唯一商品標題
+2. [thin-copy] /products/b: 擴充商品描述
+
+Abrir panel: https://app.1wayseo.com/dashboard/audit",
+}
+`;
+
+exports[`renderAuditDigestEmail > renders a stable fr-FR text snapshot 1`] = `
+{
+  "subject": "Résumé hebdomadaire d'audit SEO de Acme SEO",
+  "text": "Résumé hebdomadaire d'audit SEO de Acme SEO
+
+2026-05-14 - 2026-05-21
+
+Score de santé: 88 (+5)
+
+Nouveaux problèmes cette semaine: 3
+
+Problèmes résolus cette semaine: 2
+
+Recommandations prioritaires: 
+1. [missing-title] /products/a: 補上唯一商品標題
+2. [thin-copy] /products/b: 擴充商品描述
+
+Ouvrir le tableau de bord: https://app.1wayseo.com/dashboard/audit",
+}
+`;
+
+exports[`renderAuditDigestEmail > renders a stable ko-KR text snapshot 1`] = `
+{
+  "subject": "Acme SEO 주간 SEO 감사 요약",
+  "text": "Acme SEO 주간 SEO 감사 요약
+
+2026-05-14 - 2026-05-21
+
+건강 점수: 88 (+5)
+
+이번 주 신규 이슈: 3
+
+이번 주 해결됨: 2
+
+우선 권장 조치: 
+1. [missing-title] /products/a: 補上唯一商品標題
+2. [thin-copy] /products/b: 擴充商品描述
+
+대시보드 열기: https://app.1wayseo.com/dashboard/audit",
+}
+`;
