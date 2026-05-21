@@ -79,6 +79,7 @@ export default async function ArticleDetailPage({
     ? article.generated_articles[0]
     : article?.generated_articles;
   const cardAssets = await getArticleCardAssets(generatedArticle?.id);
+  const cardQuotaExceeded = getCardQuotaExceeded(article?.metadata);
 
   if (!article) {
     redirect("/dashboard/articles?error=" + encodeURIComponent(t("notFound")));
@@ -110,6 +111,16 @@ export default async function ArticleDetailPage({
       </div>
 
       <div className="grid gap-6">
+        {cardQuotaExceeded && (
+          <div
+            role="status"
+            className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm font-medium text-amber-900"
+          >
+            Card quota for this month exhausted (used {cardQuotaExceeded.used} /{" "}
+            {cardQuotaExceeded.cap}). Upgrade to Pro for 500/month.
+          </div>
+        )}
+
         {/* 文章資訊 */}
         <Card>
           <CardHeader>
@@ -287,6 +298,26 @@ export default async function ArticleDetailPage({
       </div>
     </div>
   );
+}
+
+function getCardQuotaExceeded(
+  metadata: unknown,
+): { used: number; cap: number } | null {
+  if (!isRecord(metadata)) return null;
+  const tags = Array.isArray(metadata.tags) ? metadata.tags : [];
+  if (!tags.includes("cards_quota_exceeded")) return null;
+
+  const quota = metadata.card_quota;
+  if (!isRecord(quota)) return { used: 0, cap: 100 };
+
+  return {
+    used: typeof quota.used === "number" ? quota.used : 0,
+    cap: typeof quota.cap === "number" ? quota.cap : 100,
+  };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
 function resolveCardDisplayUrl(r2Url: string): string {

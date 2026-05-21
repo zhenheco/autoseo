@@ -42,6 +42,7 @@ const DEFAULT_TEMPLATES: CardTemplateName[] = [
 export interface GenerateCardsInput {
   articleId: string;
   brandId: string;
+  companyId?: string;
   formats: CardFormat[];
   templates?: CardTemplateName[];
 }
@@ -60,6 +61,36 @@ export interface BrowserRenderingClient {
   }): Promise<ArrayBuffer>;
 }
 
+export interface CardQuotaResult {
+  allowed: boolean;
+  used: number;
+  cap: number;
+  remaining: number;
+  plan: string;
+  resource: string;
+}
+
+export interface CardQuotaEnforcer {
+  canConsume(
+    companyId: string,
+    resource: "cards",
+    amount: number,
+  ): Promise<CardQuotaResult>;
+  consume(
+    companyId: string,
+    resource: "cards",
+    amount: number,
+  ): Promise<CardQuotaResult>;
+}
+
+export interface CardQuotaWarning {
+  companyId: string;
+  used: number;
+  cap: number;
+  plan: string;
+  threshold: number;
+}
+
 export class CardCapExceededError extends Error {
   override readonly name = "CardCapExceededError";
 
@@ -71,6 +102,38 @@ export class CardCapExceededError extends Error {
   }
 }
 
+export class CardQuotaExceededError extends Error {
+  override readonly name = "CardQuotaExceededError";
+
+  constructor(
+    readonly details: {
+      companyId: string;
+      used: number;
+      cap: number;
+      plan: string;
+      requested?: number;
+    },
+  ) {
+    super(`card_quota_exceeded:${details.used}/${details.cap}`);
+  }
+
+  get companyId(): string {
+    return this.details.companyId;
+  }
+
+  get used(): number {
+    return this.details.used;
+  }
+
+  get cap(): number {
+    return this.details.cap;
+  }
+
+  get plan(): string {
+    return this.details.plan;
+  }
+}
+
 export async function generateCards(
   input: GenerateCardsInput,
   deps: {
@@ -78,6 +141,10 @@ export async function generateCards(
     fetchBrand(id: string): Promise<Brand>;
     browserRenderingClient: BrowserRenderingClient;
     r2Bucket: R2Bucket;
+    quotaEnforcer?: CardQuotaEnforcer;
+    captureCardQuotaWarning?: (
+      warning: CardQuotaWarning,
+    ) => void | Promise<void>;
   },
 ): Promise<CardURL[]> {
   const templates = unique(input.templates ?? DEFAULT_TEMPLATES);
@@ -103,6 +170,7 @@ export async function generateCards(
   const urls: CardURL[] = [];
 
   for (const job of jobs) {
+    const quotaBeforeRender = await assertCanRenderCard(input, deps);
     const component = TEMPLATE_COMPONENTS[job.template];
     const html = renderCardHtml(
       createElement(component, { brand, article, size: job.size }),
@@ -112,6 +180,17 @@ export async function generateCards(
       html,
       size: job.size,
     });
+    const quotaAfterRender = await consumeRenderedCard(
+      input,
+      deps,
+      quotaBeforeRender,
+    );
+    await maybeCaptureCardQuotaWarning(
+      input,
+      deps.captureCardQuotaWarning,
+      quotaBeforeRender,
+      quotaAfterRender,
+    );
     const key = r2Key(input.articleId, job.template, job.size);
 
     await deps.r2Bucket.put(key, png, {
@@ -127,6 +206,86 @@ export async function generateCards(
   }
 
   return urls;
+}
+
+async function assertCanRenderCard(
+  input: GenerateCardsInput,
+  deps: { quotaEnforcer?: CardQuotaEnforcer },
+): Promise<CardQuotaResult | null> {
+  if (!deps.quotaEnforcer || !input.companyId) {
+    return null;
+  }
+
+  const quota = await deps.quotaEnforcer.canConsume(input.companyId, "cards", 1);
+  if (!quota.allowed) {
+    throw new CardQuotaExceededError({
+      companyId: input.companyId,
+      used: quota.used,
+      cap: quota.cap,
+      plan: quota.plan,
+      requested: 1,
+    });
+  }
+
+  return quota;
+}
+
+async function consumeRenderedCard(
+  input: GenerateCardsInput,
+  deps: { quotaEnforcer?: CardQuotaEnforcer },
+  quotaBeforeRender: CardQuotaResult | null,
+): Promise<CardQuotaResult | null> {
+  if (!deps.quotaEnforcer || !input.companyId || !quotaBeforeRender) {
+    return null;
+  }
+
+  const quota = await deps.quotaEnforcer.consume(input.companyId, "cards", 1);
+  if (!quota.allowed) {
+    throw new CardQuotaExceededError({
+      companyId: input.companyId,
+      used: quota.used,
+      cap: quota.cap,
+      plan: quota.plan,
+      requested: 1,
+    });
+  }
+
+  return quota;
+}
+
+async function maybeCaptureCardQuotaWarning(
+  input: GenerateCardsInput,
+  captureCardQuotaWarning:
+    | ((warning: CardQuotaWarning) => void | Promise<void>)
+    | undefined,
+  quotaBeforeRender: CardQuotaResult | null,
+  quotaAfterRender: CardQuotaResult | null,
+): Promise<void> {
+  if (
+    !input.companyId ||
+    !captureCardQuotaWarning ||
+    !quotaBeforeRender ||
+    !quotaAfterRender
+  ) {
+    return;
+  }
+
+  const threshold = 0.8;
+  const warningAt = Math.ceil(quotaAfterRender.cap * threshold);
+  if (
+    quotaBeforeRender.used >= warningAt ||
+    quotaAfterRender.used < warningAt
+  ) {
+    return;
+  }
+
+  await captureCardQuotaWarning({
+    companyId: input.companyId,
+    used: quotaAfterRender.used,
+    cap: quotaAfterRender.cap,
+    plan: quotaAfterRender.plan,
+    threshold,
+  });
 }
 
 function renderCardHtml(component: ReactElement, size: CardSize): string {

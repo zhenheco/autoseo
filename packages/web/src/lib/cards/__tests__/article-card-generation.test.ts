@@ -9,19 +9,37 @@ import {
 
 function createSupabaseMock() {
   const inserts: unknown[] = [];
+  const updates: unknown[] = [];
+  const articleJobMetadata = {
+    current_phase: "content_completed",
+  };
 
   return {
     inserts,
+    updates,
     from: vi.fn((table: string) => {
       const builder = {
         select: vi.fn(() => builder),
         eq: vi.fn(() => builder),
         order: vi.fn(() => builder),
+        update: vi.fn((payload: unknown) => {
+          updates.push({ table, payload });
+          return builder;
+        }),
         insert: vi.fn(async (payload: unknown) => {
           inserts.push({ table, payload });
           return { data: payload, error: null };
         }),
         single: vi.fn(async () => {
+          if (table === "article_jobs") {
+            return {
+              data: {
+                metadata: articleJobMetadata,
+              },
+              error: null,
+            };
+          }
+
           if (table === "generated_articles") {
             return {
               data: {
@@ -50,6 +68,9 @@ function createSupabaseMock() {
 
           return { data: null, error: null };
         }),
+        then: vi.fn((onfulfilled?: (value: unknown) => unknown) =>
+          Promise.resolve({ data: null, error: null }).then(onfulfilled),
+        ),
       };
 
       return builder;
@@ -92,12 +113,14 @@ describe("article card generation", () => {
       },
     );
 
-    expect(generateCards).toHaveBeenCalledTimes(DEFAULT_CARD_TEMPLATES.length);
+    expect(generateCards).toHaveBeenCalledTimes(
+      DEFAULT_CARD_TEMPLATES.length * DEFAULT_CARD_FORMATS.length,
+    );
     expect(generateCards).toHaveBeenCalledWith(
       expect.objectContaining({
         articleId: "article-1",
         brandId: "brand-1",
-        formats: DEFAULT_CARD_FORMATS,
+        formats: ["ig_square"],
         templates: ["quote"],
       }),
       expect.any(Object),
@@ -154,6 +177,81 @@ describe("article card generation", () => {
         ),
       }),
     );
+  });
+
+  it("catches card quota exhaustion, alerts ops, tags the article job, and stores completed cards", async () => {
+    const supabase = createSupabaseMock();
+    const alertOps = vi.fn(async () => ({ ok: true }));
+    const generateCards = vi
+      .fn<GenerateCardsFn>()
+      .mockResolvedValueOnce([
+        {
+          template: "quote",
+          format: "ig_square",
+          size: { width: 1080, height: 1080 },
+          r2Url: "r2://card-assets/cards/article-1/quote_ig_square.png",
+        },
+      ])
+      .mockRejectedValueOnce(
+        Object.assign(new Error("card_quota_exceeded"), {
+          name: "CardQuotaExceededError",
+          companyId: "company-1",
+          used: 100,
+          cap: 100,
+          plan: "solo",
+        }),
+      );
+
+    await expect(
+      runArticleCardGeneration(
+        {
+          articleId: "article-1",
+          brandId: "brand-1",
+          articleJobId: "job-1",
+          companyId: "company-1",
+        },
+        {
+          supabase: supabase as never,
+          generateCards,
+          browserRenderingClient: { screenshot: vi.fn() },
+          r2Bucket: {} as never,
+          alertOps,
+        },
+      ),
+    ).resolves.toBeUndefined();
+
+    expect(supabase.inserts).toEqual([
+      {
+        table: "article_assets",
+        payload: [
+          expect.objectContaining({
+            article_id: "article-1",
+            kind: "card",
+            template: "quote",
+          }),
+        ],
+      },
+    ]);
+    expect(supabase.updates).toContainEqual({
+      table: "article_jobs",
+      payload: expect.objectContaining({
+        metadata: expect.objectContaining({
+          tags: ["cards_quota_exceeded"],
+          card_quota: expect.objectContaining({
+            used: 100,
+            cap: 100,
+            plan: "solo",
+          }),
+        }),
+      }),
+    });
+    expect(alertOps).toHaveBeenCalledWith(
+      expect.objectContaining({
+        subject: expect.stringContaining("Card quota exhausted"),
+        text: expect.stringContaining("cards_quota_exceeded"),
+      }),
+    );
+    expect(generateCards).toHaveBeenCalledTimes(2);
   });
 
   it("starts generation without returning the background promise", async () => {

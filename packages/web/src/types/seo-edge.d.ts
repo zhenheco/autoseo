@@ -3,6 +3,7 @@ declare module "@seo/edge" {
     input: {
       articleId: string;
       brandId: string;
+      companyId?: string;
       formats: Array<"ig_square" | "ig_story" | "og">;
       templates?: Array<"quote" | "stat" | "list" | "hero">;
     },
@@ -24,6 +25,39 @@ declare module "@seo/edge" {
         }): Promise<ArrayBuffer>;
       };
       r2Bucket: R2Bucket;
+      quotaEnforcer?: {
+        canConsume(
+          companyId: string,
+          resource: "cards",
+          amount: number,
+        ): Promise<{
+          allowed: boolean;
+          used: number;
+          cap: number;
+          remaining: number;
+          plan: string;
+          resource: string;
+        }>;
+        consume(
+          companyId: string,
+          resource: "cards",
+          amount: number,
+        ): Promise<{
+          allowed: boolean;
+          used: number;
+          cap: number;
+          remaining: number;
+          plan: string;
+          resource: string;
+        }>;
+      };
+      captureCardQuotaWarning?: (warning: {
+        companyId: string;
+        used: number;
+        cap: number;
+        plan: string;
+        threshold: number;
+      }) => void | Promise<void>;
     },
   ): Promise<
     Array<{

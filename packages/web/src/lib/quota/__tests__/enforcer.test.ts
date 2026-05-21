@@ -223,6 +223,50 @@ describe("createQuotaEnforcer", () => {
     });
   });
 
+  it("blocks cards at the monthly cap", async () => {
+    const enforcer = enforcerFor({
+      quotaRows: [
+        {
+          company_id: companyId,
+          resource: "cards",
+          month_bucket: currentMonthBucket(),
+          used: 100,
+        },
+      ],
+    });
+
+    await expect(
+      enforcer.canConsume(companyId, "cards", 1),
+    ).resolves.toMatchObject({
+      allowed: false,
+      used: 100,
+      cap: 100,
+      remaining: 0,
+    });
+  });
+
+  it("increments card usage when consuming quota", async () => {
+    const enforcer = enforcerFor({
+      quotaRows: [
+        {
+          company_id: companyId,
+          resource: "cards",
+          month_bucket: currentMonthBucket(),
+          used: 79,
+        },
+      ],
+    });
+
+    await expect(
+      enforcer.consume(companyId, "cards", 1),
+    ).resolves.toMatchObject({
+      allowed: true,
+      used: 80,
+      cap: 100,
+      remaining: 20,
+    });
+  });
+
   it("lets exactly one concurrent consume succeed at cap minus one", async () => {
     const enforcer = enforcerFor({
       quotaRows: [

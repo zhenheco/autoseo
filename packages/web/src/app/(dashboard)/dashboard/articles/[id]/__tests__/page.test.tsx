@@ -57,7 +57,10 @@ vi.mock("next-intl/server", () => ({
   }),
 }));
 
-function createSupabaseMock() {
+function createSupabaseMock(input?: {
+  articleJobMetadata?: Record<string, unknown> | null;
+  cardAssets?: unknown[];
+}) {
   return {
     from(table: string) {
       const builder = {
@@ -79,6 +82,7 @@ function createSupabaseMock() {
               published_at: null,
               wp_post_id: null,
               error_message: null,
+              metadata: input?.articleJobMetadata ?? null,
               article_title: "Fallback title",
               website_configs: {
                 site_name: "Acme Site",
@@ -104,7 +108,7 @@ function createSupabaseMock() {
           }
 
           return {
-            data: [
+            data: input?.cardAssets ?? [
               {
                 id: "asset-1",
                 template: "quote",
@@ -149,5 +153,34 @@ describe("article detail page", () => {
       "href",
       "https://cdn.example.com/cards/article-1/quote.png",
     );
+  });
+
+  it("shows a quota banner when card generation was skipped for monthly quota", async () => {
+    supabaseMocks.createClient.mockResolvedValue(
+      createSupabaseMock({
+        articleJobMetadata: {
+          tags: ["cards_quota_exceeded"],
+          card_quota: {
+            used: 100,
+            cap: 100,
+            plan: "solo",
+          },
+        },
+        cardAssets: [],
+      }),
+    );
+    const { default: ArticleDetailPage } = await import("../page");
+
+    render(
+      await ArticleDetailPage({
+        params: Promise.resolve({ id: "job-1" }),
+      }),
+    );
+
+    expect(
+      screen.getByText(
+        "Card quota for this month exhausted (used 100 / 100). Upgrade to Pro for 500/month.",
+      ),
+    ).toBeInTheDocument();
   });
 });

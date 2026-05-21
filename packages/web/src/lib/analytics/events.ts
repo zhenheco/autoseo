@@ -68,6 +68,16 @@ export type FunnelEvent =
         planId: string;
         amountUsd: number;
       };
+    }
+  | {
+      name: "card_quota_warning";
+      properties: {
+        companyId: string;
+        used: number;
+        cap: number;
+        plan: string;
+        threshold: number;
+      };
     };
 
 // ================================================

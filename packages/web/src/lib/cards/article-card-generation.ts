@@ -1,5 +1,8 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { captureCardQuotaWarning as capturePostHogCardQuotaWarning } from "@/lib/analytics/posthog-server";
 import { enqueueOpsAlertEmail } from "@/lib/email/cf-email-client";
+import { createQuotaEnforcer, type QuotaEnforcer } from "@/lib/quota/enforcer";
+import { resolveQuotaPlan } from "@/lib/quota/plan-resolver";
 import { getR2Config, R2Client } from "@/lib/storage/r2-client";
 
 export const DEFAULT_CARD_TEMPLATES = [
@@ -38,6 +41,7 @@ interface BrandForCards extends Record<string, unknown> {
 interface GenerateCardsInput {
   articleId: string;
   brandId: string;
+  companyId?: string;
   formats: CardFormat[];
   templates?: CardTemplateName[];
 }
@@ -53,6 +57,14 @@ export type GenerateCardsFn = (
     fetchBrand(id: string): Promise<BrandForCards>;
     browserRenderingClient: BrowserRenderingClient;
     r2Bucket: R2Bucket;
+    quotaEnforcer?: QuotaEnforcer;
+    captureCardQuotaWarning?: (warning: {
+      companyId: string;
+      used: number;
+      cap: number;
+      plan: string;
+      threshold: number;
+    }) => void | Promise<void>;
   },
 ) => Promise<CardURL[]>;
 
@@ -69,6 +81,8 @@ interface RunArticleCardGenerationDeps {
   browserRenderingClient?: BrowserRenderingClient;
   r2Bucket?: R2Bucket;
   alertOps?: typeof enqueueOpsAlertEmail;
+  quotaEnforcer?: QuotaEnforcer;
+  captureCardQuotaWarning?: typeof capturePostHogCardQuotaWarning;
 }
 
 interface ArticleCardGenerationSchedulerDeps
@@ -98,6 +112,8 @@ export function triggerArticleCardGeneration(
         browserRenderingClient: deps.browserRenderingClient,
         r2Bucket: deps.r2Bucket,
         alertOps: deps.alertOps,
+        quotaEnforcer: deps.quotaEnforcer,
+        captureCardQuotaWarning: deps.captureCardQuotaWarning,
       });
     });
 
@@ -128,40 +144,78 @@ export async function runArticleCardGeneration(
       deps.browserRenderingClient ?? createHttpBrowserRenderingClient();
     const r2Bucket = deps.r2Bucket ?? createR2BucketAdapter();
     const fetchers = createSupabaseFetchers(deps.supabase);
+    const quotaEnforcer =
+      deps.quotaEnforcer ??
+      (input.companyId
+        ? createQuotaEnforcer({
+            supabase: deps.supabase as never,
+            resolvePlan: (companyId) =>
+              resolveQuotaPlan(deps.supabase as never, companyId),
+          })
+        : undefined);
+    const captureCardQuotaWarning =
+      deps.captureCardQuotaWarning ?? capturePostHogCardQuotaWarning;
     const cardUrls: CardURL[] = [];
+    let cardQuotaExceeded: CardQuotaExceededLike | null = null;
 
     for (const template of DEFAULT_CARD_TEMPLATES) {
-      const generated = await generateCards(
-        {
-          articleId: input.articleId,
-          brandId: input.brandId,
-          formats: [...DEFAULT_CARD_FORMATS],
-          templates: [template],
-        },
-        {
-          ...fetchers,
-          browserRenderingClient,
-          r2Bucket,
-        },
-      );
-      cardUrls.push(...generated);
+      for (const format of DEFAULT_CARD_FORMATS) {
+        try {
+          const generated = await generateCards(
+            {
+              articleId: input.articleId,
+              brandId: input.brandId,
+              companyId: input.companyId,
+              formats: [format],
+              templates: [template],
+            },
+            {
+              ...fetchers,
+              browserRenderingClient,
+              r2Bucket,
+              quotaEnforcer,
+              captureCardQuotaWarning,
+            },
+          );
+          cardUrls.push(...generated);
+        } catch (error) {
+          if (!isCardQuotaExceededError(error)) {
+            throw error;
+          }
+
+          cardQuotaExceeded = error;
+          break;
+        }
+      }
+
+      if (cardQuotaExceeded) break;
     }
 
-    if (cardUrls.length === 0) return;
+    if (cardUrls.length > 0) {
+      await insertArticleCardAssets(deps.supabase, input, cardUrls);
+    }
 
-    const { error } = await deps.supabase.from("article_assets").insert(
-      cardUrls.map((card) => ({
-        article_id: input.articleId,
-        kind: "card",
-        template: card.template,
-        size: card.format || `${card.size.width}x${card.size.height}`,
-        r2_url: card.r2Url,
-        brand_id: input.brandId,
-      })),
-    );
+    if (cardQuotaExceeded) {
+      console.warn("[ArticleCards] Card quota exhausted", {
+        articleId: input.articleId,
+        brandId: input.brandId,
+        articleJobId: input.articleJobId,
+        companyId: input.companyId,
+        used: cardQuotaExceeded.used,
+        cap: cardQuotaExceeded.cap,
+        plan: cardQuotaExceeded.plan,
+      });
 
-    if (error) {
-      throw new Error(`article_assets_insert_failed: ${error.message}`);
+      await Promise.all([
+        alertCardQuotaExceeded({
+          alertOps,
+          input,
+          startedAt,
+          quota: cardQuotaExceeded,
+        }),
+        tagArticleJobCardQuotaExceeded(deps.supabase, input, cardQuotaExceeded),
+      ]);
+      return;
     }
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
@@ -192,6 +246,149 @@ export async function runArticleCardGeneration(
       console.error("[ArticleCards] Ops alert failed", alertError);
     }
   }
+}
+
+async function insertArticleCardAssets(
+  supabase: SupabaseClient,
+  input: ArticleCardGenerationInput,
+  cardUrls: CardURL[],
+): Promise<void> {
+  const { error } = await supabase.from("article_assets").insert(
+    cardUrls.map((card) => ({
+      article_id: input.articleId,
+      kind: "card",
+      template: card.template,
+      size: card.format || `${card.size.width}x${card.size.height}`,
+      r2_url: card.r2Url,
+      brand_id: input.brandId,
+    })),
+  );
+
+  if (error) {
+    throw new Error(`article_assets_insert_failed: ${error.message}`);
+  }
+}
+
+interface CardQuotaExceededLike {
+  name: "CardQuotaExceededError";
+  companyId?: string;
+  used: number;
+  cap: number;
+  plan: string;
+  message: string;
+}
+
+function isCardQuotaExceededError(
+  error: unknown,
+): error is CardQuotaExceededLike {
+  return (
+    typeof error === "object" &&
+    error !== null &&
+    "name" in error &&
+    error.name === "CardQuotaExceededError" &&
+    "used" in error &&
+    typeof error.used === "number" &&
+    "cap" in error &&
+    typeof error.cap === "number" &&
+    "plan" in error &&
+    typeof error.plan === "string" &&
+    "message" in error &&
+    typeof error.message === "string"
+  );
+}
+
+async function alertCardQuotaExceeded(input: {
+  alertOps: typeof enqueueOpsAlertEmail;
+  input: ArticleCardGenerationInput;
+  startedAt: string;
+  quota: CardQuotaExceededLike;
+}): Promise<void> {
+  try {
+    await input.alertOps({
+      subject: "[1WaySEO] Card quota exhausted",
+      text: [
+        "Article card generation stopped because monthly card quota was exhausted.",
+        "tag: cards_quota_exceeded",
+        `article_id: ${input.input.articleId}`,
+        `brand_id: ${input.input.brandId}`,
+        input.input.articleJobId
+          ? `article_job_id: ${input.input.articleJobId}`
+          : null,
+        input.input.companyId ? `company_id: ${input.input.companyId}` : null,
+        `used: ${input.quota.used}`,
+        `cap: ${input.quota.cap}`,
+        `plan: ${input.quota.plan}`,
+        `started_at: ${input.startedAt}`,
+      ]
+        .filter(Boolean)
+        .join("\n"),
+      idempotencyKey: `article-card-quota-exceeded:${input.input.articleId}:${input.startedAt}`,
+    });
+  } catch (alertError) {
+    console.error("[ArticleCards] Quota ops alert failed", alertError);
+  }
+}
+
+async function tagArticleJobCardQuotaExceeded(
+  supabase: SupabaseClient,
+  input: ArticleCardGenerationInput,
+  quota: CardQuotaExceededLike,
+): Promise<void> {
+  if (!input.articleJobId) return;
+
+  const { data, error } = await supabase
+    .from("article_jobs")
+    .select("metadata")
+    .eq("id", input.articleJobId)
+    .single();
+
+  if (error) {
+    console.error("[ArticleCards] Failed to read article job metadata", error);
+    return;
+  }
+
+  const metadata = normalizeMetadata(
+    (data as { metadata?: unknown } | null)?.metadata,
+  );
+  const existingTags = Array.isArray(metadata.tags)
+    ? metadata.tags.filter((tag): tag is string => typeof tag === "string")
+    : [];
+  const tags = [...new Set([...existingTags, "cards_quota_exceeded"])];
+
+  const { error: updateError } = await supabase
+    .from("article_jobs")
+    .update({
+      metadata: {
+        ...metadata,
+        tags,
+        card_quota: {
+          used: quota.used,
+          cap: quota.cap,
+          plan: quota.plan,
+          exhausted_at: new Date().toISOString(),
+        },
+      },
+    })
+    .eq("id", input.articleJobId);
+
+  if (updateError) {
+    console.error(
+      "[ArticleCards] Failed to tag article job metadata",
+      updateError,
+    );
+  }
+}
+
+function normalizeMetadata(metadata: unknown): Record<string, unknown> {
+  if (
+    typeof metadata === "object" &&
+    metadata !== null &&
+    !Array.isArray(metadata)
+  ) {
+    return metadata as Record<string, unknown>;
+  }
+
+  return {};
 }
 
 function createSupabaseFetchers(supabase: SupabaseClient) {

@@ -28,9 +28,16 @@ export default {
 
 export { applyHtmlRewrites };
 export type { EdgeRule };
-export { generateCards, CardCapExceededError } from "./cards/generate";
+export {
+  generateCards,
+  CardCapExceededError,
+  CardQuotaExceededError,
+} from "./cards/generate";
 export type {
   BrowserRenderingClient,
+  CardQuotaEnforcer,
+  CardQuotaResult,
+  CardQuotaWarning,
   CardURL,
   GenerateCardsInput,
 } from "./cards/generate";

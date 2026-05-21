@@ -82,3 +82,16 @@ export function captureTrialConverted(properties: {
     properties,
   });
 }
+
+export function captureCardQuotaWarning(properties: {
+  companyId: string;
+  used: number;
+  cap: number;
+  plan: string;
+  threshold: number;
+}): void {
+  capture(properties.companyId, {
+    name: "card_quota_warning",
+    properties,
+  });
+}
