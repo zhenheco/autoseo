@@ -4,8 +4,7 @@ compatibility_date = "2026-05-21"
 compatibility_flags = ["nodejs_compat"]
 
 # Routes are configured by the owner in the Cloudflare dashboard (HITL).
-# Create KV namespace EDGE_RULES in the dashboard, then fill the namespace id.
-#
-# [[kv_namespaces]]
-# binding = "EDGE_RULES"
-# id = "<TO_BE_FILLED>"
+
+[[kv_namespaces]]
+binding = "EDGE_RULES"
+id = "502e67be20454a4ba409647f9cf8e98c"
