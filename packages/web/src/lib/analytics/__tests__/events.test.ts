@@ -2,9 +2,9 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import type { FunnelEvent } from "../events";
 import { track } from "../events";
-import { getPostHogClient } from "../posthog-client";
+import { getPostHogClient } from "@/lib/analytics/posthog-client";
 
-vi.mock("../posthog-client", () => ({
+vi.mock("@/lib/analytics/posthog-client", () => ({
   getPostHogClient: vi.fn(),
 }));
 
@@ -41,10 +41,15 @@ const funnelEvents: FunnelEvent[] = [
 describe("funnel track", () => {
   const capture = vi.fn();
   const gtag = vi.fn();
+  let idleCallback: (deadline?: IdleDeadline) => void;
 
   beforeEach(() => {
     vi.clearAllMocks();
     mockedGetPostHogClient.mockReturnValue({ capture });
+    window.requestIdleCallback = vi.fn((callback) => {
+      idleCallback = callback;
+      return 1;
+    });
     Object.defineProperty(window.navigator, "doNotTrack", {
       configurable: true,
       value: "0",
@@ -54,21 +59,32 @@ describe("funnel track", () => {
 
   it.each(funnelEvents)(
     "dual-emits $name to PostHog and GA4 with the canonical shape",
-    (event) => {
+    async (event) => {
       track(event);
 
-      expect(capture).toHaveBeenCalledWith(event.name, event.properties);
       expect(gtag).toHaveBeenCalledWith("event", event.name, event.properties);
+      expect(window.requestIdleCallback).toHaveBeenCalled();
+      expect(capture).not.toHaveBeenCalled();
+
+      idleCallback();
+      await vi.dynamicImportSettled();
+
+      expect(capture).toHaveBeenCalledWith(event.name, event.properties);
     },
   );
 
-  it("is a no-op when PostHog is not initialized", () => {
+  it("still emits GA4 when PostHog is not initialized", async () => {
     mockedGetPostHogClient.mockReturnValue(null);
 
     track({ name: "pricing_view", properties: { locale: "zh-TW" } });
 
+    idleCallback();
+    await vi.dynamicImportSettled();
+
     expect(capture).not.toHaveBeenCalled();
-    expect(gtag).not.toHaveBeenCalled();
+    expect(gtag).toHaveBeenCalledWith("event", "pricing_view", {
+      locale: "zh-TW",
+    });
   });
 
   it("does not emit when Do Not Track is enabled", () => {

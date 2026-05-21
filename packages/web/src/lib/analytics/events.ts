@@ -8,8 +8,6 @@
  * trackArticleGeneration("article-123", ["SEO", "行銷"]);
  */
 
-import { getPostHogClient } from "./posthog-client";
-
 // ================================================
 // 類型定義
 // ================================================
@@ -120,15 +118,33 @@ export function getAnalyticsLocale(): string {
 export function track(event: FunnelEvent): void {
   if (isDoNotTrackEnabled()) return;
 
-  const posthog = getPostHogClient();
-  if (!posthog) return;
-
-  posthog.capture(event.name, event.properties);
-
   const gtag = getGtag();
   if (gtag) {
     gtag("event", event.name, event.properties);
   }
+
+  schedulePostHogCapture(event);
+}
+
+function schedulePostHogCapture(event: FunnelEvent): void {
+  if (typeof window === "undefined") return;
+
+  const capture = () => {
+    void import("@/lib/analytics/posthog-client")
+      .then(({ getPostHogClient }) => {
+        getPostHogClient()?.capture(event.name, event.properties);
+      })
+      .catch(() => {
+        // Analytics must never affect product UX or Lighthouse stability.
+      });
+  };
+
+  if (typeof window.requestIdleCallback === "function") {
+    window.requestIdleCallback(capture);
+    return;
+  }
+
+  window.setTimeout(capture, 1);
 }
 
 /**

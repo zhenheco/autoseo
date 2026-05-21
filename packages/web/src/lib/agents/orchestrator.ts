@@ -8,9 +8,9 @@ import {
 import { createQuotaEnforcer, type QuotaEnforcer } from "@/lib/quota/enforcer";
 import { QuotaExceededError } from "@/lib/quota/errors";
 import { resolveQuotaPlan } from "@/lib/quota/plan-resolver";
-import {
-  createArticleCardGenerationScheduler,
-  type ArticleCardGenerationScheduler,
+import type {
+  ArticleCardGenerationInput,
+  ArticleCardGenerationScheduler,
 } from "@/lib/cards/article-card-generation";
 import { ResearchAgent } from "./research-agent";
 import { StrategyAgent } from "./strategy-agent";
@@ -67,6 +67,13 @@ import type {
 import { AgentExecutionContext } from "./base-agent";
 
 export { QuotaExceededError } from "@/lib/quota/errors";
+
+const importArticleCardGeneration = Function(
+  "specifier",
+  "return import(specifier)",
+) as (
+  specifier: string,
+) => Promise<typeof import("@/lib/cards/article-card-generation")>;
 
 interface ParallelOrchestratorDependencies {
   brandMemoryStore?: BrandMemoryStore;
@@ -159,9 +166,17 @@ export class ParallelOrchestrator {
 
   private getCardGenerationScheduler(): ArticleCardGenerationScheduler {
     if (!this.cardGenerationScheduler) {
-      this.cardGenerationScheduler = createArticleCardGenerationScheduler({
-        getSupabase: () => this.getSupabase(),
-      });
+      this.cardGenerationScheduler = {
+        trigger: (input: ArticleCardGenerationInput) => {
+          void importArticleCardGeneration(
+            "@/lib/cards/article-card-generation",
+          ).then(({ triggerArticleCardGeneration }) => {
+            triggerArticleCardGeneration(input, {
+              getSupabase: () => this.getSupabase(),
+            });
+          });
+        },
+      };
     }
 
     return this.cardGenerationScheduler;

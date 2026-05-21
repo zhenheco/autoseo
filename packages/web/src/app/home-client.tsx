@@ -57,16 +57,16 @@ export function HomeClient({ plans, articlePackages }: PricingProps) {
             <FinalCTA />
           </>
         ) : (
-          <LegacyHero />
+          <>
+            <LegacyHero />
+            <ContrastAnchor />
+            <RevealDemo />
+            <LogoWall />
+            <ScenarioCards />
+            <PricingSection plans={plans} articlePackages={articlePackages} />
+            <ClosingCTANew />
+          </>
         )}
-        <ContrastAnchor />
-        <RevealDemo />
-        <LogoWall />
-        <ScenarioCards />
-        {!isLpV2Enabled ? (
-          <PricingSection plans={plans} articlePackages={articlePackages} />
-        ) : null}
-        <ClosingCTANew />
       </main>
       <FooterSection />
     </div>

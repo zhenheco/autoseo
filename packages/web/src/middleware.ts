@@ -12,7 +12,10 @@ const MAX_BODY_SIZE = 10 * 1024 * 1024;
 
 export async function middleware(request: NextRequest) {
   const url = request.nextUrl.clone();
-  const host = request.headers.get("host") || "";
+  const host = request.headers.get("host") || url.host;
+  const hostname = host.split(":")[0] ?? "";
+  const isLoopbackHost =
+    hostname === "localhost" || hostname === "127.0.0.1" || hostname === "::1";
 
   // ========== Request Body 大小檢查 ==========
   const contentLength = request.headers.get("content-length");
@@ -36,7 +39,7 @@ export async function middleware(request: NextRequest) {
     const isHttp = proto === "http";
     const hasWww = host.startsWith("www.");
 
-    if (isHttp || hasWww) {
+    if (!isLoopbackHost && (isHttp || hasWww)) {
       // 構建新的 URL
       const newHost = hasWww ? host.slice(4) : host; // 移除 www.
       const redirectUrl = `https://${newHost}${url.pathname}${url.search}`;

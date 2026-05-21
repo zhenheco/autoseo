@@ -57,9 +57,9 @@ export function FooterSection() {
 
           {footerLinks.map((group) => (
             <div key={group.titleKey}>
-              <h4 className="text-foreground font-bold text-sm mb-6 uppercase tracking-widest">
+              <h2 className="text-foreground font-bold text-sm mb-6 uppercase tracking-widest">
                 {t(group.titleKey)}
-              </h4>
+              </h2>
               <ul className="space-y-4">
                 {group.links.map((link) => (
                   <li key={link.name}>

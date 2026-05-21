@@ -5,7 +5,6 @@ import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { IntlProvider } from "@/providers/IntlProvider";
 import { CookieConsentProvider } from "@/components/consent";
-import { PostHogProvider } from "@/components/analytics/PostHogProvider";
 import { GoogleAnalytics } from "@/components/tracking/GoogleAnalytics";
 import { GA4Script } from "@/components/tracking/GA4Script";
 import { fontVariables } from "@/lib/fonts";
@@ -113,8 +112,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-TW" suppressHydrationWarning>
-      {/* GA4 腳本 - 使用 beforeInteractive 確保在 head 中盡早載入 */}
-      <GA4Script />
       <body className={fontVariables}>
         <ThemeProvider
           attribute="class"
@@ -123,29 +120,28 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <CookieConsentProvider>
-            <PostHogProvider>
-              <GoogleAnalytics />
-              <IntlProvider>
-                {children}
-                <Toaster richColors position="top-right" />
-                {/* 全站結構化數據 */}
-                <OrganizationSchema
-                  name={SITE_CONFIG.name}
-                  url={SITE_CONFIG.url}
-                  logo={SITE_CONFIG.logo}
-                  description={`AI 驅動的 SEO 寫文平台，提供智能文章生成服務`}
-                  sameAs={[...SOCIAL_LINKS]}
-                />
-                <WebSiteSchema
-                  name={SITE_CONFIG.name}
-                  url={SITE_CONFIG.url}
-                  description={SITE_CONFIG.description}
-                  searchUrl={`${SITE_CONFIG.url}/search`}
-                />
-              </IntlProvider>
-            </PostHogProvider>
+            <GoogleAnalytics />
+            <IntlProvider>
+              {children}
+              <Toaster richColors position="top-right" />
+              {/* 全站結構化數據 */}
+              <OrganizationSchema
+                name={SITE_CONFIG.name}
+                url={SITE_CONFIG.url}
+                logo={SITE_CONFIG.logo}
+                description={`AI 驅動的 SEO 寫文平台，提供智能文章生成服務`}
+                sameAs={[...SOCIAL_LINKS]}
+              />
+              <WebSiteSchema
+                name={SITE_CONFIG.name}
+                url={SITE_CONFIG.url}
+                description={SITE_CONFIG.description}
+                searchUrl={`${SITE_CONFIG.url}/search`}
+              />
+            </IntlProvider>
           </CookieConsentProvider>
         </ThemeProvider>
+        <GA4Script />
         {process.env.NEXT_PUBLIC_CF_ANALYTICS_TOKEN && (
           <Script
             defer

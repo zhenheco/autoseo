@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { describe, expect, it, vi } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("@shared/supabase", () => ({
   updateSession: vi.fn(() => NextResponse.next()),
@@ -11,7 +11,19 @@ function request(pathname: string) {
   return new NextRequest(`https://1wayseo.com${pathname}`);
 }
 
+function localHttpRequest(pathname: string) {
+  return new NextRequest(`http://localhost:3000${pathname}`, {
+    headers: {
+      "x-forwarded-proto": "http",
+    },
+  });
+}
+
 describe("middleware security headers", () => {
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
   it("returns relaxed CSP for SHOPLINE admin embedding", async () => {
     const response = await middleware(request("/shopline/admin?shop=demo"));
     const csp = response.headers.get("Content-Security-Policy") ?? "";
@@ -37,5 +49,14 @@ describe("middleware security headers", () => {
     );
 
     expect(response.cookies.get("active_brand_id")?.value).toBe("brand-1");
+  });
+
+  it("does not force HTTPS for localhost production smoke tests", async () => {
+    vi.stubEnv("NODE_ENV", "production");
+
+    const response = await middleware(localHttpRequest("/"));
+
+    expect(response.status).not.toBe(301);
+    expect(response.headers.get("location")).toBeNull();
   });
 });
