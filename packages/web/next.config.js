@@ -64,8 +64,8 @@ const nextConfig = {
         ],
       },
       {
-        // Public assets
-        source: "/:path*",
+        // Public assets except SHOPLINE admin iframe entrypoint.
+        source: "/((?!shopline/admin(?:/.*)?$).*)",
         headers: [
           {
             key: "X-Content-Type-Options",
