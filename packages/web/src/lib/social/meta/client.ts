@@ -8,6 +8,7 @@ import {
   type SocialAccount,
   type SupabaseServerClient,
 } from "../types";
+import { refreshMetaToken as refreshStoredMetaToken } from "./refresh";
 
 const META_GRAPH_BASE_URL = "https://graph.facebook.com/v19.0";
 
@@ -39,12 +40,12 @@ type SupabaseUpdateBuilder = {
   };
 };
 
-async function refreshMetaToken(): Promise<RefreshMetaTokenResult | null> {
-  console.warn(
-    "[MetaClient] refreshMetaToken is not implemented yet; waiting for #94",
-  );
-  return null;
-}
+const refreshMetaToken: RefreshMetaTokenImpl = async (input) =>
+  refreshStoredMetaToken(input.socialAccountId, {
+    supabase: input.supabase as never,
+    tokenCrypto: input.tokenCrypto,
+    fetchImpl: input.fetchImpl,
+  });
 
 function parseRetryAfter(response: Response): number {
   const retryAfter = response.headers.get("Retry-After");
