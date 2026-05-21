@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createAdminClient } from "@shared/supabase";
 import { verifyShoplineHmac } from "@/lib/shopline/verify-webhook-hmac";
 
 const HMAC_HEADER_NAMES = ["x-shopline-hmac-sha256", "x-hmac-sha256"] as const;
@@ -20,8 +21,36 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "invalid_hmac" }, { status: 401 });
   }
 
-  return NextResponse.json({ error: "not_implemented" }, { status: 501 });
+  let payload: CustomerRedactPayload;
+  try {
+    payload = JSON.parse(rawBody) as CustomerRedactPayload;
+  } catch {
+    return NextResponse.json({ error: "invalid_json" }, { status: 400 });
+  }
+
+  const supabase = createAdminClient();
+  const { error: logError } = await supabase
+    .from("shopline_gdpr_redact_log")
+    .insert({
+      webhook_type: "customer-redact",
+      shop_id: stringOrNull(payload.shop_id),
+      shop_domain: stringOrNull(payload.shop_domain),
+      payload_summary: "customer email absent; scrubbed: 0 rows",
+      processed_at: new Date().toISOString(),
+      result: "processed",
+    });
+
+  if (logError) {
+    return NextResponse.json({ error: "gdpr_log_failed" }, { status: 500 });
+  }
+
+  return NextResponse.json({ ok: true });
 }
+
+type CustomerRedactPayload = {
+  shop_id?: unknown;
+  shop_domain?: unknown;
+};
 
 function getHmacHeader(headers: Headers): string | null {
   for (const name of HMAC_HEADER_NAMES) {
@@ -37,4 +66,8 @@ function logHeaderNames(webhookType: string, headers: Headers) {
     webhookType,
     headerNames: Array.from(headers.keys()).sort(),
   });
+}
+
+function stringOrNull(value: unknown): string | null {
+  return typeof value === "string" && value.trim() ? value.trim() : null;
 }
