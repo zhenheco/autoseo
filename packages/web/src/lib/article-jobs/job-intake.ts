@@ -90,6 +90,10 @@ export interface ArticleJobIntakeItem {
     wordCount?: string;
     brandId?: string;
     brand_id?: string;
+    sourceTrendSignalId?: string;
+    topicTemplate?: string | null;
+    structureTemplate?: string;
+    translateLocales?: string[];
   };
 }
 
@@ -285,6 +289,11 @@ export function normalizeSingleArticleGenerationInput(
     : [];
   const writingStyle = asNonEmptyString(body.writing_style);
   const mode = asNonEmptyString(body.mode) || "single";
+  const wordCount = asNonEmptyString(body.wordCount);
+  const sourceTrendSignalId = asNonEmptyString(body.sourceTrendSignalId);
+  const topicTemplate = asNonEmptyString(body.topicTemplate);
+  const structureTemplate = asNonEmptyString(body.structureTemplate);
+  const translateLocales = asStringArray(body.translateLocales);
   const hasBrandIdField =
     Object.prototype.hasOwnProperty.call(body, "brandId") ||
     Object.prototype.hasOwnProperty.call(body, "brand_id");
@@ -306,6 +315,11 @@ export function normalizeSingleArticleGenerationInput(
             language: language || null,
             competitors,
             writing_style: writingStyle || null,
+            ...(wordCount ? { wordCount } : {}),
+            ...(sourceTrendSignalId ? { sourceTrendSignalId } : {}),
+            ...(topicTemplate ? { topicTemplate } : {}),
+            ...(structureTemplate ? { structureTemplate } : {}),
+            ...(translateLocales.length > 0 ? { translateLocales } : {}),
             ...(brandId ? { brandId, brand_id: brandId } : {}),
           },
         },
@@ -545,6 +559,13 @@ function validationFailure(
 
 function asNonEmptyString(value: unknown): string | null {
   return typeof value === "string" && value.trim().length > 0 ? value : null;
+}
+
+function asStringArray(value: unknown): string[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter(
+    (item): item is string => typeof item === "string" && item.length > 0,
+  );
 }
 
 function normalizeRawBatchItems(

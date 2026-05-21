@@ -140,6 +140,39 @@ describe("ArticleJobIntake result contract", () => {
       ],
       websiteId: null,
       hasWebsiteIdField: true,
+      brandId: null,
+      hasBrandIdField: false,
+    });
+  });
+
+  it("preserves wizard single article metadata for processing", () => {
+    const result = normalizeSingleArticleGenerationInput({
+      keyword: "AI SEO workflows",
+      mode: "wizard",
+      brandId: "brand-1",
+      sourceTrendSignalId: "signal-1",
+      topicTemplate: "comparison",
+      wordCount: "2200",
+      structureTemplate: "comparison",
+      translateLocales: ["en-US", "ja-JP"],
+    });
+
+    expect(result.success).toBe(true);
+    if (!result.success) {
+      throw new Error(result.error.message);
+    }
+    expect(result.data.brandId).toBe("brand-1");
+    expect(result.data.hasBrandIdField).toBe(true);
+    expect(result.data.items[0].metadata).toMatchObject({
+      mode: "wizard",
+      title: "AI SEO workflows",
+      brandId: "brand-1",
+      brand_id: "brand-1",
+      sourceTrendSignalId: "signal-1",
+      topicTemplate: "comparison",
+      wordCount: "2200",
+      structureTemplate: "comparison",
+      translateLocales: ["en-US", "ja-JP"],
     });
   });
 

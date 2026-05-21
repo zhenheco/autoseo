@@ -7,7 +7,7 @@ import { PenSquare } from "lucide-react";
 export function NewArticleButton() {
   return (
     <Button asChild>
-      <Link href="/dashboard/articles">
+      <Link href="/dashboard/articles/new">
         <PenSquare className="mr-2 h-4 w-4" />
         新增文章
       </Link>
