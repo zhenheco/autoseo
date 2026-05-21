@@ -66,10 +66,10 @@ function getPlanSlug(
   subscriptionPlans: CompanySubscriptionSelection["subscription_plans"],
 ): PlanSlug {
   if (Array.isArray(subscriptionPlans)) {
-    return subscriptionPlans[0]?.slug ?? "free";
+    return subscriptionPlans[0]?.slug ?? "solo";
   }
 
-  return subscriptionPlans?.slug ?? "free";
+  return subscriptionPlans?.slug ?? "solo";
 }
 
 async function resolvePlanSlug(
@@ -105,7 +105,7 @@ async function resolvePlanSlug(
     console.warn("[Analytics] Failed to resolve subscription plan:", error);
   }
 
-  return data ? getPlanSlug(data.subscription_plans) : "free";
+  return data ? getPlanSlug(data.subscription_plans) : "solo";
 }
 
 function emptySourceMetrics() {

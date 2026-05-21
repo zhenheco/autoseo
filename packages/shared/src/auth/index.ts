@@ -6,7 +6,6 @@ export type UserCompany = {
   slug?: string | null;
   owner_id?: string | null;
   subscription_tier?:
-    | "free"
     | "starter"
     | "pro"
     | "professional"
@@ -71,7 +70,9 @@ export async function getUserCompanies(
   const memberships = Array.isArray(data)
     ? data
         .map((membership) => toUserCompanyMembership(membership))
-        .filter((membership): membership is UserCompanyMembership => !!membership)
+        .filter(
+          (membership): membership is UserCompanyMembership => !!membership,
+        )
     : [];
 
   if (memberships.length === 0) return [];

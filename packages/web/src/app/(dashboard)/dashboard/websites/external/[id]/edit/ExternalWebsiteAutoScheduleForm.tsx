@@ -23,6 +23,8 @@ import { updateExternalWebsiteAutoSchedule } from "../../actions";
 import { Calendar, Clock, CalendarDays } from "lucide-react";
 import type { AutoScheduleFormProps } from "@/types/external-website.types";
 import { useTranslations } from "next-intl";
+import { FormRow } from "@/components/ui/form-row";
+import { IconLabel } from "@/components/ui/icon-label";
 
 const TIME_SLOTS_INFO: Record<number, string> = {
   1: "09:00",
@@ -78,9 +80,10 @@ export function ExternalWebsiteAutoScheduleForm({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Calendar className="h-5 w-5" />
-          {t("autoScheduleSettings")}
+        <CardTitle>
+          <IconLabel icon={<Calendar className="h-5 w-5" />}>
+            {t("autoScheduleSettings")}
+          </IconLabel>
         </CardTitle>
         <CardDescription>{t("autoScheduleDescription")}</CardDescription>
       </CardHeader>
@@ -124,31 +127,32 @@ export function ExternalWebsiteAutoScheduleForm({
             >
               <div className="flex items-center space-x-2 rounded-lg border p-4 cursor-pointer hover:bg-muted/50">
                 <RadioGroupItem value="daily" id="daily" />
-                <Label
+                <IconLabel
+                  as="label"
                   htmlFor="daily"
-                  className="flex items-center gap-2 cursor-pointer"
+                  className="cursor-pointer"
+                  icon={<Clock className="h-4 w-4" />}
                 >
-                  <Clock className="h-4 w-4" />
                   {t("dailyPublish")}
-                </Label>
+                </IconLabel>
               </div>
               <div className="flex items-center space-x-2 rounded-lg border p-4 cursor-pointer hover:bg-muted/50">
                 <RadioGroupItem value="interval" id="interval" />
-                <Label
+                <IconLabel
+                  as="label"
                   htmlFor="interval"
-                  className="flex items-center gap-2 cursor-pointer"
+                  className="cursor-pointer"
+                  icon={<CalendarDays className="h-4 w-4" />}
                 >
-                  <CalendarDays className="h-4 w-4" />
                   {t("intervalPublish")}
-                </Label>
+                </IconLabel>
               </div>
             </RadioGroup>
           </div>
 
           {/* 每日發布模式：選擇每日篇數 */}
           {scheduleType === "daily" && (
-            <div className="space-y-2">
-              <Label htmlFor="daily-limit">{t("dailyPublishLimit")}</Label>
+            <FormRow label={t("dailyPublishLimit")} htmlFor="daily-limit">
               <Select
                 value={dailyLimit}
                 onValueChange={setDailyLimit}
@@ -165,13 +169,16 @@ export function ExternalWebsiteAutoScheduleForm({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </FormRow>
           )}
 
           {/* 間隔發布模式：選擇間隔天數 */}
           {scheduleType === "interval" && (
-            <div className="space-y-2">
-              <Label htmlFor="interval-days">{t("publishInterval")}</Label>
+            <FormRow
+              label={t("publishInterval")}
+              htmlFor="interval-days"
+              helperText={t("intervalHint")}
+            >
               <Select
                 value={intervalDays}
                 onValueChange={setIntervalDays}
@@ -188,18 +195,18 @@ export function ExternalWebsiteAutoScheduleForm({
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">
-                {t("intervalHint")}
-              </p>
-            </div>
+            </FormRow>
           )}
 
           {/* 時段提示 */}
           <div className="rounded-lg bg-muted/50 p-3">
-            <p className="text-sm text-muted-foreground flex items-center gap-2">
-              <Clock className="h-4 w-4" />
+            <IconLabel
+              as="p"
+              className="text-sm text-muted-foreground"
+              icon={<Clock className="h-4 w-4" />}
+            >
               <span>{t("publishTimeSlots", { slots: currentTimeSlots })}</span>
-            </p>
+            </IconLabel>
           </div>
 
           <Button type="submit" disabled={!autoEnabled}>

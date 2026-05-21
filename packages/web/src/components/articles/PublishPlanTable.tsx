@@ -27,6 +27,7 @@ import {
   Trash2,
 } from "lucide-react";
 import type { PublishPlan } from "@/app/(dashboard)/dashboard/articles/import/page";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 interface PublishPlanTableProps {
   plans: PublishPlan[];
@@ -104,32 +105,11 @@ export function PublishPlanTable({
   const getStatusBadge = (status: PublishPlan["status"]) => {
     switch (status) {
       case "valid":
-        return (
-          <Badge
-            variant="outline"
-            className="bg-green-50 text-green-700 border-green-200"
-          >
-            {t("status.valid")}
-          </Badge>
-        );
+        return <StatusBadge status={status} label={t("status.valid")} />;
       case "warning":
-        return (
-          <Badge
-            variant="outline"
-            className="bg-yellow-50 text-yellow-700 border-yellow-200"
-          >
-            {t("status.warning")}
-          </Badge>
-        );
+        return <StatusBadge status={status} label={t("status.warning")} />;
       case "error":
-        return (
-          <Badge
-            variant="outline"
-            className="bg-red-50 text-red-700 border-red-200"
-          >
-            {t("status.error")}
-          </Badge>
-        );
+        return <StatusBadge status={status} label={t("status.error")} />;
     }
   };
 

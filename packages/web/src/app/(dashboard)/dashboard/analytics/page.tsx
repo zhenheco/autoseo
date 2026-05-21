@@ -26,10 +26,10 @@ function getPlanSlug(
   subscriptionPlans: SubscriptionSelection["subscription_plans"],
 ) {
   if (Array.isArray(subscriptionPlans)) {
-    return subscriptionPlans[0]?.slug ?? "free";
+    return subscriptionPlans[0]?.slug ?? "solo";
   }
 
-  return subscriptionPlans?.slug ?? "free";
+  return subscriptionPlans?.slug ?? "solo";
 }
 
 async function loadInitialPlan(companyId: string) {
@@ -43,12 +43,12 @@ async function loadInitialPlan(companyId: string) {
 
   if (error) {
     console.warn("[AnalyticsPage] Failed to load plan:", error);
-    return "free";
+    return "solo";
   }
 
   return data
     ? getPlanSlug((data as SubscriptionSelection).subscription_plans)
-    : "free";
+    : "solo";
 }
 
 export default async function AnalyticsPage() {

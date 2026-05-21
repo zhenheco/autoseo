@@ -69,7 +69,6 @@ export async function signUp(
       name: `${email.split("@")[0]} 的公司`,
       slug: generateSlug(email),
       owner_id: authData.user.id,
-      subscription_tier: "free",
     })
     .select()
     .single();
@@ -102,59 +101,7 @@ export async function signUp(
   });
   console.log("[註冊] Step 3.5 完成: 預設品牌建立成功");
 
-  console.log("[註冊] Step 4: 查詢免費方案...");
-  const { data: freePlan, error: planError } = await adminClient
-    .from("subscription_plans")
-    .select("id, base_tokens, articles_per_month")
-    .eq("slug", "free")
-    .single();
-
-  if (planError || !freePlan) {
-    console.error("[註冊失敗] Step 4: 無法取得免費方案", {
-      planError,
-      freePlan,
-    });
-    throw new Error("免費方案設定錯誤");
-  }
-  console.log("[註冊] Step 4 完成: 免費方案查詢成功", freePlan);
-
-  const freeArticles =
-    (freePlan as unknown as { articles_per_month: number | null })
-      .articles_per_month || 3;
-  const { error: subscriptionError } = await adminClient
-    .from("company_subscriptions")
-    .insert({
-      company_id: company.id,
-      plan_id: freePlan.id,
-      status: "active",
-      monthly_token_quota: 0,
-      monthly_quota_balance: 0,
-      purchased_token_balance: 0,
-      subscription_articles_remaining: freeArticles,
-      purchased_articles_remaining: 0,
-      articles_per_month: 0,
-      lifetime_free_articles_limit: freeArticles,
-      current_period_start: null,
-      current_period_end: null,
-      is_lifetime: false,
-      lifetime_discount: 1.0,
-    });
-
-  if (subscriptionError) {
-    console.error("[註冊失敗] Step 5: 建立訂閱失敗", subscriptionError);
-    throw subscriptionError;
-  }
-  console.log("[註冊] Step 5 完成: 訂閱建立成功");
-
-  await adminClient.from("subscriptions").insert({
-    company_id: company.id,
-    plan_name: "free",
-    status: "active",
-    monthly_article_limit: 5,
-    articles_used_this_month: 0,
-    current_period_start: new Date().toISOString(),
-    current_period_end: null,
-  });
+  console.log("[註冊] Step 4: 新帳號等待結帳建立訂閱");
 
   syncUserToBrevo(authData.user.id).catch((error) => {
     console.error("[註冊] Brevo 同步失敗（不影響註冊）:", error);

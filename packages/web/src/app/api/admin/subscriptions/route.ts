@@ -20,7 +20,7 @@ export const GET = withRouteAuth("admin", async () => {
       companyName: sub.company?.name || "未知",
       companySlug: sub.company?.slug || "",
       planName: sub.plan?.name || "無方案",
-      planSlug: sub.plan?.slug || "free",
+      planSlug: sub.plan?.slug || "none",
       status: sub.status,
       articlesPerMonth: sub.articles_per_month,
       subscriptionArticlesRemaining: sub.subscription_articles_remaining,

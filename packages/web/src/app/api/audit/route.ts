@@ -35,7 +35,7 @@ type SupabaseClient = Parameters<
   Parameters<typeof withCompany>[0]
 >[1]["supabase"];
 
-type PlanTier = "free" | "starter" | "pro" | "business" | "agency";
+type PlanTier = "starter" | "pro" | "business" | "agency";
 
 export const POST = withCompany(
   async (request, { user, supabase, companyId }) => {
@@ -136,7 +136,7 @@ async function loadCompanyPlanTier(
 
   const tier = (data as { subscription_tier?: unknown } | null)
     ?.subscription_tier;
-  return isPlanTier(tier) ? tier : "free";
+  return isPlanTier(tier) ? tier : "starter";
 }
 
 function isChromiumAuditEnabledForTier(tier: PlanTier): boolean {
@@ -145,7 +145,6 @@ function isChromiumAuditEnabledForTier(tier: PlanTier): boolean {
 
 function isPlanTier(value: unknown): value is PlanTier {
   return (
-    value === "free" ||
     value === "starter" ||
     value === "pro" ||
     value === "business" ||

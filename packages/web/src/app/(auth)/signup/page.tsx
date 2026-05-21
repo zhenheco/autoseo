@@ -1,4 +1,10 @@
 import { redirect } from "next/navigation";
+import {
+  isStripePlanId,
+  type StripePlanId,
+} from "@/lib/payments/stripe/price-ids";
+
+const DEFAULT_PLAN_ID: StripePlanId = "solo_monthly";
 
 /**
  * 註冊頁面重定向
@@ -31,7 +37,10 @@ export default async function SignupPage({
     url.searchParams.set("ref", params.ref);
   }
   if (params.plan) {
-    url.searchParams.set("plan", params.plan);
+    url.searchParams.set(
+      "plan",
+      isStripePlanId(params.plan) ? params.plan : DEFAULT_PLAN_ID,
+    );
   }
 
   // 重定向到登入頁面的註冊模式

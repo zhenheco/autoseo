@@ -1,6 +1,17 @@
-# 1wayseo Design System Tokens
+# 1wayseo Design System v1.1
 
-Status: P0-1 token contract. Component inventory lands in P0-2.
+Status: v1.1 component extraction for recurring dashboard patterns.
+
+## Changelog
+
+### v1.1 - DS Pattern Extraction
+
+- Added `IconLabel`, `FormRow`, and `StatusBadge` from recurring dashboard and
+  automation compositions found in issue #107.
+- Refactored 3+ inline usages per promoted component across automation,
+  website setup/edit, external website management, article status, publish-plan,
+  and admin subscription screens.
+- No token changes. Existing state scales and semantic tokens remain canonical.
 
 ## Source Files
 
@@ -164,6 +175,94 @@ Baseline primitives:
 - `DropdownMenu`
 - `Tooltip`
 - `Skeleton`
+
+## IconLabel
+
+Horizontal icon + label pair for dashboard headings, inline status messages, and
+compact rows.
+
+| Prop        | Type                                                        | Required | Notes                       |
+| ----------- | ----------------------------------------------------------- | -------- | --------------------------- |
+| `icon`      | `ReactNode`                                                 | Yes      | Usually a Lucide icon.      |
+| `children`  | `ReactNode`                                                 | Yes      | Label text or heading node. |
+| `as`        | `"div" \| "span" \| "p" \| "h1" \| "h2" \| "h3" \| "label"` | No       | Defaults to `"span"`.       |
+| `className` | `string`                                                    | No       | Extends text styles.        |
+
+```tsx
+import { CalendarClock } from "lucide-react";
+import { IconLabel } from "@/components/ui";
+
+export function WeeklyPreviewTitle() {
+  return (
+    <IconLabel icon={<CalendarClock className="h-5 w-5" aria-hidden />}>
+      Weekly preview
+    </IconLabel>
+  );
+}
+```
+
+Token usage: layout only; callers provide tokenized icon and text colors such as
+`text-primary`, `text-muted-foreground`, or state scale classes.
+
+## FormRow
+
+Standard vertical form row with label, control, required marker, and optional
+helper copy.
+
+| Prop              | Type        | Required | Notes                         |
+| ----------------- | ----------- | -------- | ----------------------------- |
+| `label`           | `ReactNode` | Yes      | Field label.                  |
+| `htmlFor`         | `string`    | No       | Forwarded to shadcn `Label`.  |
+| `children`        | `ReactNode` | Yes      | Input, select, or textarea.   |
+| `helperText`      | `ReactNode` | No       | Renders below the control.    |
+| `required`        | `boolean`   | No       | Adds visible required marker. |
+| `className`       | `string`    | No       | Extends row spacing.          |
+| `labelClassName`  | `string`    | No       | Label style extension.        |
+| `helperClassName` | `string`    | No       | Helper style extension.       |
+
+```tsx
+import { FormRow, Input } from "@/components/ui";
+
+export function SiteUrlField() {
+  return (
+    <FormRow
+      label="Site URL"
+      htmlFor="site-url"
+      helperText="Use the public homepage URL."
+      required
+    >
+      <Input id="site-url" type="url" />
+    </FormRow>
+  );
+}
+```
+
+Token usage: helper text uses `text-muted-foreground`; spacing follows the
+existing `space-y-2` form rhythm.
+
+## StatusBadge
+
+Stateful badge wrapper for success, warning, danger, info, and neutral status
+tones.
+
+| Prop        | Type                                                        | Required | Notes                        |
+| ----------- | ----------------------------------------------------------- | -------- | ---------------------------- |
+| `status`    | `string`                                                    | Yes      | Used for default label/tone. |
+| `label`     | `ReactNode`                                                 | No       | Localized display label.     |
+| `tone`      | `"success" \| "warning" \| "danger" \| "info" \| "neutral"` | No       | Overrides automatic mapping. |
+| `icon`      | `ReactNode`                                                 | No       | Optional leading icon.       |
+| `className` | `string`                                                    | No       | Extends badge styles.        |
+
+```tsx
+import { StatusBadge } from "@/components/ui";
+
+export function SyncResult() {
+  return <StatusBadge status="success" label="Synced" />;
+}
+```
+
+Token usage: uses `success-*`, `warning-*`, `destructive-*`, `info-*`,
+`border-subtle`, `muted`, and `muted-foreground`.
 
 ## StatBadge
 

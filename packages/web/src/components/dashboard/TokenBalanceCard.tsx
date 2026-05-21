@@ -11,7 +11,7 @@ interface TokenBalance {
     purchased: number;
   };
   subscription: {
-    tier: "free" | "starter" | "professional" | "business" | "agency";
+    tier: string;
     monthlyTokenQuota: number;
   };
 }
@@ -74,7 +74,6 @@ export function TokenBalanceCard() {
 
   const isLowBalance = balance.balance.total < 5000;
   const isCritical = balance.balance.total < 2000;
-  const isFree = balance.subscription.tier === "free";
 
   return (
     <div

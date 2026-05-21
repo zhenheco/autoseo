@@ -8,6 +8,7 @@
  */
 
 import { createClient } from "@supabase/supabase-js";
+import { LEGACY_FREE_PLAN_SLUG } from "@shared/auth/subscription-plans";
 import type { Database } from "@/types/database.types";
 
 // ===== 類型定義 =====
@@ -549,7 +550,7 @@ export class ArticleQuotaService {
     const { data } = await this.supabase
       .from("subscription_plans")
       .select("*")
-      .neq("slug", "free")
+      .neq("slug", LEGACY_FREE_PLAN_SLUG)
       .order("monthly_price", { ascending: true });
 
     const plans = (data || []) as unknown as (typeof this.planType)[];

@@ -18,7 +18,6 @@ import {
 } from "@shared/ui/select";
 import { StatCard } from "@/components/dashboard/stat-card";
 import { ArticleQuotaCard } from "@/components/dashboard/ArticleQuotaCard";
-import { UpgradePromptCard } from "@/components/dashboard/UpgradePromptCard";
 import { TrendsWidget } from "@/components/dashboard/TrendsWidget";
 import { AnalyticsDashboard } from "@/components/analytics/AnalyticsDashboard";
 import { FileText, Globe, Search } from "lucide-react";
@@ -35,7 +34,6 @@ interface DashboardClientProps {
   userEmail: string;
   articlesCount: number;
   websitesCount: number;
-  subscriptionTier: string;
   tokenBalance: number;
   websites: Website[];
 }
@@ -44,7 +42,6 @@ export function DashboardClient({
   userEmail,
   articlesCount,
   websitesCount,
-  subscriptionTier,
   tokenBalance,
   websites,
 }: DashboardClientProps) {
@@ -83,16 +80,6 @@ export function DashboardClient({
         />
         <ArticleQuotaCard />
       </div>
-
-      {/* 免費用戶升級提示 */}
-      {subscriptionTier === "free" && (
-        <div className="mt-6">
-          <UpgradePromptCard
-            currentTier={subscriptionTier}
-            tokenBalance={tokenBalance}
-          />
-        </div>
-      )}
 
       <TrendsWidget />
 

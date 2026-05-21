@@ -13,7 +13,7 @@
  * - 終身 → 任何 ❌ (終身方案無法變更)
  *
  * 不同階層升級：
- * - 只能升級到更高階層 (Free → Starter → Business → Professional → Agency)
+ * - 只能升級到更高階層 (Starter → Business → Professional → Agency)
  * - 升級時可選擇任何計費週期
  * - 無法降級到低階層
  */
@@ -34,17 +34,16 @@
  * - 系統使用方案 slug 進行比較和升級判斷
  */
 export const TIER_HIERARCHY: Record<string, number> = {
-  'free': 0,
-  'starter': 1,
-  'professional': 2,
-  'business': 3,
-  'agency': 4,
-}
+  starter: 1,
+  professional: 2,
+  business: 3,
+  agency: 4,
+};
 
 /**
  * 計費週期類型
  */
-export type BillingPeriod = 'monthly' | 'yearly' | 'lifetime'
+export type BillingPeriod = "monthly" | "yearly" | "lifetime";
 
 /**
  * 檢查目標計費週期是否比當前週期短
@@ -60,14 +59,14 @@ export type BillingPeriod = 'monthly' | 'yearly' | 'lifetime'
  */
 function isBillingPeriodShorter(
   current: BillingPeriod,
-  target: BillingPeriod
+  target: BillingPeriod,
 ): boolean {
   const periodValue: Record<BillingPeriod, number> = {
-    'monthly': 1,
-    'yearly': 2,
-    'lifetime': 3
-  }
-  return periodValue[target] < periodValue[current]
+    monthly: 1,
+    yearly: 2,
+    lifetime: 3,
+  };
+  return periodValue[target] < periodValue[current];
 }
 
 /**
@@ -107,55 +106,63 @@ export function canUpgrade(
   currentTierSlug: string | null,
   currentBillingPeriod: BillingPeriod,
   targetPlanSlug: string,
-  targetBillingPeriod: BillingPeriod
+  targetBillingPeriod: BillingPeriod,
 ): boolean {
   // 新用戶（沒有當前方案）→ 允許任何升級
   if (!currentTierSlug) {
-    return true
+    return true;
   }
 
-  const currentTierLevel = TIER_HIERARCHY[currentTierSlug] ?? 0
-  const targetTierLevel = TIER_HIERARCHY[targetPlanSlug] ?? 0
+  const currentTierLevel = TIER_HIERARCHY[currentTierSlug] ?? 0;
+  const targetTierLevel = TIER_HIERARCHY[targetPlanSlug] ?? 0;
 
   // 終身方案特殊規則
-  if (currentBillingPeriod === 'lifetime') {
+  if (currentBillingPeriod === "lifetime") {
     // 允許升級到更高階層的終身方案
-    if (targetTierLevel > currentTierLevel && targetBillingPeriod === 'lifetime') {
-      return true
+    if (
+      targetTierLevel > currentTierLevel &&
+      targetBillingPeriod === "lifetime"
+    ) {
+      return true;
     }
     // 其他情況都不允許（降級或縮短週期）
-    return false
+    return false;
   }
 
   // 升級到更高階層 → 檢查計費週期
   if (targetTierLevel > currentTierLevel) {
     // 計費週期不能縮短
     if (isBillingPeriodShorter(currentBillingPeriod, targetBillingPeriod)) {
-      return false
+      return false;
     }
-    return true
+    return true;
   }
 
   // 同階層 → 只允許延長計費週期
   if (targetTierLevel === currentTierLevel) {
     // 月繳 → 年繳或終身 ✅
-    if (currentBillingPeriod === 'monthly' &&
-        (targetBillingPeriod === 'yearly' || targetBillingPeriod === 'lifetime')) {
-      return true
+    if (
+      currentBillingPeriod === "monthly" &&
+      (targetBillingPeriod === "yearly" || targetBillingPeriod === "lifetime")
+    ) {
+      return true;
     }
     // 年繳 → 終身 ✅
-    if (currentBillingPeriod === 'yearly' && targetBillingPeriod === 'lifetime') {
-      return true
+    if (
+      currentBillingPeriod === "yearly" &&
+      targetBillingPeriod === "lifetime"
+    ) {
+      return true;
     }
-    return false
+    return false;
   }
 
   // 降級到低階層 → 不允許
   if (targetTierLevel < currentTierLevel) {
-    return false
+    return false;
   }
 
-  return false
+  return false;
 }
 
 /**
@@ -171,55 +178,61 @@ export function getUpgradeBlockReason(
   currentTierSlug: string | null,
   currentBillingPeriod: BillingPeriod,
   targetPlanSlug: string,
-  targetBillingPeriod: BillingPeriod
+  targetBillingPeriod: BillingPeriod,
 ): string | null {
   if (!currentTierSlug) {
-    return null
+    return null;
   }
 
-  const currentTierLevel = TIER_HIERARCHY[currentTierSlug] ?? 0
-  const targetTierLevel = TIER_HIERARCHY[targetPlanSlug] ?? 0
+  const currentTierLevel = TIER_HIERARCHY[currentTierSlug] ?? 0;
+  const targetTierLevel = TIER_HIERARCHY[targetPlanSlug] ?? 0;
 
   // 終身方案特殊處理
-  if (currentBillingPeriod === 'lifetime') {
+  if (currentBillingPeriod === "lifetime") {
     // 如果目標階層 > 當前階層但不是終身
-    if (targetTierLevel > currentTierLevel && targetBillingPeriod !== 'lifetime') {
-      return '終身方案不能變更為月繳或年繳'
+    if (
+      targetTierLevel > currentTierLevel &&
+      targetBillingPeriod !== "lifetime"
+    ) {
+      return "終身方案不能變更為月繳或年繳";
     }
     // 如果目標階層 < 當前階層
     if (targetTierLevel < currentTierLevel) {
-      return '無法降級到低階層方案'
+      return "無法降級到低階層方案";
     }
     // 如果目標階層 = 當前階層
     if (targetTierLevel === currentTierLevel) {
-      return '目前方案'
+      return "目前方案";
     }
-    return '終身方案無法變更'
+    return "終身方案無法變更";
   }
 
   // 降級
   if (targetTierLevel < currentTierLevel) {
-    return '無法降級到低階層方案'
+    return "無法降級到低階層方案";
   }
 
   // 跨階層升級但縮短計費週期
   if (targetTierLevel > currentTierLevel) {
     if (isBillingPeriodShorter(currentBillingPeriod, targetBillingPeriod)) {
-      return '跨階層升級不能縮短計費週期'
+      return "跨階層升級不能縮短計費週期";
     }
-    return null
+    return null;
   }
 
   // 同階層
   if (targetTierLevel === currentTierLevel) {
-    if (currentBillingPeriod === 'yearly' && targetBillingPeriod === 'monthly') {
-      return '年繳無法變更為月繳'
+    if (
+      currentBillingPeriod === "yearly" &&
+      targetBillingPeriod === "monthly"
+    ) {
+      return "年繳無法變更為月繳";
     }
     if (currentBillingPeriod === targetBillingPeriod) {
-      return '目前方案'
+      return "目前方案";
     }
-    return '無法縮短計費週期'
+    return "無法縮短計費週期";
   }
 
-  return null
+  return null;
 }

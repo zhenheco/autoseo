@@ -1,5 +1,6 @@
 import { createClient } from "@shared/supabase";
 import { HomeClient } from "./home-client";
+import { LEGACY_FREE_PLAN_SLUG } from "@shared/auth/subscription-plans";
 
 // 快取 1 年（訂閱方案和加購包很少變動，有修改時手動清除快取）
 export const revalidate = 31536000; // 1 年 = 365 * 24 * 60 * 60
@@ -45,7 +46,7 @@ export default async function Home() {
   const { data: plansRaw } = await supabase
     .from("subscription_plans")
     .select("*")
-    .neq("slug", "free")
+    .neq("slug", LEGACY_FREE_PLAN_SLUG)
     .order("monthly_price", { ascending: true });
 
   // 類型斷言：新欄位在 migration 後才會被 database.types.ts 識別

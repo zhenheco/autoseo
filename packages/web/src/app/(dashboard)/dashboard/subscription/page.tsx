@@ -7,6 +7,7 @@ import { SubscriptionStatusChecker } from "@/components/subscription/Subscriptio
 import type { Database } from "@/types/database.types";
 import { checkPagePermission } from "@shared/auth/permissions";
 import { getTranslations } from "next-intl/server";
+import { LEGACY_FREE_PLAN_SLUG } from "@shared/auth/subscription-plans";
 
 /**
  * 篇數制方案資料類型
@@ -109,7 +110,7 @@ export default async function SubscriptionPage() {
   const { data: plansRaw } = await supabase
     .from("subscription_plans")
     .select("*")
-    .neq("slug", "free")
+    .neq("slug", LEGACY_FREE_PLAN_SLUG)
     .order("monthly_price", { ascending: true });
 
   // 類型斷言：新欄位在 migration 後才會被識別
@@ -153,9 +154,7 @@ export default async function SubscriptionPage() {
               </p>
               <p className="text-lg font-semibold">
                 {companySubscription?.subscription_plans?.name ||
-                  (company.subscription_tier === "free"
-                    ? t("freePlan")
-                    : t("unknownPlan"))}
+                  t("unknownPlan")}
               </p>
               {companySubscription?.billing_cycle && (
                 <p className="text-xs text-muted-foreground">
@@ -241,7 +240,7 @@ export default async function SubscriptionPage() {
           plans={plans}
           companyId={member.company_id}
           userEmail={user.email || ""}
-          currentTier={company?.subscription_tier || "free"}
+          currentTier={company?.subscription_tier || ""}
           currentSubscription={
             companySubscription
               ? {

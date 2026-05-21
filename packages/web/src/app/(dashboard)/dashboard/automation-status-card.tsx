@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { Badge } from "@shared/ui/badge";
 import { Button } from "@shared/ui/button";
 import {
   Card,
@@ -12,6 +11,8 @@ import {
   CardTitle,
 } from "@shared/ui/card";
 import { CalendarClock, RefreshCw } from "lucide-react";
+import { IconLabel } from "@/components/ui/icon-label";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 type AutomationStatusCardProps = {
   brandId: string;
@@ -74,13 +75,18 @@ export function AutomationStatusCard({
     <Card className="border-border/60">
       <CardHeader>
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <CalendarClock className="h-5 w-5 text-primary" aria-hidden />
+          <IconLabel
+            as="div"
+            icon={
+              <CalendarClock className="h-5 w-5 text-primary" aria-hidden />
+            }
+          >
             <CardTitle>Automation status</CardTitle>
-          </div>
-          <Badge variant={automated ? "default" : "secondary"}>
-            L{automationLevel}
-          </Badge>
+          </IconLabel>
+          <StatusBadge
+            status={automated ? "active" : "inactive"}
+            label={`L${automationLevel}`}
+          />
         </div>
         <CardDescription>
           Current automation level for this brand.
@@ -122,10 +128,12 @@ export function AutomationStatusCard({
             </Link>
           </Button>
           {isRefreshing && (
-            <span className="inline-flex items-center gap-2 text-xs text-muted-foreground">
-              <RefreshCw className="h-3 w-3 animate-spin" aria-hidden />
+            <IconLabel
+              className="text-xs text-muted-foreground"
+              icon={<RefreshCw className="h-3 w-3 animate-spin" aria-hidden />}
+            >
               Refreshing
-            </span>
+            </IconLabel>
           )}
         </div>
       </CardContent>

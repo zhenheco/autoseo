@@ -52,7 +52,6 @@ export const POST = withRouteAuth(
         name,
         slug: generateSlug(name),
         owner_id: user.id,
-        subscription_tier: "free",
       })
       .select()
       .single();
@@ -79,21 +78,6 @@ export const POST = withRouteAuth(
       console.error("新增成員記錄失敗:", memberError);
       return internalError("建立公司失敗");
     }
-
-    // 建立免費訂閱
-    const periodStart = new Date();
-    const periodEnd = new Date();
-    periodEnd.setDate(periodEnd.getDate() + 30);
-
-    await supabase.from("subscriptions").insert({
-      company_id: company.id,
-      plan_name: "free",
-      status: "active",
-      monthly_article_limit: 5,
-      articles_used_this_month: 0,
-      current_period_start: periodStart.toISOString(),
-      current_period_end: periodEnd.toISOString(),
-    });
 
     return successResponse(company, undefined, HTTP_STATUS.CREATED);
   },

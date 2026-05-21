@@ -30,6 +30,7 @@ import {
   Twitter,
 } from "lucide-react";
 import { EmptyState } from "@/components/ui/empty-state";
+import { IconLabel } from "@/components/ui/icon-label";
 import { resolveActiveBrandFromCandidates } from "@/lib/brands/active-brand";
 import { fetchBrandsFromApi } from "@/lib/brands/server-api";
 import {
@@ -174,10 +175,12 @@ function RecommendedTopicsCard({
   return (
     <Card className="border-border/60">
       <CardHeader>
-        <div className="flex items-center gap-2">
-          <TrendingUp className="h-5 w-5 text-primary" aria-hidden />
+        <IconLabel
+          as="div"
+          icon={<TrendingUp className="h-5 w-5 text-primary" aria-hidden />}
+        >
           <CardTitle>This week&apos;s recommended topics</CardTitle>
-        </div>
+        </IconLabel>
         <CardDescription>
           Top trend signals ranked by confidence for the active brand.
         </CardDescription>
@@ -227,10 +230,12 @@ function RecentlyPublishedCard({ items }: { items: PublishedFeedItem[] }) {
     <Card className="border-border/60">
       <CardHeader>
         <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2">
-            <FileText className="h-5 w-5 text-primary" aria-hidden />
+          <IconLabel
+            as="div"
+            icon={<FileText className="h-5 w-5 text-primary" aria-hidden />}
+          >
             <CardTitle>Recently published</CardTitle>
-          </div>
+          </IconLabel>
           <Button asChild variant="outline" size="sm">
             <Link href="/dashboard/articles">View all</Link>
           </Button>
@@ -315,10 +320,12 @@ function PerformanceSnapshotCard({ overview }: { overview: FlywheelOverview }) {
   return (
     <Card className="border-border/60">
       <CardHeader>
-        <div className="flex items-center gap-2">
-          <BarChart3 className="h-5 w-5 text-primary" aria-hidden />
+        <IconLabel
+          as="div"
+          icon={<BarChart3 className="h-5 w-5 text-primary" aria-hidden />}
+        >
           <CardTitle>Performance snapshot</CardTitle>
-        </div>
+        </IconLabel>
         <CardDescription>Last 7 days across all sources.</CardDescription>
       </CardHeader>
       <CardContent className="grid gap-3 sm:grid-cols-2">
@@ -385,10 +392,12 @@ function QuickActionsCard({ brandId }: { brandId: string }) {
   return (
     <Card className="border-border/60">
       <CardHeader>
-        <div className="flex items-center gap-2">
-          <Sparkles className="h-5 w-5 text-primary" aria-hidden />
+        <IconLabel
+          as="div"
+          icon={<Sparkles className="h-5 w-5 text-primary" aria-hidden />}
+        >
           <CardTitle>Quick actions</CardTitle>
-        </div>
+        </IconLabel>
         <CardDescription>
           Common next steps for keeping the content flywheel moving.
         </CardDescription>
@@ -445,10 +454,16 @@ function DashboardOnboardingEmptyState({
             "Generate first article",
             "Configure trend keywords",
           ].map((item) => (
-            <div key={item} className="flex items-center gap-2 text-sm">
-              <Square className="h-4 w-4 text-muted-foreground" aria-hidden />
+            <IconLabel
+              key={item}
+              as="div"
+              className="text-sm"
+              icon={
+                <Square className="h-4 w-4 text-muted-foreground" aria-hidden />
+              }
+            >
               <span>{item}</span>
-            </div>
+            </IconLabel>
           ))}
         </div>
       </div>

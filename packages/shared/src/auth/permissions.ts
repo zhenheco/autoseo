@@ -1,6 +1,13 @@
 import { redirect } from "next/navigation";
 import { createClient } from "../supabase";
 import { getUser } from "./index";
+import {
+  isPaidSubscriptionTier,
+  LEGACY_FREE_PLAN_SLUG,
+  MANUAL_GRANDFATHER_ACCESS_TIER,
+  MANUAL_GRANDFATHER_TRIAL_STATUS,
+  type UserSubscriptionTier,
+} from "./subscription-plans";
 
 export type UserRole = "owner" | "admin" | "editor" | "writer" | "viewer";
 
@@ -101,6 +108,11 @@ export async function checkPagePermission(
   if (!permissions[page]) {
     redirect("/dashboard/unauthorized");
   }
+
+  const tier = await getUserSubscriptionTier();
+  if (!tier) {
+    redirect("/pricing?reason=trial-expired");
+  }
 }
 
 /**
@@ -114,9 +126,7 @@ export async function canAccessWebsitesFeature(): Promise<boolean> {
 /**
  * 取得用戶的訂閱層級
  */
-export async function getUserSubscriptionTier(): Promise<
-  "free" | "starter" | "professional" | "business" | "agency" | null
-> {
+export async function getUserSubscriptionTier(): Promise<UserSubscriptionTier> {
   const user = await getUser();
   if (!user) return null;
 
@@ -132,12 +142,79 @@ export async function getUserSubscriptionTier(): Promise<
   const activeMembership = memberships.find((m) => m.status === "active");
   const membership = activeMembership || memberships[0];
 
-  const { data: companies } = await supabase
-    .from("companies")
-    .select("subscription_tier")
-    .eq("id", membership.company_id);
+  const [{ data: companies }, { data: subscription }] = await Promise.all([
+    supabase
+      .from("companies")
+      .select("subscription_tier")
+      .eq("id", membership.company_id),
+    supabase
+      .from("company_subscriptions")
+      .select("status, trial_ends_at, subscription_plans(slug)")
+      .eq("company_id", membership.company_id)
+      .order("updated_at", { ascending: false })
+      .limit(1)
+      .maybeSingle(),
+  ]);
 
-  if (!companies || companies.length === 0) return null;
+  const companyTier =
+    companies && companies.length > 0 ? companies[0].subscription_tier : null;
 
-  return companies[0].subscription_tier || null;
+  const row = subscription as {
+    status?: string | null;
+    trial_ends_at?: string | null;
+    subscription_plans?:
+      | { slug?: string | null }
+      | Array<{ slug?: string | null }>
+      | null;
+  } | null;
+
+  const rawPlans = row?.subscription_plans;
+  const planSlug = Array.isArray(rawPlans) ? rawPlans[0]?.slug : rawPlans?.slug;
+
+  return normalizeUserSubscriptionTier({
+    status: row?.status ?? null,
+    trialEndsAt: row?.trial_ends_at ?? null,
+    planSlug: planSlug ?? null,
+    companyTier,
+  });
+}
+
+export function normalizeUserSubscriptionTier(input: {
+  status?: string | null;
+  trialEndsAt?: string | null;
+  planSlug?: string | null;
+  companyTier?: string | null;
+  now?: Date;
+}): UserSubscriptionTier {
+  const now = input.now ?? new Date();
+  const status = input.status ?? null;
+  const normalizedPlan = input.planSlug?.toLowerCase() ?? null;
+  const normalizedCompanyTier = input.companyTier?.toLowerCase() ?? null;
+
+  if (
+    status === MANUAL_GRANDFATHER_TRIAL_STATUS &&
+    input.trialEndsAt &&
+    new Date(input.trialEndsAt) > now
+  ) {
+    return MANUAL_GRANDFATHER_ACCESS_TIER;
+  }
+
+  if (status !== "active" && status !== "trialing") {
+    return null;
+  }
+
+  if (normalizedPlan && normalizedPlan !== LEGACY_FREE_PLAN_SLUG) {
+    return isPaidSubscriptionTier(normalizedPlan) ? normalizedPlan : null;
+  }
+
+  if (
+    normalizedCompanyTier &&
+    normalizedCompanyTier !== LEGACY_FREE_PLAN_SLUG
+  ) {
+    return isPaidSubscriptionTier(normalizedCompanyTier)
+      ? normalizedCompanyTier
+      : null;
+  }
+
+  return null;
 }

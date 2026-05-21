@@ -28,37 +28,6 @@ export interface PricingTier {
 }
 
 export const pricingTiers: Record<string, PricingTier> = {
-  // 免費體驗版
-  free: {
-    id: "free",
-    name: "免費體驗",
-    description: "適合個人部落格或測試",
-    modelPreset: "ultraFree",
-    pricing: {
-      perArticle: 0,
-      monthlyBase: 0,
-      includedArticles: 10, // 每月 10 篇免費
-      overagePrice: 0.5, // 超額每篇 $0.5
-    },
-    features: [
-      "100% 免費 AI 模型",
-      "每月 10 篇文章",
-      "基礎 SEO 優化",
-      "1000 字上限",
-      "Email 支援",
-    ],
-    limits: {
-      maxArticlesPerDay: 2,
-      maxWordCount: 1000,
-      supportLevel: "basic",
-    },
-    costStructure: {
-      actualCost: 0,
-      grossMargin: 100,
-      virtualMarkup: 0, // 無加價，超額才收費
-    },
-  },
-
   // 入門版
   starter: {
     id: "starter",

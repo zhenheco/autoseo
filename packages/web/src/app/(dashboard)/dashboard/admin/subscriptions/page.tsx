@@ -19,7 +19,6 @@ import {
 } from "@shared/ui/table";
 import { Button } from "@shared/ui/button";
 import { Input } from "@shared/ui/input";
-import { Badge } from "@shared/ui/badge";
 import {
   Select,
   SelectContent,
@@ -42,6 +41,7 @@ import { toast } from "sonner";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/ErrorState";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 interface Subscription {
   id: string;
@@ -222,17 +222,17 @@ export default function AdminSubscriptionsPage() {
 
   const getStatusBadge = (status: string, isLifetime: boolean) => {
     if (isLifetime) {
-      return <Badge variant="default">{t("statusLifetime")}</Badge>;
+      return <StatusBadge status="active" label={t("statusLifetime")} />;
     }
     switch (status) {
       case "active":
-        return <Badge variant="default">{t("statusActive")}</Badge>;
+        return <StatusBadge status={status} label={t("statusActive")} />;
       case "past_due":
-        return <Badge variant="destructive">{t("statusPastDue")}</Badge>;
+        return <StatusBadge status={status} label={t("statusPastDue")} />;
       case "cancelled":
-        return <Badge variant="secondary">{t("statusCancelled")}</Badge>;
+        return <StatusBadge status={status} label={t("statusCancelled")} />;
       default:
-        return <Badge variant="outline">{status}</Badge>;
+        return <StatusBadge status={status} />;
     }
   };
 
@@ -307,7 +307,6 @@ export default function AdminSubscriptionsPage() {
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">{t("filterPlanAll")}</SelectItem>
-                    <SelectItem value="free">Free</SelectItem>
                     <SelectItem value="starter">Starter</SelectItem>
                     <SelectItem value="professional">Professional</SelectItem>
                     <SelectItem value="business">Business</SelectItem>

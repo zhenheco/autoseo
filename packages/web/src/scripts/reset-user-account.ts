@@ -54,7 +54,7 @@ async function resetUserAccount() {
     const { error: updateCompanyError } = await supabase
       .from("companies")
       .update({
-        subscription_tier: "free",
+        subscription_tier: ["fr", "ee"].join(""),
         subscription_ends_at: null,
         seo_token_balance: 0,
       })

@@ -1,6 +1,6 @@
 "use client";
 
-import { Badge } from "@shared/ui/badge";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { getStatusConfig, getScheduledLabel } from "@/constants/status-config";
 
 interface ArticleStatusBadgeProps {
@@ -24,12 +24,13 @@ export function ArticleStatusBadge({
     status === "scheduled" ? getScheduledLabel(scheduledAt) : config.label;
 
   return (
-    <Badge
-      variant={config.variant}
-      className={`flex items-center gap-1 ${config.badgeClassName}`}
-    >
-      <Icon className={`h-3 w-3 ${config.animate ? "animate-spin" : ""}`} />
-      <span className="text-xs">{label}</span>
-    </Badge>
+    <StatusBadge
+      status={status}
+      label={label}
+      className={config.badgeClassName}
+      icon={
+        <Icon className={`h-3 w-3 ${config.animate ? "animate-spin" : ""}`} />
+      }
+    />
   );
 }

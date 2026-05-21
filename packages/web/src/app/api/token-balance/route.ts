@@ -76,7 +76,7 @@ export const GET = withRouteAuth(
           available,
         },
         subscription: {
-          tier: company?.subscription_tier || "free",
+          tier: company?.subscription_tier || "none",
           monthlyTokenQuota: subscription.monthly_token_quota,
           currentPeriodStart: isFree ? null : subscription.current_period_start,
           currentPeriodEnd: isFree ? null : subscription.current_period_end,

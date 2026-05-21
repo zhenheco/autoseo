@@ -92,6 +92,29 @@ export async function sendAutomationQuotaWarningEmail(input: {
   });
 }
 
+export async function sendGrandfatherFreeUserTrialEmail(input: {
+  to: string;
+  companyName: string;
+  trialEndsAt: string;
+  idempotencyKey: string;
+}): Promise<{ ok: boolean; messageId?: string; error?: string }> {
+  const text = [
+    `Welcome - your 1wayseo account for ${input.companyName} has been upgraded to a complimentary 30-day Pro trial.`,
+    `Add a card before ${input.trialEndsAt} to keep your data and continue generating articles without interruption.`,
+  ].join("\n\n");
+
+  return sendCfEmail({
+    to: input.to,
+    template: {
+      subject: "Welcome - your 1wayseo account has a 30-day Pro trial",
+      text,
+      html: `<p>${escapeHtml(text).replace(/\n\n/g, "</p><p>")}</p>`,
+    },
+    idempotencyKey: input.idempotencyKey,
+    tags: ["legacy-plan-grandfather", "pro-trial"],
+  });
+}
+
 export async function addCfEmailSubscriber(input: {
   email: string;
   list: string;

@@ -19,7 +19,6 @@ import {
 } from "@shared/ui/table";
 import { Button } from "@shared/ui/button";
 import { Input } from "@shared/ui/input";
-import { Badge } from "@shared/ui/badge";
 import { Switch } from "@shared/ui/switch";
 import {
   Dialog,
@@ -49,7 +48,10 @@ import type {
 import { useTranslations } from "next-intl";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ErrorState } from "@/components/ui/ErrorState";
+import { FormRow } from "@/components/ui/form-row";
+import { IconLabel } from "@/components/ui/icon-label";
 import { Skeleton } from "@/components/ui/skeleton";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 const INITIAL_FORM_DATA: CreateExternalWebsiteFormData = {
   name: "",
@@ -356,10 +358,14 @@ function WebsiteTable({
               </div>
             </TableCell>
             <TableCell>
-              <div className="flex items-center gap-2">
-                <code className="text-xs bg-muted px-2 py-1 rounded max-w-[200px] truncate">
-                  {website.webhook_url}
-                </code>
+              <IconLabel
+                as="div"
+                icon={
+                  <code className="text-xs bg-muted px-2 py-1 rounded max-w-[200px] truncate">
+                    {website.webhook_url}
+                  </code>
+                }
+              >
                 {website.webhook_url && (
                   <Button
                     variant="ghost"
@@ -370,16 +376,20 @@ function WebsiteTable({
                     <ExternalLink className="h-3 w-3" />
                   </Button>
                 )}
-              </div>
+              </IconLabel>
             </TableCell>
             <TableCell>
-              <div className="flex items-center gap-2">
-                <Switch
-                  checked={website.is_active ?? false}
-                  onCheckedChange={() => onToggleActive(website)}
-                />
+              <IconLabel
+                as="div"
+                icon={
+                  <Switch
+                    checked={website.is_active ?? false}
+                    onCheckedChange={() => onToggleActive(website)}
+                  />
+                }
+              >
                 <SyncStatusBadge status={website.last_sync_status} t={t} />
-              </div>
+              </IconLabel>
             </TableCell>
             <TableCell>
               <div className="text-sm">
@@ -431,10 +441,10 @@ function SyncStatusBadge({
   t: ReturnType<typeof useTranslations<"externalWebsites">>;
 }): React.ReactElement | null {
   if (status === "success") {
-    return <Badge variant="default">{t("status.success")}</Badge>;
+    return <StatusBadge status={status} label={t("status.success")} />;
   }
   if (status === "failed") {
-    return <Badge variant="destructive">{t("status.failed")}</Badge>;
+    return <StatusBadge status={status} label={t("status.failed")} />;
   }
   return null;
 }
@@ -485,17 +495,20 @@ function CreateWebsiteDialog({
           <DialogDescription>{t("createDialog.description")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="name">{t("createDialog.name")} *</Label>
+          <FormRow label={t("createDialog.name")} htmlFor="name" required>
             <Input
               id="name"
               value={formData.name}
               onChange={(e) => onUpdateField("name", e.target.value)}
               placeholder={t("createDialog.namePlaceholder")}
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="slug">{t("createDialog.slug")} *</Label>
+          </FormRow>
+          <FormRow
+            label={t("createDialog.slug")}
+            htmlFor="slug"
+            helperText={t("createDialog.slugHint")}
+            required
+          >
             <Input
               id="slug"
               value={formData.slug}
@@ -507,30 +520,27 @@ function CreateWebsiteDialog({
               }
               placeholder={t("createDialog.slugPlaceholder")}
             />
-            <p className="text-xs text-muted-foreground">
-              {t("createDialog.slugHint")}
-            </p>
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="webhook_url">
-              {t("createDialog.webhookUrl")} *
-            </Label>
+          </FormRow>
+          <FormRow
+            label={t("createDialog.webhookUrl")}
+            htmlFor="webhook_url"
+            required
+          >
             <Input
               id="webhook_url"
               value={formData.webhook_url}
               onChange={(e) => onUpdateField("webhook_url", e.target.value)}
               placeholder="https://example.com/api/webhooks/1wayseo"
             />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="description">{t("createDialog.description")}</Label>
+          </FormRow>
+          <FormRow label={t("createDialog.description")} htmlFor="description">
             <Textarea
               id="description"
               value={formData.description}
               onChange={(e) => onUpdateField("description", e.target.value)}
               placeholder={tCommon("optional")}
             />
-          </div>
+          </FormRow>
           <div className="space-y-3">
             <Label>{t("syncSettingsTitle")}</Label>
             {syncSettings.map(({ key, labelKey }) => (
@@ -584,10 +594,14 @@ function SecretDialog({
           <DialogDescription>{t("secretDialog.description")}</DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <code className="flex-1 bg-muted p-3 rounded text-sm break-all">
-              {secret}
-            </code>
+          <IconLabel
+            as="div"
+            icon={
+              <code className="flex-1 bg-muted p-3 rounded text-sm break-all">
+                {secret}
+              </code>
+            }
+          >
             <Button
               variant="outline"
               size="icon"
@@ -599,7 +613,7 @@ function SecretDialog({
                 <Copy className="h-4 w-4" />
               )}
             </Button>
-          </div>
+          </IconLabel>
           <p className="text-sm text-muted-foreground">
             {t("secretDialog.envHint")}
           </p>

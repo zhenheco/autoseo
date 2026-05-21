@@ -8,24 +8,10 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { getAnalyticsLocale, track } from "@/lib/analytics/events";
 import { PricingProps, ArticlePlan, ArticlePackage } from "@/types/pricing";
+import { LEGACY_FREE_PLAN_SLUG } from "@shared/auth/subscription-plans";
 
 /** Fallback mock plans when Supabase data is empty */
 const FALLBACK_PLANS = [
-  {
-    name: "Free",
-    slug: "free",
-    price: "0",
-    period: "forever",
-    descKey: "freeDesc",
-    featureKeys: [
-      "freeFeature1",
-      "freeFeature2",
-      "freeFeature3",
-      "freeFeature4",
-    ],
-    ctaKey: "getStarted",
-    popular: false,
-  },
   {
     name: "Starter",
     slug: "starter",
@@ -319,7 +305,9 @@ export function PricingSection({ plans, articlePackages }: PricingProps) {
   const sectionRef = useRef<HTMLElement | null>(null);
   const trackedPricingView = useRef(false);
 
-  const hasRealPlans = plans && plans.length > 0;
+  const visiblePlans =
+    plans?.filter((plan) => plan.slug !== LEGACY_FREE_PLAN_SLUG) ?? [];
+  const hasRealPlans = visiblePlans.length > 0;
   const hasPackages = articlePackages && articlePackages.length > 0;
 
   useEffect(() => {
@@ -410,7 +398,7 @@ export function PricingSection({ plans, articlePackages }: PricingProps) {
       {/* Pricing Cards */}
       {hasRealPlans ? (
         <RealPricingCards
-          plans={plans}
+          plans={visiblePlans}
           billingCycle={billingCycle}
           t={t}
           tSub={tSub}

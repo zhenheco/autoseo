@@ -17,13 +17,13 @@ function daysBetween(dateStr: string, now: Date): number {
  * 根據用戶數據計算所屬分群
  *
  * 優先順序（從上到下判斷）：
- * 1. PAID_USERS:              subscription_tier !== 'free'
+ * 1. PAID_USERS:              active paid subscription
  * 2. QUOTA_EXHAUSTED:         quota_remaining === 0
  * 3. DORMANT:                 last_sign_in_at > 7 天前
  * 4. NEW_NO_ACTION:           created_at ≤ 7 天前 && articles_generated === 0
  * 5. GENERATED_NOT_PUBLISHED: articles_generated > 0 && articles_published === 0
  * 6. READY_TO_UPGRADE:        quota_used_percent >= 50
- * 7. ACTIVE_FREE:             其他免費用戶
+ * 7. ACTIVE_FREE:             其他未付費用戶
  */
 export function calculateSegment(
   attrs: Omit<BrevoContactAttributes, "SEGMENT">,
@@ -33,16 +33,16 @@ export function calculateSegment(
   const daysSinceLastLogin = daysBetween(attrs.LAST_LOGIN_AT, now);
 
   // 1. 付費用戶優先判斷
-  if (attrs.PLAN !== "free") {
+  if (attrs.PLAN !== "none") {
     return "PAID_USERS";
   }
 
-  // 2. 額度耗盡（免費用戶）
+  // 2. 額度耗盡
   if (attrs.QUOTA_REMAINING === 0) {
     return "QUOTA_EXHAUSTED";
   }
 
-  // 3. 沉睡用戶（7 天未登入的免費用戶）
+  // 3. 沉睡用戶（7 天未登入）
   if (daysSinceLastLogin >= 7) {
     return "DORMANT";
   }
@@ -62,7 +62,7 @@ export function calculateSegment(
     return "READY_TO_UPGRADE";
   }
 
-  // 7. 活躍免費用戶（預設）
+  // 7. 舊版未付費活躍用戶（預設）
   return "ACTIVE_FREE";
 }
 

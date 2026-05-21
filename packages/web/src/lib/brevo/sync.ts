@@ -129,7 +129,7 @@ async function fetchUserDataForBrevo(
     COMPANY_NAME: company.name,
     REGISTERED_AT: user.created_at || new Date().toISOString(),
     PLAN:
-      (company.subscription_tier as BrevoContactAttributes["PLAN"]) || "free",
+      (company.subscription_tier as BrevoContactAttributes["PLAN"]) || "none",
     ARTICLES_GENERATED: articlesGenerated ?? 0,
     ARTICLES_PUBLISHED: articlesPublished ?? 0,
     WP_CONNECTED: (wpCount ?? 0) > 0,

@@ -122,8 +122,7 @@ export function SubscriptionPlans({
 
   // 判斷是否可以訂閱（只能升級，不能降級）
   const canSubscribe = (plan: ArticlePlan) => {
-    // 如果沒有當前方案（免費用戶），可以訂閱任何方案
-    if (!currentPlan || currentTier === "free") return true;
+    if (!currentPlan) return true;
     // 只能訂閱價格更高的方案（升級）
     return plan.monthly_price > currentPlanPrice;
   };

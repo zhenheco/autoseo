@@ -8,7 +8,6 @@ import {
   TableHeader,
   TableRow,
 } from "@shared/ui/table";
-import { Badge } from "@shared/ui/badge";
 import { Checkbox } from "@shared/ui/checkbox";
 import { Button } from "@shared/ui/button";
 import {
@@ -23,6 +22,7 @@ import { ArticleWithWebsite } from "../actions";
 import { useScheduleContext } from "./ScheduleContext";
 import { useTranslations, useLocale } from "next-intl";
 import { EmptyState } from "@/components/ui/empty-state";
+import { StatusBadge } from "@/components/ui/status-badge";
 
 interface ArticleListProps {
   articles: ArticleWithWebsite[];
@@ -41,22 +41,6 @@ const STATUS_KEYS: Record<string, string> = {
   failed: "failed",
   schedule_failed: "scheduleFailed",
   cancelled: "cancelled",
-};
-
-const STATUS_VARIANTS: Record<
-  string,
-  "default" | "secondary" | "destructive" | "outline"
-> = {
-  pending: "secondary",
-  processing: "secondary",
-  generating: "secondary",
-  draft: "outline",
-  completed: "default",
-  scheduled: "secondary",
-  published: "default",
-  failed: "destructive",
-  schedule_failed: "destructive",
-  cancelled: "outline",
 };
 
 export function ArticleList({
@@ -140,8 +124,9 @@ export function ArticleList({
 
   const getStatusBadge = (status: string) => {
     const translationKey = STATUS_KEYS[status] || status;
-    const variant = STATUS_VARIANTS[status] || "outline";
-    return <Badge variant={variant}>{t(`status.${translationKey}`)}</Badge>;
+    return (
+      <StatusBadge status={status} label={t(`status.${translationKey}`)} />
+    );
   };
 
   const formatDate = (dateString: string) => {

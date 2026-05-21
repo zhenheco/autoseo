@@ -10,11 +10,11 @@
 export type UserSegment =
   | "NEW_NO_ACTION" // 新用戶未行動：註冊 ≤7 天且生成文章數 = 0
   | "GENERATED_NOT_PUBLISHED" // 生成未發布：生成文章數 > 0 且發布數 = 0
-  | "ACTIVE_FREE" // 活躍免費用戶：有發布且額度 < 50%
-  | "READY_TO_UPGRADE" // 待升級用戶：額度 ≥ 50% 且 plan = free
-  | "QUOTA_EXHAUSTED" // 額度耗盡：額度 = 0 且 plan = free
-  | "DORMANT" // 沉睡用戶：最後登入 > 7 天且 plan = free
-  | "PAID_USERS"; // 付費用戶：plan !== free
+  | "ACTIVE_FREE" // 舊版未付費活躍用戶：有發布且額度 < 50%
+  | "READY_TO_UPGRADE" // 待升級用戶：額度 ≥ 50%
+  | "QUOTA_EXHAUSTED" // 額度耗盡：額度 = 0
+  | "DORMANT" // 沉睡用戶：最後登入 > 7 天
+  | "PAID_USERS"; // 付費用戶
 
 /**
  * Brevo Contact 屬性
@@ -31,8 +31,8 @@ export interface BrevoContactAttributes {
   COMPANY_NAME: string;
   /** 註冊時間（ISO 日期字串） */
   REGISTERED_AT: string;
-  /** 訂閱方案：free/starter/pro/business/agency */
-  PLAN: "free" | "starter" | "pro" | "business" | "agency";
+  /** 訂閱方案 */
+  PLAN: "none" | "starter" | "pro" | "business" | "agency";
   /** 已生成文章數（article_jobs status=completed） */
   ARTICLES_GENERATED: number;
   /** 已發布文章數（generated_articles status=published） */

@@ -26,7 +26,7 @@ export interface SearchRouterOptions {
 
 /**
  * 智能搜尋路由器
- * - FREE plan: 使用 Brave Search（免費 2000 次/月）
+ * - Zero Perplexity quota: 使用 Brave Search
  * - STARTER/PRO/BIZ: 使用 Perplexity（受配額限制）
  * - AGENCY: 使用 Perplexity（無限制）
  */
@@ -201,8 +201,7 @@ export class SearchRouter {
       return "mock";
     }
 
-    // FREE plan: 使用 Brave Search
-    if (quotaStatus.plan === "free") {
+    if (quotaStatus.quota <= 0) {
       return "brave";
     }
 

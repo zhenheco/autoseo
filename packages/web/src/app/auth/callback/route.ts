@@ -46,7 +46,6 @@ export async function GET(request: Request) {
             name: `${user.email?.split("@")[0] || "User"} 的公司`,
             slug: generateSlug(user.email || "user"),
             owner_id: user.id,
-            subscription_tier: "free",
           })
           .select()
           .single();
@@ -87,48 +86,7 @@ export async function GET(request: Request) {
             );
           }
 
-          // 使用 slug 查詢（與 Email 註冊統一）
-          const { data: freePlan } = await adminClient
-            .from("subscription_plans")
-            .select("id, articles_per_month")
-            .eq("slug", "free")
-            .single();
-
-          // FREE 方案為一次性額度（3 篇），不會每月重置
-          const freeArticles = freePlan?.articles_per_month || 3;
-
-          const { error: subscriptionError } = await adminClient
-            .from("company_subscriptions")
-            .insert({
-              company_id: company.id,
-              plan_id: freePlan?.id || null,
-              status: "active",
-              // Token 制（向後相容，已棄用）
-              monthly_token_quota: 0,
-              monthly_quota_balance: 0,
-              purchased_token_balance: 0,
-              is_lifetime: false,
-              // 篇數制（FREE 方案為一次性額度，不重置）
-              subscription_articles_remaining: freeArticles,
-              purchased_articles_remaining: 0,
-              articles_per_month: 0, // 0 表示一次性，不會每月重置
-              lifetime_free_articles_limit: freeArticles,
-              current_period_start: null, // 無週期（一次性）
-              current_period_end: null,
-            });
-
-          if (subscriptionError) {
-            console.error("[OAuth] 建立訂閱失敗:", subscriptionError);
-            // 回滾：刪除已建立的公司和成員記錄
-            await adminClient
-              .from("company_members")
-              .delete()
-              .eq("company_id", company.id);
-            await adminClient.from("companies").delete().eq("id", company.id);
-            return NextResponse.redirect(
-              `${origin}/login?error=${encodeURIComponent("訂閱建立失敗，請稍後再試")}`,
-            );
-          }
+          console.log("[OAuth] 新帳號等待結帳建立訂閱");
         }
       }
       return NextResponse.redirect(`${origin}${next}`);

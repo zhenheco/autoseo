@@ -34,6 +34,8 @@ import Link from "next/link";
 import { createWebsite } from "./actions";
 import { Alert, AlertDescription, AlertTitle } from "@shared/ui/alert";
 import { useTranslations } from "next-intl";
+import { FormRow } from "@/components/ui/form-row";
+import { IconLabel } from "@/components/ui/icon-label";
 
 // 地區選項的 value 列表（用於 Select）
 const REGION_VALUES = [
@@ -157,8 +159,16 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
         value={region === "other" ? customRegion : region}
       />
       <input type="hidden" name="language" value={language} />
-      <input type="hidden" name="toneOfVoice" value={getToneValue(toneOfVoice)} />
-      <input type="hidden" name="writingStyle" value={getStyleValue(writingStyle)} />
+      <input
+        type="hidden"
+        name="toneOfVoice"
+        value={getToneValue(toneOfVoice)}
+      />
+      <input
+        type="hidden"
+        name="writingStyle"
+        value={getStyleValue(writingStyle)}
+      />
       {/* 自動發文設定 hidden fields */}
       <input
         type="hidden"
@@ -173,26 +183,27 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
       <Card>
         <CardHeader>
           <CardTitle>{t("websiteInfoTitle")}</CardTitle>
-          <CardDescription>
-            {t("websiteInfoDescription")}
-          </CardDescription>
+          <CardDescription>{t("websiteInfoDescription")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="site-name">{t("siteNameLabel")}</Label>
+          <FormRow
+            label={t("siteNameLabel")}
+            htmlFor="site-name"
+            helperText={t("siteNameHint")}
+          >
             <Input
               id="site-name"
               name="siteName"
               placeholder={t("siteNamePlaceholder")}
               required
             />
-            <p className="text-xs text-muted-foreground">
-              {t("siteNameHint")}
-            </p>
-          </div>
+          </FormRow>
 
-          <div className="space-y-2">
-            <Label htmlFor="site-url">{t("siteUrlLabel")}</Label>
+          <FormRow
+            label={t("siteUrlLabel")}
+            htmlFor="site-url"
+            helperText={t("siteUrlHint")}
+          >
             <Input
               id="site-url"
               name="siteUrl"
@@ -200,23 +211,22 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
               placeholder={t("siteUrlPlaceholder")}
               required
             />
-            <p className="text-xs text-muted-foreground">
-              {t("siteUrlHint")}
-            </p>
-          </div>
+          </FormRow>
 
-          <div className="space-y-2">
-            <Label htmlFor="wp-username">{t("wpUsernameLabel")}</Label>
+          <FormRow label={t("wpUsernameLabel")} htmlFor="wp-username">
             <Input
               id="wp-username"
               name="wpUsername"
               placeholder={t("wpUsernamePlaceholder")}
               required
             />
-          </div>
+          </FormRow>
 
-          <div className="space-y-2">
-            <Label htmlFor="wp-password">{t("wpPasswordLabel")}</Label>
+          <FormRow
+            label={t("wpPasswordLabel")}
+            htmlFor="wp-password"
+            helperText={t("wpPasswordHint")}
+          >
             <Input
               id="wp-password"
               name="wpPassword"
@@ -224,25 +234,23 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
               placeholder={t("wpPasswordPlaceholder")}
               required
             />
-            <p className="text-xs text-muted-foreground">
-              {t("wpPasswordHint")}
-            </p>
-          </div>
+          </FormRow>
 
           {/* 排錯說明 */}
           <div className="mt-4">
             <button
               type="button"
               onClick={() => setTroubleshootOpen(!troubleshootOpen)}
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
+              className="text-sm text-muted-foreground hover:text-foreground transition-colors"
             >
-              <HelpCircle className="h-4 w-4" />
-              <span>{t("troubleshootToggle")}</span>
-              {troubleshootOpen ? (
-                <ChevronUp className="h-4 w-4" />
-              ) : (
-                <ChevronDown className="h-4 w-4" />
-              )}
+              <IconLabel icon={<HelpCircle className="h-4 w-4" />}>
+                <span>{t("troubleshootToggle")}</span>
+                {troubleshootOpen ? (
+                  <ChevronUp className="h-4 w-4" />
+                ) : (
+                  <ChevronDown className="h-4 w-4" />
+                )}
+              </IconLabel>
             </button>
 
             {troubleshootOpen && (
@@ -251,9 +259,7 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
                 <AlertTitle>{t("troubleshootTitle")}</AlertTitle>
                 <AlertDescription className="mt-2 space-y-3">
                   <div>
-                    <p className="font-medium text-sm">
-                      {t("error403Title")}
-                    </p>
+                    <p className="font-medium text-sm">{t("error403Title")}</p>
                     <ul className="list-disc list-inside text-sm mt-1 space-y-1 text-muted-foreground">
                       <li>
                         <strong>{t("error403Reason1")}</strong>
@@ -271,9 +277,7 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
                   </div>
 
                   <div>
-                    <p className="font-medium text-sm">
-                      {t("error401Title")}
-                    </p>
+                    <p className="font-medium text-sm">{t("error401Title")}</p>
                     <ul className="list-disc list-inside text-sm mt-1 space-y-1 text-muted-foreground">
                       <li>{t("error401Reason1")}</li>
                       <li>{t("error401Reason2")}</li>
@@ -282,9 +286,7 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
                   </div>
 
                   <div>
-                    <p className="font-medium text-sm">
-                      {t("error404Title")}
-                    </p>
+                    <p className="font-medium text-sm">{t("error404Title")}</p>
                     <ul className="list-disc list-inside text-sm mt-1 space-y-1 text-muted-foreground">
                       <li>{t("error404Reason1")}</li>
                       <li>{t("error404Reason2")}</li>
@@ -351,13 +353,14 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
       <Card>
         <CardHeader>
           <CardTitle>{t("articleSettingsTitle")}</CardTitle>
-          <CardDescription>
-            {t("articleSettingsDescription")}
-          </CardDescription>
+          <CardDescription>{t("articleSettingsDescription")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="industry">{t("topicLabel")}</Label>
+          <FormRow
+            label={t("topicLabel")}
+            htmlFor="industry"
+            helperText={t("topicHint")}
+          >
             <Input
               id="industry"
               name="industryDisplay"
@@ -365,13 +368,13 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
               onChange={(e) => setIndustry(e.target.value)}
               placeholder={t("topicPlaceholder")}
             />
-            <p className="text-xs text-muted-foreground">
-              {t("topicHint")}
-            </p>
-          </div>
+          </FormRow>
 
-          <div className="space-y-2">
-            <Label htmlFor="region">{t("regionLabel")}</Label>
+          <FormRow
+            label={t("regionLabel")}
+            htmlFor="region"
+            helperText={t("regionHint")}
+          >
             <Select value={region} onValueChange={setRegion}>
               <SelectTrigger id="region">
                 <SelectValue placeholder={t("regionPlaceholder")} />
@@ -392,13 +395,13 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
                 className="mt-2"
               />
             )}
-            <p className="text-xs text-muted-foreground">
-              {t("regionHint")}
-            </p>
-          </div>
+          </FormRow>
 
-          <div className="space-y-2">
-            <Label htmlFor="language">{t("languageLabel")}</Label>
+          <FormRow
+            label={t("languageLabel")}
+            htmlFor="language"
+            helperText={t("languageHint")}
+          >
             <Select value={language} onValueChange={setLanguage}>
               <SelectTrigger id="language">
                 <SelectValue placeholder={t("languagePlaceholder")} />
@@ -411,8 +414,7 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
                 ))}
               </SelectContent>
             </Select>
-            <p className="text-xs text-muted-foreground">{t("languageHint")}</p>
-          </div>
+          </FormRow>
         </CardContent>
       </Card>
 
@@ -420,25 +422,22 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
       <Card>
         <CardHeader>
           <CardTitle>{t("brandVoiceTitle")}</CardTitle>
-          <CardDescription>
-            {t("brandVoiceDescription")}
-          </CardDescription>
+          <CardDescription>{t("brandVoiceDescription")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="brand-name">{t("brandNameLabel")}</Label>
+          <FormRow
+            label={t("brandNameLabel")}
+            htmlFor="brand-name"
+            helperText={t("brandNameHint")}
+          >
             <Input
               id="brand-name"
               name="brandName"
               placeholder={t("brandNamePlaceholder")}
             />
-            <p className="text-xs text-muted-foreground">
-              {t("brandNameHint")}
-            </p>
-          </div>
+          </FormRow>
 
-          <div className="space-y-2">
-            <Label htmlFor="tone-of-voice">{t("toneLabel")}</Label>
+          <FormRow label={t("toneLabel")} htmlFor="tone-of-voice">
             <Select value={toneOfVoice} onValueChange={setToneOfVoice}>
               <SelectTrigger id="tone-of-voice">
                 <SelectValue placeholder={t("tonePlaceholder")} />
@@ -451,22 +450,21 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </FormRow>
 
-          <div className="space-y-2">
-            <Label htmlFor="target-audience">{t("targetAudienceLabel")}</Label>
+          <FormRow
+            label={t("targetAudienceLabel")}
+            htmlFor="target-audience"
+            helperText={t("targetAudienceHint")}
+          >
             <Input
               id="target-audience"
               name="targetAudience"
               placeholder={t("targetAudiencePlaceholder")}
             />
-            <p className="text-xs text-muted-foreground">
-              {t("targetAudienceHint")}
-            </p>
-          </div>
+          </FormRow>
 
-          <div className="space-y-2">
-            <Label htmlFor="writing-style">{t("writingStyleLabel")}</Label>
+          <FormRow label={t("writingStyleLabel")} htmlFor="writing-style">
             <Select value={writingStyle} onValueChange={setWritingStyle}>
               <SelectTrigger id="writing-style">
                 <SelectValue placeholder={t("writingStylePlaceholder")} />
@@ -479,20 +477,19 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </FormRow>
         </CardContent>
       </Card>
 
       {/* 自動發文設定 */}
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Calendar className="h-5 w-5" />
-            {t("autoScheduleTitle")}
+          <CardTitle>
+            <IconLabel icon={<Calendar className="h-5 w-5" />}>
+              {t("autoScheduleTitle")}
+            </IconLabel>
           </CardTitle>
-          <CardDescription>
-            {t("autoScheduleDescription")}
-          </CardDescription>
+          <CardDescription>{t("autoScheduleDescription")}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* 自動排程開關 */}
@@ -520,31 +517,32 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
             >
               <div className="flex items-center space-x-2 rounded-lg border p-4 cursor-pointer hover:bg-muted/50">
                 <RadioGroupItem value="daily" id="daily" />
-                <Label
+                <IconLabel
+                  as="label"
                   htmlFor="daily"
-                  className="flex items-center gap-2 cursor-pointer"
+                  className="cursor-pointer"
+                  icon={<Clock className="h-4 w-4" />}
                 >
-                  <Clock className="h-4 w-4" />
                   {t("dailyPublish")}
-                </Label>
+                </IconLabel>
               </div>
               <div className="flex items-center space-x-2 rounded-lg border p-4 cursor-pointer hover:bg-muted/50">
                 <RadioGroupItem value="interval" id="interval" />
-                <Label
+                <IconLabel
+                  as="label"
                   htmlFor="interval"
-                  className="flex items-center gap-2 cursor-pointer"
+                  className="cursor-pointer"
+                  icon={<CalendarDays className="h-4 w-4" />}
                 >
-                  <CalendarDays className="h-4 w-4" />
                   {t("intervalPublish")}
-                </Label>
+                </IconLabel>
               </div>
             </RadioGroup>
           </div>
 
           {/* 每日發布模式：選擇每日篇數 */}
           {scheduleType === "daily" && (
-            <div className="space-y-2">
-              <Label htmlFor="daily-limit">{t("dailyLimitLabel")}</Label>
+            <FormRow label={t("dailyLimitLabel")} htmlFor="daily-limit">
               <Select
                 value={dailyLimit}
                 onValueChange={setDailyLimit}
@@ -561,13 +559,16 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </FormRow>
           )}
 
           {/* 間隔發布模式：選擇間隔天數 */}
           {scheduleType === "interval" && (
-            <div className="space-y-2">
-              <Label htmlFor="interval-days">{t("intervalLabel")}</Label>
+            <FormRow
+              label={t("intervalLabel")}
+              htmlFor="interval-days"
+              helperText={t("intervalHint")}
+            >
               <Select
                 value={intervalDays}
                 onValueChange={setIntervalDays}
@@ -584,19 +585,21 @@ export function NewWebsiteForm({ companyId }: NewWebsiteFormProps) {
                   ))}
                 </SelectContent>
               </Select>
-              <p className="text-xs text-muted-foreground">
-                {t("intervalHint")}
-              </p>
-            </div>
+            </FormRow>
           )}
 
           {/* 時段提示 */}
           {autoScheduleEnabled && (
             <div className="rounded-lg bg-muted/50 p-3">
-              <p className="text-sm text-muted-foreground flex items-center gap-2">
-                <Clock className="h-4 w-4" />
-                <span>{t("publishTimeLabel", { slots: currentTimeSlots })}</span>
-              </p>
+              <IconLabel
+                as="p"
+                className="text-sm text-muted-foreground"
+                icon={<Clock className="h-4 w-4" />}
+              >
+                <span>
+                  {t("publishTimeLabel", { slots: currentTimeSlots })}
+                </span>
+              </IconLabel>
             </div>
           )}
         </CardContent>

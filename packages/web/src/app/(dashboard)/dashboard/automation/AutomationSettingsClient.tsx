@@ -24,6 +24,7 @@ import {
 import { Label } from "@shared/ui/label";
 import { RadioGroup, RadioGroupItem } from "@shared/ui/radio-group";
 import { Switch } from "@shared/ui/switch";
+import { IconLabel } from "@/components/ui/icon-label";
 import { getGoldenSlotOptions } from "@/lib/scheduling/golden-slots";
 import { cn } from "@/lib/utils";
 
@@ -260,10 +261,13 @@ export function AutomationSettingsClient({
               {saveState === "saving" ? "Saving..." : "Save"}
             </Button>
             {saveState === "saved" && (
-              <p className="flex items-center gap-2 text-sm text-green-700">
-                <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
+              <IconLabel
+                as="p"
+                className="text-sm text-success-700"
+                icon={<CheckCircle2 className="h-4 w-4" aria-hidden="true" />}
+              >
                 Settings saved.
-              </p>
+              </IconLabel>
             )}
             {saveState === "error" && (
               <p className="text-sm text-destructive">{errorMessage}</p>
@@ -274,9 +278,12 @@ export function AutomationSettingsClient({
 
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <CalendarClock className="h-5 w-5" aria-hidden="true" />
-            Weekly preview
+          <CardTitle>
+            <IconLabel
+              icon={<CalendarClock className="h-5 w-5" aria-hidden="true" />}
+            >
+              Weekly preview
+            </IconLabel>
           </CardTitle>
           <CardDescription>
             If you switch to L3 / L4 today, this week&apos;s plan would be:
@@ -308,9 +315,12 @@ export function AutomationSettingsClient({
       <AlertDialog open={confirmL4Open} onOpenChange={setConfirmL4Open}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5" aria-hidden="true" />
-              Enable L4 automation?
+            <AlertDialogTitle>
+              <IconLabel
+                icon={<AlertTriangle className="h-5 w-5" aria-hidden="true" />}
+              >
+                Enable L4 automation?
+              </IconLabel>
             </AlertDialogTitle>
             <AlertDialogDescription>
               L4 can fully automate article generation, scheduling, publishing,
