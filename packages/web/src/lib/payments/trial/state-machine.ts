@@ -22,7 +22,8 @@ export type SideEffect =
         | "converted"
         | "cancelled"
         | "expired"
-        | "payment_failed";
+        | "payment_failed"
+        | "payment_failed_d1";
     }
   | { kind: "mark_subscription_active"; stripeInvoiceId: string }
   | { kind: "start_dunning" }
@@ -34,11 +35,17 @@ export interface TransitionResult {
   changed: boolean;
 }
 
-function stay(state: TrialState, sideEffects: SideEffect[] = []): TransitionResult {
+function stay(
+  state: TrialState,
+  sideEffects: SideEffect[] = [],
+): TransitionResult {
   return { state, sideEffects, changed: false };
 }
 
-function move(state: TrialState, sideEffects: SideEffect[] = []): TransitionResult {
+function move(
+  state: TrialState,
+  sideEffects: SideEffect[] = [],
+): TransitionResult {
   return { state, sideEffects, changed: true };
 }
 
@@ -56,14 +63,19 @@ function expired(): TransitionResult {
   ]);
 }
 
-export function transition(prev: TrialState, event: TrialEvent): TransitionResult {
+export function transition(
+  prev: TrialState,
+  event: TrialEvent,
+): TransitionResult {
   switch (prev) {
     case "pending":
       switch (event.type) {
         case "card_added":
           return move("active");
         case "cancel_requested":
-          return move("cancelled", [{ kind: "send_email", template: "cancelled" }]);
+          return move("cancelled", [
+            { kind: "send_email", template: "cancelled" },
+          ]);
         case "expire_tick":
           return expired();
         default:
@@ -82,9 +94,14 @@ export function transition(prev: TrialState, event: TrialEvent): TransitionResul
         case "invoice_paid":
           return converted(event.stripeInvoiceId);
         case "cancel_requested":
-          return move("cancelled", [{ kind: "send_email", template: "cancelled" }]);
+          return move("cancelled", [
+            { kind: "send_email", template: "cancelled" },
+          ]);
         case "payment_failed":
-          return stay(prev, [{ kind: "start_dunning" }]);
+          return stay(prev, [
+            { kind: "send_email", template: "payment_failed_d1" },
+            { kind: "start_dunning" },
+          ]);
         case "expire_tick":
           return expired();
         default:
@@ -100,7 +117,7 @@ export function transition(prev: TrialState, event: TrialEvent): TransitionResul
           ]);
         case "payment_failed":
           return stay(prev, [
-            { kind: "send_email", template: "payment_failed" },
+            { kind: "send_email", template: "payment_failed_d1" },
             { kind: "start_dunning" },
           ]);
         default:

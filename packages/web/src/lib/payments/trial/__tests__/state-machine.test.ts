@@ -43,7 +43,9 @@ const convertedEffects: SideEffect[] = [
   { kind: "send_email", template: "converted" },
   { kind: "mark_subscription_active", stripeInvoiceId: "in_123" },
 ];
-const cancelledEmail: SideEffect[] = [{ kind: "send_email", template: "cancelled" }];
+const cancelledEmail: SideEffect[] = [
+  { kind: "send_email", template: "cancelled" },
+];
 const expiredEffects: SideEffect[] = [
   { kind: "send_email", template: "expired" },
   { kind: "downgrade_account" },
@@ -53,7 +55,7 @@ const convertedCancelEffects: SideEffect[] = [
   { kind: "downgrade_account" },
 ];
 const convertedPaymentFailedEffects: SideEffect[] = [
-  { kind: "send_email", template: "payment_failed" },
+  { kind: "send_email", template: "payment_failed_d1" },
   { kind: "start_dunning" },
 ];
 
@@ -81,7 +83,10 @@ const matrix = {
     ]),
     invoice_paid: expectTransition("active", "converted", convertedEffects),
     cancel_requested: expectTransition("active", "cancelled", cancelledEmail),
-    payment_failed: expectTransition("active", "active", [{ kind: "start_dunning" }]),
+    payment_failed: expectTransition("active", "active", [
+      { kind: "send_email", template: "payment_failed_d1" },
+      { kind: "start_dunning" },
+    ]),
     expire_tick: expectTransition("active", "expired", expiredEffects),
   },
   converted: {
@@ -135,7 +140,9 @@ describe("trial state machine", () => {
   });
 
   it("sends the D-1 email for an active trial_will_end event", () => {
-    expect(transition("active", { type: "trial_will_end", daysOut: 1 })).toEqual({
+    expect(
+      transition("active", { type: "trial_will_end", daysOut: 1 }),
+    ).toEqual({
       state: "active",
       sideEffects: [{ kind: "send_email", template: "trial_d1" }],
       changed: false,

@@ -1,6 +1,15 @@
 import type { renderAuditDigestEmail } from "./audit-digest-template";
 import type { renderAuditNurtureEmail } from "./audit-nurture-template";
 
+export type TransactionalTemplateName =
+  | "trial_d3"
+  | "trial_d1"
+  | "converted"
+  | "cancelled"
+  | "expired"
+  | "payment_failed"
+  | "payment_failed_d1";
+
 export async function sendAuditDigestEmail(input: {
   to: string;
   template: ReturnType<typeof renderAuditDigestEmail>;
@@ -24,6 +33,20 @@ export async function sendAuditNurtureEmail(input: {
     template: input.template,
     idempotencyKey: input.idempotencyKey,
     tags: ["audit-nurture"],
+  });
+}
+
+export async function enqueueTransactionalTemplateEmail(input: {
+  to: string;
+  template: TransactionalTemplateName;
+  idempotencyKey: string;
+  context?: Record<string, string | number | boolean | null | undefined>;
+}): Promise<{ ok: boolean; messageId?: string; error?: string }> {
+  return sendCfEmail({
+    to: input.to,
+    template: renderTransactionalTemplate(input.template),
+    idempotencyKey: input.idempotencyKey,
+    tags: ["stripe-webhook", `template:${input.template}`],
   });
 }
 
@@ -84,6 +107,62 @@ async function sendCfEmail(input: {
 function resolveSendUrl(apiUrl: string) {
   const trimmed = apiUrl.replace(/\/+$/, "");
   return trimmed.endsWith("/send") ? trimmed : `${trimmed}/send`;
+}
+
+function renderTransactionalTemplate(template: TransactionalTemplateName): {
+  subject: string;
+  html: string;
+  text: string;
+} {
+  switch (template) {
+    case "trial_d3":
+      return basicTemplate(
+        "Your 1WaySEO trial ends in 3 days",
+        "Your trial is ending soon. Your subscription will begin automatically when the trial ends.",
+      );
+    case "trial_d1":
+      return basicTemplate(
+        "Your 1WaySEO trial ends tomorrow",
+        "Your trial ends tomorrow. Your subscription will begin automatically when the trial ends.",
+      );
+    case "converted":
+      return basicTemplate(
+        "Your 1WaySEO subscription is active",
+        "Your payment was received and your subscription is now active.",
+      );
+    case "cancelled":
+      return basicTemplate(
+        "Your 1WaySEO subscription was cancelled",
+        "Your subscription has been cancelled. Your workspace is now limited to read-only access.",
+      );
+    case "expired":
+      return basicTemplate(
+        "Your 1WaySEO trial expired",
+        "Your trial has expired. Add a payment method to continue using 1WaySEO.",
+      );
+    case "payment_failed":
+    case "payment_failed_d1":
+      return basicTemplate(
+        "Payment failed for your 1WaySEO subscription",
+        "We could not process your latest payment. Please update your billing details to keep your workspace active.",
+      );
+  }
+}
+
+function basicTemplate(subject: string, text: string) {
+  return {
+    subject,
+    text,
+    html: `<p>${escapeHtml(text)}</p>`,
+  };
+}
+
+function escapeHtml(value: string) {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 }
 
 async function readResponseBody(response: Response) {
