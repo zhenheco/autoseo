@@ -1,12 +1,22 @@
 import { NextResponse } from "next/server";
+import { verifyShoplineHmac } from "@/lib/shopline/verify-webhook-hmac";
 
 const HMAC_HEADER_NAMES = ["x-shopline-hmac-sha256", "x-hmac-sha256"] as const;
 
 export async function POST(request: Request) {
   logHeaderNames("customer-redact", request.headers);
 
+  const rawBody = await request.text();
   const hmacHeader = getHmacHeader(request.headers);
   if (!hmacHeader) {
+    return NextResponse.json({ error: "invalid_hmac" }, { status: 401 });
+  }
+  const isValid = await verifyShoplineHmac(
+    rawBody,
+    hmacHeader,
+    process.env.SHOPLINE_CLIENT_SECRET ?? "",
+  );
+  if (!isValid) {
     return NextResponse.json({ error: "invalid_hmac" }, { status: 401 });
   }
 

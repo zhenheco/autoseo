@@ -21,11 +21,24 @@ describe("POST /api/shopline/webhooks/gdpr-customer-redact", () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
+    vi.stubEnv("SHOPLINE_CLIENT_SECRET", "shopline-client-secret");
     vi.spyOn(console, "info").mockImplementation(() => {});
   });
 
   it("returns 401 when the HMAC header is missing", async () => {
     const response = await post({});
+
+    expect(response.status).toBe(401);
+    await expect(response.json()).resolves.toEqual({
+      error: "invalid_hmac",
+    });
+  });
+
+  it("returns 401 when the HMAC header is invalid", async () => {
+    const response = await post(
+      { shop_id: "shop-1", shop_domain: "demo.myshopline.com" },
+      { "X-SHOPLINE-Hmac-Sha256": "invalid-signature" },
+    );
 
     expect(response.status).toBe(401);
     await expect(response.json()).resolves.toEqual({
