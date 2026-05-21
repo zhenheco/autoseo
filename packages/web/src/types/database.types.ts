@@ -716,6 +716,134 @@ export type Database = {
           },
         ];
       };
+      social_accounts: {
+        Row: {
+          id: string;
+          brand_id: string;
+          platform: "instagram" | "threads" | "facebook" | "x" | "linkedin";
+          platform_account_id: string;
+          platform_username: string | null;
+          access_token_encrypted: string;
+          refresh_token_encrypted: string | null;
+          token_expires_at: string | null;
+          connected_at: string;
+          disconnected_at: string | null;
+        };
+        Insert: {
+          id?: string;
+          brand_id: string;
+          platform: "instagram" | "threads" | "facebook" | "x" | "linkedin";
+          platform_account_id: string;
+          platform_username?: string | null;
+          access_token_encrypted: string;
+          refresh_token_encrypted?: string | null;
+          token_expires_at?: string | null;
+          connected_at?: string;
+          disconnected_at?: string | null;
+        };
+        Update: {
+          id?: string;
+          brand_id?: string;
+          platform?: "instagram" | "threads" | "facebook" | "x" | "linkedin";
+          platform_account_id?: string;
+          platform_username?: string | null;
+          access_token_encrypted?: string;
+          refresh_token_encrypted?: string | null;
+          token_expires_at?: string | null;
+          connected_at?: string;
+          disconnected_at?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "social_accounts_brand_id_fkey";
+            columns: ["brand_id"];
+            isOneToOne: false;
+            referencedRelation: "brands";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
+      social_posts: {
+        Row: {
+          id: string;
+          article_id: string | null;
+          social_account_id: string | null;
+          platform_post_id: string | null;
+          scheduled_at: string;
+          published_at: string | null;
+          status:
+            | "scheduled"
+            | "publishing"
+            | "published"
+            | "failed"
+            | "cancelled";
+          content_text: string | null;
+          media_urls: string[] | null;
+          error_message: string | null;
+          retry_count: number;
+          metrics: Json | null;
+          metrics_updated_at: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          article_id?: string | null;
+          social_account_id?: string | null;
+          platform_post_id?: string | null;
+          scheduled_at: string;
+          published_at?: string | null;
+          status?:
+            | "scheduled"
+            | "publishing"
+            | "published"
+            | "failed"
+            | "cancelled";
+          content_text?: string | null;
+          media_urls?: string[] | null;
+          error_message?: string | null;
+          retry_count?: number;
+          metrics?: Json | null;
+          metrics_updated_at?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          article_id?: string | null;
+          social_account_id?: string | null;
+          platform_post_id?: string | null;
+          scheduled_at?: string;
+          published_at?: string | null;
+          status?:
+            | "scheduled"
+            | "publishing"
+            | "published"
+            | "failed"
+            | "cancelled";
+          content_text?: string | null;
+          media_urls?: string[] | null;
+          error_message?: string | null;
+          retry_count?: number;
+          metrics?: Json | null;
+          metrics_updated_at?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "social_posts_article_id_fkey";
+            columns: ["article_id"];
+            isOneToOne: false;
+            referencedRelation: "generated_articles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "social_posts_social_account_id_fkey";
+            columns: ["social_account_id"];
+            isOneToOne: false;
+            referencedRelation: "social_accounts";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       subscription_plans: {
         Row: {
           id: string;
