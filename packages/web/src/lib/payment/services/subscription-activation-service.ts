@@ -10,7 +10,6 @@ export interface SubscriptionActivationParams {
   userId: string;
   plan: "monthly" | "annual" | "lifetime";
   amount: number;
-  referralCode?: string;
   transactionId?: string;
 }
 
@@ -31,7 +30,7 @@ export class SubscriptionActivationService {
   async activateSubscription(
     params: SubscriptionActivationParams,
   ): Promise<SubscriptionActivationResult> {
-    const { userId, plan, amount, referralCode, transactionId } = params;
+    const { userId, plan, amount, transactionId } = params;
 
     try {
       // 開始資料庫事務
@@ -39,7 +38,6 @@ export class SubscriptionActivationService {
         p_user_id: userId,
         p_plan: plan,
         p_amount: amount,
-        p_referral_code: referralCode,
         p_transaction_id: transactionId,
       } as never)) as {
         data: {
@@ -80,7 +78,7 @@ export class SubscriptionActivationService {
   private async manualActivation(
     params: SubscriptionActivationParams,
   ): Promise<SubscriptionActivationResult> {
-    const { userId, plan, amount, referralCode } = params;
+    const { userId, plan, amount } = params;
 
     // 1. 檢查現有訂閱
     const existingSubscription = await this.checkExistingSubscription(userId);
@@ -100,12 +98,7 @@ export class SubscriptionActivationService {
       return { success: false, error: "Failed to update token usage" };
     }
 
-    // 4. 處理推薦碼
-    if (referralCode) {
-      await this.processReferral(userId, referralCode, amount, plan);
-    }
-
-    // 5. 更新用戶狀態
+    // 4. 更新用戶狀態
     await this.updateUserStatus(userId, plan);
 
     return {
@@ -250,60 +243,6 @@ export class SubscriptionActivationService {
     }
 
     return insertData;
-  }
-
-  /**
-   * 處理推薦
-   * 使用 company_referral_codes 表查找推薦人公司，記錄到 referrals 表
-   */
-  private async processReferral(
-    userId: string,
-    referralCode: string,
-    _amount: number,
-    _plan: string,
-  ): Promise<void> {
-    try {
-      // 透過 company_referral_codes 查找推薦人公司
-      const { data: referrerCode } = await this.supabase
-        .from("company_referral_codes")
-        .select("company_id")
-        .eq("referral_code", referralCode)
-        .single();
-
-      if (!referrerCode) {
-        console.warn("[Referral] 找不到推薦碼:", referralCode);
-        return;
-      }
-
-      // 取得被推薦人的公司 ID
-      const { data: userProfile } = await this.supabase
-        .from("company_members")
-        .select("company_id")
-        .eq("user_id", userId)
-        .single();
-
-      if (!userProfile?.company_id) {
-        console.warn("[Referral] 找不到用戶的公司:", userId);
-        return;
-      }
-
-      // 記錄推薦關係到 referrals 表
-      await this.supabase.from("referrals").insert({
-        referrer_company_id: referrerCode.company_id,
-        referred_company_id: userProfile.company_id,
-        referral_code: referralCode,
-        status: "qualified",
-        first_payment_at: new Date().toISOString(),
-      });
-
-      console.log("[Referral] 推薦關係已記錄:", {
-        referrerCompany: referrerCode.company_id,
-        referredCompany: userProfile.company_id,
-      });
-    } catch (error) {
-      console.error("[Referral] 處理推薦失敗:", error);
-      // 推薦處理失敗不應影響主要流程
-    }
   }
 
   /**

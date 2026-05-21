@@ -185,7 +185,7 @@ export default async function TagPage({ params }: Props) {
         <nav className="container mx-auto px-4 py-3 flex items-center justify-between">
           <Link
             href="/"
-            className="text-xl font-bold text-[#8b5cf6] transition-colors hover:text-[#7c3aed]"
+            className="text-xl font-bold text-accent transition-colors hover:text-accent-700"
           >
             1Way<span className="text-slate-900 dark:text-white">SEO</span>
           </Link>

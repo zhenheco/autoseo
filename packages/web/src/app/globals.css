@@ -1,148 +1,12 @@
 @import "tailwindcss";
+@import "../styles/tokens.css";
 @config "../../tailwind.config.ts";
 @plugin "@tailwindcss/typography";
 @custom-variant dark (&:where(.dark, .dark *));
 
-/*
-  ============================================
-  1waySEO Landing Page v5 — The Flow of Intelligence (智流感)
-  ============================================
-  - Light: Warm Professional (背景 #FAFAF8)
-  - Dark: Cyberpunk Minimalist (背景 #050505)
-  - 透過 :root / .dark 切換
-*/
-
-@theme {
-  /* 主色（不隨主題變，保持品牌一致） */
-  --color-primary: #6366F1;
-  --color-primary-foreground: #FFFFFF;
-  --color-secondary: #10B981;
-  --color-secondary-foreground: #FFFFFF;
-
-  /* 語義色 — 預設值，會被 :root / .dark 覆蓋 */
-  --color-background: #FAFAF8;
-  --color-foreground: #111827;
-  --color-card: #FFFFFF;
-  --color-card-foreground: #111827;
-  --color-popover: #FFFFFF;
-  --color-popover-foreground: #111827;
-  --color-muted: #F5F3EF;
-  --color-muted-foreground: #4B5563;
-  --color-accent: #EEF2FF;
-  --color-accent-foreground: #6366F1;
-  --color-border: #E5E7EB;
-  --color-input: #E5E7EB;
-  --color-ring: #6366F1;
-
-  /* 狀態色 */
-  --color-destructive: #EF4444;
-  --color-destructive-foreground: #FFFFFF;
-  --color-success: #10B981;
-  --color-success-foreground: #FFFFFF;
-  --color-warning: #F59E0B;
-  --color-warning-foreground: #000000;
-
-  /* 圓角 */
-  --radius: 0.75rem;
-  --radius-btn: 0.5rem;
-  --radius-sm: 0.375rem;
-  --radius-card: 1rem;
-
-  /* 語義化背景色 */
-  --color-bg-main: #FAFAF8;
-  --color-bg-surface: #FFFFFF;
-  --color-bg-accent: #EEF2FF;
-
-  /* 語義化文字色 */
-  --color-text-main: #111827;
-  --color-text-sub: #4B5563;
-  --color-text-dim: #9CA3AF;
-
-  /* 漸層 */
-  --gradient-indigo: linear-gradient(135deg, #6366F1 0%, #8B5CF6 100%);
-  --gradient-emerald: linear-gradient(135deg, #10B981 0%, #3B82F6 100%);
-  --gradient-dark: linear-gradient(180deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0) 100%);
-}
-
 @layer base {
-  /* ===== Light Mode (預設) ===== */
-  :root {
-    color-scheme: light;
-    --bg-main: #FAFAF8;
-    --bg-card: #FFFFFF;
-    --bg-muted: #F5F3EF;
-    --bg-accent: #EEF2FF;
-    --text-main: #111827;
-    --text-sub: #4B5563;
-    --text-dim: #9CA3AF;
-    --border-color: #E5E7EB;
-
-    /* Tailwind v4 語義色覆寫（讓 bg-background 等 utility 跟隨主題） */
-    --color-background: #FAFAF8;
-    --color-foreground: #111827;
-    --color-card: #FFFFFF;
-    --color-card-foreground: #111827;
-    --color-popover: #FFFFFF;
-    --color-popover-foreground: #111827;
-    --color-muted: #F5F3EF;
-    --color-muted-foreground: #4B5563;
-    --color-accent: #EEF2FF;
-    --color-accent-foreground: #6366F1;
-    --color-border: #E5E7EB;
-    --color-input: #E5E7EB;
-    --color-ring: #6366F1;
-    --color-bg-main: #FAFAF8;
-    --color-bg-surface: #FFFFFF;
-    --color-bg-accent: #EEF2FF;
-    --color-text-main: #111827;
-    --color-text-sub: #4B5563;
-    --color-text-dim: #9CA3AF;
-
-    /* 陰影 */
-    --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.1), 0 1px 2px -1px rgb(0 0 0 / 0.1);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
-  }
-
-  /* ===== Dark Mode ===== */
-  .dark {
-    color-scheme: dark;
-    --bg-main: #050505;
-    --bg-card: #0A0A0A;
-    --bg-muted: #1A1A1A;
-    --bg-accent: rgba(99, 102, 241, 0.1);
-    --text-main: #FFFFFF;
-    --text-sub: #A1A1AA;
-    --text-dim: #71717A;
-    --border-color: #1A1A1A;
-
-    /* Tailwind v4 語義色覆寫（dark mode） */
-    --color-background: #050505;
-    --color-foreground: #FFFFFF;
-    --color-card: #0A0A0A;
-    --color-card-foreground: #FFFFFF;
-    --color-popover: #0A0A0A;
-    --color-popover-foreground: #FFFFFF;
-    --color-muted: #1A1A1A;
-    --color-muted-foreground: #A1A1AA;
-    --color-accent: rgba(99, 102, 241, 0.1);
-    --color-accent-foreground: #818CF8;
-    --color-border: #1A1A1A;
-    --color-input: #1A1A1A;
-    --color-ring: #818CF8;
-    --color-bg-main: #050505;
-    --color-bg-surface: #0A0A0A;
-    --color-bg-accent: rgba(99, 102, 241, 0.1);
-    --color-text-main: #FFFFFF;
-    --color-text-sub: #A1A1AA;
-    --color-text-dim: #71717A;
-
-    /* 陰影（深色模式用微弱 glow） */
-    --shadow-xs: 0 0 0 transparent;
-    --shadow-sm: 0 0 0 transparent;
-    --shadow-md: 0 0 10px -5px rgba(99, 102, 241, 0.1);
-    --shadow-lg: 0 0 20px -10px rgba(99, 102, 241, 0.15);
+  * {
+    border-color: hsl(var(--border));
   }
 
   html {
@@ -151,30 +15,81 @@
   }
 
   body {
-    background-color: var(--color-background);
-    color: var(--color-foreground);
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
     font-family: "Plus Jakarta Sans", "Inter", system-ui, sans-serif;
+    font-size: var(--font-body);
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
 
-  h1:not(.prose *), h2:not(.prose *), h3:not(.prose *),
-  h4:not(.prose *), h5:not(.prose *), h6:not(.prose *) {
+  h1:not(.prose *),
+  h2:not(.prose *),
+  h3:not(.prose *),
+  h4:not(.prose *),
+  h5:not(.prose *),
+  h6:not(.prose *) {
     @apply font-bold tracking-tight;
-    color: var(--color-foreground);
+    color: hsl(var(--foreground));
   }
 
-  /* 全域 heading 大小只套用在非 prose 容器（LP、dashboard 等） */
-  h1:not(.prose *) { @apply text-4xl md:text-6xl lg:text-7xl; }
-  h2:not(.prose *) { @apply text-3xl md:text-5xl; }
-  h3:not(.prose *) { @apply text-2xl md:text-3xl; }
+  h1:not(.prose *) {
+    font-size: var(--font-h1);
+    line-height: 1.1;
+  }
+
+  h2:not(.prose *) {
+    font-size: var(--font-h2);
+    line-height: 1.15;
+  }
+
+  h3:not(.prose *) {
+    font-size: var(--font-h3);
+    line-height: 1.2;
+  }
+
+  small {
+    font-size: var(--font-small);
+  }
+
+  a,
+  button,
+  [role="button"],
+  [role="link"] {
+    cursor: pointer;
+  }
+
+  a:focus-visible,
+  button:focus-visible,
+  input:focus-visible,
+  textarea:focus-visible,
+  select:focus-visible,
+  [role="button"]:focus-visible,
+  [role="link"]:focus-visible,
+  [tabindex]:not([tabindex="-1"]):focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0ms !important;
+      animation-delay: 0ms !important;
+      animation-iteration-count: 1 !important;
+      scroll-behavior: auto !important;
+      transition-duration: 0ms !important;
+      transition-delay: 0ms !important;
+    }
+  }
 }
 
 @layer utilities {
   .glass-card {
     @apply backdrop-blur-xl rounded-card;
-    background: color-mix(in srgb, var(--bg-card) 80%, transparent);
-    border: 1px solid color-mix(in srgb, var(--border-color) 50%, transparent);
+    background: color-mix(in srgb, hsl(var(--card)) 80%, transparent);
+    border: 1px solid color-mix(in srgb, hsl(var(--border)) 50%, transparent);
   }
 
   .glow-border {
@@ -182,14 +97,19 @@
   }
 
   .glow-border::after {
-    content: '';
+    content: "";
     position: absolute;
     inset: -1px;
-    background: linear-gradient(90deg, transparent, #6366F1, transparent);
+    background: linear-gradient(
+      90deg,
+      transparent,
+      hsl(var(--primary-500)),
+      transparent
+    );
     z-index: -1;
     border-radius: inherit;
     opacity: 0;
-    transition: opacity 0.3s;
+    transition: opacity var(--duration-300) var(--ease-out);
   }
 
   .glow-border:hover::after {
@@ -205,29 +125,51 @@
   }
 
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-[var(--text-main)] via-[var(--text-main)] to-[var(--text-dim)];
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-[hsl(var(--text-primary))] via-[hsl(var(--text-primary))] to-[hsl(var(--text-dim))];
   }
 
   .text-gradient-indigo {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-[#6366F1] to-[#A855F7];
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent;
+  }
+
+  .pricing-flow-ring {
+    background: conic-gradient(
+      from 90deg at 50% 50%,
+      hsl(var(--primary-500)) 0%,
+      hsl(var(--secondary-500)) 50%,
+      hsl(var(--primary-500)) 100%
+    );
   }
 
   .animate-float {
-    animation: float 6s ease-in-out infinite;
-  }
-
-  @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-10px); }
+    animation: float 6s var(--ease-in-out) infinite;
   }
 
   .flow-border {
-    background: linear-gradient(90deg, #6366F1, #10B981, #6366F1);
+    background: linear-gradient(
+      90deg,
+      hsl(var(--primary-500)),
+      hsl(var(--secondary-500)),
+      hsl(var(--primary-500))
+    );
     background-size: 200% auto;
     animation: flow 3s linear infinite;
   }
 
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+
   @keyframes flow {
-    to { background-position: 200% center; }
+    to {
+      background-position: 200% center;
+    }
   }
 }

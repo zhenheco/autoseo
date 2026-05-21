@@ -187,7 +187,6 @@ function buildUpdateData(
     sync_translations: "sync_translations",
     sync_languages: "sync_languages",
     is_active: "is_active",
-    brand_voice: "brand_voice",
     auto_schedule_enabled: "auto_schedule_enabled",
     schedule_type: "schedule_type",
     schedule_interval_days: "schedule_interval_days",

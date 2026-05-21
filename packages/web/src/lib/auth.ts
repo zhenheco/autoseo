@@ -1,7 +1,5 @@
 import { createAdminClient, createClient } from "@shared/supabase";
-import { cookies } from "next/headers";
 import { syncUserToBrevo } from "@/lib/brevo";
-import { trackRegistration } from "@/lib/affiliate-client";
 
 export {
   getUser,
@@ -115,19 +113,6 @@ export async function signUp(email: string, password: string) {
   }
   console.log("[註冊] Step 5 完成: 訂閱建立成功");
 
-  const cookieStore = await cookies();
-  const affiliateRef = cookieStore.get("affiliate_ref")?.value;
-
-  if (affiliateRef) {
-    trackRegistration({
-      referralCode: affiliateRef,
-      referredUserId: authData.user.id,
-      referredUserEmail: email,
-    }).catch((err) => console.error("[註冊] Affiliate 追蹤失敗:", err));
-
-    console.log("[註冊] Step 6 完成: Affiliate 追蹤已觸發");
-  }
-
   await adminClient.from("subscriptions").insert({
     company_id: company.id,
     plan_name: "free",
@@ -155,34 +140,6 @@ export async function signIn(email: string, password: string) {
   });
 
   if (error) throw error;
-
-  const cookieStore = await cookies();
-  const affiliateRef = cookieStore.get("affiliate_ref")?.value;
-
-  console.log("[SignIn Affiliate] 診斷資訊:", {
-    userId: data.user?.id,
-    userEmail: email,
-    affiliateRef: affiliateRef || "(無)",
-    hasRef: !!affiliateRef,
-  });
-
-  if (affiliateRef && data.user) {
-    try {
-      const result = await trackRegistration({
-        referralCode: affiliateRef,
-        referredUserId: data.user.id,
-        referredUserEmail: email,
-      });
-      console.log("[SignIn Affiliate] 追蹤成功:", {
-        success: !!result,
-        referralId: result?.referralId || null,
-      });
-    } catch (err) {
-      console.error("[SignIn Affiliate] 追蹤失敗:", err);
-    }
-  } else {
-    console.log("[SignIn Affiliate] 無推薦碼或無用戶，跳過追蹤");
-  }
 
   return data;
 }

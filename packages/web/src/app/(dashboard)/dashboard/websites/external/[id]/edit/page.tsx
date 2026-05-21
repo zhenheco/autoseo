@@ -20,6 +20,7 @@ import { ExternalWebsiteSettingsForm } from "./ExternalWebsiteSettingsForm";
 import { updateExternalWebsite } from "../../actions";
 import type { ExternalWebsiteDetail } from "@/types/external-website.types";
 import { getTranslations } from "next-intl/server";
+import { getWebsiteBrandVoice } from "@/lib/brands/brand-voice";
 
 async function getExternalWebsite(
   websiteId: string,
@@ -31,7 +32,7 @@ async function getExternalWebsite(
     .select(
       `id, website_name, external_slug, webhook_url,
        sync_on_publish, sync_on_update, sync_on_unpublish, sync_translations,
-       brand_voice, industry, region, language,
+       industry, region, language,
        daily_article_limit, auto_schedule_enabled, schedule_type, schedule_interval_days`,
     )
     .eq("id", websiteId)
@@ -40,7 +41,12 @@ async function getExternalWebsite(
 
   if (error || !data) return null;
 
-  return data as ExternalWebsiteDetail;
+  const brandVoice = await getWebsiteBrandVoice(adminSupabase, websiteId);
+
+  return {
+    ...data,
+    brand_voice: brandVoice,
+  } as ExternalWebsiteDetail;
 }
 
 export default async function EditExternalWebsitePage({
@@ -76,9 +82,7 @@ export default async function EditExternalWebsitePage({
     <div className="container mx-auto p-8 max-w-2xl">
       <div className="mb-8">
         <h1 className="text-3xl font-bold">{t("editTitle")}</h1>
-        <p className="text-muted-foreground mt-2">
-          {t("editDescription")}
-        </p>
+        <p className="text-muted-foreground mt-2">{t("editDescription")}</p>
       </div>
 
       <div className="grid gap-6">

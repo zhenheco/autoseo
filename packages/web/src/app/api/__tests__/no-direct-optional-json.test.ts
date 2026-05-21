@@ -6,7 +6,6 @@ const repoRoot = process.cwd();
 
 describe("optional JSON route parsing", () => {
   it.each([
-    "src/app/api/affiliate/track-click/route.ts",
     "src/app/api/sitemap/revalidate/route.ts",
     "src/app/api/sitemap/ping/route.ts",
   ])("%s uses the shared JSON parser", (path) => {

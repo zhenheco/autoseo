@@ -25,6 +25,7 @@ import { WebsiteSettingsForm } from "./WebsiteSettingsForm";
 import { AutoScheduleForm } from "./AutoScheduleForm";
 import { getTranslations } from "next-intl/server";
 import { ShoppingBag } from "lucide-react";
+import { getWebsiteBrandVoice } from "@/lib/brands/brand-voice";
 
 interface BrandVoice {
   brand_name?: string;
@@ -39,7 +40,7 @@ async function getWebsite(websiteId: string, companyId: string) {
   const { data, error } = await supabase
     .from("website_configs")
     .select(
-      "id, website_name, wordpress_url, wp_username, company_id, brand_voice, industry, region, language, daily_article_limit, auto_schedule_enabled, schedule_type, schedule_interval_days, is_platform_blog",
+      "id, website_name, wordpress_url, wp_username, company_id, industry, region, language, daily_article_limit, auto_schedule_enabled, schedule_type, schedule_interval_days, is_platform_blog",
     )
     .eq("id", websiteId)
     .eq("company_id", companyId)
@@ -47,7 +48,12 @@ async function getWebsite(websiteId: string, companyId: string) {
 
   if (error) throw error;
 
-  return data as {
+  const brandVoice = await getWebsiteBrandVoice(supabase, websiteId);
+
+  return {
+    ...data,
+    brand_voice: brandVoice,
+  } as {
     id: string;
     website_name: string | null;
     wordpress_url: string | null;

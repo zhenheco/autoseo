@@ -104,35 +104,35 @@ export async function sendCompanyInvitationEmail({
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>${subject}</title>
 </head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #f5f5f5;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5; padding: 40px 20px;">
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: rgb(245, 245, 245);">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: rgb(245, 245, 245); padding: 40px 20px;">
     <tr>
       <td align="center">
-        <table width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+        <table width="600" cellpadding="0" cellspacing="0" style="background-color: rgb(255, 255, 255); border-radius: 12px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
           <!-- Header -->
           <tr>
-            <td style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
-              <h1 style="color: #ffffff; margin: 0; font-size: 28px; font-weight: 600;">團隊邀請</h1>
+            <td style="background: linear-gradient(135deg, rgb(102, 126, 234) 0%, rgb(118, 75, 162) 100%); padding: 40px 30px; text-align: center;">
+              <h1 style="color: rgb(255, 255, 255); margin: 0; font-size: 28px; font-weight: 600;">團隊邀請</h1>
             </td>
           </tr>
 
           <!-- Content -->
           <tr>
             <td style="padding: 40px 30px;">
-              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">您好，</p>
+              <p style="color: rgb(51, 51, 51); font-size: 16px; line-height: 1.6; margin: 0 0 20px;">您好，</p>
 
-              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">
-                <strong>${inviterName}</strong> 邀請您加入 <strong>${companyName}</strong> 團隊，擔任 <strong style="color: #667eea;">${roleName}</strong> 角色。
+              <p style="color: rgb(51, 51, 51); font-size: 16px; line-height: 1.6; margin: 0 0 20px;">
+                <strong>${inviterName}</strong> 邀請您加入 <strong>${companyName}</strong> 團隊，擔任 <strong style="color: rgb(102, 126, 234);">${roleName}</strong> 角色。
               </p>
 
-              <div style="background-color: #f8f9fa; border-left: 4px solid #667eea; padding: 20px; margin: 30px 0; border-radius: 4px;">
-                <p style="color: #666666; font-size: 14px; line-height: 1.6; margin: 0;">
+              <div style="background-color: rgb(248, 249, 250); border-left: 4px solid rgb(102, 126, 234); padding: 20px; margin: 30px 0; border-radius: 4px;">
+                <p style="color: rgb(102, 102, 102); font-size: 14px; line-height: 1.6; margin: 0;">
                   <strong>角色權限說明：</strong><br>
                   ${getRoleDescription(role)}
                 </p>
               </div>
 
-              <p style="color: #333333; font-size: 16px; line-height: 1.6; margin: 0 0 30px;">
+              <p style="color: rgb(51, 51, 51); font-size: 16px; line-height: 1.6; margin: 0 0 30px;">
                 點擊下方按鈕接受邀請並開始使用：
               </p>
 
@@ -140,27 +140,27 @@ export async function sendCompanyInvitationEmail({
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center">
-                    <a href="${inviteLink}" style="display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #ffffff; text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
+                    <a href="${inviteLink}" style="display: inline-block; background: linear-gradient(135deg, rgb(102, 126, 234) 0%, rgb(118, 75, 162) 100%); color: rgb(255, 255, 255); text-decoration: none; padding: 16px 40px; border-radius: 8px; font-size: 16px; font-weight: 600; box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);">
                       接受邀請
                     </a>
                   </td>
                 </tr>
               </table>
 
-              <p style="color: #999999; font-size: 14px; line-height: 1.6; margin: 30px 0 0; text-align: center;">
+              <p style="color: rgb(153, 153, 153); font-size: 14px; line-height: 1.6; margin: 30px 0 0; text-align: center;">
                 或複製此連結到瀏覽器：<br>
-                <a href="${inviteLink}" style="color: #667eea; text-decoration: none; word-break: break-all;">${inviteLink}</a>
+                <a href="${inviteLink}" style="color: rgb(102, 126, 234); text-decoration: none; word-break: break-all;">${inviteLink}</a>
               </p>
             </td>
           </tr>
 
           <!-- Footer -->
           <tr>
-            <td style="background-color: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e9ecef;">
-              <p style="color: #999999; font-size: 14px; line-height: 1.6; margin: 0 0 10px;">
+            <td style="background-color: rgb(248, 249, 250); padding: 30px; text-align: center; border-top: 1px solid rgb(233, 236, 239);">
+              <p style="color: rgb(153, 153, 153); font-size: 14px; line-height: 1.6; margin: 0 0 10px;">
                 此郵件由 <strong>${process.env.COMPANY_NAME || "1waySEO"}</strong> 自動發送
               </p>
-              <p style="color: #999999; font-size: 12px; line-height: 1.6; margin: 0;">
+              <p style="color: rgb(153, 153, 153); font-size: 12px; line-height: 1.6; margin: 0;">
                 如果您未預期收到此郵件，請忽略即可
               </p>
             </td>
@@ -232,12 +232,12 @@ export async function sendBillingAlertEmail({
   const jobRows = failedJobs
     .map(
       (job, index) => `
-      <tr style="border-bottom: 1px solid #e5e7eb;">
-        <td style="padding: 12px; color: #374151;">${index + 1}</td>
-        <td style="padding: 12px; font-family: monospace; font-size: 12px; color: #6b7280;">${job.jobId.slice(0, 8)}...</td>
-        <td style="padding: 12px; color: #374151;">${job.companyName || job.companyId.slice(0, 8)}</td>
-        <td style="padding: 12px; color: #dc2626;">${job.error}</td>
-        <td style="padding: 12px; color: #6b7280;">${new Date(job.createdAt).toLocaleString("zh-TW", { timeZone: "Asia/Taipei" })}</td>
+      <tr style="border-bottom: 1px solid rgb(229, 231, 235);">
+        <td style="padding: 12px; color: rgb(55, 65, 81);">${index + 1}</td>
+        <td style="padding: 12px; font-family: monospace; font-size: 12px; color: rgb(107, 114, 128);">${job.jobId.slice(0, 8)}...</td>
+        <td style="padding: 12px; color: rgb(55, 65, 81);">${job.companyName || job.companyId.slice(0, 8)}</td>
+        <td style="padding: 12px; color: rgb(220, 38, 38);">${job.error}</td>
+        <td style="padding: 12px; color: rgb(107, 114, 128);">${new Date(job.createdAt).toLocaleString("zh-TW", { timeZone: "Asia/Taipei" })}</td>
       </tr>
     `,
     )
@@ -249,42 +249,42 @@ export async function sendBillingAlertEmail({
 <head>
   <meta charset="UTF-8">
 </head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5;">
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 20px; background-color: rgb(245, 245, 245);">
   <div style="max-width: 800px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
     <!-- 告警標題 -->
-    <div style="background-color: #FEE2E2; border-left: 4px solid #DC2626; padding: 20px;">
-      <h2 style="color: #991B1B; margin: 0 0 10px 0;">⚠️ 計費審計告警</h2>
-      <p style="color: #374151; margin: 0; font-size: 14px;">
+    <div style="background-color: rgb(254, 226, 226); border-left: 4px solid rgb(220, 38, 38); padding: 20px;">
+      <h2 style="color: rgb(153, 27, 27); margin: 0 0 10px 0;">⚠️ 計費審計告警</h2>
+      <p style="color: rgb(55, 65, 81); margin: 0; font-size: 14px;">
         發現 <strong>${retryFailedCount}</strong> 筆計費失敗，需要人工處理
       </p>
     </div>
 
     <!-- 統計摘要 -->
-    <div style="padding: 20px; background-color: #f9fafb; border-bottom: 1px solid #e5e7eb;">
-      <h3 style="color: #374151; margin: 0 0 12px 0; font-size: 14px;">📊 處理摘要</h3>
+    <div style="padding: 20px; background-color: rgb(249, 250, 251); border-bottom: 1px solid rgb(229, 231, 235);">
+      <h3 style="color: rgb(55, 65, 81); margin: 0 0 12px 0; font-size: 14px;">📊 處理摘要</h3>
       <div style="display: flex; gap: 24px;">
         <div>
-          <span style="color: #6b7280; font-size: 12px;">自動重試成功</span>
-          <p style="color: #059669; font-size: 20px; font-weight: 600; margin: 4px 0 0 0;">${retrySuccessCount}</p>
+          <span style="color: rgb(107, 114, 128); font-size: 12px;">自動重試成功</span>
+          <p style="color: rgb(5, 150, 105); font-size: 20px; font-weight: 600; margin: 4px 0 0 0;">${retrySuccessCount}</p>
         </div>
         <div>
-          <span style="color: #6b7280; font-size: 12px;">仍需人工處理</span>
-          <p style="color: #dc2626; font-size: 20px; font-weight: 600; margin: 4px 0 0 0;">${retryFailedCount}</p>
+          <span style="color: rgb(107, 114, 128); font-size: 12px;">仍需人工處理</span>
+          <p style="color: rgb(220, 38, 38); font-size: 20px; font-weight: 600; margin: 4px 0 0 0;">${retryFailedCount}</p>
         </div>
       </div>
     </div>
 
     <!-- 失敗任務列表 -->
     <div style="padding: 20px;">
-      <h3 style="color: #374151; margin: 0 0 12px 0; font-size: 14px;">🚨 失敗任務詳情</h3>
+      <h3 style="color: rgb(55, 65, 81); margin: 0 0 12px 0; font-size: 14px;">🚨 失敗任務詳情</h3>
       <table style="width: 100%; border-collapse: collapse; font-size: 13px;">
         <thead>
-          <tr style="background-color: #f3f4f6;">
-            <th style="padding: 12px; text-align: left; color: #6b7280;">#</th>
-            <th style="padding: 12px; text-align: left; color: #6b7280;">Job ID</th>
-            <th style="padding: 12px; text-align: left; color: #6b7280;">公司</th>
-            <th style="padding: 12px; text-align: left; color: #6b7280;">錯誤</th>
-            <th style="padding: 12px; text-align: left; color: #6b7280;">創建時間</th>
+          <tr style="background-color: rgb(243, 244, 246);">
+            <th style="padding: 12px; text-align: left; color: rgb(107, 114, 128);">#</th>
+            <th style="padding: 12px; text-align: left; color: rgb(107, 114, 128);">Job ID</th>
+            <th style="padding: 12px; text-align: left; color: rgb(107, 114, 128);">公司</th>
+            <th style="padding: 12px; text-align: left; color: rgb(107, 114, 128);">錯誤</th>
+            <th style="padding: 12px; text-align: left; color: rgb(107, 114, 128);">創建時間</th>
           </tr>
         </thead>
         <tbody>
@@ -294,15 +294,15 @@ export async function sendBillingAlertEmail({
     </div>
 
     <!-- 行動按鈕 -->
-    <div style="padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+    <div style="padding: 20px; text-align: center; border-top: 1px solid rgb(229, 231, 235);">
       <a href="${appUrl}/admin/billing"
-         style="display: inline-block; background-color: #2563EB; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500;">
+         style="display: inline-block; background-color: rgb(37, 99, 235); color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500;">
         前往後台處理
       </a>
     </div>
 
     <!-- 頁腳 -->
-    <div style="background-color: #F9FAFB; padding: 16px 20px; text-align: center; color: #6B7280; font-size: 12px;">
+    <div style="background-color: rgb(249, 250, 251); padding: 16px 20px; text-align: center; color: rgb(107, 114, 128); font-size: 12px;">
       告警時間：${now}<br>
       此郵件由 1WaySEO 自動發送，請勿直接回覆
     </div>
@@ -339,9 +339,21 @@ export async function sendScheduleAlertEmail({
   alertLevel,
 }: ScheduleAlertEmailParams): Promise<boolean> {
   const colors: Record<number, { bg: string; border: string; text: string }> = {
-    7: { bg: "#FEF3C7", border: "#F59E0B", text: "#B45309" }, // 黃色
-    3: { bg: "#FED7AA", border: "#EA580C", text: "#C2410C" }, // 橘色
-    1: { bg: "#FEE2E2", border: "#DC2626", text: "#991B1B" }, // 紅色
+    7: {
+      bg: "rgb(254, 243, 199)",
+      border: "rgb(245, 158, 11)",
+      text: "rgb(180, 83, 9)",
+    }, // 黃色
+    3: {
+      bg: "rgb(254, 215, 170)",
+      border: "rgb(234, 88, 12)",
+      text: "rgb(194, 65, 12)",
+    }, // 橘色
+    1: {
+      bg: "rgb(254, 226, 226)",
+      border: "rgb(220, 38, 38)",
+      text: "rgb(153, 27, 27)",
+    }, // 紅色
   };
 
   const c = colors[alertLevel];
@@ -355,29 +367,29 @@ export async function sendScheduleAlertEmail({
 <head>
   <meta charset="UTF-8">
 </head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5;">
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 20px; background-color: rgb(245, 245, 245);">
   <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
     <div style="background-color: ${c.bg}; border-left: 4px solid ${c.border}; padding: 20px;">
       <h2 style="color: ${c.text}; margin: 0 0 10px 0;">${alertLevel}天警告</h2>
-      <p style="color: #374151; margin: 0; font-size: 16px;">
+      <p style="color: rgb(55, 65, 81); margin: 0; font-size: 16px;">
         再過 <strong>${daysRemaining}</strong> 天就沒有排程文章囉！
       </p>
     </div>
     <div style="padding: 20px;">
-      <p style="color: #4B5563; line-height: 1.6;">
+      <p style="color: rgb(75, 85, 99); line-height: 1.6;">
         您的網站「<strong>${websiteName}</strong>」的排程文章即將用盡。
       </p>
-      <p style="color: #4B5563; line-height: 1.6;">
+      <p style="color: rgb(75, 85, 99); line-height: 1.6;">
         快來補充新文章，確保網站持續有新內容發布！
       </p>
       <div style="text-align: center; margin-top: 24px;">
         <a href="${appUrl}/dashboard/articles/manage"
-           style="display: inline-block; background-color: #2563EB; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500;">
+           style="display: inline-block; background-color: rgb(37, 99, 235); color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500;">
           前往補充文章
         </a>
       </div>
     </div>
-    <div style="background-color: #F9FAFB; padding: 16px 20px; text-align: center; color: #6B7280; font-size: 12px;">
+    <div style="background-color: rgb(249, 250, 251); padding: 16px 20px; text-align: center; color: rgb(107, 114, 128); font-size: 12px;">
       此郵件由 1WaySEO 自動發送
     </div>
   </div>
@@ -474,41 +486,41 @@ export async function sendErrorAlertEmail({
 <head>
   <meta charset="UTF-8">
 </head>
-<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5;">
+<body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; margin: 0; padding: 20px; background-color: rgb(245, 245, 245);">
   <div style="max-width: 700px; margin: 0 auto; background: white; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.1);">
     <!-- 告警標題 -->
-    <div style="background-color: #FEE2E2; border-left: 4px solid #DC2626; padding: 20px;">
-      <h2 style="color: #991B1B; margin: 0 0 10px 0;">🚨 系統嚴重錯誤</h2>
-      <p style="color: #374151; margin: 0; font-size: 14px;">
-        偵測到 <strong style="color: #DC2626;">CRITICAL</strong> 等級的系統錯誤
+    <div style="background-color: rgb(254, 226, 226); border-left: 4px solid rgb(220, 38, 38); padding: 20px;">
+      <h2 style="color: rgb(153, 27, 27); margin: 0 0 10px 0;">🚨 系統嚴重錯誤</h2>
+      <p style="color: rgb(55, 65, 81); margin: 0; font-size: 14px;">
+        偵測到 <strong style="color: rgb(220, 38, 38);">CRITICAL</strong> 等級的系統錯誤
       </p>
     </div>
 
     <!-- 錯誤資訊摘要 -->
-    <div style="padding: 20px; background-color: #f9fafb; border-bottom: 1px solid #e5e7eb;">
+    <div style="padding: 20px; background-color: rgb(249, 250, 251); border-bottom: 1px solid rgb(229, 231, 235);">
       <table style="width: 100%; border-collapse: collapse; font-size: 14px;">
         <tr>
-          <td style="padding: 8px 0; color: #6b7280; width: 100px;">錯誤 ID</td>
-          <td style="padding: 8px 0; color: #374151; font-family: monospace; font-size: 12px;">${error.id}</td>
+          <td style="padding: 8px 0; color: rgb(107, 114, 128); width: 100px;">錯誤 ID</td>
+          <td style="padding: 8px 0; color: rgb(55, 65, 81); font-family: monospace; font-size: 12px;">${error.id}</td>
         </tr>
         <tr>
-          <td style="padding: 8px 0; color: #6b7280;">類別</td>
-          <td style="padding: 8px 0; color: #374151;">${categoryName}</td>
+          <td style="padding: 8px 0; color: rgb(107, 114, 128);">類別</td>
+          <td style="padding: 8px 0; color: rgb(55, 65, 81);">${categoryName}</td>
         </tr>
         <tr>
-          <td style="padding: 8px 0; color: #6b7280;">來源</td>
-          <td style="padding: 8px 0; color: #374151;">${sourceName}${error.agentName ? ` - ${error.agentName}` : ""}${error.endpoint ? ` (${error.endpoint})` : ""}</td>
+          <td style="padding: 8px 0; color: rgb(107, 114, 128);">來源</td>
+          <td style="padding: 8px 0; color: rgb(55, 65, 81);">${sourceName}${error.agentName ? ` - ${error.agentName}` : ""}${error.endpoint ? ` (${error.endpoint})` : ""}</td>
         </tr>
         <tr>
-          <td style="padding: 8px 0; color: #6b7280;">時間</td>
-          <td style="padding: 8px 0; color: #374151;">${formattedTime}</td>
+          <td style="padding: 8px 0; color: rgb(107, 114, 128);">時間</td>
+          <td style="padding: 8px 0; color: rgb(55, 65, 81);">${formattedTime}</td>
         </tr>
         ${
           error.articleJobId
             ? `
         <tr>
-          <td style="padding: 8px 0; color: #6b7280;">任務 ID</td>
-          <td style="padding: 8px 0; color: #374151; font-family: monospace; font-size: 12px;">${error.articleJobId}</td>
+          <td style="padding: 8px 0; color: rgb(107, 114, 128);">任務 ID</td>
+          <td style="padding: 8px 0; color: rgb(55, 65, 81); font-family: monospace; font-size: 12px;">${error.articleJobId}</td>
         </tr>
         `
             : ""
@@ -517,8 +529,8 @@ export async function sendErrorAlertEmail({
           error.companyId
             ? `
         <tr>
-          <td style="padding: 8px 0; color: #6b7280;">公司 ID</td>
-          <td style="padding: 8px 0; color: #374151; font-family: monospace; font-size: 12px;">${error.companyId}</td>
+          <td style="padding: 8px 0; color: rgb(107, 114, 128);">公司 ID</td>
+          <td style="padding: 8px 0; color: rgb(55, 65, 81); font-family: monospace; font-size: 12px;">${error.companyId}</td>
         </tr>
         `
             : ""
@@ -528,30 +540,30 @@ export async function sendErrorAlertEmail({
 
     <!-- 錯誤訊息 -->
     <div style="padding: 20px;">
-      <h3 style="color: #374151; margin: 0 0 12px 0; font-size: 14px;">📋 錯誤訊息</h3>
-      <div style="background-color: #FEF2F2; border: 1px solid #FECACA; border-radius: 6px; padding: 16px;">
-        <p style="color: #991B1B; margin: 0; font-size: 14px; white-space: pre-wrap; word-break: break-word;">${error.message}</p>
+      <h3 style="color: rgb(55, 65, 81); margin: 0 0 12px 0; font-size: 14px;">📋 錯誤訊息</h3>
+      <div style="background-color: rgb(254, 242, 242); border: 1px solid rgb(254, 202, 202); border-radius: 6px; padding: 16px;">
+        <p style="color: rgb(153, 27, 27); margin: 0; font-size: 14px; white-space: pre-wrap; word-break: break-word;">${error.message}</p>
       </div>
     </div>
 
     <!-- Stack Trace -->
     <div style="padding: 0 20px 20px;">
-      <h3 style="color: #374151; margin: 0 0 12px 0; font-size: 14px;">📜 Stack Trace</h3>
-      <div style="background-color: #1F2937; border-radius: 6px; padding: 16px; overflow-x: auto;">
-        <pre style="color: #D1D5DB; margin: 0; font-size: 12px; font-family: 'Monaco', 'Menlo', monospace; white-space: pre-wrap; word-break: break-all;">${stackTrace}</pre>
+      <h3 style="color: rgb(55, 65, 81); margin: 0 0 12px 0; font-size: 14px;">📜 Stack Trace</h3>
+      <div style="background-color: rgb(31, 41, 55); border-radius: 6px; padding: 16px; overflow-x: auto;">
+        <pre style="color: rgb(209, 213, 219); margin: 0; font-size: 12px; font-family: 'Monaco', 'Menlo', monospace; white-space: pre-wrap; word-break: break-all;">${stackTrace}</pre>
       </div>
     </div>
 
     <!-- 行動按鈕 -->
-    <div style="padding: 20px; text-align: center; border-top: 1px solid #e5e7eb;">
+    <div style="padding: 20px; text-align: center; border-top: 1px solid rgb(229, 231, 235);">
       <a href="${appUrl}/admin/logs"
-         style="display: inline-block; background-color: #2563EB; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500;">
+         style="display: inline-block; background-color: rgb(37, 99, 235); color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 500;">
         前往後台查看
       </a>
     </div>
 
     <!-- 頁腳 -->
-    <div style="background-color: #F9FAFB; padding: 16px 20px; text-align: center; color: #6B7280; font-size: 12px;">
+    <div style="background-color: rgb(249, 250, 251); padding: 16px 20px; text-align: center; color: rgb(107, 114, 128); font-size: 12px;">
       此郵件由 1WaySEO 錯誤監控系統自動發送，請勿直接回覆
     </div>
   </div>

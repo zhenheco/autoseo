@@ -78,13 +78,13 @@ function FallbackPricingCards({ t }: { t: (key: string) => string }) {
           transition={{ delay: i * 0.1 }}
           className={`relative p-8 rounded-3xl border ${
             plan.popular
-              ? "border-primary/50 shadow-[0_0_50px_-12px_rgba(99,102,241,0.2)]"
+              ? "border-primary/50 shadow-primary-glow"
               : "border-foreground/5 bg-card"
           } overflow-hidden flex flex-col`}
         >
           {plan.popular && (
             <div className="absolute inset-0 p-[1px] -z-10 rounded-3xl overflow-hidden">
-              <div className="absolute inset-[-1000%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#6366F1_0%,#10B981_50%,#6366F1_100%)]" />
+              <div className="absolute inset-[-1000%] animate-[spin_4s_linear_infinite] pricing-flow-ring" />
             </div>
           )}
 
@@ -188,13 +188,13 @@ function RealPricingCards({
             transition={{ delay: i * 0.1 }}
             className={`relative p-8 rounded-3xl border ${
               isPopular
-                ? "border-primary/50 shadow-[0_0_50px_-12px_rgba(99,102,241,0.2)]"
+                ? "border-primary/50 shadow-primary-glow"
                 : "border-foreground/5 bg-card"
             } overflow-hidden flex flex-col`}
           >
             {isPopular && (
               <div className="absolute inset-0 p-[1px] -z-10 rounded-3xl overflow-hidden">
-                <div className="absolute inset-[-1000%] animate-[spin_4s_linear_infinite] bg-[conic-gradient(from_90deg_at_50%_50%,#6366F1_0%,#10B981_50%,#6366F1_100%)]" />
+                <div className="absolute inset-[-1000%] animate-[spin_4s_linear_infinite] pricing-flow-ring" />
               </div>
             )}
 

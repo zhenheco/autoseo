@@ -136,7 +136,7 @@ rm supabase/migrations/20251105000001_oauth_auto_company_setup.sql
 
 #### 6. 修改混合遷移檔案
 
-**檔案**：`supabase/migrations/20251106000002_one_time_tokens_and_referral.sql`
+**檔案**：一次性 token 遷移檔
 
 **需要移除的內容**：
 
@@ -147,7 +147,6 @@ rm supabase/migrations/20251105000001_oauth_auto_company_setup.sql
 **需要保留的內容**：
 
 - One-time tokens 功能
-- 邀請系統 (Referral) 功能
 - 其他非 OAuth 相關邏輯
 
 ---
@@ -540,7 +539,7 @@ supabase db push
 
 **資料庫遷移**：
 
-- `supabase/migrations/20251106000002_one_time_tokens_and_referral.sql`
+- 一次性 token 遷移檔
   - 移除 `handle_new_oauth_user()` 函數
   - 保留其他功能
 

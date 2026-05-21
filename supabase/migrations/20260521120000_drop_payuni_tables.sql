@@ -1,0 +1,107 @@
+-- Drop PAYUNi tables. Confirmed 0 active subscriptions per Phase 0.5 inventory.
+-- company_subscriptions has no PAYUNi-specific columns in packages/web/src/types/database.types.ts.
+DROP TABLE IF EXISTS payment_orders CASCADE;
+DROP TABLE IF EXISTS recurring_mandates CASCADE;
+DROP TABLE IF EXISTS recurring_payments CASCADE;
+DROP TABLE IF EXISTS refund_requests CASCADE;
+
+-- Rollback:
+-- Recreate the dropped tables from the pre-removal schema, then reapply any
+-- policies, indexes, comments, and triggers from the original migrations if
+-- historical data or application rollback requires them.
+--
+-- CREATE TABLE payment_orders (
+--   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+--   company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+--   order_no TEXT UNIQUE NOT NULL,
+--   order_type TEXT NOT NULL CHECK (order_type IN ('onetime', 'recurring_first', 'recurring_renewal')),
+--   payment_type TEXT NOT NULL CHECK (payment_type IN ('subscription', 'token_package', 'lifetime', 'article_package')),
+--   amount DECIMAL(10,2) NOT NULL,
+--   currency TEXT DEFAULT 'TWD',
+--   item_description TEXT NOT NULL,
+--   related_id UUID,
+--   newebpay_status TEXT,
+--   newebpay_message TEXT,
+--   newebpay_trade_no TEXT,
+--   newebpay_response JSONB,
+--   metadata JSONB,
+--   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'success', 'failed', 'cancelled', 'refunded')),
+--   paid_at TIMESTAMP WITH TIME ZONE,
+--   failed_at TIMESTAMP WITH TIME ZONE,
+--   failure_reason TEXT,
+--   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+--   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+-- );
+--
+-- CREATE TABLE recurring_mandates (
+--   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+--   company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+--   plan_id UUID NOT NULL REFERENCES subscription_plans(id),
+--   mandate_no TEXT UNIQUE NOT NULL,
+--   newebpay_period_no TEXT UNIQUE,
+--   period_type TEXT NOT NULL CHECK (period_type IN ('D', 'W', 'M', 'Y')),
+--   period_point TEXT,
+--   period_times INTEGER,
+--   period_amount DECIMAL(10,2) NOT NULL,
+--   total_amount DECIMAL(10,2),
+--   next_payment_date DATE,
+--   periods_paid INTEGER DEFAULT 0,
+--   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'active', 'suspended', 'terminated', 'completed', 'failed')),
+--   newebpay_response JSONB,
+--   first_payment_order_id UUID REFERENCES payment_orders(id),
+--   activated_at TIMESTAMP WITH TIME ZONE,
+--   suspended_at TIMESTAMP WITH TIME ZONE,
+--   terminated_at TIMESTAMP WITH TIME ZONE,
+--   termination_reason TEXT,
+--   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+--   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+-- );
+--
+-- CREATE TABLE recurring_payments (
+--   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+--   mandate_id UUID NOT NULL REFERENCES recurring_mandates(id) ON DELETE CASCADE,
+--   payment_order_id UUID REFERENCES payment_orders(id),
+--   period_number INTEGER NOT NULL,
+--   amount DECIMAL(10,2) NOT NULL,
+--   scheduled_date DATE NOT NULL,
+--   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'processing', 'success', 'failed', 'skipped')),
+--   newebpay_trade_no TEXT,
+--   newebpay_response JSONB,
+--   paid_at TIMESTAMP WITH TIME ZONE,
+--   failed_at TIMESTAMP WITH TIME ZONE,
+--   failure_reason TEXT,
+--   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+--   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+-- );
+--
+-- CREATE TABLE refund_requests (
+--   id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+--   company_id UUID NOT NULL REFERENCES companies(id) ON DELETE CASCADE,
+--   payment_order_id UUID NOT NULL REFERENCES payment_orders(id) ON DELETE CASCADE,
+--   refund_no TEXT UNIQUE NOT NULL,
+--   original_amount DECIMAL(10,2) NOT NULL,
+--   refund_amount DECIMAL(10,2) NOT NULL,
+--   retention_offered BOOLEAN DEFAULT false,
+--   retention_accepted BOOLEAN DEFAULT false,
+--   retention_credits INTEGER DEFAULT 0,
+--   is_auto_eligible BOOLEAN DEFAULT false,
+--   days_since_purchase INTEGER,
+--   reason_category TEXT NOT NULL CHECK (reason_category IN ('product_issue', 'service_unsatisfied', 'billing_error', 'change_of_mind', 'other')),
+--   reason_detail TEXT,
+--   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'retention_accepted', 'auto_processing', 'pending_review', 'approved', 'processing', 'completed', 'rejected', 'failed')),
+--   reviewed_by UUID REFERENCES auth.users(id),
+--   reviewed_at TIMESTAMP WITH TIME ZONE,
+--   review_notes TEXT,
+--   reject_reason TEXT,
+--   newebpay_trade_no TEXT,
+--   newebpay_status TEXT,
+--   newebpay_message TEXT,
+--   newebpay_response JSONB,
+--   credits_deducted INTEGER DEFAULT 0,
+--   subscription_downgraded BOOLEAN DEFAULT false,
+--   requested_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+--   processed_at TIMESTAMP WITH TIME ZONE,
+--   completed_at TIMESTAMP WITH TIME ZONE,
+--   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+--   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+-- );

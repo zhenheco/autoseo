@@ -239,11 +239,10 @@ describe("public SHOPLINE invitation install route", () => {
       company_id: "company-1",
       website_name: "demo-shop",
       wordpress_url: "https://demo-shop.myshopline.com",
-      website_type: "external",
+      website_type: "shopline",
       wp_enabled: false,
       is_active: true,
       language: "zh-TW",
-      brand_voice: {},
       created_by: null,
     });
     expect(buildAuthorizeUrlMock).toHaveBeenCalledWith({

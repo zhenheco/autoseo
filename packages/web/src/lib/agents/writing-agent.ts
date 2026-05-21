@@ -444,13 +444,16 @@ ${examples.bad_examples.map((ex) => `> ${ex}`).join("\n\n")}`;
       )
       .replace(
         /<th>/g,
-        '<th style="border: 1px solid #ddd; padding: 12px 15px; text-align: left; background-color: #f8f9fa; font-weight: 600;">',
+        '<th style="border: 1px solid rgb(221, 221, 221); padding: 12px 15px; text-align: left; background-color: rgb(248, 249, 250); font-weight: 600;">',
       )
       .replace(
         /<td>/g,
-        '<td style="border: 1px solid #ddd; padding: 12px 15px; text-align: left;">',
+        '<td style="border: 1px solid rgb(221, 221, 221); padding: 12px 15px; text-align: left;">',
       )
-      .replace(/<tr>/g, '<tr style="border-bottom: 1px solid #ddd;">');
+      .replace(
+        /<tr>/g,
+        '<tr style="border-bottom: 1px solid rgb(221, 221, 221);">',
+      );
 
     // 移除程式碼區塊，轉換為引言區塊
     result = this.convertCodeBlocksToBlockquotes(result);
@@ -479,11 +482,11 @@ ${examples.bad_examples.map((ex) => `> ${ex}`).join("\n\n")}`;
         const formattedLines = lines
           .map(
             (line: string) =>
-              `<p style="margin: 0; padding-left: 20px; font-family: monospace; background: #f5f5f5;">${line}</p>`,
+              `<p style="margin: 0; padding-left: 20px; font-family: monospace; background: rgb(245, 245, 245);">${line}</p>`,
           )
           .join("");
 
-        return `<blockquote style="border-left: 4px solid #ddd; margin: 20px 0; padding: 10px 20px; background: #f9f9f9;">${formattedLines}</blockquote>`;
+        return `<blockquote style="border-left: 4px solid rgb(221, 221, 221); margin: 20px 0; padding: 10px 20px; background: rgb(249, 249, 249);">${formattedLines}</blockquote>`;
       },
     );
   }

@@ -6,6 +6,10 @@ import { createClient } from "@shared/supabase";
 import { getUser } from "@shared/auth";
 import { WordPressClient } from "@/lib/wordpress/client";
 import { encryptWordPressPassword } from "@/lib/security/token-encryption";
+import {
+  brandVoiceToBrandUpdate,
+  getDefaultBrandIdForCompany,
+} from "@/lib/brands/brand-voice";
 
 /**
  * 新增 WordPress 網站
@@ -116,10 +120,33 @@ export async function createWebsite(formData: FormData) {
 
   // 加密 WordPress 密碼
   const encryptedPassword = encryptWordPressPassword(wpPassword);
+  const brandId = await getDefaultBrandIdForCompany(
+    supabase,
+    companyId,
+    brandName || siteName,
+  );
+
+  if (brandId) {
+    await supabase
+      .from("brands")
+      .update(
+        brandVoiceToBrandUpdate(
+          {
+            brand_name: brandName || siteName,
+            tone_of_voice: toneOfVoice || "專業親切",
+            target_audience: targetAudience || "",
+            writing_style: writingStyle || "專業正式",
+          },
+          siteName,
+        ),
+      )
+      .eq("id", brandId);
+  }
 
   // 建立網站記錄（連線驗證成功後）
   const { error } = await supabase.from("website_configs").insert({
     company_id: companyId,
+    brand_id: brandId,
     website_name: siteName,
     wordpress_url: siteUrl.replace(/\/$/, ""), // 移除尾部斜線
     wp_username: wpUsername,
@@ -130,13 +157,6 @@ export async function createWebsite(formData: FormData) {
     industry: industry || null,
     region: region || null,
     language: language || "zh-TW",
-    // 品牌聲音設定
-    brand_voice: {
-      brand_name: brandName || "",
-      tone_of_voice: toneOfVoice || "專業親切",
-      target_audience: targetAudience || "",
-      writing_style: writingStyle || "專業正式",
-    },
     // 自動發文設定
     auto_schedule_enabled: autoScheduleEnabled,
     schedule_type: scheduleType,

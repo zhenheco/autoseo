@@ -10,6 +10,7 @@ import {
   decryptWordPressPassword,
 } from "@/lib/security/token-encryption";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { updateBrandVoiceForWebsite } from "@/lib/brands/brand-voice";
 
 interface Website {
   id: string;
@@ -434,10 +435,11 @@ export async function updateWebsiteBrandVoice(formData: FormData) {
     writing_style: writingStyle || "專業正式",
   };
 
-  const { error } = await supabase
-    .from("website_configs")
-    .update({ brand_voice: brandVoice })
-    .eq("id", websiteId);
+  const { error } = await updateBrandVoiceForWebsite(
+    supabase,
+    websiteId,
+    brandVoice,
+  );
 
   if (error) {
     redirect(
@@ -529,12 +531,6 @@ export async function createPlatformBlog(formData: FormData) {
       is_platform_blog: true,
       is_active: true,
       language: "zh-TW",
-      brand_voice: {
-        brand_name: "1waySEO",
-        tone_of_voice: "專業親切",
-        target_audience: "SEO 初學者、內容行銷人員、網站經營者",
-        writing_style: "教學導向、實用案例分享",
-      },
       created_by: user.id,
     });
 
@@ -671,4 +667,3 @@ export async function updateWebsiteAutoSchedule(formData: FormData) {
       encodeURIComponent("自動排程設定已更新"),
   );
 }
-

@@ -11,6 +11,7 @@ import type {
   AIClientConfig,
 } from "@/types/agents";
 import type { AIModel } from "@/types/ai-models";
+import { getWebsiteBrandVoice } from "@/lib/brands/brand-voice";
 
 /** AgentConfig 擴展型別，包含 AI 模型詳細資訊 */
 export type AgentConfigWithModels = AgentConfig & {
@@ -97,50 +98,29 @@ export async function getBrandVoice(
   const defaultBrandVoice = getDefaultBrandVoice(websiteId);
 
   if (!websiteId || websiteId === "null") {
-    console.warn("[Pipeline] 無 websiteId，使用預設 brand_voice");
+    console.warn("[Pipeline] 無 websiteId，使用預設 brand voice");
     return defaultBrandVoice;
   }
 
-  const { data: website, error } = await supabase
-    .from("website_configs")
-    .select("brand_voice")
-    .eq("id", websiteId)
-    .single();
+  const brandVoice = await getWebsiteBrandVoice(supabase, websiteId);
 
-  if (error || !website?.brand_voice) {
-    console.warn("[Pipeline] 使用預設 brand_voice");
+  if (!brandVoice) {
+    console.warn("[Pipeline] 使用預設 brand voice");
     return defaultBrandVoice;
   }
 
-  const bv = website.brand_voice as {
-    brand_name?: string;
-    tone_of_voice?: string;
-    target_audience?: string;
-    writing_style?: string;
-    sentence_style?: string;
-    interactivity?: string;
-    voice_examples?: {
-      good_examples?: string[];
-      bad_examples?: string[];
-    };
-  };
-  console.log("[Pipeline] 使用 website brand_voice", bv);
+  console.log("[Pipeline] 使用 website brand voice", brandVoice);
   return {
     id: "",
     website_id: websiteId,
-    tone_of_voice: bv.tone_of_voice || defaultBrandVoice.tone_of_voice,
-    target_audience: bv.target_audience || defaultBrandVoice.target_audience,
+    tone_of_voice: brandVoice.tone_of_voice || defaultBrandVoice.tone_of_voice,
+    target_audience:
+      brandVoice.target_audience || defaultBrandVoice.target_audience,
     keywords: [],
-    sentence_style: bv.sentence_style || bv.writing_style || "清晰簡潔",
-    interactivity: bv.interactivity || "適度互動",
-    brand_name: bv.brand_name,
-    voice_examples: bv.voice_examples?.good_examples
-      ? {
-          good_examples: bv.voice_examples.good_examples,
-          bad_examples: bv.voice_examples.bad_examples,
-        }
-      : undefined,
-    writing_style: bv.writing_style || defaultBrandVoice.writing_style,
+    sentence_style: brandVoice.writing_style || "清晰簡潔",
+    interactivity: "適度互動",
+    brand_name: brandVoice.brand_name,
+    writing_style: brandVoice.writing_style || defaultBrandVoice.writing_style,
     brand_integration: {
       max_brand_mentions: 3,
       value_first: true,

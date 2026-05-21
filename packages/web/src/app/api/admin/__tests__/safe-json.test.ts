@@ -5,7 +5,6 @@ const services = vi.hoisted(() => ({
   grantArticles: vi.fn(),
   createPromoCode: vi.fn(),
   updatePromoCode: vi.fn(),
-  refundCreateInstance: vi.fn(),
 }));
 
 vi.mock("@/lib/api/route-auth", () => ({
@@ -32,12 +31,6 @@ vi.mock("@/lib/admin/promo-code-service", () => ({
   getPromoCode: vi.fn(),
   deactivatePromoCode: vi.fn(),
   getPromoCodeUsages: vi.fn(),
-}));
-
-vi.mock("@/lib/payment/refund-service", () => ({
-  RefundService: {
-    createInstance: services.refundCreateInstance,
-  },
 }));
 
 describe("admin mutation JSON parsing", () => {
@@ -78,14 +71,6 @@ describe("admin mutation JSON parsing", () => {
       "https://example.com/api/admin/subscriptions/company-1/grant-articles",
       { params: Promise.resolve({ companyId: "company-1" }) },
       services.grantArticles,
-    ],
-    [
-      "refund reject",
-      "../refunds/[id]/reject/route",
-      "POST",
-      "https://example.com/api/admin/refunds/refund-1/reject",
-      { params: Promise.resolve({ id: "refund-1" }) },
-      services.refundCreateInstance,
     ],
   ])(
     "returns 400 for malformed %s body",

@@ -127,10 +127,6 @@ export async function middleware(request: NextRequest) {
       "https://api.perplexity.ai",
       "https://generativelanguage.googleapis.com",
       "https://challenges.cloudflare.com",
-      // PAYUNi（統一金流）微服務
-      "https://api.payuni.com.tw",
-      "https://affiliate.1wayseo.com",
-      "https://sandbox.affiliate.1wayseo.com",
       "https://accounts.google.com",
       "https://oauth2.googleapis.com",
       "https://www.googleapis.com",
@@ -153,8 +149,7 @@ export async function middleware(request: NextRequest) {
       ? "frame-ancestors https://*.myshopline.com https://admin.shopline.com"
       : "frame-ancestors 'self'",
     "base-uri 'self'",
-    // 金流表單提交（PAYUNi 正式環境）
-    "form-action 'self' https://api.payuni.com.tw",
+    "form-action 'self'",
   ];
 
   response.headers.set("Content-Security-Policy", cspDirectives.join("; "));

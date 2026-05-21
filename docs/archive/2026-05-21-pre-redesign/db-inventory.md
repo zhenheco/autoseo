@@ -22,13 +22,6 @@ Production execution status: not run by agent. Run the inventory through `op run
 - recurring_payments: pending
 - refund_requests: pending
 
-## Referral Rows
-
-- company_referral_codes: pending
-- referral_codes: pending
-- referral_token_rewards: pending
-- referral_rewards: pending
-
 ## Articles Per Company Top 20
 
 Pending production run.
@@ -155,34 +148,6 @@ FROM refund_requests
 WHERE status NOT IN ('cancelled', 'refunded', 'completed');
 ```
 
-### companyReferralCodes
-
-```sql
-SELECT COUNT(*)::int AS count
-FROM company_referral_codes;
-```
-
-### referralCodes
-
-```sql
-SELECT COUNT(*)::int AS count
-FROM referral_codes;
-```
-
-### referralTokenRewards
-
-```sql
-SELECT COUNT(*)::int AS count
-FROM referral_token_rewards;
-```
-
-### referralRewards
-
-```sql
-SELECT COUNT(*)::int AS count
-FROM referral_rewards;
-```
-
 ### articlesPerCompanyTop20
 
 ```sql
@@ -246,4 +211,3 @@ FROM refund_requests
 GROUP BY status
 ORDER BY status;
 ```
-

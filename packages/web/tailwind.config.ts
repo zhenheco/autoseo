@@ -2,6 +2,16 @@ import type { Config } from "tailwindcss";
 import tailwindcssAnimate from "tailwindcss-animate";
 import typography from "@tailwindcss/typography";
 
+const steps = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950] as const;
+
+const hslVar = (name: string) => `hsl(var(--${name}))`;
+
+const colorScale = (name: string) => ({
+  DEFAULT: hslVar(`${name}-500`),
+  foreground: hslVar(`${name}-foreground`),
+  ...Object.fromEntries(steps.map((step) => [step, hslVar(`${name}-${step}`)])),
+});
+
 const config: Config = {
   darkMode: "class",
   content: [
@@ -27,71 +37,80 @@ const config: Config = {
         geist: ["var(--font-geist)", "Inter", "system-ui", "sans-serif"],
         jakarta: ["Plus Jakarta Sans", "Inter", "system-ui", "sans-serif"],
       },
+      fontSize: {
+        display: ["var(--font-display)", { lineHeight: "1.05" }],
+        h1: ["var(--font-h1)", { lineHeight: "1.1" }],
+        h2: ["var(--font-h2)", { lineHeight: "1.15" }],
+        h3: ["var(--font-h3)", { lineHeight: "1.2" }],
+        body: ["var(--font-body)", { lineHeight: "1.65" }],
+        small: ["var(--font-small)", { lineHeight: "1.5" }],
+        tiny: ["var(--font-tiny)", { lineHeight: "1.45" }],
+      },
       colors: {
-        border: "hsl(var(--border))",
-        input: "hsl(var(--input))",
-        ring: "hsl(var(--ring))",
-        background: "hsl(var(--background))",
-        foreground: "hsl(var(--foreground))",
-        primary: {
-          DEFAULT: "hsl(var(--primary))",
-          foreground: "hsl(var(--primary-foreground))",
-        },
-        secondary: {
-          DEFAULT: "hsl(var(--secondary))",
-          foreground: "hsl(var(--secondary-foreground))",
-        },
-        destructive: {
-          DEFAULT: "hsl(var(--destructive))",
-          foreground: "hsl(var(--destructive-foreground))",
-        },
+        border: hslVar("border"),
+        input: hslVar("input"),
+        ring: hslVar("ring"),
+        background: hslVar("background"),
+        foreground: hslVar("foreground"),
+        primary: colorScale("primary"),
+        secondary: colorScale("secondary"),
+        accent: colorScale("accent"),
+        success: colorScale("success"),
+        warning: colorScale("warning"),
+        destructive: colorScale("destructive"),
+        danger: colorScale("destructive"),
+        info: colorScale("info"),
         muted: {
-          DEFAULT: "hsl(var(--muted))",
-          foreground: "hsl(var(--muted-foreground))",
-        },
-        accent: {
-          DEFAULT: "hsl(var(--accent))",
-          foreground: "hsl(var(--accent-foreground))",
+          DEFAULT: hslVar("muted"),
+          foreground: hslVar("muted-foreground"),
         },
         popover: {
-          DEFAULT: "hsl(var(--popover))",
-          foreground: "hsl(var(--popover-foreground))",
+          DEFAULT: hslVar("popover"),
+          foreground: hslVar("popover-foreground"),
         },
         card: {
-          DEFAULT: "hsl(var(--card))",
-          foreground: "hsl(var(--card-foreground))",
+          DEFAULT: hslVar("card"),
+          foreground: hslVar("card-foreground"),
         },
-        success: "hsl(var(--success))",
-        warning: "hsl(var(--warning))",
-        danger: "hsl(var(--danger))",
-        // Modern Professional Color Palette
-        "mp-bg": "#020617", // 極深藍黑
-        "mp-surface": "#0F172A", // 深石板藍
-        "mp-primary": "#3B82F6", // 科技亮藍
-        "mp-accent": "#8B5CF6", // 創意紫羅蘭
-        "mp-success": "#10B981", // 成長綠
-        "mp-text": "#F8FAFC", // 接近純白
-        "mp-text-secondary": "#94A3B8", // 灰色
-        "tech-blue": {
-          50: "#eff6ff",
-          100: "#dbeafe",
-          200: "#bfdbfe",
-          300: "#93c5fd",
-          400: "#60a5fa",
-          500: "#3b82f6",
-          600: "#2563eb",
-          700: "#1d4ed8",
-          800: "#1e40af",
-          900: "#1e3a8a",
-          950: "#172554",
-        },
+        "bg-canvas": hslVar("bg-canvas"),
+        "bg-surface": hslVar("bg-surface"),
+        "bg-elevated": hslVar("bg-elevated"),
+        "bg-main": hslVar("bg-canvas"),
+        "bg-accent": hslVar("bg-accent"),
+        "text-primary": hslVar("text-primary"),
+        "text-muted": hslVar("text-muted"),
+        "text-main": hslVar("text-primary"),
+        "text-sub": hslVar("text-muted"),
+        "text-dim": hslVar("text-dim"),
+        "border-subtle": hslVar("border-subtle"),
+        "border-strong": hslVar("border-strong"),
+        "mp-bg": hslVar("mp-bg"),
+        "mp-surface": hslVar("mp-surface"),
+        "mp-primary": hslVar("primary-500"),
+        "mp-accent": hslVar("accent-500"),
+        "mp-success": hslVar("success-500"),
+        "mp-text": hslVar("mp-text"),
+        "mp-text-secondary": hslVar("mp-text-secondary"),
+        "tech-blue": colorScale("primary"),
+      },
+      spacing: {
+        1: "var(--space-1)",
+        2: "var(--space-2)",
+        3: "var(--space-3)",
+        4: "var(--space-4)",
+        6: "var(--space-6)",
+        8: "var(--space-8)",
+        12: "var(--space-12)",
+        16: "var(--space-16)",
+        24: "var(--space-24)",
+        32: "var(--space-32)",
       },
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic":
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
         "border-gradient":
-          "linear-gradient(90deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2))",
+          "linear-gradient(90deg, hsl(var(--primary-500) / 0.2), hsl(var(--accent-500) / 0.2))",
         noise:
           "url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='4' height='4' viewBox='0 0 4 4'%3E%3Cpath fill='%23ffffff' fill-opacity='0.03' d='m0 0h1v1h-1zm2 2h1v1h-1z'/%3E%3C/svg%3E\")",
       },
@@ -99,16 +118,41 @@ const config: Config = {
         xs: "2px",
       },
       borderRadius: {
-        lg: "var(--radius)",
-        md: "calc(var(--radius) - 2px)",
-        sm: "calc(var(--radius) - 4px)",
+        sm: "var(--radius-sm)",
+        md: "var(--radius-md)",
+        lg: "var(--radius-lg)",
+        xl: "var(--radius-xl)",
+        full: "var(--radius-full)",
+        card: "var(--radius-xl)",
+        btn: "var(--radius-md)",
       },
       boxShadow: {
         sm: "var(--shadow-sm)",
-        DEFAULT: "var(--shadow)",
+        DEFAULT: "var(--shadow-md)",
         md: "var(--shadow-md)",
         lg: "var(--shadow-lg)",
         xl: "var(--shadow-xl)",
+        "2xl": "var(--shadow-2xl)",
+        "primary-glow": "var(--shadow-primary-glow)",
+      },
+      zIndex: {
+        dropdown: "var(--z-dropdown)",
+        sticky: "var(--z-sticky)",
+        header: "var(--z-header)",
+        overlay: "var(--z-overlay)",
+        modal: "var(--z-modal)",
+        popover: "var(--z-popover)",
+        toast: "var(--z-toast)",
+      },
+      transitionTimingFunction: {
+        out: "var(--ease-out)",
+        "in-out": "var(--ease-in-out)",
+      },
+      transitionDuration: {
+        150: "var(--duration-150)",
+        200: "var(--duration-200)",
+        300: "var(--duration-300)",
+        500: "var(--duration-500)",
       },
       keyframes: {
         "accordion-down": {
@@ -136,12 +180,12 @@ const config: Config = {
           "100%": { backgroundPosition: "1000px 0" },
         },
         "pulse-glow": {
-          "0%, 100%": { boxShadow: "0 0 20px rgba(59, 130, 246, 0.4)" },
-          "50%": { boxShadow: "0 0 40px rgba(59, 130, 246, 0.7)" },
+          "0%, 100%": { boxShadow: "0 0 20px hsl(var(--primary-500) / 0.4)" },
+          "50%": { boxShadow: "0 0 40px hsl(var(--primary-500) / 0.7)" },
         },
         "pulse-glow-slow": {
-          "0%, 100%": { boxShadow: "0 0 30px rgba(59, 130, 246, 0.3)" },
-          "50%": { boxShadow: "0 0 50px rgba(59, 130, 246, 0.5)" },
+          "0%, 100%": { boxShadow: "0 0 30px hsl(var(--primary-500) / 0.3)" },
+          "50%": { boxShadow: "0 0 50px hsl(var(--primary-500) / 0.5)" },
         },
         "float-orb": {
           "0%, 100%": { transform: "translate(0, 0) scale(1)" },

@@ -4,6 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { createClient } from "@shared/supabase";
 import { getUser } from "@shared/auth";
+import {
+  brandVoiceToBrandUpdate,
+  getDefaultBrandIdForCompany,
+} from "@/lib/brands/brand-voice";
 
 /**
  * 更新帳戶資訊
@@ -96,10 +100,20 @@ export async function updateBrandVoice(formData: FormData) {
     writing_style: writingStyle || "專業正式",
   };
 
-  const { error } = await supabase
-    .from("companies")
-    .update({ brand_voice: brandVoice })
-    .eq("id", companyId);
+  const brandId = await getDefaultBrandIdForCompany(
+    supabase,
+    companyId,
+    brandName || "Default Brand",
+  );
+
+  const { error } = brandId
+    ? await supabase
+        .from("brands")
+        .update(
+          brandVoiceToBrandUpdate(brandVoice, brandName || "Default Brand"),
+        )
+        .eq("id", brandId)
+    : { error: new Error("Default brand could not be created") };
 
   if (error) {
     redirect("/dashboard/settings?error=" + encodeURIComponent(error.message));

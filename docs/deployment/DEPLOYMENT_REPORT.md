@@ -67,9 +67,6 @@
 - `token_balance_changes` - Token 餘額變動記錄
 - `monthly_token_usage_stats` - 月度統計
 - `ai_model_pricing` - AI 模型定價（8 個模型）
-- `referrals` - 推薦關係
-- `referral_rewards` - 推薦獎勵
-- `company_referral_codes` - 公司推薦碼
 
 **RLS (Row Level Security)**: ✅ 所有表已啟用
 
@@ -96,7 +93,6 @@
 - `/src/lib/billing/token-calculator.ts` - Token 計算引擎
 - `/src/lib/billing/token-billing-service.ts` - Token 計費服務（整合 AI 呼叫）
 - `/src/lib/billing/subscription-service.ts` - 訂閱管理服務
-- `/src/lib/billing/referral-service.ts` - 推薦計劃服務
 - `/src/lib/billing/reseller-service.ts` - 經銷商管理服務
 - `/src/lib/billing/index.ts` - 統一匯出
 - `/src/lib/billing/README.md` - 完整文件

@@ -37,29 +37,6 @@ export const PERPLEXITY_CONFIG = {
 } as const;
 
 /**
- * 金流微服務配置（PAYUNi）
- *
- * 環境變數（統一使用 PAYMENT_GATEWAY_* 前綴）：
- * - PAYMENT_GATEWAY_API_KEY: 金流微服務 API Key
- * - PAYMENT_GATEWAY_SITE_CODE: 站點代碼
- * - PAYMENT_GATEWAY_WEBHOOK_SECRET: Webhook 驗證密鑰
- * - PAYMENT_GATEWAY_ENV: 環境（production/sandbox）
- *
- * 注意：實際調用在 PaymentService 和 test-payment API 中實作，
- * 這裡只提供配置參考，不再直接使用 PAYUNI_* 環境變數。
- */
-export const PAYMENT_GATEWAY_CONFIG = {
-  /** 生產環境 API 基礎 URL */
-  productionBaseUrl: "https://affiliate.1wayseo.com",
-  /** 沙盒環境 API 基礎 URL */
-  sandboxBaseUrl: "https://sandbox.affiliate.1wayseo.com",
-  /** 單次付款端點 */
-  onetimeEndpoint: "/api/payment/payuni/create",
-  /** 定期定額端點 */
-  recurringEndpoint: "/api/payment/payuni/period",
-} as const;
-
-/**
  * Google OAuth 配置
  */
 export const GOOGLE_OAUTH_CONFIG = {

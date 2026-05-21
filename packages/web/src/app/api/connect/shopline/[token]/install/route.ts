@@ -64,11 +64,10 @@ export async function GET(
         company_id: invitation.companyId,
         website_name: shopHandle,
         wordpress_url: websiteUrl,
-        website_type: "external",
+        website_type: "shopline",
         wp_enabled: false,
         is_active: true,
         language: "zh-TW",
-        brand_voice: {},
         created_by: null,
       })
       .select("id")

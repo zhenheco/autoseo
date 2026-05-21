@@ -1,7 +1,5 @@
 import { createClient, createAdminClient } from "@shared/supabase";
 import { NextResponse } from "next/server";
-import { cookies } from "next/headers";
-import { trackRegistration } from "@/lib/affiliate-client";
 
 function generateSlug(email: string): string {
   const username = email.split("@")[0];
@@ -26,41 +24,6 @@ export async function GET(request: Request) {
     if (!error && session?.user) {
       const user = session.user;
       const adminClient = createAdminClient();
-
-      // === Affiliate 追蹤（移到最前面，不管新舊用戶都追蹤）===
-      // 設計原則：只要有推薦碼，任何認證成功（登入或註冊）都應該追蹤
-      // API 端會處理重複的情況（同一用戶同一產品返回 409）
-      const cookieStore = await cookies();
-      const affiliateRef = cookieStore.get("affiliate_ref")?.value;
-
-      // 診斷日誌
-      console.log("[OAuth Affiliate] 診斷資訊:", {
-        userId: user.id,
-        userEmail: user.email,
-        affiliateRef: affiliateRef || "(無)",
-        hasRef: !!affiliateRef,
-        allCookies: cookieStore.getAll().map((c) => c.name),
-      });
-
-      if (affiliateRef) {
-        // 使用 await 以便記錄結果
-        try {
-          const result = await trackRegistration({
-            referralCode: affiliateRef,
-            referredUserId: user.id,
-            referredUserEmail: user.email,
-            sourceUrl: request.url,
-          });
-          console.log("[OAuth Affiliate] 追蹤成功:", {
-            success: !!result,
-            referralId: result?.referralId || null,
-          });
-        } catch (err) {
-          console.error("[OAuth Affiliate] 追蹤失敗:", err);
-        }
-      } else {
-        console.log("[OAuth Affiliate] 無推薦碼，跳過追蹤");
-      }
 
       // 使用 .limit(1) 避免多筆記錄時 .single() 報錯
       const { data: existingMember } = await adminClient
@@ -134,8 +97,6 @@ export async function GET(request: Request) {
           }
         }
       }
-      // 舊用戶登入：Affiliate 追蹤已在上方處理（第 30-46 行）
-
       return NextResponse.redirect(`${origin}${next}`);
     }
   }

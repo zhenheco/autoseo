@@ -22,12 +22,6 @@ vi.mock("@/lib/admin/promo-code-service", () => ({
   getPromoCodeUsages: vi.fn(),
 }));
 
-vi.mock("@/lib/payment/refund-service", () => ({
-  RefundService: {
-    createInstance: vi.fn(),
-  },
-}));
-
 describe("admin route shell classification", () => {
   beforeEach(() => {
     vi.clearAllMocks();

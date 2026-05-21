@@ -106,7 +106,7 @@ export function HeroArticle({
           {/* 內容 */}
           <div className="absolute inset-0 flex flex-col justify-end p-6 md:p-10 lg:p-12">
             {/* Featured 標籤 */}
-            <Badge className="mb-4 w-fit bg-[#E75656] text-white hover:bg-[#d14a4a]">
+            <Badge className="mb-4 w-fit bg-destructive text-white hover:bg-destructive-600">
               {featuredLabel}
             </Badge>
 
@@ -125,7 +125,7 @@ export function HeroArticle({
             )}
 
             {/* 標題 */}
-            <h2 className="mb-3 max-w-3xl text-2xl font-bold leading-tight text-white transition-colors group-hover:text-[#E75656] md:text-3xl lg:text-4xl">
+            <h2 className="mb-3 max-w-3xl text-2xl font-bold leading-tight text-white transition-colors group-hover:text-destructive md:text-3xl lg:text-4xl">
               {article.title}
             </h2>
 
@@ -153,7 +153,7 @@ export function HeroArticle({
               </div>
 
               {/* Read More 按鈕 */}
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-all group-hover:bg-[#E75656] group-hover:text-white">
+              <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-all group-hover:bg-destructive group-hover:text-white">
                 {readMoreText}
                 <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
               </span>

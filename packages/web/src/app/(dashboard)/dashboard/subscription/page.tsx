@@ -3,7 +3,6 @@ import { redirect } from "next/navigation";
 import { createClient } from "@shared/supabase";
 import { SubscriptionPlans } from "./subscription-plans";
 import { ArticlePackages } from "./article-packages";
-import { PaymentHistory } from "./payment-history";
 import { SubscriptionStatusChecker } from "@/components/subscription/SubscriptionStatusChecker";
 import type { Database } from "@/types/database.types";
 import { checkPagePermission } from "@shared/auth/permissions";
@@ -138,13 +137,6 @@ export default async function SubscriptionPage() {
 
   const articlePackages = articlePackagesRaw || [];
 
-  const { data: paymentOrders } = await supabase
-    .from("payment_orders")
-    .select<"*", Database["public"]["Tables"]["payment_orders"]["Row"]>("*")
-    .eq("company_id", member.company_id)
-    .order("created_at", { ascending: false })
-    .limit(10);
-
   return (
     <div className="container mx-auto p-8">
       <SubscriptionStatusChecker />
@@ -276,8 +268,6 @@ export default async function SubscriptionPage() {
           userEmail={user.email || ""}
         />
       </div>
-
-      <PaymentHistory orders={paymentOrders || []} />
     </div>
   );
 }

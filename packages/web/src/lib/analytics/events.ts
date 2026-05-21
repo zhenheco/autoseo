@@ -262,22 +262,6 @@ export function trackGoogleConnect(
   });
 }
 
-/**
- * 追蹤推薦計劃事件
- * @param action 操作（share, click, register, payment）
- * @param referralCode 推薦碼
- */
-export function trackReferral(
-  action: "share" | "click" | "register" | "payment",
-  referralCode: string,
-): void {
-  trackEvent("referral", {
-    action,
-    referral_code: referralCode,
-    event_category: "engagement",
-  });
-}
-
 // ================================================
 // 電商相關事件（Enhanced Ecommerce）
 // ================================================

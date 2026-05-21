@@ -115,15 +115,16 @@ export function SocialProofSection() {
           className="px-6 py-3 rounded-2xl bg-foreground/5 border border-foreground/10 flex items-center gap-3 backdrop-blur-md"
         >
           <div className="flex -space-x-2">
-            {["#6366F1", "#10B981", "#F59E0B", "#EC4899"].map((bg, i) => (
-              <div
-                key={i}
-                className="w-8 h-8 rounded-full border-2 border-background flex items-center justify-center text-white text-xs font-bold"
-                style={{ backgroundColor: bg }}
-              >
-                {String.fromCharCode(65 + i)}
-              </div>
-            ))}
+            {["bg-primary", "bg-secondary", "bg-warning", "bg-accent"].map(
+              (bg, i) => (
+                <div
+                  key={i}
+                  className={`w-8 h-8 rounded-full border-2 border-background flex items-center justify-center text-white text-xs font-bold ${bg}`}
+                >
+                  {String.fromCharCode(65 + i)}
+                </div>
+              ),
+            )}
           </div>
           <div className="text-sm font-medium">
             {t("joinUsers", { count: "500" })}

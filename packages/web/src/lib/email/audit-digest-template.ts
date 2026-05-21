@@ -70,13 +70,13 @@ export function renderAuditDigestEmail(input: AuditDigestEmailInput): {
   return {
     subject,
     text,
-    html: `<!doctype html><html><body><main style="font-family:Arial,sans-serif;line-height:1.5;color:#172033;max-width:640px;margin:0 auto;padding:24px"><h1 style="font-size:24px;margin:0 0 8px">${escapeHtml(
+    html: `<!doctype html><html><body><main style="font-family:Arial,sans-serif;line-height:1.5;color:rgb(23, 32, 51);max-width:640px;margin:0 auto;padding:24px"><h1 style="font-size:24px;margin:0 0 8px">${escapeHtml(
       subject,
-    )}</h1><p style="margin:0 0 20px;color:#526070">${escapeHtml(
+    )}</h1><p style="margin:0 0 20px;color:rgb(82, 96, 112)">${escapeHtml(
       input.weekStart,
     )} - ${escapeHtml(
       input.weekEnd,
-    )}</p><section style="border:1px solid #d8dee8;border-radius:8px;padding:16px;margin-bottom:20px"><p style="margin:0 0 12px">${copy.healthScore}: <strong>${input.delta.healthScoreCurrent}</strong> (${formatDelta(
+    )}</p><section style="border:1px solid rgb(216, 222, 232);border-radius:8px;padding:16px;margin-bottom:20px"><p style="margin:0 0 12px">${copy.healthScore}: <strong>${input.delta.healthScoreCurrent}</strong> (${formatDelta(
       input.delta.healthScoreDelta,
     )})</p><p style="margin:0">${copy.newIssues}: <strong>${
       input.delta.newIssues
@@ -84,7 +84,7 @@ export function renderAuditDigestEmail(input: AuditDigestEmailInput): {
       input.delta.resolvedIssues
     }</strong></p></section><ol>${htmlRecommendations}</ol><p><a href="${escapeHtml(
       input.dashboardUrl,
-    )}" style="display:inline-block;background:#172033;color:#fff;text-decoration:none;padding:10px 16px;border-radius:6px">${copy.cta}</a></p></main></body></html>`,
+    )}" style="display:inline-block;background:rgb(23, 32, 51);color:rgb(255, 255, 255);text-decoration:none;padding:10px 16px;border-radius:6px">${copy.cta}</a></p></main></body></html>`,
   };
 }
 

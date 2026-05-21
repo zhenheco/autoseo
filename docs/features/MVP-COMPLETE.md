@@ -81,7 +81,6 @@
 進階功能表（4 張）：
 - white_label_configs (白標設定)
 - affiliates (聯盟行銷)
-- affiliate_referrals (推薦記錄)
 - affiliate_commissions (佣金記錄)
 ```
 
@@ -167,7 +166,7 @@
 
 6. **訂閱管理**
    - 方案升級介面
-   - PAYUNi（統一金流）整合
+   - legacy payment provider (removed 2026-05-21)整合
    - 用量統計和限制
 
 ### 低優先級
@@ -202,11 +201,11 @@ SUPABASE_DB_URL=
 # N8N Webhook（待設定）
 N8N_WEBHOOK_BASE_URL=https://your-n8n.com/webhook
 
-# PAYUNi（統一金流）（待設定）
-PAYUNI_MERCHANT_ID=
-PAYUNI_HASH_KEY=
-PAYUNI_HASH_IV=
-PAYUNI_API_URL=
+# legacy payment provider (removed 2026-05-21)（待設定）
+LEGACY_PAYMENT_PROVIDER_REMOVED=
+LEGACY_PAYMENT_PROVIDER_REMOVED=
+LEGACY_PAYMENT_PROVIDER_REMOVED=
+LEGACY_PAYMENT_PROVIDER_REMOVED=
 
 # AI 服務 API Keys（平台）
 PLATFORM_OPENAI_API_KEY=

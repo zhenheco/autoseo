@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { getUser } from "@shared/auth";
 import { isAdminEmail } from "@/lib/utils/admin-check";
 import { createAdminClient } from "@shared/supabase";
+import { updateBrandVoiceForWebsite } from "@/lib/brands/brand-voice";
 
 const EXTERNAL_WEBSITES_PATH = "/dashboard/websites/external";
 
@@ -138,11 +139,18 @@ export async function updateExternalWebsiteBrandVoice(
     writing_style: (formData.get("writingStyle") as string) || "專業正式",
   };
 
-  await updateWebsiteConfig(
+  const { error } = await updateBrandVoiceForWebsite(
+    createAdminClient(),
     websiteId,
-    { brand_voice: brandVoice },
-    "品牌設定已更新",
+    brandVoice,
   );
+
+  if (error) {
+    redirect(buildRedirectUrl(websiteId, "error", error.message));
+  }
+
+  revalidatePath(EXTERNAL_WEBSITES_PATH);
+  redirect(buildRedirectUrl(websiteId, "success", "品牌設定已更新"));
 }
 
 /**
@@ -175,7 +183,11 @@ export async function updateExternalWebsiteAutoSchedule(
   }
 
   // 驗證每日篇數（1-5）
-  if (isNaN(dailyArticleLimit) || dailyArticleLimit < 1 || dailyArticleLimit > 5) {
+  if (
+    isNaN(dailyArticleLimit) ||
+    dailyArticleLimit < 1 ||
+    dailyArticleLimit > 5
+  ) {
     redirect(
       buildRedirectUrl(websiteId, "error", "每日發布數量必須在 1-5 之間"),
     );
@@ -198,7 +210,8 @@ export async function updateExternalWebsiteAutoSchedule(
       daily_article_limit: dailyArticleLimit,
       auto_schedule_enabled: autoScheduleEnabled,
       schedule_type: scheduleType,
-      schedule_interval_days: scheduleType === "interval" ? scheduleIntervalDays : 1,
+      schedule_interval_days:
+        scheduleType === "interval" ? scheduleIntervalDays : 1,
     },
     "自動排程設定已更新",
   );

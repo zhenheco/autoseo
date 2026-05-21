@@ -64,21 +64,21 @@ export function renderAuditNurtureEmail(input: AuditNurtureEmailInput): {
     `${copy.unsubscribe}: ${input.unsubscribeUrl}`,
   ].join("\n\n");
 
-  const html = `<!doctype html><html><body><main style="font-family:Arial,sans-serif;line-height:1.55;color:#172033;max-width:640px;margin:0 auto;padding:24px"><h1 style="font-size:24px;margin:0 0 12px">${escapeHtml(
+  const html = `<!doctype html><html><body><main style="font-family:Arial,sans-serif;line-height:1.55;color:rgb(23, 32, 51);max-width:640px;margin:0 auto;padding:24px"><h1 style="font-size:24px;margin:0 0 12px">${escapeHtml(
     subject,
   )}</h1><p>${escapeHtml(copy.greeting)} ${escapeHtml(
     input.recipientEmail,
-  )}</p><p>${escapeHtml(stage.body)}</p><section style="border:1px solid #d8dee8;border-radius:8px;padding:16px;margin:20px 0"><p style="margin:0 0 10px">${escapeHtml(
+  )}</p><p>${escapeHtml(stage.body)}</p><section style="border:1px solid rgb(216, 222, 232);border-radius:8px;padding:16px;margin:20px 0"><p style="margin:0 0 10px">${escapeHtml(
     copy.scoreLabel,
-  )}: <strong>${input.healthScore}/100</strong></p><p style="margin:0;color:#526070">${escapeHtml(
+  )}: <strong>${input.healthScore}/100</strong></p><p style="margin:0;color:rgb(82, 96, 112)">${escapeHtml(
     input.scannedUrl,
   )}</p></section><h2 style="font-size:18px">${escapeHtml(
     copy.issuesLabel,
   )}</h2>${htmlIssues}<p><a href="${escapeHtml(
     input.ctaUrl,
-  )}" style="display:inline-block;background:#059669;color:#fff;text-decoration:none;padding:10px 16px;border-radius:6px">${escapeHtml(
+  )}" style="display:inline-block;background:rgb(5, 150, 105);color:rgb(255, 255, 255);text-decoration:none;padding:10px 16px;border-radius:6px">${escapeHtml(
     stage.ctaButton,
-  )}</a></p><p style="font-size:12px;color:#697586;margin-top:28px"><a href="${escapeHtml(
+  )}</a></p><p style="font-size:12px;color:rgb(105, 117, 134);margin-top:28px"><a href="${escapeHtml(
     input.unsubscribeUrl,
   )}" data-action="unsubscribe">${escapeHtml(copy.unsubscribe)}</a></p></main></body></html>`;
 

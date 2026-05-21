@@ -11,15 +11,8 @@ vi.mock("@/lib/api/route-auth", () => ({
   ),
 }));
 
-vi.mock("@/lib/payment/payment-service", () => ({
-  PaymentService: {
-    createInstance: vi.fn(),
-  },
-}));
-
 vi.mock("@shared/supabase", () => ({
   createClient: vi.fn(),
-  createAdminClient: vi.fn(),
 }));
 
 describe("payment create JSON parsing", () => {

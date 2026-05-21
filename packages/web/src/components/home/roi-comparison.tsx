@@ -73,7 +73,7 @@ export function RoiComparison() {
           initial={{ opacity: 0, x: 20 }}
           whileInView={{ opacity: 1, x: 0 }}
           viewport={{ once: true }}
-          className="relative p-8 md:p-12 rounded-2xl border border-primary/40 bg-primary/10 shadow-[0_0_50px_-12px_rgba(99,102,241,0.25)] overflow-hidden scale-105 z-20 bg-card"
+          className="relative p-8 md:p-12 rounded-2xl border border-primary/40 bg-primary/10 shadow-primary-glow overflow-hidden scale-105 z-20 bg-card"
         >
           <div className="absolute top-0 right-0 px-4 py-1 bg-primary text-white text-xs font-bold rounded-bl-xl uppercase tracking-widest">
             {t("recommended")}

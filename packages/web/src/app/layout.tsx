@@ -1,14 +1,12 @@
 import type { Metadata } from "next";
 import Script from "next/script";
 import "./globals.css";
-import { Suspense } from "react";
 import { Toaster } from "sonner";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { IntlProvider } from "@/providers/IntlProvider";
 import { CookieConsentProvider } from "@/components/consent";
 import { GoogleAnalytics } from "@/components/tracking/GoogleAnalytics";
 import { GA4Script } from "@/components/tracking/GA4Script";
-import { AffiliateTracker } from "@/components/tracking/affiliate-tracker";
 import { fontVariables } from "@/lib/fonts";
 import {
   OrganizationSchema,
@@ -125,9 +123,6 @@ export default function RootLayout({
         >
           <CookieConsentProvider>
             <GoogleAnalytics />
-            <Suspense fallback={null}>
-              <AffiliateTracker />
-            </Suspense>
             <IntlProvider>
               {children}
               <Toaster richColors position="top-right" />

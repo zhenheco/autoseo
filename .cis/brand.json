@@ -1,0 +1,29 @@
+{
+  "_comment": "DRAFT - pending Ace's review before this CIS profile is treated as canonical.",
+  "name": "1wayseo",
+  "tagline": "Trends → Articles → Cards → Distribution → Insight, in one loop.",
+  "voiceTone": [
+    "confident",
+    "operator-empathetic",
+    "low-jargon",
+    "evidence-led"
+  ],
+  "targetAudience": {
+    "primary": "Solo SEO operators and small content teams running multi-brand businesses",
+    "secondary": "Founders of niche SaaS / DTC brands publishing weekly content",
+    "demographics": "Asia + global, age 28-45, comfortable with English UI"
+  },
+  "competitorReferences": ["Surfer SEO", "Jasper", "Frase", "Letterdrop"],
+  "differentiators": [
+    "End-to-end flywheel from trends to publishing",
+    "Brand memory that improves prompts week over week",
+    "Multi-language (7 locales) and multi-platform out of the box"
+  ],
+  "primaryColor": "hsl(217, 91%, 55%)",
+  "secondaryColor": "hsl(150, 70%, 50%)",
+  "typography": {
+    "display": "Plus Jakarta Sans",
+    "body": "Inter",
+    "cjkBody": "Noto Sans TC / Noto Sans JP / Noto Sans KR"
+  }
+}

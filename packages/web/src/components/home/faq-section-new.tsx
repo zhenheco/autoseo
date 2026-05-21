@@ -49,7 +49,7 @@ export function FAQSectionNew() {
               transition={{ delay: i * 0.05 }}
               className={`rounded-2xl border transition-all duration-300 ${
                 activeIndex === i
-                  ? "border-primary/30 bg-primary/5 shadow-[0_0_30px_-10px_rgba(99,102,241,0.1)]"
+                  ? "border-primary/30 bg-primary/5 shadow-primary-glow"
                   : "border-foreground/5 bg-card hover:border-foreground/10"
               }`}
             >

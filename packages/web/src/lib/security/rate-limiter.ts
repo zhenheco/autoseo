@@ -31,8 +31,6 @@ export const RATE_LIMIT_CONFIGS = {
   ARTICLE_GENERATE: { limit: 10, window: 60 },
   /** 批量文章生成 - 每用戶每分鐘 5 次 */
   ARTICLE_GENERATE_BATCH: { limit: 5, window: 60 },
-  /** 推薦碼驗證 - 每 IP 每分鐘 30 次 */
-  REFERRAL_VALIDATE: { limit: 30, window: 60 },
   /** 聯盟申請 - 每用戶每小時 3 次 */
   AFFILIATE_APPLY: { limit: 3, window: 3600 },
   /** 登入嘗試 - 每 IP 每 15 分鐘 10 次 */

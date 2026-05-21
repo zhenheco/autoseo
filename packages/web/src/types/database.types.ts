@@ -247,106 +247,55 @@ export type Database = {
           },
         ];
       };
-      payment_orders: {
+      brands: {
         Row: {
           id: string;
           company_id: string;
-          order_no: string;
-          order_type: "onetime" | "recurring_first" | "recurring_renewal";
-          payment_type:
-            | "subscription"
-            | "token_package"
-            | "lifetime"
-            | "article_package";
-          amount: number;
-          currency: string;
-          item_description: string;
-          related_id: string | null;
-          newebpay_status: string | null;
-          newebpay_message: string | null;
-          newebpay_trade_no: string | null;
-          newebpay_response: Json | null;
-          metadata: Json | null;
-          status:
-            | "pending"
-            | "processing"
-            | "success"
-            | "failed"
-            | "cancelled"
-            | "refunded";
-          paid_at: string | null;
-          failed_at: string | null;
-          failure_reason: string | null;
+          name: string;
+          voice_tone: string | null;
+          target_audience: Json | null;
+          value_props: string[] | null;
+          brand_guidelines: string | null;
+          logo_url: string | null;
+          primary_color: string | null;
+          secondary_color: string | null;
+          is_default: boolean;
           created_at: string;
           updated_at: string;
         };
         Insert: {
           id?: string;
           company_id: string;
-          order_no: string;
-          order_type: "onetime" | "recurring_first" | "recurring_renewal";
-          payment_type:
-            | "subscription"
-            | "token_package"
-            | "lifetime"
-            | "article_package";
-          amount: number;
-          currency?: string;
-          item_description: string;
-          related_id?: string | null;
-          newebpay_status?: string | null;
-          newebpay_message?: string | null;
-          newebpay_trade_no?: string | null;
-          newebpay_response?: Json | null;
-          metadata?: Json | null;
-          status?:
-            | "pending"
-            | "processing"
-            | "success"
-            | "failed"
-            | "cancelled"
-            | "refunded";
-          paid_at?: string | null;
-          failed_at?: string | null;
-          failure_reason?: string | null;
+          name: string;
+          voice_tone?: string | null;
+          target_audience?: Json | null;
+          value_props?: string[] | null;
+          brand_guidelines?: string | null;
+          logo_url?: string | null;
+          primary_color?: string | null;
+          secondary_color?: string | null;
+          is_default?: boolean;
           created_at?: string;
           updated_at?: string;
         };
         Update: {
           id?: string;
           company_id?: string;
-          order_no?: string;
-          order_type?: "onetime" | "recurring_first" | "recurring_renewal";
-          payment_type?:
-            | "subscription"
-            | "token_package"
-            | "lifetime"
-            | "article_package";
-          amount?: number;
-          currency?: string;
-          item_description?: string;
-          related_id?: string | null;
-          newebpay_status?: string | null;
-          newebpay_message?: string | null;
-          newebpay_trade_no?: string | null;
-          newebpay_response?: Json | null;
-          metadata?: Json | null;
-          status?:
-            | "pending"
-            | "processing"
-            | "success"
-            | "failed"
-            | "cancelled"
-            | "refunded";
-          paid_at?: string | null;
-          failed_at?: string | null;
-          failure_reason?: string | null;
+          name?: string;
+          voice_tone?: string | null;
+          target_audience?: Json | null;
+          value_props?: string[] | null;
+          brand_guidelines?: string | null;
+          logo_url?: string | null;
+          primary_color?: string | null;
+          secondary_color?: string | null;
+          is_default?: boolean;
           created_at?: string;
           updated_at?: string;
         };
         Relationships: [
           {
-            foreignKeyName: "payment_orders_company_id_fkey";
+            foreignKeyName: "brands_company_id_fkey";
             columns: ["company_id"];
             isOneToOne: false;
             referencedRelation: "companies";
@@ -354,333 +303,60 @@ export type Database = {
           },
         ];
       };
-      recurring_mandates: {
+      brand_keywords: {
         Row: {
-          id: string;
-          company_id: string;
-          plan_id: string;
-          mandate_no: string;
-          newebpay_period_no: string | null;
-          period_type: "D" | "W" | "M" | "Y";
-          period_point: string | null;
-          period_times: number | null;
-          period_amount: number;
-          total_amount: number | null;
-          next_payment_date: string | null;
-          periods_paid: number;
-          status:
-            | "pending"
-            | "active"
-            | "suspended"
-            | "terminated"
-            | "completed"
-            | "failed";
-          newebpay_response: Json | null;
-          first_payment_order_id: string | null;
-          activated_at: string | null;
-          suspended_at: string | null;
-          terminated_at: string | null;
-          termination_reason: string | null;
+          brand_id: string;
+          keyword: string;
+          priority: number;
           created_at: string;
-          updated_at: string;
         };
         Insert: {
-          id?: string;
-          company_id: string;
-          plan_id: string;
-          mandate_no: string;
-          newebpay_period_no?: string | null;
-          period_type: "D" | "W" | "M" | "Y";
-          period_point?: string | null;
-          period_times?: number | null;
-          period_amount: number;
-          total_amount?: number | null;
-          next_payment_date?: string | null;
-          periods_paid?: number;
-          status?:
-            | "pending"
-            | "active"
-            | "suspended"
-            | "terminated"
-            | "completed"
-            | "failed";
-          newebpay_response?: Json | null;
-          first_payment_order_id?: string | null;
-          activated_at?: string | null;
-          suspended_at?: string | null;
-          terminated_at?: string | null;
-          termination_reason?: string | null;
+          brand_id: string;
+          keyword: string;
+          priority?: number;
           created_at?: string;
-          updated_at?: string;
         };
         Update: {
-          id?: string;
-          company_id?: string;
-          plan_id?: string;
-          mandate_no?: string;
-          newebpay_period_no?: string | null;
-          period_type?: "D" | "W" | "M" | "Y";
-          period_point?: string | null;
-          period_times?: number | null;
-          period_amount?: number;
-          total_amount?: number | null;
-          next_payment_date?: string | null;
-          periods_paid?: number;
-          status?:
-            | "pending"
-            | "active"
-            | "suspended"
-            | "terminated"
-            | "completed"
-            | "failed";
-          newebpay_response?: Json | null;
-          first_payment_order_id?: string | null;
-          activated_at?: string | null;
-          suspended_at?: string | null;
-          terminated_at?: string | null;
-          termination_reason?: string | null;
+          brand_id?: string;
+          keyword?: string;
+          priority?: number;
           created_at?: string;
-          updated_at?: string;
         };
         Relationships: [
           {
-            foreignKeyName: "recurring_mandates_company_id_fkey";
-            columns: ["company_id"];
+            foreignKeyName: "brand_keywords_brand_id_fkey";
+            columns: ["brand_id"];
             isOneToOne: false;
-            referencedRelation: "companies";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "recurring_mandates_plan_id_fkey";
-            columns: ["plan_id"];
-            isOneToOne: false;
-            referencedRelation: "subscription_plans";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "recurring_mandates_first_payment_order_id_fkey";
-            columns: ["first_payment_order_id"];
-            isOneToOne: false;
-            referencedRelation: "payment_orders";
+            referencedRelation: "brands";
             referencedColumns: ["id"];
           },
         ];
       };
-      recurring_payments: {
+      brand_performance_memory: {
         Row: {
-          id: string;
-          mandate_id: string;
-          payment_order_id: string | null;
-          period_number: number;
-          amount: number;
-          scheduled_date: string;
-          status: "pending" | "processing" | "success" | "failed" | "skipped";
-          newebpay_trade_no: string | null;
-          newebpay_response: Json | null;
-          paid_at: string | null;
-          failed_at: string | null;
-          failure_reason: string | null;
-          created_at: string;
+          brand_id: string;
+          metric_key: string;
+          metric_value: Json;
           updated_at: string;
         };
         Insert: {
-          id?: string;
-          mandate_id: string;
-          payment_order_id?: string | null;
-          period_number: number;
-          amount: number;
-          scheduled_date: string;
-          status?: "pending" | "processing" | "success" | "failed" | "skipped";
-          newebpay_trade_no?: string | null;
-          newebpay_response?: Json | null;
-          paid_at?: string | null;
-          failed_at?: string | null;
-          failure_reason?: string | null;
-          created_at?: string;
+          brand_id: string;
+          metric_key: string;
+          metric_value: Json;
           updated_at?: string;
         };
         Update: {
-          id?: string;
-          mandate_id?: string;
-          payment_order_id?: string | null;
-          period_number?: number;
-          amount?: number;
-          scheduled_date?: string;
-          status?: "pending" | "processing" | "success" | "failed" | "skipped";
-          newebpay_trade_no?: string | null;
-          newebpay_response?: Json | null;
-          paid_at?: string | null;
-          failed_at?: string | null;
-          failure_reason?: string | null;
-          created_at?: string;
+          brand_id?: string;
+          metric_key?: string;
+          metric_value?: Json;
           updated_at?: string;
         };
         Relationships: [
           {
-            foreignKeyName: "recurring_payments_mandate_id_fkey";
-            columns: ["mandate_id"];
+            foreignKeyName: "brand_performance_memory_brand_id_fkey";
+            columns: ["brand_id"];
             isOneToOne: false;
-            referencedRelation: "recurring_mandates";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "recurring_payments_payment_order_id_fkey";
-            columns: ["payment_order_id"];
-            isOneToOne: false;
-            referencedRelation: "payment_orders";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      refund_requests: {
-        Row: {
-          id: string;
-          company_id: string;
-          payment_order_id: string;
-          refund_no: string;
-          original_amount: number;
-          refund_amount: number;
-          retention_offered: boolean;
-          retention_accepted: boolean;
-          retention_credits: number;
-          is_auto_eligible: boolean;
-          days_since_purchase: number | null;
-          reason_category:
-            | "product_issue"
-            | "service_unsatisfied"
-            | "billing_error"
-            | "change_of_mind"
-            | "other";
-          reason_detail: string | null;
-          status:
-            | "pending"
-            | "retention_accepted"
-            | "auto_processing"
-            | "pending_review"
-            | "approved"
-            | "processing"
-            | "completed"
-            | "rejected"
-            | "failed";
-          reviewed_by: string | null;
-          reviewed_at: string | null;
-          review_notes: string | null;
-          reject_reason: string | null;
-          newebpay_trade_no: string | null;
-          newebpay_status: string | null;
-          newebpay_message: string | null;
-          newebpay_response: Json | null;
-          credits_deducted: number;
-          subscription_downgraded: boolean;
-          requested_at: string;
-          processed_at: string | null;
-          completed_at: string | null;
-          created_at: string;
-          updated_at: string;
-        };
-        Insert: {
-          id?: string;
-          company_id: string;
-          payment_order_id: string;
-          refund_no: string;
-          original_amount: number;
-          refund_amount: number;
-          retention_offered?: boolean;
-          retention_accepted?: boolean;
-          retention_credits?: number;
-          is_auto_eligible?: boolean;
-          days_since_purchase?: number | null;
-          reason_category:
-            | "product_issue"
-            | "service_unsatisfied"
-            | "billing_error"
-            | "change_of_mind"
-            | "other";
-          reason_detail?: string | null;
-          status?:
-            | "pending"
-            | "retention_accepted"
-            | "auto_processing"
-            | "pending_review"
-            | "approved"
-            | "processing"
-            | "completed"
-            | "rejected"
-            | "failed";
-          reviewed_by?: string | null;
-          reviewed_at?: string | null;
-          review_notes?: string | null;
-          reject_reason?: string | null;
-          newebpay_trade_no?: string | null;
-          newebpay_status?: string | null;
-          newebpay_message?: string | null;
-          newebpay_response?: Json | null;
-          credits_deducted?: number;
-          subscription_downgraded?: boolean;
-          requested_at?: string;
-          processed_at?: string | null;
-          completed_at?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Update: {
-          id?: string;
-          company_id?: string;
-          payment_order_id?: string;
-          refund_no?: string;
-          original_amount?: number;
-          refund_amount?: number;
-          retention_offered?: boolean;
-          retention_accepted?: boolean;
-          retention_credits?: number;
-          is_auto_eligible?: boolean;
-          days_since_purchase?: number | null;
-          reason_category?:
-            | "product_issue"
-            | "service_unsatisfied"
-            | "billing_error"
-            | "change_of_mind"
-            | "other";
-          reason_detail?: string | null;
-          status?:
-            | "pending"
-            | "retention_accepted"
-            | "auto_processing"
-            | "pending_review"
-            | "approved"
-            | "processing"
-            | "completed"
-            | "rejected"
-            | "failed";
-          reviewed_by?: string | null;
-          reviewed_at?: string | null;
-          review_notes?: string | null;
-          reject_reason?: string | null;
-          newebpay_trade_no?: string | null;
-          newebpay_status?: string | null;
-          newebpay_message?: string | null;
-          newebpay_response?: Json | null;
-          credits_deducted?: number;
-          subscription_downgraded?: boolean;
-          requested_at?: string;
-          processed_at?: string | null;
-          completed_at?: string | null;
-          created_at?: string;
-          updated_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "refund_requests_company_id_fkey";
-            columns: ["company_id"];
-            isOneToOne: false;
-            referencedRelation: "companies";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "refund_requests_payment_order_id_fkey";
-            columns: ["payment_order_id"];
-            isOneToOne: false;
-            referencedRelation: "payment_orders";
+            referencedRelation: "brands";
             referencedColumns: ["id"];
           },
         ];
@@ -1170,7 +846,7 @@ export type Database = {
         Row: {
           id: string;
           company_id: string;
-          source_type: "package" | "bonus" | "referral" | "promo";
+          source_type: "package" | "bonus" | "promo";
           source_id: string | null;
           original_articles: number;
           remaining_articles: number;
@@ -1182,7 +858,7 @@ export type Database = {
         Insert: {
           id?: string;
           company_id: string;
-          source_type: "package" | "bonus" | "referral" | "promo";
+          source_type: "package" | "bonus" | "promo";
           source_id?: string | null;
           original_articles: number;
           remaining_articles: number;
@@ -1194,7 +870,7 @@ export type Database = {
         Update: {
           id?: string;
           company_id?: string;
-          source_type?: "package" | "bonus" | "referral" | "promo";
+          source_type?: "package" | "bonus" | "promo";
           source_id?: string | null;
           original_articles?: number;
           remaining_articles?: number;
@@ -1584,267 +1260,12 @@ export type Database = {
         };
         Relationships: [];
       };
-      company_referral_codes: {
-        Row: {
-          id: string;
-          company_id: string;
-          referral_code: string;
-          total_referrals: number;
-          successful_referrals: number;
-          total_rewards_tokens: number;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          company_id: string;
-          referral_code: string;
-          total_referrals?: number;
-          successful_referrals?: number;
-          total_rewards_tokens?: number;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          company_id?: string;
-          referral_code?: string;
-          total_referrals?: number;
-          successful_referrals?: number;
-          total_rewards_tokens?: number;
-          created_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "company_referral_codes_company_id_fkey";
-            columns: ["company_id"];
-            isOneToOne: true;
-            referencedRelation: "companies";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      referral_codes: {
-        Row: {
-          id: string;
-          company_id: string;
-          code: string;
-          total_referrals: number;
-          successful_referrals: number;
-          total_clicks: number;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          company_id: string;
-          code: string;
-          total_referrals?: number;
-          successful_referrals?: number;
-          total_clicks?: number;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          company_id?: string;
-          code?: string;
-          total_referrals?: number;
-          successful_referrals?: number;
-          total_clicks?: number;
-          created_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "referral_codes_company_id_fkey";
-            columns: ["company_id"];
-            isOneToOne: true;
-            referencedRelation: "companies";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      referral_token_rewards: {
-        Row: {
-          id: string;
-          referral_id: string;
-          referrer_company_id: string;
-          referrer_tokens: number;
-          referrer_credited_at: string | null;
-          referred_company_id: string;
-          referred_tokens: number;
-          referred_credited_at: string | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          referral_id: string;
-          referrer_company_id: string;
-          referrer_tokens?: number;
-          referrer_credited_at?: string | null;
-          referred_company_id: string;
-          referred_tokens?: number;
-          referred_credited_at?: string | null;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          referral_id?: string;
-          referrer_company_id?: string;
-          referrer_tokens?: number;
-          referrer_credited_at?: string | null;
-          referred_company_id?: string;
-          referred_tokens?: number;
-          referred_credited_at?: string | null;
-          created_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "referral_token_rewards_referral_id_fkey";
-            columns: ["referral_id"];
-            isOneToOne: true;
-            referencedRelation: "referrals";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "referral_token_rewards_referrer_company_id_fkey";
-            columns: ["referrer_company_id"];
-            isOneToOne: false;
-            referencedRelation: "companies";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "referral_token_rewards_referred_company_id_fkey";
-            columns: ["referred_company_id"];
-            isOneToOne: false;
-            referencedRelation: "companies";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      referrals: {
-        Row: {
-          id: string;
-          referrer_company_id: string;
-          referred_company_id: string;
-          referral_code: string;
-          status: "pending" | "qualified" | "rewarded";
-          registered_at: string | null;
-          first_payment_at: string | null;
-          first_payment_amount: number | null;
-          reward_type: string | null;
-          tokens_rewarded: number | null;
-          total_payments: number | null;
-          lifetime_value: number | null;
-          total_commission_generated: number | null;
-          last_payment_at: string | null;
-          created_at: string | null;
-          updated_at: string | null;
-        };
-        Insert: {
-          id?: string;
-          referrer_company_id: string;
-          referred_company_id: string;
-          referral_code: string;
-          status?: "pending" | "qualified" | "rewarded";
-          registered_at?: string | null;
-          first_payment_at?: string | null;
-          first_payment_amount?: number | null;
-          reward_type?: string | null;
-          tokens_rewarded?: number | null;
-          total_payments?: number | null;
-          lifetime_value?: number | null;
-          total_commission_generated?: number | null;
-          last_payment_at?: string | null;
-          created_at?: string | null;
-          updated_at?: string | null;
-        };
-        Update: {
-          id?: string;
-          referrer_company_id?: string;
-          referred_company_id?: string;
-          referral_code?: string;
-          status?: "pending" | "qualified" | "rewarded";
-          registered_at?: string | null;
-          first_payment_at?: string | null;
-          first_payment_amount?: number | null;
-          reward_type?: string | null;
-          tokens_rewarded?: number | null;
-          total_payments?: number | null;
-          lifetime_value?: number | null;
-          total_commission_generated?: number | null;
-          last_payment_at?: string | null;
-          created_at?: string | null;
-          updated_at?: string | null;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "referrals_referrer_company_id_fkey";
-            columns: ["referrer_company_id"];
-            isOneToOne: false;
-            referencedRelation: "companies";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "referrals_referred_company_id_fkey";
-            columns: ["referred_company_id"];
-            isOneToOne: true;
-            referencedRelation: "companies";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
-      referral_rewards: {
-        Row: {
-          id: string;
-          referral_id: string;
-          company_id: string;
-          reward_type: "signup" | "first_payment" | "revenue_share";
-          token_amount: number | null;
-          cash_amount: number | null;
-          description: string | null;
-          created_at: string;
-        };
-        Insert: {
-          id?: string;
-          referral_id: string;
-          company_id: string;
-          reward_type: "signup" | "first_payment" | "revenue_share";
-          token_amount?: number | null;
-          cash_amount?: number | null;
-          description?: string | null;
-          created_at?: string;
-        };
-        Update: {
-          id?: string;
-          referral_id?: string;
-          company_id?: string;
-          reward_type?: "signup" | "first_payment" | "revenue_share";
-          token_amount?: number | null;
-          cash_amount?: number | null;
-          description?: string | null;
-          created_at?: string;
-        };
-        Relationships: [
-          {
-            foreignKeyName: "referral_rewards_referral_id_fkey";
-            columns: ["referral_id"];
-            isOneToOne: false;
-            referencedRelation: "referrals";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "referral_rewards_company_id_fkey";
-            columns: ["company_id"];
-            isOneToOne: false;
-            referencedRelation: "companies";
-            referencedColumns: ["id"];
-          },
-        ];
-      };
       resellers: {
         Row: {
           id: string;
           company_id: string;
           commission_rate: number;
           status: "active" | "suspended" | "terminated";
-          total_referrals: number;
           total_revenue: number;
           total_commission: number;
           notes: string | null;
@@ -1856,7 +1277,6 @@ export type Database = {
           company_id: string;
           commission_rate?: number;
           status?: "active" | "suspended" | "terminated";
-          total_referrals?: number;
           total_revenue?: number;
           total_commission?: number;
           notes?: string | null;
@@ -1868,7 +1288,6 @@ export type Database = {
           company_id?: string;
           commission_rate?: number;
           status?: "active" | "suspended" | "terminated";
-          total_referrals?: number;
           total_revenue?: number;
           total_commission?: number;
           notes?: string | null;
@@ -2084,10 +1503,258 @@ export type Database = {
           },
         ];
       };
+      generated_articles: {
+        Row: {
+          id: string;
+          article_job_id: string | null;
+          company_id: string | null;
+          website_id: string | null;
+          brand_id: string | null;
+          user_id: string | null;
+          title: string;
+          slug: string;
+          markdown_content: string;
+          html_content: string;
+          excerpt: string | null;
+          seo_title: string | null;
+          seo_description: string | null;
+          focus_keyword: string | null;
+          keywords: string[] | null;
+          og_title: string | null;
+          og_description: string | null;
+          og_image: string | null;
+          twitter_card_type: string | null;
+          twitter_title: string | null;
+          twitter_description: string | null;
+          twitter_image: string | null;
+          categories: string[] | null;
+          tags: string[] | null;
+          word_count: number | null;
+          reading_time: number | null;
+          paragraph_count: number | null;
+          sentence_count: number | null;
+          flesch_reading_ease: number | null;
+          flesch_kincaid_grade: number | null;
+          gunning_fog_index: number | null;
+          keyword_density: number | null;
+          keyword_usage_count: number | null;
+          internal_links: Json | null;
+          internal_links_count: number | null;
+          external_references: Json | null;
+          external_links_count: number | null;
+          article_metadata: Json | null;
+          wordpress_post_id: number | null;
+          wordpress_post_url: string | null;
+          wordpress_status: string | null;
+          featured_image_url: string | null;
+          featured_image_alt: string | null;
+          content_images: Json | null;
+          quality_score: number | null;
+          quality_passed: boolean | null;
+          quality_issues: Json | null;
+          research_model: string | null;
+          strategy_model: string | null;
+          writing_model: string | null;
+          meta_model: string | null;
+          generation_time: number | null;
+          token_usage: Json | null;
+          cost_breakdown: Json | null;
+          status: "generated" | "reviewed" | "published" | "archived" | null;
+          published_at: string | null;
+          created_at: string | null;
+          updated_at: string | null;
+          published_to_website_id: string | null;
+          published_to_website_at: string | null;
+          content_json: Json | null;
+          scheduled_publish_at: string | null;
+          target_wordpress_status: "draft" | "publish" | null;
+          publish_retry_count: number | null;
+          last_publish_error: string | null;
+        };
+        Insert: {
+          id?: string;
+          article_job_id?: string | null;
+          company_id?: string | null;
+          website_id?: string | null;
+          brand_id?: string | null;
+          user_id?: string | null;
+          title: string;
+          slug: string;
+          markdown_content: string;
+          html_content: string;
+          excerpt?: string | null;
+          seo_title?: string | null;
+          seo_description?: string | null;
+          focus_keyword?: string | null;
+          keywords?: string[] | null;
+          og_title?: string | null;
+          og_description?: string | null;
+          og_image?: string | null;
+          twitter_card_type?: string | null;
+          twitter_title?: string | null;
+          twitter_description?: string | null;
+          twitter_image?: string | null;
+          categories?: string[] | null;
+          tags?: string[] | null;
+          word_count?: number | null;
+          reading_time?: number | null;
+          paragraph_count?: number | null;
+          sentence_count?: number | null;
+          flesch_reading_ease?: number | null;
+          flesch_kincaid_grade?: number | null;
+          gunning_fog_index?: number | null;
+          keyword_density?: number | null;
+          keyword_usage_count?: number | null;
+          internal_links?: Json | null;
+          internal_links_count?: number | null;
+          external_references?: Json | null;
+          external_links_count?: number | null;
+          article_metadata?: Json | null;
+          wordpress_post_id?: number | null;
+          wordpress_post_url?: string | null;
+          wordpress_status?: string | null;
+          featured_image_url?: string | null;
+          featured_image_alt?: string | null;
+          content_images?: Json | null;
+          quality_score?: number | null;
+          quality_passed?: boolean | null;
+          quality_issues?: Json | null;
+          research_model?: string | null;
+          strategy_model?: string | null;
+          writing_model?: string | null;
+          meta_model?: string | null;
+          generation_time?: number | null;
+          token_usage?: Json | null;
+          cost_breakdown?: Json | null;
+          status?: "generated" | "reviewed" | "published" | "archived" | null;
+          published_at?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          published_to_website_id?: string | null;
+          published_to_website_at?: string | null;
+          content_json?: Json | null;
+          scheduled_publish_at?: string | null;
+          target_wordpress_status?: "draft" | "publish" | null;
+          publish_retry_count?: number | null;
+          last_publish_error?: string | null;
+        };
+        Update: {
+          id?: string;
+          article_job_id?: string | null;
+          company_id?: string | null;
+          website_id?: string | null;
+          brand_id?: string | null;
+          user_id?: string | null;
+          title?: string;
+          slug?: string;
+          markdown_content?: string;
+          html_content?: string;
+          excerpt?: string | null;
+          seo_title?: string | null;
+          seo_description?: string | null;
+          focus_keyword?: string | null;
+          keywords?: string[] | null;
+          og_title?: string | null;
+          og_description?: string | null;
+          og_image?: string | null;
+          twitter_card_type?: string | null;
+          twitter_title?: string | null;
+          twitter_description?: string | null;
+          twitter_image?: string | null;
+          categories?: string[] | null;
+          tags?: string[] | null;
+          word_count?: number | null;
+          reading_time?: number | null;
+          paragraph_count?: number | null;
+          sentence_count?: number | null;
+          flesch_reading_ease?: number | null;
+          flesch_kincaid_grade?: number | null;
+          gunning_fog_index?: number | null;
+          keyword_density?: number | null;
+          keyword_usage_count?: number | null;
+          internal_links?: Json | null;
+          internal_links_count?: number | null;
+          external_references?: Json | null;
+          external_links_count?: number | null;
+          article_metadata?: Json | null;
+          wordpress_post_id?: number | null;
+          wordpress_post_url?: string | null;
+          wordpress_status?: string | null;
+          featured_image_url?: string | null;
+          featured_image_alt?: string | null;
+          content_images?: Json | null;
+          quality_score?: number | null;
+          quality_passed?: boolean | null;
+          quality_issues?: Json | null;
+          research_model?: string | null;
+          strategy_model?: string | null;
+          writing_model?: string | null;
+          meta_model?: string | null;
+          generation_time?: number | null;
+          token_usage?: Json | null;
+          cost_breakdown?: Json | null;
+          status?: "generated" | "reviewed" | "published" | "archived" | null;
+          published_at?: string | null;
+          created_at?: string | null;
+          updated_at?: string | null;
+          published_to_website_id?: string | null;
+          published_to_website_at?: string | null;
+          content_json?: Json | null;
+          scheduled_publish_at?: string | null;
+          target_wordpress_status?: "draft" | "publish" | null;
+          publish_retry_count?: number | null;
+          last_publish_error?: string | null;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "generated_articles_article_job_id_fkey";
+            columns: ["article_job_id"];
+            isOneToOne: false;
+            referencedRelation: "article_jobs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "generated_articles_brand_id_fkey";
+            columns: ["brand_id"];
+            isOneToOne: false;
+            referencedRelation: "brands";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "generated_articles_company_id_fkey";
+            columns: ["company_id"];
+            isOneToOne: false;
+            referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "generated_articles_published_to_website_id_fkey";
+            columns: ["published_to_website_id"];
+            isOneToOne: false;
+            referencedRelation: "website_configs";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "generated_articles_user_id_fkey";
+            columns: ["user_id"];
+            isOneToOne: false;
+            referencedRelation: "users";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "generated_articles_website_id_fkey";
+            columns: ["website_id"];
+            isOneToOne: false;
+            referencedRelation: "website_configs";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       website_configs: {
         Row: {
           id: string;
           company_id: string | null;
+          brand_id: string | null;
           website_name: string;
           wordpress_url: string;
           wordpress_oauth_client_id: string | null;
@@ -2095,7 +1762,6 @@ export type Database = {
           wordpress_access_token: string | null;
           wordpress_refresh_token: string | null;
           wordpress_token_expires_at: string | null;
-          brand_voice: Json | null;
           language: string | null;
           api_config: Json | null;
           is_active: boolean | null;
@@ -2113,7 +1779,12 @@ export type Database = {
           auto_translate_enabled: boolean | null;
           auto_translate_languages: string[] | null;
           // 外部網站相關欄位
-          website_type: "wordpress" | "platform_blog" | "external" | null;
+          website_type:
+            | "wordpress"
+            | "platform_blog"
+            | "external"
+            | "shopline"
+            | null;
           webhook_url: string | null;
           webhook_secret: string | null;
           sync_on_publish: boolean | null;
@@ -2129,6 +1800,7 @@ export type Database = {
         Insert: {
           id?: string;
           company_id?: string | null;
+          brand_id?: string | null;
           website_name: string;
           wordpress_url: string;
           wordpress_oauth_client_id?: string | null;
@@ -2136,7 +1808,6 @@ export type Database = {
           wordpress_access_token?: string | null;
           wordpress_refresh_token?: string | null;
           wordpress_token_expires_at?: string | null;
-          brand_voice?: Json | null;
           language?: string | null;
           api_config?: Json | null;
           is_active?: boolean | null;
@@ -2154,7 +1825,12 @@ export type Database = {
           auto_translate_enabled?: boolean | null;
           auto_translate_languages?: string[] | null;
           // 外部網站相關欄位
-          website_type?: "wordpress" | "platform_blog" | "external" | null;
+          website_type?:
+            | "wordpress"
+            | "platform_blog"
+            | "external"
+            | "shopline"
+            | null;
           webhook_url?: string | null;
           webhook_secret?: string | null;
           sync_on_publish?: boolean | null;
@@ -2170,6 +1846,7 @@ export type Database = {
         Update: {
           id?: string;
           company_id?: string | null;
+          brand_id?: string | null;
           website_name?: string;
           wordpress_url?: string;
           wordpress_oauth_client_id?: string | null;
@@ -2177,7 +1854,6 @@ export type Database = {
           wordpress_access_token?: string | null;
           wordpress_refresh_token?: string | null;
           wordpress_token_expires_at?: string | null;
-          brand_voice?: Json | null;
           language?: string | null;
           api_config?: Json | null;
           is_active?: boolean | null;
@@ -2195,7 +1871,12 @@ export type Database = {
           auto_translate_enabled?: boolean | null;
           auto_translate_languages?: string[] | null;
           // 外部網站相關欄位
-          website_type?: "wordpress" | "platform_blog" | "external" | null;
+          website_type?:
+            | "wordpress"
+            | "platform_blog"
+            | "external"
+            | "shopline"
+            | null;
           webhook_url?: string | null;
           webhook_secret?: string | null;
           sync_on_publish?: boolean | null;
@@ -2214,6 +1895,13 @@ export type Database = {
             columns: ["company_id"];
             isOneToOne: false;
             referencedRelation: "companies";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "website_configs_brand_id_fkey";
+            columns: ["brand_id"];
+            isOneToOne: false;
+            referencedRelation: "brands";
             referencedColumns: ["id"];
           },
         ];
@@ -2359,13 +2047,6 @@ export type Database = {
             columns: ["company_id"];
             isOneToOne: false;
             referencedRelation: "companies";
-            referencedColumns: ["id"];
-          },
-          {
-            foreignKeyName: "promo_code_usages_payment_order_id_fkey";
-            columns: ["payment_order_id"];
-            isOneToOne: false;
-            referencedRelation: "payment_orders";
             referencedColumns: ["id"];
           },
         ];

@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { requestErrorResponse } from "@/lib/api/request-error-response";
 import { safeJson } from "@/lib/api/request-body";
 import { withRouteAuth } from "@/lib/api/route-auth";
-import { RefundService } from "@/lib/payment/refund-service";
 
 export const dynamic = "force-dynamic";
 
@@ -18,7 +17,7 @@ export const POST = withRouteAuth(
   "admin",
   async (
     request: NextRequest,
-    { user },
+    _context,
     { params }: { params: Promise<{ id: string }> },
   ) => {
     try {
@@ -37,34 +36,21 @@ export const POST = withRouteAuth(
         return requestErrorResponse(bodyResult.error);
       }
 
-      const body = bodyResult.data;
-
-      if (!body.rejectReason) {
+      if (!bodyResult.data.rejectReason) {
         return NextResponse.json(
           { success: false, error: "請提供拒絕原因" },
           { status: 400 },
         );
       }
 
-      // 拒絕退款
-      const refundService = RefundService.createInstance();
-      const result = await refundService.rejectRefund(
-        id,
-        user.id,
-        body.rejectReason,
+      return NextResponse.json(
+        {
+          success: false,
+          error: "退款功能已停用",
+          code: "REFUNDS_DISABLED",
+        },
+        { status: 410 },
       );
-
-      if (!result.success) {
-        return NextResponse.json(
-          { success: false, error: result.error },
-          { status: 400 },
-        );
-      }
-
-      return NextResponse.json({
-        success: true,
-        message: "退款申請已拒絕",
-      });
     } catch (error) {
       console.error("[API] /admin/refunds/[id]/reject error:", error);
       return NextResponse.json(

@@ -75,9 +75,6 @@ token_purchases                 -- Token 購買記錄
 token_balance_changes           -- Token 餘額變動記錄
 monthly_token_usage_stats       -- 月度統計
 ai_model_pricing                -- AI 模型定價
-referrals                       -- 推薦關係
-referral_rewards                -- 推薦獎勵記錄
-company_referral_codes          -- 公司推薦碼
 resellers                       -- 經銷商資料
 commissions                     -- 佣金記錄
 ```
@@ -88,7 +85,6 @@ commissions                     -- 佣金記錄
 TokenCalculator; // Token 計算引擎
 TokenBillingService; // Token 計費服務（整合 AI 呼叫）
 SubscriptionService; // 訂閱管理服務
-ReferralService; // 推薦計劃服務
 ResellerService; // 經銷商管理服務
 ```
 
@@ -101,14 +97,12 @@ import { createClient } from "@/lib/supabase/server";
 import {
   TokenBillingService,
   SubscriptionService,
-  ReferralService,
   ResellerService,
 } from "@/lib/billing";
 
 const supabase = await createClient();
 const billingService = new TokenBillingService(supabase);
 const subscriptionService = new SubscriptionService(supabase);
-const referralService = new ReferralService(supabase);
 const resellerService = new ResellerService(supabase);
 ```
 
@@ -182,27 +176,7 @@ const purchaseResult = await subscriptionService.purchaseTokenPackage(
 // 終身會員自動享 8 折
 ```
 
-### 6. 推薦計劃
-
-```typescript
-// 取得推薦碼
-const myCode = await referralService.getReferralCode(companyId);
-
-// 驗證推薦碼並建立推薦關係
-const validation = await referralService.validateReferralCode("ABCD1234");
-if (validation.valid) {
-  await referralService.createReferral(
-    validation.companyId!,
-    newCompanyId,
-    "ABCD1234",
-  );
-}
-
-// 首次付費觸發推薦獎勵
-await referralService.processFirstPayment(referredCompanyId, paymentAmount);
-```
-
-### 7. 經銷商管理（手動）
+### 6. 經銷商管理（手動）
 
 ```typescript
 // 查詢經銷商資料

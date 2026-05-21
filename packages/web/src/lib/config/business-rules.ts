@@ -4,11 +4,6 @@
  */
 
 export const BUSINESS_RULES = {
-  referral: {
-    signupReward: 2000,
-    firstPaymentCommissionRate: 0.2,
-    firstPurchaseDiscountRate: 0.8,
-  },
   subscription: {
     lifetimeDiscountRate: 0.8,
     trialPeriodDays: 14,

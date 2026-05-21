@@ -10,12 +10,6 @@ vi.mock("@/lib/billing/token-billing-service", () => ({
   TokenBillingService: vi.fn(),
 }));
 
-vi.mock("@/lib/payment/refund-service", () => ({
-  RefundService: {
-    createInstance: vi.fn(),
-  },
-}));
-
 vi.mock("@/lib/billing/article-quota-service", () => ({
   ArticleQuotaService: vi.fn(),
 }));
