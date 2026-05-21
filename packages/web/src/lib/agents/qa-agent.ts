@@ -29,8 +29,11 @@ export class QAAgent extends BaseAgent<QAInput, QAOutput> {
     const userQuestionsSection = userQuestions
       ? `\n## Real User Questions\n${userQuestions}\nPrioritize answering these real questions.\n`
       : "";
+    const brandMemorySection = input.brandMemoryPrompt
+      ? `${input.brandMemoryPrompt}\n\n`
+      : "";
 
-    const prompt = `${topicAlignment ? `${topicAlignment}\n` : ""}${userQuestionsSection}
+    const prompt = `${brandMemorySection}${topicAlignment ? `${topicAlignment}\n` : ""}${userQuestionsSection}
 Generate ${count} FAQ for "${title}".
 
 ${langInstructions}

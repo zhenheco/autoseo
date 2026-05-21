@@ -16,6 +16,7 @@ export interface ArticleJobIntakeServiceInput {
   userId: string;
   companyId: string;
   websiteId: string | null;
+  brandId: string;
   items: ArticleJobIntakeItem[];
 }
 
@@ -43,7 +44,7 @@ export function createArticleJobIntakeService({
   createJobId,
 }: CreateArticleJobIntakeServiceInput): ArticleJobIntakeService {
   return {
-    async createJobs({ userId, companyId, websiteId, items }) {
+    async createJobs({ userId, companyId, websiteId, brandId, items }) {
       const existingJobs =
         await recordRepository.findPendingOrProcessingJobs(companyId);
       const existingJobsByKeyword = new Map(
@@ -76,10 +77,15 @@ export function createArticleJobIntakeService({
             jobId,
             companyId,
             websiteId,
+            brandId,
             userId,
             keywords: [item.keyword],
             status: "pending",
-            metadata: item.metadata,
+            metadata: {
+              ...item.metadata,
+              brandId,
+              brand_id: brandId,
+            },
           });
         } catch (error) {
           failedItems.push({

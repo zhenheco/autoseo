@@ -200,6 +200,7 @@ export interface SaveArticleParams {
   result: ArticleGenerationResult;
   websiteId?: string | null; // 可選：文章寫好後才決定發佈到哪個網站
   companyId: string;
+  brandId?: string | null;
   userId: string;
 }
 
@@ -392,7 +393,7 @@ export class ArticleStorageService {
    * 儲存生成的文章到資料庫
    */
   async saveArticle(params: SaveArticleParams): Promise<SavedArticle> {
-    const { articleJobId, websiteId, companyId, userId } = params;
+    const { articleJobId, websiteId, companyId, brandId, userId } = params;
     let { result } = params;
 
     // 驗證輸入
@@ -486,6 +487,7 @@ export class ArticleStorageService {
       article_job_id: articleJobId || null, // 允許 null，如果 job 不存在
       company_id: companyId,
       website_id: websiteId || null, // 允許 null，文章寫好後才決定發佈到哪個網站
+      brand_id: brandId || null,
       user_id: userId,
 
       // 文章內容

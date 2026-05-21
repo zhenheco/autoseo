@@ -19,6 +19,7 @@ import { normalizeSingleArticleGenerationInput } from "@/lib/article-jobs/job-in
 import { createSupabaseArticleJobGenerationService } from "@/lib/article-jobs/factory";
 import { articleJobGenerationSingleResponse } from "@/lib/article-jobs/api-response";
 import { singleArticleGenerationRequestSchema } from "@/lib/article-jobs/request-schema";
+import { BrandNotFoundError, QuotaExceededError } from "@/lib/quota/errors";
 
 export const maxDuration = 300;
 
@@ -101,6 +102,27 @@ export async function POST(request: NextRequest) {
 
     return articleJobGenerationSingleResponse(result);
   } catch (error) {
+    if (error instanceof QuotaExceededError) {
+      return NextResponse.json(
+        {
+          error: "quota_exceeded",
+          resource: error.resource,
+          used: error.used,
+          cap: error.cap,
+          plan: error.plan,
+          upgradeUrl: "/dashboard/settings#upgrade",
+        },
+        { status: 402 },
+      );
+    }
+
+    if (error instanceof BrandNotFoundError) {
+      return NextResponse.json(
+        { error: "brand_not_found", brandId: error.brandId ?? null },
+        { status: 404 },
+      );
+    }
+
     console.error("Generate article error:", error);
     return NextResponse.json(
       { error: "Internal server error", details: (error as Error).message },

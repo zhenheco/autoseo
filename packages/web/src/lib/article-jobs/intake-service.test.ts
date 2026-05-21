@@ -70,6 +70,7 @@ describe("createArticleJobIntakeService", () => {
       userId: "user-1",
       companyId: "company-1",
       websiteId: null,
+      brandId: "brand-1",
       items: [intakeItem],
     });
 
@@ -121,6 +122,7 @@ describe("createArticleJobIntakeService", () => {
       userId: "user-1",
       companyId: "company-1",
       websiteId: "website-1",
+      brandId: "brand-1",
       items: [intakeItem],
     });
 
@@ -129,10 +131,15 @@ describe("createArticleJobIntakeService", () => {
       jobId: "job-1",
       companyId: "company-1",
       websiteId: "website-1",
+      brandId: "brand-1",
       userId: "user-1",
       keywords: ["seo"],
       status: "pending",
-      metadata: intakeItem.metadata,
+      metadata: {
+        ...intakeItem.metadata,
+        brandId: "brand-1",
+        brand_id: "brand-1",
+      },
     });
     expect(reserveArticle).toHaveBeenCalledWith({
       companyId: "company-1",
@@ -179,6 +186,7 @@ describe("createArticleJobIntakeService", () => {
       userId: "user-1",
       companyId: "company-1",
       websiteId: null,
+      brandId: "brand-1",
       items: [intakeItem],
     });
 
@@ -219,6 +227,7 @@ describe("createArticleJobIntakeService", () => {
       userId: "user-1",
       companyId: "company-1",
       websiteId: null,
+      brandId: "brand-1",
       items: [intakeItem],
     });
 
@@ -258,6 +267,7 @@ describe("createArticleJobIntakeService", () => {
       userId: "user-1",
       companyId: "company-1",
       websiteId: null,
+      brandId: "brand-1",
       items: [
         {
           ...intakeItem,
@@ -273,6 +283,8 @@ describe("createArticleJobIntakeService", () => {
     expect(updateArticleJobMetadata).toHaveBeenCalledWith("job-1", {
       ...intakeItem.metadata,
       competitors: ["https://example.com"],
+      brandId: "brand-1",
+      brand_id: "brand-1",
       competitorAnalysis: [{ content: "strategy", provider: "perplexity" }],
     });
     expect(dispatchJobs).toHaveBeenCalledWith(["job-1"]);
@@ -311,6 +323,7 @@ describe("createArticleJobIntakeService", () => {
       userId: "user-1",
       companyId: "company-1",
       websiteId: null,
+      brandId: "brand-1",
       items: [
         {
           ...intakeItem,

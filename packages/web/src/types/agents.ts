@@ -321,6 +321,7 @@ export interface WritingInput {
   brandVoice: BrandVoice;
   previousArticles: PreviousArticle[];
   competitorAnalysis?: CompetitorAnalysisOutput;
+  brandMemoryPrompt?: string;
   model: string;
   temperature: number;
   maxTokens: number;
@@ -631,6 +632,7 @@ export interface ArticleGenerationInput {
   articleJobId: string;
   companyId: string;
   websiteId: string;
+  brandId?: string;
   userId?: string;
   title: string;
   region?: string;
@@ -727,6 +729,7 @@ export interface IntroductionInput {
   outline: Outline;
   featuredImage: GeneratedImage | null;
   brandVoice: BrandVoice;
+  brandMemoryPrompt?: string;
   targetLanguage?: string;
   model: string;
   temperature?: number;
@@ -764,6 +767,7 @@ export interface SectionInput {
   previousSummary?: string;
   sectionImage: GeneratedImage | null;
   brandVoice: BrandVoice;
+  brandMemoryPrompt?: string;
   targetLanguage?: string;
   index: number;
   model: string;
@@ -789,6 +793,7 @@ export interface SectionOutput {
 export interface ConclusionInput {
   outline: Outline;
   brandVoice: BrandVoice;
+  brandMemoryPrompt?: string;
   targetLanguage?: string;
   model: string;
   temperature?: number;
@@ -811,6 +816,7 @@ export interface QAInput {
   title: string;
   outline: Outline;
   brandVoice: BrandVoice;
+  brandMemoryPrompt?: string;
   targetLanguage?: string;
   count?: number;
   model: string;

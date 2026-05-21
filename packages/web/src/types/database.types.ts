@@ -1462,6 +1462,7 @@ export type Database = {
           job_id: string;
           company_id: string | null;
           website_id: string | null;
+          brand_id: string | null;
           user_id: string | null;
           keywords: string[];
           region: string;
@@ -1500,6 +1501,7 @@ export type Database = {
           job_id?: string;
           company_id?: string | null;
           website_id?: string | null;
+          brand_id?: string | null;
           user_id?: string | null;
           keywords: string[];
           region?: string;
@@ -1538,6 +1540,7 @@ export type Database = {
           job_id?: string;
           company_id?: string | null;
           website_id?: string | null;
+          brand_id?: string | null;
           user_id?: string | null;
           keywords?: string[];
           region?: string;
@@ -1577,6 +1580,13 @@ export type Database = {
             columns: ["audit_issue_id"];
             isOneToOne: false;
             referencedRelation: "audit_issues";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "article_jobs_brand_id_fkey";
+            columns: ["brand_id"];
+            isOneToOne: false;
+            referencedRelation: "brands";
             referencedColumns: ["id"];
           },
           {

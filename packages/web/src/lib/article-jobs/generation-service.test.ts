@@ -78,6 +78,8 @@ const normalizedInput: Extract<
 >["data"] = {
   websiteId: null,
   hasWebsiteIdField: false,
+  brandId: "brand-1",
+  hasBrandIdField: true,
   items: [
     {
       keyword: "seo",
@@ -143,6 +145,7 @@ describe("createArticleJobGenerationService", () => {
       userId: "user-1",
       companyId: "company-1",
       websiteId: "website-1",
+      brandId: "brand-1",
       items: normalizedInput.items,
     });
   });

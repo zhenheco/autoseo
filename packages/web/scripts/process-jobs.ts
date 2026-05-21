@@ -94,6 +94,7 @@ async function main() {
       id,
       company_id,
       website_id,
+      brand_id,
       status,
       keywords,
       metadata,
@@ -177,6 +178,10 @@ async function main() {
         articleJobId: job.id,
         companyId: job.company_id,
         websiteId: job.website_id,
+        brandId:
+          job.brand_id ||
+          (metadata?.brandId as string | undefined) ||
+          (metadata?.brand_id as string | undefined),
         title: title,
         targetLanguage: metadata?.targetLanguage as string | undefined,
         language: metadata?.language as string | undefined,

@@ -3,7 +3,10 @@ import { dispatchArticleJobs } from "./dispatch";
 import { createArticleJobGenerationService } from "./generation-service";
 import { createArticleJobIntakeService } from "./intake-service";
 import { createArticleJobQuotaGateway } from "./quota";
+import { createQuotaEnforcer, type QuotaEnforcer } from "@/lib/quota/enforcer";
+import { resolveQuotaPlan } from "@/lib/quota/plan-resolver";
 import {
+  createSupabaseArticleJobBrandRepository,
   createSupabaseArticleJobCompanyRepository,
   createSupabaseArticleJobRecordRepository,
   createSupabaseArticleJobSubscriptionRepository,
@@ -20,6 +23,7 @@ export interface CreateSupabaseArticleJobGenerationServiceInput {
   };
   createJobId: () => string;
   dispatchTimeoutMs?: number;
+  quotaEnforcer?: QuotaEnforcer;
 }
 
 export function createSupabaseArticleJobGenerationService({
@@ -28,6 +32,7 @@ export function createSupabaseArticleJobGenerationService({
   github,
   createJobId,
   dispatchTimeoutMs,
+  quotaEnforcer,
 }: CreateSupabaseArticleJobGenerationServiceInput) {
   const recordRepository = createSupabaseArticleJobRecordRepository(supabase);
   const intakeService = createArticleJobIntakeService({
@@ -53,6 +58,14 @@ export function createSupabaseArticleJobGenerationService({
     subscriptionRepository:
       createSupabaseArticleJobSubscriptionRepository(supabase),
     websiteRepository: createSupabaseArticleJobWebsiteRepository(supabase),
+    brandRepository: createSupabaseArticleJobBrandRepository(supabase),
+    quotaEnforcer:
+      quotaEnforcer ??
+      createQuotaEnforcer({
+        supabase: supabase as never,
+        resolvePlan: (companyId) =>
+          resolveQuotaPlan(supabase as never, companyId),
+      }),
     intakeService,
   });
 }

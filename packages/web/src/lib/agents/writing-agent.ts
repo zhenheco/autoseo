@@ -161,6 +161,8 @@ export class WritingAgent extends BaseAgent<WritingInput, WritingOutput> {
 
     const prompt = `${personaSection}
 
+${input.brandMemoryPrompt ? `${input.brandMemoryPrompt}\n` : ""}
+
 # Your Task
 Write a complete article for "${strategy.selectedTitle}".
 

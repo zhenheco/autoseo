@@ -1,6 +1,13 @@
 import { createAdminClient } from "@shared/supabase";
 import { SupabaseClient } from "@supabase/supabase-js";
 import { ArticleStorageService } from "@/lib/services/article-storage";
+import {
+  createBrandMemoryStore,
+  type BrandMemoryStore,
+} from "@/lib/brands/memory-store";
+import { createQuotaEnforcer, type QuotaEnforcer } from "@/lib/quota/enforcer";
+import { QuotaExceededError } from "@/lib/quota/errors";
+import { resolveQuotaPlan } from "@/lib/quota/plan-resolver";
 import { ResearchAgent } from "./research-agent";
 import { StrategyAgent } from "./strategy-agent";
 import { WritingAgent } from "./writing-agent";
@@ -55,14 +62,37 @@ import type {
 } from "@/types/agents";
 import { AgentExecutionContext } from "./base-agent";
 
+export { QuotaExceededError } from "@/lib/quota/errors";
+
+interface ParallelOrchestratorDependencies {
+  brandMemoryStore?: BrandMemoryStore;
+  quotaEnforcer?: QuotaEnforcer;
+  resolveDefaultBrandId?: (
+    companyId: string,
+    supabase: SupabaseClient,
+  ) => Promise<string | null>;
+}
+
 export class ParallelOrchestrator {
   private supabaseClient?: SupabaseClient;
   private errorTracker: ErrorTracker;
   private pipelineLogger?: PipelineLogger;
   private currentJobId?: string;
+  private brandMemoryStore?: BrandMemoryStore;
+  private quotaEnforcer?: QuotaEnforcer;
+  private readonly resolveDefaultBrandIdOverride?: (
+    companyId: string,
+    supabase: SupabaseClient,
+  ) => Promise<string | null>;
 
-  constructor(supabaseClient?: SupabaseClient) {
+  constructor(
+    supabaseClient?: SupabaseClient,
+    dependencies: ParallelOrchestratorDependencies = {},
+  ) {
     this.supabaseClient = supabaseClient;
+    this.brandMemoryStore = dependencies.brandMemoryStore;
+    this.quotaEnforcer = dependencies.quotaEnforcer;
+    this.resolveDefaultBrandIdOverride = dependencies.resolveDefaultBrandId;
     this.errorTracker = new ErrorTracker({
       enableLogging: true,
       enableMetrics: true,
@@ -96,6 +126,110 @@ export class ParallelOrchestrator {
       return this.supabaseClient;
     }
     return createAdminClient();
+  }
+
+  private getBrandMemoryStore(supabase: SupabaseClient): BrandMemoryStore {
+    if (!this.brandMemoryStore) {
+      this.brandMemoryStore = createBrandMemoryStore({
+        supabase: supabase as never,
+      });
+    }
+
+    return this.brandMemoryStore;
+  }
+
+  private getQuotaEnforcer(supabase: SupabaseClient): QuotaEnforcer {
+    if (!this.quotaEnforcer) {
+      this.quotaEnforcer = createQuotaEnforcer({
+        supabase: supabase as never,
+        resolvePlan: (companyId) =>
+          resolveQuotaPlan(supabase as never, companyId),
+      });
+    }
+
+    return this.quotaEnforcer;
+  }
+
+  private async resolveBrandId(
+    input: ArticleGenerationInput,
+    supabase: SupabaseClient,
+  ): Promise<string> {
+    if (input.brandId) {
+      return input.brandId;
+    }
+
+    console.warn(
+      "[Orchestrator] Deprecated generation input without brandId; using company default brand",
+    );
+
+    const defaultBrandId = this.resolveDefaultBrandIdOverride
+      ? await this.resolveDefaultBrandIdOverride(input.companyId, supabase)
+      : await this.resolveDefaultBrandId(input.companyId, supabase);
+
+    if (!defaultBrandId) {
+      throw new Error("brand_id_required");
+    }
+
+    return defaultBrandId;
+  }
+
+  private async resolveDefaultBrandId(
+    companyId: string,
+    supabase: SupabaseClient,
+  ): Promise<string | null> {
+    const { data, error } = await supabase
+      .from("brands")
+      .select("id")
+      .eq("company_id", companyId)
+      .eq("is_default", true)
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      throw new Error(`default_brand_lookup_failed: ${error.message}`);
+    }
+
+    return typeof data?.id === "string" ? data.id : null;
+  }
+
+  private async assertArticleQuota(
+    companyId: string,
+    supabase: SupabaseClient,
+  ): Promise<void> {
+    const result = await this.getQuotaEnforcer(supabase).canConsume(
+      companyId,
+      "articles",
+      1,
+    );
+
+    if (!result.allowed) {
+      throw new QuotaExceededError({
+        resource: "articles",
+        used: result.used,
+        cap: result.cap,
+        plan: result.plan,
+      });
+    }
+  }
+
+  private async consumeArticleQuota(
+    companyId: string,
+    supabase: SupabaseClient,
+  ): Promise<void> {
+    const result = await this.getQuotaEnforcer(supabase).consume(
+      companyId,
+      "articles",
+      1,
+    );
+
+    if (!result.allowed) {
+      throw new QuotaExceededError({
+        resource: "articles",
+        used: result.used,
+        cap: result.cap,
+        plan: result.plan,
+      });
+    }
   }
 
   /**
@@ -185,6 +319,11 @@ export class ParallelOrchestrator {
           );
         }
       }
+
+      const brandId = await this.resolveBrandId(input, supabase);
+      await this.assertArticleQuota(input.companyId, supabase);
+      const brandMemoryPrompt =
+        await this.getBrandMemoryStore(supabase).getPromptInjection(brandId);
 
       let currentPhase = jobData?.metadata?.current_phase;
       const savedState = jobData?.metadata;
@@ -552,6 +691,7 @@ export class ParallelOrchestrator {
               contentPlan,
               researchOutput,
               materialsProfile,
+              brandMemoryPrompt,
             );
 
             console.log(
@@ -578,6 +718,7 @@ export class ParallelOrchestrator {
                 competitorAnalysis,
                 targetLanguage,
                 targetRegion,
+                brandMemoryPrompt,
               ),
               imageOutput ||
                 this.executeImageAgent(
@@ -603,6 +744,7 @@ export class ParallelOrchestrator {
               competitorAnalysis,
               targetLanguage,
               targetRegion,
+              brandMemoryPrompt,
             ),
             this.executeImageAgent(
               strategyOutput,
@@ -862,6 +1004,10 @@ export class ParallelOrchestrator {
         parallelSpeedup,
       };
 
+      if (result.success) {
+        await this.consumeArticleQuota(input.companyId, supabase);
+      }
+
       const finalStatus = result.success ? "completed" : "failed";
       await this.updateJobStatus(input.articleJobId, finalStatus, result);
 
@@ -937,6 +1083,7 @@ export class ParallelOrchestrator {
               result,
               websiteId: input.websiteId,
               companyId: input.companyId,
+              brandId,
               userId,
             });
 
@@ -1103,6 +1250,7 @@ export class ParallelOrchestrator {
     competitorAnalysis?: CompetitorAnalysisOutput,
     targetLanguage?: string,
     targetRegion?: string,
+    brandMemoryPrompt?: string,
   ) {
     if (!strategyOutput) throw new Error("Strategy output is required");
 
@@ -1112,6 +1260,7 @@ export class ParallelOrchestrator {
       brandVoice,
       previousArticles,
       competitorAnalysis,
+      brandMemoryPrompt,
       model: agentConfig.writing_model,
       temperature: agentConfig.writing_temperature,
       maxTokens: agentConfig.writing_max_tokens,
@@ -1204,6 +1353,7 @@ export class ParallelOrchestrator {
     contentPlan?: ContentPlanOutput,
     researchOutput?: ResearchOutput,
     materialsProfile?: MaterialsProfile,
+    brandMemoryPrompt?: string,
   ) {
     if (!strategyOutput) throw new Error("Strategy output is required");
 
@@ -1331,6 +1481,7 @@ export class ParallelOrchestrator {
             outline,
             featuredImage: imageOutput?.featuredImage || null,
             brandVoice,
+            brandMemoryPrompt,
             targetLanguage,
             contentContext,
             researchSummary,
@@ -1349,6 +1500,7 @@ export class ParallelOrchestrator {
           return agent.execute({
             outline,
             brandVoice,
+            brandMemoryPrompt,
             targetLanguage,
             contentContext,
             researchHighlights,
@@ -1367,6 +1519,7 @@ export class ParallelOrchestrator {
             title: selectedTitle,
             outline,
             brandVoice,
+            brandMemoryPrompt,
             targetLanguage,
             contentContext,
             userQuestions,
@@ -1439,6 +1592,7 @@ export class ParallelOrchestrator {
               previousSummary: undefined,
               sectionImage,
               brandVoice,
+              brandMemoryPrompt,
               targetLanguage,
               contentContext,
               specialBlock,

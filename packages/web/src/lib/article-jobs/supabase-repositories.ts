@@ -184,6 +184,39 @@ export function createSupabaseArticleJobWebsiteRepository(
   };
 }
 
+export interface ArticleJobBrandRepository {
+  findDefaultBrandId(companyId: string): Promise<string | null>;
+  findBrandCompanyId(brandId: string): Promise<string | null>;
+}
+
+export function createSupabaseArticleJobBrandRepository(
+  supabase: SupabaseRepositoryClient,
+): ArticleJobBrandRepository {
+  return {
+    async findDefaultBrandId(companyId) {
+      const { data } = await supabase
+        .from("brands")
+        .select("id")
+        .eq("company_id", companyId)
+        .eq("is_default", true)
+        .limit(1)
+        .maybeSingle<{ id: string }>();
+
+      return data?.id ?? null;
+    },
+
+    async findBrandCompanyId(brandId) {
+      const { data } = await supabase
+        .from("brands")
+        .select("company_id")
+        .eq("id", brandId)
+        .maybeSingle<{ company_id: string }>();
+
+      return data?.company_id ?? null;
+    },
+  };
+}
+
 export function createSupabaseArticleJobSubscriptionRepository(
   supabase: SupabaseRepositoryClient,
 ): ArticleJobSubscriptionRepository {
@@ -252,6 +285,7 @@ export function createSupabaseArticleJobRecordRepository(
         job_id: input.jobId,
         company_id: input.companyId,
         website_id: input.websiteId,
+        brand_id: input.brandId,
         user_id: input.userId,
         keywords: input.keywords,
         status: input.status,

@@ -30,7 +30,11 @@ export class ConclusionAgent extends BaseAgent<
 
     const conclusionStyleSection = getConclusionStyle(brandVoice.writing_style);
 
-    const prompt = `${topicAlignment ? `${topicAlignment}\n` : ""}${researchHighlightsSection}
+    const brandMemorySection = input.brandMemoryPrompt
+      ? `${input.brandMemoryPrompt}\n\n`
+      : "";
+
+    const prompt = `${brandMemorySection}${topicAlignment ? `${topicAlignment}\n` : ""}${researchHighlightsSection}
 Write an article conclusion.
 
 ${langInstructions}

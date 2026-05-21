@@ -171,7 +171,11 @@ Example format:
 
     const langInstructions = buildLanguageInstructions(targetLang);
 
-    const prompt = `${topicAlignmentSection ? `${topicAlignmentSection}\n` : ""}${researchDataSection}
+    const brandMemorySection = input.brandMemoryPrompt
+      ? `${input.brandMemoryPrompt}\n\n`
+      : "";
+
+    const prompt = `${brandMemorySection}${topicAlignmentSection ? `${topicAlignmentSection}\n` : ""}${researchDataSection}
 Write an article section.
 
 ${langInstructions}

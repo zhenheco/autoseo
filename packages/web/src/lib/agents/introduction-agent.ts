@@ -73,7 +73,11 @@ export class IntroductionAgent extends BaseAgent<
       materialsProfile,
     );
 
-    const prompt = `${topicAlignment ? `${topicAlignment}\n` : ""}${researchSummarySection}
+    const brandMemorySection = input.brandMemoryPrompt
+      ? `${input.brandMemoryPrompt}\n\n`
+      : "";
+
+    const prompt = `${brandMemorySection}${topicAlignment ? `${topicAlignment}\n` : ""}${researchSummarySection}
 Write an article introduction.
 
 ${langInstructions}

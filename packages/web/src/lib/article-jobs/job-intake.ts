@@ -88,6 +88,8 @@ export interface ArticleJobIntakeItem {
     totalBatch?: number;
     targetLanguage?: string;
     wordCount?: string;
+    brandId?: string;
+    brand_id?: string;
   };
 }
 
@@ -95,6 +97,8 @@ export interface NormalizedArticleJobIntakeInput {
   items: ArticleJobIntakeItem[];
   websiteId: string | null;
   hasWebsiteIdField: boolean;
+  brandId: string | null;
+  hasBrandIdField: boolean;
 }
 
 export type ArticleJobInputNormalizationResult =
@@ -191,6 +195,7 @@ export interface ArticleJobInsertRecord {
   jobId: string;
   companyId: string;
   websiteId: string | null;
+  brandId: string;
   userId: string;
   keywords: string[];
   status: "pending";
@@ -280,6 +285,11 @@ export function normalizeSingleArticleGenerationInput(
     : [];
   const writingStyle = asNonEmptyString(body.writing_style);
   const mode = asNonEmptyString(body.mode) || "single";
+  const hasBrandIdField =
+    Object.prototype.hasOwnProperty.call(body, "brandId") ||
+    Object.prototype.hasOwnProperty.call(body, "brand_id");
+  const brandId =
+    asNonEmptyString(body.brandId) || asNonEmptyString(body.brand_id);
 
   return {
     success: true,
@@ -296,11 +306,14 @@ export function normalizeSingleArticleGenerationInput(
             language: language || null,
             competitors,
             writing_style: writingStyle || null,
+            ...(brandId ? { brandId, brand_id: brandId } : {}),
           },
         },
       ],
       websiteId,
       hasWebsiteIdField,
+      brandId,
+      hasBrandIdField,
     },
   };
 }
@@ -346,6 +359,16 @@ export function normalizeBatchArticleGenerationInput(
   const websiteId = hasWebsiteIdField
     ? asNonEmptyString(body.website_id) || null
     : null;
+  const hasBrandIdField =
+    Object.prototype.hasOwnProperty.call(body, "brandId") ||
+    Object.prototype.hasOwnProperty.call(body, "brand_id") ||
+    Object.prototype.hasOwnProperty.call(options, "brandId") ||
+    Object.prototype.hasOwnProperty.call(options, "brand_id");
+  const brandId =
+    asNonEmptyString(body.brandId) ||
+    asNonEmptyString(body.brand_id) ||
+    asNonEmptyString(options.brandId) ||
+    asNonEmptyString(options.brand_id);
 
   return {
     success: true,
@@ -365,10 +388,13 @@ export function normalizeBatchArticleGenerationInput(
           totalBatch: rawItems.length,
           targetLanguage,
           wordCount,
+          ...(brandId ? { brandId, brand_id: brandId } : {}),
         },
       })),
       websiteId,
       hasWebsiteIdField,
+      brandId,
+      hasBrandIdField,
     },
   };
 }
