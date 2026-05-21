@@ -76,6 +76,14 @@ export type FunnelEvent =
         plan: string;
         threshold: number;
       };
+    }
+  | {
+      name: "automation_cron_run";
+      properties: {
+        count: number;
+        brandsProcessed: number;
+        quotaExceeded: number;
+      };
     };
 
 // ================================================

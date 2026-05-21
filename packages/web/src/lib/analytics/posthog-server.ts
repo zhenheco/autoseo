@@ -95,3 +95,20 @@ export function captureCardQuotaWarning(properties: {
     properties,
   });
 }
+
+export async function captureAutomationCronRun(properties: {
+  count: number;
+  brandsProcessed: number;
+  quotaExceeded: number;
+}): Promise<void> {
+  const posthog = getPostHogServerClient();
+  if (!posthog) return;
+
+  posthog.capture({
+    distinctId: "automation-cron",
+    event: "automation_cron_run",
+    properties,
+  });
+
+  await posthog.flush();
+}

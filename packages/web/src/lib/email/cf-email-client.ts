@@ -69,6 +69,29 @@ export async function enqueueOpsAlertEmail(input: {
   });
 }
 
+export async function sendAutomationQuotaWarningEmail(input: {
+  to: string;
+  brandName: string;
+  runDate: string;
+  idempotencyKey: string;
+}): Promise<{ ok: boolean; messageId?: string; error?: string }> {
+  const text = [
+    `Your automated article schedule for ${input.brandName} could not create new articles on ${input.runDate} because the article quota has been used up.`,
+    "Upgrade your plan or add article credits to resume automated generation.",
+  ].join("\n\n");
+
+  return sendCfEmail({
+    to: input.to,
+    template: {
+      subject: "Automated article generation paused: quota reached",
+      text,
+      html: `<p>${escapeHtml(text).replace(/\n\n/g, "</p><p>")}</p>`,
+    },
+    idempotencyKey: input.idempotencyKey,
+    tags: ["automation", "quota-warning"],
+  });
+}
+
 export async function addCfEmailSubscriber(input: {
   email: string;
   list: string;

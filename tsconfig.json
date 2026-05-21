@@ -1,0 +1,12 @@
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["packages/web/src/*"],
+      "@shared/*": ["packages/shared/src/*"],
+      "@audit": ["packages/audit/src/index.ts"],
+      "@audit/*": ["packages/audit/src/*"],
+      "@seo/edge": ["packages/edge/src/worker.ts"]
+    }
+  }
+}

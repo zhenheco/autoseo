@@ -12,6 +12,7 @@
     "clean": "turbo clean && rm -rf node_modules"
   },
   "devDependencies": {
+    "tsx": "^4.20.6",
     "turbo": "^2.0.0",
     "typescript": "^5.5.0"
   },
