@@ -84,7 +84,7 @@ export function statText(article: GeneratedArticle): {
 }
 
 function extractBullets(content: string): string[] {
-  const htmlListItems = [...content.matchAll(/<li[^>]*>(.*?)<\/li>/gis)].map(
+  const htmlListItems = [...content.matchAll(/<li[^>]*>([\s\S]*?)<\/li>/gi)].map(
     (match) => stripTags(match[1] ?? ""),
   );
   const markdownBullets = content

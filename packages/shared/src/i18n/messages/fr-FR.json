@@ -2131,6 +2131,67 @@
           ]
         }
       }
+    },
+    "faq": {
+      "eyebrow": "TODO: FAQ",
+      "headline": "TODO: Questions before you start.",
+      "subheadline": "TODO: Clear answers on trial, billing, publishing, exports, and how the flywheel learns.",
+      "items": [
+        {
+          "question": "TODO: How does the 7-day trial work?",
+          "answer": "TODO: Start a trial from any plan and use the product for 7 days before the first subscription charge."
+        },
+        {
+          "question": "TODO: How many brands can I have?",
+          "answer": "TODO: Brand capacity depends on your plan. Solo is designed for one focused workspace, while Pro supports teams that manage more brands."
+        },
+        {
+          "question": "TODO: Does international credit card work?",
+          "answer": "TODO: International Visa, Mastercard, and JCB cards are supported when the issuing bank allows cross-border online payments."
+        },
+        {
+          "question": "TODO: Will I get a Taiwan invoice (Amego)?",
+          "answer": "TODO: Taiwan invoice issuance is handled through Amego for eligible paid subscriptions."
+        },
+        {
+          "question": "TODO: How do I cancel?",
+          "answer": "TODO: You can cancel from billing settings and keep access until the end of the current paid period or trial window."
+        },
+        {
+          "question": "TODO: Which languages are supported?",
+          "answer": "TODO: The workflow is built around Traditional Chinese, English, Japanese, Korean, German, Spanish, and French."
+        },
+        {
+          "question": "TODO: Which social platforms?",
+          "answer": "TODO: The content flywheel is designed for Instagram, Facebook, Threads, and X."
+        },
+        {
+          "question": "TODO: What is the audit feature?",
+          "answer": "TODO: The audit feature checks a website or store for SEO issues and helps turn findings into content work."
+        },
+        {
+          "question": "TODO: Can I export my articles?",
+          "answer": "TODO: Articles remain accessible in your workspace and can be copied or exported for your own publishing workflows."
+        },
+        {
+          "question": "TODO: How does Brand Memory improve over time?",
+          "answer": "TODO: Brand Memory stores voice, audience, offers, and content lessons for reuse in future prompts and outputs."
+        }
+      ]
+    },
+    "finalCta": {
+      "eyebrow": "TODO: Start your next cycle",
+      "headline": "TODO: Ready to start your content flywheel?",
+      "subheadline": "TODO: Launch with a 7-day trial, or leave an email for product updates without starting a trial.",
+      "primaryCta": "TODO: Start 7-day free trial",
+      "emailLabel": "TODO: Email address",
+      "emailPlaceholder": "you@example.com",
+      "emailSubmit": "TODO: Subscribe",
+      "emailHelp": "TODO: Newsletter only. This is separate from the trial and will never block signup.",
+      "invalidEmail": "TODO: Enter a valid email address.",
+      "success": "TODO: You are subscribed.",
+      "duplicate": "TODO: You are already subscribed.",
+      "error": "TODO: Subscription failed. Please try again."
     }
   },
   "faq": {

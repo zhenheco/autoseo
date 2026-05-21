@@ -2030,6 +2030,67 @@
           ]
         }
       }
+    },
+    "faq": {
+      "eyebrow": "常見問題",
+      "headline": "開始前，你可能會想確認的事。",
+      "subheadline": "關於試用、付款、發票、發布平台、匯出與品牌記憶的簡短說明。",
+      "items": [
+        {
+          "question": "7 天免費試用如何運作？",
+          "answer": "你可以從任一方案開始試用，前 7 天先體驗產品，試用期結束後才會進入訂閱扣款。若不想續用，可在試用結束前到帳務設定取消。"
+        },
+        {
+          "question": "我可以建立幾個品牌？",
+          "answer": "品牌數量會依方案而定。Solo 適合經營一個聚焦工作區，Pro 則適合需要管理更多品牌與發布流程的團隊。"
+        },
+        {
+          "question": "可以使用海外信用卡嗎？",
+          "answer": "可以。只要發卡銀行允許跨境線上交易，Visa、Mastercard 與 JCB 等國際信用卡都可透過金流服務付款。"
+        },
+        {
+          "question": "會開立台灣發票（Amego）嗎？",
+          "answer": "會。符合條件的付費訂閱會透過 Amego 依結帳時提供的資料開立台灣電子發票。"
+        },
+        {
+          "question": "我要如何取消？",
+          "answer": "你可以在帳務設定中取消訂閱。取消後，仍可使用到目前付費週期或試用期結束。"
+        },
+        {
+          "question": "支援哪些語言？",
+          "answer": "目前 landing page 內容流程以七個語系為基礎：繁體中文、英文、日文、韓文、德文、西班牙文與法文。"
+        },
+        {
+          "question": "支援哪些社群平台？",
+          "answer": "內容飛輪以 Instagram、Facebook、Threads 與 X 為主要社群發布場景，支援可重複使用的圖卡與平台文案。"
+        },
+        {
+          "question": "Audit 功能是什麼？",
+          "answer": "Audit 功能會檢查網站或商店的 SEO 問題，指出需要優先處理的項目，並協助把問題轉成後續內容任務。"
+        },
+        {
+          "question": "可以匯出文章嗎？",
+          "answer": "可以。文章會保留在你的工作區，也能複製或匯出到自己的 CMS 與發布流程中使用。"
+        },
+        {
+          "question": "Brand Memory 會如何隨時間變好？",
+          "answer": "Brand Memory 會累積品牌語氣、受眾、賣點與內容成效洞察。發布與回顧越多，後續提示詞與輸出就越能沿用這些脈絡。"
+        }
+      ]
+    },
+    "finalCta": {
+      "eyebrow": "啟動下一輪內容",
+      "headline": "Ready to start your content flywheel?",
+      "subheadline": "直接開始 7 天免費試用，或只留下 email 接收產品更新，兩者彼此獨立。",
+      "primaryCta": "免費試用 7 天",
+      "emailLabel": "Email 地址",
+      "emailPlaceholder": "you@example.com",
+      "emailSubmit": "訂閱",
+      "emailHelp": "這只是電子報訂閱，和試用流程分開，不會影響註冊。",
+      "invalidEmail": "請輸入有效的 Email 地址。",
+      "success": "你已完成訂閱。",
+      "duplicate": "這個 Email 已經訂閱過了。",
+      "error": "訂閱失敗，請稍後再試。"
     }
   },
   "faq": {

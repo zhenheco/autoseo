@@ -2030,6 +2030,67 @@
           ]
         }
       }
+    },
+    "faq": {
+      "eyebrow": "FAQ",
+      "headline": "Questions before you start.",
+      "subheadline": "Clear answers on trial, billing, publishing, exports, and how the flywheel learns.",
+      "items": [
+        {
+          "question": "How does the 7-day trial work?",
+          "answer": "Start a trial from any plan and use the product for 7 days before the first subscription charge. You can cancel before the trial ends from billing settings."
+        },
+        {
+          "question": "How many brands can I have?",
+          "answer": "Brand capacity depends on your plan. Solo is designed for one focused workspace, while Pro supports teams that manage more brands and publishing workflows."
+        },
+        {
+          "question": "Does international credit card work?",
+          "answer": "Yes. International Visa, Mastercard, and JCB cards are supported through the payment processor when the issuing bank allows cross-border online payments."
+        },
+        {
+          "question": "Will I get a Taiwan invoice (Amego)?",
+          "answer": "Yes. Taiwan invoice issuance is handled through Amego for eligible paid subscriptions, using the billing information provided during checkout."
+        },
+        {
+          "question": "How do I cancel?",
+          "answer": "You can cancel from billing settings. Access remains available until the end of the current paid period or trial window."
+        },
+        {
+          "question": "Which languages are supported?",
+          "answer": "The landing page workflow is built around seven locales: Traditional Chinese, English, Japanese, Korean, German, Spanish, and French."
+        },
+        {
+          "question": "Which social platforms?",
+          "answer": "The content flywheel is designed for Instagram, Facebook, Threads, and X, with reusable visual cards and platform-ready copy."
+        },
+        {
+          "question": "What is the audit feature?",
+          "answer": "The audit feature checks a website or store for SEO issues, highlights what needs attention, and helps turn findings into follow-up content work."
+        },
+        {
+          "question": "Can I export my articles?",
+          "answer": "Yes. Articles remain accessible in your workspace and can be copied or exported for use in your own CMS and publishing workflows."
+        },
+        {
+          "question": "How does Brand Memory improve over time?",
+          "answer": "Brand Memory stores voice, audience, offers, and content lessons. As you publish and review performance, those signals can be reused in future prompts and outputs."
+        }
+      ]
+    },
+    "finalCta": {
+      "eyebrow": "Start your next cycle",
+      "headline": "Ready to start your content flywheel?",
+      "subheadline": "Launch with a 7-day trial, or leave an email for product updates without starting a trial.",
+      "primaryCta": "Start 7-day free trial",
+      "emailLabel": "Email address",
+      "emailPlaceholder": "you@example.com",
+      "emailSubmit": "Subscribe",
+      "emailHelp": "Newsletter only. This is separate from the trial and will never block signup.",
+      "invalidEmail": "Enter a valid email address.",
+      "success": "You are subscribed.",
+      "duplicate": "You are already subscribed.",
+      "error": "Subscription failed. Please try again."
     }
   },
   "faq": {

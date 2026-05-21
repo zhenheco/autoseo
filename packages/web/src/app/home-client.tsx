@@ -6,6 +6,8 @@ import { Navbar } from "@/components/layout/navbar";
 import { Hero as LegacyHero } from "@/components/home/hero";
 import { Hero as MarketingHero } from "@/components/marketing/Hero";
 import { Features } from "@/components/marketing/Features";
+import { FAQ } from "@/components/marketing/FAQ";
+import { FinalCTA } from "@/components/marketing/FinalCTA";
 import { HowItWorks } from "@/components/marketing/HowItWorks";
 import { Pain } from "@/components/marketing/Pain";
 import { Pricing } from "@/components/marketing/Pricing";
@@ -51,6 +53,8 @@ export function HomeClient({ plans, articlePackages }: PricingProps) {
             <Features />
             <SocialProof />
             <Pricing locale={locale} />
+            <FAQ />
+            <FinalCTA />
           </>
         ) : (
           <LegacyHero />

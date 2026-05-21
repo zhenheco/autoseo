@@ -69,6 +69,47 @@ export async function enqueueOpsAlertEmail(input: {
   });
 }
 
+export async function addCfEmailSubscriber(input: {
+  email: string;
+  list: string;
+}): Promise<{ ok: true } | { ok: false; status: number; error?: string }> {
+  const apiUrl = process.env.CF_EMAIL_API_URL;
+  const apiToken =
+    process.env.CF_EMAIL_API_TOKEN ?? process.env.CF_EMAIL_API_KEY;
+
+  if (!apiUrl || !apiToken) {
+    throw new Error("cf_email_not_configured");
+  }
+
+  const response = await fetch(resolveSubscribersUrl(apiUrl), {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "X-API-Key": apiToken,
+    },
+    body: JSON.stringify({
+      email: input.email,
+      list: input.list,
+    }),
+  });
+
+  if (response.ok) {
+    return { ok: true };
+  }
+
+  const body = await readResponseBody(response);
+  return {
+    ok: false,
+    status: response.status,
+    error:
+      typeof body?.error === "object" && body.error && "code" in body.error
+        ? String(body.error.code)
+        : response.status === 409
+          ? "already_subscribed"
+          : `cf_email_subscribe_failed_${response.status}`,
+  };
+}
+
 async function sendCfEmail(input: {
   to: string;
   template: { subject: string; html: string; text: string };
@@ -126,6 +167,11 @@ async function sendCfEmail(input: {
 function resolveSendUrl(apiUrl: string) {
   const trimmed = apiUrl.replace(/\/+$/, "");
   return trimmed.endsWith("/send") ? trimmed : `${trimmed}/send`;
+}
+
+function resolveSubscribersUrl(apiUrl: string) {
+  const trimmed = apiUrl.replace(/\/+$/, "");
+  return trimmed.endsWith("/subscribers") ? trimmed : `${trimmed}/subscribers`;
 }
 
 function renderTransactionalTemplate(template: TransactionalTemplateName): {

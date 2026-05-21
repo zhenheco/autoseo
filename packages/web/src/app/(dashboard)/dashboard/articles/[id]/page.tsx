@@ -80,10 +80,10 @@ export default async function ArticleDetailPage({
     ? article.generated_articles[0]
     : article?.generated_articles;
   const cardAssets = await getArticleCardAssets(generatedArticle?.id);
+  const cardQuotaExceeded = getCardQuotaExceeded(article?.metadata);
   const showManualSocialPack =
     !!generatedArticle?.id &&
     process.env.NEXT_PUBLIC_META_OAUTH_PUBLIC_ENABLED !== "true";
-  const cardQuotaExceeded = getCardQuotaExceeded(article?.metadata);
 
   if (!article) {
     redirect("/dashboard/articles?error=" + encodeURIComponent(t("notFound")));

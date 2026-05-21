@@ -91,6 +91,21 @@ const pricingKeys = [
   "plans.pro.description",
   "plans.pro.features",
 ];
+const faqKeys = ["eyebrow", "headline", "subheadline", "items"];
+const finalCtaKeys = [
+  "eyebrow",
+  "headline",
+  "subheadline",
+  "primaryCta",
+  "emailLabel",
+  "emailPlaceholder",
+  "emailSubmit",
+  "emailHelp",
+  "invalidEmail",
+  "success",
+  "duplicate",
+  "error",
+];
 
 function getNestedMessage(
   messages: Record<string, unknown>,
@@ -192,6 +207,46 @@ describe("lp pricing locale coverage", () => {
           expect(value).toEqual(expect.any(String));
           expect(value).not.toBe("");
         }
+      }
+    },
+  );
+});
+
+describe("lp faq locale coverage", () => {
+  it.each(Object.entries(localeMessages))(
+    "has lp.faq copy in %s",
+    (_locale, messages) => {
+      for (const key of faqKeys) {
+        const value = getNestedMessage(messages.lp.faq, key);
+
+        if (key === "items") {
+          expect(value).toEqual(
+            expect.arrayContaining([
+              expect.objectContaining({
+                question: expect.any(String),
+                answer: expect.any(String),
+              }),
+            ]),
+          );
+          expect(value).toHaveLength(10);
+        } else {
+          expect(value).toEqual(expect.any(String));
+          expect(value).not.toBe("");
+        }
+      }
+    },
+  );
+});
+
+describe("lp final CTA locale coverage", () => {
+  it.each(Object.entries(localeMessages))(
+    "has lp.finalCta copy in %s",
+    (_locale, messages) => {
+      for (const key of finalCtaKeys) {
+        const value = getNestedMessage(messages.lp.finalCta, key);
+
+        expect(value).toEqual(expect.any(String));
+        expect(value).not.toBe("");
       }
     },
   );
