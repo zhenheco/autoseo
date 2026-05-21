@@ -25,6 +25,7 @@ export function FooterSection() {
       links: [
         { name: tHome("privacy"), href: "/privacy" },
         { name: tHome("terms"), href: "/terms" },
+        { name: "FAQ", href: "/faq" },
       ],
     },
   ];

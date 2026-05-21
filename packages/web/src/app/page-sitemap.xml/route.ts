@@ -26,6 +26,7 @@ const STATIC_PAGES = [
   { path: "/register", priority: "0.5", changefreq: "monthly" as const },
   { path: "/terms", priority: "0.3", changefreq: "monthly" as const },
   { path: "/privacy", priority: "0.3", changefreq: "monthly" as const },
+  { path: "/faq", priority: "0.3", changefreq: "monthly" as const },
 ];
 
 /**
