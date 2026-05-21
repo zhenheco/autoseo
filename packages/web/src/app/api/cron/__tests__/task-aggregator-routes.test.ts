@@ -111,7 +111,11 @@ describe("cron task aggregator routes", () => {
 
   it("hourly tasks preserve scheduled publishing and pending job processing", async () => {
     process.env.CRON_SECRET = "cron-secret";
-    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(okJson({ published: 1 })));
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(okJson({ published: 1 }))
+      .mockResolvedValueOnce(okJson({ sent: 1 }));
+    vi.stubGlobal("fetch", fetchMock);
     articleProcessor.processPendingJobs.mockResolvedValue({ processed: 2 });
     const { GET } = await import("../hourly-tasks/route");
 
@@ -125,12 +129,23 @@ describe("cron task aggregator routes", () => {
           status: "completed",
           details: { published: 1 },
         },
+        processDunningSchedules: {
+          status: "completed",
+          details: { sent: 1 },
+        },
         processPendingJobs: {
           status: "completed",
           details: { processed: 2 },
         },
       },
     });
+    expect(fetchMock).toHaveBeenNthCalledWith(
+      2,
+      "https://app.test/api/cron/process-dunning-schedules",
+      {
+        headers: { authorization: "Bearer cron-secret" },
+      },
+    );
     expect(articleProcessor.processPendingJobs).toHaveBeenCalledTimes(1);
   });
 });

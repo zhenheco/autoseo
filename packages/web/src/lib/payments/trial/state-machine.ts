@@ -23,10 +23,12 @@ export type SideEffect =
         | "cancelled"
         | "expired"
         | "payment_failed"
-        | "payment_failed_d1";
+        | "payment_failed_d1"
+        | "payment_failed_d3"
+        | "payment_failed_d7";
     }
   | { kind: "mark_subscription_active"; stripeInvoiceId: string }
-  | { kind: "start_dunning" }
+  | { kind: "start_dunning"; stripeInvoiceId: string }
   | { kind: "downgrade_account" };
 
 export interface TransitionResult {
@@ -99,8 +101,7 @@ export function transition(
           ]);
         case "payment_failed":
           return stay(prev, [
-            { kind: "send_email", template: "payment_failed_d1" },
-            { kind: "start_dunning" },
+            { kind: "start_dunning", stripeInvoiceId: event.stripeInvoiceId },
           ]);
         case "expire_tick":
           return expired();
@@ -117,8 +118,7 @@ export function transition(
           ]);
         case "payment_failed":
           return stay(prev, [
-            { kind: "send_email", template: "payment_failed_d1" },
-            { kind: "start_dunning" },
+            { kind: "start_dunning", stripeInvoiceId: event.stripeInvoiceId },
           ]);
         default:
           return stay(prev);

@@ -16,6 +16,12 @@ const amegoJob = vi.hoisted(() => ({
   enqueueAmegoInvoiceIssue: vi.fn(),
 }));
 
+const dunning = vi.hoisted(() => ({
+  cancelDunning: vi.fn(),
+  createDunningScheduler: vi.fn(),
+  startDunning: vi.fn(),
+}));
+
 const analytics = vi.hoisted(() => ({
   captureTrialCardAdded: vi.fn(),
   captureTrialConverted: vi.fn(),
@@ -25,6 +31,7 @@ vi.mock("@/lib/payments/stripe/server", () => stripeServer);
 vi.mock("@shared/supabase", () => supabaseAdmin);
 vi.mock("@/lib/email/cf-email-client", () => emailClient);
 vi.mock("@/lib/payments/amego/job", () => amegoJob);
+vi.mock("@/lib/payments/dunning/scheduler", () => dunning);
 vi.mock("@/lib/analytics/posthog-server", () => analytics);
 
 type Row = Record<string, unknown>;
@@ -390,6 +397,12 @@ describe("Stripe webhook route", () => {
       ok: true,
       messageId: "email-1",
     });
+    dunning.startDunning.mockResolvedValue(undefined);
+    dunning.cancelDunning.mockResolvedValue(undefined);
+    dunning.createDunningScheduler.mockReturnValue({
+      startDunning: dunning.startDunning,
+      cancelDunning: dunning.cancelDunning,
+    });
     stripeServer.getStripeClient.mockReturnValue({
       verifyWebhookSignature: vi.fn((rawBody: string) => JSON.parse(rawBody)),
     });
@@ -513,6 +526,7 @@ describe("Stripe webhook route", () => {
     });
     expect(supabase.state.trials[0].converted_at).toBeTruthy();
     expect(supabase.state.company_subscriptions[0].status).toBe("active");
+    expect(dunning.cancelDunning).toHaveBeenCalledWith("in_TW");
     expect(analytics.captureTrialConverted).toHaveBeenCalledWith(
       expect.objectContaining({ amountUsd: 29, trialId: "trial-1" }),
     );
@@ -537,7 +551,7 @@ describe("Stripe webhook route", () => {
     expect(amegoJob.enqueueAmegoInvoiceIssue).not.toHaveBeenCalled();
   });
 
-  it("handles invoice.payment_failed by marking past_due and sending D-1 email", async () => {
+  it("handles invoice.payment_failed by marking past_due and starting dunning", async () => {
     const state = createSeedState();
     seedActiveTrial(state, "US");
     const supabase = createFakeSupabase(state);
@@ -548,13 +562,14 @@ describe("Stripe webhook route", () => {
 
     expect(response.status).toBe(200);
     expect(supabase.state.company_subscriptions[0].status).toBe("past_due");
-    expect(emailClient.enqueueTransactionalTemplateEmail).toHaveBeenCalledWith(
-      expect.objectContaining({
-        to: "buyer@example.com",
-        template: "payment_failed_d1",
-        idempotencyKey: "stripe:evt_payment_failed:payment_failed_d1",
-      }),
+    expect(dunning.startDunning).toHaveBeenCalledWith(
+      "in_failed",
+      "user-1",
+      "en",
     );
+    expect(
+      emailClient.enqueueTransactionalTemplateEmail,
+    ).not.toHaveBeenCalled();
   });
 
   it("handles customer.subscription.deleted by cancelling the subscription row", async () => {

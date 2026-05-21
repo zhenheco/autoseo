@@ -10,6 +10,7 @@ export const GET = withRouteAuth("cron", async (request: NextRequest) => {
     { status: string; error: string | null; details?: unknown }
   > = {
     processScheduledArticles: { status: "pending", error: null },
+    processDunningSchedules: { status: "pending", error: null },
     processPendingJobs: { status: "pending", error: null },
   };
 
@@ -43,6 +44,35 @@ export const GET = withRouteAuth("cron", async (request: NextRequest) => {
       results.processScheduledArticles.error =
         err instanceof Error ? err.message : "Unknown error";
       console.error("[Hourly Tasks] 排程發布錯誤:", err);
+    }
+
+    console.log("[Hourly Tasks] 處理 dunning email 排程...");
+    try {
+      const dunningResponse = await fetch(
+        `${process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000"}/api/cron/process-dunning-schedules`,
+        {
+          headers: { authorization: authHeader },
+        },
+      );
+
+      if (dunningResponse.ok) {
+        const data = await dunningResponse.json();
+        results.processDunningSchedules.status = "completed";
+        results.processDunningSchedules.details = data;
+        console.log("[Hourly Tasks] dunning 排程處理完成:", data);
+      } else {
+        results.processDunningSchedules.status = "failed";
+        results.processDunningSchedules.error = `HTTP ${dunningResponse.status}`;
+        console.error(
+          "[Hourly Tasks] dunning 排程處理失敗:",
+          dunningResponse.status,
+        );
+      }
+    } catch (err) {
+      results.processDunningSchedules.status = "failed";
+      results.processDunningSchedules.error =
+        err instanceof Error ? err.message : "Unknown error";
+      console.error("[Hourly Tasks] dunning 排程處理錯誤:", err);
     }
 
     console.log("[Hourly Tasks] 處理待處理的文章生成任務...");

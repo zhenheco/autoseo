@@ -55,8 +55,7 @@ const convertedCancelEffects: SideEffect[] = [
   { kind: "downgrade_account" },
 ];
 const convertedPaymentFailedEffects: SideEffect[] = [
-  { kind: "send_email", template: "payment_failed_d1" },
-  { kind: "start_dunning" },
+  { kind: "start_dunning", stripeInvoiceId: "in_failed" },
 ];
 
 function expectTransition(
@@ -84,8 +83,7 @@ const matrix = {
     invoice_paid: expectTransition("active", "converted", convertedEffects),
     cancel_requested: expectTransition("active", "cancelled", cancelledEmail),
     payment_failed: expectTransition("active", "active", [
-      { kind: "send_email", template: "payment_failed_d1" },
-      { kind: "start_dunning" },
+      { kind: "start_dunning", stripeInvoiceId: "in_failed" },
     ]),
     expire_tick: expectTransition("active", "expired", expiredEffects),
   },

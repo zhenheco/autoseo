@@ -11,6 +11,7 @@ import {
 } from "@/lib/email/cf-email-client";
 import type { AmegoIssueInput } from "@/lib/payments/amego/adapter";
 import { enqueueAmegoInvoiceIssue } from "@/lib/payments/amego/job";
+import { createDunningScheduler } from "@/lib/payments/dunning/scheduler";
 import { getStripeClient } from "@/lib/payments/stripe/server";
 import {
   transition,
@@ -37,6 +38,7 @@ type WebhookContext = {
   subscription?: CompanySubscriptionRow | null;
   email?: string;
   billingCountry?: string;
+  locale?: string;
 };
 
 type Metadata = Record<string, string>;
@@ -351,6 +353,9 @@ async function handleInvoicePaid(
     context,
     sideEffects: result.sideEffects,
   });
+  await createDunningScheduler({ supabase: supabase as never }).cancelDunning(
+    stripeInvoiceId,
+  );
 
   if (amegoPayload) {
     enqueueAmegoInvoiceIssue({
@@ -486,6 +491,14 @@ async function resolveContextForSubscriptionId(
     trial,
     subscription,
     billingCountry: subscription?.billing_country ?? undefined,
+    locale: readMetadataValue(
+      metadata,
+      "locale",
+      "userLocale",
+      "user_locale",
+      "preferredLocale",
+      "preferred_locale",
+    ),
     email:
       email ??
       readMetadataValue(metadata, "userEmail", "user_email", "email") ??
@@ -539,7 +552,13 @@ async function applySideEffects(
         );
         break;
       case "start_dunning":
-        // Issue #75 will expand this into the full D-3/D-7 dunning sequence.
+        await createDunningScheduler({
+          supabase: supabase as never,
+        }).startDunning(
+          sideEffect.stripeInvoiceId,
+          input.context.userId,
+          input.context.locale ?? "en",
+        );
         break;
       case "downgrade_account":
         // Read-only behavior is enforced from subscription status elsewhere.

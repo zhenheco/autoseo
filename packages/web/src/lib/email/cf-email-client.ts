@@ -8,7 +8,9 @@ export type TransactionalTemplateName =
   | "cancelled"
   | "expired"
   | "payment_failed"
-  | "payment_failed_d1";
+  | "payment_failed_d1"
+  | "payment_failed_d3"
+  | "payment_failed_d7";
 
 export async function sendAuditDigestEmail(input: {
   to: string;
@@ -162,6 +164,16 @@ function renderTransactionalTemplate(template: TransactionalTemplateName): {
       return basicTemplate(
         "Payment failed for your 1WaySEO subscription",
         "We could not process your latest payment. Please update your billing details to keep your workspace active.",
+      );
+    case "payment_failed_d3":
+      return basicTemplate(
+        "Payment still needs attention",
+        "We still could not process your subscription payment. Please update your card to keep your workspace active.",
+      );
+    case "payment_failed_d7":
+      return basicTemplate(
+        "Final reminder before account downgrade",
+        "We still could not process your subscription payment. Please update your billing details today to avoid an account downgrade tomorrow.",
       );
   }
 }
