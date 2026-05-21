@@ -13,19 +13,28 @@ type TableName =
   | "shopline_connections"
   | "shopline_gdpr_redact_log";
 
-function createSupabaseMock() {
+function createSupabaseMock(
+  options: {
+    connection?: { website_id: string } | null;
+    reports?: Array<{ id: string }>;
+    issues?: Array<{ id: string }>;
+  } = {},
+) {
   const calls: Array<{ table: string; method: string; args: unknown[] }> = [];
   const responses: Record<string, unknown> = {
     "shopline_connections.maybeSingle": {
-      data: { website_id: "website-1" },
+      data:
+        options.connection === undefined
+          ? { website_id: "website-1" }
+          : options.connection,
       error: null,
     },
     "audit_reports.select": {
-      data: [{ id: "report-1" }],
+      data: options.reports ?? [{ id: "report-1" }],
       error: null,
     },
     "audit_issues.select": {
-      data: [{ id: "issue-1" }],
+      data: options.issues ?? [{ id: "issue-1" }],
       error: null,
     },
   };
@@ -65,8 +74,8 @@ function createSupabaseMock() {
           );
         }),
         then(
-          resolve: (value: { data: unknown; error: unknown }) => void,
-          reject: (reason?: unknown) => void,
+          resolve: (value: unknown) => unknown,
+          reject?: (reason?: unknown) => unknown,
         ) {
           const response = responses[`${table}.select`] ?? {
             data: null,
@@ -182,6 +191,48 @@ describe("POST /api/shopline/webhooks/gdpr-shop-redact", () => {
           shop_domain: "demo.myshopline.com",
           payload_summary:
             "shop data redacted: connection revoked; reports deleted: 1",
+          result: "processed",
+        }),
+      ],
+    });
+  });
+
+  it("returns 200 and logs an idempotent result when the shop is not found", async () => {
+    const body = {
+      shop_id: "shop-1",
+      shop_domain: "missing.myshopline.com",
+    };
+    const supabase = createSupabaseMock({ connection: null });
+    supabaseMocks.createAdminClient.mockReturnValue(supabase);
+
+    const response = await post(body, {
+      "X-SHOPLINE-Hmac-Sha256": await signBody(body),
+    });
+
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({ ok: true });
+    expect(supabase.calls).not.toContainEqual(
+      expect.objectContaining({
+        table: "shopline_connections",
+        method: "update",
+      }),
+    );
+    expect(supabase.calls).not.toContainEqual(
+      expect.objectContaining({
+        table: "audit_reports",
+        method: "delete",
+      }),
+    );
+    expect(supabase.calls).toContainEqual({
+      table: "shopline_gdpr_redact_log",
+      method: "insert",
+      args: [
+        expect.objectContaining({
+          webhook_type: "shop-redact",
+          shop_id: "shop-1",
+          shop_domain: "missing.myshopline.com",
+          payload_summary:
+            "shop not found; already redacted or never connected",
           result: "processed",
         }),
       ],

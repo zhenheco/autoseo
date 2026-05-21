@@ -51,7 +51,22 @@ export async function POST(request: Request) {
   }
 
   if (!connection) {
-    return NextResponse.json({ error: "not_implemented" }, { status: 501 });
+    const { error: logError } = await supabase
+      .from("shopline_gdpr_redact_log")
+      .insert({
+        webhook_type: "shop-redact",
+        shop_id: stringOrNull(payload.shop_id),
+        shop_domain: shopDomain,
+        payload_summary: "shop not found; already redacted or never connected",
+        processed_at: new Date().toISOString(),
+        result: "processed",
+      });
+
+    if (logError) {
+      return NextResponse.json({ error: "gdpr_log_failed" }, { status: 500 });
+    }
+
+    return NextResponse.json({ ok: true });
   }
 
   const now = new Date().toISOString();
