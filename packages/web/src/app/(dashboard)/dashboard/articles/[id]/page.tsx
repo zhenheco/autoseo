@@ -45,6 +45,22 @@ async function getArticle(articleId: string) {
   return data;
 }
 
+async function getArticleCardAssets(articleId?: string) {
+  if (!articleId) return [];
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("article_assets")
+    .select("id, template, size, r2_url, created_at")
+    .eq("article_id", articleId)
+    .eq("kind", "card")
+    .order("created_at", { ascending: true });
+
+  if (error) throw error;
+
+  return data ?? [];
+}
+
 export default async function ArticleDetailPage({
   params,
 }: {
@@ -59,6 +75,10 @@ export default async function ArticleDetailPage({
 
   const { id } = await params;
   const article = await getArticle(id);
+  const generatedArticle = Array.isArray(article?.generated_articles)
+    ? article.generated_articles[0]
+    : article?.generated_articles;
+  const cardAssets = await getArticleCardAssets(generatedArticle?.id);
 
   if (!article) {
     redirect("/dashboard/articles?error=" + encodeURIComponent(t("notFound")));
@@ -69,9 +89,7 @@ export default async function ArticleDetailPage({
       <div className="mb-8 flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold">
-            {article.generated_articles?.title ||
-              article.article_title ||
-              t("untitled")}
+            {generatedArticle?.title || article.article_title || t("untitled")}
           </h1>
           <p className="text-muted-foreground mt-2">
             {t("websiteLabel")}{" "}
@@ -178,7 +196,7 @@ export default async function ArticleDetailPage({
         </Card>
 
         {/* 文章內容 */}
-        {article.generated_articles && (
+        {generatedArticle && (
           <Card>
             <CardHeader>
               <CardTitle>{t("generatedContent")}</CardTitle>
@@ -188,19 +206,64 @@ export default async function ArticleDetailPage({
             </CardHeader>
             <CardContent>
               <div className="prose max-w-none">
-                {article.generated_articles.title && (
+                {generatedArticle.title && (
                   <h2 className="text-2xl font-bold mb-4">
-                    {article.generated_articles.title}
+                    {generatedArticle.title}
                   </h2>
                 )}
-                {article.generated_articles.html_content && (
+                {generatedArticle.html_content && (
                   <div
                     className="prose prose-lg max-w-none prose-p:leading-[1.8] prose-p:my-5 prose-h2:mt-10 prose-h2:mb-4 prose-h3:mt-7 prose-h3:mb-3 prose-li:my-2 prose-li:leading-[1.7] prose-ul:my-6 prose-ol:my-6 prose-img:my-8"
                     dangerouslySetInnerHTML={{
-                      __html: article.generated_articles.html_content,
+                      __html: generatedArticle.html_content,
                     }}
                   />
                 )}
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {cardAssets.length > 0 && (
+          <Card>
+            <CardHeader>
+              <CardTitle>{t("cardAssets")}</CardTitle>
+              <CardDescription>{t("cardAssetsDescription")}</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {cardAssets.map((asset) => {
+                  const displayUrl = resolveCardDisplayUrl(asset.r2_url);
+                  const label = [asset.template, asset.size]
+                    .filter(Boolean)
+                    .join(" ");
+
+                  return (
+                    <div
+                      key={asset.id}
+                      className="overflow-hidden rounded-lg border bg-background"
+                    >
+                      {/* eslint-disable-next-line @next/next/no-img-element -- card URLs can point at tenant R2 public domains not configured for next/image. */}
+                      <img
+                        src={displayUrl}
+                        alt={label}
+                        className="aspect-video w-full bg-muted object-cover"
+                      />
+                      <div className="flex items-center justify-between gap-3 p-3">
+                        <span className="truncate text-sm text-muted-foreground">
+                          {label}
+                        </span>
+                        <a
+                          href={displayUrl}
+                          download
+                          className="text-sm font-medium text-primary hover:underline"
+                        >
+                          {t("downloadCard")}
+                        </a>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </CardContent>
           </Card>
@@ -224,4 +287,20 @@ export default async function ArticleDetailPage({
       </div>
     </div>
   );
+}
+
+function resolveCardDisplayUrl(r2Url: string): string {
+  if (!r2Url.startsWith("r2://")) return r2Url;
+
+  const [, rest] = r2Url.split("r2://");
+  const slashIndex = rest.indexOf("/");
+  const key = slashIndex >= 0 ? rest.slice(slashIndex + 1) : "";
+  const publicBase =
+    process.env.CARD_ASSETS_PUBLIC_URL ??
+    process.env.NEXT_PUBLIC_CARD_ASSETS_PUBLIC_URL ??
+    (process.env.R2_ACCOUNT_ID
+      ? `https://pub-${process.env.R2_ACCOUNT_ID}.r2.dev`
+      : null);
+
+  return publicBase && key ? `${publicBase.replace(/\/+$/, "")}/${key}` : r2Url;
 }

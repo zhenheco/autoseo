@@ -8,6 +8,10 @@ import {
 import { createQuotaEnforcer, type QuotaEnforcer } from "@/lib/quota/enforcer";
 import { QuotaExceededError } from "@/lib/quota/errors";
 import { resolveQuotaPlan } from "@/lib/quota/plan-resolver";
+import {
+  createArticleCardGenerationScheduler,
+  type ArticleCardGenerationScheduler,
+} from "@/lib/cards/article-card-generation";
 import { ResearchAgent } from "./research-agent";
 import { StrategyAgent } from "./strategy-agent";
 import { WritingAgent } from "./writing-agent";
@@ -67,6 +71,7 @@ export { QuotaExceededError } from "@/lib/quota/errors";
 interface ParallelOrchestratorDependencies {
   brandMemoryStore?: BrandMemoryStore;
   quotaEnforcer?: QuotaEnforcer;
+  cardGenerationScheduler?: ArticleCardGenerationScheduler;
   resolveDefaultBrandId?: (
     companyId: string,
     supabase: SupabaseClient,
@@ -80,6 +85,7 @@ export class ParallelOrchestrator {
   private currentJobId?: string;
   private brandMemoryStore?: BrandMemoryStore;
   private quotaEnforcer?: QuotaEnforcer;
+  private cardGenerationScheduler?: ArticleCardGenerationScheduler;
   private readonly resolveDefaultBrandIdOverride?: (
     companyId: string,
     supabase: SupabaseClient,
@@ -92,6 +98,7 @@ export class ParallelOrchestrator {
     this.supabaseClient = supabaseClient;
     this.brandMemoryStore = dependencies.brandMemoryStore;
     this.quotaEnforcer = dependencies.quotaEnforcer;
+    this.cardGenerationScheduler = dependencies.cardGenerationScheduler;
     this.resolveDefaultBrandIdOverride = dependencies.resolveDefaultBrandId;
     this.errorTracker = new ErrorTracker({
       enableLogging: true,
@@ -148,6 +155,16 @@ export class ParallelOrchestrator {
     }
 
     return this.quotaEnforcer;
+  }
+
+  private getCardGenerationScheduler(): ArticleCardGenerationScheduler {
+    if (!this.cardGenerationScheduler) {
+      this.cardGenerationScheduler = createArticleCardGenerationScheduler({
+        getSupabase: () => this.getSupabase(),
+      });
+    }
+
+    return this.cardGenerationScheduler;
   }
 
   private async resolveBrandId(
@@ -1223,6 +1240,20 @@ export class ParallelOrchestrator {
             "[Orchestrator] ✅ Metadata 已更新，saved_article_id:",
             savedArticle.article.id,
           );
+
+          try {
+            this.getCardGenerationScheduler().trigger({
+              articleId: savedArticle.article.id,
+              brandId,
+              articleJobId: input.articleJobId,
+              companyId: input.companyId,
+            });
+          } catch (cardTriggerError) {
+            console.error(
+              "[Orchestrator] Card generation trigger failed:",
+              cardTriggerError,
+            );
+          }
         } catch (storageError) {
           console.error("[Orchestrator] 文章儲存失敗:", storageError);
           // 不中斷流程，儲存失敗不影響文章生成

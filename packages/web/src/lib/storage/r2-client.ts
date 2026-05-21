@@ -1,7 +1,11 @@
-import { S3Client, PutObjectCommand, GetObjectCommand } from '@aws-sdk/client-s3';
-import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
-import { NodeHttpHandler } from '@smithy/node-http-handler';
-import https from 'https';
+import {
+  S3Client,
+  PutObjectCommand,
+  GetObjectCommand,
+} from "@aws-sdk/client-s3";
+import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
+import { NodeHttpHandler } from "@smithy/node-http-handler";
+import https from "https";
 
 interface R2Config {
   accountId: string;
@@ -30,11 +34,11 @@ export class R2Client {
       keepAlive: true,
       maxSockets: 50,
       rejectUnauthorized: true, // 保持 SSL 驗證
-      minVersion: 'TLSv1.2', // 最低 TLS 版本
+      minVersion: "TLSv1.2", // 最低 TLS 版本
     });
 
     this.client = new S3Client({
-      region: 'auto',
+      region: "auto",
       endpoint: `https://${config.accountId}.r2.cloudflarestorage.com`,
       credentials: {
         accessKeyId: config.accessKeyId,
@@ -55,9 +59,9 @@ export class R2Client {
   async uploadImage(
     base64Data: string,
     fileName: string,
-    contentType: string = 'image/png'
+    contentType: string = "image/png",
   ): Promise<UploadResult> {
-    console.log('[R2 Upload Diagnostics]', {
+    console.log("[R2 Upload Diagnostics]", {
       filename: fileName,
       contentType,
       base64Length: base64Data.length,
@@ -66,10 +70,13 @@ export class R2Client {
 
     const nonAsciiMatch = fileName.match(/[^\x00-\x7F]/g);
     if (nonAsciiMatch) {
-      console.warn('[R2] ⚠️ Non-ASCII characters detected in filename:', nonAsciiMatch);
+      console.warn(
+        "[R2] ⚠️ Non-ASCII characters detected in filename:",
+        nonAsciiMatch,
+      );
     }
 
-    const buffer = Buffer.from(base64Data, 'base64');
+    const buffer = Buffer.from(base64Data, "base64");
     const fileKey = `images/${Date.now()}-${fileName}`;
 
     const command = new PutObjectCommand({
@@ -77,27 +84,33 @@ export class R2Client {
       Key: fileKey,
       Body: buffer,
       ContentType: contentType,
-      CacheControl: 'public, max-age=31536000',
+      CacheControl: "public, max-age=31536000",
     });
 
     try {
       await this.client.send(command);
-      console.log('[R2] ✅ Upload successful:', fileKey);
+      console.log("[R2] ✅ Upload successful:", fileKey);
     } catch (error) {
       const err = error as Error;
-      console.error('[R2] ❌ Upload failed:', {
+      console.error("[R2] ❌ Upload failed:", {
         error: err.message,
         errorName: err.name,
         stack: err.stack,
         fileKey,
       });
 
-      if (err.message.includes('SSL') || err.message.includes('TLS') || err.message.includes('EPROTO')) {
-        console.error('[R2] 🔒 SSL/TLS Error detected - possible causes:');
-        console.error('  1. Incorrect R2 credentials');
-        console.error('  2. Network/firewall blocking Cloudflare R2');
-        console.error('  3. R2 endpoint configuration issue');
-        console.error('  Suggestion: Verify R2 credentials in Vercel Dashboard');
+      if (
+        err.message.includes("SSL") ||
+        err.message.includes("TLS") ||
+        err.message.includes("EPROTO")
+      ) {
+        console.error("[R2] 🔒 SSL/TLS Error detected - possible causes:");
+        console.error("  1. Incorrect R2 credentials");
+        console.error("  2. Network/firewall blocking Cloudflare R2");
+        console.error("  3. R2 endpoint configuration issue");
+        console.error(
+          "  Suggestion: Verify R2 credentials in Vercel Dashboard",
+        );
       }
 
       throw error;
@@ -112,7 +125,36 @@ export class R2Client {
     };
   }
 
-  async getSignedUrl(fileKey: string, expiresIn: number = 3600): Promise<string> {
+  async putObject(
+    fileKey: string,
+    body: ArrayBuffer | ArrayBufferView | string,
+    contentType: string = "application/octet-stream",
+  ): Promise<void> {
+    const command = new PutObjectCommand({
+      Bucket: this.bucketName,
+      Key: fileKey,
+      Body:
+        typeof body === "string"
+          ? body
+          : Buffer.from(
+              ArrayBuffer.isView(body)
+                ? body.buffer.slice(
+                    body.byteOffset,
+                    body.byteOffset + body.byteLength,
+                  )
+                : body,
+            ),
+      ContentType: contentType,
+      CacheControl: "public, max-age=31536000",
+    });
+
+    await this.client.send(command);
+  }
+
+  async getSignedUrl(
+    fileKey: string,
+    expiresIn: number = 3600,
+  ): Promise<string> {
     const command = new GetObjectCommand({
       Bucket: this.bucketName,
       Key: fileKey,
@@ -128,20 +170,22 @@ export function getR2Config(): R2Config | null {
   const secretAccessKey = process.env.R2_SECRET_ACCESS_KEY;
   const bucketName = process.env.R2_BUCKET_NAME;
 
-  console.log('[R2 Config Check]', {
-    R2_ACCOUNT_ID: accountId ? 'SET' : 'MISSING',
-    R2_ACCESS_KEY_ID: accessKeyId ? 'SET' : 'MISSING',
-    R2_SECRET_ACCESS_KEY: secretAccessKey ? 'SET' : 'MISSING',
-    R2_BUCKET_NAME: bucketName ? 'SET' : 'MISSING',
+  console.log("[R2 Config Check]", {
+    R2_ACCOUNT_ID: accountId ? "SET" : "MISSING",
+    R2_ACCESS_KEY_ID: accessKeyId ? "SET" : "MISSING",
+    R2_SECRET_ACCESS_KEY: secretAccessKey ? "SET" : "MISSING",
+    R2_BUCKET_NAME: bucketName ? "SET" : "MISSING",
   });
 
   if (!accountId || !accessKeyId || !secretAccessKey || !bucketName) {
-    console.warn('[R2] ⚠️ R2 configuration incomplete, R2 upload disabled');
+    console.warn("[R2] ⚠️ R2 configuration incomplete, R2 upload disabled");
     return null;
   }
 
   if (secretAccessKey.match(/[^\x00-\x7F]/)) {
-    console.warn('[R2] ⚠️ Non-ASCII characters detected in R2_SECRET_ACCESS_KEY');
+    console.warn(
+      "[R2] ⚠️ Non-ASCII characters detected in R2_SECRET_ACCESS_KEY",
+    );
   }
 
   return {

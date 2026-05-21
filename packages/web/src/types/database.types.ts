@@ -247,6 +247,54 @@ export type Database = {
           },
         ];
       };
+      article_assets: {
+        Row: {
+          id: string;
+          article_id: string;
+          kind: "card" | "image" | "video";
+          template: string | null;
+          size: string | null;
+          r2_url: string;
+          brand_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          article_id: string;
+          kind: "card" | "image" | "video";
+          template?: string | null;
+          size?: string | null;
+          r2_url: string;
+          brand_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          article_id?: string;
+          kind?: "card" | "image" | "video";
+          template?: string | null;
+          size?: string | null;
+          r2_url?: string;
+          brand_id?: string | null;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "article_assets_article_id_fkey";
+            columns: ["article_id"];
+            isOneToOne: false;
+            referencedRelation: "generated_articles";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "article_assets_brand_id_fkey";
+            columns: ["brand_id"];
+            isOneToOne: false;
+            referencedRelation: "brands";
+            referencedColumns: ["id"];
+          },
+        ];
+      };
       brands: {
         Row: {
           id: string;

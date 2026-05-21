@@ -3,6 +3,7 @@ import { ParallelOrchestrator, QuotaExceededError } from "../orchestrator";
 import type { ArticleGenerationInput } from "@/types/agents";
 import type { BrandMemoryStore } from "@/lib/brands/memory-store";
 import type { QuotaEnforcer } from "@/lib/quota/enforcer";
+import type { ArticleCardGenerationScheduler } from "@/lib/cards/article-card-generation";
 
 const mocks = vi.hoisted(() => ({
   writingExecute: vi.fn(),
@@ -19,50 +20,70 @@ const mocks = vi.hoisted(() => ({
 }));
 
 vi.mock("../writing-agent", () => ({
-  WritingAgent: vi.fn(() => ({ execute: mocks.writingExecute })),
+  WritingAgent: vi.fn(function WritingAgent() {
+    return { execute: mocks.writingExecute };
+  }),
 }));
 
 vi.mock("../featured-image-agent", () => ({
-  FeaturedImageAgent: vi.fn(() => ({ execute: mocks.featuredImageExecute })),
+  FeaturedImageAgent: vi.fn(function FeaturedImageAgent() {
+    return { execute: mocks.featuredImageExecute };
+  }),
 }));
 
 vi.mock("../article-image-agent", () => ({
-  ArticleImageAgent: vi.fn(() => ({ execute: mocks.articleImageExecute })),
+  ArticleImageAgent: vi.fn(function ArticleImageAgent() {
+    return { execute: mocks.articleImageExecute };
+  }),
 }));
 
 vi.mock("../meta-agent", () => ({
-  MetaAgent: vi.fn(() => ({ execute: mocks.metaExecute })),
+  MetaAgent: vi.fn(function MetaAgent() {
+    return { execute: mocks.metaExecute };
+  }),
 }));
 
 vi.mock("../link-processor-agent", () => ({
-  LinkProcessorAgent: vi.fn(() => ({ execute: mocks.linkExecute })),
+  LinkProcessorAgent: vi.fn(function LinkProcessorAgent() {
+    return { execute: mocks.linkExecute };
+  }),
 }));
 
 vi.mock("../category-agent", () => ({
-  CategoryAgent: vi.fn(() => ({ generateCategories: mocks.categoryGenerate })),
+  CategoryAgent: vi.fn(function CategoryAgent() {
+    return { generateCategories: mocks.categoryGenerate };
+  }),
 }));
 
 vi.mock("../competitor-analysis-agent", () => ({
-  CompetitorAnalysisAgent: vi.fn(() => ({
-    execute: mocks.competitorExecute,
-  })),
+  CompetitorAnalysisAgent: vi.fn(function CompetitorAnalysisAgent() {
+    return {
+      execute: mocks.competitorExecute,
+    };
+  }),
 }));
 
 vi.mock("../content-plan-agent", () => ({
-  ContentPlanAgent: vi.fn(() => ({ execute: mocks.contentPlanExecute })),
+  ContentPlanAgent: vi.fn(function ContentPlanAgent() {
+    return { execute: mocks.contentPlanExecute };
+  }),
 }));
 
 vi.mock("@/lib/services/article-storage", () => ({
-  ArticleStorageService: vi.fn(() => ({
-    saveArticleWithRecommendations: mocks.saveArticleWithRecommendations,
-  })),
+  ArticleStorageService: vi.fn(function ArticleStorageService() {
+    return {
+      saveArticleWithRecommendations: mocks.saveArticleWithRecommendations,
+    };
+  }),
 }));
 
 vi.mock("@/lib/billing/article-quota-service", () => ({
-  ArticleQuotaService: vi.fn(() => ({
-    deductArticle: mocks.deductArticle,
-    consumeReservation: mocks.consumeReservation,
-  })),
+  ArticleQuotaService: vi.fn(function ArticleQuotaService() {
+    return {
+      deductArticle: mocks.deductArticle,
+      consumeReservation: mocks.consumeReservation,
+    };
+  }),
 }));
 
 vi.mock("../pipeline-helpers", () => ({
@@ -218,6 +239,43 @@ describe("ParallelOrchestrator brand memory and quota", () => {
     );
   });
 
+  it("triggers async card generation after a successful article save", async () => {
+    const cardGenerationScheduler = createCardGenerationSchedulerMock();
+    const orchestrator = createOrchestrator({
+      brandMemoryStore: createBrandMemoryStoreMock(),
+      quotaEnforcer: createQuotaEnforcerMock(),
+      cardGenerationScheduler,
+    });
+
+    await orchestrator.execute(createInput({ brandId: "brand-1" }));
+
+    expect(cardGenerationScheduler.trigger).toHaveBeenCalledWith({
+      articleId: "article-1",
+      brandId: "brand-1",
+      articleJobId: "job-1",
+      companyId: "company-1",
+    });
+  });
+
+  it("keeps the article successful when card generation trigger fails", async () => {
+    const cardGenerationScheduler = createCardGenerationSchedulerMock();
+    vi.mocked(cardGenerationScheduler.trigger).mockImplementationOnce(() => {
+      throw new Error("card trigger failed");
+    });
+    const orchestrator = createOrchestrator({
+      brandMemoryStore: createBrandMemoryStoreMock(),
+      quotaEnforcer: createQuotaEnforcerMock(),
+      cardGenerationScheduler,
+    });
+
+    const result = await orchestrator.execute(
+      createInput({ brandId: "brand-1" }),
+    );
+
+    expect(result.success).toBe(true);
+    expect(result.savedArticle?.id).toBe("article-1");
+  });
+
   it("does not consume article quota when generation fails", async () => {
     mocks.writingExecute.mockRejectedValueOnce(new Error("generation failed"));
     const quotaEnforcer = createQuotaEnforcerMock();
@@ -236,12 +294,17 @@ describe("ParallelOrchestrator brand memory and quota", () => {
 function createOrchestrator(input: {
   brandMemoryStore: BrandMemoryStore;
   quotaEnforcer: QuotaEnforcer;
+  cardGenerationScheduler?: ArticleCardGenerationScheduler;
   resolveDefaultBrandId?: (
     companyId: string,
     supabase: unknown,
   ) => Promise<string | null>;
 }) {
-  return new ParallelOrchestrator(createSupabaseMock() as never, input);
+  return new ParallelOrchestrator(createSupabaseMock() as never, {
+    ...input,
+    cardGenerationScheduler:
+      input.cardGenerationScheduler ?? createCardGenerationSchedulerMock(),
+  });
 }
 
 function createBrandMemoryStoreMock(): BrandMemoryStore {
@@ -271,6 +334,12 @@ function createQuotaEnforcerMock(input?: { allowed?: boolean }): QuotaEnforcer {
       resource: "articles",
     })),
     getUsage: vi.fn(),
+  };
+}
+
+function createCardGenerationSchedulerMock(): ArticleCardGenerationScheduler {
+  return {
+    trigger: vi.fn(),
   };
 }
 

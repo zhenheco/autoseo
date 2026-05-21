@@ -15,6 +15,7 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
       "@shared": path.resolve(__dirname, "../shared/src"),
       "@audit": path.resolve(__dirname, "../audit/src/index.ts"),
+      "@seo/edge": path.resolve(__dirname, "../edge/src/worker.ts"),
     },
   },
 });
