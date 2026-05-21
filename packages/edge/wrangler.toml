@@ -8,3 +8,9 @@ compatibility_flags = ["nodejs_compat"]
 [[kv_namespaces]]
 binding = "EDGE_RULES"
 id = "502e67be20454a4ba409647f9cf8e98c"
+
+# Browser Rendering binding for audit CWV + a11y (S14)
+# Requires Workers Paid plan (✓ enabled).
+[browser]
+binding = "BROWSER"
+
