@@ -454,9 +454,10 @@ export interface ArticleImageOutput {
   images: GeneratedImage[];
   executionInfo: {
     model: string;
-    totalImages: number;
+    totalImages?: number;
     executionTime: number;
     totalCost: number;
+    skippedReason?: string;
   };
 }
 

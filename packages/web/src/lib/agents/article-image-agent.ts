@@ -68,6 +68,21 @@ export class ArticleImageAgent extends BaseAgent<
   protected async process(
     input: ArticleImageInput,
   ): Promise<ArticleImageOutput> {
+    if (process.env.IMAGE_GENERATION_ENABLED !== "true") {
+      console.log(
+        "[ArticleImageAgent] Skipped: IMAGE_GENERATION_ENABLED is not 'true'",
+      );
+      return {
+        images: [],
+        executionInfo: {
+          model: input.model || DEFAULT_MODEL,
+          executionTime: this.startTime ? Date.now() - this.startTime : 0,
+          totalCost: 0,
+          skippedReason: "feature_disabled",
+        },
+      };
+    }
+
     const model = input.model || DEFAULT_MODEL;
     const images: GeneratedImage[] = [];
     const failedIndices: number[] = [];

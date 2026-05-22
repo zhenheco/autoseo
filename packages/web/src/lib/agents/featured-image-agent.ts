@@ -63,6 +63,21 @@ export class FeaturedImageAgent extends BaseAgent<
   protected async process(
     input: FeaturedImageInput,
   ): Promise<FeaturedImageOutput> {
+    if (process.env.IMAGE_GENERATION_ENABLED !== "true") {
+      console.log(
+        "[FeaturedImageAgent] Skipped: IMAGE_GENERATION_ENABLED is not 'true'",
+      );
+      return {
+        image: null,
+        executionInfo: {
+          model: input.model || DEFAULT_MODEL,
+          executionTime: this.startTime ? Date.now() - this.startTime : 0,
+          cost: 0,
+          skippedReason: "feature_disabled",
+        },
+      };
+    }
+
     const model = input.model || DEFAULT_MODEL;
     console.log(
       `[FeaturedImageAgent] 🎨 Generating featured image with model: ${model}`,
