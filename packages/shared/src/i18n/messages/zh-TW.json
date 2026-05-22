@@ -2393,7 +2393,7 @@
       "section5Content": "我們使用以下第三方服務：",
       "section5List1": "Supabase - 資料庫和認證服務",
       "section5List2": "Vercel - 網站托管服務",
-      "section5List3": "PAYUNi - 支付處理服務",
+      "section5List3": "NewebPay 藍新金流 - 支付處理服務",
       "section5List4": "OpenAI/Anthropic - AI 內容生成服務",
       "section5List5": "Google Search Console / Google Analytics - 網站數據分析（需使用者授權）",
       "section6Title": "六、Google API 服務使用揭露",
@@ -2466,7 +2466,7 @@
       "section3List2": "月費和年費方案將自動續訂，除非取消。",
       "section3List3": "可隨時取消訂閱，但不退還已支付費用。",
       "section3List4": "價格可能調整，將提前通知使用者。",
-      "section3List5": "付款資訊由第三方支付服務商（如 PAYUNi）處理，本公司不儲存完整的付款資訊。",
+      "section3List5": "付款資訊由第三方支付服務商（如 NewebPay 藍新金流）處理，本公司不儲存完整的付款資訊。",
       "section4Title": "四、智慧財產權",
       "section4List1": "使用者生成的內容歸使用者所有。",
       "section4List2": "1waySEO 保留平台和服務的所有權。",
@@ -2691,7 +2691,7 @@
       }
     },
     "paymentTest": {
-      "title": "PAYUNi 金流測試",
+      "title": "NewebPay 藍新金流 金流測試",
       "description": "正式環境付款測試（會產生真實交易，請使用小額測試）",
       "paymentType": "付款類型",
       "onetimePayment": "單次付款",
@@ -2718,7 +2718,7 @@
       "warning": "注意：",
       "warningMessage": "此為正式環境測試，會產生真實交易。請確保金額正確後再進行付款。",
       "paymentCreateFailed": "付款建立失敗: {error}",
-      "redirectingToPayuni": "正在跳轉至 PAYUNi 付款頁面...",
+      "redirectingToNewebPay": "正在跳轉至 NewebPay 藍新金流 付款頁面...",
       "noPaymentFormData": "未收到付款表單資料",
       "paymentTestFailed": "付款測試失敗，請查看 console"
     },
