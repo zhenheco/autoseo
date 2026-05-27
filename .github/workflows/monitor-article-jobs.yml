@@ -1,9 +1,6 @@
 name: Monitor Article Jobs
 
 on:
-  schedule:
-    # 🔧 優化：從每 5 分鐘改為每 15 分鐘（減少 egress）
-    - cron: "*/15 * * * *"
   workflow_dispatch: # 允許手動觸發
 
 jobs:

@@ -1,5 +1,9 @@
 # seo-monorepo
 
+Deprecated legacy repo. SEOHelp now replaces 1waySEO; active work lives in
+`zhenheco/seohelp`. This repository is kept for source history and
+cherry-picking only, so GitHub Actions schedules are intentionally disabled.
+
 Monorepo skeleton for the existing `zhenheco/autoseo` repository.
 
 ## Packages

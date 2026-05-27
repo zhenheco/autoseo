@@ -1,9 +1,6 @@
 name: 重置月配額
 
 on:
-  schedule:
-    # 每天凌晨 3:00 (UTC+8) 執行 = UTC 19:00 前一天
-    - cron: "0 19 * * *"
   workflow_dispatch:
     # 允許手動觸發
 

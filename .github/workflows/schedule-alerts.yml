@@ -1,9 +1,6 @@
 name: Schedule Alert Check
 
 on:
-  schedule:
-    # 每天台灣時間 9:00 AM (UTC 1:00)
-    - cron: "0 1 * * *"
   workflow_dispatch:
 
 jobs:

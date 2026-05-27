@@ -1,10 +1,6 @@
 name: Process Translation Jobs
 
 on:
-  schedule:
-    # 每 5 分鐘執行一次（翻譯任務較重）
-    - cron: "*/5 * * * *"
-
   # 支援手動觸發
   workflow_dispatch:
 

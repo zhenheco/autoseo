@@ -1,9 +1,6 @@
 name: Daily Billing Audit
 
 on:
-  schedule:
-    # 每日凌晨 2 點執行（UTC 時間，即台灣時間上午 10 點）
-    - cron: "0 2 * * *"
   workflow_dispatch: # 允許手動觸發
     inputs:
       days:

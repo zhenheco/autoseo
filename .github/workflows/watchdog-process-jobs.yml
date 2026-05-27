@@ -1,9 +1,6 @@
 name: Watchdog - Auto Recovery
 
 on:
-  schedule:
-    # 🔧 優化：從每 10 分鐘改為每 30 分鐘（減少 egress）
-    - cron: "*/30 * * * *"
   workflow_dispatch:
 
 permissions:

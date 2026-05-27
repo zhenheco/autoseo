@@ -1,10 +1,6 @@
 name: Publish Scheduled Articles
 
 on:
-  schedule:
-    # 每小時整點執行
-    - cron: "0 * * * *"
-
   # 支援手動觸發
   workflow_dispatch:
 
