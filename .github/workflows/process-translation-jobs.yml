@@ -4,10 +4,6 @@ on:
   # 支援手動觸發
   workflow_dispatch:
 
-  # 支援 API 觸發
-  repository_dispatch:
-    types: [translation-jobs-created]
-
 # 避免多個實例同時運行
 concurrency:
   group: process-translation-jobs

@@ -1,8 +1,6 @@
 name: WordPress Client Change Alert
 on:
-  pull_request:
-    types: [opened, synchronize, reopened]
-    paths: ['src/lib/wordpress/client.ts']
+  workflow_dispatch:
 
 jobs:
   alert-edgeseo:
