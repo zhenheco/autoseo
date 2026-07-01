@@ -15,6 +15,10 @@ Monorepo skeleton for the existing `zhenheco/autoseo` repository.
 
 Existing SDK packages under `packages/article-sync-sdk` and `packages/blog-sdk` are preserved in place.
 
+Environment handoff lives in `docs/env.md`; use
+`packages/web/.env.example` as the app template and keep real values in
+1Password or the target platform secret store.
+
 ## Commands
 
 ```bash
