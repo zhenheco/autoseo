@@ -14,7 +14,7 @@
     "lint": "echo 'no lint yet'"
   },
   "dependencies": {
-    "cheerio": "^1.0.0"
+    "cheerio": "^1.2.0"
   },
   "devDependencies": {
     "@types/node": "^24.0.0",
