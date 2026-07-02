@@ -1,36 +1,37 @@
-'use client';
+"use client";
 
-import { useState } from 'react';
-import { useTranslations } from 'next-intl';
+import { useState } from "react";
+import { useTranslations } from "next-intl";
+import { sanitizeArticleHtml } from "@/lib/security/html-sanitizer";
 
 export function ArticleGeneratorExample() {
-  const [title, setTitle] = useState('');
+  const [title, setTitle] = useState("");
   const [jobId, setJobId] = useState<string | null>(null);
-  const [status, setStatus] = useState<string>('');
+  const [status, setStatus] = useState<string>("");
   const [progress, setProgress] = useState(0);
   const [loading, setLoading] = useState(false);
   const [article, setArticle] = useState<any>(null);
-  const t = useTranslations('articleGenerator');
+  const t = useTranslations("articleGenerator");
 
   // 1. 觸發文章生成
   const generateArticle = async () => {
     if (!title) {
-      alert(t('enterTitleAlert'));
+      alert(t("enterTitleAlert"));
       return;
     }
 
     setLoading(true);
-    setStatus(t('submitting'));
+    setStatus(t("submitting"));
 
     try {
-      const response = await fetch('/api/articles/generate', {
-        method: 'POST',
+      const response = await fetch("/api/articles/generate", {
+        method: "POST",
         headers: {
-          'Content-Type': 'application/json',
+          "Content-Type": "application/json",
         },
         body: JSON.stringify({
           title,
-          mode: 'single',
+          mode: "single",
         }),
       });
 
@@ -38,14 +39,14 @@ export function ArticleGeneratorExample() {
 
       if (data.success && data.articleJobId) {
         setJobId(data.articleJobId);
-        setStatus(t('submitted'));
+        setStatus(t("submitted"));
         // 開始輪詢狀態
         pollStatus(data.articleJobId);
       } else {
-        setStatus(t('submitFailed') + ': ' + (data.error || t('unknownError')));
+        setStatus(t("submitFailed") + ": " + (data.error || t("unknownError")));
       }
     } catch (error) {
-      setStatus(t('submitFailed') + ': ' + (error as Error).message);
+      setStatus(t("submitFailed") + ": " + (error as Error).message);
     } finally {
       setLoading(false);
     }
@@ -61,14 +62,14 @@ export function ArticleGeneratorExample() {
         setStatus(data.message || data.status);
         setProgress(data.progress || 0);
 
-        if (data.status === 'completed') {
+        if (data.status === "completed") {
           setArticle(data.article);
           clearInterval(intervalId);
-        } else if (data.status === 'failed') {
+        } else if (data.status === "failed") {
           clearInterval(intervalId);
         }
       } catch (error) {
-        console.error('Status check error:', error);
+        console.error("Status check error:", error);
       }
     };
 
@@ -86,18 +87,18 @@ export function ArticleGeneratorExample() {
 
   return (
     <div className="p-6 max-w-2xl mx-auto">
-      <h2 className="text-2xl font-bold mb-6">{t('title')}</h2>
+      <h2 className="text-2xl font-bold mb-6">{t("title")}</h2>
 
       {/* 輸入區 */}
       <div className="mb-6">
         <label className="block text-sm font-medium mb-2">
-          {t('articleTitle')}
+          {t("articleTitle")}
         </label>
         <input
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder={t('titlePlaceholder')}
+          placeholder={t("titlePlaceholder")}
           className="w-full px-4 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
         />
       </div>
@@ -108,20 +109,24 @@ export function ArticleGeneratorExample() {
         disabled={loading || !title}
         className="w-full py-2 px-4 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
       >
-        {loading ? t('processing') : t('generateButton')}
+        {loading ? t("processing") : t("generateButton")}
       </button>
 
       {/* 任務資訊 */}
       {jobId && (
         <div className="mt-6 p-4 bg-gray-100 rounded-lg">
-          <p className="text-sm text-gray-600">{t('jobId')}: {jobId}</p>
+          <p className="text-sm text-gray-600">
+            {t("jobId")}: {jobId}
+          </p>
         </div>
       )}
 
       {/* 狀態顯示 */}
       {status && (
         <div className="mt-4">
-          <p className="text-sm font-medium mb-2">{t('status')}: {status}</p>
+          <p className="text-sm font-medium mb-2">
+            {t("status")}: {status}
+          </p>
           <div className="w-full bg-gray-200 rounded-full h-2">
             <div
               className="bg-blue-500 h-2 rounded-full transition-all duration-300"
@@ -139,7 +144,9 @@ export function ArticleGeneratorExample() {
           <p className="text-gray-600 mb-4">{article.meta_description}</p>
           <div
             className="prose max-w-none"
-            dangerouslySetInnerHTML={{ __html: article.content }}
+            dangerouslySetInnerHTML={{
+              __html: sanitizeArticleHtml(article.content),
+            }}
           />
         </div>
       )}

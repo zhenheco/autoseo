@@ -12,6 +12,7 @@ import { Button } from "@shared/ui/button";
 import Link from "next/link";
 import { ArticleDetailPublish } from "./components/ArticleDetailPublish";
 import { getTranslations } from "next-intl/server";
+import { sanitizeArticleHtml } from "@/lib/security/html-sanitizer";
 
 async function getArticle(articleId: string) {
   const supabase = await createClient();
@@ -230,7 +231,9 @@ export default async function ArticleDetailPage({
                   <div
                     className="prose prose-lg max-w-none prose-p:leading-[1.8] prose-p:my-5 prose-h2:mt-10 prose-h2:mb-4 prose-h3:mt-7 prose-h3:mb-3 prose-li:my-2 prose-li:leading-[1.7] prose-ul:my-6 prose-ol:my-6 prose-img:my-8"
                     dangerouslySetInnerHTML={{
-                      __html: generatedArticle.html_content,
+                      __html: sanitizeArticleHtml(
+                        generatedArticle.html_content,
+                      ),
                     }}
                   />
                 )}

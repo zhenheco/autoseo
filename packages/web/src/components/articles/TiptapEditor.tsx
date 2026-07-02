@@ -30,6 +30,7 @@ import {
 } from "@shared/ui/dropdown-menu";
 import { useCallback, useEffect, useState } from "react";
 import { useTranslations } from "next-intl";
+import { sanitizeArticleHtml } from "@/lib/security/html-sanitizer";
 
 interface TiptapEditorProps {
   content: string;
@@ -116,7 +117,7 @@ export function TiptapEditor({
   // HTML 轉 Markdown 函式
   const htmlToMarkdown = useCallback((html: string): string => {
     const tempDiv = document.createElement("div");
-    tempDiv.innerHTML = html;
+    tempDiv.innerHTML = sanitizeArticleHtml(html);
 
     const processNode = (node: Node): string => {
       if (node.nodeType === Node.TEXT_NODE) {

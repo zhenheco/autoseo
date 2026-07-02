@@ -1,5 +1,6 @@
 import type { BlogArticle } from "@/types/blog";
 import type { SupportedLocale } from "@/types/translations";
+import { serializeJsonLd } from "@/lib/security/html-sanitizer";
 
 interface ArticleSchemaProps {
   article: BlogArticle;
@@ -47,7 +48,7 @@ export function ArticleSchema({ article, url, locale }: ArticleSchemaProps) {
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      dangerouslySetInnerHTML={{ __html: serializeJsonLd(schema) }}
     />
   );
 }
