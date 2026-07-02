@@ -33,10 +33,10 @@ describe("security rendering patterns", () => {
     const generatorExample = read("src/components/ArticleGeneratorExample.tsx");
 
     expect(dashboardArticle).toMatch(
-      /__html:\s*sanitizeArticleHtml\(\s*generatedArticle\.html_content/s,
+      /__html:\s*sanitizeArticleHtml\(\s*generatedArticle\.html_content/,
     );
     expect(generatorExample).toMatch(
-      /__html:\s*sanitizeArticleHtml\(\s*article\.content/s,
+      /__html:\s*sanitizeArticleHtml\(\s*article\.content/,
     );
   });
 
