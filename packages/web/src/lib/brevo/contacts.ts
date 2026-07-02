@@ -124,7 +124,7 @@ export async function getContact(
   const contactsApi = getContactsApi();
 
   try {
-    return contactsApi.getContactInfo({ identifier: email });
+    return await contactsApi.getContactInfo({ identifier: email });
   } catch (error: unknown) {
     const err = error as { status?: number; statusCode?: number };
     if (err.status === 404 || err.statusCode === 404) {
