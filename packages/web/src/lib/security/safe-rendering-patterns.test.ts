@@ -30,13 +30,32 @@ describe("security rendering patterns", () => {
     const dashboardArticle = read(
       "src/app/(dashboard)/dashboard/articles/[id]/page.tsx",
     );
+    const publicBlogArticle = read(
+      "src/app/(blog)/blog/lang/[locale]/[slug]/page.tsx",
+    );
     const generatorExample = read("src/components/ArticleGeneratorExample.tsx");
+    const articlePreview = read(
+      "src/components/article/ArticleHtmlPreview.tsx",
+    );
+    const tiptapEditor = read("src/components/articles/TiptapEditor.tsx");
 
     expect(dashboardArticle).toMatch(
       /__html:\s*sanitizeArticleHtml\(\s*generatedArticle\.html_content/,
     );
+    expect(publicBlogArticle).toMatch(
+      /__html:\s*sanitizeArticleHtml\(\s*article\.html_content/,
+    );
     expect(generatorExample).toMatch(
       /__html:\s*sanitizeArticleHtml\(\s*article\.content/,
+    );
+    expect(articlePreview).toContain(
+      "const sanitized = sanitizeArticleHtml(htmlContent)",
+    );
+    expect(articlePreview).toMatch(
+      /dangerouslySetInnerHTML=\{\{\s*__html:\s*processedHTML/,
+    );
+    expect(tiptapEditor).toMatch(
+      /tempDiv\.innerHTML\s*=\s*sanitizeArticleHtml\(html\)/,
     );
   });
 
