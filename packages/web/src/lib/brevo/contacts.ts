@@ -3,7 +3,7 @@
  * 提供聯絡人的新增、更新、刪除功能
  */
 
-import * as brevo from "@getbrevo/brevo";
+import type { Brevo } from "@getbrevo/brevo";
 import { getContactsApi } from "./client";
 import { UserDataForBrevo, BREVO_LISTS } from "./types";
 import {
@@ -34,6 +34,9 @@ export async function upsertContact(userData: UserDataForBrevo): Promise<void> {
     ...userData.attributes,
     SEGMENT: segment,
   };
+  const contactAttributes = attributes as unknown as NonNullable<
+    Brevo.CreateContactRequest["attributes"]
+  >;
 
   // 準備要從其他分群移除的 List IDs
   const otherSegmentListIds = getAllSegmentListIds().filter(
@@ -47,8 +50,10 @@ export async function upsertContact(userData: UserDataForBrevo): Promise<void> {
 
   try {
     // 嘗試更新現有 Contact
-    const updateContact = new brevo.UpdateContact();
-    updateContact.attributes = attributes as unknown as object;
+    const updateContact: Brevo.UpdateContactRequest = {
+      identifier: userData.email,
+      attributes: contactAttributes,
+    };
 
     // 只有在 List ID 已設定時才加入/移除
     if (validListIds.length > 0) {
@@ -58,7 +63,7 @@ export async function upsertContact(userData: UserDataForBrevo): Promise<void> {
       updateContact.unlinkListIds = otherSegmentListIds;
     }
 
-    await contactsApi.updateContact(userData.email, updateContact);
+    await contactsApi.updateContact(updateContact);
     console.log(
       `[Brevo] 更新 Contact: ${userData.email}, 分群: ${getSegmentDisplayName(segment)}`,
     );
@@ -67,9 +72,10 @@ export async function upsertContact(userData: UserDataForBrevo): Promise<void> {
     const err = error as { status?: number; statusCode?: number };
     if (err.status === 404 || err.statusCode === 404) {
       // Contact 不存在，新增
-      const createContact = new brevo.CreateContact();
-      createContact.email = userData.email;
-      createContact.attributes = attributes as unknown as object;
+      const createContact: Brevo.CreateContactRequest = {
+        email: userData.email,
+        attributes: contactAttributes,
+      };
 
       // 只有在 List ID 已設定時才加入
       if (validListIds.length > 0) {
@@ -95,7 +101,7 @@ export async function deleteContact(email: string): Promise<void> {
   const contactsApi = getContactsApi();
 
   try {
-    await contactsApi.deleteContact(email);
+    await contactsApi.deleteContact({ identifier: email });
     console.log(`[Brevo] 刪除 Contact: ${email}`);
   } catch (error: unknown) {
     const err = error as { status?: number; statusCode?: number };
@@ -114,12 +120,11 @@ export async function deleteContact(email: string): Promise<void> {
  */
 export async function getContact(
   email: string,
-): Promise<brevo.GetExtendedContactDetails | null> {
+): Promise<Brevo.GetContactInfoResponse | null> {
   const contactsApi = getContactsApi();
 
   try {
-    const result = await contactsApi.getContactInfo(email);
-    return result.body;
+    return contactsApi.getContactInfo({ identifier: email });
   } catch (error: unknown) {
     const err = error as { status?: number; statusCode?: number };
     if (err.status === 404 || err.statusCode === 404) {
