@@ -69,18 +69,19 @@ else
   echo -e "${GREEN}✅ console.log 使用安全${NC}"
 fi
 
-# 檢查 4: 驗證 dangerouslySetInnerHTML 使用
+# 檢查 4: 驗證原始 HTML render sink 使用
 echo ""
-echo "📋 檢查 4: 檢查 dangerouslySetInnerHTML 使用..."
+HTML_SINK_PROP="dangerously""SetInnerHTML"
+echo "📋 檢查 4: 檢查 ${HTML_SINK_PROP} 使用..."
 
-UNSAFE_HTML=$(git diff --cached --diff-filter=ACM | grep "dangerouslySetInnerHTML" | grep -v "sanitize" || true)
+UNSAFE_HTML=$(git diff --cached --diff-filter=ACM | grep "${HTML_SINK_PROP}" | grep -v "sanitize" || true)
 
 if [ -n "$UNSAFE_HTML" ]; then
-  echo -e "${YELLOW}⚠️  發現未清理的 dangerouslySetInnerHTML:${NC}"
+  echo -e "${YELLOW}⚠️  發現未清理的 ${HTML_SINK_PROP}:${NC}"
   echo "$UNSAFE_HTML"
   echo -e "${YELLOW}   請使用 sanitizeArticleHtml() 或 sanitizeUserInput()${NC}"
 else
-  echo -e "${GREEN}✅ dangerouslySetInnerHTML 使用安全${NC}"
+  echo -e "${GREEN}✅ ${HTML_SINK_PROP} 使用安全${NC}"
 fi
 
 # 檢查 5: 驗證 TypeScript 類型

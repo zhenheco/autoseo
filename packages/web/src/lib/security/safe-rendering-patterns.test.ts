@@ -52,7 +52,7 @@ describe("security rendering patterns", () => {
       "const sanitized = sanitizeArticleHtml(htmlContent)",
     );
     expect(articlePreview).toMatch(
-      /dangerouslySetInnerHTML=\{\{\s*__html:\s*processedHTML/,
+      /dangerouslySetInnerHTML=\{\{\s*__html:\s*sanitizedProcessedHTML/,
     );
     expect(tiptapEditor).toMatch(
       /tempDiv\.innerHTML\s*=\s*sanitizeArticleHtml\(html\)/,
