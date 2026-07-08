@@ -11,6 +11,7 @@ import { Input } from "@shared/ui/input";
 type SubmitState = "idle" | "submitting" | "success" | "duplicate" | "error";
 
 const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const DEFAULT_SIGNUP_HREF = "/signup?plan=solo_monthly";
 
 export function FinalCTA() {
   const t = useTranslations("lp.finalCta");
@@ -79,7 +80,7 @@ export function FinalCTA() {
               size="lg"
               className="mt-8 h-12 rounded-md text-body font-semibold"
             >
-              <Link href="/signup">
+              <Link href={DEFAULT_SIGNUP_HREF}>
                 {t("primaryCta")}
                 <ArrowRight aria-hidden="true" className="ml-2 h-4 w-4" />
               </Link>

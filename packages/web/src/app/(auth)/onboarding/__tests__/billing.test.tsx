@@ -54,8 +54,16 @@ vi.mock("@shared/supabase", () => ({
 }));
 
 vi.mock("@/lib/payments/stripe/price-ids", () => ({
-  getPriceId: vi.fn(() => "price_solo_monthly"),
-  isStripePlanId: vi.fn((plan: string) => plan === "solo_monthly"),
+  getBillingCycleFromPlanId: vi.fn((plan: string) =>
+    plan.endsWith("_yearly") ? "yearly" : "monthly",
+  ),
+  getPriceId: vi.fn((plan: string) => `price_${plan}`),
+  getSubscriptionPlanSlug: vi.fn((plan: string) =>
+    plan.startsWith("pro_") ? "pro" : "starter",
+  ),
+  isStripePlanId: vi.fn((plan: string) =>
+    ["solo_monthly", "solo_yearly", "pro_monthly", "pro_yearly"].includes(plan),
+  ),
 }));
 
 vi.mock("@/lib/payments/stripe/server", () => ({
@@ -94,7 +102,29 @@ describe("/onboarding/billing", () => {
       metadata: {
         user_id: "user-1",
         company_id: "company-1",
+        planSlug: "starter",
+        billingCycle: "monthly",
       },
     });
+  });
+
+  it("maps yearly Pro checkout requests to the database plan metadata", async () => {
+    await expect(
+      BillingPage({
+        searchParams: Promise.resolve({ plan: "pro_yearly" }),
+      }),
+    ).rejects.toThrow(
+      "NEXT_REDIRECT:https://checkout.stripe.com/c/pay/cs_test_123",
+    );
+
+    expect(checkoutMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        priceId: "price_pro_yearly",
+        metadata: expect.objectContaining({
+          planSlug: "pro",
+          billingCycle: "yearly",
+        }),
+      }),
+    );
   });
 });

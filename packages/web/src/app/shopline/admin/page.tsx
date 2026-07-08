@@ -3,14 +3,14 @@ import { Button } from "@shared/ui/button";
 type SearchParams = Record<string, string | string[] | undefined>;
 
 type PageProps = {
-  searchParams?: Promise<SearchParams> | SearchParams;
+  searchParams?: Promise<SearchParams>;
 };
 
 export const dynamic = "force-dynamic";
 
 export default async function ShoplineAdminPage({
-  searchParams,
-}: PageProps = {}) {
+  searchParams = Promise.resolve<SearchParams>({}),
+}: PageProps) {
   const params = await searchParams;
   const shopParam = Array.isArray(params?.shop)
     ? params?.shop[0]

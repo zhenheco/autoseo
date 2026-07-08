@@ -5,7 +5,7 @@
   "main": "index.js",
   "scripts": {
     "dev": "next dev -p 3168",
-    "build": "NODE_OPTIONS='--max-old-space-size=4096' next build",
+    "build": "NODE_OPTIONS='--max-old-space-size=4096' next build --webpack",
     "start": "next start",
     "lint": "NODE_OPTIONS='--max-old-space-size=4096' eslint .",
     "typecheck": "tsc --noEmit",
@@ -22,9 +22,9 @@
     "google-drive:authorize": "tsx scripts/google-drive-authorize.ts",
     "shopline:cli": "pnpm --dir ../.. --filter @seo/cli shopline:cli --",
     "shopline:check": "pnpm --dir ../.. --filter @seo/cli shopline:cli -- check",
-    "preview:cf": "NODE_OPTIONS='--max-old-space-size=4096' next build && opennextjs-cloudflare build && opennextjs-cloudflare preview",
-    "deploy:cf-workers": "NODE_OPTIONS='--max-old-space-size=4096' next build && opennextjs-cloudflare build && opennextjs-cloudflare deploy",
-    "deploy:pages": "NODE_OPTIONS='--max-old-space-size=4096' next build && opennextjs-cloudflare build && wrangler pages deploy .open-next --project-name=auto-pilot-seo",
+    "preview:cf": "NODE_OPTIONS='--max-old-space-size=4096' next build --webpack && opennextjs-cloudflare build && opennextjs-cloudflare preview",
+    "deploy:cf-workers": "NODE_OPTIONS='--max-old-space-size=4096' next build --webpack && opennextjs-cloudflare build && opennextjs-cloudflare deploy",
+    "deploy:pages": "NODE_OPTIONS='--max-old-space-size=4096' next build --webpack && opennextjs-cloudflare build && wrangler pages deploy .open-next --project-name=auto-pilot-seo",
     "lint:staged": "lint-staged"
   },
   "keywords": [],

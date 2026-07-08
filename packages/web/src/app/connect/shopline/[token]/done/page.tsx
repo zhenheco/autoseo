@@ -1,7 +1,7 @@
 import { getTranslations } from "next-intl/server";
 
 type DonePageProps = {
-  searchParams?: Promise<{ shop?: string }> | { shop?: string };
+  searchParams?: Promise<{ shop?: string }>;
 };
 
 export default async function ShoplineInvitationDonePage({

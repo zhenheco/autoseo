@@ -10,8 +10,26 @@ import { getAnalyticsLocale, track } from "@/lib/analytics/events";
 import { PricingProps, ArticlePlan, ArticlePackage } from "@/types/pricing";
 import { LEGACY_FREE_PLAN_SLUG } from "@shared/auth/subscription-plans";
 
+type BillingCycle = "monthly" | "yearly";
+type PlanSlug = "starter" | "pro";
+type StripePlanId =
+  | "solo_monthly"
+  | "solo_yearly"
+  | "pro_monthly"
+  | "pro_yearly";
+type CheckoutArticlePlan = ArticlePlan & { slug: PlanSlug };
+
 /** Fallback mock plans when Supabase data is empty */
-const FALLBACK_PLANS = [
+const FALLBACK_PLANS: Array<{
+  name: string;
+  slug: PlanSlug;
+  price: string;
+  period: string;
+  descKey: string;
+  featureKeys: string[];
+  ctaKey: string;
+  popular: boolean;
+}> = [
   {
     name: "Starter",
     slug: "starter",
@@ -52,6 +70,22 @@ const FALLBACK_ARTICLE_PACKS = [
   { nameKey: "mPack", articles: 30, price: 49 },
   { nameKey: "lPack", articles: 80, price: 99 },
 ];
+
+function isSupportedCheckoutPlan(slug: string): slug is PlanSlug {
+  return slug === "starter" || slug === "pro";
+}
+
+function isCheckoutArticlePlan(plan: ArticlePlan): plan is CheckoutArticlePlan {
+  return (
+    plan.slug !== LEGACY_FREE_PLAN_SLUG && isSupportedCheckoutPlan(plan.slug)
+  );
+}
+
+function getSignupHref(planSlug: PlanSlug, billingCycle: BillingCycle): string {
+  const stripePlan: StripePlanId =
+    planSlug === "pro" ? `pro_${billingCycle}` : `solo_${billingCycle}`;
+  return `/signup?plan=${stripePlan}`;
+}
 
 function FallbackPricingCards({ t }: { t: (key: string) => string }) {
   return (
@@ -116,7 +150,10 @@ function FallbackPricingCards({ t }: { t: (key: string) => string }) {
             ))}
           </div>
 
-          <Link href="/login">
+          <Link
+            data-testid={`home-pricing-cta-${plan.slug}`}
+            href={getSignupHref(plan.slug, "monthly")}
+          >
             <Button
               className={`w-full py-6 rounded-xl font-bold transition-all duration-300 ${
                 plan.popular
@@ -139,8 +176,8 @@ function RealPricingCards({
   t,
   tSub,
 }: {
-  plans: ArticlePlan[];
-  billingCycle: "monthly" | "yearly";
+  plans: CheckoutArticlePlan[];
+  billingCycle: BillingCycle;
   t: (key: string) => string;
   tSub: ReturnType<typeof useTranslations>;
 }) {
@@ -224,7 +261,10 @@ function RealPricingCards({
               ))}
             </div>
 
-            <Link href="/login">
+            <Link
+              data-testid={`home-pricing-cta-${plan.slug}`}
+              href={getSignupHref(plan.slug, billingCycle)}
+            >
               <Button
                 className={`w-full py-6 rounded-xl font-bold transition-all duration-300 ${
                   isPopular
@@ -305,8 +345,7 @@ export function PricingSection({ plans, articlePackages }: PricingProps) {
   const sectionRef = useRef<HTMLElement | null>(null);
   const trackedPricingView = useRef(false);
 
-  const visiblePlans =
-    plans?.filter((plan) => plan.slug !== LEGACY_FREE_PLAN_SLUG) ?? [];
+  const visiblePlans = plans?.filter(isCheckoutArticlePlan) ?? [];
   const hasRealPlans = visiblePlans.length > 0;
   const hasPackages = articlePackages && articlePackages.length > 0;
 

@@ -6,6 +6,8 @@ import Link from "next/link";
 import { Button } from "@shared/ui/button";
 import { getAnalyticsLocale, track } from "@/lib/analytics/events";
 
+const DEFAULT_SIGNUP_HREF = "/signup?plan=solo_monthly";
+
 export function Hero() {
   const t = useTranslations("home.v6.hero");
 
@@ -35,7 +37,7 @@ export function Hero() {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.6 }}
         >
-          <Link href="/signup">
+          <Link href={DEFAULT_SIGNUP_HREF}>
             <Button
               size="lg"
               onClick={() =>
