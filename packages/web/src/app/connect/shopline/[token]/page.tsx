@@ -7,7 +7,7 @@ import {
 import { getTranslations } from "next-intl/server";
 
 type PageProps = {
-  params: Promise<{ token: string }> | { token: string };
+  params: Promise<{ token: string }>;
 };
 
 export const dynamic = "force-dynamic";

@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 
 /**
  * 地理位置檢測 API
- * 使用 Vercel Edge Functions 或 Cloudflare Workers 的地理位置資訊
+ * 使用 Vercel 或 Cloudflare 的地理位置 headers
  */
 export async function GET(request: NextRequest) {
   try {
@@ -57,6 +57,3 @@ export async function GET(request: NextRequest) {
     );
   }
 }
-
-// 支援 Edge Runtime 以提升效能
-export const runtime = "edge";

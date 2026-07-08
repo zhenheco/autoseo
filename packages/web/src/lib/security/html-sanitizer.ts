@@ -191,3 +191,21 @@ export function sanitizeJson(obj: unknown): string {
   const json = JSON.stringify(obj);
   return escapeHtml(json);
 }
+
+/**
+ * 安全序列化 JSON-LD - 用於 application/ld+json script 內容
+ *
+ * JSON-LD script 需要保留有效 JSON,不能使用 HTML entity 轉義。
+ * 這裡只轉義會跳出 script context 或造成解析差異的字元。
+ *
+ * @param obj - 要序列化的物件
+ * @returns 可安全嵌入 script 的 JSON 字串
+ */
+export function serializeJsonLd(obj: unknown): string {
+  return (JSON.stringify(obj) ?? "null")
+    .replace(/</g, "\\u003c")
+    .replace(/>/g, "\\u003e")
+    .replace(/&/g, "\\u0026")
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029");
+}

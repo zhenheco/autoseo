@@ -5,6 +5,8 @@ import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { Button } from "@shared/ui/button";
 
+const DEFAULT_SIGNUP_HREF = "/signup?plan=solo_monthly";
+
 export function ClosingCTANew() {
   const t = useTranslations("home.v6.cta");
 
@@ -28,7 +30,7 @@ export function ClosingCTANew() {
           transition={{ delay: 0.3, duration: 0.6 }}
           className="mb-6"
         >
-          <Link href="/signup">
+          <Link href={DEFAULT_SIGNUP_HREF}>
             <Button
               size="lg"
               className="px-10 py-6 text-base font-semibold rounded-full bg-foreground text-background hover:bg-foreground/90 transition-all"

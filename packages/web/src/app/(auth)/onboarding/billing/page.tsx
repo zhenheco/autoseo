@@ -6,7 +6,9 @@ import { CreditCard, Loader2 } from "lucide-react";
 import type { CheckoutInput } from "@/lib/payments/stripe/client";
 import { getStripeClient } from "@/lib/payments/stripe/server";
 import {
+  getBillingCycleFromPlanId,
   getPriceId,
+  getSubscriptionPlanSlug,
   isStripePlanId,
   type StripePlanId,
 } from "@/lib/payments/stripe/price-ids";
@@ -37,12 +39,6 @@ export default async function BillingPage({ searchParams }: BillingPageProps) {
       </div>
     </main>
   );
-}
-
-async function createCheckoutSession(planId: string) {
-  "use server";
-
-  await startCheckout(normalizePlanId(planId));
 }
 
 async function startCheckout(planId: StripePlanId): Promise<never> {
@@ -83,6 +79,8 @@ async function startCheckout(planId: StripePlanId): Promise<never> {
     metadata: {
       user_id: user.id,
       company_id: companyId,
+      planSlug: getSubscriptionPlanSlug(planId),
+      billingCycle: getBillingCycleFromPlanId(planId),
     },
   });
 

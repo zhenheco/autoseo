@@ -1,4 +1,5 @@
 import type { SupportedLocale } from "@/types/translations";
+import { serializeJsonLd } from "@/lib/security/html-sanitizer";
 
 interface BreadcrumbSchemaProps {
   title: string;
@@ -70,7 +71,7 @@ export function BreadcrumbSchema({
   return (
     <script
       type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
+      dangerouslySetInnerHTML={{ __html: serializeJsonLd(schema) }}
     />
   );
 }

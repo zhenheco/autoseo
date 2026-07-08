@@ -190,6 +190,7 @@ async function handleCheckoutSessionCompleted(
   const plan = await resolvePlan(supabase, metadata);
   const userId = requireMetadata(metadata, "userId", "user_id");
   const companyId = requireMetadata(metadata, "companyId", "company_id");
+  const billingCycle = readBillingCycle(metadata);
   const trialEndsAt = resolveTrialEndsAt(session, metadata);
   const billingCountry =
     session.customer_details?.address?.country ??
@@ -229,6 +230,7 @@ async function handleCheckoutSessionCompleted(
         monthly_token_quota: plan.base_tokens,
         articles_per_month: plan.articles_per_month,
         subscription_articles_remaining: plan.articles_per_month,
+        billing_cycle: billingCycle,
         provider: "stripe",
         stripe_customer_id: customerId,
         stripe_subscription_id: subscriptionId,
@@ -657,6 +659,13 @@ function readMetadataValue(metadata: Metadata, ...keys: string[]) {
     if (value) return value;
   }
   return undefined;
+}
+
+function readBillingCycle(metadata: Metadata): "monthly" | "yearly" {
+  return readMetadataValue(metadata, "billingCycle", "billing_cycle") ===
+    "yearly"
+    ? "yearly"
+    : "monthly";
 }
 
 function readMetadataNumber(metadata: Metadata, ...keys: string[]) {

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { Button } from "@shared/ui/button";
 import { Card, CardContent, CardHeader } from "@shared/ui/card";
 import { ArrowLeft } from "lucide-react";
+import { serializeJsonLd } from "@/lib/security/html-sanitizer";
 
 export const dynamic = "force-static";
 
@@ -102,7 +103,7 @@ export default function FAQPage() {
     <main className="min-h-screen bg-background text-foreground">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqSchema) }}
+        dangerouslySetInnerHTML={{ __html: serializeJsonLd(faqSchema) }}
       />
       <div className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:py-14">
         <Button asChild variant="ghost" className="mb-8">

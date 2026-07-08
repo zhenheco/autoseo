@@ -1,4 +1,5 @@
-import readXlsxFile from "read-excel-file";
+import { readSheet } from "read-excel-file/browser";
+import type { Row } from "read-excel-file/browser";
 import type { PublishPlan } from "@/app/(dashboard)/dashboard/articles/import/page";
 
 interface ExcelRow {
@@ -15,13 +16,13 @@ export async function parseMultiColumnExcel(
   validateExcelFile(file);
 
   try {
-    const jsonData = await readXlsxFile(file);
+    const jsonData = await readSheet(file);
 
     if (jsonData.length === 0) {
       throw new Error("Excel 檔案是空的");
     }
 
-    const firstRow = jsonData[0] as (string | number | null)[];
+    const firstRow = jsonData[0] as Row;
     const hasHeader = firstRow.some(
       (cell) =>
         typeof cell === "string" &&
@@ -30,7 +31,7 @@ export async function parseMultiColumnExcel(
           cell.includes("keyword")),
     );
 
-    const dataRows = hasHeader ? jsonData.slice(1) : jsonData;
+    const dataRows: Row[] = hasHeader ? jsonData.slice(1) : jsonData;
 
     const rows: ExcelRow[] = dataRows
       .filter((row) => row.length > 0 && row[0])

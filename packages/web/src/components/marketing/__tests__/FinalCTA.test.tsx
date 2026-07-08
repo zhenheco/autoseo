@@ -36,6 +36,14 @@ describe("FinalCTA", () => {
     vi.unstubAllGlobals();
   });
 
+  it("routes the primary trial CTA through signup with the default purchase plan", () => {
+    renderFinalCTA();
+
+    expect(
+      screen.getByRole("link", { name: "Start 7-day free trial" }),
+    ).toHaveAttribute("href", "/signup?plan=solo_monthly");
+  });
+
   it("validates email before posting", async () => {
     const fetchMock = vi.fn();
     vi.stubGlobal("fetch", fetchMock);

@@ -98,7 +98,7 @@ export function ArticleHtmlPreview({
   featuredImageUrl,
   className,
 }: ArticleHtmlPreviewProps) {
-  const processedHTML = useMemo(() => {
+  const sanitizedProcessedHTML = useMemo(() => {
     const sanitized = sanitizeArticleHtml(htmlContent);
     const withoutFeatured = removeFeaturedImage(sanitized, featuredImageUrl);
     return addHeadingIds(withoutFeatured);
@@ -151,7 +151,7 @@ export function ArticleHtmlPreview({
         "prose-hr:border-slate-200 dark:prose-hr:border-slate-700 prose-hr:my-8",
         className,
       )}
-      dangerouslySetInnerHTML={{ __html: processedHTML }}
+      dangerouslySetInnerHTML={{ __html: sanitizedProcessedHTML }}
     />
   );
 }

@@ -10,7 +10,7 @@ import {
 } from "@/lib/shopline/oauth";
 
 type RouteContext = {
-  params: Promise<{ token: string }> | { token: string };
+  params: Promise<{ token: string }>;
 };
 
 export async function GET(

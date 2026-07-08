@@ -111,7 +111,7 @@ export async function middleware(request: NextRequest) {
 
   const cspDirectives = [
     "default-src 'self'",
-    // script-src: 開發環境需要 unsafe-eval (Next.js HMR)，生產環境移除
+    // script-src: 開發環境需要 unsafe-eval token for Next.js HMR，生產環境移除
     // 加入 Cloudflare Insights 和 Google Tag Manager 域名
     isDevelopment
       ? "script-src 'self' 'unsafe-eval' 'unsafe-inline' https://static.cloudflareinsights.com https://challenges.cloudflare.com https://www.googletagmanager.com https://www.google-analytics.com https://ssl.google-analytics.com https://tagmanager.google.com"

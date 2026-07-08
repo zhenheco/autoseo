@@ -60,8 +60,8 @@ const SOURCE_LABELS: Record<string, string> = {
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage({
-  searchParams,
-}: DashboardPageProps = {}) {
+  searchParams = Promise.resolve<DashboardSearchParams>({}),
+}: DashboardPageProps) {
   await checkPagePermission("canAccessDashboard");
 
   const user = await getUser();
@@ -71,7 +71,7 @@ export default async function DashboardPage({
 
   const [brands, params, headerStore, supabase] = await Promise.all([
     fetchBrandsFromApi(),
-    searchParams ?? Promise.resolve<DashboardSearchParams>({}),
+    searchParams,
     headers(),
     createClient(),
   ]);

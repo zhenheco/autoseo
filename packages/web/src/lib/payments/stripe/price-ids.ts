@@ -10,6 +10,8 @@ export const STRIPE_PLAN_IDS = [
 
 export type StripePlanId = (typeof STRIPE_PLAN_IDS)[number];
 export type StripePriceIdMode = "test" | "live";
+export type StripeBillingCycle = "monthly" | "yearly";
+export type SubscriptionPlanSlug = "starter" | "pro";
 
 type PriceIdMap = Record<StripePlanId, string>;
 
@@ -39,6 +41,18 @@ export function isStripePlanId(plan: string): plan is StripePlanId {
 export function getPriceId(plan: StripePlanId): string {
   cachedMap ??= loadPriceIdMap();
   return cachedMap[plan];
+}
+
+export function getSubscriptionPlanSlug(
+  plan: StripePlanId,
+): SubscriptionPlanSlug {
+  return plan.startsWith("pro_") ? "pro" : "starter";
+}
+
+export function getBillingCycleFromPlanId(
+  plan: StripePlanId,
+): StripeBillingCycle {
+  return plan.endsWith("_yearly") ? "yearly" : "monthly";
 }
 
 export function loadPriceIdMap(

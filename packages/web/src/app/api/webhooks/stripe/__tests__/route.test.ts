@@ -109,6 +109,7 @@ function checkoutEvent(id = "evt_checkout") {
         userId: "user-1",
         companyId: "company-1",
         planSlug: "solo",
+        billingCycle: "monthly",
         trialDays: "14",
       },
       payment_method_details: {
@@ -460,6 +461,7 @@ describe("Stripe webhook route", () => {
       stripe_customer_id: "cus_123",
       stripe_subscription_id: "sub_123",
       billing_country: "TW",
+      billing_cycle: "monthly",
       status: "trialing",
     });
     expect(analytics.captureTrialCardAdded).toHaveBeenCalledWith(
